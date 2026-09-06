@@ -32,16 +32,22 @@ No Riichi yaku, dora, fu/han, furiten, Hong Kong fan minimum, American card
 hands, jokers or Charleston rules are present. Generic Seven Pairs and generic
 one-suit-with-chows scoring were found and removed.
 
+## Winning-tile provenance corrections
+
+11. Added optional winning-tile provenance with distinct grouped-set and
+    loose-layout destinations. It is checked against the completed winning hand.
+12. Implemented Buried Treasure's discard/final-discard exception: only the
+    provenance-selected final pung or pair may be exposed.
+13. Implemented Gates of Heaven's final-pung exception: a claimed completion
+    must identify a suited 1 or 9 in the Gates suit. Unknown, paired-minor, stale
+    and mismatched provenance is rejected conservatively.
+
 ## Ambiguities retained rather than guessed
 
 1. **Loose-tile extra 2 points:** the general scoring page says the extra two
    points are for a live-wall draw, while the Purity notes say live wall or
    kong box. The unambiguous loose-tile double remains; no extra two points are
    awarded pending an authoritative clarification.
-2. **Buried Treasure final claim:** BMJA permits claiming the final pung or pair
-   to go Mah-Jong. The current hand contract records set exposure but not which
-   set contains the winning tile, so the detector conservatively requires all
-   sets concealed.
 
 ## BMJA special hands not represented by the current engine
 
@@ -55,5 +61,5 @@ Knitting, Triple Knitting, Imperial Jade, Gates of Heaven and Wriggling Snake
 now have winner-pattern recognition. All supported specials now also have
 verified one-tile-away fishing treatment with published 200/400 values,
 intrinsic-value alternatives where applicable, and separately scored bonus
-tiles. Gates of Heaven retains the final-winning-tile provenance limitation
-described below.
+tiles. Buried Treasure and Gates of Heaven now apply their final-claim
+exceptions only from validated winning-tile provenance.

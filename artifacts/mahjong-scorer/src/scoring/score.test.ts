@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { bonus, dragon, scoreHand, set, suited, wind } from '.';
+import {
+  bonus,
+  dragon,
+  resolveWinningTileProvenance,
+  scoreHand,
+  set,
+  suited,
+  wind,
+} from '.';
 import type { MahjongHand } from '.';
 
 describe('scoreHand breakdown', () => {
@@ -107,7 +115,7 @@ describe('scoreHand breakdown', () => {
       isWinner: true,
     });
     expect(score.valid).toBe(false);
-    expect(score.validationErrors).toHaveLength(2);
+    expect(score.validationErrors).toHaveLength(3);
     expect(score.basePoints).toBe(20);
   });
 
@@ -127,5 +135,82 @@ describe('scoreHand breakdown', () => {
     expect(score.validationErrors).toContain(
       'A normal BMJA hand may contain at most one chow.',
     );
+  });
+
+  it('validates grouped winning provenance including the exact chow position', () => {
+    const hand: MahjongHand = {
+      sets: [
+        set('chow', 'chow', suited('bamboo', 3)),
+        set('pung-1', 'pung', suited('circles', 1)),
+        set('pung-2', 'pung', suited('circles', 2)),
+        set('pung-3', 'pung', dragon('red')),
+        set('pair', 'pair', wind('east')),
+      ],
+      bonusTiles: [],
+      isWinner: true,
+      winningTileProvenance: {
+        tile: suited('bamboo', 4),
+        target: { type: 'grouped-set', setId: 'chow', tileIndex: 1 },
+      },
+    };
+    expect(resolveWinningTileProvenance(hand)).toMatchObject({
+      tile: suited('bamboo', 4),
+      set: { id: 'chow' },
+    });
+    expect(
+      resolveWinningTileProvenance({
+        ...hand,
+        winningTileProvenance: {
+          tile: suited('bamboo', 4),
+          target: { type: 'grouped-set', setId: 'chow', tileIndex: 0 },
+        },
+      }),
+    ).toBeUndefined();
+    expect(
+      resolveWinningTileProvenance({ ...hand, isWinner: false }),
+    ).toBeUndefined();
+  });
+
+  it('rejects provenance for incomplete winners and ambiguous set ids', () => {
+    const incomplete: MahjongHand = {
+      sets: [set('only', 'pair', suited('bamboo', 2))],
+      bonusTiles: [],
+      isWinner: true,
+      winningTileProvenance: {
+        tile: suited('bamboo', 2),
+        target: { type: 'grouped-set', setId: 'only' },
+      },
+    };
+    expect(resolveWinningTileProvenance(incomplete)).toBeUndefined();
+    expect(scoreHand(incomplete).validationErrors).toContain(
+      'A winning hand must be a complete grouped hand or a 14-tile special layout.',
+    );
+
+    const duplicateIds: MahjongHand = {
+      sets: [
+        set('duplicate', 'pung', suited('bamboo', 2), 'exposed'),
+        set('duplicate', 'pung', suited('bamboo', 3)),
+        set('four', 'pung', suited('bamboo', 4)),
+        set('six', 'pung', suited('bamboo', 6)),
+        set('pair', 'pair', suited('bamboo', 8)),
+      ],
+      bonusTiles: [],
+      isWinner: true,
+      winningMethod: 'discard',
+      winningTileProvenance: {
+        tile: suited('bamboo', 2),
+        target: { type: 'grouped-set', setId: 'duplicate' },
+      },
+    };
+    expect(resolveWinningTileProvenance(duplicateIds)).toBeUndefined();
+    const result = scoreHand(duplicateIds);
+    expect(result.validationErrors).toContain(
+      'Each grouped set or pair must have a unique id.',
+    );
+    expect(
+      result.specialHands.some(
+        ({ id, matched }) => id === 'buried-treasure' && matched,
+      ),
+    ).toBe(false);
   });
 });

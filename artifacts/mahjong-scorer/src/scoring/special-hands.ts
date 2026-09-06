@@ -1,4 +1,9 @@
-import { expandedTiles, isTerminal, tileKey } from './tiles';
+import {
+  expandedTiles,
+  isTerminal,
+  resolveWinningTileProvenance,
+  tileKey,
+} from './tiles';
 import type {
   MahjongHand,
   PlayingTile,
@@ -49,6 +54,41 @@ const isGreenTile = (tile: PlayingTile) =>
     : tile.family === 'suit' &&
       tile.suit === 'bamboo' &&
       [2, 3, 4, 6, 8].includes(tile.rank);
+
+const isClaimedCompletion = (hand: MahjongHand) =>
+  hand.winningMethod === 'discard' ||
+  hand.winningMethod === 'final-discard';
+
+const gatesCompletionIsAllowed = (
+  hand: MahjongHand,
+  suit: Extract<PlayingTile, { family: 'suit' }>['suit'],
+) => {
+  if (!isClaimedCompletion(hand)) {
+    return hand.winningMethod !== 'robbing-kong';
+  }
+  const provenance = resolveWinningTileProvenance(hand);
+  return (
+    provenance?.target.type === 'loose-layout' &&
+    provenance.tile.family === 'suit' &&
+    provenance.tile.suit === suit &&
+    (provenance.tile.rank === 1 || provenance.tile.rank === 9)
+  );
+};
+
+const buriedVisibilityIsAllowed = (hand: MahjongHand) => {
+  const exposed = hand.sets.filter((group) => group.visibility === 'exposed');
+  if (exposed.length === 0) return true;
+  if (exposed.length !== 1 || !isClaimedCompletion(hand)) return false;
+
+  const provenance = resolveWinningTileProvenance(hand);
+  return (
+    provenance !== undefined &&
+    'set' in provenance &&
+    provenance.set.id === exposed[0].id &&
+    (provenance.set.kind === 'pung' || provenance.set.kind === 'pair') &&
+    tileKey(provenance.tile) === tileKey(provenance.set.tile)
+  );
+};
 
 /**
  * Special-hand detectors are independent: each receives only the canonical
@@ -228,7 +268,8 @@ export const specialHandDetectors: Detector[] = [
           [1, 2].includes(ranks.get(rank) ?? 0),
         ) &&
         [2, 3, 4, 5, 6, 7, 8].filter((rank) => ranks.get(rank) === 2)
-          .length === 1
+          .length === 1 &&
+        gatesCompletionIsAllowed(hand, suited[0].suit)
       );
     },
   },
@@ -383,7 +424,7 @@ export const specialHandDetectors: Detector[] = [
     detect: (hand) =>
       hand.isWinner &&
       hand.sets.length === 5 &&
-      hand.sets.every((set) => set.visibility === 'concealed') &&
+      buriedVisibilityIsAllowed(hand) &&
       hand.sets.filter((set) => set.kind === 'pung').length === 4 &&
       hand.sets.filter((set) => set.kind === 'pair').length === 1 &&
       new Set(

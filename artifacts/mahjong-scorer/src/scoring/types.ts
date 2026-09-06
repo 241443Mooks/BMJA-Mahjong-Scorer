@@ -62,6 +62,21 @@ export type WinningMethod =
   | 'final-discard'
   | 'robbing-kong';
 
+export type WinningTileTarget =
+  | {
+      type: 'grouped-set';
+      /** Stable id of the completed set or pair. */
+      setId: string;
+      /** Required for a chow: zero-based position in its expanded tile order. */
+      tileIndex?: 0 | 1 | 2;
+    }
+  | { type: 'loose-layout' };
+
+export type WinningTileProvenance = {
+  tile: PlayingTile;
+  target: WinningTileTarget;
+};
+
 /**
  * This is the single hand contract used by scoring and manual entry.
  * A future recogniser should produce this exact shape.
@@ -73,6 +88,8 @@ export type MahjongHand = {
   bonusTiles: BonusTile[];
   isWinner: boolean;
   winningMethod?: WinningMethod;
+  /** Exact winning tile and its destination; absence means unknown. */
+  winningTileProvenance?: WinningTileProvenance;
   originalCall?: boolean;
   /** Exact incomplete group held alongside complete sets while fishing. */
   incompleteSet?: IncompleteSet;

@@ -108,11 +108,11 @@ Fishing matters. BMJA assigns special fishing values to many special hands when 
 | Fourfold Plenty | 1,000 | Implemented — winner and 400 fishing |
 | Three Great Scholars | 1,000 | Implemented — winner and greater of 400 fishing or intrinsic value |
 | Four Blessings Hovering over the Door | 1,000 | Implemented — winner and greater of 400 fishing or intrinsic value |
-| Buried Treasure | 1,000 | Partial — winner and 400 fishing implemented; final-winning-tile concealment exception still needs richer provenance |
+| Buried Treasure | 1,000 | Implemented — winner (including the provenance-verified final pung/pair claim exception) and 400 fishing |
 | Knitting | 500 | Implemented — winner and 200 fishing |
 | Triple Knitting | 500 | Implemented — winner and 200 fishing |
 | Imperial Jade | 1,000 | Implemented — winner and 400 fishing |
-| Gates of Heaven | 1,000 | Partial — winner and 400 fishing implemented; final-winning-tile claim exception still needs richer provenance |
+| Gates of Heaven | 1,000 | Implemented — winner (including the provenance-verified terminal final-pung claim exception) and 400 fishing |
 | Wriggling Snake | 1,000 | Implemented — winner and 400 fishing |
 
 ### Missing event-dependent specials
@@ -150,13 +150,17 @@ Flowers and Seasons are handled separately. Under fixed special fishing, their p
 
 ### Winning-tile provenance
 
-The current hand model does not always know which exact tile completed the hand or which set/pair it completed. This affects exceptions for hands such as Buried Treasure and Gates of Heaven.
+**Implemented.** A winning hand may retain the exact winning tile together with
+either the stable id of its destination set/pair (and chow position where
+applicable) or a loose-layout target. Absence explicitly means unknown.
+Provenance is accepted only for a winner and only when the tile and destination
+exist in the completed hand; stale metadata cannot enable an exception.
 
-Gates of Heaven is therefore currently recognized from a fully concealed 14-tile
-special layout. The BMJA exception allowing the final pung to be claimed remains
-out of scope until winning-tile provenance is represented.
-
-Tracked in issue #3.
+Buried Treasure remains valid when all groups are concealed. A discard or final
+discard may instead expose only the provenance-selected final pung or pair.
+Gates of Heaven keeps its exact 14-tile pattern; a discard or final-discard
+completion qualifies only when loose-layout provenance identifies a 1 or 9 in
+the Gates suit. Drawn completion keeps the ordinary concealed treatment.
 
 ## Settlement between four players
 
@@ -215,7 +219,6 @@ For each rule added or changed:
 
 - #1 Complete missing layout-based BMJA special hands.
 - #2 Add BMJA special-hand fishing scores.
-- #3 Model winning-tile provenance for special-hand exceptions.
 - #4 Add event-based BMJA special hands.
 - #6 Add detailed end-of-game report.
 - #7 Add shared tile inventory and availability warnings.

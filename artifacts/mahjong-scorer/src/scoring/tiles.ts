@@ -3,12 +3,14 @@ import type {
   Dragon,
   DragonTile,
   HandSet,
+  MahjongHand,
   PlayingTile,
   Suit,
   SuitTile,
   Visibility,
   Wind,
   WindTile,
+  WinningTileProvenance,
 } from './types';
 
 export const suited = (suit: Suit, rank: SuitTile['rank']): SuitTile => ({
@@ -64,6 +66,78 @@ export const expandedTiles = (handSet: HandSet): PlayingTile[] => {
   }
   const count = handSet.kind === 'kong' ? 4 : handSet.kind === 'pair' ? 2 : 3;
   return Array.from({ length: count }, () => handSet.tile);
+};
+
+export const hasCompleteWinningShape = (hand: MahjongHand): boolean => {
+  if (!hand.isWinner || hand.incompleteSet) return false;
+  if (hand.sets.length === 0) {
+    return (hand.looseTiles?.length ?? 0) === 14;
+  }
+  if ((hand.looseTiles?.length ?? 0) > 0) return false;
+  const pairs = hand.sets.filter((group) => group.kind === 'pair').length;
+  const melds = hand.sets.length - pairs;
+  return (
+    (hand.sets.length === 7 && pairs === 7) ||
+    (hand.sets.length === 5 && pairs === 1 && melds === 4)
+  );
+};
+
+export type ValidWinningTileProvenance =
+  | {
+      tile: PlayingTile;
+      target: { type: 'grouped-set'; setId: string; tileIndex?: 0 | 1 | 2 };
+      set: HandSet;
+    }
+  | {
+      tile: PlayingTile;
+      target: { type: 'loose-layout' };
+    };
+
+/**
+ * Resolves provenance only when it describes an actual tile destination in
+ * the completed winning hand. Invalid and stale metadata is treated as unknown.
+ */
+export const resolveWinningTileProvenance = (
+  hand: MahjongHand,
+): ValidWinningTileProvenance | undefined => {
+  const provenance: WinningTileProvenance | undefined =
+    hand.winningTileProvenance;
+  if (!provenance || !hasCompleteWinningShape(hand)) return undefined;
+
+  if (provenance.target.type === 'loose-layout') {
+    return hand.sets.length === 0 &&
+      (hand.looseTiles ?? []).some(
+        (tile) => tileKey(tile) === tileKey(provenance.tile),
+      )
+      ? { tile: provenance.tile, target: provenance.target }
+      : undefined;
+  }
+
+  const target = provenance.target;
+  const matchingGroups = hand.sets.filter(
+    (handSet) => handSet.id === target.setId,
+  );
+  if (matchingGroups.length !== 1) return undefined;
+  const group = matchingGroups[0];
+  const expanded = expandedTiles(group);
+
+  if (group.kind === 'chow') {
+    const index = target.tileIndex;
+    if (
+      index === undefined ||
+      !expanded[index] ||
+      tileKey(expanded[index]) !== tileKey(provenance.tile)
+    ) {
+      return undefined;
+    }
+  } else if (
+    target.tileIndex !== undefined ||
+    !expanded.some((tile) => tileKey(tile) === tileKey(provenance.tile))
+  ) {
+    return undefined;
+  }
+
+  return { tile: provenance.tile, target, set: group };
 };
 
 export const windNumber = (value: Wind): BonusTile['number'] =>

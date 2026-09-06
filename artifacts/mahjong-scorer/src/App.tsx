@@ -24,9 +24,12 @@ import type {
   SetKind,
   Visibility,
   IncompleteSet,
+  WinningTileProvenance,
 } from './scoring';
 import {
   scoreHand,
+  validateHand,
+  resolveWinningTileProvenance,
   suited,
   wind,
   dragon,
@@ -158,6 +161,14 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
       ? { ...initialHand.incompleteSet, tile: { ...initialHand.incompleteSet.tile } }
       : null,
   );
+  const [winningTileProvenance, setWinningTileProvenance] = useState<WinningTileProvenance | undefined>(
+    initialHand?.winningTileProvenance
+      ? {
+          tile: { ...initialHand.winningTileProvenance.tile },
+          target: { ...initialHand.winningTileProvenance.target },
+        }
+      : undefined,
+  );
 
   const [selectedSet, setSelectedSet] = useState<string>(
     initialHand?.sets[0]?.id ?? 'set-1',
@@ -205,6 +216,14 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
           }
         : null,
     );
+    setWinningTileProvenance(
+      savedHand?.winningTileProvenance
+        ? {
+            tile: { ...savedHand.winningTileProvenance.tile },
+            target: { ...savedHand.winningTileProvenance.target },
+          }
+        : undefined,
+    );
     setSelectedSet(savedHand?.incompleteSet ? 'fishing-incomplete' : nextSets[0]?.id ?? '');
     setExpandedRule(null);
     setCopied(false);
@@ -221,6 +240,7 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
       ],
       isWinner,
       winningMethod: isWinner ? winningMethod : undefined,
+      winningTileProvenance: isWinner ? winningTileProvenance : undefined,
       originalCall: isWinner ? originalCall : false,
       incompleteSet:
         !isWinner &&
@@ -229,7 +249,35 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
           ? { ...incompleteSet, tile: incompleteSet.tile }
           : undefined,
     };
-  }, [sets, looseTiles, layoutMode, flowers, seasons, isWinner, winningMethod, originalCall, incompleteSet]);
+  }, [sets, looseTiles, layoutMode, flowers, seasons, isWinner, winningMethod, originalCall, incompleteSet, winningTileProvenance]);
+
+  useEffect(() => {
+    if (winningTileProvenance) {
+      const validSets = sets.filter((s): s is HandSet => s.tile !== null);
+      const tempHand: MahjongHand = {
+        sets: layoutMode === 'sets' ? validSets : [],
+        looseTiles: layoutMode === 'special' ? looseTiles : undefined,
+        bonusTiles: [],
+        isWinner,
+        winningMethod: isWinner ? winningMethod : undefined,
+        originalCall: isWinner ? originalCall : false,
+        winningTileProvenance,
+      };
+      if (!resolveWinningTileProvenance(tempHand)) {
+        setWinningTileProvenance(undefined);
+      }
+    }
+  }, [sets, looseTiles, layoutMode, isWinner, winningMethod, winningTileProvenance]);
+
+  const isStructureComplete = useMemo(() => {
+    if (!isWinner) return false;
+    const tempHand: MahjongHand = {
+      ...hand,
+      winningMethod: 'wall',
+      winningTileProvenance: undefined,
+    };
+    return validateHand(tempHand).length === 0;
+  }, [hand, isWinner]);
 
   const gameContext = useMemo<GameContext>(
     () => ({ playerWind, prevailingWind, limit }),
@@ -258,6 +306,9 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
     seasons.length;
 
   function updateSet(id: string, updates: Partial<UIHandSet>) {
+    if ('kind' in updates || 'tile' in updates) {
+      setWinningTileProvenance(undefined);
+    }
     setSets((current) => {
       if (
         updates.kind === 'chow' &&
@@ -269,6 +320,7 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
     });
   }
   function removeSet(id: string) {
+    setWinningTileProvenance(undefined);
     setSets((current) => {
       const newSets = current.filter(s => s.id !== id);
       if (selectedSet === id) setSelectedSet(newSets[0]?.id || '');
@@ -282,6 +334,7 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
       ).length;
       const specialTileLimit = isWinner ? 14 : 13;
       if (looseTiles.length < specialTileLimit && matchingCopies < 4) {
+        setWinningTileProvenance(undefined);
         setLooseTiles((current) => [...current, tile]);
       }
       return;
@@ -296,6 +349,7 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
     updateSet(selectedSet, { tile });
   }
   function addSet() {
+    setWinningTileProvenance(undefined);
     const id = `set-${Date.now()}`;
     setSets((current) => [
       ...current,
@@ -316,6 +370,7 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
     setSeasons([]);
     setLooseTiles([]);
     setIncompleteSet(null);
+    setWinningTileProvenance(undefined);
     setIsWinner(context?.isWinner ?? false);
     setSelectedSet('set-1');
   }
@@ -323,6 +378,7 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
     setLayoutMode('sets');
     setLooseTiles([]);
     setIncompleteSet(null);
+    setWinningTileProvenance(undefined);
     setSets([
       { id: 'set-1', kind: 'chow', visibility: 'concealed', tile: suited('bamboo', 1) },
       { id: 'set-2', kind: 'pung', visibility: 'exposed', tile: suited('circles', 9) },
@@ -370,6 +426,12 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
             ? {
                 ...hand.incompleteSet,
                 tile: { ...hand.incompleteSet.tile },
+              }
+            : undefined,
+          winningTileProvenance: hand.winningTileProvenance
+            ? {
+                tile: { ...hand.winningTileProvenance.tile },
+                target: { ...hand.winningTileProvenance.target },
               }
             : undefined,
         },
@@ -465,7 +527,10 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
                   <button
                     type="button"
                     data-testid="button-layout-sets"
-                    onClick={() => setLayoutMode('sets')}
+                    onClick={() => {
+                      if (layoutMode !== 'sets') setWinningTileProvenance(undefined);
+                      setLayoutMode('sets');
+                    }}
                     className={`rounded-md px-3 py-2 text-[11px] font-semibold ${layoutMode === 'sets' ? 'bg-[#284d45] text-[#f8f4e9]' : 'text-[#66746e]'}`}
                   >
                     Standard sets
@@ -473,7 +538,10 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
                   <button
                     type="button"
                     data-testid="button-layout-special"
-                    onClick={() => setLayoutMode('special')}
+                    onClick={() => {
+                      if (layoutMode !== 'special') setWinningTileProvenance(undefined);
+                      setLayoutMode('special');
+                    }}
                     className={`rounded-md px-3 py-2 text-[11px] font-semibold ${layoutMode === 'special' ? 'bg-[#284d45] text-[#f8f4e9]' : 'text-[#66746e]'}`}
                   >
                     Special layout
@@ -487,9 +555,12 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
                           key={`${tileKey(tile)}-${index}`}
                           tile={tile}
                           onRemove={() =>
-                            setLooseTiles((current) =>
-                              current.filter((_, tileIndex) => tileIndex !== index),
-                            )
+                            {
+                              setWinningTileProvenance(undefined);
+                              setLooseTiles((current) =>
+                                current.filter((_, tileIndex) => tileIndex !== index),
+                              );
+                            }
                           }
                         />
                       ))}
@@ -682,8 +753,129 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
                 <div className="mt-4 flex items-start gap-2 text-[11px] leading-5 text-[#7a7769]"><CircleHelp size={14} className="mt-0.5 shrink-0 text-[#ae6249]" /> {layoutMode === 'special' ? 'Choose each tile individually; duplicate physical tiles may be added up to four times.' : 'Click a set, or add and select an incomplete set, then choose its representative tile (for a chow, pick the first tile 1-7).'}</div>
               </section>
 
+              {isWinner && isStructureComplete && (
+                <section className="animate-rise rounded-xl border border-[#d8ceb8] bg-[#fbf8ed] p-5 shadow-[var(--shadow-sm)] sm:p-6">
+                  <SectionLabel eyebrow="03 / completion" title="The winning tile" />
+                  <p className="mb-4 text-[13px] text-[#66746e]">
+                    Which tile completed Mah Jong?
+                  </p>
+
+                  <div className="space-y-4">
+                    {layoutMode === 'sets' ? (
+                      <div className="flex flex-wrap gap-3">
+                        {sets.filter(s => s.tile !== null).map(set => (
+                          <div key={set.id} className="min-w-0 rounded-lg border border-[#e2d9c7] bg-[#fdfbf5] p-2 shadow-sm">
+                            <div className="mb-1.5 font-mono text-[9px] uppercase tracking-[.12em] text-[#7a7769]">
+                              {set.kind}
+                            </div>
+                            <div className="flex flex-wrap gap-1">
+                            {expandedTiles(set as HandSet).map((tile, idx) => {
+                              const isSelected = winningTileProvenance?.target.type === 'grouped-set'
+                                  && winningTileProvenance.target.setId === set.id
+                                  && (set.kind !== 'chow' || winningTileProvenance.target.tileIndex === idx);
+
+                              return (
+                                <button
+                                  key={idx}
+                                  type="button"
+                                  data-testid={`button-winning-tile-${set.id}-${idx}`}
+                                  aria-label={`${tileName(tile)} in ${set.kind}`}
+                                  aria-pressed={isSelected}
+                                  onClick={() => setWinningTileProvenance({
+                                    tile: { ...tile },
+                                    target: {
+                                      type: 'grouped-set',
+                                      setId: set.id,
+                                      ...(set.kind === 'chow' ? { tileIndex: idx as 0 | 1 | 2 } : {})
+                                    }
+                                  })}
+                                  className={`group relative rounded-[7px] transition-transform ${isSelected ? 'scale-[1.05] ring-2 ring-[#ae6249] ring-offset-2 ring-offset-[#fbf8ed]' : 'hover:-translate-y-0.5 hover:shadow-md'}`}
+                                >
+                                  <TileFace tile={tile} compact />
+                                  {isSelected && (
+                                    <div className="absolute -right-1.5 -top-1.5 flex h-[18px] w-[18px] items-center justify-center rounded-full bg-[#ae6249] text-white shadow-sm">
+                                      <Check size={11} strokeWidth={3} />
+                                    </div>
+                                  )}
+                                </button>
+                              );
+                            })}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="flex flex-wrap gap-2 rounded-lg border border-[#e2d9c7] bg-[#fdfbf5] p-3 shadow-sm">
+                        {looseTiles.map((tile, idx) => {
+                          const isSelected = winningTileProvenance?.target.type === 'loose-layout'
+                            && tileKey(winningTileProvenance.tile) === tileKey(tile);
+
+                          return (
+                            <button
+                              key={idx}
+                              type="button"
+                              data-testid={`button-winning-loose-${tileKey(tile)}-${idx}`}
+                              aria-label={`${tileName(tile)} in special layout`}
+                              aria-pressed={isSelected}
+                              onClick={() => setWinningTileProvenance({
+                                tile: { ...tile },
+                                target: { type: 'loose-layout' }
+                              })}
+                              className={`group relative rounded-[7px] transition-transform ${isSelected ? 'scale-[1.05] ring-2 ring-[#ae6249] ring-offset-2 ring-offset-[#fdfbf5]' : 'hover:-translate-y-0.5 hover:shadow-md'}`}
+                            >
+                              <TileFace tile={tile} compact />
+                              {isSelected && (
+                                <div className="absolute -right-1.5 -top-1.5 flex h-[18px] w-[18px] items-center justify-center rounded-full bg-[#ae6249] text-white shadow-sm">
+                                  <Check size={11} strokeWidth={3} />
+                                </div>
+                              )}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                      {winningTileProvenance ? (
+                        <div className="flex flex-1 items-center justify-between rounded-md border border-[#b8cdbf] bg-[#edf3ed] px-4 py-3">
+                          <div className="flex items-center gap-2 text-[12px] font-semibold text-[#284d45]">
+                            <Check size={16} className="text-[#477562]" />
+                            <span>
+                              Completed {winningTileProvenance.target.type === 'loose-layout' ? 'special layout' : sets.find(s => s.id === (winningTileProvenance.target.type === 'grouped-set' ? winningTileProvenance.target.setId : ''))?.kind} with {tileName(winningTileProvenance.tile)}
+                            </span>
+                          </div>
+                          <button
+                            type="button"
+                            data-testid="button-winning-tile-unknown"
+                            onClick={() => setWinningTileProvenance(undefined)}
+                            className="text-[11px] font-semibold text-[#477562] transition hover:text-[#284d45] focus:underline"
+                          >
+                            I'm not sure
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex flex-1 flex-col items-start gap-2 rounded-md border border-[#cfc3aa] bg-[#fdfbf5] px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+                          <p className="text-[11px] leading-relaxed text-[#7a7769]">
+                            Winning-tile-sensitive special exceptions may not be applied without this detail, so scoring remains conservative.
+                          </p>
+                          <button
+                            type="button"
+                            data-testid="button-winning-tile-unknown"
+                            aria-pressed="true"
+                            onClick={() => setWinningTileProvenance(undefined)}
+                            className="shrink-0 rounded-md border border-[#cfc3aa] bg-[#f4eddf] px-3 py-2 text-[11px] font-semibold text-[#284d45] focus:ring-2"
+                          >
+                            I'm not sure
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </section>
+              )}
+
               <section className="animate-rise animate-rise-delay-3 rounded-xl border border-[#d8ceb8] bg-[#fbf8ed] p-5 shadow-[var(--shadow-sm)] sm:p-6">
-                <SectionLabel eyebrow="03 / bonus tiles" title="Flowers & seasons" count={`${flowers.length + seasons.length} selected`} />
+                <SectionLabel eyebrow="04 / bonus tiles" title="Flowers & seasons" count={`${flowers.length + seasons.length} selected`} />
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
                     <div className="mb-2 font-mono text-[10px] uppercase tracking-[.15em] text-[#7a7769]">Flowers</div>
@@ -707,7 +899,7 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
 
             <aside className="min-w-0 space-y-5">
               <section className="animate-rise animate-rise-delay-1 min-w-0 rounded-xl border border-[#d8ceb8] bg-[#e8e1d1] p-5 sm:p-6">
-                <SectionLabel eyebrow="04 / context" title="Game status" />
+                <SectionLabel eyebrow="05 / context" title="Game status" />
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     <label className="block min-w-0">
@@ -763,6 +955,8 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
                              setIsWinner(e.target.checked);
                              if (e.target.checked) {
                                setIncompleteSet(null);
+                             } else {
+                               setWinningTileProvenance(undefined);
                              }
                            }
                         }}

@@ -29,6 +29,12 @@ const cloneDetailedHandRecord = (
     })),
     looseTiles: record.hand.looseTiles?.map((tile) => ({ ...tile })),
     bonusTiles: record.hand.bonusTiles.map((tile) => ({ ...tile })),
+    winningTileProvenance: record.hand.winningTileProvenance
+      ? {
+          tile: { ...record.hand.winningTileProvenance.tile },
+          target: { ...record.hand.winningTileProvenance.target },
+        }
+      : undefined,
   },
   context: { ...record.context },
   breakdown: {

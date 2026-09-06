@@ -219,6 +219,10 @@ describe('game hand-scorer handoff', () => {
 
   it('persists detailed and manual score sources into the confirmed ledger', () => {
     const calculated = makeCalculatedResult('bill', 88, true, 'original');
+    calculated.detailedHand.hand.winningTileProvenance = {
+      tile: { family: 'dragon', dragon: 'red' },
+      target: { type: 'grouped-set', setId: 'original' },
+    };
     let draft: RoundScoringDraft = {
       scores: {},
       scoreRecords: {},
@@ -237,6 +241,15 @@ describe('game hand-scorer handoff', () => {
     expect(confirmed.handHistory[0].scoreRecords.bill).toEqual(
       calculated.detailedHand,
     );
+    expect(
+      confirmed.handHistory[0].scoreRecords.bill?.source === 'detailed-scorer'
+        ? confirmed.handHistory[0].scoreRecords.bill.hand
+            .winningTileProvenance
+        : undefined,
+    ).toEqual({
+      tile: { family: 'dragon', dragon: 'red' },
+      target: { type: 'grouped-set', setId: 'original' },
+    });
     expect(confirmed.handHistory[0].scoreRecords.jenn).toEqual({
       source: 'manual',
       finalScore: 80,
