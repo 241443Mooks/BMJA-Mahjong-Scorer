@@ -1,0 +1,81 @@
+{
+  "catalogueVersion": "1.0.0",
+  "ruleset": "BMJA-style British Mahjong",
+  "source": {
+    "title": "An illustrated description of Mah-Jong (BMJA rules)",
+    "scoringUrl": "https://mahjongbritishrules.wordpress.com/scoring/working-out-the-scores/",
+    "specialHandsUrl": "https://mahjongbritishrules.wordpress.com/scoring/special-hands/"
+  },
+  "rules": [
+    {"id":"points.chow","category":"basic-points","value":0,"specification":"Exposed and concealed chows score no points.","implementation":"scorePungs/scoreKongs (deliberate omission)","test":"rules.test.ts: scores no points for chows"},
+    {"id":"points.pung.minor.exposed","category":"basic-points","value":2,"specification":"An exposed pung of a minor suited tile scores 2.","implementation":"scorePungs","test":"rules.test.ts: scores a exposed minor pung as 2"},
+    {"id":"points.pung.minor.concealed","category":"basic-points","value":4,"specification":"A concealed pung of a minor suited tile scores 4.","implementation":"scorePungs","test":"rules.test.ts: scores a concealed minor pung as 4"},
+    {"id":"points.pung.major.exposed","category":"basic-points","value":4,"specification":"An exposed pung of a terminal, wind or dragon scores 4.","implementation":"scorePungs","test":"rules.test.ts: scores a exposed major pung as 4"},
+    {"id":"points.pung.major.concealed","category":"basic-points","value":8,"specification":"A concealed pung of a terminal, wind or dragon scores 8.","implementation":"scorePungs","test":"rules.test.ts: scores a concealed major pung as 8"},
+    {"id":"points.kong.minor.exposed","category":"basic-points","value":8,"specification":"An exposed kong of a minor suited tile scores 8.","implementation":"scoreKongs","test":"rules.test.ts: scores a exposed minor kong as 8"},
+    {"id":"points.kong.minor.concealed","category":"basic-points","value":16,"specification":"A concealed kong of a minor suited tile scores 16.","implementation":"scoreKongs","test":"rules.test.ts: scores a concealed minor kong as 16"},
+    {"id":"points.kong.major.exposed","category":"basic-points","value":16,"specification":"An exposed kong of a terminal, wind or dragon scores 16.","implementation":"scoreKongs","test":"rules.test.ts: scores a exposed major kong as 16"},
+    {"id":"points.kong.major.concealed","category":"basic-points","value":32,"specification":"A concealed kong of a terminal, wind or dragon scores 32.","implementation":"scoreKongs","test":"rules.test.ts: scores a concealed major kong as 32"},
+    {"id":"points.pair.dragon","category":"pairs","value":2,"specification":"A pair of any dragon scores 2.","implementation":"scoreHonorPairs","test":"rules.test.ts: scores a dragon pair as 2"},
+    {"id":"points.pair.own-wind","category":"pairs","value":2,"specification":"A pair of the player's own wind scores 2.","implementation":"scoreHonorPairs","test":"rules.test.ts: scores own and prevailing wind separately on the same pair"},
+    {"id":"points.pair.prevailing-wind","category":"pairs","value":2,"specification":"A pair of the prevailing wind scores 2; it stacks with own wind.","implementation":"scoreHonorPairs","test":"rules.test.ts: scores own and prevailing wind separately on the same pair"},
+    {"id":"points.flower","category":"flowers-seasons","value":4,"specification":"Each flower scores 4.","implementation":"scoreBonusTiles","test":"rules.test.ts: scores every flower and season as 4"},
+    {"id":"points.season","category":"flowers-seasons","value":4,"specification":"Each season scores 4.","implementation":"scoreBonusTiles","test":"rules.test.ts: scores every flower and season as 4"},
+    {"id":"points.mahjong","category":"mahjong-bonus","value":20,"specification":"Going Mah-Jong scores 20.","implementation":"scoreWinningPoints","test":"rules.test.ts: scores 20 for Mah-Jong and 2 for a live-wall win"},
+    {"id":"points.live-wall-win","category":"mahjong-bonus","value":2,"specification":"Drawing the winning tile from the live wall scores 2.","implementation":"scoreWinningPoints","test":"rules.test.ts: scores 20 for Mah-Jong and 2 for a live-wall win"},
+    {"id":"double.dragon-set","category":"doubles","value":1,"specification":"Each pung or kong of dragons gives one double.","implementation":"scoreHonorDoubles","test":"rules.test.ts: gives one double for each dragon pung or kong"},
+    {"id":"double.own-wind-set","category":"doubles","value":1,"specification":"A pung or kong of own wind gives one double.","implementation":"scoreHonorDoubles","test":"rules.test.ts: gives two doubles when a wind set is both own and prevailing"},
+    {"id":"double.prevailing-wind-set","category":"doubles","value":1,"specification":"A pung or kong of prevailing wind gives one double and stacks with own wind.","implementation":"scoreHonorDoubles","test":"rules.test.ts: gives two doubles when a wind set is both own and prevailing"},
+    {"id":"double.own-flower","category":"doubles","value":1,"specification":"The flower matching player wind gives one double.","implementation":"scoreBonusDoubles","test":"rules.test.ts: gives one double for an own flower or season"},
+    {"id":"double.own-season","category":"doubles","value":1,"specification":"The season matching player wind gives one double.","implementation":"scoreBonusDoubles","test":"rules.test.ts: gives one double for an own flower or season"},
+    {"id":"double.flower-bouquet","category":"doubles","value":2,"specification":"All four flowers give two doubles total, including own flower.","implementation":"scoreBonusDoubles","test":"rules.test.ts: scores a bouquet as two doubles inclusive of the own tile"},
+    {"id":"double.season-bouquet","category":"doubles","value":2,"specification":"All four seasons give two doubles total, including own season.","implementation":"scoreBonusDoubles","test":"rules.test.ts: scores a season bouquet as two doubles inclusive of the own tile"},
+    {"id":"double.no-chows","category":"doubles","value":1,"specification":"A standard winning hand with no chows gives one double.","implementation":"scoreWinnerDoubles","test":"rules.test.ts: gives winner doubles for no chows, mixed suit, all concealed, and original call"},
+    {"id":"double.mixed-one-suit","category":"doubles","value":1,"specification":"One suit with winds and/or dragons gives one double.","implementation":"scoreWinnerDoubles","test":"golden-fixtures.test.ts: scores a standard mixed-one-suit winner item by item"},
+    {"id":"double.all-majors","category":"doubles","value":1,"specification":"A winning hand containing only terminals, winds and dragons gives one double.","implementation":"scoreWinnerDoubles","test":"rules.test.ts: gives one double for a winning hand made entirely from major tiles"},
+    {"id":"double.concealed-hand","category":"doubles","value":1,"specification":"A standard winning hand whose sets and pair are concealed gives one double.","implementation":"scoreWinnerDoubles","test":"rules.test.ts: gives winner doubles for no chows, mixed suit, all concealed, and original call"},
+    {"id":"double.original-call","category":"doubles","value":1,"specification":"Original call gives one double.","implementation":"scoreWinnerDoubles","test":"rules.test.ts: gives winner doubles for no chows, mixed suit, all concealed, and original call"},
+    {"id":"double.loose-tile-win","category":"doubles","value":1,"specification":"Winning with a loose tile gives one double.","implementation":"scoreWinnerDoubles","test":"rules.test.ts: gives one double for winning by loose-tile"},
+    {"id":"double.last-wall-tile-win","category":"doubles","value":1,"specification":"Winning with the last available wall tile gives one double.","implementation":"scoreWinnerDoubles","test":"rules.test.ts: gives one double for winning by last-wall-tile"},
+    {"id":"double.final-discard-win","category":"doubles","value":1,"specification":"Winning with the final discard gives one double.","implementation":"scoreWinnerDoubles","test":"rules.test.ts: gives one double for winning by final-discard"},
+    {"id":"double.robbing-kong","category":"doubles","value":1,"specification":"Winning by robbing a kong gives one double.","implementation":"scoreWinnerDoubles","test":"rules.test.ts: gives one double for winning by robbing-kong"},
+    {"id":"special.purity","category":"special-hand","value":"basic score x8","specification":"Four pungs/kongs and a pair in one suit, no honours or chows; bonus tiles score separately.","implementation":"isPurityHand, scoreWinnerDoubles, scoreHand","test":"golden-fixtures.test.ts: scores Purity and bonus tiles as separate components"},
+    {"id":"limit.standard","category":"limit-handling","value":"context.limit","specification":"A standard score cannot exceed the configured limit, normally 1000.","implementation":"scoreHand","test":"score.test.ts: caps a standard score at the table limit"},
+    {"id":"limit.special-bonus","category":"limit-handling","value":"context.limit","specification":"Special-hand bonus points are calculated separately, added, then the total is capped.","implementation":"scoreHand","test":"golden-fixtures.test.ts: caps a limit special hand after separately calculating bonuses"},
+    {"id":"special.all-pair-honours","category":"special-hand","value":500,"specification":"Seven pairs of major tiles; terminals are allowed and pairs may repeat.","implementation":"specialHandDetectors[all-pair-honours]","test":"special-hands.test.ts: detects all pair honours with terminals and repeated pairs"},
+    {"id":"special.thirteen-unique-wonders","category":"special-hand","value":1000,"specification":"One of each dragon, wind, suited 1 and suited 9, with any one paired.","implementation":"specialHandDetectors[thirteen-unique-wonders]","test":"special-hands.test.ts: detects thirteen unique wonders from ungrouped tiles"},
+    {"id":"special.all-winds-and-dragons","category":"special-hand","value":1000,"specification":"Four pungs/kongs and a pair made only from winds and dragons.","implementation":"specialHandDetectors[all-winds-and-dragons]","test":"special-hands.test.ts: detects all honours"},
+    {"id":"special.heads-and-tails","category":"special-hand","value":1000,"specification":"Four pungs/kongs and a pair made only from suited 1s and 9s.","implementation":"specialHandDetectors[heads-and-tails]","test":"special-hands.test.ts: detects all terminals"},
+    {"id":"special.fourfold-plenty","category":"special-hand","value":1000,"specification":"Four kongs and a pair.","implementation":"specialHandDetectors[fourfold-plenty]","test":"special-hands.test.ts: detects four kongs"},
+    {"id":"special.three-great-scholars","category":"special-hand","value":1000,"specification":"Pungs/kongs of all three dragons, another pung/kong and any pair.","implementation":"specialHandDetectors[three-great-scholars]","test":"special-hands.test.ts: detects three great scholars"},
+    {"id":"special.four-blessings","category":"special-hand","value":1000,"specification":"Pungs/kongs of all four winds and any pair.","implementation":"specialHandDetectors[four-blessings]","test":"special-hands.test.ts: detects four winds"},
+    {"id":"special.buried-treasure","category":"special-hand","value":1000,"specification":"Four concealed pungs and a pair, using one suit with optional winds/dragons; no kongs or chows.","implementation":"specialHandDetectors[buried-treasure]","test":"special-hands.test.ts: rejects kongs and mixed suits for buried treasure"},
+    {"id":"special.bonus-points","category":"special-hand-interaction","value":"4 each, separately doubled","specification":"Ordinary doubles do not apply to a special hand; eligible doubles apply only to bonus-tile points.","implementation":"scoreHand","test":"golden-fixtures.test.ts: scores All pair honours plus separately doubled bonus tiles"},
+    {"id":"special.final-discard-bonus","category":"special-hand-interaction","value":1,"specification":"For a special hand, final discard doubles bonus-tile points only.","implementation":"scoreHand","test":"golden-fixtures.test.ts: applies final-discard doubling only to special-hand bonus tiles"}
+  ],
+  "variantAudit": {
+    "removed": [
+      {
+        "rule": "Generic Seven Pairs",
+        "reason": "Not a BMJA special hand; it was an accidental cross-variant rule."
+      },
+      {
+        "rule": "Generic pure one-suit hand including chows",
+        "reason": "BMJA Purity specifically requires pungs/kongs and a pair."
+      }
+    ],
+    "notPresent": ["riichi", "dora", "ura-dora", "ippatsu", "furiten", "fu", "han", "American card hands", "Hong Kong fan minimum"]
+  },
+  "ambiguities": [
+    {
+      "id": "loose-tile-two-points",
+      "status": "unresolved",
+      "detail": "The general scoring page awards the extra 2 points only for a live-wall draw, while the Purity notes say live wall or kong box. The engine retains the unambiguous loose-tile double but does not guess at the conflicting 2-point interpretation."
+    },
+    {
+      "id": "buried-treasure-winning-claim",
+      "status": "model-limited",
+      "detail": "BMJA permits the final pung or pair to be claimed to go Mah-Jong. The current hand contract cannot identify which set contains the winning tile, so the detector conservatively requires all sets concealed."
+    }
+  ]
+}

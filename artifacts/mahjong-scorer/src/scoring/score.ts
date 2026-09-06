@@ -3,6 +3,7 @@ import {
   applyPointRules,
   scoreBonusDoubles,
   scoreBonusTiles,
+  isPurityHand,
 } from './rules';
 import { detectSpecialHands } from './special-hands';
 import type { GameContext, MahjongHand, ScoreBreakdown } from './types';
@@ -29,6 +30,7 @@ export const scoreHand = (
     .filter((result) => result.matched)
     .sort((a, b) => b.value - a.value)[0];
   const validationErrors = validateHand(hand);
+  const purity = isPurityHand(hand);
   const specialFinalDiscardDouble =
     matchedSpecial && hand.winningMethod === 'final-discard'
       ? [
@@ -50,10 +52,85 @@ export const scoreHand = (
     : applyDoubleRules(hand, context);
   const basePoints = pointRules.reduce((sum, rule) => sum + rule.amount, 0);
   const doubles = doubleRules.reduce((sum, rule) => sum + rule.amount, 0);
-  const standardScore = basePoints * 2 ** doubles;
-  const uncappedScore = matchedSpecial
-    ? matchedSpecial.value + basePoints * 2 ** doubles
-    : standardScore;
+  const bonusPoints = scoreBonusTiles(hand).reduce(
+    (sum, rule) => sum + rule.amount,
+    0,
+  );
+  const bonusDoubles = scoreBonusDoubles(hand, context).reduce(
+    (sum, rule) => sum + rule.amount,
+    0,
+  );
+  const finalDiscardDouble = hand.winningMethod === 'final-discard' ? 1 : 0;
+  let calculationComponents: ScoreBreakdown['calculationComponents'];
+
+  if (matchedSpecial) {
+    calculationComponents = [
+      {
+        id: `special-${matchedSpecial.id}`,
+        label: matchedSpecial.name,
+        base: matchedSpecial.value,
+        doubles: 0,
+        subtotal: matchedSpecial.value,
+      },
+      ...(bonusPoints
+        ? [
+            {
+              id: 'special-bonus-tiles',
+              label: 'Bonus tiles',
+              base: bonusPoints,
+              doubles: bonusDoubles + finalDiscardDouble,
+              subtotal:
+                bonusPoints * 2 ** (bonusDoubles + finalDiscardDouble),
+            },
+          ]
+        : []),
+    ];
+  } else if (purity) {
+    const playingPointRules = applyPointRules(
+      { ...hand, bonusTiles: [] },
+      context,
+    );
+    const playingBase = playingPointRules.reduce(
+      (sum, rule) => sum + rule.amount,
+      0,
+    );
+    calculationComponents = [
+      {
+        id: 'purity-playing-tiles',
+        label: 'Purity playing tiles',
+        base: playingBase,
+        doubles: 3 + finalDiscardDouble,
+        subtotal: playingBase * 2 ** (3 + finalDiscardDouble),
+      },
+      ...(bonusPoints
+        ? [
+            {
+              id: 'purity-bonus-tiles',
+              label: 'Bonus tiles',
+              base: bonusPoints,
+              doubles: bonusDoubles + finalDiscardDouble,
+              subtotal:
+                bonusPoints * 2 ** (bonusDoubles + finalDiscardDouble),
+            },
+          ]
+        : []),
+    ];
+  } else {
+    calculationComponents = [
+      {
+        id: 'standard-hand',
+        label: 'Standard hand',
+        base: basePoints,
+        doubles,
+        subtotal: basePoints * 2 ** doubles,
+      },
+    ];
+  }
+
+  const uncappedScore = calculationComponents.reduce(
+    (sum, component) => sum + component.subtotal,
+    0,
+  );
   const finalScore = Math.min(uncappedScore, context.limit);
 
   return {
@@ -67,6 +144,7 @@ export const scoreHand = (
     uncappedScore,
     finalScore,
     limitApplied: finalScore < uncappedScore,
-    scoringMode: matchedSpecial ? 'special' : 'standard',
+    scoringMode: matchedSpecial || purity ? 'special' : 'standard',
+    calculationComponents,
   };
 };

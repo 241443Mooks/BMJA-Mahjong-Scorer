@@ -126,6 +126,14 @@ describe('documented double rules', () => {
     expect(amounts(scoreBonusDoubles(value, context))).toEqual([2]);
   });
 
+  it('scores a season bouquet as two doubles inclusive of the own tile', () => {
+    const value = hand();
+    value.bonusTiles = [1, 2, 3, 4].map((number) =>
+      bonus('season', number as 1 | 2 | 3 | 4),
+    );
+    expect(amounts(scoreBonusDoubles(value, context))).toEqual([2]);
+  });
+
   it('gives winner doubles for no chows, mixed suit, all concealed, and original call', () => {
     const value: MahjongHand = {
       sets: [
@@ -150,6 +158,21 @@ describe('documented double rules', () => {
   it('gives purity three doubles', () => {
     const value: MahjongHand = {
       sets: [
+        set('1', 'pung', suited('characters', 1)),
+        set('2', 'pung', suited('characters', 3)),
+        set('3', 'pung', suited('characters', 6)),
+        set('4', 'kong', suited('characters', 9)),
+        set('5', 'pair', suited('characters', 5)),
+      ],
+      bonusTiles: [],
+      isWinner: true,
+    };
+    expect(scoreWinnerDoubles(value).find((rule) => rule.id === 'purity')?.amount).toBe(3);
+  });
+
+  it('does not import the non-BMJA one-suit-with-chows double', () => {
+    const value: MahjongHand = {
+      sets: [
         set('1', 'chow', suited('characters', 1)),
         set('2', 'chow', suited('characters', 3)),
         set('3', 'pung', suited('characters', 6)),
@@ -159,7 +182,26 @@ describe('documented double rules', () => {
       bonusTiles: [],
       isWinner: true,
     };
-    expect(scoreWinnerDoubles(value).find((rule) => rule.id === 'purity')?.amount).toBe(3);
+    expect(scoreWinnerDoubles(value).some((rule) => rule.id === 'purity')).toBe(
+      false,
+    );
+  });
+
+  it('gives one double for a winning hand made entirely from major tiles', () => {
+    const value: MahjongHand = {
+      sets: [
+        set('1', 'pung', suited('bamboo', 1), 'exposed'),
+        set('2', 'pung', suited('characters', 9), 'exposed'),
+        set('3', 'pung', wind('south'), 'exposed'),
+        set('4', 'pung', dragon('red'), 'exposed'),
+        set('5', 'pair', wind('north'), 'exposed'),
+      ],
+      bonusTiles: [],
+      isWinner: true,
+    };
+    expect(scoreWinnerDoubles(value)).toContainEqual(
+      expect.objectContaining({ id: 'all-majors', amount: 1 }),
+    );
   });
 
   it.each([

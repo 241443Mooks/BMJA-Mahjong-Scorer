@@ -11,32 +11,17 @@ const matched = (hand: MahjongHand, id: string) =>
   detectSpecialHands(hand).find((result) => result.id === id)?.matched;
 
 describe('independent special-hand detectors', () => {
-  it('detects seven pairs and rejects a duplicate pair', () => {
-    const pairs = [
-      suited('bamboo', 1),
-      suited('bamboo', 2),
-      suited('characters', 3),
-      suited('characters', 4),
-      suited('circles', 5),
-      wind('east'),
-      dragon('red'),
-    ].map((tile, index) => set(String(index), 'pair', tile));
-    expect(matched(winning(pairs), 'seven-pairs')).toBe(true);
-    pairs[6] = set('6', 'pair', suited('bamboo', 1));
-    expect(matched(winning(pairs), 'seven-pairs')).toBe(false);
-  });
-
-  it('detects all pair honours', () => {
-    const honors = [
+  it('detects all pair honours with terminals and repeated pairs', () => {
+    const majors = [
       wind('east'),
       wind('south'),
-      wind('west'),
-      wind('north'),
       dragon('red'),
       dragon('green'),
-      dragon('white'),
+      suited('bamboo', 1),
+      suited('characters', 9),
+      suited('bamboo', 1),
     ].map((tile, index) => set(String(index), 'pair', tile));
-    expect(matched(winning(honors), 'all-pair-honours')).toBe(true);
+    expect(matched(winning(majors), 'all-pair-honours')).toBe(true);
   });
 
   it('detects thirteen unique wonders from ungrouped tiles', () => {
@@ -74,7 +59,7 @@ describe('independent special-hand detectors', () => {
           set('4', 'pung', dragon('green')),
           set('5', 'pair', dragon('white')),
         ]),
-        'all-honours',
+        'all-winds-and-dragons',
       ),
     ).toBe(true);
   });
@@ -89,7 +74,7 @@ describe('independent special-hand detectors', () => {
           set('4', 'pung', suited('circles', 9)),
           set('5', 'pair', suited('characters', 9)),
         ]),
-        'all-terminals',
+        'heads-and-tails',
       ),
     ).toBe(true);
   });
@@ -104,7 +89,7 @@ describe('independent special-hand detectors', () => {
           set('4', 'kong', dragon('red')),
           set('5', 'pair', suited('circles', 5)),
         ]),
-        'four-kongs',
+        'fourfold-plenty',
       ),
     ).toBe(true);
   });
@@ -116,6 +101,8 @@ describe('independent special-hand detectors', () => {
           set('1', 'pung', dragon('red')),
           set('2', 'pung', dragon('green')),
           set('3', 'kong', dragon('white')),
+          set('4', 'pung', suited('circles', 4)),
+          set('5', 'pair', suited('bamboo', 2)),
         ]),
         'three-great-scholars',
       ),
@@ -129,9 +116,10 @@ describe('independent special-hand detectors', () => {
           set('1', 'pung', wind('east')),
           set('2', 'pung', wind('south')),
           set('3', 'kong', wind('west')),
-          set('4', 'pair', wind('north')),
+          set('4', 'pung', wind('north')),
+          set('5', 'pair', suited('circles', 2)),
         ]),
-        'four-winds',
+        'four-blessings',
       ),
     ).toBe(true);
   });
@@ -140,18 +128,50 @@ describe('independent special-hand detectors', () => {
     const sets = [
       set('1', 'pung', suited('bamboo', 2)),
       set('2', 'pung', suited('bamboo', 3)),
-      set('3', 'pung', suited('characters', 4)),
-      set('4', 'kong', dragon('red')),
-      set('5', 'pair', suited('circles', 5)),
+      set('3', 'pung', suited('bamboo', 4)),
+      set('4', 'pung', dragon('red')),
+      set('5', 'pair', suited('bamboo', 5)),
     ];
     expect(matched(winning(sets), 'buried-treasure')).toBe(true);
     sets[0] = { ...sets[0], visibility: 'exposed' };
     expect(matched(winning(sets), 'buried-treasure')).toBe(false);
   });
 
+  it('rejects kongs and mixed suits for buried treasure', () => {
+    const base = [
+      set('1', 'pung', suited('bamboo', 2)),
+      set('2', 'pung', suited('bamboo', 3)),
+      set('3', 'pung', suited('bamboo', 4)),
+      set('4', 'pung', dragon('red')),
+      set('5', 'pair', suited('bamboo', 5)),
+    ];
+    expect(
+      matched(
+        winning(base.map((group) => ({ ...group }))),
+        'buried-treasure',
+      ),
+    ).toBe(true);
+    expect(
+      matched(
+        winning(base.map((group, index) =>
+          index === 3 ? { ...group, kind: 'kong' as const } : group,
+        )),
+        'buried-treasure',
+      ),
+    ).toBe(false);
+    expect(
+      matched(
+        winning(base.map((group, index) =>
+          index === 2 ? set('3', 'pung', suited('circles', 4)) : group,
+        )),
+        'buried-treasure',
+      ),
+    ).toBe(false);
+  });
+
   it('reports every detector result independently', () => {
     const results = detectSpecialHands(winning([]));
-    expect(results.length).toBeGreaterThanOrEqual(8);
+    expect(results).toHaveLength(8);
     expect(new Set(results.map((result) => result.id)).size).toBe(results.length);
   });
 });

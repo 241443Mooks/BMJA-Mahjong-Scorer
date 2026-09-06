@@ -214,6 +214,23 @@ export const scoreBonusDoubles = (
 
 const handTiles = (hand: MahjongHand) => hand.sets.flatMap(expandedTiles);
 
+/** BMJA Purity: four pungs/kongs and a pair, all in one suit; no honours/chows. */
+export const isPurityHand = (hand: MahjongHand): boolean => {
+  const tiles = handTiles(hand);
+  const suits = new Set(
+    tiles.flatMap((tile) => (tile.family === 'suit' ? [tile.suit] : [])),
+  );
+  return (
+    hand.isWinner &&
+    hand.sets.length === 5 &&
+    hand.sets.filter((set) => set.kind === 'pair').length === 1 &&
+    hand.sets.filter((set) => set.kind === 'pung' || set.kind === 'kong')
+      .length === 4 &&
+    tiles.every((tile) => tile.family === 'suit') &&
+    suits.size === 1
+  );
+};
+
 /**
  * BMJA winner doubles: no chows; mixed one suit with honours; all majors;
  * fully concealed; and the named exceptional winning methods.
@@ -229,8 +246,9 @@ export const scoreWinnerDoubles = (hand: MahjongHand): RuleResult[] => {
     ),
   );
   const hasHonors = tiles.some((tile) => tile.family !== 'suit');
+  const purity = isPurityHand(hand);
 
-  if (!hand.sets.some((set) => set.kind === 'chow')) {
+  if (!purity && !hand.sets.some((set) => set.kind === 'chow')) {
     rules.push(double('no-chows', 'No chows', 'A winning hand with no chows.'));
   }
   if (tiles.length > 0 && suitSet.size === 1 && hasHonors) {
@@ -242,12 +260,12 @@ export const scoreWinnerDoubles = (hand: MahjongHand): RuleResult[] => {
       ),
     );
   }
-  if (tiles.length > 0 && suitSet.size === 1 && !hasHonors) {
+  if (purity) {
     rules.push(
       double(
         'purity',
         'Purity',
-        'Every tile is from one suit and there are no honours.',
+        'Four pungs/kongs and a pair in one suit, with no honours or chows.',
         3,
       ),
     );
@@ -258,6 +276,7 @@ export const scoreWinnerDoubles = (hand: MahjongHand): RuleResult[] => {
     );
   }
   if (
+    !purity &&
     hand.sets.length > 0 &&
     hand.sets.every((set) => set.visibility === 'concealed')
   ) {

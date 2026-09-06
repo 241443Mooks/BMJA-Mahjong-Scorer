@@ -37,11 +37,11 @@ describe('scoreHand breakdown', () => {
   it('caps a standard score at the table limit', () => {
     const hand: MahjongHand = {
       sets: [
-        set('1', 'kong', suited('characters', 2)),
-        set('2', 'pung', suited('characters', 3), 'exposed'),
-        set('3', 'pung', suited('characters', 6)),
-        set('4', 'pung', suited('characters', 8)),
-        set('5', 'pair', suited('characters', 5)),
+        set('1', 'kong', dragon('red')),
+        set('2', 'kong', wind('east')),
+        set('3', 'pung', suited('bamboo', 1)),
+        set('4', 'pung', suited('bamboo', 9), 'exposed'),
+        set('5', 'pair', suited('bamboo', 5)),
       ],
       bonusTiles: [
         bonus('flower', 1),

@@ -30,28 +30,20 @@ const counts = (values: PlayingTile[]) =>
  */
 export const specialHandDetectors: Detector[] = [
   {
-    id: 'seven-pairs',
-    name: 'Seven pairs',
-    description: 'Seven distinct pairs, all concealed.',
-    value: 500,
-    detect: (hand) =>
-      hand.isWinner &&
-      hand.sets.length === 7 &&
-      hand.sets.every(
-        (set) => set.kind === 'pair' && set.visibility === 'concealed',
-      ) &&
-      new Set(hand.sets.map((set) => tileKey(set.tile))).size === 7,
-  },
-  {
     id: 'all-pair-honours',
     name: 'All pair honours',
-    description: 'Seven pairs made entirely from winds and dragons.',
+    description:
+      'Seven pairs of major tiles: 1s, 9s, winds and dragons; repeated pairs are allowed.',
     value: 500,
     detect: (hand) =>
       hand.isWinner &&
       hand.sets.length === 7 &&
       hand.sets.every(
-        (set) => set.kind === 'pair' && set.tile.family !== 'suit',
+        (set) =>
+          set.kind === 'pair' &&
+          (set.tile.family !== 'suit' ||
+            set.tile.rank === 1 ||
+            set.tile.rank === 9),
       ),
   },
   {
@@ -87,9 +79,10 @@ export const specialHandDetectors: Detector[] = [
     },
   },
   {
-    id: 'all-honours',
-    name: 'All honours',
-    description: 'Every playing tile is a wind or dragon.',
+    id: 'all-winds-and-dragons',
+    name: 'All Winds and Dragons',
+    description:
+      'Four pungs/kongs and a pair, all made from winds and dragons.',
     value: 1000,
     detect: (hand) => {
       const all = tiles(hand);
@@ -97,28 +90,40 @@ export const specialHandDetectors: Detector[] = [
         hand.isWinner &&
         hand.sets.length === 5 &&
         hand.sets.filter((set) => set.kind === 'pair').length === 1 &&
+        hand.sets.filter((set) => set.kind === 'pung' || set.kind === 'kong')
+          .length === 4 &&
         all.length >= 14 &&
         all.every((tile) => tile.family !== 'suit')
       );
     },
   },
   {
-    id: 'all-terminals',
-    name: 'All terminals',
-    description: 'Every playing tile is a suited 1 or 9.',
+    id: 'heads-and-tails',
+    name: 'Heads and Tails',
+    description: 'Four pungs/kongs and a pair, all made from suited 1s and 9s.',
     value: 1000,
     detect: (hand) => {
       const all = tiles(hand);
-      return hand.isWinner && all.length >= 14 && all.every(isTerminal);
+      return (
+        hand.isWinner &&
+        hand.sets.length === 5 &&
+        hand.sets.filter((set) => set.kind === 'pair').length === 1 &&
+        hand.sets.filter((set) => set.kind === 'pung' || set.kind === 'kong')
+          .length === 4 &&
+        all.every(isTerminal)
+      );
     },
   },
   {
-    id: 'four-kongs',
-    name: 'Four kongs',
-    description: 'A winning hand containing four kongs.',
+    id: 'fourfold-plenty',
+    name: 'Fourfold Plenty',
+    description: 'Four kongs and a pair.',
     value: 1000,
     detect: (hand) =>
-      hand.isWinner && hand.sets.filter((set) => set.kind === 'kong').length === 4,
+      hand.isWinner &&
+      hand.sets.length === 5 &&
+      hand.sets.filter((set) => set.kind === 'kong').length === 4 &&
+      hand.sets.filter((set) => set.kind === 'pair').length === 1,
   },
   {
     id: 'three-great-scholars',
@@ -135,13 +140,20 @@ export const specialHandDetectors: Detector[] = [
           )
           .map((set) => (set.tile.family === 'dragon' ? set.tile.dragon : '')),
       );
-      return hand.isWinner && dragons.size === 3;
+      return (
+        hand.isWinner &&
+        hand.sets.length === 5 &&
+        hand.sets.filter((set) => set.kind === 'pair').length === 1 &&
+        hand.sets.filter((set) => set.kind === 'pung' || set.kind === 'kong')
+          .length === 4 &&
+        dragons.size === 3
+      );
     },
   },
   {
-    id: 'four-winds',
-    name: 'Four winds',
-    description: 'Pungs or kongs of three winds and a pair of the fourth.',
+    id: 'four-blessings',
+    name: 'Four Blessings Hovering over the Door',
+    description: 'A pung or kong of each wind, plus any pair.',
     value: 1000,
     detect: (hand) => {
       const windSets = hand.sets.filter(
@@ -149,24 +161,36 @@ export const specialHandDetectors: Detector[] = [
           (set.kind === 'pung' || set.kind === 'kong') &&
           set.tile.family === 'wind',
       );
-      const windPairs = hand.sets.filter(
-        (set) => set.kind === 'pair' && set.tile.family === 'wind',
+      return (
+        hand.isWinner &&
+        hand.sets.length === 5 &&
+        windSets.length === 4 &&
+        new Set(
+          windSets.map((set) =>
+            set.tile.family === 'wind' ? set.tile.wind : '',
+          ),
+        ).size === 4 &&
+        hand.sets.filter((set) => set.kind === 'pair').length === 1
       );
-      return hand.isWinner && windSets.length === 3 && windPairs.length === 1;
     },
   },
   {
     id: 'buried-treasure',
     name: 'Buried treasure',
-    description: 'Four concealed pungs or kongs and a concealed pair.',
+    description:
+      'Four concealed pungs and a concealed pair, using one suit with optional winds/dragons.',
     value: 1000,
     detect: (hand) =>
       hand.isWinner &&
       hand.sets.length === 5 &&
       hand.sets.every((set) => set.visibility === 'concealed') &&
-      hand.sets.filter((set) => set.kind === 'pung' || set.kind === 'kong')
-        .length === 4 &&
-      hand.sets.filter((set) => set.kind === 'pair').length === 1,
+      hand.sets.filter((set) => set.kind === 'pung').length === 4 &&
+      hand.sets.filter((set) => set.kind === 'pair').length === 1 &&
+      new Set(
+        hand.sets.flatMap((set) =>
+          set.tile.family === 'suit' ? [set.tile.suit] : [],
+        ),
+      ).size <= 1,
   },
 ];
 

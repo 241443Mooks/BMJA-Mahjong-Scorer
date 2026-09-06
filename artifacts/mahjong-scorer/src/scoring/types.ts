@@ -89,4 +89,11 @@ export type ScoreBreakdown = {
   finalScore: number;
   limitApplied: boolean;
   scoringMode: 'standard' | 'special';
+  calculationComponents: {
+    id: string;
+    label: string;
+    base: number;
+    doubles: number;
+    subtotal: number;
+  }[];
 };
