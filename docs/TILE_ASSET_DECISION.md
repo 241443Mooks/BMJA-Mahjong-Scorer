@@ -34,6 +34,26 @@ Recommended attribution text:
 
 When assets are added to this repository, also add a local attribution/licence notice beside them.
 
+## Implementation status
+
+The first implementation uses the upstream repository as a **pinned Git submodule** at:
+
+`artifacts/mahjong-scorer/src/assets/riichi-mahjong-tiles`
+
+The submodule is pinned to upstream commit:
+
+`19d72ff5cf9ad9c401188734f80cef7e6c8c6140`
+
+This is a deliberate lightweight interpretation of “vendor the SVGs into this repository”. It keeps the source and licence attached to the artwork, makes the exact revision reproducible, avoids maintaining 42 copied files manually, and still avoids runtime hot-linking. Vite builds the selected local SVG files into the app bundle.
+
+The application explicitly references only the 42 British-Mahjong identities listed below. Back/front artwork and Riichi red-five / Dora variants are not imported into the app bundle.
+
+A local project attribution notice is stored at:
+
+`artifacts/mahjong-scorer/src/assets/MAHJONG_TILE_ARTWORK_ATTRIBUTION.md`
+
+If the hosting/build provider ever proves unreliable with Git submodules, the fallback is to copy the same pinned Regular SVG files directly into the project without changing the canonical mapping or public attribution.
+
 ## Why this set was selected
 
 The project needs a set that works for British Mahjong rather than only Riichi. In particular, it needs all eight bonus tiles as first-class assets.
@@ -86,11 +106,11 @@ The app may later display conventional flower/season names as secondary labels, 
 
 When this work is implemented:
 
-1. **Vendor the SVGs into this repository.** Do not hot-link to GitHub or another external host at runtime.
-2. Keep the source licence/attribution with the vendored assets.
+1. Keep the tile source available locally at build time; do not hot-link to GitHub or another external host at runtime.
+2. Keep the source licence/attribution with the vendored or pinned assets.
 3. Prefer SVG as the canonical asset format.
 4. Generate or bundle PNG only where a specific export path genuinely requires raster artwork.
-5. Use stable project-owned filenames such as `characters-1.svg`, `circles-5.svg`, `east-wind.svg`, `red-dragon.svg`, `flower-1.svg` and `season-1.svg`.
+5. Use stable project-facing identities such as `characters-1`, `circles-5`, `east-wind`, `red-dragon`, `flower-1` and `season-1` in application code rather than exposing upstream naming to users.
 6. Do not import red fives / Dora tiles because they are not part of the current BMJA ruleset.
 7. Add accessible text alternatives wherever the tile image conveys information.
 8. Examples should be generated from tile identities where practical rather than hand-building one-off composite images. This will let the same asset system power the special-hand catalogue, beginner guide, scorer, reports and future photo-correction UI.
