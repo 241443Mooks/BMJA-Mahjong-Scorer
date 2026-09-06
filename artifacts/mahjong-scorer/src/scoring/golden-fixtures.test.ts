@@ -26,7 +26,7 @@ describe('BMJA complete-hand golden fixtures', () => {
       sets: [
         set('dragon', 'pung', dragon('red'), 'exposed'),
         set('chow-1', 'chow', suited('bamboo', 2), 'exposed'),
-        set('chow-2', 'chow', suited('bamboo', 5)),
+        set('minor', 'pung', suited('bamboo', 5)),
         set('terminal', 'pung', suited('bamboo', 9)),
         set('pair', 'pair', wind('south')),
       ],
@@ -38,6 +38,7 @@ describe('BMJA complete-hand golden fixtures', () => {
       valid: true,
       pointRules: [
         { id: 'pung-dragon', amount: 4 },
+        { id: 'pung-minor', amount: 4 },
         { id: 'pung-terminal', amount: 8 },
         { id: 'own-wind-pair', amount: 2 },
         { id: 'bonus-flower-2', amount: 4 },
@@ -53,15 +54,15 @@ describe('BMJA complete-hand golden fixtures', () => {
         {
           id: 'standard-hand',
           label: 'Standard hand',
-          base: 40,
+          base: 44,
           doubles: 3,
-          subtotal: 320,
+          subtotal: 352,
         },
       ],
-      basePoints: 40,
+      basePoints: 44,
       doubles: 3,
-      uncappedScore: 320,
-      finalScore: 320,
+      uncappedScore: 352,
+      finalScore: 352,
       limitApplied: false,
       scoringMode: 'standard',
     });
@@ -389,6 +390,67 @@ describe('BMJA complete-hand golden fixtures', () => {
     expect(scoreHand(impossible).validationErrors).toContain(
       'A playing tile cannot appear more than four times.',
     );
+  });
+
+  it('scores the published North Thirteen Unique Wonders fishing example', () => {
+    const hand: MahjongHand = {
+      sets: [],
+      looseTiles: [
+        suited('bamboo', 1),
+        suited('bamboo', 9),
+        suited('characters', 1),
+        suited('characters', 9),
+        suited('circles', 1),
+        suited('circles', 9),
+        wind('east'),
+        wind('south'),
+        wind('west'),
+        wind('north'),
+        dragon('red'),
+        dragon('green'),
+        dragon('white'),
+      ],
+      bonusTiles: [bonus('flower', 4), bonus('season', 2)],
+      isWinner: false,
+      originalCall: false,
+    };
+    const score = scoreHand(hand, context('north', 'east'));
+    expect(itemised(score)).toEqual({
+      valid: true,
+      pointRules: [
+        { id: 'bonus-flower-4', amount: 4 },
+        { id: 'bonus-season-2', amount: 4 },
+      ],
+      doubleRules: [{ id: 'own-flower', amount: 1 }],
+      components: [
+        {
+          id: 'fishing-thirteen-unique-wonders',
+          label: 'Thirteen unique wonders fishing',
+          base: 400,
+          doubles: 0,
+          subtotal: 400,
+        },
+        {
+          id: 'fishing-special-bonus-tiles',
+          label: 'Bonus tiles',
+          base: 8,
+          doubles: 1,
+          subtotal: 16,
+        },
+      ],
+      basePoints: 8,
+      doubles: 1,
+      uncappedScore: 416,
+      finalScore: 416,
+      limitApplied: false,
+      scoringMode: 'special',
+    });
+    expect(score.specialFishing).toMatchObject({
+      id: 'thirteen-unique-wonders',
+      fishingValue: 400,
+      intrinsicApplied: false,
+    });
+    expect(score.specialFishing?.completingTiles).toHaveLength(13);
   });
 
   it('caps a limit special hand after separately calculating bonuses', () => {

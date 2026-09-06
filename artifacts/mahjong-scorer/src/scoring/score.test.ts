@@ -8,7 +8,7 @@ describe('scoreHand breakdown', () => {
       sets: [
         set('1', 'pung', dragon('red'), 'exposed'),
         set('2', 'chow', suited('bamboo', 2), 'exposed'),
-        set('3', 'chow', suited('bamboo', 5)),
+        set('3', 'pung', suited('bamboo', 5)),
         set('4', 'pung', suited('bamboo', 9)),
         set('5', 'pair', wind('south')),
       ],
@@ -22,10 +22,10 @@ describe('scoreHand breakdown', () => {
       limit: 1000,
     });
     expect(score.valid).toBe(true);
-    expect(score.basePoints).toBe(40);
+    expect(score.basePoints).toBe(44);
     expect(score.doubles).toBe(3);
-    expect(score.uncappedScore).toBe(320);
-    expect(score.finalScore).toBe(320);
+    expect(score.uncappedScore).toBe(352);
+    expect(score.finalScore).toBe(352);
     expect(score.pointRules.length).toBeGreaterThan(4);
     expect(score.doubleRules.map((rule) => rule.id)).toEqual([
       'dragon-set-1',
@@ -109,5 +109,23 @@ describe('scoreHand breakdown', () => {
     expect(score.valid).toBe(false);
     expect(score.validationErrors).toHaveLength(2);
     expect(score.basePoints).toBe(20);
+  });
+
+  it('rejects a normal grouped hand containing more than one chow', () => {
+    const score = scoreHand({
+      sets: [
+        set('1', 'chow', suited('bamboo', 1)),
+        set('2', 'chow', suited('circles', 4)),
+        set('3', 'pung', dragon('red')),
+        set('4', 'pung', wind('east')),
+        set('5', 'pair', suited('characters', 9)),
+      ],
+      bonusTiles: [],
+      isWinner: true,
+    });
+    expect(score.valid).toBe(false);
+    expect(score.validationErrors).toContain(
+      'A normal BMJA hand may contain at most one chow.',
+    );
   });
 });

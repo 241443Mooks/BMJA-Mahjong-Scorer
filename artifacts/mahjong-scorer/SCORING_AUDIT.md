@@ -52,6 +52,8 @@ that the current hand contract does not yet capture. They have not been guessed
 or silently approximated.
 
 Knitting, Triple Knitting, Imperial Jade, Gates of Heaven and Wriggling Snake
-now have winner-pattern recognition. Fishing treatment remains separate, and
-Gates of Heaven retains the final-winning-tile provenance limitation described
-below.
+now have winner-pattern recognition. All supported specials now also have
+verified one-tile-away fishing treatment with published 200/400 values,
+intrinsic-value alternatives where applicable, and separately scored bonus
+tiles. Gates of Heaven retains the final-winning-tile provenance limitation
+described below.

@@ -32,6 +32,28 @@ export type HandSet = {
   visibility: Visibility;
 };
 
+export type IncompleteSet = {
+  kind: 'single' | 'pair' | 'pung';
+  tile: PlayingTile;
+  visibility: Visibility;
+};
+
+export type FishingSpecialId =
+  | 'purity'
+  | 'all-pair-honours'
+  | 'knitting'
+  | 'triple-knitting'
+  | 'buried-treasure'
+  | 'imperial-jade'
+  | 'heads-and-tails'
+  | 'three-great-scholars'
+  | 'all-winds-and-dragons'
+  | 'four-blessings'
+  | 'fourfold-plenty'
+  | 'gates-of-heaven'
+  | 'wriggling-snake'
+  | 'thirteen-unique-wonders';
+
 export type WinningMethod =
   | 'discard'
   | 'wall'
@@ -52,6 +74,8 @@ export type MahjongHand = {
   isWinner: boolean;
   winningMethod?: WinningMethod;
   originalCall?: boolean;
+  /** Exact incomplete group held alongside complete sets while fishing. */
+  incompleteSet?: IncompleteSet;
 };
 
 export type GameContext = {
@@ -77,12 +101,26 @@ export type SpecialHandResult = {
   value: number;
 };
 
+export type SpecialFishingResult = {
+  id: FishingSpecialId;
+  name: string;
+  fishingValue: number | 'three-doubles';
+  completingTiles: PlayingTile[];
+  intrinsicApplied: boolean;
+  /** Uncapped lawful fishing score for this interpretation. */
+  score?: number;
+  /** True when this interpretation supplies the hand's final score. */
+  selected?: boolean;
+};
+
 export type ScoreBreakdown = {
   valid: boolean;
   validationErrors: string[];
   pointRules: RuleResult[];
   doubleRules: RuleResult[];
   specialHands: SpecialHandResult[];
+  specialFishing?: SpecialFishingResult;
+  specialFishingMatches?: SpecialFishingResult[];
   basePoints: number;
   doubles: number;
   uncappedScore: number;

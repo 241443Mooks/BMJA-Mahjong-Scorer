@@ -1,5 +1,5 @@
 {
-  "catalogueVersion": "1.0.0",
+  "catalogueVersion": "1.2.1",
   "ruleset": "BMJA-style British Mahjong",
   "source": {
     "title": "An illustrated description of Mah-Jong (BMJA rules)",
@@ -8,6 +8,7 @@
   },
   "rules": [
     {"id":"points.chow","category":"basic-points","value":0,"specification":"Exposed and concealed chows score no points.","implementation":"scorePungs/scoreKongs (deliberate omission)","test":"rules.test.ts: scores no points for chows"},
+    {"id":"hand-shape.maximum-chows","category":"validation","value":1,"specification":"A normal grouped BMJA hand may contain at most one chow; named special-hand sequences entered as ungrouped special layouts are not chows.","implementation":"validateHand, standard-sets builder","test":"score.test.ts: rejects a normal grouped hand containing more than one chow; golden-fixtures.test.ts: Gates and Wriggling remain valid"},
     {"id":"points.pung.minor.exposed","category":"basic-points","value":2,"specification":"An exposed pung of a minor suited tile scores 2.","implementation":"scorePungs","test":"rules.test.ts: scores a exposed minor pung as 2"},
     {"id":"points.pung.minor.concealed","category":"basic-points","value":4,"specification":"A concealed pung of a minor suited tile scores 4.","implementation":"scorePungs","test":"rules.test.ts: scores a concealed minor pung as 4"},
     {"id":"points.pung.major.exposed","category":"basic-points","value":4,"specification":"An exposed pung of a terminal, wind or dragon scores 4.","implementation":"scorePungs","test":"rules.test.ts: scores a exposed major pung as 4"},
@@ -56,7 +57,13 @@
     {"id":"special.four-blessings","category":"special-hand","value":1000,"specification":"Pungs/kongs of all four winds and any pair.","implementation":"specialHandDetectors[four-blessings]","test":"special-hands.test.ts: detects four winds"},
     {"id":"special.buried-treasure","category":"special-hand","value":1000,"specification":"Four concealed pungs and a pair, using one suit with optional winds/dragons; no kongs or chows.","implementation":"specialHandDetectors[buried-treasure]","test":"special-hands.test.ts: rejects kongs and mixed suits for buried treasure"},
     {"id":"special.bonus-points","category":"special-hand-interaction","value":"4 each, separately doubled","specification":"Ordinary doubles do not apply to a special hand; eligible doubles apply only to bonus-tile points.","implementation":"scoreHand","test":"golden-fixtures.test.ts: scores All pair honours plus separately doubled bonus tiles"},
-    {"id":"special.final-discard-bonus","category":"special-hand-interaction","value":1,"specification":"For a special hand, final discard doubles bonus-tile points only.","implementation":"scoreHand","test":"golden-fixtures.test.ts: applies final-discard doubling only to special-hand bonus tiles"}
+    {"id":"special.final-discard-bonus","category":"special-hand-interaction","value":1,"specification":"For a special hand, final discard doubles bonus-tile points only.","implementation":"scoreHand","test":"golden-fixtures.test.ts: applies final-discard doubling only to special-hand bonus tiles"},
+    {"id":"fishing.one-tile-away","category":"special-hand-fishing","value":"verified legal completion","specification":"For a non-winner, every legal playing-tile completion is tested automatically against every supported special; a dead required tile still qualifies.","implementation":"detectSpecialFishing, validateHand","test":"fishing.test.ts: detects and rejects one-tile-away hands for every supported special"},
+    {"id":"fishing.overlaps","category":"special-hand-fishing","value":"highest lawful score","specification":"All matching specials and completing tiles are retained; each interpretation is scored and the highest lawful fishing score is used while alternatives remain visible.","implementation":"detectSpecialFishing, scoreHand","test":"fishing.test.ts: collects overlapping specials and selects the highest lawful score"},
+    {"id":"fishing.500-special","category":"special-hand-fishing","value":200,"specification":"All Pair Honours, Knitting and Triple Knitting score 200 while fishing.","implementation":"fishingValues, fishingScoreOptions","test":"fishing.test.ts: detects a genuine one-tile-away hand and scores every fixed fishing value"},
+    {"id":"fishing.1000-special","category":"special-hand-fishing","value":400,"specification":"Supported 1,000-point tile-pattern specials score 400 while fishing.","implementation":"fishingValues, fishingScoreOptions","test":"fishing.test.ts: detects a genuine one-tile-away hand and scores every fixed fishing value"},
+    {"id":"fishing.intrinsic-alternative","category":"special-hand-fishing","value":"greater of published fishing value or intrinsic value","specification":"Three Great Scholars, All Winds and Dragons, and Four Blessings use intrinsic playing-tile value when it exceeds 400; Purity uses its published three-doubles treatment or the greater whole-hand intrinsic treatment.","implementation":"fishingScoreOptions","test":"fishing.test.ts: uses the higher intrinsic fishing value"},
+    {"id":"fishing.bonus-tiles","category":"special-hand-fishing","value":"4 each, separately doubled","specification":"Flowers and Seasons remain separate from the special fishing value; eligible own-tile and bouquet doubles apply to their subtotal unless the greater whole-hand Purity intrinsic option is used.","implementation":"fishingScoreOptions","test":"golden-fixtures.test.ts: scores the published North Thirteen Unique Wonders fishing example"}
   ],
   "variantAudit": {
     "removed": [

@@ -6,6 +6,7 @@ import {
   isPurityHand,
 } from './rules';
 import { detectSpecialHands } from './special-hands';
+import { detectSpecialFishing, fishingScoreOptions } from './fishing';
 import type { GameContext, MahjongHand, ScoreBreakdown } from './types';
 import { validateHand } from './validation';
 
@@ -26,6 +27,7 @@ export const scoreHand = (
   context: GameContext = DEFAULT_CONTEXT,
 ): ScoreBreakdown => {
   const specialHands = detectSpecialHands(hand);
+  const fishingMatches = detectSpecialFishing(hand);
   const matchedSpecial = specialHands
     .filter((result) => result.matched)
     .sort((a, b) => b.value - a.value)[0];
@@ -44,12 +46,41 @@ export const scoreHand = (
           },
         ]
       : [];
-  const pointRules = matchedSpecial
-    ? scoreBonusTiles(hand)
-    : applyPointRules(hand, context);
-  const doubleRules = matchedSpecial
-    ? [...scoreBonusDoubles(hand, context), ...specialFinalDiscardDouble]
-    : applyDoubleRules(hand, context);
+  const scoredFishingMatches = fishingMatches
+    .map((fishing) => {
+      const options = fishingScoreOptions(hand, context, fishing);
+      const score = options.components.reduce(
+        (sum, component) => sum + component.subtotal,
+        0,
+      );
+      return {
+        fishing: {
+          ...fishing,
+          intrinsicApplied: options.intrinsicApplied,
+          score,
+        },
+        options,
+        score,
+      };
+    })
+    .sort(
+      (left, right) =>
+        right.score - left.score ||
+        left.fishing.name.localeCompare(right.fishing.name),
+    );
+  const selectedFishing = scoredFishingMatches[0];
+  const specialFishing = selectedFishing?.fishing;
+  const fishingOptions = selectedFishing?.options;
+  const pointRules = fishingOptions
+    ? fishingOptions.pointRules
+    : matchedSpecial
+      ? scoreBonusTiles(hand)
+      : applyPointRules(hand, context);
+  const doubleRules = fishingOptions
+    ? fishingOptions.doubleRules
+    : matchedSpecial
+      ? [...scoreBonusDoubles(hand, context), ...specialFinalDiscardDouble]
+      : applyDoubleRules(hand, context);
   const basePoints = pointRules.reduce((sum, rule) => sum + rule.amount, 0);
   const doubles = doubleRules.reduce((sum, rule) => sum + rule.amount, 0);
   const bonusPoints = scoreBonusTiles(hand).reduce(
@@ -63,7 +94,9 @@ export const scoreHand = (
   const finalDiscardDouble = hand.winningMethod === 'final-discard' ? 1 : 0;
   let calculationComponents: ScoreBreakdown['calculationComponents'];
 
-  if (matchedSpecial) {
+  if (specialFishing && fishingOptions) {
+    calculationComponents = fishingOptions.components;
+  } else if (matchedSpecial) {
     calculationComponents = [
       {
         id: `special-${matchedSpecial.id}`,
@@ -139,12 +172,23 @@ export const scoreHand = (
     pointRules,
     doubleRules,
     specialHands,
+    specialFishing: specialFishing
+      ? {
+          ...specialFishing,
+          selected: true,
+        }
+      : undefined,
+    specialFishingMatches: scoredFishingMatches.map(({ fishing }, index) => ({
+      ...fishing,
+      selected: index === 0,
+    })),
     basePoints,
     doubles,
     uncappedScore,
     finalScore,
     limitApplied: finalScore < uncappedScore,
-    scoringMode: matchedSpecial || purity ? 'special' : 'standard',
+    scoringMode:
+      specialFishing || matchedSpecial || purity ? 'special' : 'standard',
     calculationComponents,
   };
 };
