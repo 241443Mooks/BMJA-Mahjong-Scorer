@@ -23,7 +23,6 @@ import type {
   SuitTile,
   SetKind,
   Visibility,
-  FishingSpecialId,
   IncompleteSet,
 } from './scoring';
 import {
@@ -37,7 +36,6 @@ import {
   SUITS,
   WINDS,
   DRAGONS,
-  FISHING_SPECIALS,
 } from './scoring';
 
 const queryClient = new QueryClient();
@@ -53,6 +51,12 @@ const allWindTiles: PlayingTile[] = WINDS.map(wind);
 const allDragonTiles: PlayingTile[] = DRAGONS.map(dragon);
 
 const allPlayingTiles = [...allSuitTiles, ...allWindTiles, ...allDragonTiles];
+const tileName = (tile: PlayingTile) =>
+  tile.family === 'suit'
+    ? `${tile.rank} ${tile.suit}`
+    : tile.family === 'wind'
+      ? `${tile.wind} Wind`
+      : `${tile.dragon} Dragon`;
 
 type UIHandSet = Omit<HandSet, 'tile'> & { tile: PlayingTile | null };
 type UIIncompleteSet = Omit<IncompleteSet, 'tile'> & {
@@ -149,10 +153,6 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
   const [originalCall, setOriginalCall] = useState<boolean>(
     initialContext.isWinner ? initialHand?.originalCall ?? false : false,
   );
-  const [fishingSpecial, setFishingSpecial] =
-    useState<FishingSpecialId | null>(
-      initialContext.isWinner ? null : initialHand?.fishingSpecial ?? null,
-    );
   const [incompleteSet, setIncompleteSet] = useState<UIIncompleteSet | null>(
     initialHand?.incompleteSet
       ? { ...initialHand.incompleteSet, tile: { ...initialHand.incompleteSet.tile } }
@@ -197,9 +197,6 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
     setOriginalCall(
       nextContext.isWinner ? savedHand?.originalCall ?? false : false,
     );
-    setFishingSpecial(
-      nextContext.isWinner ? null : savedHand?.fishingSpecial ?? null,
-    );
     setIncompleteSet(
       savedHand?.incompleteSet
         ? {
@@ -225,16 +222,14 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
       isWinner,
       winningMethod: isWinner ? winningMethod : undefined,
       originalCall: isWinner ? originalCall : false,
-      fishingSpecial: !isWinner ? fishingSpecial ?? undefined : undefined,
       incompleteSet:
         !isWinner &&
-        fishingSpecial &&
         layoutMode === 'sets' &&
         incompleteSet?.tile
           ? { ...incompleteSet, tile: incompleteSet.tile }
           : undefined,
     };
-  }, [sets, looseTiles, layoutMode, flowers, seasons, isWinner, winningMethod, originalCall, fishingSpecial, incompleteSet]);
+  }, [sets, looseTiles, layoutMode, flowers, seasons, isWinner, winningMethod, originalCall, incompleteSet]);
 
   const gameContext = useMemo<GameContext>(
     () => ({ playerWind, prevailingWind, limit }),
@@ -277,7 +272,7 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
       const matchingCopies = looseTiles.filter(
         (candidate) => tileKey(candidate) === tileKey(tile),
       ).length;
-      const specialTileLimit = fishingSpecial && !isWinner ? 13 : 14;
+      const specialTileLimit = isWinner ? 14 : 13;
       if (looseTiles.length < specialTileLimit && matchingCopies < 4) {
         setLooseTiles((current) => [...current, tile]);
       }
@@ -302,7 +297,6 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
     setFlowers([]);
     setSeasons([]);
     setLooseTiles([]);
-    setFishingSpecial(null);
     setIncompleteSet(null);
     setIsWinner(context?.isWinner ?? false);
     setSelectedSet('set-1');
@@ -310,7 +304,6 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
   function loadExample() {
     setLayoutMode('sets');
     setLooseTiles([]);
-    setFishingSpecial(null);
     setIncompleteSet(null);
     setSets([
       { id: 'set-1', kind: 'chow', visibility: 'concealed', tile: suited('bamboo', 1) },
@@ -484,7 +477,7 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
                       ))}
                       {looseTiles.length === 0 && (
                         <div className="w-full text-center text-[11px] text-[#9b988d]">
-                          Add the {fishingSpecial && !isWinner ? 13 : 14} tiles in the {fishingSpecial && !isWinner ? 'one-tile-away' : 'completed'} special-hand layout.
+                          Add the {isWinner ? 14 : 13} tiles in the {isWinner ? 'completed' : 'one-tile-away'} special-hand layout.
                         </div>
                       )}
                     </div>
@@ -520,11 +513,20 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
                       </div>
                     </div>
                     ))}
-                    {fishingSpecial && !isWinner && (
+                    {!isWinner && (
                       <div
                         data-testid="card-fishing-incomplete"
                         className={`rounded-lg border p-3 transition ${selectedSet === 'fishing-incomplete' ? 'border-[#ae6249]/60 bg-[#f7f1e3]' : 'border-[#e2d9c7] bg-[#fdfbf5]'}`}
-                        onClick={() => setSelectedSet('fishing-incomplete')}
+                        onClick={() => {
+                          setIncompleteSet((current) =>
+                            current ?? {
+                              kind: 'single',
+                              visibility: 'concealed',
+                              tile: null,
+                            },
+                          );
+                          setSelectedSet('fishing-incomplete');
+                        }}
                       >
                         <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
                           <div className="flex items-center gap-2">
@@ -604,7 +606,7 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
               <section className="animate-rise animate-rise-delay-2 rounded-xl border border-[#d8ceb8] bg-[#fbf8ed] p-5 shadow-[var(--shadow-sm)] sm:p-6">
                 <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
                   <div><div className="font-mono text-[10px] font-medium uppercase tracking-[.2em] text-[#ae6249]">02 / tile bank</div><h2 className="mt-1 font-serif text-[22px] text-[#284d45]">Choose a tile</h2></div>
-                  <div className="font-mono text-[10px] text-[#7a7769]">Adding to <span className="text-[#ae6249]">{layoutMode === 'special' ? `special layout (${looseTiles.length}/${fishingSpecial && !isWinner ? 13 : 14})` : selectedSet === 'fishing-incomplete' ? 'incomplete group' : activeSet ? `set ${sets.findIndex(s => s.id === selectedSet) + 1}` : '—'}</span></div>
+                  <div className="font-mono text-[10px] text-[#7a7769]">Adding to <span className="text-[#ae6249]">{layoutMode === 'special' ? `special layout (${looseTiles.length}/${isWinner ? 14 : 13})` : selectedSet === 'fishing-incomplete' ? 'incomplete group' : activeSet ? `set ${sets.findIndex(s => s.id === selectedSet) + 1}` : '—'}</span></div>
                 </div>
                 <div className="mb-4 flex items-center gap-1 overflow-x-auto border-b border-[#e2d9c7] pb-2">
                   {suitOrder.map((suit) => (
@@ -621,7 +623,7 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
                       onClick={() => addTile(tile)}
                       disabled={
                         layoutMode === 'special' &&
-                          (looseTiles.length >= (fishingSpecial && !isWinner ? 13 : 14) ||
+                          (looseTiles.length >= (isWinner ? 14 : 13) ||
                           looseTiles.filter(
                             (candidate) =>
                               tileKey(candidate) === tileKey(tile),
@@ -715,7 +717,6 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
                            if (!hasContext) {
                              setIsWinner(e.target.checked);
                              if (e.target.checked) {
-                               setFishingSpecial(null);
                                setIncompleteSet(null);
                              }
                            }
@@ -732,44 +733,19 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
                       </label>
                     )}
                     {!isWinner && (
-                      <label className="mt-2 block min-w-0">
-                        <span className="mb-1.5 block font-mono text-[10px] uppercase tracking-[.15em] text-[#7a7769]">
-                          Special-hand fishing
-                        </span>
-                        <select
-                          data-testid="select-fishing-special"
-                          value={fishingSpecial ?? ''}
-                          onChange={(event) => {
-                            const target =
-                              (event.target.value as FishingSpecialId) || null;
-                            setFishingSpecial(target);
-                            if (target && layoutMode === 'sets') {
-                              setIncompleteSet((current) =>
-                                current ?? {
-                                  kind: 'single',
-                                  visibility: 'concealed',
-                                  tile: null,
-                                },
-                              );
-                              setSelectedSet('fishing-incomplete');
-                            } else if (!target) {
-                              setIncompleteSet(null);
-                            }
-                          }}
-                          className="w-full min-w-0 rounded-md border border-[#cfc3aa] bg-[#fdfbf5] px-3 py-2.5 text-[12px] font-semibold text-[#284d45] focus:ring-2"
-                        >
-                          <option value="">Not fishing for a special</option>
-                          {FISHING_SPECIALS.map((special) => (
-                            <option key={special.id} value={special.id}>
-                              {special.name}
-                            </option>
-                          ))}
-                        </select>
-                        <span className="mt-1.5 block text-[10px] leading-4 text-[#7a7769]">
-                          Separate from Original Call. The hand must be exactly
-                          one legal tile away from the selected special.
-                        </span>
-                      </label>
+                      <div
+                        data-testid="notice-automatic-special-fishing"
+                        className="rounded-md border border-[#d8ceb8] bg-[#fdfbf5] px-3 py-2.5"
+                      >
+                        <div className="text-[12px] font-semibold text-[#284d45]">
+                          Special fishing is detected automatically
+                        </div>
+                        <p className="mt-1 text-[10px] leading-4 text-[#7a7769]">
+                          Enter the tiles currently held. The scorer checks
+                          every supported special and every legal winning tile.
+                          This remains separate from Original Call.
+                        </p>
+                      </div>
                     )}
                     {isWinner && (
                       <label className="flex cursor-pointer items-center justify-between rounded-md bg-[#f4eddf] px-3 py-2.5 text-[12px] font-semibold text-[#284d45]">
@@ -877,6 +853,26 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
               <section className="animate-rise animate-rise-delay-3 rounded-xl border border-[#d8ceb8] bg-[#fbf8ed] p-5 shadow-[var(--shadow-sm)] sm:p-6">
                 <div className="mb-4 flex items-center justify-between"><div><div className="font-mono text-[10px] uppercase tracking-[.2em] text-[#ae6249]">Detected patterns</div><h2 className="mt-1 font-serif text-[22px] text-[#284d45]">Special hands</h2></div><Sparkles size={18} className="text-[#ae6249]" /></div>
                 <div className="space-y-2">
+                  {(score.specialFishingMatches ?? []).map((fishing) => (
+                    <div
+                      key={`fishing-${fishing.id}`}
+                      data-testid={`status-fishing-${fishing.id}`}
+                      className={`rounded-md border p-3 ${fishing.selected ? 'border-[#ae6249]/60 bg-[#fff4e8]' : 'border-[#b8cdbf] bg-[#edf3ed]'}`}
+                    >
+                      <div className="flex flex-wrap items-center gap-2 text-[12px] font-semibold text-[#284d45]">
+                        <Check size={14} className="text-[#477562]" />
+                        {fishing.name} fishing
+                        <span className="ml-auto font-mono text-[9px] uppercase tracking-wider text-[#477562]">
+                          {fishing.score} pts{fishing.selected ? ' · used' : ''}
+                        </span>
+                      </div>
+                      <p className="mt-1 pl-5 text-[10px] leading-4 text-[#7a7769]">
+                        Possible winning {fishing.completingTiles.length === 1 ? 'tile' : 'tiles'}:{' '}
+                        {fishing.completingTiles.map(tileName).join(', ')}
+                        {fishing.intrinsicApplied ? ' · Higher intrinsic value applied.' : ''}
+                      </p>
+                    </div>
+                  ))}
                   {score.specialHands.map((special) => (
                     <div key={special.id} data-testid={`status-special-${special.id}`} className={`rounded-md border p-3 ${special.matched ? 'border-[#b8cdbf] bg-[#edf3ed]' : 'border-[#e5ddcd] bg-[#fdfbf5]'}`}>
                       <div className="flex items-center gap-2 text-[12px] font-semibold text-[#284d45]">

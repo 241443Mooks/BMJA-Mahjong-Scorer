@@ -118,7 +118,6 @@ const completesTarget = (
       sets: [...hand.sets, completedSet],
       looseTiles: undefined,
       incompleteSet: undefined,
-      fishingSpecial: undefined,
       isWinner: true,
       originalCall: false,
     };
@@ -128,7 +127,6 @@ const completesTarget = (
       sets: [],
       looseTiles: [...(hand.looseTiles ?? []), tile],
       incompleteSet: undefined,
-      fishingSpecial: undefined,
       isWinner: true,
       originalCall: false,
     };
@@ -143,27 +141,37 @@ const completesTarget = (
 
 export const detectSpecialFishing = (
   hand: MahjongHand,
-): SpecialFishingResult | undefined => {
-  const target = hand.fishingSpecial;
-  if (!target || hand.isWinner) return undefined;
+): SpecialFishingResult[] => {
+  if (
+    hand.isWinner ||
+    (!hand.incompleteSet &&
+      !(hand.sets.length === 0 && hand.looseTiles?.length === 13))
+  ) {
+    return [];
+  }
   const tally = new Map<string, number>();
   for (const tile of currentTiles(hand)) {
     const key = tileKey(tile);
     tally.set(key, (tally.get(key) ?? 0) + 1);
   }
-  const completingTiles = playingTiles.filter(
-    (tile) =>
-      (tally.get(tileKey(tile)) ?? 0) < 4 &&
-      completesTarget(hand, target, tile),
-  );
-  if (completingTiles.length === 0) return undefined;
-  return {
-    id: target,
-    name: names[target],
-    fishingValue: fishingValues[target],
-    completingTiles,
-    intrinsicApplied: false,
-  };
+  return FISHING_SPECIALS.flatMap(({ id, name, fishingValue }) => {
+    const completingTiles = playingTiles.filter(
+      (tile) =>
+        (tally.get(tileKey(tile)) ?? 0) < 4 &&
+        completesTarget(hand, id, tile),
+    );
+    return completingTiles.length
+      ? [
+          {
+            id,
+            name,
+            fishingValue,
+            completingTiles,
+            intrinsicApplied: false,
+          },
+        ]
+      : [];
+  });
 };
 
 export const fishingIntrinsicHand = (hand: MahjongHand): MahjongHand => {
@@ -182,7 +190,6 @@ export const fishingIntrinsicHand = (hand: MahjongHand): MahjongHand => {
     sets: [...hand.sets, ...(intrinsicSet ? [intrinsicSet] : [])],
     looseTiles: undefined,
     incompleteSet: undefined,
-    fishingSpecial: undefined,
     isWinner: false,
     originalCall: false,
     winningMethod: undefined,

@@ -129,7 +129,9 @@ Tracked in issue #4.
 
 ### Fishing
 
-**Implemented.** Special fishing is represented independently from Original Call and only applies to a non-winning hand. The scorer verifies the declaration by enumerating legal playing tiles and requiring at least one tile that completes the selected special. The required tile may be dead; availability in the wall is not part of fishing eligibility. Multiple completing tiles are retained in the score result.
+**Implemented.** Special fishing is represented independently from Original Call and only applies to a non-winning hand. The player does not select or name a target special. The scorer automatically enumerates every legal playing-tile completion and tests each completed hand against every supported special. The required tile may be dead; availability in the wall is not part of fishing eligibility.
+
+Every matching special and every possible completing tile are retained in the score result and shown in the scorer. Where patterns overlap, each lawful fishing interpretation is calculated independently and the highest score is used. Equal-scoring alternatives remain visible, with one deterministic interpretation supplying the shared score.
 
 Irregular hands are entered as the 13 tiles currently held. Grouped hands retain complete sets and identify the exact incomplete group currently held: a single waiting to become a pair, a pair waiting to become a pung, or a pung waiting to become a kong. This avoids treating a completed special with `isWinner = false` as fishing.
 

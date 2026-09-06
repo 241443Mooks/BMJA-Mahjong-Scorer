@@ -411,7 +411,6 @@ describe('BMJA complete-hand golden fixtures', () => {
       ],
       bonusTiles: [bonus('flower', 4), bonus('season', 2)],
       isWinner: false,
-      fishingSpecial: 'thirteen-unique-wonders',
       originalCall: false,
     };
     const score = scoreHand(hand, context('north', 'east'));

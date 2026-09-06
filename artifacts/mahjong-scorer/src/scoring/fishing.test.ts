@@ -17,7 +17,7 @@ import type {
 } from '.';
 
 const fishing = (
-  target: FishingSpecialId,
+  _target: FishingSpecialId,
   options: {
     sets?: HandSet[];
     looseTiles?: PlayingTile[];
@@ -27,7 +27,6 @@ const fishing = (
   sets: options.sets ?? [],
   looseTiles: options.looseTiles,
   incompleteSet: options.incompleteSet,
-  fishingSpecial: target,
   bonusTiles: [],
   isWinner: false,
   originalCall: false,
@@ -294,27 +293,30 @@ describe('BMJA special-hand fishing detection', () => {
   it.each(cases)(
     'detects a genuine one-tile-away $name hand',
     ({ id, value, hand }) => {
-      const result = detectSpecialFishing(hand);
-      expect(result?.id).toBe(id);
+      const result = detectSpecialFishing(hand).find(
+        (fishing) => fishing.id === id,
+      );
       expect(result?.fishingValue).toBe(value);
       expect(result?.completingTiles.length).toBeGreaterThan(0);
       const score = scoreHand(hand);
       expect(score.valid).toBe(true);
       expect(score.scoringMode).toBe('special');
-      expect(score.specialFishing?.id).toBe(id);
+      expect(score.specialFishingMatches?.map((match) => match.id)).toContain(
+        id,
+      );
       if (typeof value === 'number') {
-        expect(score.finalScore).toBe(value);
+        expect(score.finalScore).toBeGreaterThanOrEqual(value);
       }
     },
   );
 
   it.each(cases)(
-    'rejects a $name declaration that is not one tile away',
+    'rejects a $name hand that is not one tile away',
     ({ hand }) => {
       const notFishing: MahjongHand = hand.incompleteSet
-        ? { ...hand, incompleteSet: undefined }
+        ? { ...hand, sets: hand.sets.slice(0, -1) }
         : { ...hand, looseTiles: hand.looseTiles?.slice(0, 12) };
-      expect(detectSpecialFishing(notFishing)).toBeUndefined();
+      expect(detectSpecialFishing(notFishing)).toEqual([]);
       expect(scoreHand(notFishing).valid).toBe(false);
     },
   );
@@ -323,17 +325,65 @@ describe('BMJA special-hand fishing detection', () => {
     const hand = cases.find(
       ({ id }) => id === 'thirteen-unique-wonders',
     )!.hand;
-    expect(detectSpecialFishing(hand)?.completingTiles).toHaveLength(13);
+    expect(
+      detectSpecialFishing(hand).find(
+        ({ id }) => id === 'thirteen-unique-wonders',
+      )?.completingTiles,
+    ).toHaveLength(13);
+  });
+
+  it('collects overlapping specials and selects the highest lawful score', () => {
+    const hand = fishing('purity', {
+      sets: [
+        set('two', 'kong', suited('bamboo', 2)),
+        set('three', 'kong', suited('bamboo', 3)),
+        set('four', 'kong', suited('bamboo', 4)),
+        set('six', 'kong', suited('bamboo', 6)),
+      ],
+      incompleteSet: incomplete('single', suited('bamboo', 8)),
+    });
+    const score = scoreHand(hand);
+    expect(score.specialFishingMatches).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: 'purity', score: 512, selected: true }),
+        expect.objectContaining({ id: 'imperial-jade', score: 400 }),
+        expect.objectContaining({ id: 'fourfold-plenty', score: 400 }),
+      ]),
+    );
+    expect(score.specialFishing?.id).toBe('purity');
+    expect(score.finalScore).toBe(512);
+  });
+
+  it('retains equal-scoring overlapping interpretations transparently', () => {
+    const hand = fishing('three-great-scholars', {
+      sets: [
+        set('red', 'pung', dragon('red')),
+        set('green', 'pung', dragon('green')),
+        set('white', 'pung', dragon('white')),
+        set('east', 'pung', wind('east')),
+      ],
+      incompleteSet: incomplete('single', wind('south')),
+    });
+    const score = scoreHand(hand);
+    expect(score.specialFishingMatches?.map(({ id }) => id)).toEqual(
+      expect.arrayContaining([
+        'three-great-scholars',
+        'all-winds-and-dragons',
+      ]),
+    );
+    expect(
+      score.specialFishingMatches?.filter(({ selected }) => selected),
+    ).toHaveLength(1);
   });
 
   it('keeps special fishing distinct from Original Call and completed winners', () => {
     const hand = cases.find(({ id }) => id === 'knitting')!.hand;
     expect(
-      detectSpecialFishing({ ...hand, originalCall: true })?.id,
-    ).toBe('knitting');
+      detectSpecialFishing({ ...hand, originalCall: true }).map(({ id }) => id),
+    ).toContain('knitting');
     expect(
       detectSpecialFishing({ ...hand, isWinner: true }),
-    ).toBeUndefined();
+    ).toEqual([]);
     expect(scoreHand({ ...hand, originalCall: true }).valid).toBe(false);
   });
 

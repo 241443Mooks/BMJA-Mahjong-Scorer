@@ -27,7 +27,7 @@ export const scoreHand = (
   context: GameContext = DEFAULT_CONTEXT,
 ): ScoreBreakdown => {
   const specialHands = detectSpecialHands(hand);
-  const specialFishing = detectSpecialFishing(hand);
+  const fishingMatches = detectSpecialFishing(hand);
   const matchedSpecial = specialHands
     .filter((result) => result.matched)
     .sort((a, b) => b.value - a.value)[0];
@@ -46,9 +46,31 @@ export const scoreHand = (
           },
         ]
       : [];
-  const fishingOptions = specialFishing
-    ? fishingScoreOptions(hand, context, specialFishing)
-    : undefined;
+  const scoredFishingMatches = fishingMatches
+    .map((fishing) => {
+      const options = fishingScoreOptions(hand, context, fishing);
+      const score = options.components.reduce(
+        (sum, component) => sum + component.subtotal,
+        0,
+      );
+      return {
+        fishing: {
+          ...fishing,
+          intrinsicApplied: options.intrinsicApplied,
+          score,
+        },
+        options,
+        score,
+      };
+    })
+    .sort(
+      (left, right) =>
+        right.score - left.score ||
+        left.fishing.name.localeCompare(right.fishing.name),
+    );
+  const selectedFishing = scoredFishingMatches[0];
+  const specialFishing = selectedFishing?.fishing;
+  const fishingOptions = selectedFishing?.options;
   const pointRules = fishingOptions
     ? fishingOptions.pointRules
     : matchedSpecial
@@ -153,9 +175,13 @@ export const scoreHand = (
     specialFishing: specialFishing
       ? {
           ...specialFishing,
-          intrinsicApplied: fishingOptions?.intrinsicApplied ?? false,
+          selected: true,
         }
       : undefined,
+    specialFishingMatches: scoredFishingMatches.map(({ fishing }, index) => ({
+      ...fishing,
+      selected: index === 0,
+    })),
     basePoints,
     doubles,
     uncappedScore,

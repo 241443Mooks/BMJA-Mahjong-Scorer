@@ -18,7 +18,7 @@ export const validateHand = (hand: MahjongHand): string[] => {
     detectSpecialHands({ ...hand, isWinner: true }).some(
       (special) => special.matched,
     );
-  const fishing = detectSpecialFishing(hand);
+  const fishingMatches = detectSpecialFishing(hand);
 
   if (
     hand.isWinner &&
@@ -34,36 +34,42 @@ export const validateHand = (hand: MahjongHand): string[] => {
     errors.push('Ungrouped special-hand tiles cannot be mixed with ordinary sets.');
   }
 
-  if (isIrregularShape && !isSupportedIrregularShape && !hand.fishingSpecial) {
+  if (isIrregularShape && !isSupportedIrregularShape) {
     errors.push(
       'Ungrouped tiles must form a supported 14-tile special-hand layout.',
     );
   }
 
-  if (hand.fishingSpecial) {
+  if (hand.originalCall && !hand.isWinner) {
+    errors.push('Original Call applies only to a winning hand.');
+  }
+
+  if (hand.incompleteSet) {
     if (hand.isWinner) {
-      errors.push('Special-hand fishing applies only to a non-winning hand.');
-    }
-    if (hand.originalCall) {
-      errors.push('Special-hand fishing is separate from Original Call.');
+      errors.push('An incomplete group is only valid in a non-winning hand.');
     }
     if (hand.incompleteSet && hand.looseTiles?.length) {
       errors.push(
         'A fishing hand cannot mix an incomplete group with ungrouped tiles.',
       );
     }
-    if (!hand.incompleteSet && hand.looseTiles?.length !== 13) {
+    if (fishingMatches.length === 0) {
       errors.push(
-        'An irregular fishing hand must contain exactly 13 ungrouped tiles.',
+        'The incomplete hand is not exactly one legal tile away from a supported special.',
       );
     }
-    if (!fishing) {
+  }
+
+  if (!hand.isWinner && hand.looseTiles?.length) {
+    if (hand.looseTiles.length !== 13) {
       errors.push(
-        'The hand is not exactly one legal tile away from the selected special.',
+        'An irregular non-winning hand must contain exactly 13 ungrouped tiles.',
+      );
+    } else if (fishingMatches.length === 0) {
+      errors.push(
+        'The ungrouped hand is not exactly one legal tile away from a supported special.',
       );
     }
-  } else if (hand.incompleteSet) {
-    errors.push('An incomplete group is only valid while fishing for a special.');
   }
 
   const playingTiles: PlayingTile[] = [

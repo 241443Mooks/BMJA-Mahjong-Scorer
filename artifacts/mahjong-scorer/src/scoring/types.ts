@@ -74,8 +74,6 @@ export type MahjongHand = {
   isWinner: boolean;
   winningMethod?: WinningMethod;
   originalCall?: boolean;
-  /** Named BMJA special the non-winner is one legal tile away from completing. */
-  fishingSpecial?: FishingSpecialId;
   /** Exact incomplete group held alongside complete sets while fishing. */
   incompleteSet?: IncompleteSet;
 };
@@ -109,6 +107,10 @@ export type SpecialFishingResult = {
   fishingValue: number | 'three-doubles';
   completingTiles: PlayingTile[];
   intrinsicApplied: boolean;
+  /** Uncapped lawful fishing score for this interpretation. */
+  score?: number;
+  /** True when this interpretation supplies the hand's final score. */
+  selected?: boolean;
 };
 
 export type ScoreBreakdown = {
@@ -118,6 +120,7 @@ export type ScoreBreakdown = {
   doubleRules: RuleResult[];
   specialHands: SpecialHandResult[];
   specialFishing?: SpecialFishingResult;
+  specialFishingMatches?: SpecialFishingResult[];
   basePoints: number;
   doubles: number;
   uncappedScore: number;
