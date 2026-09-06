@@ -10,6 +10,11 @@ import type {
   HandScorerContext,
   HandScorerResult,
 } from './game';
+import {
+  bonusTileDefinition,
+  playingTileDefinition,
+  tileAssetUrl,
+} from './tiles/MahjongTileArtwork';
 
 import type {
   GameContext,
@@ -46,8 +51,7 @@ import {
 
 const queryClient = new QueryClient();
 
-const suitNames: Record<string, string> = { characters: 'Characters', bamboo: 'Bamboo', circles: 'Dots', wind: 'Winds', dragon: 'Dragons' };
-const suitShort: Record<string, string> = { characters: 'C', bamboo: 'B', circles: 'D', wind: 'W', dragon: 'R' };
+const suitNames: Record<string, string> = { characters: 'Characters', bamboo: 'Bamboo', circles: 'Circles', wind: 'Winds', dragon: 'Dragons' };
 const suitOrder = ['characters', 'bamboo', 'circles', 'wind', 'dragon'] as const;
 
 const allSuitTiles: PlayingTile[] = SUITS.flatMap((s) =>
@@ -57,12 +61,7 @@ const allWindTiles: PlayingTile[] = WINDS.map(wind);
 const allDragonTiles: PlayingTile[] = DRAGONS.map(dragon);
 
 const allPlayingTiles = [...allSuitTiles, ...allWindTiles, ...allDragonTiles];
-const tileName = (tile: PlayingTile) =>
-  tile.family === 'suit'
-    ? `${tile.rank} ${tile.suit}`
-    : tile.family === 'wind'
-      ? `${tile.wind} Wind`
-      : `${tile.dragon} Dragon`;
+const tileName = (tile: PlayingTile) => playingTileDefinition(tile).label;
 
 type UIHandSet = Omit<HandSet, 'tile'> & { tile: PlayingTile | null };
 const defaultSets: UIHandSet[] = [
@@ -84,38 +83,25 @@ function TileFace({
   actionLabel?: string;
   actionTestId?: string;
 }) {
-  const family = tile.family;
-  const suitLabel = suitShort[family === 'suit' ? tile.suit : family];
-  
-  let valueLabel = '';
-  let colorClass = '';
-  
-  if (family === 'suit') {
-    valueLabel = String(tile.rank);
-  } else if (family === 'wind') {
-    valueLabel = tile.wind.charAt(0).toUpperCase();
-  } else if (family === 'dragon') {
-    valueLabel = tile.dragon.charAt(0).toUpperCase();
-    if (tile.dragon === 'red') colorClass = 'text-[#ae6249]';
-    if (tile.dragon === 'green') colorClass = 'text-[#477562]';
-  }
-
-  const className = `group relative flex shrink-0 flex-col items-center justify-center rounded-[7px] border border-[#d3c6aa] bg-[#fbf8ed] text-[#284d45] tile-shadow ${compact ? 'h-12 w-9' : 'h-[72px] w-[52px]'}`;
+  const artwork = playingTileDefinition(tile);
+  const className = `group relative flex shrink-0 items-center justify-center rounded-[7px] ${compact ? 'h-12 w-9' : 'h-[72px] w-[54px]'}`;
   const face = (
-    <>
-      <span className={`font-serif font-bold ${compact ? 'text-lg' : 'text-2xl'} ${colorClass}`}>{valueLabel}</span>
-      <span className={`mt-0.5 font-mono uppercase tracking-[.08em] text-[#7a7769] ${compact ? 'text-[7px]' : 'text-[8px]'}`}>{suitLabel}</span>
-    </>
+    <img
+      src={tileAssetUrl(artwork.asset)}
+      alt={onActivate ? '' : artwork.label}
+      loading="lazy"
+      className="h-full w-full rounded-[6px] bg-[#fffdf7] object-contain tile-shadow"
+    />
   );
 
   if (onActivate) {
     return (
       <button
         type="button"
-        aria-label={actionLabel}
+        aria-label={actionLabel ?? artwork.label}
         data-testid={actionTestId ?? `button-tile-${tileKey(tile)}`}
         onClick={onActivate}
-        className={`${className} cursor-pointer touch-manipulation transition hover:-translate-y-0.5 hover:border-[#ae6249] hover:bg-[#fffaf0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249] focus-visible:ring-offset-2 active:translate-y-0 active:scale-95`}
+        className={`${className} cursor-pointer touch-manipulation transition hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249] focus-visible:ring-offset-2 active:translate-y-0 active:scale-95`}
       >
         {face}
       </button>
@@ -127,6 +113,46 @@ function TileFace({
       {onRemove && <button type="button" aria-label="Remove" data-testid={`button-remove-${tileKey(tile)}`} onClick={onRemove} className="absolute -right-2 -top-2 z-10 hidden h-5 w-5 items-center justify-center rounded-full bg-[#ae6249] text-[#fff7e9] group-hover:flex focus:flex"><X size={12} /></button>}
       {face}
     </div>
+  );
+}
+
+function BonusTileButton({
+  family,
+  number,
+  selected,
+  onToggle,
+}: {
+  family: BonusTile['family'];
+  number: BonusTile['number'];
+  selected: boolean;
+  onToggle: () => void;
+}) {
+  const artwork = bonusTileDefinition(family, number);
+  const selectedClass = family === 'flower'
+    ? 'border-[#ae6249] bg-[#f5eadb] ring-2 ring-[#ae6249]/20'
+    : 'border-[#284d45] bg-[#e9efea] ring-2 ring-[#284d45]/20';
+
+  return (
+    <button
+      type="button"
+      data-testid={`button-${family}-${number}`}
+      aria-label={artwork.label}
+      aria-pressed={selected}
+      onClick={onToggle}
+      className={`flex min-w-[58px] flex-col items-center rounded-lg border p-1.5 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249] ${
+        selected
+          ? selectedClass
+          : 'border-[#d8ceb8] bg-[#fdfbf5] hover:border-[#ae6249] hover:bg-[#fffaf0]'
+      }`}
+    >
+      <img
+        src={tileAssetUrl(artwork.asset)}
+        alt=""
+        loading="lazy"
+        className="h-[64px] w-[48px] rounded-[5px] bg-[#fffdf7] object-contain shadow-[0_2px_6px_rgba(48,57,49,.12)]"
+      />
+      <span className="mt-1 text-[9px] font-semibold leading-4 text-[#66746e]">{artwork.label}</span>
+    </button>
   );
 }
 
@@ -851,6 +877,7 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
                       type="button"
                       key={tileKey(tile)}
                       data-testid={`button-add-tile-${tileKey(tile)}`}
+                      aria-label={`Add ${tileName(tile)}`}
                       onClick={() => addTile(tile)}
                       disabled={
                         layoutMode === 'special' &&
@@ -861,7 +888,7 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
                           ).length >= 4) ||
                         (layoutMode === 'sets' && !canAddStandardTile(tile))
                       }
-                      className="transition hover:-translate-y-1 focus:ring-2 focus:ring-[#ae6249] disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:translate-y-0"
+                      className="rounded-[7px] transition hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249] disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:translate-y-0"
                     ><TileFace tile={tile} compact /></button>
                   ))}
                   {visibleTiles.length === 0 && <div className="text-[11px] text-[#7a7769] py-4">No valid tiles for this set type.</div>}
@@ -992,12 +1019,18 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
 
               <section className="animate-rise animate-rise-delay-3 rounded-xl border border-[#d8ceb8] bg-[#fbf8ed] p-5 shadow-[var(--shadow-sm)] sm:p-6">
                 <SectionLabel eyebrow="04 / bonus tiles" title="Flowers & seasons" count={`${flowers.length + seasons.length} selected`} />
-                <div className="grid gap-4 sm:grid-cols-2">
+                <div className="grid gap-5 sm:grid-cols-2">
                   <div>
                     <div className="mb-2 font-mono text-[10px] uppercase tracking-[.15em] text-[#7a7769]">Flowers</div>
                     <div className="flex flex-wrap gap-2">
                       {[1, 2, 3, 4].map((num) => (
-                        <button type="button" key={`flower-${num}`} data-testid={`button-flower-${num}`} onClick={() => toggleBonus('flower', num)} className={`rounded-md border px-2.5 py-2 text-[11px] font-semibold transition focus:ring-2 ${flowers.includes(num) ? 'border-[#ae6249] bg-[#ae6249] text-[#fff7e9]' : 'border-[#d8ceb8] bg-[#fdfbf5] text-[#66746e] hover:border-[#ae6249]'}`}><span className="mr-1.5 font-serif text-sm">{num}</span>Flower</button>
+                        <BonusTileButton
+                          key={`flower-${num}`}
+                          family="flower"
+                          number={num as BonusTile['number']}
+                          selected={flowers.includes(num)}
+                          onToggle={() => toggleBonus('flower', num)}
+                        />
                       ))}
                     </div>
                   </div>
@@ -1005,7 +1038,13 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
                     <div className="mb-2 font-mono text-[10px] uppercase tracking-[.15em] text-[#7a7769]">Seasons</div>
                     <div className="flex flex-wrap gap-2">
                       {[1, 2, 3, 4].map((num) => (
-                        <button type="button" key={`season-${num}`} data-testid={`button-season-${num}`} onClick={() => toggleBonus('season', num)} className={`rounded-md border px-2.5 py-2 text-[11px] font-semibold transition focus:ring-2 ${seasons.includes(num) ? 'border-[#284d45] bg-[#284d45] text-[#f8f4e9]' : 'border-[#d8ceb8] bg-[#fdfbf5] text-[#66746e] hover:border-[#284d45]'}`}><span className="mr-1.5 font-serif text-sm">{num}</span>Season</button>
+                        <BonusTileButton
+                          key={`season-${num}`}
+                          family="season"
+                          number={num as BonusTile['number']}
+                          selected={seasons.includes(num)}
+                          onToggle={() => toggleBonus('season', num)}
+                        />
                       ))}
                     </div>
                   </div>
