@@ -238,10 +238,15 @@ export function BeginnerGuide({ onClose }: { onClose: () => void }) {
               <p>British Mahjong includes named special hands that do not use ordinary scoring in the usual way.</p>
               <p>Some are unusual tile patterns — such as Thirteen Unique Wonders, Knitting, Triple Knitting, Gates of Heaven and Wriggling Snake. Others depend on the circumstances of the win.</p>
               <p>The scorer detects these where it can. If it needs information that cannot be seen from the tiles, it asks a short factual question about what happened rather than asking you to identify the special by name.</p>
-              <div className="rounded-xl border border-[#b8cdbf] bg-[#edf3ed] p-5">
-                <div className="flex items-center gap-2 font-serif text-[19px] text-[#284d45]"><Sparkles size={16} className="text-[#477562]" /> Special-hand catalogue</div>
-                <p className="mt-2 text-[12px] leading-5 text-[#66746e]">A separate visual catalogue is planned so you can browse patterns and values without cluttering this beginner flow.</p>
-              </div>
+              <a href="/special-hands" className="block rounded-xl border border-[#b8cdbf] bg-[#edf3ed] p-5 transition hover:bg-[#e3eee6] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <div className="flex items-center gap-2 font-serif text-[19px] text-[#284d45]"><Sparkles size={16} className="text-[#477562]" /> Browse the visual special-hand catalogue</div>
+                    <p className="mt-2 text-[12px] leading-5 text-[#66746e]">See every supported special with tile examples, values, fishing scores and simple event timelines.</p>
+                  </div>
+                  <ChevronRight size={18} className="shrink-0 text-[#477562]" />
+                </div>
+              </a>
             </GuideSection>
 
             <GuideSection id="settling-up" number="10" title="Settling up">
