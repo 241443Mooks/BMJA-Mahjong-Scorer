@@ -45,9 +45,13 @@ one-suit-with-chows scoring were found and removed.
 
 ## BMJA special hands not represented by the current engine
 
-The catalogue lists every special hand currently supported. Knitting, Triple
-Knitting, Imperial Jade, Gates of Heaven, Wriggling Snake, Heaven's Blessing,
-Earth's Blessing, Gathering the Plum Blossom from the Roof, Plucking the Moon
-from the Bottom of the Sea and Twofold Fortune need tile/event data that the
-current hand contract does not yet capture. They were not guessed or silently
-approximated during this audit.
+The catalogue lists every special hand currently supported. The event-dependent
+Heaven's Blessing, Earth's Blessing, Gathering the Plum Blossom from the Roof,
+Plucking the Moon from the Bottom of the Sea and Twofold Fortune need event data
+that the current hand contract does not yet capture. They have not been guessed
+or silently approximated.
+
+Knitting, Triple Knitting, Imperial Jade, Gates of Heaven and Wriggling Snake
+now have winner-pattern recognition. Fishing treatment remains separate, and
+Gates of Heaven retains the final-winning-tile provenance limitation described
+below.
