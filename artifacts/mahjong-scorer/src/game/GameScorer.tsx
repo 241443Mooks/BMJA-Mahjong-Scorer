@@ -17,6 +17,7 @@ import {
   createHandScorerContext,
   CURRENT_RULESET,
   GAME_WINDS,
+  reconcileDetailedHandsForOutcome,
   undoLastHand,
 } from '.';
 import type {
@@ -56,34 +57,77 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
   const [scoreRecords, setScoreRecords] = useState<PlayerScoreRecords>({});
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    if (returnedScore !== undefined && game) {
-      const returned = applyHandScorerSession(
-        game,
-        { scores, scoreRecords },
-        returnedScore,
-      );
-      setScores(returned.draft.scores);
-      setScoreRecords(returned.draft.scoreRecords);
-      if (returned.selectedWinnerId) {
-        setOutcomeType('win');
-        setWinnerId(returned.selectedWinnerId);
-      }
-      onClearReturnedScore();
-    }
-  }, [game, onClearReturnedScore, returnedScore, scoreRecords, scores]);
-
   const currentEastId = game
     ? Object.entries(game.seats).find(([, seat]) => seat === 'east')?.[0]
     : undefined;
 
-  const outcome: HandOutcome | null = game
-    ? outcomeType === 'draw'
-      ? { type: 'draw' }
-      : winnerId
-        ? { type: 'win', winnerId }
-        : null
-    : null;
+  const outcome = useMemo<HandOutcome | null>(
+    () =>
+      game
+        ? outcomeType === 'draw'
+          ? { type: 'draw' }
+          : winnerId
+            ? { type: 'win', winnerId }
+            : null
+        : null,
+    [game, outcomeType, winnerId],
+  );
+
+  useEffect(() => {
+    if (returnedScore === undefined || !game || !outcome) return;
+
+    try {
+      const returned = applyHandScorerSession(
+        game,
+        { scores, scoreRecords },
+        outcome,
+        returnedScore,
+      );
+      setScores(returned.draft.scores);
+      setScoreRecords(returned.draft.scoreRecords);
+      setError('');
+    } catch (caught) {
+      setError(
+        caught instanceof Error
+          ? caught.message
+          : 'The detailed hand could not be applied.',
+      );
+    } finally {
+      onClearReturnedScore();
+    }
+  }, [
+    game,
+    onClearReturnedScore,
+    outcome,
+    returnedScore,
+    scoreRecords,
+    scores,
+  ]);
+
+  const changeRoundOutcome = (nextOutcome: HandOutcome) => {
+    if (!game) return;
+    const currentDraft = { scores, scoreRecords };
+    const reconciled = reconcileDetailedHandsForOutcome(
+      game,
+      currentDraft,
+      nextOutcome,
+    );
+    const invalidated = game.players.some(
+      (player) =>
+        currentDraft.scores[player.id] !== undefined &&
+        reconciled.scores[player.id] === undefined,
+    );
+
+    setScores(reconciled.scores);
+    setScoreRecords(reconciled.scoreRecords);
+    setOutcomeType(nextOutcome.type);
+    if (nextOutcome.type === 'win') setWinnerId(nextOutcome.winnerId);
+    setError(
+      invalidated
+        ? 'Winner changed. Recalculate the affected detailed hands before confirming.'
+        : '',
+    );
+  };
 
   const preview = useMemo(() => {
     if (!game || !outcome) return null;
@@ -351,7 +395,10 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
                   <button
                     type="button"
                     data-testid="button-outcome-win"
-                    onClick={() => setOutcomeType('win')}
+                    onClick={() =>
+                      winnerId &&
+                      changeRoundOutcome({ type: 'win', winnerId })
+                    }
                     className={`rounded-md px-4 py-2 text-[11px] font-semibold ${
                       outcomeType === 'win'
                         ? 'bg-[#284d45] text-[#f8f4e9]'
@@ -363,7 +410,7 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
                   <button
                     type="button"
                     data-testid="button-outcome-draw"
-                    onClick={() => setOutcomeType('draw')}
+                    onClick={() => changeRoundOutcome({ type: 'draw' })}
                     className={`rounded-md px-4 py-2 text-[11px] font-semibold ${
                       outcomeType === 'draw'
                         ? 'bg-[#284d45] text-[#f8f4e9]'
@@ -382,7 +429,12 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
                     <select
                       data-testid="select-round-winner"
                       value={winnerId}
-                      onChange={(event) => setWinnerId(event.target.value)}
+                      onChange={(event) =>
+                        changeRoundOutcome({
+                          type: 'win',
+                          winnerId: event.target.value,
+                        })
+                      }
                       className="w-full rounded-md border border-[#cfc3aa] bg-[#fdfbf5] px-3 py-3 text-[13px] font-semibold text-[#284d45]"
                     >
                       {game.players.map((player) => (
@@ -398,10 +450,17 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
                   {game.players.map((player) => (
                     <label key={player.id} className="block">
                       <span className="mb-1.5 block text-[11px] font-semibold text-[#284d45]">
-                        {player.name}{' '}
+                           {player.name}{' '}
                         <span className="font-normal text-[#7a7769]">
                           ({windLabel(game.seats[player.id])})
                         </span>
+                           {scoreRecords[player.id]?.source ===
+                             'detailed-scorer' &&
+                             scoreRecords[player.id]?.requiresRecalculation && (
+                               <span className="ml-2 font-normal text-[#ae6249]">
+                                 Winner changed — recalculate
+                               </span>
+                             )}
                       </span>
                       <div className="flex gap-2">
                         <input

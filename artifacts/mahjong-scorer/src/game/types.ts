@@ -120,6 +120,7 @@ export type HandScorerContext = {
   isWinner: boolean;
   limit: number;
   detailedHand?: DetailedHandRecord;
+  requiresRecalculation?: boolean;
 };
 
 export type HandScorerResult = {
@@ -134,6 +135,7 @@ export type RoundScoreDraft = Partial<PlayerAmounts>;
 export type ManualScoreRecord = {
   source: 'manual';
   finalScore: number;
+  requiresRecalculation?: false;
 };
 
 export type DetailedHandRecord = {
@@ -142,6 +144,7 @@ export type DetailedHandRecord = {
   context: GameContext;
   breakdown: ScoreBreakdown;
   finalScore: number;
+  requiresRecalculation?: boolean;
 };
 
 export type PlayerScoreRecord = ManualScoreRecord | DetailedHandRecord;

@@ -1,4 +1,5 @@
 import { CURRENT_RULESET } from './ruleset';
+import { assertDetailedWinnerMatchesOutcome } from './hand-scorer-handoff';
 import type {
   ConfirmedHand,
   DetailedHandRecord,
@@ -94,6 +95,7 @@ const normaliseScoreRecords = (
           `Score metadata for ${player.name} does not match the round score.`,
         );
       }
+      assertDetailedWinnerMatchesOutcome(round.outcome, player.id, record);
       return [player.id, cloneScoreRecord(record)];
     }),
   );

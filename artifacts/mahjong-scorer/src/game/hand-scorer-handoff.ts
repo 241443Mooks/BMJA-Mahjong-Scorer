@@ -30,18 +30,46 @@ export const createHandScorerContext = (
     isWinner: outcome?.type === 'win' && outcome.winnerId === playerId,
     limit: CURRENT_RULESET.defaultLimit,
     ...(scoreRecord?.source === 'detailed-scorer'
-      ? { detailedHand: scoreRecord }
+      ? {
+          detailedHand: scoreRecord,
+          requiresRecalculation: scoreRecord.requiresRecalculation === true,
+        }
       : {}),
   };
+};
+
+export const isRoundWinner = (
+  outcome: HandOutcome,
+  playerId: PlayerId,
+): boolean => outcome.type === 'win' && outcome.winnerId === playerId;
+
+export const assertDetailedWinnerMatchesOutcome = (
+  outcome: HandOutcome,
+  playerId: PlayerId,
+  record: PlayerScoreRecord,
+): void => {
+  if (record.source !== 'detailed-scorer') return;
+
+  const expectedWinner = isRoundWinner(outcome, playerId);
+  if (
+    record.requiresRecalculation ||
+    record.hand.isWinner !== expectedWinner ||
+    (!expectedWinner && record.hand.winningMethod !== undefined) ||
+    (!expectedWinner && record.hand.originalCall === true)
+  ) {
+    throw new Error(
+      'The detailed hand winner status does not match the active round.',
+    );
+  }
 };
 
 export const applyHandScorerResult = (
   game: GameState,
   draft: RoundScoringDraft,
+  outcome: HandOutcome,
   result: HandScorerResult,
 ): {
   draft: RoundScoringDraft;
-  selectedWinnerId: PlayerId | null;
 } => {
   if (!game.players.some((player) => player.id === result.playerId)) {
     throw new Error('A returned hand score must belong to the current game.');
@@ -49,6 +77,17 @@ export const applyHandScorerResult = (
   if (!Number.isFinite(result.score) || result.score < 0) {
     throw new Error('A returned hand score must be a non-negative number.');
   }
+  const expectedWinner = isRoundWinner(outcome, result.playerId);
+  if (result.isWinner !== expectedWinner) {
+    throw new Error(
+      'The detailed hand winner status does not match the active round.',
+    );
+  }
+  assertDetailedWinnerMatchesOutcome(
+    outcome,
+    result.playerId,
+    result.detailedHand,
+  );
   if (
     result.detailedHand.source !== 'detailed-scorer' ||
     result.detailedHand.finalScore !== result.score ||
@@ -65,21 +104,57 @@ export const applyHandScorerResult = (
         [result.playerId]: result.detailedHand,
       },
     },
-    selectedWinnerId: result.isWinner ? result.playerId : null,
   };
 };
 
 export const applyHandScorerSession = (
   game: GameState,
   draft: RoundScoringDraft,
+  outcome: HandOutcome,
   result: HandScorerResult | null,
 ): {
   draft: RoundScoringDraft;
-  selectedWinnerId: PlayerId | null;
 } =>
   result
-    ? applyHandScorerResult(game, draft, result)
-    : { draft, selectedWinnerId: null };
+    ? applyHandScorerResult(game, draft, outcome, result)
+    : { draft };
+
+export const reconcileDetailedHandsForOutcome = (
+  game: GameState,
+  draft: RoundScoringDraft,
+  outcome: HandOutcome,
+): RoundScoringDraft => {
+  const scores = { ...draft.scores };
+  const scoreRecords: PlayerScoreRecords = { ...draft.scoreRecords };
+
+  for (const player of game.players) {
+    const record = scoreRecords[player.id];
+    if (
+      record?.source !== 'detailed-scorer' ||
+      record.requiresRecalculation ||
+      record.hand.isWinner === isRoundWinner(outcome, player.id)
+    ) {
+      continue;
+    }
+
+    const expectedWinner = isRoundWinner(outcome, player.id);
+    delete scores[player.id];
+    scoreRecords[player.id] = {
+      ...record,
+      requiresRecalculation: true,
+      hand: {
+        ...record.hand,
+        isWinner: expectedWinner,
+        winningMethod: expectedWinner
+          ? record.hand.winningMethod
+          : undefined,
+        originalCall: expectedWinner ? record.hand.originalCall : false,
+      },
+    };
+  }
+
+  return { scores, scoreRecords };
+};
 
 export const applyManualScore = (
   game: GameState,

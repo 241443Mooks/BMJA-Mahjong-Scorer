@@ -135,7 +135,7 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
     initialHand?.winningMethod ?? 'wall',
   );
   const [originalCall, setOriginalCall] = useState<boolean>(
-    initialHand?.originalCall ?? false,
+    initialContext.isWinner ? initialHand?.originalCall ?? false : false,
   );
 
   const [selectedSet, setSelectedSet] = useState<string>(
@@ -171,7 +171,9 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
     setLimit(nextContext.limit);
     setIsWinner(nextContext.isWinner);
     setWinningMethod(savedHand?.winningMethod ?? 'wall');
-    setOriginalCall(savedHand?.originalCall ?? false);
+    setOriginalCall(
+      nextContext.isWinner ? savedHand?.originalCall ?? false : false,
+    );
     setSelectedSet(nextSets[0]?.id ?? '');
     setExpandedRule(null);
     setCopied(false);
@@ -187,7 +189,7 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
       ],
       isWinner,
       winningMethod: isWinner ? winningMethod : undefined,
-      originalCall,
+      originalCall: isWinner ? originalCall : false,
     };
   }, [sets, flowers, seasons, isWinner, winningMethod, originalCall]);
 
@@ -239,7 +241,7 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
     ]);
     setFlowers([1, 4]);
     setSeasons([]);
-    setIsWinner(true);
+    setIsWinner(context?.isWinner ?? true);
     setWinningMethod('wall');
     setOriginalCall(false);
     setSelectedSet('set-1');
@@ -342,6 +344,14 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
                     ? `Calculating ${context.playerName}’s ${context.playerWind} hand during the ${context.prevailingWind} prevailing round.`
                     : 'Enter each set as it sits on the table. The score builds beside you, with every point and double accounted for.'}
                 </p>
+                {context?.requiresRecalculation && (
+                  <div
+                    data-testid="notice-recalculation-required"
+                    className="mt-4 max-w-[560px] rounded-md border border-[#ae6249]/40 bg-[#fff4e8] px-3 py-2 text-[11px] font-semibold text-[#8a4d38]"
+                  >
+                    The round winner changed. Review this hand and apply it again before confirming the round.
+                  </div>
+                )}
               </div>
               <div className="flex gap-2">
                 <button type="button" data-testid="button-load-example" onClick={loadExample} className="flex items-center gap-2 rounded-md border border-[#cfc3aa] bg-[#f8f4e9] px-3 py-2 text-[11px] font-semibold text-[#284d45] transition hover:-translate-y-0.5 hover:border-[#ae6249] focus:ring-2"><Sparkles size={14} /> Load example</button>
@@ -463,9 +473,26 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
                   </div>
                   
                   <div className="space-y-2 border-t border-[#d1c7b4] pt-4">
-                    <label className="flex cursor-pointer items-center justify-between rounded-md bg-[#f4eddf] px-3 py-2.5 text-[12px] font-semibold text-[#284d45]">
-                      <span>Hand is winner</span>
-                      <input type="checkbox" data-testid="checkbox-is-winner" checked={isWinner} onChange={(e) => setIsWinner(e.target.checked)} className="h-4 w-4 accent-[#284d45]" />
+                    <label className={`flex items-center justify-between rounded-md bg-[#f4eddf] px-3 py-2.5 text-[12px] font-semibold text-[#284d45] ${hasContext ? 'cursor-not-allowed' : 'cursor-pointer'}`}>
+                      <span>
+                        Hand is winner
+                        {hasContext && (
+                          <span className="ml-1 font-normal text-[#7a7769]">
+                            (Set on game screen)
+                          </span>
+                        )}
+                      </span>
+                      <input
+                        type="checkbox"
+                        data-testid="checkbox-is-winner"
+                        checked={isWinner}
+                        disabled={hasContext}
+                        aria-readonly={hasContext}
+                        onChange={(e) => {
+                          if (!hasContext) setIsWinner(e.target.checked);
+                        }}
+                        className="h-4 w-4 accent-[#284d45] disabled:cursor-not-allowed"
+                      />
                     </label>
                     {isWinner && (
                       <label className="mt-2 block min-w-0">
@@ -475,10 +502,12 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
                         </select>
                       </label>
                     )}
-                    <label className="flex cursor-pointer items-center justify-between rounded-md bg-[#f4eddf] px-3 py-2.5 text-[12px] font-semibold text-[#284d45]">
-                      <span>Original Call (First turn win)</span>
-                      <input type="checkbox" data-testid="checkbox-original-call" checked={originalCall} onChange={(e) => setOriginalCall(e.target.checked)} className="h-4 w-4 accent-[#284d45]" />
-                    </label>
+                    {isWinner && (
+                      <label className="flex cursor-pointer items-center justify-between rounded-md bg-[#f4eddf] px-3 py-2.5 text-[12px] font-semibold text-[#284d45]">
+                        <span>Original Call (First turn win)</span>
+                        <input type="checkbox" data-testid="checkbox-original-call" checked={originalCall} onChange={(e) => setOriginalCall(e.target.checked)} className="h-4 w-4 accent-[#284d45]" />
+                      </label>
+                    )}
                   </div>
 
                   <label className="block border-t border-[#d1c7b4] pt-4">

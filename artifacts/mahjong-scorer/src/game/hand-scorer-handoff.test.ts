@@ -6,6 +6,7 @@ import {
   applyHandScorerResult,
   createHandScorerContext,
   handScorerLocalContext,
+  reconcileDetailedHandsForOutcome,
 } from './hand-scorer-handoff';
 import type {
   HandScorerResult,
@@ -21,6 +22,8 @@ const game = createBmjaGame(
   ],
   { jenn: 'east', bill: 'south', ben: 'west', jack: 'north' },
 );
+
+const billWins = { type: 'win' as const, winnerId: 'bill' };
 
 const makeCalculatedResult = (
   playerId: string,
@@ -111,6 +114,24 @@ describe('game hand-scorer handoff', () => {
     expect([nonWinner.isWinner, winner.isWinner]).toEqual([false, true]);
   });
 
+  it('derives exactly one winner across every player context', () => {
+    expect(
+      game.players.map(
+        (player) =>
+          createHandScorerContext(game, player.id, billWins).isWinner,
+      ),
+    ).toEqual([false, true, false, false]);
+  });
+
+  it('derives no winners for a draw or wash-out', () => {
+    expect(
+      game.players.map(
+        (player) =>
+          createHandScorerContext(game, player.id, { type: 'draw' }).isWinner,
+      ),
+    ).toEqual([false, false, false, false]);
+  });
+
   it('returns the full detailed record to only that player', () => {
     const calculated = makeCalculatedResult('bill', 336, true, 'original');
     const result = applyHandScorerResult(
@@ -122,6 +143,7 @@ describe('game hand-scorer handoff', () => {
           ben: { source: 'manual', finalScore: 208 },
         },
       },
+      billWins,
       calculated,
     );
 
@@ -131,7 +153,6 @@ describe('game hand-scorer handoff', () => {
       ben: 208,
     });
     expect(result.draft.scoreRecords.bill).toEqual(calculated.detailedHand);
-    expect(result.selectedWinnerId).toBe('bill');
     expect(game.balances).toEqual({ jenn: 0, bill: 0, ben: 0, jack: 0 });
     expect(game.handHistory).toEqual([]);
   });
@@ -140,6 +161,7 @@ describe('game hand-scorer handoff', () => {
     const first = applyHandScorerResult(
       game,
       { scores: {}, scoreRecords: {} },
+      billWins,
       makeCalculatedResult('bill', 88, true, 'original'),
     );
     const replacement = makeCalculatedResult(
@@ -148,7 +170,12 @@ describe('game hand-scorer handoff', () => {
       true,
       'replacement',
     );
-    const second = applyHandScorerResult(game, first.draft, replacement);
+    const second = applyHandScorerResult(
+      game,
+      first.draft,
+      billWins,
+      replacement,
+    );
 
     expect(second.draft.scores.bill).toBe(176);
     expect(second.draft.scoreRecords.bill).toEqual(replacement.detailedHand);
@@ -163,9 +190,10 @@ describe('game hand-scorer handoff', () => {
     const draft = applyHandScorerResult(
       game,
       { scores: {}, scoreRecords: {} },
+      billWins,
       makeCalculatedResult('bill', 88, true, 'original'),
     ).draft;
-    const cancelled = applyHandScorerSession(game, draft, null);
+    const cancelled = applyHandScorerSession(game, draft, billWins, null);
 
     expect(cancelled.draft).toBe(draft);
     expect(cancelled.draft.scoreRecords.bill).toEqual(
@@ -177,6 +205,7 @@ describe('game hand-scorer handoff', () => {
     const calculated = applyHandScorerResult(
       game,
       { scores: {}, scoreRecords: {} },
+      billWins,
       makeCalculatedResult('bill', 88, true, 'original'),
     ).draft;
     const manual = applyManualScore(game, calculated, 'bill', 100);
@@ -194,7 +223,7 @@ describe('game hand-scorer handoff', () => {
       scores: {},
       scoreRecords: {},
     };
-    draft = applyHandScorerResult(game, draft, calculated).draft;
+    draft = applyHandScorerResult(game, draft, billWins, calculated).draft;
     draft = applyManualScore(game, draft, 'jenn', 80);
     draft = applyManualScore(game, draft, 'ben', 208);
     draft = applyManualScore(game, draft, 'jack', 416);
@@ -212,5 +241,78 @@ describe('game hand-scorer handoff', () => {
       source: 'manual',
       finalScore: 80,
     });
+  });
+
+  it('rejects a detailed result that contradicts the selected round winner', () => {
+    expect(() =>
+      applyHandScorerResult(
+        game,
+        { scores: {}, scoreRecords: {} },
+        billWins,
+        makeCalculatedResult('jenn', 88, true, 'contradiction'),
+      ),
+    ).toThrow('winner status does not match');
+  });
+
+  it('invalidates every affected calculated hand when the winner changes', () => {
+    let draft: RoundScoringDraft = { scores: {}, scoreRecords: {} };
+    draft = applyHandScorerResult(
+      game,
+      draft,
+      billWins,
+      makeCalculatedResult('bill', 88, true, 'bill-winner'),
+    ).draft;
+    draft = applyHandScorerResult(
+      game,
+      draft,
+      billWins,
+      makeCalculatedResult('jenn', 44, false, 'jenn-non-winner'),
+    ).draft;
+    draft = applyHandScorerResult(
+      game,
+      draft,
+      billWins,
+      makeCalculatedResult('ben', 32, false, 'ben-non-winner'),
+    ).draft;
+
+    const changed = reconcileDetailedHandsForOutcome(game, draft, {
+      type: 'win',
+      winnerId: 'jenn',
+    });
+
+    expect(changed.scores.bill).toBeUndefined();
+    expect(changed.scores.jenn).toBeUndefined();
+    expect(changed.scores.ben).toBe(32);
+    expect(changed.scoreRecords.bill).toMatchObject({
+      source: 'detailed-scorer',
+      requiresRecalculation: true,
+      hand: { isWinner: false },
+    });
+    expect(changed.scoreRecords.jenn).toMatchObject({
+      source: 'detailed-scorer',
+      requiresRecalculation: true,
+      hand: { isWinner: true },
+    });
+    expect(changed.scoreRecords.ben).toMatchObject({
+      source: 'detailed-scorer',
+      hand: { isWinner: false },
+    });
+  });
+
+  it('prevents contradictory detailed winner metadata entering the ledger', () => {
+    const contradictory = makeCalculatedResult(
+      'jenn',
+      80,
+      true,
+      'second-winner',
+    );
+
+    expect(() =>
+      confirmHand(game, {
+        outcome: billWins,
+        scores: { jenn: 80, bill: 88, ben: 32, jack: 16 },
+        scoreRecords: { jenn: contradictory.detailedHand },
+      }),
+    ).toThrow('winner status does not match');
   });
 });
