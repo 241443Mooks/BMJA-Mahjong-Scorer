@@ -1,17 +1,51 @@
 import { CURRENT_RULESET } from './ruleset';
 import type {
   ConfirmedHand,
+  DetailedHandRecord,
   GameLength,
   GamePlayer,
   GameSetup,
   GameState,
   PlayerAmounts,
+  PlayerScoreRecords,
+  PlayerScoreRecord,
   RoundInput,
   SeatAssignments,
 } from './types';
 
 const cloneAmounts = (amounts: PlayerAmounts): PlayerAmounts => ({ ...amounts });
 const cloneSeats = (seats: SeatAssignments): SeatAssignments => ({ ...seats });
+
+const cloneDetailedHandRecord = (
+  record: DetailedHandRecord,
+): DetailedHandRecord => ({
+  ...record,
+  hand: {
+    ...record.hand,
+    sets: record.hand.sets.map((handSet) => ({
+      ...handSet,
+      tile: { ...handSet.tile },
+    })),
+    looseTiles: record.hand.looseTiles?.map((tile) => ({ ...tile })),
+    bonusTiles: record.hand.bonusTiles.map((tile) => ({ ...tile })),
+  },
+  context: { ...record.context },
+  breakdown: {
+    ...record.breakdown,
+    validationErrors: [...record.breakdown.validationErrors],
+    pointRules: record.breakdown.pointRules.map((rule) => ({ ...rule })),
+    doubleRules: record.breakdown.doubleRules.map((rule) => ({ ...rule })),
+    specialHands: record.breakdown.specialHands.map((hand) => ({ ...hand })),
+    calculationComponents: record.breakdown.calculationComponents.map(
+      (component) => ({ ...component }),
+    ),
+  },
+});
+
+const cloneScoreRecord = (record: PlayerScoreRecord): PlayerScoreRecord =>
+  record.source === 'detailed-scorer'
+    ? cloneDetailedHandRecord(record)
+    : { ...record };
 
 const validateSetup = (setup: GameSetup) => {
   if (setup.players.length !== 4) {
@@ -36,6 +70,33 @@ const eastPlayerId = (seats: SeatAssignments) => {
   if (!east) throw new Error('A game must always have an East player.');
   return east[0];
 };
+
+const normaliseScoreRecords = (
+  state: GameState,
+  round: RoundInput,
+): PlayerScoreRecords =>
+  Object.fromEntries(
+    state.players.map((player) => {
+      const score = round.scores[player.id];
+      const record = round.scoreRecords?.[player.id];
+      if (!record) {
+        return [
+          player.id,
+          { source: 'manual' as const, finalScore: score },
+        ];
+      }
+      if (
+        record.finalScore !== score ||
+        (record.source === 'detailed-scorer' &&
+          record.breakdown.finalScore !== score)
+      ) {
+        throw new Error(
+          `Score metadata for ${player.name} does not match the round score.`,
+        );
+      }
+      return [player.id, cloneScoreRecord(record)];
+    }),
+  );
 
 export const createBmjaGame = (
   players: GamePlayer[],
@@ -77,6 +138,7 @@ const applyRound = (state: GameState, round: RoundInput): GameState => {
     state.seats,
     round,
   );
+  const scoreRecords = normaliseScoreRecords(state, round);
   const runningTotals = Object.fromEntries(
     state.players.map((player) => [
       player.id,
@@ -106,6 +168,7 @@ const applyRound = (state: GameState, round: RoundInput): GameState => {
     handNumber: state.handHistory.length + 1,
     outcome: round.outcome,
     scores: cloneAmounts(round.scores),
+    scoreRecords,
     eastPlayerId: eastPlayerId(state.seats),
     prevailingWind: state.prevailingWind,
     seats: cloneSeats(state.seats),
@@ -149,8 +212,9 @@ export const replayGame = (
 export const undoLastHand = (state: GameState): GameState =>
   replayGame(
     state.setup,
-    state.handHistory.slice(0, -1).map(({ outcome, scores }) => ({
+    state.handHistory.slice(0, -1).map(({ outcome, scores, scoreRecords }) => ({
       outcome,
       scores,
+      scoreRecords,
     })),
   );

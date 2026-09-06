@@ -1,10 +1,11 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { Check, ChevronDown, CircleHelp, Copy, Minus, Plus, RotateCcw, Sparkles, X, AlertCircle } from 'lucide-react';
 import { GameScorer } from './game/GameScorer';
+import { handScorerLocalContext } from './game';
 import type {
   HandScorerContext,
   HandScorerResult,
@@ -105,19 +106,41 @@ const winningMethods: { value: WinningMethod; label: string }[] = [
 
 function HandScorer({ context, onClose }: { context: HandScorerContext | null; onClose: (result?: HandScorerResult) => void }) {
   const hasContext = !!context;
-  const [sets, setSets] = useState<UIHandSet[]>(defaultSets);
-  const [flowers, setFlowers] = useState<number[]>([]);
-  const [seasons, setSeasons] = useState<number[]>([]);
-  
-  const [playerWind, setPlayerWind] = useState<Wind>(context?.playerWind ?? 'east');
-  const [prevailingWind, setPrevailingWind] = useState<Wind>(context?.prevailingWind ?? 'east');
-  const [limit, setLimit] = useState<number>(context?.limit ?? 1000);
-  
-  const [isWinner, setIsWinner] = useState<boolean>(context?.isWinner ?? false);
-  const [winningMethod, setWinningMethod] = useState<WinningMethod>('wall');
-  const [originalCall, setOriginalCall] = useState<boolean>(false);
+  const initialContext = handScorerLocalContext(context);
+  const initialHand = context?.detailedHand?.hand;
+  const [sets, setSets] = useState<UIHandSet[]>(() =>
+    initialHand
+      ? initialHand.sets.map((handSet) => ({ ...handSet }))
+      : defaultSets.map((handSet) => ({ ...handSet })),
+  );
+  const [flowers, setFlowers] = useState<number[]>(() =>
+    initialHand?.bonusTiles
+      .filter((tile) => tile.family === 'flower')
+      .map((tile) => tile.number) ?? [],
+  );
+  const [seasons, setSeasons] = useState<number[]>(() =>
+    initialHand?.bonusTiles
+      .filter((tile) => tile.family === 'season')
+      .map((tile) => tile.number) ?? [],
+  );
 
-  const [selectedSet, setSelectedSet] = useState<string>('set-1');
+  const [playerWind, setPlayerWind] = useState<Wind>(initialContext.playerWind);
+  const [prevailingWind, setPrevailingWind] = useState<Wind>(
+    initialContext.prevailingWind,
+  );
+  const [limit, setLimit] = useState<number>(initialContext.limit);
+
+  const [isWinner, setIsWinner] = useState<boolean>(initialContext.isWinner);
+  const [winningMethod, setWinningMethod] = useState<WinningMethod>(
+    initialHand?.winningMethod ?? 'wall',
+  );
+  const [originalCall, setOriginalCall] = useState<boolean>(
+    initialHand?.originalCall ?? false,
+  );
+
+  const [selectedSet, setSelectedSet] = useState<string>(
+    initialHand?.sets[0]?.id ?? 'set-1',
+  );
   const [activeSuit, setActiveSuit] = useState<string>('characters');
   const [showAllTiles, setShowAllTiles] = useState(false);
   const [expandedRule, setExpandedRule] = useState<string | null>(null);
@@ -125,9 +148,38 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
 
   const activeSet = sets.find(s => s.id === selectedSet);
 
-  const score = useMemo(() => {
+  useEffect(() => {
+    const nextContext = handScorerLocalContext(context);
+    const savedHand = context?.detailedHand?.hand;
+    const nextSets = savedHand
+      ? savedHand.sets.map((handSet) => ({ ...handSet }))
+      : defaultSets.map((handSet) => ({ ...handSet }));
+
+    setSets(nextSets);
+    setFlowers(
+      savedHand?.bonusTiles
+        .filter((tile) => tile.family === 'flower')
+        .map((tile) => tile.number) ?? [],
+    );
+    setSeasons(
+      savedHand?.bonusTiles
+        .filter((tile) => tile.family === 'season')
+        .map((tile) => tile.number) ?? [],
+    );
+    setPlayerWind(nextContext.playerWind);
+    setPrevailingWind(nextContext.prevailingWind);
+    setLimit(nextContext.limit);
+    setIsWinner(nextContext.isWinner);
+    setWinningMethod(savedHand?.winningMethod ?? 'wall');
+    setOriginalCall(savedHand?.originalCall ?? false);
+    setSelectedSet(nextSets[0]?.id ?? '');
+    setExpandedRule(null);
+    setCopied(false);
+  }, [context]);
+
+  const hand = useMemo<MahjongHand>(() => {
     const validSets = sets.filter((s): s is HandSet => s.tile !== null);
-    const hand: MahjongHand = {
+    return {
       sets: validSets,
       bonusTiles: [
         ...flowers.map(n => bonus('flower', n as BonusTile['number'])),
@@ -137,9 +189,17 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
       winningMethod: isWinner ? winningMethod : undefined,
       originalCall,
     };
-    const gameContext: GameContext = { playerWind, prevailingWind, limit };
-    return scoreHand(hand, gameContext);
-  }, [sets, flowers, seasons, isWinner, winningMethod, originalCall, playerWind, prevailingWind, limit]);
+  }, [sets, flowers, seasons, isWinner, winningMethod, originalCall]);
+
+  const gameContext = useMemo<GameContext>(
+    () => ({ playerWind, prevailingWind, limit }),
+    [limit, playerWind, prevailingWind],
+  );
+
+  const score = useMemo(
+    () => scoreHand(hand, gameContext),
+    [gameContext, hand],
+  );
 
   const tileCount = sets.filter(s => s.tile !== null).flatMap(s => expandedTiles(s as HandSet)).length + flowers.length + seasons.length;
 
@@ -166,7 +226,7 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
     setSets([{ id: 'set-1', kind: 'chow', visibility: 'concealed', tile: null }]);
     setFlowers([]);
     setSeasons([]);
-    if (!hasContext) setIsWinner(false);
+    setIsWinner(context?.isWinner ?? false);
     setSelectedSet('set-1');
   }
   function loadExample() {
@@ -195,6 +255,30 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
     navigator.clipboard?.writeText(`${playerWind} Player: ${score.finalScore} points (${score.basePoints} base, ${score.doubles} doubles)`);
     setCopied(true);
     window.setTimeout(() => setCopied(false), 1400);
+  }
+
+  function applyScore() {
+    if (!context || !score.valid) return;
+    onClose({
+      playerId: context.playerId,
+      score: score.finalScore,
+      isWinner,
+      detailedHand: {
+        source: 'detailed-scorer',
+        hand: {
+          ...hand,
+          sets: hand.sets.map((handSet) => ({
+            ...handSet,
+            tile: { ...handSet.tile },
+          })),
+          bonusTiles: hand.bonusTiles.map((tile) => ({ ...tile })),
+          looseTiles: hand.looseTiles?.map((tile) => ({ ...tile })),
+        },
+        context: { ...gameContext },
+        breakdown: score,
+        finalScore: score.finalScore,
+      },
+    });
   }
 
   const visibleTiles = allPlayingTiles.filter(tile => {
@@ -234,7 +318,7 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
               </button>
             )}
             {hasContext ? (
-              <button type="button" data-testid="button-apply-score" disabled={!score.valid} onClick={() => onClose({ playerId: context.playerId, score: score.finalScore, isWinner })} className="rounded-md bg-[#284d45] px-4 py-2 text-[11px] font-bold text-[#f8f4e9] disabled:cursor-not-allowed disabled:opacity-40">
+              <button type="button" data-testid="button-apply-score" disabled={!score.valid} onClick={applyScore} className="rounded-md bg-[#284d45] px-4 py-2 text-[11px] font-bold text-[#f8f4e9] disabled:cursor-not-allowed disabled:opacity-40">
                 Apply {score.finalScore} to {context.playerName}
               </button>
             ) : (
@@ -477,7 +561,7 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
                 <div className="border-t border-[#55756c] bg-[#1f3f38] p-5 sm:hidden">
                   {hasContext ? (
                     <>
-                      <button type="button" data-testid="button-apply-score-mobile" disabled={!score.valid} onClick={() => onClose({ playerId: context.playerId, score: score.finalScore, isWinner })} className="flex w-full items-center justify-center rounded-md bg-[#f3e8d4] px-4 py-3 text-[13px] font-bold text-[#284d45] disabled:cursor-not-allowed disabled:opacity-40">
+                      <button type="button" data-testid="button-apply-score-mobile" disabled={!score.valid} onClick={applyScore} className="flex w-full items-center justify-center rounded-md bg-[#f3e8d4] px-4 py-3 text-[13px] font-bold text-[#284d45] disabled:cursor-not-allowed disabled:opacity-40">
                         Apply {score.finalScore} to {context.playerName}
                       </button>
                       <button type="button" onClick={() => onClose()} className="mt-3 flex w-full items-center justify-center rounded-md border border-[#45665d] py-3 text-[13px] font-semibold text-[#c8d8d1]">
@@ -519,7 +603,9 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
 export default function App() {
   const [view, setView] = useState<'game' | 'hand'>('game');
   const [scorerContext, setScorerContext] = useState<HandScorerContext | null>(null);
-  const [returnedScore, setReturnedScore] = useState<HandScorerResult | null>(null);
+  const [returnedScore, setReturnedScore] = useState<
+    HandScorerResult | null | undefined
+  >(undefined);
   const [scorerSession, setScorerSession] = useState(0);
 
   const handleOpenHandScorer = (ctx?: HandScorerContext) => {
@@ -529,9 +615,7 @@ export default function App() {
   };
 
   const handleCloseHandScorer = (result?: HandScorerResult) => {
-    if (result) {
-      setReturnedScore(result);
-    }
+    setReturnedScore(result ?? null);
     setView('game');
   };
 
@@ -543,7 +627,7 @@ export default function App() {
             <GameScorer
               onOpenHandScorer={handleOpenHandScorer}
               returnedScore={returnedScore}
-              onClearReturnedScore={() => setReturnedScore(null)}
+              onClearReturnedScore={() => setReturnedScore(undefined)}
             />
           </div>
           <div className={view === 'hand' ? 'block' : 'hidden'}>

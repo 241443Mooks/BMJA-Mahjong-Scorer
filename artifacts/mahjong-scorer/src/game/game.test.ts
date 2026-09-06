@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { confirmHand, createBmjaGame, undoLastHand } from './game';
-import type { GamePlayer, SeatAssignments } from './types';
+import type {
+  DetailedHandRecord,
+  GamePlayer,
+  SeatAssignments,
+} from './types';
 
 const players: GamePlayer[] = [
   { id: 'bill', name: 'Bill' },
@@ -14,6 +18,36 @@ const seats: SeatAssignments = {
   rod: 'east',
   ben: 'west',
   jack: 'north',
+};
+
+const rodDetailedScore: DetailedHandRecord = {
+  source: 'detailed-scorer',
+  hand: {
+    sets: [],
+    bonusTiles: [],
+    isWinner: true,
+    winningMethod: 'wall',
+  },
+  context: {
+    playerWind: 'east',
+    prevailingWind: 'east',
+    limit: 1000,
+  },
+  breakdown: {
+    valid: true,
+    validationErrors: [],
+    pointRules: [],
+    doubleRules: [],
+    specialHands: [],
+    basePoints: 200,
+    doubles: 0,
+    uncappedScore: 200,
+    finalScore: 200,
+    limitApplied: false,
+    scoringMode: 'standard',
+    calculationComponents: [],
+  },
+  finalScore: 200,
 };
 
 describe('BMJA game-level golden fixtures', () => {
@@ -115,6 +149,7 @@ describe('BMJA game-level golden fixtures', () => {
     const afterFirst = confirmHand(initial, {
       outcome: { type: 'win', winnerId: 'rod' },
       scores: { bill: 100, rod: 200, ben: 300, jack: 400 },
+      scoreRecords: { rod: rodDetailedScore },
     });
     const afterSecond = confirmHand(afterFirst, {
       outcome: { type: 'draw' },
@@ -124,5 +159,6 @@ describe('BMJA game-level golden fixtures', () => {
 
     expect(undone).toEqual(afterFirst);
     expect(undone.handHistory).toHaveLength(1);
+    expect(undone.handHistory[0].scoreRecords.rod).toEqual(rodDetailedScore);
   });
 });

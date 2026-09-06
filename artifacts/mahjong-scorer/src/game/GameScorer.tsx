@@ -10,7 +10,8 @@ import {
   Undo2,
 } from 'lucide-react';
 import {
-  applyHandScorerResult,
+  applyManualScore,
+  applyHandScorerSession,
   confirmHand,
   createBmjaGame,
   createHandScorerContext,
@@ -26,7 +27,9 @@ import type {
   HandScorerContext,
   HandScorerResult,
   PlayerAmounts,
+  PlayerScoreRecords,
   RoundScoreDraft,
+  RoundScoringDraft,
   SeatAssignments,
 } from '.';
 import type { Wind } from '../scoring';
@@ -50,19 +53,25 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
   const [outcomeType, setOutcomeType] = useState<'win' | 'draw'>('win');
   const [winnerId, setWinnerId] = useState('');
   const [scores, setScores] = useState<RoundScoreDraft>({});
+  const [scoreRecords, setScoreRecords] = useState<PlayerScoreRecords>({});
   const [error, setError] = useState('');
 
   useEffect(() => {
-    if (returnedScore && game) {
-      const returned = applyHandScorerResult(game, scores, returnedScore);
-      setScores(returned.scores);
+    if (returnedScore !== undefined && game) {
+      const returned = applyHandScorerSession(
+        game,
+        { scores, scoreRecords },
+        returnedScore,
+      );
+      setScores(returned.draft.scores);
+      setScoreRecords(returned.draft.scoreRecords);
       if (returned.selectedWinnerId) {
         setOutcomeType('win');
         setWinnerId(returned.selectedWinnerId);
       }
       onClearReturnedScore();
     }
-  }, [game, onClearReturnedScore, returnedScore, scores]);
+  }, [game, onClearReturnedScore, returnedScore, scoreRecords, scores]);
 
   const currentEastId = game
     ? Object.entries(game.seats).find(([, seat]) => seat === 'east')?.[0]
@@ -109,12 +118,14 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
     const started = createBmjaGame(players, seats, undefined, gameLength);
     setGame(started);
     setScores({});
+    setScoreRecords({});
     setWinnerId(players[0].id);
     setError('');
   };
 
   const resetRoundEntry = (nextGame: GameState) => {
     setScores({});
+    setScoreRecords({});
     const east = Object.entries(nextGame.seats).find(
       ([, seat]) => seat === 'east',
     )?.[0];
@@ -133,7 +144,11 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
       return;
     }
     const fullScores = Object.fromEntries(game.players.map(p => [p.id, scores[p.id] ?? 0])) as PlayerAmounts;
-    const next = confirmHand(game, { outcome, scores: fullScores });
+    const next = confirmHand(game, {
+      outcome,
+      scores: fullScores,
+      scoreRecords,
+    });
     setGame(next);
     resetRoundEntry(next);
     setError('');
@@ -396,18 +411,17 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
                            placeholder="Enter score"
                           data-testid={`input-score-${player.id}`}
                           value={scores[player.id] === undefined ? '' : scores[player.id]}
-                          onChange={(event) =>
-                            setScores((current) => {
-                              const val = event.target.value;
-                              const next = { ...current };
-                              if (val === '') {
-                                delete next[player.id];
-                              } else {
-                                next[player.id] = Number(val);
-                              }
-                              return next;
-                            })
-                          }
+                           onChange={(event) => {
+                             const value = event.target.value;
+                             const next: RoundScoringDraft = applyManualScore(
+                               game,
+                               { scores, scoreRecords },
+                               player.id,
+                               value === '' ? null : Number(value),
+                             );
+                             setScores(next.scores);
+                             setScoreRecords(next.scoreRecords);
+                           }}
                           className="w-full min-w-0 rounded-md border border-[#cfc3aa] bg-[#fdfbf5] px-3 py-3 font-mono text-[16px] text-[#284d45] outline-none focus:ring-2 focus:ring-[#ae6249]"
                         />
                         <button
@@ -415,7 +429,12 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
                           data-testid={`button-calculate-${player.id}`}
                            onClick={() =>
                              onOpenHandScorer(
-                               createHandScorerContext(game, player.id, outcome),
+                               createHandScorerContext(
+                                 game,
+                                 player.id,
+                                 outcome,
+                                 scoreRecords[player.id],
+                               ),
                              )
                            }
                            className="flex shrink-0 items-center justify-center gap-1.5 rounded-md border border-[#cfc3aa] bg-[#e8e1d1] px-3 text-[11px] font-semibold text-[#284d45] transition hover:bg-[#d8ceb8]"

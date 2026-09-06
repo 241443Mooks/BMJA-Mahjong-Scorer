@@ -1,4 +1,9 @@
-import type { MahjongHand, ScoreBreakdown, Wind } from '../scoring';
+import type {
+  GameContext,
+  MahjongHand,
+  ScoreBreakdown,
+  Wind,
+} from '../scoring';
 
 export const GAME_WINDS: Wind[] = ['east', 'south', 'west', 'north'];
 
@@ -19,6 +24,7 @@ export type HandOutcome =
 export type RoundInput = {
   outcome: HandOutcome;
   scores: PlayerAmounts;
+  scoreRecords?: PlayerScoreRecords;
 };
 
 export type SettlementTransaction = {
@@ -51,6 +57,7 @@ export type ConfirmedHand = {
   handNumber: number;
   outcome: HandOutcome;
   scores: PlayerAmounts;
+  scoreRecords: PlayerScoreRecords;
   eastPlayerId: PlayerId;
   prevailingWind: Wind;
   seats: SeatAssignments;
@@ -112,12 +119,42 @@ export type HandScorerContext = {
   prevailingWind: Wind;
   isWinner: boolean;
   limit: number;
+  detailedHand?: DetailedHandRecord;
 };
 
 export type HandScorerResult = {
   playerId: string;
   score: number;
   isWinner: boolean;
+  detailedHand: DetailedHandRecord;
 };
 
 export type RoundScoreDraft = Partial<PlayerAmounts>;
+
+export type ManualScoreRecord = {
+  source: 'manual';
+  finalScore: number;
+};
+
+export type DetailedHandRecord = {
+  source: 'detailed-scorer';
+  hand: MahjongHand;
+  context: GameContext;
+  breakdown: ScoreBreakdown;
+  finalScore: number;
+};
+
+export type PlayerScoreRecord = ManualScoreRecord | DetailedHandRecord;
+export type PlayerScoreRecords = Partial<Record<PlayerId, PlayerScoreRecord>>;
+
+export type RoundScoringDraft = {
+  scores: RoundScoreDraft;
+  scoreRecords: PlayerScoreRecords;
+};
+
+export type HandScorerLocalContext = {
+  playerWind: Wind;
+  prevailingWind: Wind;
+  limit: number;
+  isWinner: boolean;
+};
