@@ -23,12 +23,110 @@ const counts = (values: PlayingTile[]) =>
     map.set(key, (map.get(key) ?? 0) + 1);
     return map;
   }, new Map());
+const hasAtMostFourCopies = (values: PlayingTile[]) =>
+  [...counts(values).values()].every((count) => count <= 4);
+
+const suitedRankCounts = (values: PlayingTile[]) => {
+  const tally = new Map<number, Map<string, number>>();
+  for (const tile of values) {
+    if (tile.family !== 'suit') return null;
+    const rank = tally.get(tile.rank) ?? new Map<string, number>();
+    rank.set(tile.suit, (rank.get(tile.suit) ?? 0) + 1);
+    tally.set(tile.rank, rank);
+  }
+  return tally;
+};
+
+const canPairAcrossSuits = (rankCounts: Map<string, number>) => {
+  const values = [...rankCounts.values()];
+  const total = values.reduce((sum, value) => sum + value, 0);
+  return total % 2 === 0 && Math.max(...values, 0) <= total / 2;
+};
+
+const isGreenTile = (tile: PlayingTile) =>
+  tile.family === 'dragon'
+    ? tile.dragon === 'green'
+    : tile.family === 'suit' &&
+      tile.suit === 'bamboo' &&
+      [2, 3, 4, 6, 8].includes(tile.rank);
 
 /**
  * Special-hand detectors are independent: each receives only the canonical
  * MahjongHand and returns a boolean. Adding one cannot alter another.
  */
 export const specialHandDetectors: Detector[] = [
+  {
+    id: 'knitting',
+    name: 'Knitting',
+    description:
+      'Seven pairs, each pairing the same number across two different suits; pairs may repeat.',
+    value: 500,
+    detect: (hand) => {
+      const all = tiles(hand);
+      const tally = suitedRankCounts(all);
+      return (
+        hand.isWinner &&
+        hand.sets.length === 0 &&
+        all.length === 14 &&
+        hasAtMostFourCopies(all) &&
+        tally !== null &&
+        [...tally.values()].every(canPairAcrossSuits)
+      );
+    },
+  },
+  {
+    id: 'triple-knitting',
+    name: 'Triple Knitting',
+    description:
+      'Four same-number groups across all three suits, plus a same-number pair across two suits.',
+    value: 500,
+    detect: (hand) => {
+      const all = tiles(hand);
+      const tally = suitedRankCounts(all);
+      if (
+        !hand.isWinner ||
+        hand.sets.length !== 0 ||
+        all.length !== 14 ||
+        !hasAtMostFourCopies(all) ||
+        tally === null
+      ) {
+        return false;
+      }
+      const suits = ['bamboo', 'characters', 'circles'] as const;
+      return [...tally.entries()].some(([pairRank, rankCounts]) =>
+        suits.some((firstSuit, firstIndex) =>
+          suits.slice(firstIndex + 1).some((secondSuit) => {
+            if (
+              (rankCounts.get(firstSuit) ?? 0) < 1 ||
+              (rankCounts.get(secondSuit) ?? 0) < 1
+            ) {
+              return false;
+            }
+            let triplets = 0;
+            for (const [rank, values] of tally) {
+              const adjusted = suits.map(
+                (suit) =>
+                  (values.get(suit) ?? 0) -
+                  (rank === pairRank &&
+                  (suit === firstSuit || suit === secondSuit)
+                    ? 1
+                    : 0),
+              );
+              if (
+                adjusted.some((value) => value < 0) ||
+                adjusted[0] !== adjusted[1] ||
+                adjusted[1] !== adjusted[2]
+              ) {
+                return false;
+              }
+              triplets += adjusted[0];
+            }
+            return triplets === 4;
+          }),
+        ),
+      );
+    },
+  },
   {
     id: 'all-pair-honours',
     name: 'All pair honours',
@@ -45,6 +143,25 @@ export const specialHandDetectors: Detector[] = [
             set.tile.rank === 1 ||
             set.tile.rank === 9),
       ),
+  },
+  {
+    id: 'imperial-jade',
+    name: 'Imperial Jade',
+    description:
+      'Four pungs/kongs and a pair using only Green Dragon or Bamboo 2, 3, 4, 6 and 8.',
+    value: 1000,
+    detect: (hand) => {
+      const all = tiles(hand);
+      return (
+        hand.isWinner &&
+        hand.sets.length === 5 &&
+        hand.sets.filter((set) => set.kind === 'pair').length === 1 &&
+        hand.sets.filter((set) => set.kind === 'pung' || set.kind === 'kong')
+          .length === 4 &&
+        hasAtMostFourCopies(all) &&
+        all.every(isGreenTile)
+      );
+    },
   },
   {
     id: 'thirteen-unique-wonders',
@@ -75,6 +192,89 @@ export const specialHandDetectors: Detector[] = [
         all.length === 14 &&
         required.every((key) => tally.has(key)) &&
         [...tally.values()].filter((count) => count === 2).length === 1
+      );
+    },
+  },
+  {
+    id: 'gates-of-heaven',
+    name: 'The Gates of Heaven',
+    description:
+      'A concealed one-suit layout with three 1s, three 9s, 2 through 8, and one of 2 through 8 paired.',
+    value: 1000,
+    detect: (hand) => {
+      const all = tiles(hand);
+      if (
+        !hand.isWinner ||
+        hand.sets.length !== 0 ||
+        all.length !== 14 ||
+        !hasAtMostFourCopies(all) ||
+        all.some((tile) => tile.family !== 'suit')
+      ) {
+        return false;
+      }
+      const suited = all.filter(
+        (tile): tile is Extract<PlayingTile, { family: 'suit' }> =>
+          tile.family === 'suit',
+      );
+      if (new Set(suited.map((tile) => tile.suit)).size !== 1) return false;
+      const ranks = new Map<number, number>();
+      for (const tile of suited) {
+        ranks.set(tile.rank, (ranks.get(tile.rank) ?? 0) + 1);
+      }
+      return (
+        ranks.get(1) === 3 &&
+        ranks.get(9) === 3 &&
+        [2, 3, 4, 5, 6, 7, 8].every((rank) =>
+          [1, 2].includes(ranks.get(rank) ?? 0),
+        ) &&
+        [2, 3, 4, 5, 6, 7, 8].filter((rank) => ranks.get(rank) === 2)
+          .length === 1
+      );
+    },
+  },
+  {
+    id: 'wriggling-snake',
+    name: 'The Wriggling Snake',
+    description:
+      'A pair of suited 1s, suited 2 through 9 in that suit, and one of each Wind.',
+    value: 1000,
+    detect: (hand) => {
+      const all = tiles(hand);
+      if (
+        !hand.isWinner ||
+        hand.sets.length !== 0 ||
+        all.length !== 14 ||
+        !hasAtMostFourCopies(all)
+      ) {
+        return false;
+      }
+      const suited = all.filter(
+        (tile): tile is Extract<PlayingTile, { family: 'suit' }> =>
+          tile.family === 'suit',
+      );
+      const winds = all.filter(
+        (tile): tile is Extract<PlayingTile, { family: 'wind' }> =>
+          tile.family === 'wind',
+      );
+      if (
+        suited.length !== 10 ||
+        winds.length !== 4 ||
+        new Set(suited.map((tile) => tile.suit)).size !== 1
+      ) {
+        return false;
+      }
+      const rankTally = counts(suited);
+      const windTally = counts(winds);
+      const suit = suited[0]?.suit;
+      return (
+        !!suit &&
+        rankTally.get(`${suit}-1`) === 2 &&
+        [2, 3, 4, 5, 6, 7, 8, 9].every(
+          (rank) => rankTally.get(`${suit}-${rank}`) === 1,
+        ) &&
+        ['east', 'south', 'west', 'north'].every(
+          (value) => windTally.get(`wind-${value}`) === 1,
+        )
       );
     },
   },

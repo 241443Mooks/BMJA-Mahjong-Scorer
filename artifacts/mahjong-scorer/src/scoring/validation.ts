@@ -1,4 +1,6 @@
-import type { MahjongHand } from './types';
+import { detectSpecialHands } from './special-hands';
+import { expandedTiles, tileKey } from './tiles';
+import type { MahjongHand, PlayingTile } from './types';
 
 export const validateHand = (hand: MahjongHand): string[] => {
   const errors: string[] = [];
@@ -10,6 +12,11 @@ export const validateHand = (hand: MahjongHand): string[] => {
     hand.sets.every((set) => set.kind === 'pair');
   const isIrregularShape =
     hand.sets.length === 0 && hand.looseTiles?.length === 14;
+  const isSupportedIrregularShape =
+    isIrregularShape &&
+    detectSpecialHands({ ...hand, isWinner: true }).some(
+      (special) => special.matched,
+    );
 
   if (
     hand.isWinner &&
@@ -23,6 +30,28 @@ export const validateHand = (hand: MahjongHand): string[] => {
 
   if (hand.looseTiles && hand.looseTiles.length > 0 && hand.sets.length > 0) {
     errors.push('Ungrouped special-hand tiles cannot be mixed with ordinary sets.');
+  }
+
+  if (isIrregularShape && !isSupportedIrregularShape) {
+    errors.push(
+      'Ungrouped tiles must form a supported 14-tile special-hand layout.',
+    );
+  }
+
+  const playingTiles: PlayingTile[] = [
+    ...hand.sets.flatMap(expandedTiles),
+    ...(hand.looseTiles ?? []),
+  ];
+  const playingTileCounts = playingTiles.reduce<Map<string, number>>(
+    (tally, tile) => {
+      const key = tileKey(tile);
+      tally.set(key, (tally.get(key) ?? 0) + 1);
+      return tally;
+    },
+    new Map(),
+  );
+  if ([...playingTileCounts.values()].some((count) => count > 4)) {
+    errors.push('A playing tile cannot appear more than four times.');
   }
 
   for (const set of hand.sets) {

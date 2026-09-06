@@ -107,18 +107,11 @@ Fishing matters. BMJA assigns special fishing values to many special hands when 
 | Three Great Scholars | 1,000 | Partial — winner implemented; fishing/intrinsic comparison not yet implemented |
 | Four Blessings Hovering over the Door | 1,000 | Partial — winner implemented; fishing/intrinsic comparison not yet implemented |
 | Buried Treasure | 1,000 | Partial — winner pattern implemented but final-winning-tile concealment exception needs richer provenance |
-
-### Missing layout-based specials
-
-These should be detectable from a sufficiently expressive final hand representation:
-
-- Knitting — 500; 200 when fishing.
-- Triple Knitting — 500; 200 when fishing.
-- Imperial Jade — 1,000; 400 when fishing.
-- Gates of Heaven — 1,000; 400 when fishing.
-- Wriggling Snake — 1,000; 400 when fishing.
-
-Tracked in issue #1.
+| Knitting | 500 | Partial — winner pattern implemented; 200 fishing not yet implemented |
+| Triple Knitting | 500 | Partial — winner pattern implemented; 200 fishing not yet implemented |
+| Imperial Jade | 1,000 | Partial — winner pattern implemented; 400 fishing not yet implemented |
+| Gates of Heaven | 1,000 | Partial — concealed winner layout implemented; final-winning-tile claim exception still needs richer provenance; 400 fishing not yet implemented |
+| Wriggling Snake | 1,000 | Partial — winner pattern implemented; 400 fishing not yet implemented |
 
 ### Missing event-dependent specials
 
@@ -147,6 +140,10 @@ For some special-hand fishing situations the published rules allow intrinsic sco
 ### Winning-tile provenance
 
 The current hand model does not always know which exact tile completed the hand or which set/pair it completed. This affects exceptions for hands such as Buried Treasure and Gates of Heaven.
+
+Gates of Heaven is therefore currently recognized from a fully concealed 14-tile
+special layout. The BMJA exception allowing the final pung to be claimed remains
+out of scope until winning-tile provenance is represented.
 
 Tracked in issue #3.
 

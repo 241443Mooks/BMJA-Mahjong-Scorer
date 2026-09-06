@@ -113,6 +113,12 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
       ? initialHand.sets.map((handSet) => ({ ...handSet }))
       : defaultSets.map((handSet) => ({ ...handSet })),
   );
+  const [layoutMode, setLayoutMode] = useState<'sets' | 'special'>(() =>
+    initialHand?.looseTiles?.length ? 'special' : 'sets',
+  );
+  const [looseTiles, setLooseTiles] = useState<PlayingTile[]>(() =>
+    initialHand?.looseTiles?.map((tile) => ({ ...tile })) ?? [],
+  );
   const [flowers, setFlowers] = useState<number[]>(() =>
     initialHand?.bonusTiles
       .filter((tile) => tile.family === 'flower')
@@ -156,6 +162,8 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
       : defaultSets.map((handSet) => ({ ...handSet }));
 
     setSets(nextSets);
+    setLayoutMode(savedHand?.looseTiles?.length ? 'special' : 'sets');
+    setLooseTiles(savedHand?.looseTiles?.map((tile) => ({ ...tile })) ?? []);
     setFlowers(
       savedHand?.bonusTiles
         .filter((tile) => tile.family === 'flower')
@@ -182,7 +190,8 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
   const hand = useMemo<MahjongHand>(() => {
     const validSets = sets.filter((s): s is HandSet => s.tile !== null);
     return {
-      sets: validSets,
+      sets: layoutMode === 'sets' ? validSets : [],
+      looseTiles: layoutMode === 'special' ? looseTiles : undefined,
       bonusTiles: [
         ...flowers.map(n => bonus('flower', n as BonusTile['number'])),
         ...seasons.map(n => bonus('season', n as BonusTile['number']))
@@ -191,7 +200,7 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
       winningMethod: isWinner ? winningMethod : undefined,
       originalCall: isWinner ? originalCall : false,
     };
-  }, [sets, flowers, seasons, isWinner, winningMethod, originalCall]);
+  }, [sets, looseTiles, layoutMode, flowers, seasons, isWinner, winningMethod, originalCall]);
 
   const gameContext = useMemo<GameContext>(
     () => ({ playerWind, prevailingWind, limit }),
@@ -203,7 +212,14 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
     [gameContext, hand],
   );
 
-  const tileCount = sets.filter(s => s.tile !== null).flatMap(s => expandedTiles(s as HandSet)).length + flowers.length + seasons.length;
+  const tileCount =
+    (layoutMode === 'special'
+      ? looseTiles.length
+      : sets
+          .filter((s) => s.tile !== null)
+          .flatMap((s) => expandedTiles(s as HandSet)).length) +
+    flowers.length +
+    seasons.length;
 
   function updateSet(id: string, updates: Partial<UIHandSet>) {
     setSets((current) => current.map((s) => s.id === id ? { ...s, ...updates } : s));
@@ -216,6 +232,15 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
     });
   }
   function addTile(tile: PlayingTile) {
+    if (layoutMode === 'special') {
+      const matchingCopies = looseTiles.filter(
+        (candidate) => tileKey(candidate) === tileKey(tile),
+      ).length;
+      if (looseTiles.length < 14 && matchingCopies < 4) {
+        setLooseTiles((current) => [...current, tile]);
+      }
+      return;
+    }
     if (!selectedSet) return;
     updateSet(selectedSet, { tile });
   }
@@ -228,10 +253,13 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
     setSets([{ id: 'set-1', kind: 'chow', visibility: 'concealed', tile: null }]);
     setFlowers([]);
     setSeasons([]);
+    setLooseTiles([]);
     setIsWinner(context?.isWinner ?? false);
     setSelectedSet('set-1');
   }
   function loadExample() {
+    setLayoutMode('sets');
+    setLooseTiles([]);
     setSets([
       { id: 'set-1', kind: 'chow', visibility: 'concealed', tile: suited('bamboo', 1) },
       { id: 'set-2', kind: 'pung', visibility: 'exposed', tile: suited('circles', 9) },
@@ -293,7 +321,7 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
         if (tile.family !== 'dragon') return false;
       }
     }
-    if (activeSet?.kind === 'chow') {
+    if (layoutMode === 'sets' && activeSet?.kind === 'chow') {
       if (tile.family !== 'suit') return false;
       if (tile.rank > 7) return false;
     }
@@ -364,8 +392,53 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
             <div className="min-w-0 space-y-5">
               <section className="animate-rise animate-rise-delay-1 rounded-xl border border-[#d8ceb8] bg-[#fbf8ed] p-5 shadow-[var(--shadow-sm)] sm:p-6">
                 <SectionLabel eyebrow="01 / hand" title="Arrange the tiles" count={`${tileCount} tiles entered`} />
-                <div className="space-y-3">
-                  {sets.map((s, index) => (
+                <div className="mb-4 grid grid-cols-2 gap-2 rounded-lg border border-[#e2d9c7] bg-[#f7f1e3] p-1">
+                  <button
+                    type="button"
+                    data-testid="button-layout-sets"
+                    onClick={() => setLayoutMode('sets')}
+                    className={`rounded-md px-3 py-2 text-[11px] font-semibold ${layoutMode === 'sets' ? 'bg-[#284d45] text-[#f8f4e9]' : 'text-[#66746e]'}`}
+                  >
+                    Standard sets
+                  </button>
+                  <button
+                    type="button"
+                    data-testid="button-layout-special"
+                    onClick={() => setLayoutMode('special')}
+                    className={`rounded-md px-3 py-2 text-[11px] font-semibold ${layoutMode === 'special' ? 'bg-[#284d45] text-[#f8f4e9]' : 'text-[#66746e]'}`}
+                  >
+                    Special layout
+                  </button>
+                </div>
+                {layoutMode === 'special' ? (
+                  <div>
+                    <div className="flex min-h-[92px] flex-wrap items-center gap-2 rounded-lg border border-[#e2d9c7] bg-[#fdfbf5] p-3">
+                      {looseTiles.map((tile, index) => (
+                        <TileFace
+                          key={`${tileKey(tile)}-${index}`}
+                          tile={tile}
+                          onRemove={() =>
+                            setLooseTiles((current) =>
+                              current.filter((_, tileIndex) => tileIndex !== index),
+                            )
+                          }
+                        />
+                      ))}
+                      {looseTiles.length === 0 && (
+                        <div className="w-full text-center text-[11px] text-[#9b988d]">
+                          Add the 14 tiles in the completed special-hand layout.
+                        </div>
+                      )}
+                    </div>
+                    <p className="mt-3 text-[11px] leading-5 text-[#7a7769]">
+                      Use this for Knitting, Triple Knitting, Gates of Heaven,
+                      Wriggling Snake, and Thirteen Unique Wonders.
+                    </p>
+                  </div>
+                ) : (
+                <>
+                  <div className="space-y-3">
+                    {sets.map((s, index) => (
                     <div key={s.id} data-testid={`card-set-${index + 1}`} className={`rounded-lg border p-3 transition ${selectedSet === s.id ? 'border-[#ae6249]/60 bg-[#f7f1e3]' : 'border-[#e2d9c7] bg-[#fdfbf5]'}`} onClick={() => setSelectedSet(s.id)}>
                       <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
                         <div className="flex items-center gap-2">
@@ -387,15 +460,17 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
                         )}
                       </div>
                     </div>
-                  ))}
-                </div>
-                <button type="button" data-testid="button-add-set" onClick={addSet} className="mt-4 flex w-full items-center justify-center gap-2 rounded-md border border-dashed border-[#cdbfa7] py-2.5 text-[11px] font-semibold text-[#66746e] transition hover:border-[#ae6249] hover:text-[#284d45] focus:ring-2"><Plus size={14} /> Add another set</button>
+                    ))}
+                  </div>
+                  <button type="button" data-testid="button-add-set" onClick={addSet} className="mt-4 flex w-full items-center justify-center gap-2 rounded-md border border-dashed border-[#cdbfa7] py-2.5 text-[11px] font-semibold text-[#66746e] transition hover:border-[#ae6249] hover:text-[#284d45] focus:ring-2"><Plus size={14} /> Add another set</button>
+                </>
+                )}
               </section>
 
               <section className="animate-rise animate-rise-delay-2 rounded-xl border border-[#d8ceb8] bg-[#fbf8ed] p-5 shadow-[var(--shadow-sm)] sm:p-6">
                 <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
                   <div><div className="font-mono text-[10px] font-medium uppercase tracking-[.2em] text-[#ae6249]">02 / tile bank</div><h2 className="mt-1 font-serif text-[22px] text-[#284d45]">Choose a tile</h2></div>
-                  <div className="font-mono text-[10px] text-[#7a7769]">Adding to <span className="text-[#ae6249]">{activeSet ? `set ${sets.findIndex(s => s.id === selectedSet) + 1}` : '—'}</span></div>
+                  <div className="font-mono text-[10px] text-[#7a7769]">Adding to <span className="text-[#ae6249]">{layoutMode === 'special' ? `special layout (${looseTiles.length}/14)` : activeSet ? `set ${sets.findIndex(s => s.id === selectedSet) + 1}` : '—'}</span></div>
                 </div>
                 <div className="mb-4 flex items-center gap-1 overflow-x-auto border-b border-[#e2d9c7] pb-2">
                   {suitOrder.map((suit) => (
@@ -405,11 +480,25 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {visibleTiles.map((tile) => (
-                    <button type="button" key={tileKey(tile)} data-testid={`button-add-tile-${tileKey(tile)}`} onClick={() => addTile(tile)} className="transition hover:-translate-y-1 focus:ring-2 focus:ring-[#ae6249]"><TileFace tile={tile} compact /></button>
+                    <button
+                      type="button"
+                      key={tileKey(tile)}
+                      data-testid={`button-add-tile-${tileKey(tile)}`}
+                      onClick={() => addTile(tile)}
+                      disabled={
+                        layoutMode === 'special' &&
+                        (looseTiles.length >= 14 ||
+                          looseTiles.filter(
+                            (candidate) =>
+                              tileKey(candidate) === tileKey(tile),
+                          ).length >= 4)
+                      }
+                      className="transition hover:-translate-y-1 focus:ring-2 focus:ring-[#ae6249] disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:translate-y-0"
+                    ><TileFace tile={tile} compact /></button>
                   ))}
                   {visibleTiles.length === 0 && <div className="text-[11px] text-[#7a7769] py-4">No valid tiles for this set type.</div>}
                 </div>
-                <div className="mt-4 flex items-start gap-2 text-[11px] leading-5 text-[#7a7769]"><CircleHelp size={14} className="mt-0.5 shrink-0 text-[#ae6249]" /> Click a set above to target it, then choose its representative tile (for chows, pick the first tile 1-7).</div>
+                <div className="mt-4 flex items-start gap-2 text-[11px] leading-5 text-[#7a7769]"><CircleHelp size={14} className="mt-0.5 shrink-0 text-[#ae6249]" /> {layoutMode === 'special' ? 'Choose each tile individually; duplicate physical tiles may be added up to four times.' : 'Click a set above to target it, then choose its representative tile (for chows, pick the first tile 1-7).'}</div>
               </section>
 
               <section className="animate-rise animate-rise-delay-3 rounded-xl border border-[#d8ceb8] bg-[#fbf8ed] p-5 shadow-[var(--shadow-sm)] sm:p-6">

@@ -205,6 +205,192 @@ describe('BMJA complete-hand golden fixtures', () => {
     expect(score.finalScore).toBe(532);
   });
 
+  it.each([
+    [
+      'Knitting',
+      'knitting',
+      500,
+      {
+        sets: [],
+        looseTiles: [
+          suited('characters', 1),
+          suited('bamboo', 1),
+          suited('characters', 2),
+          suited('circles', 2),
+          suited('bamboo', 3),
+          suited('circles', 3),
+          suited('characters', 4),
+          suited('bamboo', 4),
+          suited('characters', 5),
+          suited('circles', 5),
+          suited('bamboo', 6),
+          suited('circles', 6),
+          suited('characters', 7),
+          suited('bamboo', 7),
+        ],
+        bonusTiles: [],
+        isWinner: true,
+      },
+    ],
+    [
+      'Triple Knitting',
+      'triple-knitting',
+      500,
+      {
+        sets: [],
+        looseTiles: [
+          suited('characters', 1),
+          suited('bamboo', 1),
+          suited('circles', 1),
+          suited('characters', 3),
+          suited('bamboo', 3),
+          suited('circles', 3),
+          suited('characters', 5),
+          suited('bamboo', 5),
+          suited('circles', 5),
+          suited('characters', 7),
+          suited('bamboo', 7),
+          suited('circles', 7),
+          suited('characters', 9),
+          suited('bamboo', 9),
+        ],
+        bonusTiles: [],
+        isWinner: true,
+      },
+    ],
+    [
+      'Imperial Jade',
+      'imperial-jade',
+      1000,
+      {
+        sets: [
+          set('dragon', 'pung', dragon('green')),
+          set('two', 'pung', suited('bamboo', 2)),
+          set('four', 'kong', suited('bamboo', 4)),
+          set('eight', 'pung', suited('bamboo', 8)),
+          set('pair', 'pair', suited('bamboo', 6)),
+        ],
+        bonusTiles: [],
+        isWinner: true,
+      },
+    ],
+    [
+      'The Gates of Heaven',
+      'gates-of-heaven',
+      1000,
+      {
+        sets: [],
+        looseTiles: [
+          suited('circles', 1),
+          suited('circles', 1),
+          suited('circles', 1),
+          suited('circles', 2),
+          suited('circles', 3),
+          suited('circles', 4),
+          suited('circles', 5),
+          suited('circles', 5),
+          suited('circles', 6),
+          suited('circles', 7),
+          suited('circles', 8),
+          suited('circles', 9),
+          suited('circles', 9),
+          suited('circles', 9),
+        ],
+        bonusTiles: [],
+        isWinner: true,
+      },
+    ],
+    [
+      'The Wriggling Snake',
+      'wriggling-snake',
+      1000,
+      {
+        sets: [],
+        looseTiles: [
+          suited('bamboo', 1),
+          suited('bamboo', 1),
+          suited('bamboo', 2),
+          suited('bamboo', 3),
+          suited('bamboo', 4),
+          suited('bamboo', 5),
+          suited('bamboo', 6),
+          suited('bamboo', 7),
+          suited('bamboo', 8),
+          suited('bamboo', 9),
+          wind('east'),
+          wind('south'),
+          wind('west'),
+          wind('north'),
+        ],
+        bonusTiles: [],
+        isWinner: true,
+      },
+    ],
+  ] as const)(
+    'scores the complete %s winner as a fixed special hand',
+    (_name, id, value, hand) => {
+      expect(itemised(scoreHand(hand as unknown as MahjongHand))).toEqual({
+        valid: true,
+        pointRules: [],
+        doubleRules: [],
+        components: [
+          {
+            id: `special-${id}`,
+            label: _name,
+            base: value,
+            doubles: 0,
+            subtotal: value,
+          },
+        ],
+        basePoints: 0,
+        doubles: 0,
+        uncappedScore: value,
+        finalScore: value,
+        limitApplied: false,
+        scoringMode: 'special',
+      });
+    },
+  );
+
+  it('rejects an arbitrary or physically impossible ungrouped layout', () => {
+    const arbitrary: MahjongHand = {
+      sets: [],
+      looseTiles: [
+        suited('characters', 1),
+        suited('characters', 2),
+        suited('characters', 3),
+        suited('characters', 4),
+        suited('characters', 5),
+        suited('characters', 6),
+        suited('characters', 7),
+        suited('characters', 8),
+        suited('characters', 9),
+        suited('bamboo', 1),
+        suited('bamboo', 2),
+        suited('bamboo', 3),
+        suited('bamboo', 4),
+        suited('bamboo', 5),
+      ],
+      bonusTiles: [],
+      isWinner: true,
+    };
+    const impossible: MahjongHand = {
+      sets: [],
+      looseTiles: [
+        ...Array.from({ length: 6 }, () => suited('characters', 1)),
+        ...Array.from({ length: 4 }, () => suited('bamboo', 1)),
+        ...Array.from({ length: 4 }, () => suited('circles', 1)),
+      ],
+      bonusTiles: [],
+      isWinner: true,
+    };
+    expect(scoreHand(arbitrary).valid).toBe(false);
+    expect(scoreHand(impossible).valid).toBe(false);
+    expect(scoreHand(impossible).validationErrors).toContain(
+      'A playing tile cannot appear more than four times.',
+    );
+  });
+
   it('caps a limit special hand after separately calculating bonuses', () => {
     const hand: MahjongHand = {
       sets: [
