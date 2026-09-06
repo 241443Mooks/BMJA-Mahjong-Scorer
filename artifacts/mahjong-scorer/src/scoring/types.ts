@@ -55,6 +55,7 @@ export type FishingSpecialId =
   | 'thirteen-unique-wonders';
 
 export type WinningMethod =
+  | 'initial-deal'
   | 'discard'
   | 'wall'
   | 'loose-tile'
@@ -77,6 +78,19 @@ export type WinningTileProvenance = {
   target: WinningTileTarget;
 };
 
+export type WinningEventEvidence =
+  | {
+      type: 'discard';
+      discardedBy: Wind;
+      /** One-based discard position within the hand. */
+      handDiscardOrdinal: number;
+    }
+  | {
+      type: 'replacement-chain';
+      /** Consecutive kong declarations whose replacement draws led to the win. */
+      kongDeclarations: number;
+    };
+
 /**
  * This is the single hand contract used by scoring and manual entry.
  * A future recogniser should produce this exact shape.
@@ -90,6 +104,8 @@ export type MahjongHand = {
   winningMethod?: WinningMethod;
   /** Exact winning tile and its destination; absence means unknown. */
   winningTileProvenance?: WinningTileProvenance;
+  /** Minimal event facts not represented by winningMethod; absence means unknown. */
+  winningEventEvidence?: WinningEventEvidence;
   originalCall?: boolean;
   /** Exact incomplete group held alongside complete sets while fishing. */
   incompleteSet?: IncompleteSet;

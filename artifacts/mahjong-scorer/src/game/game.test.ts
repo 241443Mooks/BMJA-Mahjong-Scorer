@@ -50,6 +50,23 @@ const rodDetailedScore: DetailedHandRecord = {
   finalScore: 200,
 };
 
+const billEarthDetailedScore: DetailedHandRecord = {
+  ...rodDetailedScore,
+  hand: {
+    ...rodDetailedScore.hand,
+    winningMethod: 'discard',
+    winningEventEvidence: {
+      type: 'discard',
+      discardedBy: 'east',
+      handDiscardOrdinal: 1,
+    },
+  },
+  context: {
+    ...rodDetailedScore.context,
+    playerWind: 'south',
+  },
+};
+
 describe('BMJA game-level golden fixtures', () => {
   const zeroScores = { bill: 0, rod: 0, ben: 0, jack: 0 };
 
@@ -160,5 +177,30 @@ describe('BMJA game-level golden fixtures', () => {
     expect(undone).toEqual(afterFirst);
     expect(undone.handHistory).toHaveLength(1);
     expect(undone.handHistory[0].scoreRecords.rod).toEqual(rodDetailedScore);
+  });
+
+  it('retains winning-event evidence while replaying the ledger during undo', () => {
+    const initial = createBmjaGame(players, seats);
+    const afterFirst = confirmHand(initial, {
+      outcome: { type: 'win', winnerId: 'bill' },
+      scores: { bill: 200, rod: 100, ben: 80, jack: 60 },
+      scoreRecords: { bill: billEarthDetailedScore },
+    });
+    const afterSecond = confirmHand(afterFirst, {
+      outcome: { type: 'draw' },
+      scores: { bill: 20, rod: 40, ben: 60, jack: 80 },
+    });
+
+    const undone = undoLastHand(afterSecond);
+    const billRecord = undone.handHistory[0].scoreRecords.bill;
+    expect(
+      billRecord?.source === 'detailed-scorer'
+        ? billRecord.hand.winningEventEvidence
+        : undefined,
+    ).toEqual({
+      type: 'discard',
+      discardedBy: 'east',
+      handDiscardOrdinal: 1,
+    });
   });
 });

@@ -114,18 +114,47 @@ Fishing matters. BMJA assigns special fishing values to many special hands when 
 | Imperial Jade | 1,000 | Implemented — winner and 400 fishing |
 | Gates of Heaven | 1,000 | Implemented — winner (including the provenance-verified terminal final-pung claim exception) and 400 fishing |
 | Wriggling Snake | 1,000 | Implemented — winner and 400 fishing |
+| Heaven’s Blessing | 1,000 | Implemented — inferred for East from “Mah Jong in original deal” |
+| Earth’s Blessing | 1,000 | Implemented — requires confirmation that a non-East winner used East’s first discard |
+| Gathering the Plum Blossom from the Roof | 1,000 | Implemented — inferred from a replacement winning 5 Circles |
+| Plucking the Moon from the Bottom of the Sea | 1,000 | Implemented — inferred from a last-wall winning 1 Circles |
+| Twofold Fortune | 1,000 | Implemented — requires confirmation of the two-Kong replacement sequence |
 
-### Missing event-dependent specials
+### Event-dependent specials
 
-These cannot be identified reliably from a final tile photograph alone because they depend on timing, draw source or event sequence:
+**Implemented without a full turn history.** The scorer stores only the event
+facts needed beyond the completed hand, winning method and winning-tile
+provenance.
 
-- Heaven’s Blessing.
-- Earth’s Blessing.
-- Gathering the Plum Blossom from the Roof.
-- Plucking the Moon from the Bottom of the Sea.
-- Twofold Fortune.
+- Heaven’s Blessing is inferred when East selects “Mah Jong in original deal.”
+  It has no separately drawn or claimed winning tile and cannot include a
+  Flower/Season replacement.
+- Earth’s Blessing is available only to a non-East discard winner. A short
+  question records whether the tile was East’s first discard.
+- Gathering the Plum Blossom from the Roof is inferred when a replacement
+  (loose) winning tile is 5 Circles.
+- Plucking the Moon from the Bottom of the Sea is inferred when the last wall
+  tile is the winning 1 Circles.
+- Twofold Fortune is available only for a replacement-tile winner whose hand
+  contains at least two Kongs. A short question records whether one Kong’s
+  replacement completed another Kong and the next replacement completed
+  Mah Jong.
 
-Tracked in issue #4.
+For the two questions, “No” and “I’m not sure” retain no event evidence and the
+hand is scored conservatively. The questions do not name the special hands.
+Event-only specials do not make an otherwise unsupported tile layout valid.
+
+### Irregular-hand entry
+
+Standard sets remain the default hand-building route. The individual-tile
+special layout is available through the beginner-facing “My hand doesn’t fit
+normal sets” action rather than as an equal default mode.
+
+In the irregular layout, tapping an already-entered loose tile removes that
+single occurrence, including on touch/mobile devices. The entered tiles remain
+keyboard controls, so Enter or Space also removes the selected occurrence.
+Switching between Standard sets and the irregular layout preserves each mode’s
+draft so changing entry route does not silently discard work.
 
 ## Known special-hand gaps
 

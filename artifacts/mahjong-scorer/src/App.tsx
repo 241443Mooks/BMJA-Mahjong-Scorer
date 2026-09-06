@@ -25,9 +25,13 @@ import type {
   Visibility,
   IncompleteSet,
   WinningTileProvenance,
+  WinningEventEvidence,
 } from './scoring';
 import {
   scoreHand,
+  isFirstDiscardEvidenceCandidate,
+  isReplacementSequenceEvidenceCandidate,
+  isWinningEventEvidenceCompatible,
   validateHand,
   resolveWinningTileProvenance,
   suited,
@@ -70,7 +74,21 @@ const defaultSets: UIHandSet[] = [
   { id: 'set-1', kind: 'chow', visibility: 'concealed', tile: null },
 ];
 
-function TileFace({ tile, compact = false, onRemove }: { tile: PlayingTile; compact?: boolean; onRemove?: () => void }) {
+function TileFace({
+  tile,
+  compact = false,
+  onRemove,
+  onActivate,
+  actionLabel,
+  actionTestId,
+}: {
+  tile: PlayingTile;
+  compact?: boolean;
+  onRemove?: () => void;
+  onActivate?: () => void;
+  actionLabel?: string;
+  actionTestId?: string;
+}) {
   const family = tile.family;
   const suitLabel = suitShort[family === 'suit' ? tile.suit : family];
   
@@ -87,11 +105,32 @@ function TileFace({ tile, compact = false, onRemove }: { tile: PlayingTile; comp
     if (tile.dragon === 'green') colorClass = 'text-[#477562]';
   }
 
-  return (
-    <div className={`group relative flex shrink-0 flex-col items-center justify-center rounded-[7px] border border-[#d3c6aa] bg-[#fbf8ed] text-[#284d45] tile-shadow ${compact ? 'h-12 w-9' : 'h-[72px] w-[52px]'}`} data-testid={`tile-${tileKey(tile)}`}>
-      {onRemove && <button type="button" aria-label="Remove" data-testid={`button-remove-${tileKey(tile)}`} onClick={onRemove} className="absolute -right-2 -top-2 z-10 hidden h-5 w-5 items-center justify-center rounded-full bg-[#ae6249] text-[#fff7e9] group-hover:flex focus:flex"><X size={12} /></button>}
+  const className = `group relative flex shrink-0 flex-col items-center justify-center rounded-[7px] border border-[#d3c6aa] bg-[#fbf8ed] text-[#284d45] tile-shadow ${compact ? 'h-12 w-9' : 'h-[72px] w-[52px]'}`;
+  const face = (
+    <>
       <span className={`font-serif font-bold ${compact ? 'text-lg' : 'text-2xl'} ${colorClass}`}>{valueLabel}</span>
       <span className={`mt-0.5 font-mono uppercase tracking-[.08em] text-[#7a7769] ${compact ? 'text-[7px]' : 'text-[8px]'}`}>{suitLabel}</span>
+    </>
+  );
+
+  if (onActivate) {
+    return (
+      <button
+        type="button"
+        aria-label={actionLabel}
+        data-testid={actionTestId ?? `button-tile-${tileKey(tile)}`}
+        onClick={onActivate}
+        className={`${className} cursor-pointer touch-manipulation transition hover:-translate-y-0.5 hover:border-[#ae6249] hover:bg-[#fffaf0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249] focus-visible:ring-offset-2 active:translate-y-0 active:scale-95`}
+      >
+        {face}
+      </button>
+    );
+  }
+
+  return (
+    <div className={className} data-testid={`tile-${tileKey(tile)}`}>
+      {onRemove && <button type="button" aria-label="Remove" data-testid={`button-remove-${tileKey(tile)}`} onClick={onRemove} className="absolute -right-2 -top-2 z-10 hidden h-5 w-5 items-center justify-center rounded-full bg-[#ae6249] text-[#fff7e9] group-hover:flex focus:flex"><X size={12} /></button>}
+      {face}
     </div>
   );
 }
@@ -107,15 +146,6 @@ function SectionLabel({ eyebrow, title, count }: { eyebrow: string; title: strin
     </div>
   );
 }
-
-const winningMethods: { value: WinningMethod; label: string }[] = [
-  { value: 'wall', label: 'Self-drawn from wall' },
-  { value: 'discard', label: 'From discard' },
-  { value: 'loose-tile', label: 'Replacement (loose) tile' },
-  { value: 'last-wall-tile', label: 'Last wall tile' },
-  { value: 'final-discard', label: 'Final discard' },
-  { value: 'robbing-kong', label: 'Robbing a Kong' },
-];
 
 function HandScorer({ context, onClose }: { context: HandScorerContext | null; onClose: (result?: HandScorerResult) => void }) {
   const hasContext = !!context;
@@ -169,6 +199,30 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
         }
       : undefined,
   );
+  const [winningEventEvidence, setWinningEventEvidence] = useState<WinningEventEvidence | undefined>(
+    initialHand?.winningEventEvidence ? { ...initialHand.winningEventEvidence } : undefined
+  );
+  const [discardAnswer, setDiscardAnswer] = useState<'yes' | 'no' | 'unsure' | null>(
+    initialHand?.winningEventEvidence?.type === 'discard' ? 'yes' : null
+  );
+  const [replacementAnswer, setReplacementAnswer] = useState<'yes' | 'no' | 'unsure' | null>(
+    initialHand?.winningEventEvidence?.type === 'replacement-chain' ? 'yes' : null
+  );
+
+  const availableWinningMethods = useMemo(() => {
+    const baseMethods: { value: WinningMethod; label: string }[] = [
+      { value: 'wall', label: 'Self-drawn from wall' },
+      { value: 'discard', label: 'From discard' },
+      { value: 'loose-tile', label: 'Replacement (loose) tile' },
+      { value: 'last-wall-tile', label: 'Last wall tile' },
+      { value: 'final-discard', label: 'Final discard' },
+      { value: 'robbing-kong', label: 'Robbing a Kong' },
+    ];
+    if (playerWind === 'east') {
+      baseMethods.unshift({ value: 'initial-deal', label: 'Mah Jong in original deal' });
+    }
+    return baseMethods;
+  }, [playerWind]);
 
   const [selectedSet, setSelectedSet] = useState<string>(
     initialHand?.sets[0]?.id ?? 'set-1',
@@ -179,6 +233,27 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
   const [copied, setCopied] = useState(false);
 
   const activeSet = sets.find(s => s.id === selectedSet);
+  const numberOfKongs =
+    layoutMode === 'sets'
+      ? sets.filter((set) => set.kind === 'kong' && set.tile !== null).length
+      : 0;
+  const winningEventCandidate = {
+    isWinner,
+    playerWind,
+    winningMethod: isWinner ? winningMethod : undefined,
+    completedKongs: numberOfKongs,
+  };
+  const shouldAskFirstDiscard =
+    isFirstDiscardEvidenceCandidate(winningEventCandidate);
+  const shouldAskReplacementSequence =
+    isReplacementSequenceEvidenceCandidate(winningEventCandidate);
+  const effectiveWinningEventEvidence =
+    isWinningEventEvidenceCompatible(
+      winningEventEvidence,
+      winningEventCandidate,
+    )
+      ? winningEventEvidence
+      : undefined;
 
   useEffect(() => {
     const nextContext = handScorerLocalContext(context);
@@ -224,6 +299,15 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
           }
         : undefined,
     );
+    setWinningEventEvidence(
+      savedHand?.winningEventEvidence ? { ...savedHand.winningEventEvidence } : undefined
+    );
+    setDiscardAnswer(
+      savedHand?.winningEventEvidence?.type === 'discard' ? 'yes' : null
+    );
+    setReplacementAnswer(
+      savedHand?.winningEventEvidence?.type === 'replacement-chain' ? 'yes' : null
+    );
     setSelectedSet(savedHand?.incompleteSet ? 'fishing-incomplete' : nextSets[0]?.id ?? '');
     setExpandedRule(null);
     setCopied(false);
@@ -240,7 +324,8 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
       ],
       isWinner,
       winningMethod: isWinner ? winningMethod : undefined,
-      winningTileProvenance: isWinner ? winningTileProvenance : undefined,
+      winningTileProvenance: isWinner && winningMethod !== 'initial-deal' ? winningTileProvenance : undefined,
+      winningEventEvidence: effectiveWinningEventEvidence,
       originalCall: isWinner ? originalCall : false,
       incompleteSet:
         !isWinner &&
@@ -249,7 +334,7 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
           ? { ...incompleteSet, tile: incompleteSet.tile }
           : undefined,
     };
-  }, [sets, looseTiles, layoutMode, flowers, seasons, isWinner, winningMethod, originalCall, incompleteSet, winningTileProvenance]);
+  }, [sets, looseTiles, layoutMode, flowers, seasons, isWinner, winningMethod, originalCall, incompleteSet, winningTileProvenance, effectiveWinningEventEvidence]);
 
   useEffect(() => {
     if (winningTileProvenance) {
@@ -268,6 +353,45 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
       }
     }
   }, [sets, looseTiles, layoutMode, isWinner, winningMethod, winningTileProvenance]);
+
+  useEffect(() => {
+    if (playerWind !== 'east' && winningMethod === 'initial-deal') {
+      setWinningMethod('wall');
+    }
+  }, [playerWind, winningMethod]);
+
+  useEffect(() => {
+    if (winningMethod === 'initial-deal') {
+      setWinningTileProvenance(undefined);
+    }
+  }, [winningMethod]);
+
+  useEffect(() => {
+    setWinningEventEvidence((current) => {
+      if (!current) return current;
+      if (!isWinner) return undefined;
+
+      if (current.type === 'discard') {
+        if (playerWind === 'east' || winningMethod !== 'discard') return undefined;
+      }
+      if (current.type === 'replacement-chain') {
+        if (winningMethod !== 'loose-tile' || numberOfKongs < 2) return undefined;
+      }
+      return current;
+    });
+  }, [isWinner, playerWind, winningMethod, numberOfKongs]);
+
+  useEffect(() => {
+    if (!isWinner || playerWind === 'east' || winningMethod !== 'discard') {
+      setDiscardAnswer(null);
+    }
+  }, [isWinner, playerWind, winningMethod]);
+
+  useEffect(() => {
+    if (!isWinner || winningMethod !== 'loose-tile' || numberOfKongs < 2) {
+      setReplacementAnswer(null);
+    }
+  }, [isWinner, winningMethod, numberOfKongs]);
 
   const isStructureComplete = useMemo(() => {
     if (!isWinner) return false;
@@ -371,14 +495,19 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
     setLooseTiles([]);
     setIncompleteSet(null);
     setWinningTileProvenance(undefined);
+    setWinningEventEvidence(undefined);
+    setDiscardAnswer(null);
+    setReplacementAnswer(null);
     setIsWinner(context?.isWinner ?? false);
     setSelectedSet('set-1');
   }
   function loadExample() {
     setLayoutMode('sets');
-    setLooseTiles([]);
     setIncompleteSet(null);
     setWinningTileProvenance(undefined);
+    setWinningEventEvidence(undefined);
+    setDiscardAnswer(null);
+    setReplacementAnswer(null);
     setSets([
       { id: 'set-1', kind: 'chow', visibility: 'concealed', tile: suited('bamboo', 1) },
       { id: 'set-2', kind: 'pung', visibility: 'exposed', tile: suited('circles', 9) },
@@ -433,6 +562,9 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
                 tile: { ...hand.winningTileProvenance.tile },
                 target: { ...hand.winningTileProvenance.target },
               }
+            : undefined,
+          winningEventEvidence: hand.winningEventEvidence
+            ? { ...hand.winningEventEvidence }
             : undefined,
         },
         context: { ...gameContext },
@@ -523,45 +655,62 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
             <div className="min-w-0 space-y-5">
               <section className="animate-rise animate-rise-delay-1 rounded-xl border border-[#d8ceb8] bg-[#fbf8ed] p-5 shadow-[var(--shadow-sm)] sm:p-6">
                 <SectionLabel eyebrow="01 / hand" title="Arrange the tiles" count={`${tileCount} tiles entered`} />
-                <div className="mb-4 grid grid-cols-2 gap-2 rounded-lg border border-[#e2d9c7] bg-[#f7f1e3] p-1">
-                  <button
-                    type="button"
-                    data-testid="button-layout-sets"
-                    onClick={() => {
-                      if (layoutMode !== 'sets') setWinningTileProvenance(undefined);
-                      setLayoutMode('sets');
-                    }}
-                    className={`rounded-md px-3 py-2 text-[11px] font-semibold ${layoutMode === 'sets' ? 'bg-[#284d45] text-[#f8f4e9]' : 'text-[#66746e]'}`}
-                  >
-                    Standard sets
-                  </button>
-                  <button
-                    type="button"
-                    data-testid="button-layout-special"
-                    onClick={() => {
-                      if (layoutMode !== 'special') setWinningTileProvenance(undefined);
-                      setLayoutMode('special');
-                    }}
-                    className={`rounded-md px-3 py-2 text-[11px] font-semibold ${layoutMode === 'special' ? 'bg-[#284d45] text-[#f8f4e9]' : 'text-[#66746e]'}`}
-                  >
-                    Special layout
-                  </button>
-                </div>
+                {layoutMode === 'sets' ? (
+                  <div className="mb-4 flex flex-col gap-3 rounded-lg border border-[#e2d9c7] bg-[#fdfbf5] p-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="min-w-0">
+                      <p className="text-[11px] font-semibold text-[#284d45]">Build with normal sets</p>
+                      <p className="mt-0.5 text-[10px] leading-4 text-[#7a7769]">Add chows, pungs, kongs and a pair below.</p>
+                    </div>
+                    <button
+                      type="button"
+                      data-testid="button-layout-special"
+                      onClick={() => {
+                        setWinningTileProvenance(undefined);
+                        setLayoutMode('special');
+                      }}
+                      className="flex shrink-0 flex-col items-start rounded-md border border-dashed border-[#cfc3aa] px-3 py-2 text-left transition hover:border-[#ae6249] hover:bg-[#f8f4e9] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249] sm:items-end sm:text-right"
+                    >
+                      <span className="text-[11px] font-semibold text-[#66746e]">My hand doesn’t fit normal sets</span>
+                      <span className="mt-0.5 text-[9px] text-[#8c8a7f]">Enter an irregular special hand</span>
+                    </button>
+                  </div>
+                ) : (
+                  <div className="mb-4 flex flex-col gap-3 rounded-lg border border-[#d8ceb8] bg-[#f7f1e3] p-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="min-w-0">
+                      <p className="text-[11px] font-semibold text-[#284d45]">Irregular special hand</p>
+                      <p className="mt-0.5 text-[10px] leading-4 text-[#7a7769]">Enter each tile individually. Your normal-set entry stays available if you switch back.</p>
+                    </div>
+                    <button
+                      type="button"
+                      data-testid="button-layout-sets"
+                      onClick={() => {
+                        setWinningTileProvenance(undefined);
+                        setLayoutMode('sets');
+                      }}
+                      className="shrink-0 self-start rounded-md border border-[#cfc3aa] bg-[#fbf8ed] px-3 py-2 text-[10px] font-semibold text-[#66746e] transition hover:border-[#ae6249] hover:text-[#284d45] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249] sm:self-auto"
+                    >
+                      Back to Standard sets
+                    </button>
+                  </div>
+                )}
                 {layoutMode === 'special' ? (
                   <div>
+                    <p className="mb-2 text-[10px] font-semibold text-[#ae6249]">
+                      Tap an entered tile to remove it.
+                    </p>
                     <div className="flex min-h-[92px] flex-wrap items-center gap-2 rounded-lg border border-[#e2d9c7] bg-[#fdfbf5] p-3">
                       {looseTiles.map((tile, index) => (
                         <TileFace
                           key={`${tileKey(tile)}-${index}`}
                           tile={tile}
-                          onRemove={() =>
-                            {
-                              setWinningTileProvenance(undefined);
-                              setLooseTiles((current) =>
-                                current.filter((_, tileIndex) => tileIndex !== index),
-                              );
-                            }
-                          }
+                          actionLabel={`Remove ${tileName(tile)} from the irregular hand`}
+                          actionTestId={`button-remove-loose-tile-${index}`}
+                          onActivate={() => {
+                            setWinningTileProvenance(undefined);
+                            setLooseTiles((current) =>
+                              current.filter((_, tileIndex) => tileIndex !== index),
+                            );
+                          }}
                         />
                       ))}
                       {looseTiles.length === 0 && (
@@ -753,7 +902,7 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
                 <div className="mt-4 flex items-start gap-2 text-[11px] leading-5 text-[#7a7769]"><CircleHelp size={14} className="mt-0.5 shrink-0 text-[#ae6249]" /> {layoutMode === 'special' ? 'Choose each tile individually; duplicate physical tiles may be added up to four times.' : 'Click a set, or add and select an incomplete set, then choose its representative tile (for a chow, pick the first tile 1-7).'}</div>
               </section>
 
-              {isWinner && isStructureComplete && (
+              {isWinner && isStructureComplete && winningMethod !== 'initial-deal' && (
                 <section className="animate-rise rounded-xl border border-[#d8ceb8] bg-[#fbf8ed] p-5 shadow-[var(--shadow-sm)] sm:p-6">
                   <SectionLabel eyebrow="03 / completion" title="The winning tile" />
                   <p className="mb-4 text-[13px] text-[#66746e]">
@@ -964,12 +1113,90 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
                       />
                     </label>
                     {isWinner && (
-                      <label className="mt-2 block min-w-0">
-                        <span className="mb-1.5 block font-mono text-[10px] uppercase tracking-[.15em] text-[#7a7769]">Winning method</span>
-                        <select data-testid="select-winning-method" value={winningMethod} onChange={(e) => setWinningMethod(e.target.value as WinningMethod)} className="w-full min-w-0 rounded-md border border-[#cfc3aa] bg-[#fdfbf5] px-3 py-2.5 text-[12px] font-semibold text-[#284d45] focus:ring-2">
-                          {winningMethods.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
-                        </select>
-                      </label>
+                      <div className="mt-2 space-y-4">
+                        <label className="block min-w-0">
+                          <span className="mb-1.5 block font-mono text-[10px] uppercase tracking-[.15em] text-[#7a7769]">Winning method</span>
+                          <select data-testid="select-winning-method" value={winningMethod} onChange={(e) => setWinningMethod(e.target.value as WinningMethod)} className="w-full min-w-0 rounded-md border border-[#cfc3aa] bg-[#fdfbf5] px-3 py-2.5 text-[12px] font-semibold text-[#284d45] focus:ring-2">
+                            {availableWinningMethods.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
+                          </select>
+                        </label>
+
+                        {shouldAskFirstDiscard && (
+                          <div className="animate-rise rounded-lg border border-[#e2d9c7] bg-[#fdfbf5] p-3">
+                            <div className="mb-2 text-[11px] font-semibold text-[#284d45]">Was this East’s very first discard of the hand?</div>
+                            <div className="flex flex-wrap gap-2">
+                              {[
+                                { value: 'yes', label: 'Yes' },
+                                { value: 'no', label: 'No' },
+                                { value: 'unsure', label: 'I’m not sure' }
+                              ].map(opt => {
+                                const isSelected = discardAnswer === opt.value;
+                                return (
+                                  <button
+                                    key={opt.value}
+                                    type="button"
+                                    data-testid={`button-discard-answer-${opt.value}`}
+                                    aria-pressed={isSelected}
+                                    onClick={() => {
+                                      setDiscardAnswer(opt.value as 'yes' | 'no' | 'unsure');
+                                      if (opt.value === 'yes') {
+                                        setWinningEventEvidence({ type: 'discard', discardedBy: 'east', handDiscardOrdinal: 1 });
+                                      } else {
+                                        setWinningEventEvidence(undefined);
+                                      }
+                                    }}
+                                    className={`rounded-md px-3 py-1.5 text-[11px] font-semibold transition ${
+                                      isSelected
+                                        ? 'bg-[#284d45] text-[#f8f4e9] shadow-sm'
+                                        : 'border border-[#d8ceb8] bg-[#fdfbf5] text-[#66746e] hover:border-[#cfc3aa] hover:bg-[#f8f4e9]'
+                                    }`}
+                                  >
+                                    {opt.label}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
+
+                        {shouldAskReplacementSequence && (
+                          <div className="animate-rise rounded-lg border border-[#e2d9c7] bg-[#fdfbf5] p-3">
+                            <div className="mb-2 text-[11px] font-semibold text-[#284d45]">Did one Kong’s replacement tile complete another Kong, then the next replacement tile complete Mah Jong?</div>
+                            <div className="flex flex-wrap gap-2">
+                              {[
+                                { value: 'yes', label: 'Yes' },
+                                { value: 'no', label: 'No' },
+                                { value: 'unsure', label: 'I’m not sure' }
+                              ].map(opt => {
+                                const isSelected = replacementAnswer === opt.value;
+                                return (
+                                  <button
+                                    key={opt.value}
+                                    type="button"
+                                    data-testid={`button-replacement-answer-${opt.value}`}
+                                    aria-pressed={isSelected}
+                                    onClick={() => {
+                                      setReplacementAnswer(opt.value as 'yes' | 'no' | 'unsure');
+                                      if (opt.value === 'yes') {
+                                        setWinningEventEvidence({ type: 'replacement-chain', kongDeclarations: 2 });
+                                      } else {
+                                        setWinningEventEvidence(undefined);
+                                      }
+                                    }}
+                                    className={`rounded-md px-3 py-1.5 text-[11px] font-semibold transition ${
+                                      isSelected
+                                        ? 'bg-[#284d45] text-[#f8f4e9] shadow-sm'
+                                        : 'border border-[#d8ceb8] bg-[#fdfbf5] text-[#66746e] hover:border-[#cfc3aa] hover:bg-[#f8f4e9]'
+                                    }`}
+                                  >
+                                    {opt.label}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     )}
                     {!isWinner && (
                       <div

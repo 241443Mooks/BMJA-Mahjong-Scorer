@@ -35,6 +35,9 @@ const cloneDetailedHandRecord = (
           target: { ...record.hand.winningTileProvenance.target },
         }
       : undefined,
+    winningEventEvidence: record.hand.winningEventEvidence
+      ? { ...record.hand.winningEventEvidence }
+      : undefined,
   },
   context: { ...record.context },
   breakdown: {
