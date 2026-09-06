@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "British Mahjong Scorer"
+description = "A frontend-first British Mahjong scoring tool with a fully tested BMJA-style scoring engine, manual hand entry, and detailed rule breakdowns."
+version = "1.0.0"
+id = "artifacts/mahjong-scorer"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 21594
+
+[services.development]
+run = "pnpm --filter @workspace/mahjong-scorer run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/mahjong-scorer", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/mahjong-scorer/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "21594"
+BASE_PATH = "/"

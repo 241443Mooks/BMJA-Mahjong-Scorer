@@ -1,19 +1,22 @@
-# [Project name]
+# British Mahjong Scorer
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+A frontend-first TypeScript app for entering and scoring British Mahjong hands with a detailed BMJA-style breakdown.
 
 ## Run & Operate
 
 - `pnpm --filter @workspace/api-server run dev` — run the API server (port 5000)
+- `pnpm --filter @workspace/mahjong-scorer run dev` — run the scoring app
+- `pnpm --filter @workspace/mahjong-scorer test` — run scoring engine tests
 - `pnpm run typecheck` — full typecheck across all packages
 - `pnpm run build` — typecheck + build all packages
 - `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
 - `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
-- Required env: `DATABASE_URL` — Postgres connection string
+- The scorer itself needs no environment variables, database, or API.
 
 ## Stack
 
 - pnpm workspaces, Node.js 24, TypeScript 5.9
+- React + Vite frontend; Vitest scoring tests
 - API: Express 5
 - DB: PostgreSQL + Drizzle ORM
 - Validation: Zod (`zod/v4`), `drizzle-zod`
@@ -22,19 +25,23 @@ _Replace the heading above with the project's name, and this line with one sente
 
 ## Where things live
 
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+- `artifacts/mahjong-scorer/src/scoring/` — pure hand model, rule functions, special-hand detectors, tests, and score orchestration
+- `artifacts/mahjong-scorer/src/App.tsx` — manual hand-entry UI
 
 ## Architecture decisions
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
+- Manual entry and future recognition must both produce the canonical `MahjongHand` type.
+- Every scoring rule is a named pure function that returns an itemised `RuleResult`.
+- Special hands are independent detectors and do not mutate standard scoring.
 
 ## Product
 
-_Describe the high-level user-facing capabilities of this app once they exist._
+Phase 1 supports manual set and bonus entry, player/prevailing winds, detailed points and doubles, a configurable 1,000-point limit, and special-hand detection.
 
 ## User preferences
 
-_Populate as you build — explicit user instructions worth remembering across sessions._
+- Prioritise correctness, simplicity, and maintainability over visual polish.
+- Do not add accounts, authentication, a database, subscriptions, multiplayer, or photo recognition in Phase 1.
 
 ## Gotchas
 
