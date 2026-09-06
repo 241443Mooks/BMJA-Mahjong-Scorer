@@ -1,4 +1,4 @@
-type TileAssetKey =
+export type TileAssetKey =
   | 'Man1' | 'Man2' | 'Man3' | 'Man4' | 'Man5' | 'Man6' | 'Man7' | 'Man8' | 'Man9'
   | 'Pin1' | 'Pin2' | 'Pin3' | 'Pin4' | 'Pin5' | 'Pin6' | 'Pin7' | 'Pin8' | 'Pin9'
   | 'Sou1' | 'Sou2' | 'Sou3' | 'Sou4' | 'Sou5' | 'Sou6' | 'Sou7' | 'Sou8' | 'Sou9'
@@ -7,7 +7,7 @@ type TileAssetKey =
   | 'Flower1' | 'Flower2' | 'Flower3' | 'Flower4'
   | 'Season1' | 'Season2' | 'Season3' | 'Season4';
 
-type TileDefinition = {
+export type TileDefinition = {
   asset: TileAssetKey;
   label: string;
 };
@@ -102,6 +102,33 @@ function TileArt({ tile, compact = false }: { tile: TileDefinition; compact?: bo
   );
 }
 
+export function TileStrip({
+  tiles,
+  ariaLabel,
+  compact = true,
+}: {
+  tiles: TileDefinition[];
+  ariaLabel?: string;
+  compact?: boolean;
+}) {
+  const description = ariaLabel ?? tiles.map((tile) => tile.label).join(', ');
+  return (
+    <div className="overflow-x-auto pb-2">
+      <div className="flex min-w-max gap-1.5" role="img" aria-label={description}>
+        {tiles.map((tile, index) => (
+          <img
+            key={`${tile.asset}-${index}`}
+            src={tileAssets[tile.asset]}
+            alt=""
+            loading="lazy"
+            className={`${compact ? 'h-[68px] w-[51px]' : 'h-[84px] w-[63px]'} rounded-[5px] bg-[#fffdf7] object-contain shadow-[0_2px_6px_rgba(48,57,49,.12)]`}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function TileGroup({ title, tiles }: { title: string; tiles: TileDefinition[] }) {
   return (
     <section className="rounded-xl border border-[#dfd5c2] bg-[#fdfbf5] p-4">
@@ -120,16 +147,8 @@ function Example({ title, note, tiles }: { title: string; note: string; tiles: T
     <div className="rounded-xl border border-[#dfd5c2] bg-[#fdfbf5] p-4">
       <div className="font-serif text-[19px] text-[#284d45]">{title}</div>
       <p className="mt-1 text-[11px] leading-5 text-[#6d746f]">{note}</p>
-      <div className="mt-3 flex gap-1.5" role="img" aria-label={`${title}: ${tiles.map((tile) => tile.label).join(', ')}`}>
-        {tiles.map((tile, index) => (
-          <img
-            key={`${tile.asset}-${index}`}
-            src={tileAssets[tile.asset]}
-            alt=""
-            loading="lazy"
-            className="h-[68px] w-[51px] rounded-[5px] bg-[#fffdf7] object-contain shadow-[0_2px_6px_rgba(48,57,49,.12)]"
-          />
-        ))}
+      <div className="mt-3">
+        <TileStrip tiles={tiles} ariaLabel={`${title}: ${tiles.map((tile) => tile.label).join(', ')}`} />
       </div>
     </div>
   );
