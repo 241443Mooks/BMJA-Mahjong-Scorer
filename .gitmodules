@@ -1,0 +1,3 @@
+[submodule "artifacts/mahjong-scorer/src/assets/riichi-mahjong-tiles"]
+	path = artifacts/mahjong-scorer/src/assets/riichi-mahjong-tiles
+	url = https://github.com/xhokir/riichi-mahjong-tiles.git
