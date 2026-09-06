@@ -346,37 +346,37 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
 
       <main className="mx-auto grid max-w-[1440px] gap-6 px-5 py-7 lg:grid-cols-[minmax(0,1fr)_390px] lg:px-8">
         <section className="min-w-0 space-y-5">
-          <div className="grid grid-cols-2 gap-2 sm:gap-3 xl:grid-cols-4">
-            {game.players.map((player) => (
-              <div
-                key={player.id}
-                className={`rounded-lg border p-3 sm:rounded-xl sm:p-4 ${
-                  game.seats[player.id] === 'east'
-                    ? 'border-[#ae6249] bg-[#f5eadb]'
-                    : 'border-[#d8ceb8] bg-[#fbf8ed]'
-                }`}
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0">
-                    <div className="font-mono text-[8px] uppercase tracking-[.12em] text-[#ae6249] sm:text-[9px] sm:tracking-[.16em]">
-                      {windLabel(game.seats[player.id])}
-                      {game.seats[player.id] === 'east' ? ' · Dealer' : ''}
+          <div>
+            <div className="mb-2 font-mono text-[9px] font-medium uppercase tracking-[.18em] text-[#7a7769]">
+              Running game totals
+            </div>
+            <div className="grid grid-cols-2 gap-2 sm:gap-3 xl:grid-cols-4">
+              {game.players.map((player) => (
+                <div
+                  key={player.id}
+                  className={`rounded-lg border p-3 sm:rounded-xl sm:p-4 ${
+                    game.seats[player.id] === 'east'
+                      ? 'border-[#ae6249] bg-[#f5eadb]'
+                      : 'border-[#d8ceb8] bg-[#fbf8ed]'
+                    }`}
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <div className="font-mono text-[8px] uppercase tracking-[.12em] text-[#ae6249] sm:text-[9px] sm:tracking-[.16em]">
+                        {windLabel(game.seats[player.id])}
+                        {game.seats[player.id] === 'east' ? ' · Dealer' : ''}
+                      </div>
+                      <div className="mt-0.5 truncate font-serif text-[16px] leading-tight text-[#284d45] sm:mt-1 sm:text-[20px]">
+                        {player.name}
+                      </div>
                     </div>
-                    <div className="mt-0.5 truncate font-serif text-[16px] leading-tight text-[#284d45] sm:mt-1 sm:text-[20px]">
-                      {player.name}
-                    </div>
-                  </div>
-                  <div className="shrink-0 text-right">
-                    <div className="font-mono text-[15px] font-bold leading-tight text-[#284d45] sm:text-[18px]">
+                    <div className="shrink-0 text-right font-mono text-[15px] font-bold leading-tight text-[#284d45] sm:text-[18px]">
                       {formatChange(game.balances[player.id])}
-                    </div>
-                    <div className="mt-1 max-w-[64px] text-[7px] font-semibold uppercase leading-[1.2] tracking-[.06em] text-[#7a7769] sm:max-w-none sm:text-[8px] sm:tracking-wider">
-                      Running game total
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
 
           <section ref={tableScoresRef} data-testid="section-table-scores" className="scroll-mt-4 rounded-xl border border-[#d8ceb8] bg-[#fbf8ed] p-5 sm:p-6">
@@ -519,94 +519,9 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
             )}
           </section>
 
-          <section className="rounded-xl border border-[#d8ceb8] bg-[#fbf8ed] p-5 sm:p-6">
-            <div className="mb-4 flex items-center gap-2">
-              <History size={16} className="text-[#ae6249]" />
-              <h2 className="font-serif text-[23px] text-[#284d45]">
-                Game ledger
-              </h2>
-            </div>
-            {game.handHistory.length === 0 ? (
-              <p className="text-[12px] text-[#8c8a7f]">
-                Confirm the first hand to begin the ledger.
-              </p>
-            ) : (
-              <div className="space-y-3">
-                {[...game.handHistory].reverse().map((hand) => (
-                  <details
-                    key={hand.handNumber}
-                    className="rounded-lg border border-[#e2d9c7] bg-[#fdfbf5] p-4"
-                  >
-                    <summary className="cursor-pointer list-none text-[12px] font-semibold text-[#284d45]">
-                      Hand {hand.handNumber} ·{' '}
-                      {hand.outcome.type === 'draw'
-                        ? 'Draw'
-                        : `${game.players.find((player) => player.id === (hand.outcome.type === 'win' ? hand.outcome.winnerId : ''))?.name} won`}
-                      <span className="ml-2 font-normal text-[#7a7769]">
-                        East:{' '}
-                        {
-                          game.players.find(
-                            (player) => player.id === hand.eastPlayerId,
-                          )?.name
-                        }
-                      </span>
-                    </summary>
-                    <div className="mt-3 grid gap-2 sm:grid-cols-2">
-                      {game.players.map((player) => (
-                        <div
-                          key={player.id}
-                          className="flex justify-between text-[11px] text-[#66746e]"
-                        >
-                          <span>
-                            {player.name}: {hand.scores[player.id]}
-                          </span>
-                          <b
-                            className={
-                              hand.settlement.changes[player.id] >= 0
-                                ? 'text-[#477562]'
-                                : 'text-[#ae6249]'
-                            }
-                          >
-                            {formatChange(hand.settlement.changes[player.id])}
-                          </b>
-                        </div>
-                      ))}
-                    </div>
-                    {hand.settlement.transactions.length > 0 && (
-                      <div className="mt-3 border-t border-[#e2d9c7] pt-3 text-[10px] leading-5 text-[#7a7769]">
-                        {hand.settlement.transactions.map(
-                          (transaction, index) => (
-                            <div key={`${transaction.fromPlayerId}-${transaction.toPlayerId}-${index}`}>
-                              {
-                                game.players.find(
-                                  (player) =>
-                                    player.id === transaction.fromPlayerId,
-                                )?.name
-                              }{' '}
-                              paid{' '}
-                              {
-                                game.players.find(
-                                  (player) =>
-                                    player.id === transaction.toPlayerId,
-                                )?.name
-                              }{' '}
-                              {transaction.amount}
-                              {transaction.eastMultiplier === 2
-                                ? ' (East ×2)'
-                                : ''}
-                            </div>
-                          ),
-                        )}
-                      </div>
-                    )}
-                  </details>
-                ))}
-              </div>
-            )}
-          </section>
         </section>
 
-        <aside>
+        <aside className="lg:col-start-2 lg:row-span-2 lg:row-start-1">
           <section className="sticky top-5 overflow-hidden rounded-xl bg-[#284d45] text-[#f8f4e9] shadow-[var(--shadow-lg)]">
             <div className="border-b border-[#55756c] p-5">
               <div className="font-mono text-[10px] uppercase tracking-[.2em] text-[#d7a287]">
@@ -697,6 +612,92 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
             )}
           </section>
         </aside>
+
+        <section className="rounded-xl border border-[#d8ceb8] bg-[#fbf8ed] p-5 sm:p-6 lg:col-start-1">
+          <div className="mb-4 flex items-center gap-2">
+            <History size={16} className="text-[#ae6249]" />
+            <h2 className="font-serif text-[23px] text-[#284d45]">
+              Game ledger
+            </h2>
+          </div>
+          {game.handHistory.length === 0 ? (
+            <p className="text-[12px] text-[#8c8a7f]">
+              Confirm the first hand to begin the ledger.
+            </p>
+          ) : (
+            <div className="space-y-3">
+              {[...game.handHistory].reverse().map((hand) => (
+                <details
+                  key={hand.handNumber}
+                  className="rounded-lg border border-[#e2d9c7] bg-[#fdfbf5] p-4"
+                >
+                  <summary className="cursor-pointer list-none text-[12px] font-semibold text-[#284d45]">
+                    Hand {hand.handNumber} ·{' '}
+                    {hand.outcome.type === 'draw'
+                      ? 'Draw'
+                      : `${game.players.find((player) => player.id === (hand.outcome.type === 'win' ? hand.outcome.winnerId : ''))?.name} won`}
+                    <span className="ml-2 font-normal text-[#7a7769]">
+                      East:{' '}
+                      {
+                        game.players.find(
+                          (player) => player.id === hand.eastPlayerId,
+                        )?.name
+                      }
+                    </span>
+                  </summary>
+                  <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                    {game.players.map((player) => (
+                      <div
+                        key={player.id}
+                        className="flex justify-between text-[11px] text-[#66746e]"
+                      >
+                        <span>
+                          {player.name}: {hand.scores[player.id]}
+                        </span>
+                        <b
+                          className={
+                            hand.settlement.changes[player.id] >= 0
+                              ? 'text-[#477562]'
+                              : 'text-[#ae6249]'
+                          }
+                        >
+                          {formatChange(hand.settlement.changes[player.id])}
+                        </b>
+                      </div>
+                    ))}
+                  </div>
+                  {hand.settlement.transactions.length > 0 && (
+                    <div className="mt-3 border-t border-[#e2d9c7] pt-3 text-[10px] leading-5 text-[#7a7769]">
+                      {hand.settlement.transactions.map(
+                        (transaction, index) => (
+                          <div key={`${transaction.fromPlayerId}-${transaction.toPlayerId}-${index}`}>
+                            {
+                              game.players.find(
+                                (player) =>
+                                  player.id === transaction.fromPlayerId,
+                              )?.name
+                            }{' '}
+                            paid{' '}
+                            {
+                              game.players.find(
+                                (player) =>
+                                  player.id === transaction.toPlayerId,
+                              )?.name
+                            }{' '}
+                            {transaction.amount}
+                            {transaction.eastMultiplier === 2
+                              ? ' (East ×2)'
+                              : ''}
+                          </div>
+                        ),
+                      )}
+                    </div>
+                  )}
+                </details>
+              ))}
+            </div>
+          )}
+        </section>
       </main>
     </div>
   );
