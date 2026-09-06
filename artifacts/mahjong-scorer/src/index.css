@@ -86,6 +86,7 @@
   * { @apply border-border; }
   body { @apply font-sans antialiased bg-background text-foreground; margin: 0; }
   button, input, select { font: inherit; }
+  input, select { min-width: 0; max-width: 100%; }
   button, [role='button'], input, select { outline-color: hsl(var(--ring)); }
 }
 
@@ -96,6 +97,6 @@
 .animate-rise-delay-2 { animation-delay: .12s; }
 .animate-rise-delay-3 { animation-delay: .18s; }
 .animate-pulse-soft { animation: pulse-soft 2.8s ease-in-out infinite; }
-.mahjong-shell { min-height: 100dvh; background: radial-gradient(circle at 85% 4%, rgba(190, 129, 87, .11), transparent 27rem), hsl(var(--background)); }
+.mahjong-shell { min-height: 100dvh; overflow-x: clip; background: radial-gradient(circle at 85% 4%, rgba(190, 129, 87, .11), transparent 27rem), hsl(var(--background)); }
 .tile-shadow { box-shadow: 0 3px 0 rgba(37, 55, 49, .18), 0 6px 14px rgba(37, 55, 49, .08); }
 .fine-rule { background: linear-gradient(90deg, hsl(var(--accent)), transparent); height: 2px; }

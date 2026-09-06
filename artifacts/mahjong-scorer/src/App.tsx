@@ -4,14 +4,15 @@ import { ErrorBoundary } from '@/components/error-boundary';
 import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { Check, ChevronDown, CircleHelp, Copy, Minus, Plus, RotateCcw, Sparkles, X, AlertCircle } from 'lucide-react';
-import { Route, Switch, Router as WouterRouter, useLocation } from 'wouter';
-import NotFound from '@/pages/not-found';
 import { GameScorer } from './game/GameScorer';
+import type {
+  HandScorerContext,
+  HandScorerResult,
+} from './game';
 
 import type {
   GameContext,
   MahjongHand,
-  ScoreBreakdown,
   PlayingTile,
   HandSet,
   BonusTile,
@@ -28,14 +29,11 @@ import {
   wind,
   dragon,
   bonus,
-  set,
   expandedTiles,
   tileKey,
   SUITS,
   WINDS,
-  DRAGONS,
-  SET_KINDS,
-  VISIBILITIES
+  DRAGONS
 } from './scoring';
 
 const queryClient = new QueryClient();
@@ -105,16 +103,17 @@ const winningMethods: { value: WinningMethod; label: string }[] = [
   { value: 'robbing-kong', label: 'Robbing a Kong' },
 ];
 
-function HandScorer({ onOpenGame }: { onOpenGame: () => void }) {
+function HandScorer({ context, onClose }: { context: HandScorerContext | null; onClose: (result?: HandScorerResult) => void }) {
+  const hasContext = !!context;
   const [sets, setSets] = useState<UIHandSet[]>(defaultSets);
   const [flowers, setFlowers] = useState<number[]>([]);
   const [seasons, setSeasons] = useState<number[]>([]);
   
-  const [playerWind, setPlayerWind] = useState<Wind>('east');
-  const [prevailingWind, setPrevailingWind] = useState<Wind>('east');
-  const [limit, setLimit] = useState<number>(1000);
+  const [playerWind, setPlayerWind] = useState<Wind>(context?.playerWind ?? 'east');
+  const [prevailingWind, setPrevailingWind] = useState<Wind>(context?.prevailingWind ?? 'east');
+  const [limit, setLimit] = useState<number>(context?.limit ?? 1000);
   
-  const [isWinner, setIsWinner] = useState<boolean>(false);
+  const [isWinner, setIsWinner] = useState<boolean>(context?.isWinner ?? false);
   const [winningMethod, setWinningMethod] = useState<WinningMethod>('wall');
   const [originalCall, setOriginalCall] = useState<boolean>(false);
 
@@ -138,8 +137,8 @@ function HandScorer({ onOpenGame }: { onOpenGame: () => void }) {
       winningMethod: isWinner ? winningMethod : undefined,
       originalCall,
     };
-    const context: GameContext = { playerWind, prevailingWind, limit };
-    return scoreHand(hand, context);
+    const gameContext: GameContext = { playerWind, prevailingWind, limit };
+    return scoreHand(hand, gameContext);
   }, [sets, flowers, seasons, isWinner, winningMethod, originalCall, playerWind, prevailingWind, limit]);
 
   const tileCount = sets.filter(s => s.tile !== null).flatMap(s => expandedTiles(s as HandSet)).length + flowers.length + seasons.length;
@@ -167,7 +166,7 @@ function HandScorer({ onOpenGame }: { onOpenGame: () => void }) {
     setSets([{ id: 'set-1', kind: 'chow', visibility: 'concealed', tile: null }]);
     setFlowers([]);
     setSeasons([]);
-    setIsWinner(false);
+    if (!hasContext) setIsWinner(false);
     setSelectedSet('set-1');
   }
   function loadExample() {
@@ -229,21 +228,36 @@ function HandScorer({ onOpenGame }: { onOpenGame: () => void }) {
             </div>
           </div>
           <div className="hidden items-center gap-3 text-right sm:flex">
-            <button type="button" onClick={onOpenGame} className="rounded-md bg-[#284d45] px-3 py-2 text-[11px] font-semibold text-[#f8f4e9]">Whole game</button>
-            <div className="font-mono text-[10px] uppercase tracking-[.16em] text-[#7a7769]">British Mahjong ruleset</div>
-            <div className="h-2 w-2 rounded-full bg-[#ae6249] animate-pulse-soft" />
+            {hasContext && (
+              <button type="button" onClick={() => onClose()} className="rounded-md border border-[#cfc3aa] bg-[#fbf8ed] px-3 py-2 text-[11px] font-semibold text-[#284d45]">
+                Cancel
+              </button>
+            )}
+            {hasContext ? (
+              <button type="button" data-testid="button-apply-score" disabled={!score.valid} onClick={() => onClose({ playerId: context.playerId, score: score.finalScore, isWinner })} className="rounded-md bg-[#284d45] px-4 py-2 text-[11px] font-bold text-[#f8f4e9] disabled:cursor-not-allowed disabled:opacity-40">
+                Apply {score.finalScore} to {context.playerName}
+              </button>
+            ) : (
+              <button type="button" onClick={() => onClose()} className="rounded-md bg-[#284d45] px-3 py-2 text-[11px] font-semibold text-[#f8f4e9]">
+                Return to game
+              </button>
+            )}
           </div>
         </div>
       </header>
 
-      <main className="mx-auto grid max-w-[1440px] gap-6 px-5 py-7 lg:grid-cols-[minmax(0,1fr)_376px] lg:px-8 lg:py-9">
+      <main className="mx-auto grid max-w-[1440px] grid-cols-[minmax(0,1fr)] gap-6 px-5 py-7 lg:grid-cols-[minmax(0,1fr)_376px] lg:px-8 lg:py-9">
         <section className="min-w-0">
           <div className="mb-7 animate-rise">
             <div className="mb-3 flex items-center gap-3"><div className="fine-rule w-10" /><span className="font-mono text-[10px] uppercase tracking-[.2em] text-[#ae6249]">New hand · ready to enter</span></div>
             <div className="flex flex-wrap items-end justify-between gap-4">
               <div>
                 <h1 className="font-serif text-[clamp(36px,5vw,62px)] leading-[.97] tracking-[-.03em] text-[#284d45]">Score a hand<br /><span className="text-[#ae6249]">with confidence.</span></h1>
-                <p className="mt-4 max-w-[560px] text-[14px] leading-6 text-[#66746e]">Enter each set as it sits on the table. The score builds beside you, with every point and double accounted for.</p>
+                <p className="mt-4 max-w-[560px] text-[14px] leading-6 text-[#66746e]">
+                  {hasContext
+                    ? `Calculating ${context.playerName}’s ${context.playerWind} hand during the ${context.prevailingWind} prevailing round.`
+                    : 'Enter each set as it sits on the table. The score builds beside you, with every point and double accounted for.'}
+                </p>
               </div>
               <div className="flex gap-2">
                 <button type="button" data-testid="button-load-example" onClick={loadExample} className="flex items-center gap-2 rounded-md border border-[#cfc3aa] bg-[#f8f4e9] px-3 py-2 text-[11px] font-semibold text-[#284d45] transition hover:-translate-y-0.5 hover:border-[#ae6249] focus:ring-2"><Sparkles size={14} /> Load example</button>
@@ -252,8 +266,8 @@ function HandScorer({ onOpenGame }: { onOpenGame: () => void }) {
             </div>
           </div>
 
-          <div className="grid gap-5 xl:grid-cols-[minmax(0,1.18fr)_minmax(280px,.82fr)]">
-            <div className="space-y-5">
+          <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-5 xl:grid-cols-[minmax(0,1.18fr)_minmax(280px,.82fr)]">
+            <div className="min-w-0 space-y-5">
               <section className="animate-rise animate-rise-delay-1 rounded-xl border border-[#d8ceb8] bg-[#fbf8ed] p-5 shadow-[var(--shadow-sm)] sm:p-6">
                 <SectionLabel eyebrow="01 / hand" title="Arrange the tiles" count={`${tileCount} tiles entered`} />
                 <div className="space-y-3">
@@ -327,13 +341,41 @@ function HandScorer({ onOpenGame }: { onOpenGame: () => void }) {
               </section>
             </div>
 
-            <aside className="space-y-5">
-              <section className="animate-rise animate-rise-delay-1 rounded-xl border border-[#d8ceb8] bg-[#e8e1d1] p-5 sm:p-6">
+            <aside className="min-w-0 space-y-5">
+              <section className="animate-rise animate-rise-delay-1 min-w-0 rounded-xl border border-[#d8ceb8] bg-[#e8e1d1] p-5 sm:p-6">
                 <SectionLabel eyebrow="04 / context" title="Game status" />
                 <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-3">
-                    <label className="block"><span className="mb-1.5 block font-mono text-[10px] uppercase tracking-[.15em] text-[#7a7769]">Player wind</span><select data-testid="select-player-wind" value={playerWind} onChange={(e) => setPlayerWind(e.target.value as Wind)} className="w-full rounded-md border border-[#cfc3aa] bg-[#fdfbf5] px-3 py-2.5 text-[12px] font-semibold text-[#284d45] focus:ring-2"><option value="east">East</option><option value="south">South</option><option value="west">West</option><option value="north">North</option></select></label>
-                    <label className="block"><span className="mb-1.5 block font-mono text-[10px] uppercase tracking-[.15em] text-[#7a7769]">Prevailing wind</span><select data-testid="select-prevailing-wind" value={prevailingWind} onChange={(e) => setPrevailingWind(e.target.value as Wind)} className="w-full rounded-md border border-[#cfc3aa] bg-[#fdfbf5] px-3 py-2.5 text-[12px] font-semibold text-[#284d45] focus:ring-2"><option value="east">East</option><option value="south">South</option><option value="west">West</option><option value="north">North</option></select></label>
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <label className="block min-w-0">
+                      <span className="mb-1.5 block font-mono text-[10px] uppercase tracking-[.15em] text-[#7a7769]">Player wind</span>
+                      {hasContext ? (
+                        <div className="w-full rounded-md border border-[#cfc3aa] bg-[#f0e9da] px-3 py-2.5 text-[12px] font-semibold text-[#66746e]">
+                          {playerWind.charAt(0).toUpperCase() + playerWind.slice(1)} (Inherited)
+                        </div>
+                      ) : (
+                        <select data-testid="select-player-wind" value={playerWind} onChange={(e) => setPlayerWind(e.target.value as Wind)} className="w-full min-w-0 rounded-md border border-[#cfc3aa] bg-[#fdfbf5] px-3 py-2.5 text-[12px] font-semibold text-[#284d45] focus:ring-2">
+                          <option value="east">East</option>
+                          <option value="south">South</option>
+                          <option value="west">West</option>
+                          <option value="north">North</option>
+                        </select>
+                      )}
+                    </label>
+                    <label className="block min-w-0">
+                      <span className="mb-1.5 block font-mono text-[10px] uppercase tracking-[.15em] text-[#7a7769]">Prevailing wind</span>
+                      {hasContext ? (
+                        <div className="w-full rounded-md border border-[#cfc3aa] bg-[#f0e9da] px-3 py-2.5 text-[12px] font-semibold text-[#66746e]">
+                          {prevailingWind.charAt(0).toUpperCase() + prevailingWind.slice(1)} (Inherited)
+                        </div>
+                      ) : (
+                        <select data-testid="select-prevailing-wind" value={prevailingWind} onChange={(e) => setPrevailingWind(e.target.value as Wind)} className="w-full min-w-0 rounded-md border border-[#cfc3aa] bg-[#fdfbf5] px-3 py-2.5 text-[12px] font-semibold text-[#284d45] focus:ring-2">
+                          <option value="east">East</option>
+                          <option value="south">South</option>
+                          <option value="west">West</option>
+                          <option value="north">North</option>
+                        </select>
+                      )}
+                    </label>
                   </div>
                   
                   <div className="space-y-2 border-t border-[#d1c7b4] pt-4">
@@ -342,9 +384,9 @@ function HandScorer({ onOpenGame }: { onOpenGame: () => void }) {
                       <input type="checkbox" data-testid="checkbox-is-winner" checked={isWinner} onChange={(e) => setIsWinner(e.target.checked)} className="h-4 w-4 accent-[#284d45]" />
                     </label>
                     {isWinner && (
-                      <label className="block mt-2">
+                      <label className="mt-2 block min-w-0">
                         <span className="mb-1.5 block font-mono text-[10px] uppercase tracking-[.15em] text-[#7a7769]">Winning method</span>
-                        <select data-testid="select-winning-method" value={winningMethod} onChange={(e) => setWinningMethod(e.target.value as WinningMethod)} className="w-full rounded-md border border-[#cfc3aa] bg-[#fdfbf5] px-3 py-2.5 text-[12px] font-semibold text-[#284d45] focus:ring-2">
+                        <select data-testid="select-winning-method" value={winningMethod} onChange={(e) => setWinningMethod(e.target.value as WinningMethod)} className="w-full min-w-0 rounded-md border border-[#cfc3aa] bg-[#fdfbf5] px-3 py-2.5 text-[12px] font-semibold text-[#284d45] focus:ring-2">
                           {winningMethods.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
                         </select>
                       </label>
@@ -357,12 +399,18 @@ function HandScorer({ onOpenGame }: { onOpenGame: () => void }) {
 
                   <label className="block border-t border-[#d1c7b4] pt-4">
                     <span className="mb-1.5 block font-mono text-[10px] uppercase tracking-[.15em] text-[#7a7769]">Table Limit</span>
-                    <select data-testid="select-limit" value={limit} onChange={(e) => setLimit(Number(e.target.value))} className="w-full rounded-md border border-[#cfc3aa] bg-[#fdfbf5] px-3 py-2.5 text-[12px] font-semibold text-[#284d45] focus:ring-2">
-                      <option value={300}>300 points</option>
-                      <option value={500}>500 points</option>
-                      <option value={1000}>1,000 points</option>
-                      <option value={2000}>2,000 points</option>
-                    </select>
+                    {hasContext ? (
+                      <div className="w-full rounded-md border border-[#cfc3aa] bg-[#f0e9da] px-3 py-2.5 text-[12px] font-semibold text-[#66746e]">
+                        {limit} points (Inherited)
+                      </div>
+                    ) : (
+                      <select data-testid="select-limit" value={limit} onChange={(e) => setLimit(Number(e.target.value))} className="w-full min-w-0 rounded-md border border-[#cfc3aa] bg-[#fdfbf5] px-3 py-2.5 text-[12px] font-semibold text-[#284d45] focus:ring-2">
+                        <option value={300}>300 points</option>
+                        <option value={500}>500 points</option>
+                        <option value={1000}>1,000 points</option>
+                        <option value={2000}>2,000 points</option>
+                      </select>
+                    )}
                   </label>
                 </div>
               </section>
@@ -425,6 +473,23 @@ function HandScorer({ onOpenGame }: { onOpenGame: () => void }) {
                     ))}
                   </div>
                 </div>
+
+                <div className="border-t border-[#55756c] bg-[#1f3f38] p-5 sm:hidden">
+                  {hasContext ? (
+                    <>
+                      <button type="button" data-testid="button-apply-score-mobile" disabled={!score.valid} onClick={() => onClose({ playerId: context.playerId, score: score.finalScore, isWinner })} className="flex w-full items-center justify-center rounded-md bg-[#f3e8d4] px-4 py-3 text-[13px] font-bold text-[#284d45] disabled:cursor-not-allowed disabled:opacity-40">
+                        Apply {score.finalScore} to {context.playerName}
+                      </button>
+                      <button type="button" onClick={() => onClose()} className="mt-3 flex w-full items-center justify-center rounded-md border border-[#45665d] py-3 text-[13px] font-semibold text-[#c8d8d1]">
+                        Cancel
+                      </button>
+                    </>
+                  ) : (
+                    <button type="button" onClick={() => onClose()} className="flex w-full items-center justify-center rounded-md border border-[#45665d] bg-[#284d45] py-3 text-[13px] font-semibold text-[#f8f4e9]">
+                      Return to game
+                    </button>
+                  )}
+                </div>
               </section>
 
               <section className="animate-rise animate-rise-delay-3 rounded-xl border border-[#d8ceb8] bg-[#fbf8ed] p-5 shadow-[var(--shadow-sm)] sm:p-6">
@@ -451,26 +516,46 @@ function HandScorer({ onOpenGame }: { onOpenGame: () => void }) {
   );
 }
 
-function Home() {
-  const [mode, setMode] = useState<'game' | 'hand'>('game');
+export default function App() {
+  const [view, setView] = useState<'game' | 'hand'>('game');
+  const [scorerContext, setScorerContext] = useState<HandScorerContext | null>(null);
+  const [returnedScore, setReturnedScore] = useState<HandScorerResult | null>(null);
+  const [scorerSession, setScorerSession] = useState(0);
+
+  const handleOpenHandScorer = (ctx?: HandScorerContext) => {
+    setScorerContext(ctx ?? null);
+    setScorerSession((current) => current + 1);
+    setView('hand');
+  };
+
+  const handleCloseHandScorer = (result?: HandScorerResult) => {
+    if (result) {
+      setReturnedScore(result);
+    }
+    setView('game');
+  };
+
   return (
-    <>
-      <div className={mode === 'game' ? 'block' : 'hidden'}>
-        <GameScorer onOpenHandScorer={() => setMode('hand')} />
-      </div>
-      <div className={mode === 'hand' ? 'block' : 'hidden'}>
-        <HandScorer onOpenGame={() => setMode('game')} />
-      </div>
-    </>
+    <QueryClientProvider client={queryClient}>
+      <ErrorBoundary>
+        <TooltipProvider>
+          <div className={view === 'game' ? 'block' : 'hidden'}>
+            <GameScorer
+              onOpenHandScorer={handleOpenHandScorer}
+              returnedScore={returnedScore}
+              onClearReturnedScore={() => setReturnedScore(null)}
+            />
+          </div>
+          <div className={view === 'hand' ? 'block' : 'hidden'}>
+            <HandScorer
+              key={scorerSession}
+              context={scorerContext}
+              onClose={handleCloseHandScorer}
+            />
+          </div>
+          <Toaster />
+        </TooltipProvider>
+      </ErrorBoundary>
+    </QueryClientProvider>
   );
 }
-
-function Router() {
-  return <Switch><Route path="/" component={Home} /><Route component={NotFound} /></Switch>;
-}
-
-function App() {
-  return <QueryClientProvider client={queryClient}><TooltipProvider><WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, '')}><ErrorBoundary resetKey={useLocation()[0]}><Router /></ErrorBoundary></WouterRouter><Toaster /></TooltipProvider></QueryClientProvider>;
-}
-
-export default App;

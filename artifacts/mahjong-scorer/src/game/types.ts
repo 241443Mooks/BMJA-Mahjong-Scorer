@@ -59,11 +59,14 @@ export type ConfirmedHand = {
   progressionAfter: ProgressionState;
 };
 
+export type GameLength = 'one-round' | 'full-game';
+
 export type GameSetup = {
   players: GamePlayer[];
   startingSeats: SeatAssignments;
   startingPrevailingWind: Wind;
   startingBalances: PlayerAmounts;
+  gameLength: GameLength;
 };
 
 export type GameState = {
@@ -75,6 +78,7 @@ export type GameState = {
   eastCycleStartPlayerId: PlayerId;
   balances: PlayerAmounts;
   handHistory: ConfirmedHand[];
+  isComplete: boolean;
 };
 
 export type HandScoreInput = {
@@ -100,3 +104,20 @@ export type GameRuleset = {
     outcome: HandOutcome,
   ) => ProgressionResult;
 };
+
+export type HandScorerContext = {
+  playerId: string;
+  playerName: string;
+  playerWind: Wind;
+  prevailingWind: Wind;
+  isWinner: boolean;
+  limit: number;
+};
+
+export type HandScorerResult = {
+  playerId: string;
+  score: number;
+  isWinner: boolean;
+};
+
+export type RoundScoreDraft = Partial<PlayerAmounts>;

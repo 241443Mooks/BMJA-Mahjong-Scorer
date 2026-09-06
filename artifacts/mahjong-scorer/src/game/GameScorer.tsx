@@ -1,30 +1,40 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import {
   ArrowRight,
+  Calculator,
   Check,
   History,
   RotateCcw,
   Sparkles,
+  Trophy,
   Undo2,
 } from 'lucide-react';
 import {
+  applyHandScorerResult,
   confirmHand,
   createBmjaGame,
+  createHandScorerContext,
   CURRENT_RULESET,
   GAME_WINDS,
   undoLastHand,
 } from '.';
 import type {
+  GameLength,
   GamePlayer,
   GameState,
   HandOutcome,
+  HandScorerContext,
+  HandScorerResult,
   PlayerAmounts,
+  RoundScoreDraft,
   SeatAssignments,
 } from '.';
 import type { Wind } from '../scoring';
 
 type GameScorerProps = {
-  onOpenHandScorer: () => void;
+  onOpenHandScorer: (context?: HandScorerContext) => void;
+  returnedScore?: HandScorerResult | null;
+  onClearReturnedScore: () => void;
 };
 
 const windLabel = (wind: Wind) =>
@@ -33,16 +43,26 @@ const windLabel = (wind: Wind) =>
 const formatChange = (value: number) =>
   `${value > 0 ? '+' : value < 0 ? '−' : ''}${Math.abs(value)}`;
 
-const emptyScores = (players: GamePlayer[]): PlayerAmounts =>
-  Object.fromEntries(players.map((player) => [player.id, 0]));
-
-export function GameScorer({ onOpenHandScorer }: GameScorerProps) {
+export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedScore }: GameScorerProps) {
   const [names, setNames] = useState(['', '', '', '']);
+  const [gameLength, setGameLength] = useState<GameLength>('full-game');
   const [game, setGame] = useState<GameState | null>(null);
   const [outcomeType, setOutcomeType] = useState<'win' | 'draw'>('win');
   const [winnerId, setWinnerId] = useState('');
-  const [scores, setScores] = useState<PlayerAmounts>({});
+  const [scores, setScores] = useState<RoundScoreDraft>({});
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (returnedScore && game) {
+      const returned = applyHandScorerResult(game, scores, returnedScore);
+      setScores(returned.scores);
+      if (returned.selectedWinnerId) {
+        setOutcomeType('win');
+        setWinnerId(returned.selectedWinnerId);
+      }
+      onClearReturnedScore();
+    }
+  }, [game, onClearReturnedScore, returnedScore, scores]);
 
   const currentEastId = game
     ? Object.entries(game.seats).find(([, seat]) => seat === 'east')?.[0]
@@ -58,10 +78,11 @@ export function GameScorer({ onOpenHandScorer }: GameScorerProps) {
 
   const preview = useMemo(() => {
     if (!game || !outcome) return null;
+    const fullScores = Object.fromEntries(game.players.map(p => [p.id, scores[p.id] ?? 0])) as PlayerAmounts;
     try {
       return CURRENT_RULESET.settleRound(game.players, game.seats, {
         outcome,
-        scores,
+        scores: fullScores,
       });
     } catch {
       return null;
@@ -85,15 +106,15 @@ export function GameScorer({ onOpenHandScorer }: GameScorerProps) {
     const seats = Object.fromEntries(
       players.map((player, index) => [player.id, GAME_WINDS[index]]),
     ) as SeatAssignments;
-    const started = createBmjaGame(players, seats);
+    const started = createBmjaGame(players, seats, undefined, gameLength);
     setGame(started);
-    setScores(emptyScores(players));
+    setScores({});
     setWinnerId(players[0].id);
     setError('');
   };
 
   const resetRoundEntry = (nextGame: GameState) => {
-    setScores(emptyScores(nextGame.players));
+    setScores({});
     const east = Object.entries(nextGame.seats).find(
       ([, seat]) => seat === 'east',
     )?.[0];
@@ -106,7 +127,13 @@ export function GameScorer({ onOpenHandScorer }: GameScorerProps) {
       setError('Choose a winner and enter a score for every player.');
       return;
     }
-    const next = confirmHand(game, { outcome, scores });
+    const isScoresComplete = game.players.every(p => scores[p.id] !== undefined);
+    if (!isScoresComplete) {
+      setError('Enter a score for every player (use 0 if none).');
+      return;
+    }
+    const fullScores = Object.fromEntries(game.players.map(p => [p.id, scores[p.id] ?? 0])) as PlayerAmounts;
+    const next = confirmHand(game, { outcome, scores: fullScores });
     setGame(next);
     resetRoundEntry(next);
     setError('');
@@ -139,7 +166,7 @@ export function GameScorer({ onOpenHandScorer }: GameScorerProps) {
             </div>
             <button
               type="button"
-              onClick={onOpenHandScorer}
+              onClick={() => onOpenHandScorer()}
               className="rounded-md border border-[#cfc3aa] bg-[#fbf8ed] px-3 py-2 text-[11px] font-semibold text-[#284d45]"
             >
               Detailed hand scorer
@@ -165,7 +192,22 @@ export function GameScorer({ onOpenHandScorer }: GameScorerProps) {
           </div>
 
           <section className="rounded-xl border border-[#d8ceb8] bg-[#fbf8ed] p-5 shadow-[var(--shadow-sm)] sm:p-7">
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="mb-6 grid gap-4 sm:grid-cols-2">
+              <label className="block sm:col-span-2">
+                <span className="mb-1.5 block font-mono text-[10px] uppercase tracking-[.15em] text-[#7a7769]">
+                  Game Length
+                </span>
+                <select
+                  data-testid="select-game-length"
+                  value={gameLength}
+                  onChange={(e) => setGameLength(e.target.value as GameLength)}
+                  className="w-full rounded-md border border-[#cfc3aa] bg-[#fdfbf5] px-3 py-3 text-[13px] font-semibold text-[#284d45] focus:ring-2 focus:ring-[#ae6249]"
+                >
+                  <option value="one-round">One Prevailing Round (East only)</option>
+                  <option value="full-game">Full Game (East, South, West, North)</option>
+                </select>
+              </label>
+
               {GAME_WINDS.map((wind, index) => (
                 <label key={wind} className="block">
                   <span className="mb-1.5 block font-mono text-[10px] uppercase tracking-[.15em] text-[#7a7769]">
@@ -231,7 +273,7 @@ export function GameScorer({ onOpenHandScorer }: GameScorerProps) {
             </button>
             <button
               type="button"
-              onClick={onOpenHandScorer}
+              onClick={() => onOpenHandScorer()}
               className="flex items-center gap-2 rounded-md bg-[#284d45] px-3 py-2 text-[11px] font-semibold text-[#f8f4e9]"
             >
               <Sparkles size={14} /> Detailed hand scorer
@@ -259,11 +301,11 @@ export function GameScorer({ onOpenHandScorer }: GameScorerProps) {
                 <div className="mt-1 font-serif text-[22px] text-[#284d45]">
                   {player.name}
                 </div>
-                <div className="mt-3 font-mono text-[17px] font-bold text-[#284d45]">
+                <div className="mt-3 font-mono text-[18px] font-bold text-[#284d45]">
                   {formatChange(game.balances[player.id])}
-                  <span className="ml-1 text-[9px] font-normal uppercase text-[#7a7769]">
-                    total
-                  </span>
+                </div>
+                <div className="mt-0.5 text-[9px] font-semibold uppercase tracking-wider text-[#7a7769]">
+                  Running game total
                 </div>
               </div>
             ))}
@@ -275,86 +317,119 @@ export function GameScorer({ onOpenHandScorer }: GameScorerProps) {
                 Current hand
               </div>
               <h1 className="mt-1 font-serif text-[30px] text-[#284d45]">
-                Enter the table scores
+                {game.isComplete ? 'Game complete' : 'Enter the table scores'}
               </h1>
-              <p className="mt-2 text-[12px] text-[#7a7769]">
-                Enter each player’s hand score, not the payment amount.
-              </p>
+              {game.isComplete ? (
+                <p className="mt-2 text-[12px] text-[#7a7769]">
+                  The final hand has been recorded. Undo the last hand to continue playing, or refresh to start a new game.
+                </p>
+              ) : (
+                <p className="mt-2 text-[12px] text-[#7a7769]">
+                  Enter each player’s hand score, not the payment amount.
+                </p>
+              )}
             </div>
 
-            <div className="mb-5 flex gap-2">
-              <button
-                type="button"
-                data-testid="button-outcome-win"
-                onClick={() => setOutcomeType('win')}
-                className={`rounded-md px-4 py-2 text-[11px] font-semibold ${
-                  outcomeType === 'win'
-                    ? 'bg-[#284d45] text-[#f8f4e9]'
-                    : 'border border-[#d8ceb8] text-[#66746e]'
-                }`}
-              >
-                Mah Jong
-              </button>
-              <button
-                type="button"
-                data-testid="button-outcome-draw"
-                onClick={() => setOutcomeType('draw')}
-                className={`rounded-md px-4 py-2 text-[11px] font-semibold ${
-                  outcomeType === 'draw'
-                    ? 'bg-[#284d45] text-[#f8f4e9]'
-                    : 'border border-[#d8ceb8] text-[#66746e]'
-                }`}
-              >
-                Draw / wash-out
-              </button>
-            </div>
+            {!game.isComplete && (
+              <>
+                <div className="mb-5 flex gap-2">
+                  <button
+                    type="button"
+                    data-testid="button-outcome-win"
+                    onClick={() => setOutcomeType('win')}
+                    className={`rounded-md px-4 py-2 text-[11px] font-semibold ${
+                      outcomeType === 'win'
+                        ? 'bg-[#284d45] text-[#f8f4e9]'
+                        : 'border border-[#d8ceb8] text-[#66746e]'
+                    }`}
+                  >
+                    Mah Jong
+                  </button>
+                  <button
+                    type="button"
+                    data-testid="button-outcome-draw"
+                    onClick={() => setOutcomeType('draw')}
+                    className={`rounded-md px-4 py-2 text-[11px] font-semibold ${
+                      outcomeType === 'draw'
+                        ? 'bg-[#284d45] text-[#f8f4e9]'
+                        : 'border border-[#d8ceb8] text-[#66746e]'
+                    }`}
+                  >
+                    Draw / wash-out
+                  </button>
+                </div>
 
-            {outcomeType === 'win' && (
-              <label className="mb-5 block">
-                <span className="mb-1.5 block font-mono text-[10px] uppercase tracking-[.15em] text-[#7a7769]">
-                  Player who went Mah Jong
-                </span>
-                <select
-                  data-testid="select-round-winner"
-                  value={winnerId}
-                  onChange={(event) => setWinnerId(event.target.value)}
-                  className="w-full rounded-md border border-[#cfc3aa] bg-[#fdfbf5] px-3 py-3 text-[13px] font-semibold text-[#284d45]"
-                >
-                  {game.players.map((player) => (
-                    <option key={player.id} value={player.id}>
-                      {player.name} · {windLabel(game.seats[player.id])}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            )}
-
-            <div className="grid gap-3 sm:grid-cols-2">
-              {game.players.map((player) => (
-                <label key={player.id} className="block">
-                  <span className="mb-1.5 block text-[11px] font-semibold text-[#284d45]">
-                    {player.name}{' '}
-                    <span className="font-normal text-[#7a7769]">
-                      ({windLabel(game.seats[player.id])})
+                {outcomeType === 'win' && (
+                  <label className="mb-5 block">
+                    <span className="mb-1.5 block font-mono text-[10px] uppercase tracking-[.15em] text-[#7a7769]">
+                      Player who went Mah Jong
                     </span>
-                  </span>
-                  <input
-                    type="number"
-                    min={0}
-                    step={1}
-                    data-testid={`input-score-${player.id}`}
-                    value={scores[player.id] ?? 0}
-                    onChange={(event) =>
-                      setScores((current) => ({
-                        ...current,
-                        [player.id]: Number(event.target.value),
-                      }))
-                    }
-                    className="w-full rounded-md border border-[#cfc3aa] bg-[#fdfbf5] px-3 py-3 font-mono text-[14px] text-[#284d45] outline-none focus:ring-2 focus:ring-[#ae6249]"
-                  />
-                </label>
-              ))}
-            </div>
+                    <select
+                      data-testid="select-round-winner"
+                      value={winnerId}
+                      onChange={(event) => setWinnerId(event.target.value)}
+                      className="w-full rounded-md border border-[#cfc3aa] bg-[#fdfbf5] px-3 py-3 text-[13px] font-semibold text-[#284d45]"
+                    >
+                      {game.players.map((player) => (
+                        <option key={player.id} value={player.id}>
+                          {player.name} · {windLabel(game.seats[player.id])}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                )}
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  {game.players.map((player) => (
+                    <label key={player.id} className="block">
+                      <span className="mb-1.5 block text-[11px] font-semibold text-[#284d45]">
+                        {player.name}{' '}
+                        <span className="font-normal text-[#7a7769]">
+                          ({windLabel(game.seats[player.id])})
+                        </span>
+                      </span>
+                      <div className="flex gap-2">
+                        <input
+                          type="number"
+                          min={0}
+                          step={1}
+                           placeholder="Enter score"
+                          data-testid={`input-score-${player.id}`}
+                          value={scores[player.id] === undefined ? '' : scores[player.id]}
+                          onChange={(event) =>
+                            setScores((current) => {
+                              const val = event.target.value;
+                              const next = { ...current };
+                              if (val === '') {
+                                delete next[player.id];
+                              } else {
+                                next[player.id] = Number(val);
+                              }
+                              return next;
+                            })
+                          }
+                          className="w-full min-w-0 rounded-md border border-[#cfc3aa] bg-[#fdfbf5] px-3 py-3 font-mono text-[16px] text-[#284d45] outline-none focus:ring-2 focus:ring-[#ae6249]"
+                        />
+                        <button
+                          type="button"
+                          data-testid={`button-calculate-${player.id}`}
+                           onClick={() =>
+                             onOpenHandScorer(
+                               createHandScorerContext(game, player.id, outcome),
+                             )
+                           }
+                           className="flex shrink-0 items-center justify-center gap-1.5 rounded-md border border-[#cfc3aa] bg-[#e8e1d1] px-3 text-[11px] font-semibold text-[#284d45] transition hover:bg-[#d8ceb8]"
+                          aria-label={`Calculate score for ${player.name}`}
+                        >
+                           <Calculator size={15} />
+                           Calculate
+                        </button>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+              </>
+            )}
           </section>
 
           <section className="rounded-xl border border-[#d8ceb8] bg-[#fbf8ed] p-5 sm:p-6">
@@ -448,62 +523,91 @@ export function GameScorer({ onOpenHandScorer }: GameScorerProps) {
           <section className="sticky top-5 overflow-hidden rounded-xl bg-[#284d45] text-[#f8f4e9] shadow-[var(--shadow-lg)]">
             <div className="border-b border-[#55756c] p-5">
               <div className="font-mono text-[10px] uppercase tracking-[.2em] text-[#d7a287]">
-                Round settlement
+                {game.isComplete ? 'Final Standings' : 'Round settlement'}
               </div>
               <div className="mt-2 font-serif text-[27px]">
-                {outcomeType === 'draw' ? 'No payments' : 'Preview changes'}
+                {game.isComplete ? 'Game Complete' : outcomeType === 'draw' ? 'No payments' : 'Preview changes'}
               </div>
             </div>
-            <div className="p-5">
-              <div className="space-y-3">
-                {game.players.map((player) => {
-                  const change = preview?.changes[player.id] ?? 0;
-                  return (
-                    <div
-                      key={player.id}
-                      className="flex items-center justify-between border-b border-[#45665d] pb-3 last:border-0"
-                    >
-                      <div>
-                        <div className="text-[12px] font-semibold">
-                          {player.name}
-                        </div>
-                        <div className="font-mono text-[8px] uppercase tracking-wider text-[#b4c4bd]">
-                          {windLabel(game.seats[player.id])}
-                        </div>
-                      </div>
+
+            {!game.isComplete ? (
+              <div className="p-5">
+                <div className="space-y-3">
+                  {game.players.map((player) => {
+                    const change = preview?.changes[player.id] ?? 0;
+                    return (
                       <div
-                        className={`font-mono text-[18px] font-bold ${
-                          change > 0
-                            ? 'text-[#b8d5c5]'
-                            : change < 0
-                              ? 'text-[#e6a48d]'
-                              : 'text-[#b4c4bd]'
-                        }`}
+                        key={player.id}
+                        className="flex items-center justify-between border-b border-[#45665d] pb-3 last:border-0"
                       >
-                        {formatChange(change)}
+                        <div>
+                          <div className="text-[12px] font-semibold">
+                            {player.name}
+                          </div>
+                          <div className="font-mono text-[8px] uppercase tracking-wider text-[#b4c4bd]">
+                            {windLabel(game.seats[player.id])}
+                          </div>
+                        </div>
+                        <div
+                          className={`font-mono text-[18px] font-bold ${
+                            change > 0
+                              ? 'text-[#b8d5c5]'
+                              : change < 0
+                                ? 'text-[#e6a48d]'
+                                : 'text-[#b4c4bd]'
+                          }`}
+                        >
+                          {formatChange(change)}
+                        </div>
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
+                <div className="mt-5 flex items-center gap-2 rounded-md bg-[#355e54] px-3 py-2 text-[10px] text-[#c8d8d1]">
+                  <Check size={13} />
+                  Changes total {preview?.zeroSum ? 'zero' : '—'}
+                </div>
+                {error && (
+                  <p className="mt-3 text-[11px] font-semibold text-[#e6a48d]">
+                    {error}
+                  </p>
+                )}
+                <button
+                  type="button"
+                  data-testid="button-confirm-hand"
+                  onClick={confirmRound}
+                  className="mt-4 flex w-full items-center justify-center gap-2 rounded-md bg-[#f3e8d4] px-4 py-3 text-[12px] font-bold text-[#284d45]"
+                >
+                  Confirm and advance <ArrowRight size={15} />
+                </button>
               </div>
-              <div className="mt-5 flex items-center gap-2 rounded-md bg-[#355e54] px-3 py-2 text-[10px] text-[#c8d8d1]">
-                <Check size={13} />
-                Changes total {preview?.zeroSum ? 'zero' : '—'}
+            ) : (
+              <div className="p-5">
+                <div className="flex justify-center py-6 text-[#b4c4bd]">
+                  <Trophy size={48} className="opacity-50" />
+                </div>
+                <div className="space-y-3">
+                  {[...game.players]
+                    .sort((a, b) => game.balances[b.id] - game.balances[a.id])
+                    .map((player, index) => (
+                      <div key={player.id} className="flex items-center justify-between border-b border-[#45665d] pb-3 last:border-0">
+                        <div className="flex items-center gap-3">
+                          <div className="font-mono text-[14px] font-bold text-[#d7a287]">{index + 1}</div>
+                          <div>
+                            <div className="text-[12px] font-semibold">{player.name}</div>
+                            <div className="font-mono text-[8px] uppercase tracking-wider text-[#b4c4bd]">
+                              {windLabel(game.seats[player.id])}
+                            </div>
+                          </div>
+                        </div>
+                        <div className={`font-mono text-[18px] font-bold ${game.balances[player.id] > 0 ? 'text-[#b8d5c5]' : game.balances[player.id] < 0 ? 'text-[#e6a48d]' : 'text-[#b4c4bd]'}`}>
+                          {formatChange(game.balances[player.id])}
+                        </div>
+                      </div>
+                  ))}
+                </div>
               </div>
-              {error && (
-                <p className="mt-3 text-[11px] font-semibold text-[#e6a48d]">
-                  {error}
-                </p>
-              )}
-              <button
-                type="button"
-                data-testid="button-confirm-hand"
-                onClick={confirmRound}
-                className="mt-4 flex w-full items-center justify-center gap-2 rounded-md bg-[#f3e8d4] px-4 py-3 text-[12px] font-bold text-[#284d45]"
-              >
-                Confirm and advance <ArrowRight size={15} />
-              </button>
-            </div>
+            )}
           </section>
         </aside>
       </main>

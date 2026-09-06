@@ -36,6 +36,15 @@ Every settlement is checked to total zero before it is returned.
   who began the current prevailing-wind cycle, meaning all four players have
   served as East.
 
+## Game length
+
+- A one-round game completes when the East prevailing cycle finishes and the
+  original starting-East player returns to East.
+- A full official game continues through the East, South, West, and North
+  prevailing cycles and completes only when the North cycle finishes.
+- Completion is part of replayed game state. Undoing the completing hand
+  reopens the game without changing earlier ledger entries.
+
 ## Remaining interpretation note
 
 The cited material explicitly says East and the winds do not change after a

@@ -1,6 +1,7 @@
 import { CURRENT_RULESET } from './ruleset';
 import type {
   ConfirmedHand,
+  GameLength,
   GamePlayer,
   GameSetup,
   GameState,
@@ -40,6 +41,7 @@ export const createBmjaGame = (
   players: GamePlayer[],
   startingSeats: SeatAssignments,
   startingBalances?: PlayerAmounts,
+  gameLength: GameLength = 'full-game',
 ): GameState => {
   const balances =
     startingBalances ??
@@ -49,6 +51,7 @@ export const createBmjaGame = (
     startingSeats: cloneSeats(startingSeats),
     startingPrevailingWind: 'east',
     startingBalances: cloneAmounts(balances),
+    gameLength,
   };
   validateSetup(setup);
   return {
@@ -60,10 +63,15 @@ export const createBmjaGame = (
     eastCycleStartPlayerId: eastPlayerId(startingSeats),
     balances: cloneAmounts(balances),
     handHistory: [],
+    isComplete: false,
   };
 };
 
 const applyRound = (state: GameState, round: RoundInput): GameState => {
+  if (state.isComplete) {
+    throw new Error('Game is already complete.');
+  }
+
   const settlement = CURRENT_RULESET.settleRound(
     state.players,
     state.seats,
@@ -84,6 +92,16 @@ const applyRound = (state: GameState, round: RoundInput): GameState => {
     },
     round.outcome,
   );
+
+  let isComplete = false;
+  if (progression.prevailingWindAdvanced) {
+    if (state.setup.gameLength === 'one-round') {
+      isComplete = true;
+    } else if (state.setup.gameLength === 'full-game' && state.prevailingWind === 'north') {
+      isComplete = true;
+    }
+  }
+
   const confirmed: ConfirmedHand = {
     handNumber: state.handHistory.length + 1,
     outcome: round.outcome,
@@ -107,6 +125,7 @@ const applyRound = (state: GameState, round: RoundInput): GameState => {
     eastCycleStartPlayerId: progression.eastCycleStartPlayerId,
     balances: runningTotals,
     handHistory: [...state.handHistory, confirmed],
+    isComplete,
   };
 };
 
@@ -121,6 +140,7 @@ export const replayGame = (
     setup.players,
     setup.startingSeats,
     setup.startingBalances,
+    setup.gameLength,
   );
   for (const round of rounds) state = applyRound(state, round);
   return state;

@@ -41,7 +41,7 @@ A frontend-first TypeScript app for entering and scoring British Mahjong hands w
 
 ## Product
 
-The app supports detailed single-hand scoring plus an in-memory four-player BMJA game ledger with numeric score entry, settlement, East/seat rotation, prevailing-wind progression, and replay-based undo.
+The app supports detailed single-hand scoring plus an in-memory four-player BMJA game ledger with numeric score entry, player-scoped hand calculation, settlement, East/seat rotation, prevailing-wind progression, configurable game length, and replay-based undo.
 
 ## User preferences
 
