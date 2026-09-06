@@ -58,6 +58,16 @@ one-suit-with-chows scoring were found and removed.
     detailed score records, confirmation, replay and undo. No turn or discard
     history was introduced.
 
+## Hand-builder UX refinements
+
+- Kept Standard sets as the default entry route and moved the rare irregular
+  layout behind the beginner-facing “My hand doesn’t fit normal sets” action.
+- Made each entered loose tile a touch-friendly removal control: tapping it
+  removes that occurrence, while Enter and Space provide the same keyboard
+  behavior.
+- Preserved the separate Standard-set and irregular-layout drafts when changing
+  modes so switching entry route does not silently discard work.
+
 ## Ambiguities retained rather than guessed
 
 1. **Loose-tile extra 2 points:** the general scoring page says the extra two

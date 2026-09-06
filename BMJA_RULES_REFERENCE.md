@@ -144,6 +144,18 @@ For the two questions, “No” and “I’m not sure” retain no event evidenc
 hand is scored conservatively. The questions do not name the special hands.
 Event-only specials do not make an otherwise unsupported tile layout valid.
 
+### Irregular-hand entry
+
+Standard sets remain the default hand-building route. The individual-tile
+special layout is available through the beginner-facing “My hand doesn’t fit
+normal sets” action rather than as an equal default mode.
+
+In the irregular layout, tapping an already-entered loose tile removes that
+single occurrence, including on touch/mobile devices. The entered tiles remain
+keyboard controls, so Enter or Space also removes the selected occurrence.
+Switching between Standard sets and the irregular layout preserves each mode’s
+draft so changing entry route does not silently discard work.
+
 ## Known special-hand gaps
 
 ### Fishing
