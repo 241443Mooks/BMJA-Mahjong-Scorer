@@ -213,4 +213,163 @@ describe('scoreHand breakdown', () => {
       ),
     ).toBe(false);
   });
+
+  it("scores Heaven's Blessing only for East without replacement tiles", () => {
+    const hand: MahjongHand = {
+      sets: [
+        set('1', 'pung', dragon('red')),
+        set('2', 'pung', suited('bamboo', 2)),
+        set('3', 'pung', suited('bamboo', 3)),
+        set('4', 'pung', suited('bamboo', 4)),
+        set('pair', 'pair', suited('bamboo', 5)),
+      ],
+      bonusTiles: [],
+      isWinner: true,
+      winningMethod: 'initial-deal',
+    };
+    const east = scoreHand(hand, {
+      playerWind: 'east',
+      prevailingWind: 'south',
+      limit: 1000,
+    });
+    expect(east.valid).toBe(true);
+    expect(east.scoringMode).toBe('special');
+    expect(east.specialHands.find(({ id }) => id === 'heavens-blessing'))
+      .toMatchObject({ matched: true, value: 1000 });
+
+    const south = scoreHand(hand, {
+      playerWind: 'south',
+      prevailingWind: 'south',
+      limit: 1000,
+    });
+    expect(south.valid).toBe(false);
+    expect(south.validationErrors).toContain(
+      'Mah Jong in the original deal applies only to a winning East hand.',
+    );
+
+    const withReplacement = scoreHand(
+      { ...hand, bonusTiles: [bonus('flower', 1)] },
+      {
+        playerWind: 'east',
+        prevailingWind: 'south',
+        limit: 1000,
+      },
+    );
+    expect(withReplacement.valid).toBe(false);
+    expect(withReplacement.validationErrors).toContain(
+      'An original-deal win must use the original fourteen tiles without replacement draws.',
+    );
+
+    const withKong = scoreHand(
+      {
+        ...hand,
+        sets: hand.sets.map((group, index) =>
+          index === 0 ? { ...group, kind: 'kong' } : group,
+        ),
+      },
+      {
+        playerWind: 'east',
+        prevailingWind: 'south',
+        limit: 1000,
+      },
+    );
+    expect(withKong.valid).toBe(false);
+    expect(withKong.validationErrors).toContain(
+      'An original-deal win must contain exactly fourteen playing tiles.',
+    );
+    expect(
+      withKong.specialHands.find(({ id }) => id === 'heavens-blessing')?.matched,
+    ).toBe(false);
+  });
+
+  it('keeps unknown event answers conservative and rejects incompatible evidence', () => {
+    const hand: MahjongHand = {
+      sets: [
+        set('1', 'pung', dragon('red')),
+        set('2', 'pung', suited('bamboo', 2)),
+        set('3', 'pung', suited('bamboo', 3)),
+        set('4', 'pung', suited('bamboo', 4)),
+        set('pair', 'pair', suited('bamboo', 5)),
+      ],
+      bonusTiles: [],
+      isWinner: true,
+      winningMethod: 'discard',
+    };
+    const context = {
+      playerWind: 'south' as const,
+      prevailingWind: 'east' as const,
+      limit: 1000,
+    };
+    const unknown = scoreHand(hand, context);
+    expect(unknown.valid).toBe(true);
+    expect(
+      unknown.specialHands.find(({ id }) => id === 'earths-blessing')?.matched,
+    ).toBe(false);
+
+    const confirmed = scoreHand(
+      {
+        ...hand,
+        winningEventEvidence: {
+          type: 'discard',
+          discardedBy: 'east',
+          handDiscardOrdinal: 1,
+        },
+      },
+      context,
+    );
+    expect(confirmed.valid).toBe(true);
+    expect(
+      confirmed.specialHands.find(({ id }) => id === 'earths-blessing')?.matched,
+    ).toBe(true);
+
+    const incompatible = scoreHand(
+      {
+        ...hand,
+        winningMethod: 'wall',
+        winningEventEvidence: {
+          type: 'discard',
+          discardedBy: 'east',
+          handDiscardOrdinal: 1,
+        },
+      },
+      context,
+    );
+    expect(incompatible.valid).toBe(false);
+  });
+
+  it('does not let an event-only match validate an unsupported loose layout', () => {
+    const score = scoreHand(
+      {
+        sets: [],
+        looseTiles: [
+          suited('bamboo', 1),
+          suited('bamboo', 1),
+          suited('bamboo', 1),
+          suited('bamboo', 1),
+          suited('bamboo', 2),
+          suited('bamboo', 2),
+          suited('bamboo', 2),
+          suited('bamboo', 2),
+          suited('bamboo', 3),
+          suited('bamboo', 3),
+          suited('bamboo', 3),
+          suited('bamboo', 3),
+          suited('bamboo', 4),
+          suited('bamboo', 4),
+        ],
+        bonusTiles: [],
+        isWinner: true,
+        winningMethod: 'initial-deal',
+      },
+      {
+        playerWind: 'east',
+        prevailingWind: 'east',
+        limit: 1000,
+      },
+    );
+    expect(score.valid).toBe(false);
+    expect(score.validationErrors).toContain(
+      'Ungrouped tiles must form a supported 14-tile special-hand layout.',
+    );
+  });
 });

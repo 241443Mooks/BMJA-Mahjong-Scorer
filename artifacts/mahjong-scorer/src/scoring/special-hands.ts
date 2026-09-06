@@ -5,6 +5,7 @@ import {
   tileKey,
 } from './tiles';
 import type {
+  GameContext,
   MahjongHand,
   PlayingTile,
   SpecialHandResult,
@@ -15,7 +16,8 @@ type Detector = {
   name: string;
   description: string;
   value: number;
-  detect: (hand: MahjongHand) => boolean;
+  eventBased?: boolean;
+  detect: (hand: MahjongHand, context?: GameContext) => boolean;
 };
 
 const tiles = (hand: MahjongHand) => [
@@ -58,6 +60,19 @@ const isGreenTile = (tile: PlayingTile) =>
 const isClaimedCompletion = (hand: MahjongHand) =>
   hand.winningMethod === 'discard' ||
   hand.winningMethod === 'final-discard';
+
+const isWinningTile = (
+  hand: MahjongHand,
+  suit: Extract<PlayingTile, { family: 'suit' }>['suit'],
+  rank: Extract<PlayingTile, { family: 'suit' }>['rank'],
+) => {
+  const provenance = resolveWinningTileProvenance(hand);
+  return (
+    provenance?.tile.family === 'suit' &&
+    provenance.tile.suit === suit &&
+    provenance.tile.rank === rank
+  );
+};
 
 const gatesCompletionIsAllowed = (
   hand: MahjongHand,
@@ -433,15 +448,89 @@ export const specialHandDetectors: Detector[] = [
         ),
       ).size <= 1,
   },
+  {
+    id: 'heavens-blessing',
+    name: "Heaven's Blessing",
+    description:
+      'East makes Mah Jong immediately with the original fourteen dealt tiles.',
+    value: 1000,
+    eventBased: true,
+    detect: (hand, context) =>
+      hand.isWinner &&
+      hand.winningMethod === 'initial-deal' &&
+      tiles(hand).length === 14 &&
+      hand.bonusTiles.length === 0 &&
+      context?.playerWind === 'east',
+  },
+  {
+    id: 'earths-blessing',
+    name: "Earth's Blessing",
+    description:
+      "A non-East player makes Mah Jong with East's first discard.",
+    value: 1000,
+    eventBased: true,
+    detect: (hand, context) =>
+      hand.isWinner &&
+      hand.winningMethod === 'discard' &&
+      context?.playerWind !== undefined &&
+      context.playerWind !== 'east' &&
+      hand.winningEventEvidence?.type === 'discard' &&
+      hand.winningEventEvidence.discardedBy === 'east' &&
+      hand.winningEventEvidence.handDiscardOrdinal === 1,
+  },
+  {
+    id: 'gathering-plum-blossom',
+    name: 'Gathering the Plum Blossom from the Roof',
+    description:
+      'A replacement tile is 5 Circles and completes Mah Jong.',
+    value: 1000,
+    eventBased: true,
+    detect: (hand) =>
+      hand.isWinner &&
+      hand.winningMethod === 'loose-tile' &&
+      isWinningTile(hand, 'circles', 5),
+  },
+  {
+    id: 'plucking-moon',
+    name: 'Plucking the Moon from the Bottom of the Sea',
+    description:
+      'The last wall tile is 1 Circles and completes Mah Jong.',
+    value: 1000,
+    eventBased: true,
+    detect: (hand) =>
+      hand.isWinner &&
+      hand.winningMethod === 'last-wall-tile' &&
+      isWinningTile(hand, 'circles', 1),
+  },
+  {
+    id: 'twofold-fortune',
+    name: 'Twofold Fortune',
+    description:
+      'One kong replacement completes another kong, whose replacement completes Mah Jong.',
+    value: 1000,
+    eventBased: true,
+    detect: (hand) =>
+      hand.isWinner &&
+      hand.winningMethod === 'loose-tile' &&
+      hand.winningEventEvidence?.type === 'replacement-chain' &&
+      hand.winningEventEvidence.kongDeclarations === 2 &&
+      hand.sets.filter((set) => set.kind === 'kong').length >= 2,
+  },
 ];
 
 export const detectSpecialHands = (
   hand: MahjongHand,
+  context?: GameContext,
 ): SpecialHandResult[] =>
   specialHandDetectors.map((detector) => ({
     id: detector.id,
     name: detector.name,
     description: detector.description,
     value: detector.value,
-    matched: detector.detect(hand),
+    matched: detector.detect(hand, context),
   }));
+
+export const matchesSupportedIrregularLayout = (hand: MahjongHand): boolean =>
+  specialHandDetectors
+    .filter((detector) => detector.eventBased !== true)
+    .some((detector) => detector.detect(hand));

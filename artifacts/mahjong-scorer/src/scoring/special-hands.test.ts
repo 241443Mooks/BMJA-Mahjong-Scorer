@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { detectSpecialHands, dragon, set, suited, wind } from '.';
-import type { HandSet, MahjongHand } from '.';
+import type { GameContext, HandSet, MahjongHand } from '.';
 
 const winning = (sets: HandSet[]): MahjongHand => ({
   sets,
@@ -9,6 +9,19 @@ const winning = (sets: HandSet[]): MahjongHand => ({
 });
 const matched = (hand: MahjongHand, id: string) =>
   detectSpecialHands(hand).find((result) => result.id === id)?.matched;
+const context = (playerWind: GameContext['playerWind']): GameContext => ({
+  playerWind,
+  prevailingWind: 'east',
+  limit: 1000,
+});
+const matchedFor = (
+  hand: MahjongHand,
+  id: string,
+  playerWind: GameContext['playerWind'],
+) =>
+  detectSpecialHands(hand, context(playerWind)).find(
+    (result) => result.id === id,
+  )?.matched;
 const looseWinning = (looseTiles: MahjongHand['looseTiles']): MahjongHand => ({
   sets: [],
   looseTiles,
@@ -593,9 +606,184 @@ describe('independent special-hand detectors', () => {
     ).toBe(false);
   });
 
+  it("detects Heaven's Blessing only for East's original dealt hand", () => {
+    const hand: MahjongHand = {
+      ...winning([
+        set('1', 'pung', dragon('red')),
+        set('2', 'pung', suited('bamboo', 2)),
+        set('3', 'pung', suited('bamboo', 3)),
+        set('4', 'pung', suited('bamboo', 4)),
+        set('5', 'pair', suited('bamboo', 5)),
+      ]),
+      winningMethod: 'initial-deal',
+    };
+    expect(matchedFor(hand, 'heavens-blessing', 'east')).toBe(true);
+    expect(matchedFor(hand, 'heavens-blessing', 'south')).toBe(false);
+    expect(
+      matchedFor({ ...hand, winningMethod: 'wall' }, 'heavens-blessing', 'east'),
+    ).toBe(false);
+    expect(
+      matchedFor(
+        {
+          ...hand,
+          sets: hand.sets.map((group, index) =>
+            index === 0 ? { ...group, kind: 'kong' } : group,
+          ),
+        },
+        'heavens-blessing',
+        'east',
+      ),
+    ).toBe(false);
+  });
+
+  it("detects Earth's Blessing only from East's first discard to a non-East player", () => {
+    const hand: MahjongHand = {
+      ...winning([
+        set('1', 'pung', dragon('red')),
+        set('2', 'pung', suited('bamboo', 2)),
+        set('3', 'pung', suited('bamboo', 3)),
+        set('4', 'pung', suited('bamboo', 4)),
+        set('5', 'pair', suited('bamboo', 5)),
+      ]),
+      winningMethod: 'discard',
+      winningEventEvidence: {
+        type: 'discard',
+        discardedBy: 'east',
+        handDiscardOrdinal: 1,
+      },
+    };
+    expect(matchedFor(hand, 'earths-blessing', 'south')).toBe(true);
+    expect(matchedFor(hand, 'earths-blessing', 'east')).toBe(false);
+    expect(
+      matchedFor(
+        { ...hand, winningEventEvidence: undefined },
+        'earths-blessing',
+        'south',
+      ),
+    ).toBe(false);
+    expect(
+      matchedFor(
+        {
+          ...hand,
+          winningEventEvidence: {
+            type: 'discard',
+            discardedBy: 'east',
+            handDiscardOrdinal: 2,
+          },
+        },
+        'earths-blessing',
+        'south',
+      ),
+    ).toBe(false);
+  });
+
+  it('infers Plum Blossom only from a replacement winning 5 Circles', () => {
+    const hand: MahjongHand = {
+      ...winning([
+        set('kong', 'kong', suited('bamboo', 2)),
+        set('2', 'pung', suited('bamboo', 3)),
+        set('3', 'pung', suited('bamboo', 4)),
+        set('4', 'pung', dragon('red')),
+        set('pair', 'pair', suited('circles', 5)),
+      ]),
+      winningMethod: 'loose-tile',
+      winningTileProvenance: {
+        tile: suited('circles', 5),
+        target: { type: 'grouped-set', setId: 'pair' },
+      },
+    };
+    expect(matched(hand, 'gathering-plum-blossom')).toBe(true);
+    expect(
+      matched(
+        { ...hand, winningMethod: 'wall' },
+        'gathering-plum-blossom',
+      ),
+    ).toBe(false);
+    expect(
+      matched(
+        {
+          ...hand,
+          winningTileProvenance: {
+            tile: suited('circles', 1),
+            target: { type: 'grouped-set', setId: 'pair' },
+          },
+        },
+        'gathering-plum-blossom',
+      ),
+    ).toBe(false);
+  });
+
+  it('infers Moon only from a last-wall winning 1 Circles', () => {
+    const hand: MahjongHand = {
+      ...winning([
+        set('1', 'pung', dragon('red')),
+        set('2', 'pung', suited('bamboo', 2)),
+        set('3', 'pung', suited('bamboo', 3)),
+        set('4', 'pung', suited('bamboo', 4)),
+        set('pair', 'pair', suited('circles', 1)),
+      ]),
+      winningMethod: 'last-wall-tile',
+      winningTileProvenance: {
+        tile: suited('circles', 1),
+        target: { type: 'grouped-set', setId: 'pair' },
+      },
+    };
+    expect(matched(hand, 'plucking-moon')).toBe(true);
+    expect(
+      matched({ ...hand, winningMethod: 'wall' }, 'plucking-moon'),
+    ).toBe(false);
+    expect(
+      matched(
+        { ...hand, winningTileProvenance: undefined },
+        'plucking-moon',
+      ),
+    ).toBe(false);
+  });
+
+  it('detects Twofold Fortune only with two kongs and confirmed replacement sequence', () => {
+    const hand: MahjongHand = {
+      ...winning([
+        set('1', 'kong', suited('bamboo', 2)),
+        set('2', 'kong', suited('bamboo', 3)),
+        set('3', 'pung', suited('bamboo', 4)),
+        set('4', 'pung', dragon('red')),
+        set('pair', 'pair', suited('circles', 5)),
+      ]),
+      winningMethod: 'loose-tile',
+      winningEventEvidence: {
+        type: 'replacement-chain',
+        kongDeclarations: 2,
+      },
+    };
+    expect(matched(hand, 'twofold-fortune')).toBe(true);
+    expect(
+      matched(
+        { ...hand, winningEventEvidence: undefined },
+        'twofold-fortune',
+      ),
+    ).toBe(false);
+    expect(
+      matched(
+        { ...hand, winningMethod: 'wall' },
+        'twofold-fortune',
+      ),
+    ).toBe(false);
+    expect(
+      matched(
+        {
+          ...hand,
+          sets: hand.sets.map((group, index) =>
+            index === 1 ? { ...group, kind: 'pung' } : group,
+          ),
+        },
+        'twofold-fortune',
+      ),
+    ).toBe(false);
+  });
+
   it('reports every detector result independently', () => {
     const results = detectSpecialHands(winning([]));
-    expect(results).toHaveLength(13);
+    expect(results).toHaveLength(18);
     expect(new Set(results.map((result) => result.id)).size).toBe(results.length);
   });
 });

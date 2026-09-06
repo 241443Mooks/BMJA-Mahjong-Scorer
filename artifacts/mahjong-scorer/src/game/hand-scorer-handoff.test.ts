@@ -219,9 +219,15 @@ describe('game hand-scorer handoff', () => {
 
   it('persists detailed and manual score sources into the confirmed ledger', () => {
     const calculated = makeCalculatedResult('bill', 88, true, 'original');
+    calculated.detailedHand.hand.winningMethod = 'discard';
     calculated.detailedHand.hand.winningTileProvenance = {
       tile: { family: 'dragon', dragon: 'red' },
       target: { type: 'grouped-set', setId: 'original' },
+    };
+    calculated.detailedHand.hand.winningEventEvidence = {
+      type: 'discard',
+      discardedBy: 'east',
+      handDiscardOrdinal: 1,
     };
     let draft: RoundScoringDraft = {
       scores: {},
@@ -250,6 +256,15 @@ describe('game hand-scorer handoff', () => {
       tile: { family: 'dragon', dragon: 'red' },
       target: { type: 'grouped-set', setId: 'original' },
     });
+    expect(
+      confirmed.handHistory[0].scoreRecords.bill?.source === 'detailed-scorer'
+        ? confirmed.handHistory[0].scoreRecords.bill.hand.winningEventEvidence
+        : undefined,
+    ).toEqual({
+      type: 'discard',
+      discardedBy: 'east',
+      handDiscardOrdinal: 1,
+    });
     expect(confirmed.handHistory[0].scoreRecords.jenn).toEqual({
       source: 'manual',
       finalScore: 80,
@@ -267,13 +282,42 @@ describe('game hand-scorer handoff', () => {
     ).toThrow('winner status does not match');
   });
 
+  it('rejects winning-event evidence on a non-winner', () => {
+    const result = makeCalculatedResult('jenn', 44, false, 'non-winner-event');
+    result.detailedHand.hand.winningEventEvidence = {
+      type: 'discard',
+      discardedBy: 'east',
+      handDiscardOrdinal: 1,
+    };
+    expect(() =>
+      applyHandScorerResult(
+        game,
+        { scores: {}, scoreRecords: {} },
+        billWins,
+        result,
+      ),
+    ).toThrow('winner status does not match');
+  });
+
   it('invalidates every affected calculated hand when the winner changes', () => {
     let draft: RoundScoringDraft = { scores: {}, scoreRecords: {} };
+    const originalBillWinner = makeCalculatedResult(
+      'bill',
+      88,
+      true,
+      'bill-winner',
+    );
+    originalBillWinner.detailedHand.hand.winningMethod = 'discard';
+    originalBillWinner.detailedHand.hand.winningEventEvidence = {
+      type: 'discard',
+      discardedBy: 'east',
+      handDiscardOrdinal: 1,
+    };
     draft = applyHandScorerResult(
       game,
       draft,
       billWins,
-      makeCalculatedResult('bill', 88, true, 'bill-winner'),
+      originalBillWinner,
     ).draft;
     draft = applyHandScorerResult(
       game,
@@ -299,7 +343,7 @@ describe('game hand-scorer handoff', () => {
     expect(changed.scoreRecords.bill).toMatchObject({
       source: 'detailed-scorer',
       requiresRecalculation: true,
-      hand: { isWinner: false },
+      hand: { isWinner: false, winningEventEvidence: undefined },
     });
     expect(changed.scoreRecords.jenn).toMatchObject({
       source: 'detailed-scorer',

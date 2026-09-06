@@ -26,12 +26,12 @@ export const scoreHand = (
   hand: MahjongHand,
   context: GameContext = DEFAULT_CONTEXT,
 ): ScoreBreakdown => {
-  const specialHands = detectSpecialHands(hand);
+  const specialHands = detectSpecialHands(hand, context);
   const fishingMatches = detectSpecialFishing(hand);
   const matchedSpecial = specialHands
     .filter((result) => result.matched)
     .sort((a, b) => b.value - a.value)[0];
-  const validationErrors = validateHand(hand);
+  const validationErrors = validateHand(hand, context);
   const purity = isPurityHand(hand);
   const specialFinalDiscardDouble =
     matchedSpecial && hand.winningMethod === 'final-discard'

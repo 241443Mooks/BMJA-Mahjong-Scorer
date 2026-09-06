@@ -25,9 +25,13 @@ import type {
   Visibility,
   IncompleteSet,
   WinningTileProvenance,
+  WinningEventEvidence,
 } from './scoring';
 import {
   scoreHand,
+  isFirstDiscardEvidenceCandidate,
+  isReplacementSequenceEvidenceCandidate,
+  isWinningEventEvidenceCompatible,
   validateHand,
   resolveWinningTileProvenance,
   suited,
@@ -108,15 +112,6 @@ function SectionLabel({ eyebrow, title, count }: { eyebrow: string; title: strin
   );
 }
 
-const winningMethods: { value: WinningMethod; label: string }[] = [
-  { value: 'wall', label: 'Self-drawn from wall' },
-  { value: 'discard', label: 'From discard' },
-  { value: 'loose-tile', label: 'Replacement (loose) tile' },
-  { value: 'last-wall-tile', label: 'Last wall tile' },
-  { value: 'final-discard', label: 'Final discard' },
-  { value: 'robbing-kong', label: 'Robbing a Kong' },
-];
-
 function HandScorer({ context, onClose }: { context: HandScorerContext | null; onClose: (result?: HandScorerResult) => void }) {
   const hasContext = !!context;
   const initialContext = handScorerLocalContext(context);
@@ -169,6 +164,30 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
         }
       : undefined,
   );
+  const [winningEventEvidence, setWinningEventEvidence] = useState<WinningEventEvidence | undefined>(
+    initialHand?.winningEventEvidence ? { ...initialHand.winningEventEvidence } : undefined
+  );
+  const [discardAnswer, setDiscardAnswer] = useState<'yes' | 'no' | 'unsure' | null>(
+    initialHand?.winningEventEvidence?.type === 'discard' ? 'yes' : null
+  );
+  const [replacementAnswer, setReplacementAnswer] = useState<'yes' | 'no' | 'unsure' | null>(
+    initialHand?.winningEventEvidence?.type === 'replacement-chain' ? 'yes' : null
+  );
+
+  const availableWinningMethods = useMemo(() => {
+    const baseMethods: { value: WinningMethod; label: string }[] = [
+      { value: 'wall', label: 'Self-drawn from wall' },
+      { value: 'discard', label: 'From discard' },
+      { value: 'loose-tile', label: 'Replacement (loose) tile' },
+      { value: 'last-wall-tile', label: 'Last wall tile' },
+      { value: 'final-discard', label: 'Final discard' },
+      { value: 'robbing-kong', label: 'Robbing a Kong' },
+    ];
+    if (playerWind === 'east') {
+      baseMethods.unshift({ value: 'initial-deal', label: 'Mah Jong in original deal' });
+    }
+    return baseMethods;
+  }, [playerWind]);
 
   const [selectedSet, setSelectedSet] = useState<string>(
     initialHand?.sets[0]?.id ?? 'set-1',
@@ -179,6 +198,27 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
   const [copied, setCopied] = useState(false);
 
   const activeSet = sets.find(s => s.id === selectedSet);
+  const numberOfKongs =
+    layoutMode === 'sets'
+      ? sets.filter((set) => set.kind === 'kong' && set.tile !== null).length
+      : 0;
+  const winningEventCandidate = {
+    isWinner,
+    playerWind,
+    winningMethod: isWinner ? winningMethod : undefined,
+    completedKongs: numberOfKongs,
+  };
+  const shouldAskFirstDiscard =
+    isFirstDiscardEvidenceCandidate(winningEventCandidate);
+  const shouldAskReplacementSequence =
+    isReplacementSequenceEvidenceCandidate(winningEventCandidate);
+  const effectiveWinningEventEvidence =
+    isWinningEventEvidenceCompatible(
+      winningEventEvidence,
+      winningEventCandidate,
+    )
+      ? winningEventEvidence
+      : undefined;
 
   useEffect(() => {
     const nextContext = handScorerLocalContext(context);
@@ -224,6 +264,15 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
           }
         : undefined,
     );
+    setWinningEventEvidence(
+      savedHand?.winningEventEvidence ? { ...savedHand.winningEventEvidence } : undefined
+    );
+    setDiscardAnswer(
+      savedHand?.winningEventEvidence?.type === 'discard' ? 'yes' : null
+    );
+    setReplacementAnswer(
+      savedHand?.winningEventEvidence?.type === 'replacement-chain' ? 'yes' : null
+    );
     setSelectedSet(savedHand?.incompleteSet ? 'fishing-incomplete' : nextSets[0]?.id ?? '');
     setExpandedRule(null);
     setCopied(false);
@@ -240,7 +289,8 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
       ],
       isWinner,
       winningMethod: isWinner ? winningMethod : undefined,
-      winningTileProvenance: isWinner ? winningTileProvenance : undefined,
+      winningTileProvenance: isWinner && winningMethod !== 'initial-deal' ? winningTileProvenance : undefined,
+      winningEventEvidence: effectiveWinningEventEvidence,
       originalCall: isWinner ? originalCall : false,
       incompleteSet:
         !isWinner &&
@@ -249,7 +299,7 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
           ? { ...incompleteSet, tile: incompleteSet.tile }
           : undefined,
     };
-  }, [sets, looseTiles, layoutMode, flowers, seasons, isWinner, winningMethod, originalCall, incompleteSet, winningTileProvenance]);
+  }, [sets, looseTiles, layoutMode, flowers, seasons, isWinner, winningMethod, originalCall, incompleteSet, winningTileProvenance, effectiveWinningEventEvidence]);
 
   useEffect(() => {
     if (winningTileProvenance) {
@@ -268,6 +318,45 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
       }
     }
   }, [sets, looseTiles, layoutMode, isWinner, winningMethod, winningTileProvenance]);
+
+  useEffect(() => {
+    if (playerWind !== 'east' && winningMethod === 'initial-deal') {
+      setWinningMethod('wall');
+    }
+  }, [playerWind, winningMethod]);
+
+  useEffect(() => {
+    if (winningMethod === 'initial-deal') {
+      setWinningTileProvenance(undefined);
+    }
+  }, [winningMethod]);
+
+  useEffect(() => {
+    setWinningEventEvidence((current) => {
+      if (!current) return current;
+      if (!isWinner) return undefined;
+
+      if (current.type === 'discard') {
+        if (playerWind === 'east' || winningMethod !== 'discard') return undefined;
+      }
+      if (current.type === 'replacement-chain') {
+        if (winningMethod !== 'loose-tile' || numberOfKongs < 2) return undefined;
+      }
+      return current;
+    });
+  }, [isWinner, playerWind, winningMethod, numberOfKongs]);
+
+  useEffect(() => {
+    if (!isWinner || playerWind === 'east' || winningMethod !== 'discard') {
+      setDiscardAnswer(null);
+    }
+  }, [isWinner, playerWind, winningMethod]);
+
+  useEffect(() => {
+    if (!isWinner || winningMethod !== 'loose-tile' || numberOfKongs < 2) {
+      setReplacementAnswer(null);
+    }
+  }, [isWinner, winningMethod, numberOfKongs]);
 
   const isStructureComplete = useMemo(() => {
     if (!isWinner) return false;
@@ -371,6 +460,9 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
     setLooseTiles([]);
     setIncompleteSet(null);
     setWinningTileProvenance(undefined);
+    setWinningEventEvidence(undefined);
+    setDiscardAnswer(null);
+    setReplacementAnswer(null);
     setIsWinner(context?.isWinner ?? false);
     setSelectedSet('set-1');
   }
@@ -379,6 +471,9 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
     setLooseTiles([]);
     setIncompleteSet(null);
     setWinningTileProvenance(undefined);
+    setWinningEventEvidence(undefined);
+    setDiscardAnswer(null);
+    setReplacementAnswer(null);
     setSets([
       { id: 'set-1', kind: 'chow', visibility: 'concealed', tile: suited('bamboo', 1) },
       { id: 'set-2', kind: 'pung', visibility: 'exposed', tile: suited('circles', 9) },
@@ -433,6 +528,9 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
                 tile: { ...hand.winningTileProvenance.tile },
                 target: { ...hand.winningTileProvenance.target },
               }
+            : undefined,
+          winningEventEvidence: hand.winningEventEvidence
+            ? { ...hand.winningEventEvidence }
             : undefined,
         },
         context: { ...gameContext },
@@ -753,7 +851,7 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
                 <div className="mt-4 flex items-start gap-2 text-[11px] leading-5 text-[#7a7769]"><CircleHelp size={14} className="mt-0.5 shrink-0 text-[#ae6249]" /> {layoutMode === 'special' ? 'Choose each tile individually; duplicate physical tiles may be added up to four times.' : 'Click a set, or add and select an incomplete set, then choose its representative tile (for a chow, pick the first tile 1-7).'}</div>
               </section>
 
-              {isWinner && isStructureComplete && (
+              {isWinner && isStructureComplete && winningMethod !== 'initial-deal' && (
                 <section className="animate-rise rounded-xl border border-[#d8ceb8] bg-[#fbf8ed] p-5 shadow-[var(--shadow-sm)] sm:p-6">
                   <SectionLabel eyebrow="03 / completion" title="The winning tile" />
                   <p className="mb-4 text-[13px] text-[#66746e]">
@@ -964,12 +1062,90 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
                       />
                     </label>
                     {isWinner && (
-                      <label className="mt-2 block min-w-0">
-                        <span className="mb-1.5 block font-mono text-[10px] uppercase tracking-[.15em] text-[#7a7769]">Winning method</span>
-                        <select data-testid="select-winning-method" value={winningMethod} onChange={(e) => setWinningMethod(e.target.value as WinningMethod)} className="w-full min-w-0 rounded-md border border-[#cfc3aa] bg-[#fdfbf5] px-3 py-2.5 text-[12px] font-semibold text-[#284d45] focus:ring-2">
-                          {winningMethods.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
-                        </select>
-                      </label>
+                      <div className="mt-2 space-y-4">
+                        <label className="block min-w-0">
+                          <span className="mb-1.5 block font-mono text-[10px] uppercase tracking-[.15em] text-[#7a7769]">Winning method</span>
+                          <select data-testid="select-winning-method" value={winningMethod} onChange={(e) => setWinningMethod(e.target.value as WinningMethod)} className="w-full min-w-0 rounded-md border border-[#cfc3aa] bg-[#fdfbf5] px-3 py-2.5 text-[12px] font-semibold text-[#284d45] focus:ring-2">
+                            {availableWinningMethods.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
+                          </select>
+                        </label>
+
+                        {shouldAskFirstDiscard && (
+                          <div className="animate-rise rounded-lg border border-[#e2d9c7] bg-[#fdfbf5] p-3">
+                            <div className="mb-2 text-[11px] font-semibold text-[#284d45]">Was this East’s very first discard of the hand?</div>
+                            <div className="flex flex-wrap gap-2">
+                              {[
+                                { value: 'yes', label: 'Yes' },
+                                { value: 'no', label: 'No' },
+                                { value: 'unsure', label: 'I’m not sure' }
+                              ].map(opt => {
+                                const isSelected = discardAnswer === opt.value;
+                                return (
+                                  <button
+                                    key={opt.value}
+                                    type="button"
+                                    data-testid={`button-discard-answer-${opt.value}`}
+                                    aria-pressed={isSelected}
+                                    onClick={() => {
+                                      setDiscardAnswer(opt.value as 'yes' | 'no' | 'unsure');
+                                      if (opt.value === 'yes') {
+                                        setWinningEventEvidence({ type: 'discard', discardedBy: 'east', handDiscardOrdinal: 1 });
+                                      } else {
+                                        setWinningEventEvidence(undefined);
+                                      }
+                                    }}
+                                    className={`rounded-md px-3 py-1.5 text-[11px] font-semibold transition ${
+                                      isSelected
+                                        ? 'bg-[#284d45] text-[#f8f4e9] shadow-sm'
+                                        : 'border border-[#d8ceb8] bg-[#fdfbf5] text-[#66746e] hover:border-[#cfc3aa] hover:bg-[#f8f4e9]'
+                                    }`}
+                                  >
+                                    {opt.label}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
+
+                        {shouldAskReplacementSequence && (
+                          <div className="animate-rise rounded-lg border border-[#e2d9c7] bg-[#fdfbf5] p-3">
+                            <div className="mb-2 text-[11px] font-semibold text-[#284d45]">Did one Kong’s replacement tile complete another Kong, then the next replacement tile complete Mah Jong?</div>
+                            <div className="flex flex-wrap gap-2">
+                              {[
+                                { value: 'yes', label: 'Yes' },
+                                { value: 'no', label: 'No' },
+                                { value: 'unsure', label: 'I’m not sure' }
+                              ].map(opt => {
+                                const isSelected = replacementAnswer === opt.value;
+                                return (
+                                  <button
+                                    key={opt.value}
+                                    type="button"
+                                    data-testid={`button-replacement-answer-${opt.value}`}
+                                    aria-pressed={isSelected}
+                                    onClick={() => {
+                                      setReplacementAnswer(opt.value as 'yes' | 'no' | 'unsure');
+                                      if (opt.value === 'yes') {
+                                        setWinningEventEvidence({ type: 'replacement-chain', kongDeclarations: 2 });
+                                      } else {
+                                        setWinningEventEvidence(undefined);
+                                      }
+                                    }}
+                                    className={`rounded-md px-3 py-1.5 text-[11px] font-semibold transition ${
+                                      isSelected
+                                        ? 'bg-[#284d45] text-[#f8f4e9] shadow-sm'
+                                        : 'border border-[#d8ceb8] bg-[#fdfbf5] text-[#66746e] hover:border-[#cfc3aa] hover:bg-[#f8f4e9]'
+                                    }`}
+                                  >
+                                    {opt.label}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     )}
                     {!isWinner && (
                       <div

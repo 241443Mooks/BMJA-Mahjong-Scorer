@@ -1,5 +1,5 @@
 {
-  "catalogueVersion": "1.2.1",
+  "catalogueVersion": "1.3.0",
   "ruleset": "BMJA-style British Mahjong",
   "source": {
     "title": "An illustrated description of Mah-Jong (BMJA rules)",
@@ -56,6 +56,11 @@
     {"id":"special.three-great-scholars","category":"special-hand","value":1000,"specification":"Pungs/kongs of all three dragons, another pung/kong and any pair.","implementation":"specialHandDetectors[three-great-scholars]","test":"special-hands.test.ts: detects three great scholars"},
     {"id":"special.four-blessings","category":"special-hand","value":1000,"specification":"Pungs/kongs of all four winds and any pair.","implementation":"specialHandDetectors[four-blessings]","test":"special-hands.test.ts: detects four winds"},
     {"id":"special.buried-treasure","category":"special-hand","value":1000,"specification":"Four concealed pungs and a pair, using one suit with optional winds/dragons; no kongs or chows.","implementation":"specialHandDetectors[buried-treasure]","test":"special-hands.test.ts: rejects kongs and mixed suits for buried treasure"},
+    {"id":"special.heavens-blessing","category":"event-special","value":1000,"specification":"East makes Mah Jong immediately with the original fourteen dealt tiles.","implementation":"specialHandDetectors[heavens-blessing]","test":"special-hands.test.ts: detects Heaven's Blessing only for East's original dealt hand"},
+    {"id":"special.earths-blessing","category":"event-special","value":1000,"specification":"A non-East player makes Mah Jong using East's first discard.","implementation":"specialHandDetectors[earths-blessing]","test":"special-hands.test.ts: detects Earth's Blessing only from East's first discard to a non-East player"},
+    {"id":"special.gathering-plum-blossom","category":"event-special","value":1000,"specification":"A replacement tile is 5 Circles and completes Mah Jong.","implementation":"specialHandDetectors[gathering-plum-blossom]","test":"special-hands.test.ts: infers Plum Blossom only from a replacement winning 5 Circles"},
+    {"id":"special.plucking-moon","category":"event-special","value":1000,"specification":"The last wall tile is 1 Circles and completes Mah Jong.","implementation":"specialHandDetectors[plucking-moon]","test":"special-hands.test.ts: infers Moon only from a last-wall winning 1 Circles"},
+    {"id":"special.twofold-fortune","category":"event-special","value":1000,"specification":"One kong replacement completes another kong, whose replacement completes Mah Jong.","implementation":"specialHandDetectors[twofold-fortune]","test":"special-hands.test.ts: detects Twofold Fortune only with two kongs and confirmed replacement sequence"},
     {"id":"special.bonus-points","category":"special-hand-interaction","value":"4 each, separately doubled","specification":"Ordinary doubles do not apply to a special hand; eligible doubles apply only to bonus-tile points.","implementation":"scoreHand","test":"golden-fixtures.test.ts: scores All pair honours plus separately doubled bonus tiles"},
     {"id":"special.final-discard-bonus","category":"special-hand-interaction","value":1,"specification":"For a special hand, final discard doubles bonus-tile points only.","implementation":"scoreHand","test":"golden-fixtures.test.ts: applies final-discard doubling only to special-hand bonus tiles"},
     {"id":"fishing.one-tile-away","category":"special-hand-fishing","value":"verified legal completion","specification":"For a non-winner, every legal playing-tile completion is tested automatically against every supported special; a dead required tile still qualifies.","implementation":"detectSpecialFishing, validateHand","test":"fishing.test.ts: detects and rejects one-tile-away hands for every supported special"},

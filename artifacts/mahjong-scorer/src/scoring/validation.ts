@@ -1,4 +1,4 @@
-import { detectSpecialHands } from './special-hands';
+import { matchesSupportedIrregularLayout } from './special-hands';
 import { detectSpecialFishing } from './fishing';
 import {
   expandedTiles,
@@ -6,9 +6,12 @@ import {
   resolveWinningTileProvenance,
   tileKey,
 } from './tiles';
-import type { MahjongHand, PlayingTile } from './types';
+import type { GameContext, MahjongHand, PlayingTile } from './types';
 
-export const validateHand = (hand: MahjongHand): string[] => {
+export const validateHand = (
+  hand: MahjongHand,
+  context?: GameContext,
+): string[] => {
   const errors: string[] = [];
   const pairCount = hand.sets.filter((set) => set.kind === 'pair').length;
   const setCount = hand.sets.filter((set) => set.kind !== 'pair').length;
@@ -21,9 +24,7 @@ export const validateHand = (hand: MahjongHand): string[] => {
     hand.sets.length === 0 && hand.looseTiles?.length === 14;
   const isSupportedIrregularShape =
     isIrregularShape &&
-    detectSpecialHands({ ...hand, isWinner: true }).some(
-      (special) => special.matched,
-    );
+    matchesSupportedIrregularLayout({ ...hand, isWinner: true });
   const fishingMatches = detectSpecialFishing(hand);
 
   if (hand.isWinner && !hasCompleteWinningShape(hand)) {
@@ -62,6 +63,56 @@ export const validateHand = (hand: MahjongHand): string[] => {
 
   if (hand.originalCall && !hand.isWinner) {
     errors.push('Original Call applies only to a winning hand.');
+  }
+
+  if (hand.winningMethod === 'initial-deal') {
+    if (!hand.isWinner || context?.playerWind !== 'east') {
+      errors.push(
+        'Mah Jong in the original deal applies only to a winning East hand.',
+      );
+    }
+    if (hand.winningTileProvenance) {
+      errors.push(
+        'An original-deal win does not have a separately drawn or claimed winning tile.',
+      );
+    }
+    if (hand.bonusTiles.length > 0) {
+      errors.push(
+        'An original-deal win must use the original fourteen tiles without replacement draws.',
+      );
+    }
+    const playingTileCount =
+      hand.sets.flatMap(expandedTiles).length + (hand.looseTiles?.length ?? 0);
+    if (playingTileCount !== 14) {
+      errors.push(
+        'An original-deal win must contain exactly fourteen playing tiles.',
+      );
+    }
+  }
+
+  if (hand.winningEventEvidence) {
+    if (!hand.isWinner) {
+      errors.push('Winning-event details apply only to a winning hand.');
+    } else if (
+      hand.winningEventEvidence.type === 'discard' &&
+      (hand.winningMethod !== 'discard' ||
+        hand.winningEventEvidence.discardedBy !== 'east' ||
+        hand.winningEventEvidence.handDiscardOrdinal !== 1 ||
+        context?.playerWind === 'east')
+    ) {
+      errors.push(
+        "East's first-discard detail requires a non-East winner from an ordinary discard.",
+      );
+    } else if (
+      hand.winningEventEvidence.type === 'replacement-chain' &&
+      (hand.winningMethod !== 'loose-tile' ||
+        hand.winningEventEvidence.kongDeclarations !== 2 ||
+        hand.sets.filter((set) => set.kind === 'kong').length < 2)
+    ) {
+      errors.push(
+        'The replacement sequence requires two kongs and a replacement-tile win.',
+      );
+    }
   }
 
   if (

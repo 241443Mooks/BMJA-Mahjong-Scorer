@@ -42,6 +42,22 @@ one-suit-with-chows scoring were found and removed.
     must identify a suited 1 or 9 in the Gates suit. Unknown, paired-minor, stale
     and mismatched provenance is rejected conservatively.
 
+## Event-special corrections
+
+14. Added an East-only original-deal winning method and automatic Heaven's
+    Blessing recognition without treating the hand as a wall draw.
+15. Added the minimum first-discard evidence for Earth's Blessing. Unknown or
+    negative answers do not enable the special.
+16. Added automatic Gathering the Plum Blossom from the Roof recognition from a
+    replacement winning 5 Circles.
+17. Added automatic Plucking the Moon from the Bottom of the Sea recognition
+    from a last-wall winning 1 Circles.
+18. Added a compact two-Kong replacement-sequence fact for Twofold Fortune.
+    It requires at least two completed Kongs and a replacement-tile win.
+19. Kept event evidence out of non-winning records and preserved it through
+    detailed score records, confirmation, replay and undo. No turn or discard
+    history was introduced.
+
 ## Ambiguities retained rather than guessed
 
 1. **Loose-tile extra 2 points:** the general scoring page says the extra two
@@ -49,17 +65,14 @@ one-suit-with-chows scoring were found and removed.
    kong box. The unambiguous loose-tile double remains; no extra two points are
    awarded pending an authoritative clarification.
 
-## BMJA special hands not represented by the current engine
-
-The catalogue lists every special hand currently supported. The event-dependent
-Heaven's Blessing, Earth's Blessing, Gathering the Plum Blossom from the Roof,
-Plucking the Moon from the Bottom of the Sea and Twofold Fortune need event data
-that the current hand contract does not yet capture. They have not been guessed
-or silently approximated.
+## BMJA special-hand coverage
 
 Knitting, Triple Knitting, Imperial Jade, Gates of Heaven and Wriggling Snake
 now have winner-pattern recognition. All supported specials now also have
 verified one-tile-away fishing treatment with published 200/400 values,
 intrinsic-value alternatives where applicable, and separately scored bonus
 tiles. Buried Treasure and Gates of Heaven now apply their final-claim
-exceptions only from validated winning-tile provenance.
+exceptions only from validated winning-tile provenance. The five event-based
+specials are now recognized from existing winning method/provenance data plus
+only the two event facts that cannot be inferred: East's first discard and the
+two-Kong replacement sequence.
