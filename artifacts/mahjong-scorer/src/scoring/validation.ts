@@ -1,4 +1,5 @@
 import { detectSpecialHands } from './special-hands';
+import { detectSpecialFishing } from './fishing';
 import { expandedTiles, tileKey } from './tiles';
 import type { MahjongHand, PlayingTile } from './types';
 
@@ -17,6 +18,7 @@ export const validateHand = (hand: MahjongHand): string[] => {
     detectSpecialHands({ ...hand, isWinner: true }).some(
       (special) => special.matched,
     );
+  const fishing = detectSpecialFishing(hand);
 
   if (
     hand.isWinner &&
@@ -32,15 +34,54 @@ export const validateHand = (hand: MahjongHand): string[] => {
     errors.push('Ungrouped special-hand tiles cannot be mixed with ordinary sets.');
   }
 
-  if (isIrregularShape && !isSupportedIrregularShape) {
+  if (isIrregularShape && !isSupportedIrregularShape && !hand.fishingSpecial) {
     errors.push(
       'Ungrouped tiles must form a supported 14-tile special-hand layout.',
     );
   }
 
+  if (hand.fishingSpecial) {
+    if (hand.isWinner) {
+      errors.push('Special-hand fishing applies only to a non-winning hand.');
+    }
+    if (hand.originalCall) {
+      errors.push('Special-hand fishing is separate from Original Call.');
+    }
+    if (hand.incompleteSet && hand.looseTiles?.length) {
+      errors.push(
+        'A fishing hand cannot mix an incomplete group with ungrouped tiles.',
+      );
+    }
+    if (!hand.incompleteSet && hand.looseTiles?.length !== 13) {
+      errors.push(
+        'An irregular fishing hand must contain exactly 13 ungrouped tiles.',
+      );
+    }
+    if (!fishing) {
+      errors.push(
+        'The hand is not exactly one legal tile away from the selected special.',
+      );
+    }
+  } else if (hand.incompleteSet) {
+    errors.push('An incomplete group is only valid while fishing for a special.');
+  }
+
   const playingTiles: PlayingTile[] = [
     ...hand.sets.flatMap(expandedTiles),
     ...(hand.looseTiles ?? []),
+    ...(hand.incompleteSet
+      ? Array.from(
+          {
+            length:
+              hand.incompleteSet.kind === 'single'
+                ? 1
+                : hand.incompleteSet.kind === 'pair'
+                  ? 2
+                  : 3,
+          },
+          () => hand.incompleteSet!.tile,
+        )
+      : []),
   ];
   const playingTileCounts = playingTiles.reduce<Map<string, number>>(
     (tally, tile) => {

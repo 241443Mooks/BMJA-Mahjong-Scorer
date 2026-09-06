@@ -22,7 +22,9 @@ import type {
   Suit,
   SuitTile,
   SetKind,
-  Visibility
+  Visibility,
+  FishingSpecialId,
+  IncompleteSet,
 } from './scoring';
 import {
   scoreHand,
@@ -34,7 +36,8 @@ import {
   tileKey,
   SUITS,
   WINDS,
-  DRAGONS
+  DRAGONS,
+  FISHING_SPECIALS,
 } from './scoring';
 
 const queryClient = new QueryClient();
@@ -52,6 +55,9 @@ const allDragonTiles: PlayingTile[] = DRAGONS.map(dragon);
 const allPlayingTiles = [...allSuitTiles, ...allWindTiles, ...allDragonTiles];
 
 type UIHandSet = Omit<HandSet, 'tile'> & { tile: PlayingTile | null };
+type UIIncompleteSet = Omit<IncompleteSet, 'tile'> & {
+  tile: PlayingTile | null;
+};
 
 const defaultSets: UIHandSet[] = [
   { id: 'set-1', kind: 'chow', visibility: 'concealed', tile: null },
@@ -143,6 +149,15 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
   const [originalCall, setOriginalCall] = useState<boolean>(
     initialContext.isWinner ? initialHand?.originalCall ?? false : false,
   );
+  const [fishingSpecial, setFishingSpecial] =
+    useState<FishingSpecialId | null>(
+      initialContext.isWinner ? null : initialHand?.fishingSpecial ?? null,
+    );
+  const [incompleteSet, setIncompleteSet] = useState<UIIncompleteSet | null>(
+    initialHand?.incompleteSet
+      ? { ...initialHand.incompleteSet, tile: { ...initialHand.incompleteSet.tile } }
+      : null,
+  );
 
   const [selectedSet, setSelectedSet] = useState<string>(
     initialHand?.sets[0]?.id ?? 'set-1',
@@ -182,7 +197,18 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
     setOriginalCall(
       nextContext.isWinner ? savedHand?.originalCall ?? false : false,
     );
-    setSelectedSet(nextSets[0]?.id ?? '');
+    setFishingSpecial(
+      nextContext.isWinner ? null : savedHand?.fishingSpecial ?? null,
+    );
+    setIncompleteSet(
+      savedHand?.incompleteSet
+        ? {
+            ...savedHand.incompleteSet,
+            tile: { ...savedHand.incompleteSet.tile },
+          }
+        : null,
+    );
+    setSelectedSet(savedHand?.incompleteSet ? 'fishing-incomplete' : nextSets[0]?.id ?? '');
     setExpandedRule(null);
     setCopied(false);
   }, [context]);
@@ -199,8 +225,16 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
       isWinner,
       winningMethod: isWinner ? winningMethod : undefined,
       originalCall: isWinner ? originalCall : false,
+      fishingSpecial: !isWinner ? fishingSpecial ?? undefined : undefined,
+      incompleteSet:
+        !isWinner &&
+        fishingSpecial &&
+        layoutMode === 'sets' &&
+        incompleteSet?.tile
+          ? { ...incompleteSet, tile: incompleteSet.tile }
+          : undefined,
     };
-  }, [sets, looseTiles, layoutMode, flowers, seasons, isWinner, winningMethod, originalCall]);
+  }, [sets, looseTiles, layoutMode, flowers, seasons, isWinner, winningMethod, originalCall, fishingSpecial, incompleteSet]);
 
   const gameContext = useMemo<GameContext>(
     () => ({ playerWind, prevailingWind, limit }),
@@ -217,7 +251,14 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
       ? looseTiles.length
       : sets
           .filter((s) => s.tile !== null)
-          .flatMap((s) => expandedTiles(s as HandSet)).length) +
+          .flatMap((s) => expandedTiles(s as HandSet)).length +
+        (incompleteSet?.tile
+          ? incompleteSet.kind === 'single'
+            ? 1
+            : incompleteSet.kind === 'pair'
+              ? 2
+              : 3
+          : 0)) +
     flowers.length +
     seasons.length;
 
@@ -236,9 +277,16 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
       const matchingCopies = looseTiles.filter(
         (candidate) => tileKey(candidate) === tileKey(tile),
       ).length;
-      if (looseTiles.length < 14 && matchingCopies < 4) {
+      const specialTileLimit = fishingSpecial && !isWinner ? 13 : 14;
+      if (looseTiles.length < specialTileLimit && matchingCopies < 4) {
         setLooseTiles((current) => [...current, tile]);
       }
+      return;
+    }
+    if (selectedSet === 'fishing-incomplete') {
+      setIncompleteSet((current) =>
+        current ? { ...current, tile } : current,
+      );
       return;
     }
     if (!selectedSet) return;
@@ -254,12 +302,16 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
     setFlowers([]);
     setSeasons([]);
     setLooseTiles([]);
+    setFishingSpecial(null);
+    setIncompleteSet(null);
     setIsWinner(context?.isWinner ?? false);
     setSelectedSet('set-1');
   }
   function loadExample() {
     setLayoutMode('sets');
     setLooseTiles([]);
+    setFishingSpecial(null);
+    setIncompleteSet(null);
     setSets([
       { id: 'set-1', kind: 'chow', visibility: 'concealed', tile: suited('bamboo', 1) },
       { id: 'set-2', kind: 'pung', visibility: 'exposed', tile: suited('circles', 9) },
@@ -303,6 +355,12 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
           })),
           bonusTiles: hand.bonusTiles.map((tile) => ({ ...tile })),
           looseTiles: hand.looseTiles?.map((tile) => ({ ...tile })),
+          incompleteSet: hand.incompleteSet
+            ? {
+                ...hand.incompleteSet,
+                tile: { ...hand.incompleteSet.tile },
+              }
+            : undefined,
         },
         context: { ...gameContext },
         breakdown: score,
@@ -426,13 +484,14 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
                       ))}
                       {looseTiles.length === 0 && (
                         <div className="w-full text-center text-[11px] text-[#9b988d]">
-                          Add the 14 tiles in the completed special-hand layout.
+                          Add the {fishingSpecial && !isWinner ? 13 : 14} tiles in the {fishingSpecial && !isWinner ? 'one-tile-away' : 'completed'} special-hand layout.
                         </div>
                       )}
                     </div>
                     <p className="mt-3 text-[11px] leading-5 text-[#7a7769]">
-                      Use this for Knitting, Triple Knitting, Gates of Heaven,
-                      Wriggling Snake, and Thirteen Unique Wonders.
+                      Use this for irregular layouts. When fishing, enter only
+                      the tiles currently held; the scorer finds every legal
+                      completing tile.
                     </p>
                   </div>
                 ) : (
@@ -461,6 +520,81 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
                       </div>
                     </div>
                     ))}
+                    {fishingSpecial && !isWinner && (
+                      <div
+                        data-testid="card-fishing-incomplete"
+                        className={`rounded-lg border p-3 transition ${selectedSet === 'fishing-incomplete' ? 'border-[#ae6249]/60 bg-[#f7f1e3]' : 'border-[#e2d9c7] bg-[#fdfbf5]'}`}
+                        onClick={() => setSelectedSet('fishing-incomplete')}
+                      >
+                        <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono text-[10px] text-[#ae6249]">INCOMPLETE GROUP</span>
+                            <select
+                              aria-label="Incomplete group type"
+                              data-testid="select-incomplete-type"
+                              value={incompleteSet?.kind ?? 'single'}
+                              onChange={(event) =>
+                                setIncompleteSet({
+                                  kind: event.target.value as IncompleteSet['kind'],
+                                  visibility: incompleteSet?.visibility ?? 'concealed',
+                                  tile: null,
+                                })
+                              }
+                              className="cursor-pointer border-0 bg-transparent font-mono text-[10px] uppercase tracking-[.12em] text-[#284d45] outline-none"
+                            >
+                              <option value="single">Single (waiting for pair)</option>
+                              <option value="pair">Pair (waiting for pung)</option>
+                              <option value="pung">Pung (waiting for kong)</option>
+                            </select>
+                            <select
+                              aria-label="Incomplete group visibility"
+                              data-testid="select-incomplete-visibility"
+                              value={incompleteSet?.visibility ?? 'concealed'}
+                              onChange={(event) =>
+                                setIncompleteSet((current) => ({
+                                  kind: current?.kind ?? 'single',
+                                  tile: current?.tile ?? null,
+                                  visibility: event.target.value as Visibility,
+                                }))
+                              }
+                              className="cursor-pointer border-0 bg-transparent font-mono text-[10px] uppercase tracking-[.12em] text-[#284d45] outline-none"
+                            >
+                              <option value="concealed">Concealed</option>
+                              <option value="exposed">Exposed</option>
+                            </select>
+                          </div>
+                        </div>
+                        <div className="flex min-h-[76px] items-center gap-2 overflow-x-auto pb-1">
+                          {incompleteSet?.tile ? (
+                            Array.from(
+                              {
+                                length:
+                                  incompleteSet.kind === 'single'
+                                    ? 1
+                                    : incompleteSet.kind === 'pair'
+                                      ? 2
+                                      : 3,
+                              },
+                              (_, index) => (
+                                <TileFace
+                                  key={`${tileKey(incompleteSet.tile!)}-${index}`}
+                                  tile={incompleteSet.tile!}
+                                  onRemove={() =>
+                                    setIncompleteSet((current) =>
+                                      current ? { ...current, tile: null } : current,
+                                    )
+                                  }
+                                />
+                              ),
+                            )
+                          ) : (
+                            <div className="flex h-[62px] w-full items-center justify-center rounded-md border border-dashed border-[#d7cbb5] text-[11px] text-[#9b988d]">
+                              Select the repeated tile currently held in this incomplete group
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
                   <button type="button" data-testid="button-add-set" onClick={addSet} className="mt-4 flex w-full items-center justify-center gap-2 rounded-md border border-dashed border-[#cdbfa7] py-2.5 text-[11px] font-semibold text-[#66746e] transition hover:border-[#ae6249] hover:text-[#284d45] focus:ring-2"><Plus size={14} /> Add another set</button>
                 </>
@@ -470,7 +604,7 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
               <section className="animate-rise animate-rise-delay-2 rounded-xl border border-[#d8ceb8] bg-[#fbf8ed] p-5 shadow-[var(--shadow-sm)] sm:p-6">
                 <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
                   <div><div className="font-mono text-[10px] font-medium uppercase tracking-[.2em] text-[#ae6249]">02 / tile bank</div><h2 className="mt-1 font-serif text-[22px] text-[#284d45]">Choose a tile</h2></div>
-                  <div className="font-mono text-[10px] text-[#7a7769]">Adding to <span className="text-[#ae6249]">{layoutMode === 'special' ? `special layout (${looseTiles.length}/14)` : activeSet ? `set ${sets.findIndex(s => s.id === selectedSet) + 1}` : '—'}</span></div>
+                  <div className="font-mono text-[10px] text-[#7a7769]">Adding to <span className="text-[#ae6249]">{layoutMode === 'special' ? `special layout (${looseTiles.length}/${fishingSpecial && !isWinner ? 13 : 14})` : selectedSet === 'fishing-incomplete' ? 'incomplete group' : activeSet ? `set ${sets.findIndex(s => s.id === selectedSet) + 1}` : '—'}</span></div>
                 </div>
                 <div className="mb-4 flex items-center gap-1 overflow-x-auto border-b border-[#e2d9c7] pb-2">
                   {suitOrder.map((suit) => (
@@ -487,7 +621,7 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
                       onClick={() => addTile(tile)}
                       disabled={
                         layoutMode === 'special' &&
-                        (looseTiles.length >= 14 ||
+                          (looseTiles.length >= (fishingSpecial && !isWinner ? 13 : 14) ||
                           looseTiles.filter(
                             (candidate) =>
                               tileKey(candidate) === tileKey(tile),
@@ -498,7 +632,7 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
                   ))}
                   {visibleTiles.length === 0 && <div className="text-[11px] text-[#7a7769] py-4">No valid tiles for this set type.</div>}
                 </div>
-                <div className="mt-4 flex items-start gap-2 text-[11px] leading-5 text-[#7a7769]"><CircleHelp size={14} className="mt-0.5 shrink-0 text-[#ae6249]" /> {layoutMode === 'special' ? 'Choose each tile individually; duplicate physical tiles may be added up to four times.' : 'Click a set above to target it, then choose its representative tile (for chows, pick the first tile 1-7).'}</div>
+                <div className="mt-4 flex items-start gap-2 text-[11px] leading-5 text-[#7a7769]"><CircleHelp size={14} className="mt-0.5 shrink-0 text-[#ae6249]" /> {layoutMode === 'special' ? 'Choose each tile individually; duplicate physical tiles may be added up to four times.' : 'Click a set or the incomplete group above, then choose its representative tile (for chows, pick the first tile 1-7).'}</div>
               </section>
 
               <section className="animate-rise animate-rise-delay-3 rounded-xl border border-[#d8ceb8] bg-[#fbf8ed] p-5 shadow-[var(--shadow-sm)] sm:p-6">
@@ -578,7 +712,13 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
                         disabled={hasContext}
                         aria-readonly={hasContext}
                         onChange={(e) => {
-                          if (!hasContext) setIsWinner(e.target.checked);
+                           if (!hasContext) {
+                             setIsWinner(e.target.checked);
+                             if (e.target.checked) {
+                               setFishingSpecial(null);
+                               setIncompleteSet(null);
+                             }
+                           }
                         }}
                         className="h-4 w-4 accent-[#284d45] disabled:cursor-not-allowed"
                       />
@@ -589,6 +729,46 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
                         <select data-testid="select-winning-method" value={winningMethod} onChange={(e) => setWinningMethod(e.target.value as WinningMethod)} className="w-full min-w-0 rounded-md border border-[#cfc3aa] bg-[#fdfbf5] px-3 py-2.5 text-[12px] font-semibold text-[#284d45] focus:ring-2">
                           {winningMethods.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
                         </select>
+                      </label>
+                    )}
+                    {!isWinner && (
+                      <label className="mt-2 block min-w-0">
+                        <span className="mb-1.5 block font-mono text-[10px] uppercase tracking-[.15em] text-[#7a7769]">
+                          Special-hand fishing
+                        </span>
+                        <select
+                          data-testid="select-fishing-special"
+                          value={fishingSpecial ?? ''}
+                          onChange={(event) => {
+                            const target =
+                              (event.target.value as FishingSpecialId) || null;
+                            setFishingSpecial(target);
+                            if (target && layoutMode === 'sets') {
+                              setIncompleteSet((current) =>
+                                current ?? {
+                                  kind: 'single',
+                                  visibility: 'concealed',
+                                  tile: null,
+                                },
+                              );
+                              setSelectedSet('fishing-incomplete');
+                            } else if (!target) {
+                              setIncompleteSet(null);
+                            }
+                          }}
+                          className="w-full min-w-0 rounded-md border border-[#cfc3aa] bg-[#fdfbf5] px-3 py-2.5 text-[12px] font-semibold text-[#284d45] focus:ring-2"
+                        >
+                          <option value="">Not fishing for a special</option>
+                          {FISHING_SPECIALS.map((special) => (
+                            <option key={special.id} value={special.id}>
+                              {special.name}
+                            </option>
+                          ))}
+                        </select>
+                        <span className="mt-1.5 block text-[10px] leading-4 text-[#7a7769]">
+                          Separate from Original Call. The hand must be exactly
+                          one legal tile away from the selected special.
+                        </span>
                       </label>
                     )}
                     {isWinner && (

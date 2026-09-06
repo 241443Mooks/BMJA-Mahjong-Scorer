@@ -391,6 +391,68 @@ describe('BMJA complete-hand golden fixtures', () => {
     );
   });
 
+  it('scores the published North Thirteen Unique Wonders fishing example', () => {
+    const hand: MahjongHand = {
+      sets: [],
+      looseTiles: [
+        suited('bamboo', 1),
+        suited('bamboo', 9),
+        suited('characters', 1),
+        suited('characters', 9),
+        suited('circles', 1),
+        suited('circles', 9),
+        wind('east'),
+        wind('south'),
+        wind('west'),
+        wind('north'),
+        dragon('red'),
+        dragon('green'),
+        dragon('white'),
+      ],
+      bonusTiles: [bonus('flower', 4), bonus('season', 2)],
+      isWinner: false,
+      fishingSpecial: 'thirteen-unique-wonders',
+      originalCall: false,
+    };
+    const score = scoreHand(hand, context('north', 'east'));
+    expect(itemised(score)).toEqual({
+      valid: true,
+      pointRules: [
+        { id: 'bonus-flower-4', amount: 4 },
+        { id: 'bonus-season-2', amount: 4 },
+      ],
+      doubleRules: [{ id: 'own-flower', amount: 1 }],
+      components: [
+        {
+          id: 'fishing-thirteen-unique-wonders',
+          label: 'Thirteen unique wonders fishing',
+          base: 400,
+          doubles: 0,
+          subtotal: 400,
+        },
+        {
+          id: 'fishing-special-bonus-tiles',
+          label: 'Bonus tiles',
+          base: 8,
+          doubles: 1,
+          subtotal: 16,
+        },
+      ],
+      basePoints: 8,
+      doubles: 1,
+      uncappedScore: 416,
+      finalScore: 416,
+      limitApplied: false,
+      scoringMode: 'special',
+    });
+    expect(score.specialFishing).toMatchObject({
+      id: 'thirteen-unique-wonders',
+      fishingValue: 400,
+      intrinsicApplied: false,
+    });
+    expect(score.specialFishing?.completingTiles).toHaveLength(13);
+  });
+
   it('caps a limit special hand after separately calculating bonuses', () => {
     const hand: MahjongHand = {
       sets: [

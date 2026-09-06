@@ -90,7 +90,7 @@ For fixed-value special hands below the 1,000-point limit, Flowers and Seasons a
 
 Purity is different: it is a three-doubles scoring mode rather than a fixed 500- or 1,000-point value.
 
-Fishing matters. BMJA assigns special fishing values to many special hands when another player goes Mah-Jong. These are not equivalent to Original Call and must be modelled separately.
+Fishing matters. BMJA assigns special fishing values to many special hands when another player goes Mah-Jong. These are not equivalent to Original Call and are modelled separately.
 
 ## Special hands
 
@@ -98,20 +98,20 @@ Fishing matters. BMJA assigns special fishing values to many special hands when 
 
 | Special hand | Winner treatment | Current project status |
 | --- | --- | --- |
-| Purity | Basic score doubled three times | Partial — winner pattern implemented; fishing treatment still required |
-| All Pair Honours | 500 | Partial — winner implemented; 200 fishing not yet implemented |
-| Thirteen Unique Wonders | 1,000 | Partial — winner implemented; 400 fishing not yet implemented |
-| All Winds and Dragons | 1,000 | Partial — winner implemented; fishing/intrinsic comparison not yet implemented |
-| Heads and Tails | 1,000 | Partial — winner implemented; 400 fishing not yet implemented |
-| Fourfold Plenty | 1,000 | Partial — winner implemented; 400 fishing not yet implemented |
-| Three Great Scholars | 1,000 | Partial — winner implemented; fishing/intrinsic comparison not yet implemented |
-| Four Blessings Hovering over the Door | 1,000 | Partial — winner implemented; fishing/intrinsic comparison not yet implemented |
-| Buried Treasure | 1,000 | Partial — winner pattern implemented but final-winning-tile concealment exception needs richer provenance |
-| Knitting | 500 | Partial — winner pattern implemented; 200 fishing not yet implemented |
-| Triple Knitting | 500 | Partial — winner pattern implemented; 200 fishing not yet implemented |
-| Imperial Jade | 1,000 | Partial — winner pattern implemented; 400 fishing not yet implemented |
-| Gates of Heaven | 1,000 | Partial — concealed winner layout implemented; final-winning-tile claim exception still needs richer provenance; 400 fishing not yet implemented |
-| Wriggling Snake | 1,000 | Partial — winner pattern implemented; 400 fishing not yet implemented |
+| Purity | Basic score doubled three times | Implemented — winner and verified one-tile-away fishing, including the greater intrinsic option |
+| All Pair Honours | 500 | Implemented — winner and 200 fishing |
+| Thirteen Unique Wonders | 1,000 | Implemented — winner and 400 fishing, including multiple possible waits |
+| All Winds and Dragons | 1,000 | Implemented — winner and greater of 400 fishing or intrinsic value |
+| Heads and Tails | 1,000 | Implemented — winner and 400 fishing |
+| Fourfold Plenty | 1,000 | Implemented — winner and 400 fishing |
+| Three Great Scholars | 1,000 | Implemented — winner and greater of 400 fishing or intrinsic value |
+| Four Blessings Hovering over the Door | 1,000 | Implemented — winner and greater of 400 fishing or intrinsic value |
+| Buried Treasure | 1,000 | Partial — winner and 400 fishing implemented; final-winning-tile concealment exception still needs richer provenance |
+| Knitting | 500 | Implemented — winner and 200 fishing |
+| Triple Knitting | 500 | Implemented — winner and 200 fishing |
+| Imperial Jade | 1,000 | Implemented — winner and 400 fishing |
+| Gates of Heaven | 1,000 | Partial — winner and 400 fishing implemented; final-winning-tile claim exception still needs richer provenance |
+| Wriggling Snake | 1,000 | Implemented — winner and 400 fishing |
 
 ### Missing event-dependent specials
 
@@ -129,13 +129,20 @@ Tracked in issue #4.
 
 ### Fishing
 
-**Planned.** The current scorer does not yet award BMJA special-hand fishing values. This is important because non-winning hands participate in settlement.
+**Implemented.** Special fishing is represented independently from Original Call and only applies to a non-winning hand. The scorer verifies the declaration by enumerating legal playing tiles and requiring at least one tile that completes the selected special. The required tile may be dead; availability in the wall is not part of fishing eligibility. Multiple completing tiles are retained in the score result.
 
-Tracked in issue #2.
+Irregular hands are entered as the 13 tiles currently held. Grouped hands retain complete sets and identify the exact incomplete group currently held: a single waiting to become a pair, a pair waiting to become a pung, or a pung waiting to become a kong. This avoids treating a completed special with `isWinner = false` as fishing.
 
-### Intrinsic-value alternatives
+Published values implemented:
 
-For some special-hand fishing situations the published rules allow intrinsic scoring when that exceeds the special fishing value. This must be explicit in the engine rather than inferred from ordinary winner logic.
+- Purity: the basic score doubled three times, or intrinsic value if greater.
+- All Pair Honours, Knitting and Triple Knitting: 200.
+- Supported 1,000-point tile-pattern specials: 400.
+- Three Great Scholars, All Winds and Dragons, and Four Blessings Hovering over the Door: 400 or intrinsic value if greater.
+
+Flowers and Seasons are handled separately. Under fixed special fishing, their points and qualifying own-tile/bouquet doubles apply only to the bonus subtotal. The published North example for Thirteen Unique Wonders therefore scores `400 + (8 × 2) = 416`.
+
+**Purity interpretation:** the source says both “double three times or intrinsic value, if greater” and that, when the higher intrinsic route is chosen, doubling applies to the basic score of the whole hand. The engine interprets that route as applying Purity’s three doubles plus qualifying bonus doubles to the combined playing-tile and bonus base. The ordinary separated-bonus Purity calculation remains the alternative, and the higher result is selected.
 
 ### Winning-tile provenance
 
