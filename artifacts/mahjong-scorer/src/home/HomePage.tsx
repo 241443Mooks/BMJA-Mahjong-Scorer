@@ -1,0 +1,177 @@
+import {
+  ArrowRight,
+  BookOpen,
+  Calculator,
+  CircleHelp,
+  Gamepad2,
+  Info,
+  Sparkles,
+} from 'lucide-react';
+
+type HomeLink = {
+  title: string;
+  description: string;
+  href: string;
+  icon: typeof Calculator;
+};
+
+const learningLinks: HomeLink[] = [
+  {
+    title: 'Gameplay basics',
+    description: 'Learn the tiles, sets, claiming, Kongs, Winds and how a game progresses.',
+    href: '/gameplay-basics',
+    icon: BookOpen,
+  },
+  {
+    title: 'Scoring basics',
+    description: 'Understand points, doubles, fishing and how players settle after each hand.',
+    href: '/guide#ordinary-scoring',
+    icon: Calculator,
+  },
+  {
+    title: 'Special hands',
+    description: 'Browse special hands, their values, example patterns and how the scorer recognises them.',
+    href: '/special-hands',
+    icon: Sparkles,
+  },
+];
+
+function PrimaryAction({
+  title,
+  description,
+  href,
+  icon: Icon,
+  dark = false,
+}: HomeLink & { dark?: boolean }) {
+  return (
+    <a
+      href={href}
+      className={`group flex min-h-[190px] flex-col justify-between rounded-2xl border p-6 shadow-[var(--shadow-sm)] transition duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249] focus-visible:ring-offset-2 sm:p-7 ${
+        dark
+          ? 'border-[#284d45] bg-[#284d45] text-[#f8f4e9] hover:-translate-y-0.5 hover:bg-[#23443d]'
+          : 'border-[#cfc3aa] bg-[#fbf8ed] text-[#284d45] hover:-translate-y-0.5 hover:border-[#ae6249] hover:bg-[#fffaf0]'
+      }`}
+    >
+      <div className="flex items-start justify-between gap-4">
+        <div className={`flex h-11 w-11 items-center justify-center rounded-xl ${dark ? 'bg-[#3b5e55] text-[#f3d8c7]' : 'bg-[#efe8da] text-[#ae6249]'}`}>
+          <Icon size={20} strokeWidth={1.8} />
+        </div>
+        <ArrowRight
+          size={20}
+          className={`mt-1 shrink-0 transition-transform group-hover:translate-x-1 ${dark ? 'text-[#d7a287]' : 'text-[#ae6249]'}`}
+        />
+      </div>
+      <div className="mt-8">
+        <h2 className="font-serif text-[30px] leading-tight">{title}</h2>
+        <p className={`mt-2 max-w-[470px] text-[13px] leading-6 ${dark ? 'text-[#c8d8d1]' : 'text-[#66746e]'}`}>
+          {description}
+        </p>
+      </div>
+    </a>
+  );
+}
+
+function LearningAction({ title, description, href, icon: Icon }: HomeLink) {
+  return (
+    <a
+      href={href}
+      className="group flex min-h-[126px] items-start gap-4 rounded-xl border border-[#ddd3bf] bg-[#fbf8ed] p-5 transition hover:border-[#c9b99d] hover:bg-[#fffaf0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249] focus-visible:ring-offset-2"
+    >
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#efe8da] text-[#477562]">
+        <Icon size={18} strokeWidth={1.8} />
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center justify-between gap-3">
+          <h3 className="font-serif text-[21px] leading-tight text-[#284d45]">{title}</h3>
+          <ArrowRight size={15} className="shrink-0 text-[#ae6249] transition-transform group-hover:translate-x-1" />
+        </div>
+        <p className="mt-1.5 text-[11px] leading-5 text-[#6d746f]">{description}</p>
+      </div>
+    </a>
+  );
+}
+
+export function HomePage() {
+  return (
+    <div className="mahjong-shell min-h-screen">
+      <header className="border-b border-[#d8ceb8] bg-[#f5f1e6]/95">
+        <div className="mx-auto flex max-w-[1100px] items-center gap-3 px-5 py-4 lg:px-8">
+          <div className="flex h-10 w-10 items-center justify-center rounded-md bg-[#284d45] text-[#f5f1e6]">
+            <span className="font-serif text-[22px] font-bold">麻</span>
+          </div>
+          <div>
+            <div className="font-serif text-[20px] font-bold leading-none text-[#284d45]">British Mahjong Scorer</div>
+            <div className="mt-1 font-mono text-[8px] uppercase tracking-[.2em] text-[#ae6249]">Score · learn · understand</div>
+          </div>
+        </div>
+      </header>
+
+      <main className="mx-auto max-w-[1100px] px-5 py-9 lg:px-8 lg:py-14">
+        <section className="max-w-[760px]">
+          <h1 className="font-serif text-[clamp(38px,6vw,58px)] leading-[1.02] text-[#284d45]">
+            What would you like to do?
+          </h1>
+          <p className="mt-4 max-w-[620px] text-[15px] leading-7 text-[#66746e]">
+            Score a game, check a hand, or learn British Mahjong as you play.
+          </p>
+        </section>
+
+        <section className="mt-8 grid gap-4 md:grid-cols-2" aria-label="Scoring actions">
+          <PrimaryAction
+            title="Score a game"
+            description="Start a four-player game, score each hand, settle payments and keep running totals."
+            href="/game"
+            icon={Gamepad2}
+            dark
+          />
+          <PrimaryAction
+            title="Score a hand"
+            description="Work out the score for one hand without starting a full game."
+            href="/hand"
+            icon={Calculator}
+          />
+        </section>
+
+        <section className="mt-11">
+          <div className="mb-4 flex items-center gap-3">
+            <h2 className="font-serif text-[25px] text-[#284d45]">Learn British Mahjong</h2>
+            <div className="fine-rule max-w-16 flex-1" />
+          </div>
+          <div className="grid gap-3 md:grid-cols-3">
+            {learningLinks.map((link) => (
+              <LearningAction key={link.title} {...link} />
+            ))}
+          </div>
+        </section>
+
+        <section className="mt-8 border-t border-[#ddd3bf] pt-6">
+          <a
+            href="/about"
+            className="group flex items-center gap-4 rounded-lg px-2 py-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]"
+          >
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#efe8da] text-[#7a7769]">
+              <Info size={17} strokeWidth={1.8} />
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center justify-between gap-3">
+                <h2 className="font-serif text-[19px] text-[#284d45]">About this project</h2>
+                <ArrowRight size={14} className="shrink-0 text-[#ae6249] transition-transform group-hover:translate-x-1" />
+              </div>
+              <p className="mt-1 text-[11px] leading-5 text-[#7a7769]">
+                How the scorer was built, which rules sources it uses, and how to support the project.
+              </p>
+            </div>
+          </a>
+        </section>
+      </main>
+
+      <footer className="mx-auto flex max-w-[1100px] flex-wrap items-center justify-between gap-3 border-t border-[#d8ceb8] px-5 py-5 lg:px-8">
+        <p className="text-[10px] leading-5 text-[#8c8a7f]">Independent project · not an official BMJA publication.</p>
+        <div className="flex items-center gap-2 text-[10px] text-[#8c8a7f]">
+          <CircleHelp size={13} />
+          <span>Scoring stays one tap away.</span>
+        </div>
+      </footer>
+    </div>
+  );
+}
