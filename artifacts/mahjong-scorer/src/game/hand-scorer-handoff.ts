@@ -55,6 +55,7 @@ export const assertDetailedWinnerMatchesOutcome = (
     record.requiresRecalculation ||
     record.hand.isWinner !== expectedWinner ||
     (!expectedWinner && record.hand.winningMethod !== undefined) ||
+    (!expectedWinner && record.hand.winningTileProvenance !== undefined) ||
     (!expectedWinner && record.hand.originalCall === true)
   ) {
     throw new Error(
@@ -147,6 +148,9 @@ export const reconcileDetailedHandsForOutcome = (
         isWinner: expectedWinner,
         winningMethod: expectedWinner
           ? record.hand.winningMethod
+          : undefined,
+        winningTileProvenance: expectedWinner
+          ? record.hand.winningTileProvenance
           : undefined,
         originalCall: expectedWinner ? record.hand.originalCall : false,
       },

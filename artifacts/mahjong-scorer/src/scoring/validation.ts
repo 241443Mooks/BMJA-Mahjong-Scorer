@@ -1,6 +1,11 @@
 import { detectSpecialHands } from './special-hands';
 import { detectSpecialFishing } from './fishing';
-import { expandedTiles, tileKey } from './tiles';
+import {
+  expandedTiles,
+  hasCompleteWinningShape,
+  resolveWinningTileProvenance,
+  tileKey,
+} from './tiles';
 import type { MahjongHand, PlayingTile } from './types';
 
 export const validateHand = (hand: MahjongHand): string[] => {
@@ -21,6 +26,12 @@ export const validateHand = (hand: MahjongHand): string[] => {
     );
   const fishingMatches = detectSpecialFishing(hand);
 
+  if (hand.isWinner && !hasCompleteWinningShape(hand)) {
+    errors.push(
+      'A winning hand must be a complete grouped hand or a 14-tile special layout.',
+    );
+  }
+
   if (
     hand.isWinner &&
     hand.sets.length > 0 &&
@@ -35,6 +46,10 @@ export const validateHand = (hand: MahjongHand): string[] => {
     errors.push('A normal BMJA hand may contain at most one chow.');
   }
 
+  if (new Set(hand.sets.map((group) => group.id)).size !== hand.sets.length) {
+    errors.push('Each grouped set or pair must have a unique id.');
+  }
+
   if (hand.looseTiles && hand.looseTiles.length > 0 && hand.sets.length > 0) {
     errors.push('Ungrouped special-hand tiles cannot be mixed with ordinary sets.');
   }
@@ -47,6 +62,15 @@ export const validateHand = (hand: MahjongHand): string[] => {
 
   if (hand.originalCall && !hand.isWinner) {
     errors.push('Original Call applies only to a winning hand.');
+  }
+
+  if (
+    hand.winningTileProvenance &&
+    !resolveWinningTileProvenance(hand)
+  ) {
+    errors.push(
+      'Winning-tile provenance must identify a tile destination in the completed winning hand.',
+    );
   }
 
   if (hand.incompleteSet) {

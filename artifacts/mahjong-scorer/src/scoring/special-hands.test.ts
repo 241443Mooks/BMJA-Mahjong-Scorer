@@ -396,6 +396,171 @@ describe('independent special-hand detectors', () => {
     expect(matched(winning(sets), 'buried-treasure')).toBe(false);
   });
 
+  it('applies the final claimed-group exception to Buried Treasure only with matching provenance', () => {
+    const base = [
+      set('one', 'pung', suited('bamboo', 2), 'exposed'),
+      set('two', 'pung', suited('bamboo', 3)),
+      set('three', 'pung', suited('bamboo', 4)),
+      set('four', 'pung', dragon('red')),
+      set('pair', 'pair', suited('bamboo', 5)),
+    ];
+    const claimed: MahjongHand = {
+      ...winning(base),
+      winningMethod: 'discard',
+      winningTileProvenance: {
+        tile: suited('bamboo', 2),
+        target: { type: 'grouped-set', setId: 'one' },
+      },
+    };
+
+    expect(matched(claimed, 'buried-treasure')).toBe(true);
+    expect(
+      matched(
+        { ...claimed, winningTileProvenance: undefined },
+        'buried-treasure',
+      ),
+    ).toBe(false);
+    expect(
+      matched(
+        {
+          ...claimed,
+          winningTileProvenance: {
+            tile: suited('bamboo', 3),
+            target: { type: 'grouped-set', setId: 'two' },
+          },
+        },
+        'buried-treasure',
+      ),
+    ).toBe(false);
+    expect(
+      matched(
+        {
+          ...claimed,
+          winningTileProvenance: {
+            tile: suited('bamboo', 2),
+            target: { type: 'grouped-set', setId: 'stale' },
+          },
+        },
+        'buried-treasure',
+      ),
+    ).toBe(false);
+    expect(
+      matched(
+        {
+          ...claimed,
+          sets: base.map((group, index) =>
+            index === 1 ? { ...group, visibility: 'exposed' } : group,
+          ),
+        },
+        'buried-treasure',
+      ),
+    ).toBe(false);
+    expect(
+      matched({ ...claimed, winningMethod: 'wall' }, 'buried-treasure'),
+    ).toBe(false);
+    expect(
+      matched(
+        {
+          ...claimed,
+          winningMethod: 'wall',
+          winningTileProvenance: undefined,
+          sets: base.map((group) => ({
+            ...group,
+            visibility: 'concealed',
+          })),
+        },
+        'buried-treasure',
+      ),
+    ).toBe(true);
+
+    const pairClaimed: MahjongHand = {
+      ...claimed,
+      sets: base.map((group) => ({
+        ...group,
+        visibility: group.id === 'pair' ? 'exposed' : 'concealed',
+      })),
+      winningTileProvenance: {
+        tile: suited('bamboo', 5),
+        target: { type: 'grouped-set', setId: 'pair' },
+      },
+    };
+    expect(matched(pairClaimed, 'buried-treasure')).toBe(true);
+  });
+
+  it('allows claimed Gates only when loose provenance selects a terminal', () => {
+    const looseTiles = [
+      suited('circles', 1),
+      suited('circles', 1),
+      suited('circles', 1),
+      suited('circles', 2),
+      suited('circles', 3),
+      suited('circles', 4),
+      suited('circles', 5),
+      suited('circles', 5),
+      suited('circles', 6),
+      suited('circles', 7),
+      suited('circles', 8),
+      suited('circles', 9),
+      suited('circles', 9),
+      suited('circles', 9),
+    ];
+    const claimed: MahjongHand = {
+      ...looseWinning(looseTiles),
+      winningMethod: 'final-discard',
+      winningTileProvenance: {
+        tile: suited('circles', 9),
+        target: { type: 'loose-layout' },
+      },
+    };
+    expect(matched(claimed, 'gates-of-heaven')).toBe(true);
+    expect(
+      matched(
+        {
+          ...claimed,
+          winningTileProvenance: {
+            tile: suited('circles', 5),
+            target: { type: 'loose-layout' },
+          },
+        },
+        'gates-of-heaven',
+      ),
+    ).toBe(false);
+    expect(
+      matched(
+        { ...claimed, winningTileProvenance: undefined },
+        'gates-of-heaven',
+      ),
+    ).toBe(false);
+    expect(
+      matched(
+        {
+          ...claimed,
+          winningTileProvenance: {
+            tile: suited('bamboo', 9),
+            target: { type: 'loose-layout' },
+          },
+        },
+        'gates-of-heaven',
+      ),
+    ).toBe(false);
+    expect(
+      matched(
+        {
+          ...claimed,
+          winningMethod: 'wall',
+          winningTileProvenance: undefined,
+        },
+        'gates-of-heaven',
+      ),
+    ).toBe(true);
+    expect(
+      matched(
+        { ...claimed, winningMethod: 'robbing-kong' },
+        'gates-of-heaven',
+      ),
+    ).toBe(false);
+  });
+
   it('rejects kongs and mixed suits for buried treasure', () => {
     const base = [
       set('1', 'pung', suited('bamboo', 2)),
