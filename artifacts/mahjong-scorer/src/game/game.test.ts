@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { suited } from '../scoring';
 import { confirmHand, createBmjaGame, undoLastHand } from './game';
 import type {
   DetailedHandRecord,
@@ -202,5 +203,32 @@ describe('BMJA game-level golden fixtures', () => {
       discardedBy: 'east',
       handDiscardOrdinal: 1,
     });
+  });
+
+  it('deep-clones remaining tiles stored in detailed hand records', () => {
+    const remainingTile = suited('characters', 4);
+    const record: DetailedHandRecord = {
+      ...rodDetailedScore,
+      hand: {
+        sets: [],
+        remainingTiles: [remainingTile],
+        bonusTiles: [],
+        isWinner: false,
+      },
+    };
+    const confirmed = confirmHand(createBmjaGame(players, seats), {
+      outcome: { type: 'draw' },
+      scores: { bill: 0, rod: 200, ben: 0, jack: 0 },
+      scoreRecords: { rod: record },
+    });
+
+    remainingTile.rank = 7;
+
+    const stored = confirmed.handHistory[0].scoreRecords.rod;
+    expect(
+      stored?.source === 'detailed-scorer'
+        ? stored.hand.remainingTiles?.[0]
+        : undefined,
+    ).toEqual(suited('characters', 4));
   });
 });

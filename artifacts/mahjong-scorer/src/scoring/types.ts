@@ -32,12 +32,6 @@ export type HandSet = {
   visibility: Visibility;
 };
 
-export type IncompleteSet = {
-  kind: 'single' | 'pair' | 'pung';
-  tile: PlayingTile;
-  visibility: Visibility;
-};
-
 export type FishingSpecialId =
   | 'purity'
   | 'all-pair-honours'
@@ -99,6 +93,8 @@ export type MahjongHand = {
   sets: HandSet[];
   /** Ungrouped tiles support irregular special hands such as Thirteen Unique Wonders. */
   looseTiles?: PlayingTile[];
+  /** Actual ungrouped tiles left over after completed sets in an ordinary non-winning hand. */
+  remainingTiles?: PlayingTile[];
   bonusTiles: BonusTile[];
   isWinner: boolean;
   winningMethod?: WinningMethod;
@@ -107,8 +103,6 @@ export type MahjongHand = {
   /** Minimal event facts not represented by winningMethod; absence means unknown. */
   winningEventEvidence?: WinningEventEvidence;
   originalCall?: boolean;
-  /** Exact incomplete group held alongside complete sets while fishing. */
-  incompleteSet?: IncompleteSet;
 };
 
 export type GameContext = {

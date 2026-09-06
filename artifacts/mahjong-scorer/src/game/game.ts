@@ -28,6 +28,7 @@ const cloneDetailedHandRecord = (
       tile: { ...handSet.tile },
     })),
     looseTiles: record.hand.looseTiles?.map((tile) => ({ ...tile })),
+    remainingTiles: record.hand.remainingTiles?.map((tile) => ({ ...tile })),
     bonusTiles: record.hand.bonusTiles.map((tile) => ({ ...tile })),
     winningTileProvenance: record.hand.winningTileProvenance
       ? {

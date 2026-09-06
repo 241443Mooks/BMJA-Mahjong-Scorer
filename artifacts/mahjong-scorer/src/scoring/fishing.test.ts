@@ -11,7 +11,6 @@ import {
 import type {
   FishingSpecialId,
   HandSet,
-  IncompleteSet,
   MahjongHand,
   PlayingTile,
 } from '.';
@@ -21,22 +20,16 @@ const fishing = (
   options: {
     sets?: HandSet[];
     looseTiles?: PlayingTile[];
-    incompleteSet?: IncompleteSet;
+    remainingTiles?: PlayingTile[];
   },
 ): MahjongHand => ({
   sets: options.sets ?? [],
   looseTiles: options.looseTiles,
-  incompleteSet: options.incompleteSet,
+  remainingTiles: options.remainingTiles,
   bonusTiles: [],
   isWinner: false,
   originalCall: false,
 });
-
-const incomplete = (
-  kind: IncompleteSet['kind'],
-  tile: PlayingTile,
-  visibility: IncompleteSet['visibility'] = 'concealed',
-): IncompleteSet => ({ kind, tile, visibility });
 
 const irregular = (
   target: FishingSpecialId,
@@ -64,7 +57,7 @@ const cases: {
         set('3', 'kong', suited('bamboo', 6)),
         set('4', 'pair', suited('bamboo', 8)),
       ],
-      incompleteSet: incomplete('pair', suited('bamboo', 4)),
+      remainingTiles: [suited('bamboo', 4), suited('bamboo', 4)],
     }),
   },
   {
@@ -80,7 +73,7 @@ const cases: {
         set('5', 'pair', suited('circles', 9)),
         set('6', 'pair', suited('characters', 1)),
       ],
-      incompleteSet: incomplete('single', dragon('green')),
+      remainingTiles: [dragon('green')],
     }),
   },
   {
@@ -136,7 +129,7 @@ const cases: {
         set('3', 'pung', dragon('red')),
         set('4', 'pair', wind('east')),
       ],
-      incompleteSet: incomplete('pair', suited('circles', 6)),
+      remainingTiles: [suited('circles', 6), suited('circles', 6)],
     }),
   },
   {
@@ -150,7 +143,7 @@ const cases: {
         set('3', 'kong', suited('bamboo', 4)),
         set('4', 'pair', suited('bamboo', 6)),
       ],
-      incompleteSet: incomplete('pair', suited('bamboo', 8)),
+      remainingTiles: [suited('bamboo', 8), suited('bamboo', 8)],
     }),
   },
   {
@@ -164,7 +157,7 @@ const cases: {
         set('3', 'kong', suited('circles', 1)),
         set('4', 'pair', suited('characters', 9)),
       ],
-      incompleteSet: incomplete('pair', suited('circles', 9)),
+      remainingTiles: [suited('circles', 9), suited('circles', 9)],
     }),
   },
   {
@@ -178,7 +171,7 @@ const cases: {
         set('3', 'pung', suited('circles', 4)),
         set('4', 'pair', suited('bamboo', 2)),
       ],
-      incompleteSet: incomplete('pair', dragon('white')),
+      remainingTiles: [dragon('white'), dragon('white')],
     }),
   },
   {
@@ -192,7 +185,7 @@ const cases: {
         set('3', 'pung', dragon('red')),
         set('4', 'pair', dragon('green')),
       ],
-      incompleteSet: incomplete('pair', wind('west')),
+      remainingTiles: [wind('west'), wind('west')],
     }),
   },
   {
@@ -206,7 +199,7 @@ const cases: {
         set('3', 'pung', wind('west')),
         set('4', 'pair', dragon('red')),
       ],
-      incompleteSet: incomplete('pair', wind('north')),
+      remainingTiles: [wind('north'), wind('north')],
     }),
   },
   {
@@ -218,9 +211,9 @@ const cases: {
         set('1', 'kong', suited('bamboo', 2)),
         set('2', 'kong', suited('circles', 4)),
         set('3', 'kong', dragon('red')),
-        set('4', 'pair', wind('south')),
+        set('4', 'kong', suited('characters', 6)),
       ],
-      incompleteSet: incomplete('pung', suited('characters', 6)),
+      remainingTiles: [wind('south')],
     }),
   },
   {
@@ -313,8 +306,8 @@ describe('BMJA special-hand fishing detection', () => {
   it.each(cases)(
     'rejects a $name hand that is not one tile away',
     ({ hand }) => {
-      const notFishing: MahjongHand = hand.incompleteSet
-        ? { ...hand, sets: hand.sets.slice(0, -1) }
+      const notFishing: MahjongHand = hand.remainingTiles
+        ? { ...hand, remainingTiles: hand.remainingTiles.slice(0, -1) }
         : { ...hand, looseTiles: hand.looseTiles?.slice(0, 12) };
       expect(detectSpecialFishing(notFishing)).toEqual([]);
       expect(scoreHand(notFishing).valid).toBe(false);
@@ -340,7 +333,7 @@ describe('BMJA special-hand fishing detection', () => {
         set('four', 'kong', suited('bamboo', 4)),
         set('six', 'kong', suited('bamboo', 6)),
       ],
-      incompleteSet: incomplete('single', suited('bamboo', 8)),
+      remainingTiles: [suited('bamboo', 8)],
     });
     const score = scoreHand(hand);
     expect(score.specialFishingMatches).toEqual(
@@ -362,7 +355,7 @@ describe('BMJA special-hand fishing detection', () => {
         set('white', 'pung', dragon('white')),
         set('east', 'pung', wind('east')),
       ],
-      incompleteSet: incomplete('single', wind('south')),
+      remainingTiles: [wind('south')],
     });
     const score = scoreHand(hand);
     expect(score.specialFishingMatches?.map(({ id }) => id)).toEqual(
@@ -397,7 +390,7 @@ describe('BMJA special-hand fishing detection', () => {
           set('white', 'kong', dragon('white')),
           set('other', 'pung', suited('circles', 8)),
         ],
-        incompleteSet: incomplete('single', suited('circles', 2)),
+        remainingTiles: [suited('circles', 2)],
       }),
       800,
     ],
@@ -410,7 +403,7 @@ describe('BMJA special-hand fishing detection', () => {
           set('west', 'kong', wind('west')),
           set('north', 'kong', wind('north')),
         ],
-        incompleteSet: incomplete('single', dragon('red')),
+        remainingTiles: [dragon('red')],
       }),
       512,
     ],
@@ -423,7 +416,7 @@ describe('BMJA special-hand fishing detection', () => {
           set('west', 'kong', wind('west')),
           set('north', 'kong', wind('north')),
         ],
-        incompleteSet: incomplete('single', suited('circles', 2)),
+        remainingTiles: [suited('circles', 2)],
       }),
       512,
     ],
@@ -445,7 +438,7 @@ describe('BMJA special-hand fishing detection', () => {
         set('four', 'kong', suited('bamboo', 4)),
         set('six', 'kong', suited('bamboo', 6)),
       ],
-      incompleteSet: incomplete('single', suited('bamboo', 8)),
+      remainingTiles: [suited('bamboo', 8)],
     });
     hand.bonusTiles = [bonus('flower', 1)];
     const score = scoreHand(hand);

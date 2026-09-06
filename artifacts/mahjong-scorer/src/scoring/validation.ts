@@ -1,12 +1,14 @@
 import { matchesSupportedIrregularLayout } from './special-hands';
 import { detectSpecialFishing } from './fishing';
 import {
-  expandedTiles,
   hasCompleteWinningShape,
+  playingTiles,
+  representedKongCount,
   resolveWinningTileProvenance,
+  structuralTileCount,
   tileKey,
 } from './tiles';
-import type { GameContext, MahjongHand, PlayingTile } from './types';
+import type { GameContext, MahjongHand } from './types';
 
 export const validateHand = (
   hand: MahjongHand,
@@ -21,11 +23,18 @@ export const validateHand = (
     hand.sets.length === 7 &&
     hand.sets.every((set) => set.kind === 'pair');
   const isIrregularShape =
-    hand.sets.length === 0 && hand.looseTiles?.length === 14;
+    hand.sets.length === 0 &&
+    (hand.remainingTiles?.length ?? 0) === 0 &&
+    hand.looseTiles?.length === 14;
   const isSupportedIrregularShape =
     isIrregularShape &&
     matchesSupportedIrregularLayout({ ...hand, isWinner: true });
   const fishingMatches = detectSpecialFishing(hand);
+  const structuralCount = structuralTileCount(hand);
+  const physicalCount = playingTiles(hand).length;
+  const kongCount = representedKongCount(hand);
+  const expectedStructuralCount = hand.isWinner ? 14 : 13;
+  const expectedPhysicalCount = expectedStructuralCount + kongCount;
 
   if (hand.isWinner && !hasCompleteWinningShape(hand)) {
     errors.push(
@@ -47,12 +56,29 @@ export const validateHand = (
     errors.push('A normal BMJA hand may contain at most one chow.');
   }
 
+  if (
+    structuralCount !== expectedStructuralCount ||
+    physicalCount !== expectedPhysicalCount
+  ) {
+    errors.push(
+      `${hand.isWinner ? 'A winning hand' : 'A non-winning hand'} must contain ${expectedStructuralCount} structural playing tiles; each represented kong adds one extra physical tile.`,
+    );
+  }
+
   if (new Set(hand.sets.map((group) => group.id)).size !== hand.sets.length) {
     errors.push('Each grouped set or pair must have a unique id.');
   }
 
-  if (hand.looseTiles && hand.looseTiles.length > 0 && hand.sets.length > 0) {
+  if (
+    hand.looseTiles &&
+    hand.looseTiles.length > 0 &&
+    (hand.sets.length > 0 || (hand.remainingTiles?.length ?? 0) > 0)
+  ) {
     errors.push('Ungrouped special-hand tiles cannot be mixed with ordinary sets.');
+  }
+
+  if (hand.isWinner && (hand.remainingTiles?.length ?? 0) > 0) {
+    errors.push('Remaining tiles are only valid in a non-winning hand.');
   }
 
   if (isIrregularShape && !isSupportedIrregularShape) {
@@ -81,9 +107,7 @@ export const validateHand = (
         'An original-deal win must use the original fourteen tiles without replacement draws.',
       );
     }
-    const playingTileCount =
-      hand.sets.flatMap(expandedTiles).length + (hand.looseTiles?.length ?? 0);
-    if (playingTileCount !== 14) {
+    if (physicalCount !== 14) {
       errors.push(
         'An original-deal win must contain exactly fourteen playing tiles.',
       );
@@ -124,22 +148,6 @@ export const validateHand = (
     );
   }
 
-  if (hand.incompleteSet) {
-    if (hand.isWinner) {
-      errors.push('An incomplete group is only valid in a non-winning hand.');
-    }
-    if (hand.incompleteSet && hand.looseTiles?.length) {
-      errors.push(
-        'A fishing hand cannot mix an incomplete group with ungrouped tiles.',
-      );
-    }
-    if (fishingMatches.length === 0) {
-      errors.push(
-        'The incomplete hand is not exactly one legal tile away from a supported special.',
-      );
-    }
-  }
-
   if (!hand.isWinner && hand.looseTiles?.length) {
     if (hand.looseTiles.length !== 13) {
       errors.push(
@@ -152,24 +160,7 @@ export const validateHand = (
     }
   }
 
-  const playingTiles: PlayingTile[] = [
-    ...hand.sets.flatMap(expandedTiles),
-    ...(hand.looseTiles ?? []),
-    ...(hand.incompleteSet
-      ? Array.from(
-          {
-            length:
-              hand.incompleteSet.kind === 'single'
-                ? 1
-                : hand.incompleteSet.kind === 'pair'
-                  ? 2
-                  : 3,
-          },
-          () => hand.incompleteSet!.tile,
-        )
-      : []),
-  ];
-  const playingTileCounts = playingTiles.reduce<Map<string, number>>(
+  const playingTileCounts = playingTiles(hand).reduce<Map<string, number>>(
     (tally, tile) => {
       const key = tileKey(tile);
       tally.set(key, (tally.get(key) ?? 0) + 1);

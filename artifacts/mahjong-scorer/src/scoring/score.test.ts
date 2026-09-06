@@ -115,7 +115,9 @@ describe('scoreHand breakdown', () => {
       isWinner: true,
     });
     expect(score.valid).toBe(false);
-    expect(score.validationErrors).toHaveLength(3);
+    expect(score.validationErrors).toContain(
+      'A winning hand must contain 14 structural playing tiles; each represented kong adds one extra physical tile.',
+    );
     expect(score.basePoints).toBe(20);
   });
 

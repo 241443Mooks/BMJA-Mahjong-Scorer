@@ -212,7 +212,11 @@ export const scoreBonusDoubles = (
   return rules;
 };
 
-const handTiles = (hand: MahjongHand) => hand.sets.flatMap(expandedTiles);
+const handTiles = (hand: MahjongHand) => [
+  ...hand.sets.flatMap(expandedTiles),
+  ...(hand.looseTiles ?? []),
+  ...(hand.remainingTiles ?? []),
+];
 
 /** BMJA Purity: four pungs/kongs and a pair, all in one suit; no honours/chows. */
 export const isPurityHand = (hand: MahjongHand): boolean => {
