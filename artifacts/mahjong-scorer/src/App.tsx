@@ -6,6 +6,7 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 import { Check, ChevronDown, CircleHelp, Copy, Minus, Plus, RotateCcw, Sparkles, X, AlertCircle } from 'lucide-react';
 import { Route, Switch, Router as WouterRouter, useLocation } from 'wouter';
 import NotFound from '@/pages/not-found';
+import { GameScorer } from './game/GameScorer';
 
 import type {
   GameContext,
@@ -104,7 +105,7 @@ const winningMethods: { value: WinningMethod; label: string }[] = [
   { value: 'robbing-kong', label: 'Robbing a Kong' },
 ];
 
-function Home() {
+function HandScorer({ onOpenGame }: { onOpenGame: () => void }) {
   const [sets, setSets] = useState<UIHandSet[]>(defaultSets);
   const [flowers, setFlowers] = useState<number[]>([]);
   const [seasons, setSeasons] = useState<number[]>([]);
@@ -228,6 +229,7 @@ function Home() {
             </div>
           </div>
           <div className="hidden items-center gap-3 text-right sm:flex">
+            <button type="button" onClick={onOpenGame} className="rounded-md bg-[#284d45] px-3 py-2 text-[11px] font-semibold text-[#f8f4e9]">Whole game</button>
             <div className="font-mono text-[10px] uppercase tracking-[.16em] text-[#7a7769]">British Mahjong ruleset</div>
             <div className="h-2 w-2 rounded-full bg-[#ae6249] animate-pulse-soft" />
           </div>
@@ -446,6 +448,20 @@ function Home() {
       </main>
       <footer className="mx-auto flex max-w-[1440px] flex-wrap items-center justify-between gap-3 border-t border-[#d8ceb8] px-5 py-5 lg:px-8"><p className="font-mono text-[10px] uppercase tracking-[.12em] text-[#8c8a7f]">Local tool · no hand data leaves this device</p><p className="text-[11px] text-[#8c8a7f]">Built for the quiet moment before the next deal.</p></footer>
     </div>
+  );
+}
+
+function Home() {
+  const [mode, setMode] = useState<'game' | 'hand'>('game');
+  return (
+    <>
+      <div className={mode === 'game' ? 'block' : 'hidden'}>
+        <GameScorer onOpenHandScorer={() => setMode('hand')} />
+      </div>
+      <div className={mode === 'hand' ? 'block' : 'hidden'}>
+        <HandScorer onOpenGame={() => setMode('game')} />
+      </div>
+    </>
   );
 }
 

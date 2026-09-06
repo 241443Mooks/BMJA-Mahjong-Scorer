@@ -26,6 +26,7 @@ A frontend-first TypeScript app for entering and scoring British Mahjong hands w
 ## Where things live
 
 - `artifacts/mahjong-scorer/src/scoring/` — pure hand model, rule functions, special-hand detectors, tests, and score orchestration
+- `artifacts/mahjong-scorer/src/game/` — pure BMJA settlement, progression, ruleset boundary, ledger replay, game UI, and tests
 - `artifacts/mahjong-scorer/src/App.tsx` — manual hand-entry UI
 
 ## Architecture decisions
@@ -33,15 +34,19 @@ A frontend-first TypeScript app for entering and scoring British Mahjong hands w
 - Manual entry and future recognition must both produce the canonical `MahjongHand` type.
 - Every scoring rule is a named pure function that returns an itemised `RuleResult`.
 - Special hands are independent detectors and do not mutate standard scoring.
+- Keep hand scoring, round settlement, game progression, and ledger replay as separate layers.
+- A hand score is an input to settlement, never a payment amount by itself.
+- Undo game history by replaying confirmed round inputs from the original setup.
+- BMJA is selected through the game ruleset boundary; do not add alternate-rule branches inside game orchestration.
 
 ## Product
 
-Phase 1 supports manual set and bonus entry, player/prevailing winds, detailed points and doubles, a configurable 1,000-point limit, and special-hand detection.
+The app supports detailed single-hand scoring plus an in-memory four-player BMJA game ledger with numeric score entry, settlement, East/seat rotation, prevailing-wind progression, and replay-based undo.
 
 ## User preferences
 
 - Prioritise correctness, simplicity, and maintainability over visual polish.
-- Do not add accounts, authentication, a database, subscriptions, multiplayer, or photo recognition in Phase 1.
+- Do not add accounts, authentication, a database, subscriptions, remote multiplayer, photo recognition, or alternate rulesets unless explicitly requested.
 
 ## Gotchas
 
