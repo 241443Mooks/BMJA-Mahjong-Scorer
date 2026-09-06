@@ -383,7 +383,27 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
               </section>
 
               <section className="animate-rise animate-rise-delay-2 rounded-xl border border-[#d8ceb8] bg-[#fbf8ed] p-5 shadow-[var(--shadow-sm)] sm:p-6">
-                <SectionLabel eyebrow="02 / bonus tiles" title="Flowers & seasons" count={`${flowers.length + seasons.length} selected`} />
+                <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+                  <div><div className="font-mono text-[10px] font-medium uppercase tracking-[.2em] text-[#ae6249]">02 / tile bank</div><h2 className="mt-1 font-serif text-[22px] text-[#284d45]">Choose a tile</h2></div>
+                  <div className="font-mono text-[10px] text-[#7a7769]">Adding to <span className="text-[#ae6249]">{activeSet ? `set ${sets.findIndex(s => s.id === selectedSet) + 1}` : '—'}</span></div>
+                </div>
+                <div className="mb-4 flex items-center gap-1 overflow-x-auto border-b border-[#e2d9c7] pb-2">
+                  {suitOrder.map((suit) => (
+                    <button type="button" key={suit} data-testid={`button-suit-${suit}`} onClick={() => { setActiveSuit(suit); setShowAllTiles(false); }} className={`shrink-0 rounded px-3 py-1.5 font-mono text-[10px] uppercase tracking-[.12em] transition ${activeSuit === suit && !showAllTiles ? 'bg-[#284d45] text-[#f8f4e9]' : 'text-[#7a7769] hover:bg-[#eee6d5]'}`}>{suitNames[suit]}</button>
+                  ))}
+                  <button type="button" data-testid="button-show-all-tiles" onClick={() => setShowAllTiles(true)} className={`shrink-0 rounded px-3 py-1.5 font-mono text-[10px] uppercase tracking-[.12em] transition ${showAllTiles ? 'bg-[#ae6249] text-[#fff7e9]' : 'text-[#7a7769] hover:bg-[#eee6d5]'}`}>All</button>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {visibleTiles.map((tile) => (
+                    <button type="button" key={tileKey(tile)} data-testid={`button-add-tile-${tileKey(tile)}`} onClick={() => addTile(tile)} className="transition hover:-translate-y-1 focus:ring-2 focus:ring-[#ae6249]"><TileFace tile={tile} compact /></button>
+                  ))}
+                  {visibleTiles.length === 0 && <div className="text-[11px] text-[#7a7769] py-4">No valid tiles for this set type.</div>}
+                </div>
+                <div className="mt-4 flex items-start gap-2 text-[11px] leading-5 text-[#7a7769]"><CircleHelp size={14} className="mt-0.5 shrink-0 text-[#ae6249]" /> Click a set above to target it, then choose its representative tile (for chows, pick the first tile 1-7).</div>
+              </section>
+
+              <section className="animate-rise animate-rise-delay-3 rounded-xl border border-[#d8ceb8] bg-[#fbf8ed] p-5 shadow-[var(--shadow-sm)] sm:p-6">
+                <SectionLabel eyebrow="03 / bonus tiles" title="Flowers & seasons" count={`${flowers.length + seasons.length} selected`} />
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
                     <div className="mb-2 font-mono text-[10px] uppercase tracking-[.15em] text-[#7a7769]">Flowers</div>
@@ -402,26 +422,6 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
                     </div>
                   </div>
                 </div>
-              </section>
-
-              <section className="animate-rise animate-rise-delay-3 rounded-xl border border-[#d8ceb8] bg-[#fbf8ed] p-5 shadow-[var(--shadow-sm)] sm:p-6">
-                <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
-                  <div><div className="font-mono text-[10px] font-medium uppercase tracking-[.2em] text-[#ae6249]">03 / tile bank</div><h2 className="mt-1 font-serif text-[22px] text-[#284d45]">Choose a tile</h2></div>
-                  <div className="font-mono text-[10px] text-[#7a7769]">Adding to <span className="text-[#ae6249]">{activeSet ? `set ${sets.findIndex(s => s.id === selectedSet) + 1}` : '—'}</span></div>
-                </div>
-                <div className="mb-4 flex items-center gap-1 overflow-x-auto border-b border-[#e2d9c7] pb-2">
-                  {suitOrder.map((suit) => (
-                    <button type="button" key={suit} data-testid={`button-suit-${suit}`} onClick={() => { setActiveSuit(suit); setShowAllTiles(false); }} className={`shrink-0 rounded px-3 py-1.5 font-mono text-[10px] uppercase tracking-[.12em] transition ${activeSuit === suit && !showAllTiles ? 'bg-[#284d45] text-[#f8f4e9]' : 'text-[#7a7769] hover:bg-[#eee6d5]'}`}>{suitNames[suit]}</button>
-                  ))}
-                  <button type="button" data-testid="button-show-all-tiles" onClick={() => setShowAllTiles(true)} className={`shrink-0 rounded px-3 py-1.5 font-mono text-[10px] uppercase tracking-[.12em] transition ${showAllTiles ? 'bg-[#ae6249] text-[#fff7e9]' : 'text-[#7a7769] hover:bg-[#eee6d5]'}`}>All</button>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {visibleTiles.map((tile) => (
-                    <button type="button" key={tileKey(tile)} data-testid={`button-add-tile-${tileKey(tile)}`} onClick={() => addTile(tile)} className="transition hover:-translate-y-1 focus:ring-2 focus:ring-[#ae6249]"><TileFace tile={tile} compact /></button>
-                  ))}
-                  {visibleTiles.length === 0 && <div className="text-[11px] text-[#7a7769] py-4">No valid tiles for this set type.</div>}
-                </div>
-                <div className="mt-4 flex items-start gap-2 text-[11px] leading-5 text-[#7a7769]"><CircleHelp size={14} className="mt-0.5 shrink-0 text-[#ae6249]" /> Click a set above to target it, then choose its representative tile (for chows, pick the first tile 1-7).</div>
               </section>
             </div>
 
