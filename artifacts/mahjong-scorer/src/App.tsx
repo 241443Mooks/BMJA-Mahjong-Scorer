@@ -258,7 +258,15 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
     seasons.length;
 
   function updateSet(id: string, updates: Partial<UIHandSet>) {
-    setSets((current) => current.map((s) => s.id === id ? { ...s, ...updates } : s));
+    setSets((current) => {
+      if (
+        updates.kind === 'chow' &&
+        current.some((handSet) => handSet.id !== id && handSet.kind === 'chow')
+      ) {
+        return current;
+      }
+      return current.map((s) => s.id === id ? { ...s, ...updates } : s);
+    });
   }
   function removeSet(id: string) {
     setSets((current) => {
@@ -289,7 +297,17 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
   }
   function addSet() {
     const id = `set-${Date.now()}`;
-    setSets((current) => [...current, { id, kind: 'chow', visibility: 'concealed', tile: null }]);
+    setSets((current) => [
+      ...current,
+      {
+        id,
+        kind: current.some((handSet) => handSet.kind === 'chow')
+          ? 'pung'
+          : 'chow',
+        visibility: 'concealed',
+        tile: null,
+      },
+    ]);
     setSelectedSet(id);
   }
   function clearHand() {
@@ -308,7 +326,7 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
     setSets([
       { id: 'set-1', kind: 'chow', visibility: 'concealed', tile: suited('bamboo', 1) },
       { id: 'set-2', kind: 'pung', visibility: 'exposed', tile: suited('circles', 9) },
-      { id: 'set-3', kind: 'chow', visibility: 'exposed', tile: suited('characters', 7) },
+      { id: 'set-3', kind: 'pung', visibility: 'exposed', tile: suited('characters', 7) },
       { id: 'set-4', kind: 'pung', visibility: 'concealed', tile: wind('east') },
       { id: 'set-5', kind: 'pair', visibility: 'concealed', tile: dragon('red') },
     ]);
@@ -495,8 +513,8 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
                       <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
                         <div className="flex items-center gap-2">
                           <span className="font-mono text-[10px] text-[#ae6249]">SET {String(index + 1).padStart(2, '0')}</span>
-                          <select aria-label={`Set ${index + 1} type`} data-testid={`select-set-type-${index + 1}`} value={s.kind} onChange={(e) => updateSet(s.id, { kind: e.target.value as SetKind, tile: null })} className="cursor-pointer border-0 bg-transparent font-mono text-[10px] uppercase tracking-[.12em] text-[#284d45] outline-none">
-                            <option value="chow">Chow</option><option value="pung">Pung</option><option value="kong">Kong</option><option value="pair">Pair</option>
+                           <select aria-label={`Set ${index + 1} type`} data-testid={`select-set-type-${index + 1}`} value={s.kind} onChange={(e) => updateSet(s.id, { kind: e.target.value as SetKind, tile: null })} className="cursor-pointer border-0 bg-transparent font-mono text-[10px] uppercase tracking-[.12em] text-[#284d45] outline-none">
+                             <option value="chow" disabled={sets.some((other) => other.id !== s.id && other.kind === 'chow')}>Chow</option><option value="pung">Pung</option><option value="kong">Kong</option><option value="pair">Pair</option>
                           </select>
                           <select aria-label={`Set ${index + 1} visibility`} data-testid={`select-set-visibility-${index + 1}`} value={s.visibility} onChange={(e) => updateSet(s.id, { visibility: e.target.value as Visibility })} className="cursor-pointer border-0 bg-transparent font-mono text-[10px] uppercase tracking-[.12em] text-[#284d45] outline-none">
                             <option value="concealed">Concealed</option><option value="exposed">Exposed</option>
@@ -513,45 +531,55 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
                       </div>
                     </div>
                     ))}
-                    {!isWinner && (
+                    {!isWinner && incompleteSet && (
                       <div
                         data-testid="card-fishing-incomplete"
                         className={`rounded-lg border p-3 transition ${selectedSet === 'fishing-incomplete' ? 'border-[#ae6249]/60 bg-[#f7f1e3]' : 'border-[#e2d9c7] bg-[#fdfbf5]'}`}
-                        onClick={() => {
-                          setIncompleteSet((current) =>
-                            current ?? {
-                              kind: 'single',
-                              visibility: 'concealed',
-                              tile: null,
-                            },
-                          );
-                          setSelectedSet('fishing-incomplete');
-                        }}
+                        onClick={() => setSelectedSet('fishing-incomplete')}
                       >
-                        <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-                          <div className="flex items-center gap-2">
-                            <span className="font-mono text-[10px] text-[#ae6249]">INCOMPLETE GROUP</span>
+                        <div className="mb-3 flex items-center justify-between gap-2">
+                          <span className="min-w-0 font-mono text-[10px] text-[#ae6249]">INCOMPLETE GROUP</span>
+                          <button
+                            type="button"
+                            aria-label="Remove incomplete group"
+                            data-testid="button-remove-incomplete-set"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              setIncompleteSet(null);
+                              setSelectedSet(sets[0]?.id ?? '');
+                            }}
+                            className="shrink-0 text-[#ae6249] transition hover:text-[#8a4d38] focus:ring-2"
+                          >
+                            <X size={14} />
+                          </button>
+                        </div>
+                        <div className="mb-3 grid min-w-0 gap-2 sm:grid-cols-2">
+                          <label className="min-w-0">
+                            <span className="mb-1 block text-[10px] font-semibold text-[#7a7769]">Waiting shape</span>
                             <select
                               aria-label="Incomplete group type"
                               data-testid="select-incomplete-type"
-                              value={incompleteSet?.kind ?? 'single'}
+                              value={incompleteSet.kind}
                               onChange={(event) =>
                                 setIncompleteSet({
                                   kind: event.target.value as IncompleteSet['kind'],
-                                  visibility: incompleteSet?.visibility ?? 'concealed',
+                                  visibility: incompleteSet.visibility,
                                   tile: null,
                                 })
                               }
-                              className="cursor-pointer border-0 bg-transparent font-mono text-[10px] uppercase tracking-[.12em] text-[#284d45] outline-none"
+                              className="block w-full min-w-0 cursor-pointer rounded-md border border-[#d7cbb5] bg-[#fdfbf5] px-2 py-2 text-[11px] text-[#284d45] outline-none"
                             >
                               <option value="single">Single (waiting for pair)</option>
                               <option value="pair">Pair (waiting for pung)</option>
                               <option value="pung">Pung (waiting for kong)</option>
                             </select>
+                          </label>
+                          <label className="min-w-0">
+                            <span className="mb-1 block text-[10px] font-semibold text-[#7a7769]">Visibility</span>
                             <select
                               aria-label="Incomplete group visibility"
                               data-testid="select-incomplete-visibility"
-                              value={incompleteSet?.visibility ?? 'concealed'}
+                              value={incompleteSet.visibility}
                               onChange={(event) =>
                                 setIncompleteSet((current) => ({
                                   kind: current?.kind ?? 'single',
@@ -559,12 +587,12 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
                                   visibility: event.target.value as Visibility,
                                 }))
                               }
-                              className="cursor-pointer border-0 bg-transparent font-mono text-[10px] uppercase tracking-[.12em] text-[#284d45] outline-none"
+                              className="block w-full min-w-0 cursor-pointer rounded-md border border-[#d7cbb5] bg-[#fdfbf5] px-2 py-2 text-[11px] text-[#284d45] outline-none"
                             >
                               <option value="concealed">Concealed</option>
                               <option value="exposed">Exposed</option>
                             </select>
-                          </div>
+                          </label>
                         </div>
                         <div className="flex min-h-[76px] items-center gap-2 overflow-x-auto pb-1">
                           {incompleteSet?.tile ? (
@@ -599,6 +627,23 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
                     )}
                   </div>
                   <button type="button" data-testid="button-add-set" onClick={addSet} className="mt-4 flex w-full items-center justify-center gap-2 rounded-md border border-dashed border-[#cdbfa7] py-2.5 text-[11px] font-semibold text-[#66746e] transition hover:border-[#ae6249] hover:text-[#284d45] focus:ring-2"><Plus size={14} /> Add another set</button>
+                  {!isWinner && !incompleteSet && (
+                    <button
+                      type="button"
+                      data-testid="button-add-incomplete-set"
+                      onClick={() => {
+                        setIncompleteSet({
+                          kind: 'single',
+                          visibility: 'concealed',
+                          tile: null,
+                        });
+                        setSelectedSet('fishing-incomplete');
+                      }}
+                      className="mt-2 flex w-full items-center justify-center gap-2 rounded-md border border-dashed border-[#cdbfa7] py-2.5 text-[11px] font-semibold text-[#66746e] transition hover:border-[#ae6249] hover:text-[#284d45] focus:ring-2"
+                    >
+                      <Plus size={14} /> Add an incomplete set
+                    </button>
+                  )}
                 </>
                 )}
               </section>
@@ -634,7 +679,7 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
                   ))}
                   {visibleTiles.length === 0 && <div className="text-[11px] text-[#7a7769] py-4">No valid tiles for this set type.</div>}
                 </div>
-                <div className="mt-4 flex items-start gap-2 text-[11px] leading-5 text-[#7a7769]"><CircleHelp size={14} className="mt-0.5 shrink-0 text-[#ae6249]" /> {layoutMode === 'special' ? 'Choose each tile individually; duplicate physical tiles may be added up to four times.' : 'Click a set or the incomplete group above, then choose its representative tile (for chows, pick the first tile 1-7).'}</div>
+                <div className="mt-4 flex items-start gap-2 text-[11px] leading-5 text-[#7a7769]"><CircleHelp size={14} className="mt-0.5 shrink-0 text-[#ae6249]" /> {layoutMode === 'special' ? 'Choose each tile individually; duplicate physical tiles may be added up to four times.' : 'Click a set, or add and select an incomplete set, then choose its representative tile (for a chow, pick the first tile 1-7).'}</div>
               </section>
 
               <section className="animate-rise animate-rise-delay-3 rounded-xl border border-[#d8ceb8] bg-[#fbf8ed] p-5 shadow-[var(--shadow-sm)] sm:p-6">

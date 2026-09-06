@@ -1,5 +1,5 @@
 {
-  "catalogueVersion": "1.2.0",
+  "catalogueVersion": "1.2.1",
   "ruleset": "BMJA-style British Mahjong",
   "source": {
     "title": "An illustrated description of Mah-Jong (BMJA rules)",
@@ -8,6 +8,7 @@
   },
   "rules": [
     {"id":"points.chow","category":"basic-points","value":0,"specification":"Exposed and concealed chows score no points.","implementation":"scorePungs/scoreKongs (deliberate omission)","test":"rules.test.ts: scores no points for chows"},
+    {"id":"hand-shape.maximum-chows","category":"validation","value":1,"specification":"A normal grouped BMJA hand may contain at most one chow; named special-hand sequences entered as ungrouped special layouts are not chows.","implementation":"validateHand, standard-sets builder","test":"score.test.ts: rejects a normal grouped hand containing more than one chow; golden-fixtures.test.ts: Gates and Wriggling remain valid"},
     {"id":"points.pung.minor.exposed","category":"basic-points","value":2,"specification":"An exposed pung of a minor suited tile scores 2.","implementation":"scorePungs","test":"rules.test.ts: scores a exposed minor pung as 2"},
     {"id":"points.pung.minor.concealed","category":"basic-points","value":4,"specification":"A concealed pung of a minor suited tile scores 4.","implementation":"scorePungs","test":"rules.test.ts: scores a concealed minor pung as 4"},
     {"id":"points.pung.major.exposed","category":"basic-points","value":4,"specification":"An exposed pung of a terminal, wind or dragon scores 4.","implementation":"scorePungs","test":"rules.test.ts: scores a exposed major pung as 4"},

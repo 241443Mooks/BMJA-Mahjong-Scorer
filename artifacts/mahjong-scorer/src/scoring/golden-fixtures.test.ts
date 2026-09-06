@@ -26,7 +26,7 @@ describe('BMJA complete-hand golden fixtures', () => {
       sets: [
         set('dragon', 'pung', dragon('red'), 'exposed'),
         set('chow-1', 'chow', suited('bamboo', 2), 'exposed'),
-        set('chow-2', 'chow', suited('bamboo', 5)),
+        set('minor', 'pung', suited('bamboo', 5)),
         set('terminal', 'pung', suited('bamboo', 9)),
         set('pair', 'pair', wind('south')),
       ],
@@ -38,6 +38,7 @@ describe('BMJA complete-hand golden fixtures', () => {
       valid: true,
       pointRules: [
         { id: 'pung-dragon', amount: 4 },
+        { id: 'pung-minor', amount: 4 },
         { id: 'pung-terminal', amount: 8 },
         { id: 'own-wind-pair', amount: 2 },
         { id: 'bonus-flower-2', amount: 4 },
@@ -53,15 +54,15 @@ describe('BMJA complete-hand golden fixtures', () => {
         {
           id: 'standard-hand',
           label: 'Standard hand',
-          base: 40,
+          base: 44,
           doubles: 3,
-          subtotal: 320,
+          subtotal: 352,
         },
       ],
-      basePoints: 40,
+      basePoints: 44,
       doubles: 3,
-      uncappedScore: 320,
-      finalScore: 320,
+      uncappedScore: 352,
+      finalScore: 352,
       limitApplied: false,
       scoringMode: 'standard',
     });

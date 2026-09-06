@@ -40,6 +40,8 @@ Use these markers when extending this document:
 
 - Exposed chow: 0 points.
 - Concealed chow: 0 points.
+- A normal grouped hand may contain at most one chow.
+- Named special-hand sequences such as The Gates of Heaven and The Wriggling Snake are entered as special layouts and are not counted as chows.
 
 ### Pungs
 

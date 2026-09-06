@@ -7,6 +7,7 @@ export const validateHand = (hand: MahjongHand): string[] => {
   const errors: string[] = [];
   const pairCount = hand.sets.filter((set) => set.kind === 'pair').length;
   const setCount = hand.sets.filter((set) => set.kind !== 'pair').length;
+  const chowCount = hand.sets.filter((set) => set.kind === 'chow').length;
 
   const isSevenPairsShape =
     hand.sets.length === 7 &&
@@ -28,6 +29,10 @@ export const validateHand = (hand: MahjongHand): string[] => {
     (pairCount !== 1 || setCount !== 4)
   ) {
     errors.push('A standard winning hand must contain four sets and one pair.');
+  }
+
+  if (chowCount > 1) {
+    errors.push('A normal BMJA hand may contain at most one chow.');
   }
 
   if (hand.looseTiles && hand.looseTiles.length > 0 && hand.sets.length > 0) {
