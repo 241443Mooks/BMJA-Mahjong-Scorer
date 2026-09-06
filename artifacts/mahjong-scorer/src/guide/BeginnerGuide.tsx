@@ -1,4 +1,5 @@
 import { ArrowLeft, BookOpen, ChevronRight, CircleHelp, Sparkles } from 'lucide-react';
+import { SetExamples, TileGallery } from './MahjongTileGallery';
 
 const sections = [
   { id: 'getting-started', label: 'Getting started' },
@@ -137,24 +138,14 @@ export function BeginnerGuide({ onClose }: { onClose: () => void }) {
 
             <GuideSection id="hand-shape" number="02" title="What makes a Mahjong hand?">
               <p>A normal Mahjong hand is made from <strong className="text-[#284d45]">four sets and a pair</strong>.</p>
-              <div className="grid gap-3 sm:grid-cols-3">
-                {[
-                  ['Pung', 'Three identical tiles'],
-                  ['Kong', 'Four identical tiles'],
-                  ['Chow', 'Three consecutive numbers in the same suit'],
-                ].map(([name, description]) => (
-                  <div key={name} className="rounded-lg border border-[#dfd5c2] bg-[#fdfbf5] p-4">
-                    <div className="font-serif text-[20px] text-[#284d45]">{name}</div>
-                    <p className="mt-1 text-[12px] leading-5 text-[#6d746f]">{description}</p>
-                  </div>
-                ))}
-              </div>
+              <SetExamples />
               <p>Under British rules, a normal hand can contain <strong className="text-[#284d45]">no more than one Chow</strong>. Some named special hands use different patterns; the scorer checks those separately.</p>
             </GuideSection>
 
             <GuideSection id="tiles" number="03" title="The tiles">
               <p>There are three numbered suits: <strong className="text-[#284d45]">Bamboos, Characters and Circles</strong>. Each runs from 1 to 9.</p>
               <p>There are also four Winds — East, South, West and North — and three Dragons — Red, Green and White. Winds and Dragons together are called <strong className="text-[#284d45]">honours</strong>.</p>
+              <TileGallery />
               <div className="overflow-x-auto rounded-lg border border-[#dfd5c2] bg-[#fdfbf5]">
                 <table className="w-full min-w-[420px] text-left text-[12px]">
                   <thead className="border-b border-[#dfd5c2] font-mono text-[9px] uppercase tracking-[.14em] text-[#8c8a7f]">
@@ -286,9 +277,16 @@ export function BeginnerGuide({ onClose }: { onClose: () => void }) {
         </div>
       </main>
 
-      <footer className="mx-auto flex max-w-[1180px] flex-wrap items-center justify-between gap-3 border-t border-[#d8ceb8] px-5 py-5 lg:px-8">
-        <p className="text-[11px] text-[#8c8a7f]">Independent British Mahjong learner guide · not an official BMJA publication.</p>
-        <button type="button" onClick={onClose} className="text-[11px] font-semibold text-[#284d45] underline decoration-[#ae6249] underline-offset-4">Return to scorer</button>
+      <footer className="mx-auto max-w-[1180px] border-t border-[#d8ceb8] px-5 py-5 lg:px-8">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <p className="text-[11px] text-[#8c8a7f]">Independent British Mahjong learner guide · not an official BMJA publication.</p>
+          <button type="button" onClick={onClose} className="text-[11px] font-semibold text-[#284d45] underline decoration-[#ae6249] underline-offset-4">Return to scorer</button>
+        </div>
+        <p className="mt-3 max-w-[820px] text-[9px] leading-4 text-[#9a978c]">
+          Mahjong tile artwork from{' '}
+          <a className="underline underline-offset-2" href="https://github.com/xhokir/riichi-mahjong-tiles" target="_blank" rel="noreferrer">xhokir/riichi-mahjong-tiles</a>, based on FluffyStuff/riichi-mahjong-tiles, used under{' '}
+          <a className="underline underline-offset-2" href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noreferrer">CC BY 4.0</a>.
+        </p>
       </footer>
     </div>
   );
