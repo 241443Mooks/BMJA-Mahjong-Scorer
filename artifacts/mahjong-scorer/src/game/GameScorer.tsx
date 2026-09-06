@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useRef, useState, useEffect } from 'react';
 import {
   ArrowRight,
   Calculator,
@@ -18,6 +18,7 @@ import {
   CURRENT_RULESET,
   GAME_WINDS,
   reconcileDetailedHandsForOutcome,
+  returnAppliedScoreToTable,
   undoLastHand,
 } from '.';
 import type {
@@ -49,13 +50,14 @@ const formatChange = (value: number) =>
 
 export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedScore }: GameScorerProps) {
   const [names, setNames] = useState(['', '', '', '']);
-  const [gameLength, setGameLength] = useState<GameLength>('full-game');
+  const [gameLength, setGameLength] = useState<GameLength>('one-round');
   const [game, setGame] = useState<GameState | null>(null);
   const [outcomeType, setOutcomeType] = useState<'win' | 'draw'>('win');
   const [winnerId, setWinnerId] = useState('');
   const [scores, setScores] = useState<RoundScoreDraft>({});
   const [scoreRecords, setScoreRecords] = useState<PlayerScoreRecords>({});
   const [error, setError] = useState('');
+  const tableScoresRef = useRef<HTMLElement>(null);
 
   const currentEastId = game
     ? Object.entries(game.seats).find(([, seat]) => seat === 'east')?.[0]
@@ -86,6 +88,7 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
       setScores(returned.draft.scores);
       setScoreRecords(returned.draft.scoreRecords);
       setError('');
+      returnAppliedScoreToTable(returnedScore, tableScoresRef.current);
     } catch (caught) {
       setError(
         caught instanceof Error
@@ -343,34 +346,40 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
 
       <main className="mx-auto grid max-w-[1440px] gap-6 px-5 py-7 lg:grid-cols-[minmax(0,1fr)_390px] lg:px-8">
         <section className="min-w-0 space-y-5">
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="grid grid-cols-2 gap-2 sm:gap-3 xl:grid-cols-4">
             {game.players.map((player) => (
               <div
                 key={player.id}
-                className={`rounded-xl border p-4 ${
+                className={`rounded-lg border p-3 sm:rounded-xl sm:p-4 ${
                   game.seats[player.id] === 'east'
                     ? 'border-[#ae6249] bg-[#f5eadb]'
                     : 'border-[#d8ceb8] bg-[#fbf8ed]'
                 }`}
               >
-                <div className="font-mono text-[9px] uppercase tracking-[.16em] text-[#ae6249]">
-                  {windLabel(game.seats[player.id])}
-                  {game.seats[player.id] === 'east' ? ' · Dealer' : ''}
-                </div>
-                <div className="mt-1 font-serif text-[22px] text-[#284d45]">
-                  {player.name}
-                </div>
-                <div className="mt-3 font-mono text-[18px] font-bold text-[#284d45]">
-                  {formatChange(game.balances[player.id])}
-                </div>
-                <div className="mt-0.5 text-[9px] font-semibold uppercase tracking-wider text-[#7a7769]">
-                  Running game total
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <div className="font-mono text-[8px] uppercase tracking-[.12em] text-[#ae6249] sm:text-[9px] sm:tracking-[.16em]">
+                      {windLabel(game.seats[player.id])}
+                      {game.seats[player.id] === 'east' ? ' · Dealer' : ''}
+                    </div>
+                    <div className="mt-0.5 truncate font-serif text-[16px] leading-tight text-[#284d45] sm:mt-1 sm:text-[20px]">
+                      {player.name}
+                    </div>
+                  </div>
+                  <div className="shrink-0 text-right">
+                    <div className="font-mono text-[15px] font-bold leading-tight text-[#284d45] sm:text-[18px]">
+                      {formatChange(game.balances[player.id])}
+                    </div>
+                    <div className="mt-1 max-w-[64px] text-[7px] font-semibold uppercase leading-[1.2] tracking-[.06em] text-[#7a7769] sm:max-w-none sm:text-[8px] sm:tracking-wider">
+                      Running game total
+                    </div>
+                  </div>
                 </div>
               </div>
             ))}
           </div>
 
-          <section className="rounded-xl border border-[#d8ceb8] bg-[#fbf8ed] p-5 sm:p-6">
+          <section ref={tableScoresRef} data-testid="section-table-scores" className="scroll-mt-4 rounded-xl border border-[#d8ceb8] bg-[#fbf8ed] p-5 sm:p-6">
             <div className="mb-5">
               <div className="font-mono text-[10px] uppercase tracking-[.2em] text-[#ae6249]">
                 Current hand
