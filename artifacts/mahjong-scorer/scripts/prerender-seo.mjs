@@ -14,6 +14,7 @@ const routes = [
   ['/features', 'British Mahjong Scorer Features', 'See how British Mahjong Scorer handles full games, detailed and partial hands, explanations, recovery and printable game records.'],
   ['/how-it-works', 'How British Mahjong Scorer Works', 'See how the scorer moves from game context and tile evidence to scoring, explanations, settlement and the final game record.'],
   ['/help', 'British Mahjong Scorer Help', 'Get practical help with scoring games and hands, partial evidence, special situations, recovery, settlement and saving a game record.'],
+  ['/mahjong-rules-compared', 'British vs Riichi vs Hong Kong vs American Mahjong Rules', 'Compare British, Hong Kong, Japanese Riichi, Chinese Official/MCR and American Mahjong. See how winning hands, scoring, Chows, Flowers, Jokers and special rules differ.'],
   ['/about', 'About British Mahjong Scorer', 'Learn why British Mahjong Scorer exists, which rules it uses, how uncertainty is handled and how browser-side game data works.'],
 ];
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
