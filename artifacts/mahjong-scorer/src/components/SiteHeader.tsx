@@ -1,14 +1,31 @@
 import { Menu, X } from 'lucide-react';
 import { useEffect, useId, useState, type MouseEvent } from 'react';
 
-const destinations = [
-  ['Home', '/'],
-  ['Score a game', '/game'],
-  ['Score a hand', '/hand'],
-  ['Gameplay basics', '/gameplay-basics'],
-  ['Scoring basics', '/guide#ordinary-scoring'],
-  ['Special hands', '/special-hands'],
-  ['About this project', '/about'],
+const navigationGroups = [
+  {
+    label: 'Score',
+    destinations: [
+      ['Score a game', '/game'],
+      ['Score a hand', '/hand'],
+    ],
+  },
+  {
+    label: 'Learn',
+    destinations: [
+      ['Gameplay basics', '/gameplay-basics'],
+      ['Scoring guide', '/guide#ordinary-scoring'],
+      ['Special hands', '/special-hands'],
+    ],
+  },
+  {
+    label: 'Explore',
+    destinations: [
+      ['Help', '/help'],
+      ['Features', '/features'],
+      ['How it works', '/how-it-works'],
+      ['About this project', '/about'],
+    ],
+  },
 ] as const;
 
 type SiteHeaderProps = {
@@ -48,10 +65,18 @@ export function SiteHeader({ onNavigate }: SiteHeaderProps) {
           </button>
           {open && (
             <nav id={menuId} aria-label="Site navigation" className="absolute right-0 top-[calc(100%+0.5rem)] w-[min(20rem,calc(100vw-2.5rem))] rounded-xl border border-[#d8ceb8] bg-[#fbf8ed] p-2 shadow-lg">
-              {destinations.map(([label, href]) => (
-                <a key={href} href={href} onClick={(event) => navigate(event, href)} className="flex min-h-11 items-center rounded-lg px-3 text-[14px] font-semibold text-[#284d45] transition hover:bg-[#efe8da] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">
-                  {label}
-                </a>
+              <a href="/" onClick={(event) => navigate(event, '/')} className="flex min-h-11 items-center rounded-lg px-3 text-[14px] font-semibold text-[#284d45] transition hover:bg-[#efe8da] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">
+                Home
+              </a>
+              {navigationGroups.map((group, index) => (
+                <div key={group.label} className={index === 0 ? 'border-t border-[#e2d9c7] pt-2' : 'mt-1 border-t border-[#e2d9c7] pt-2'}>
+                  <div className="px-3 pb-1 pt-1 font-mono text-[9px] uppercase tracking-[.18em] text-[#ae6249]">{group.label}</div>
+                  {group.destinations.map(([label, href]) => (
+                    <a key={href} href={href} onClick={(event) => navigate(event, href)} className="flex min-h-10 items-center rounded-lg px-3 text-[13px] font-semibold text-[#284d45] transition hover:bg-[#efe8da] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">
+                      {label}
+                    </a>
+                  ))}
+                </div>
               ))}
             </nav>
           )}
