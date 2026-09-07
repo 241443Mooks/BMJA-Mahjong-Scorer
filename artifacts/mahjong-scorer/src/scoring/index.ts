@@ -5,4 +5,5 @@ export * from './rules';
 export * from './special-hands';
 export * from './fishing';
 export * from './score';
+export * from './detected-patterns';
 export * from './event-evidence';

@@ -3,7 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
-import { Check, ChevronDown, CircleHelp, Copy, Minus, Plus, RotateCcw, Sparkles, X, AlertCircle } from 'lucide-react';
+import { Check, ChevronDown, CircleHelp, Copy, Plus, RotateCcw, Sparkles, X, AlertCircle } from 'lucide-react';
 import { GameScorer } from './game/GameScorer';
 import { SiteHeader } from './components/SiteHeader';
 import { handScorerLocalContext } from './game';
@@ -35,6 +35,7 @@ import type {
 } from './scoring';
 import {
   scoreHand,
+  detectedPatterns,
   isFirstDiscardEvidenceCandidate,
   isReplacementSequenceEvidenceCandidate,
   isWinningEventEvidenceCompatible,
@@ -447,6 +448,7 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
     () => scoreHand(hand, gameContext),
     [gameContext, hand],
   );
+  const patterns = useMemo(() => detectedPatterns(score), [score]);
 
   const enteredSets = sets.filter((s): s is HandSet => s.tile !== null);
   const representedKongs =
@@ -1318,41 +1320,19 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
                 </div>
               </section>
 
-              <section className="animate-rise animate-rise-delay-3 rounded-xl border border-[#d8ceb8] bg-[#fbf8ed] p-5 shadow-[var(--shadow-sm)] sm:p-6">
-                <div className="mb-4 flex items-center justify-between"><div><div className="font-mono text-[10px] uppercase tracking-[.2em] text-[#ae6249]">Detected patterns</div><h2 className="mt-1 font-serif text-[22px] text-[#284d45]">Special hands</h2></div><Sparkles size={18} className="text-[#ae6249]" /></div>
-                <div className="space-y-2">
-                  {(score.specialFishingMatches ?? []).map((fishing) => (
-                    <div
-                      key={`fishing-${fishing.id}`}
-                      data-testid={`status-fishing-${fishing.id}`}
-                      className={`rounded-md border p-3 ${fishing.selected ? 'border-[#ae6249]/60 bg-[#fff4e8]' : 'border-[#b8cdbf] bg-[#edf3ed]'}`}
-                    >
-                      <div className="flex flex-wrap items-center gap-2 text-[12px] font-semibold text-[#284d45]">
-                        <Check size={14} className="text-[#477562]" />
-                        {fishing.name} fishing
-                        <span className="ml-auto font-mono text-[9px] uppercase tracking-wider text-[#477562]">
-                          {fishing.score} pts{fishing.selected ? ' · used' : ''}
-                        </span>
+              {patterns.length > 0 && (
+                <section className="animate-rise animate-rise-delay-3 rounded-xl border border-[#d8ceb8] bg-[#fbf8ed] p-5 shadow-[var(--shadow-sm)] sm:p-6" data-testid="detected-patterns">
+                  <div className="mb-4 flex items-center justify-between"><div><div className="font-mono text-[10px] uppercase tracking-[.2em] text-[#ae6249]">Detected patterns</div><h2 className="mt-1 font-serif text-[22px] text-[#284d45]">Why this hand scores</h2></div><Sparkles size={18} className="text-[#ae6249]" /></div>
+                  <div className="space-y-2">
+                    {patterns.map((pattern) => (
+                      <div key={pattern.id} data-testid={`pattern-${pattern.id}`} className={`rounded-md border p-3 ${pattern.selected ? 'border-[#ae6249]/60 bg-[#fff4e8]' : 'border-[#b8cdbf] bg-[#edf3ed]'}`}>
+                        <div className="flex flex-wrap items-center gap-2 text-[12px] font-semibold text-[#284d45]"><Check size={14} className="text-[#477562]" />{pattern.name}<span className="ml-auto font-mono text-[9px] uppercase tracking-wider text-[#477562]">{pattern.effect}{pattern.selected ? ' · used' : ''}</span></div>
+                        <p className="mt-1 pl-5 text-[10px] leading-4 text-[#7a7769]">{pattern.explanation}</p>
                       </div>
-                      <p className="mt-1 pl-5 text-[10px] leading-4 text-[#7a7769]">
-                        Possible winning {fishing.completingTiles.length === 1 ? 'tile' : 'tiles'}:{' '}
-                        {fishing.completingTiles.map(tileName).join(', ')}
-                        {fishing.intrinsicApplied ? ' · Higher intrinsic value applied.' : ''}
-                      </p>
-                    </div>
-                  ))}
-                  {score.specialHands.map((special) => (
-                    <div key={special.id} data-testid={`status-special-${special.id}`} className={`rounded-md border p-3 ${special.matched ? 'border-[#b8cdbf] bg-[#edf3ed]' : 'border-[#e5ddcd] bg-[#fdfbf5]'}`}>
-                      <div className="flex items-center gap-2 text-[12px] font-semibold text-[#284d45]">
-                        {special.matched ? <Check size={14} className="text-[#477562]" /> : <Minus size={14} className="text-[#aaa395]" />}
-                        {special.name}
-                        {special.matched && <span className="ml-auto font-mono text-[9px] uppercase tracking-wider text-[#477562]">Matched ({special.value} pts)</span>}
-                      </div>
-                      <p className="mt-1 pl-5 text-[10px] leading-4 text-[#7a7769]">{special.description}</p>
-                    </div>
-                  ))}
-                </div>
-              </section>
+                    ))}
+                  </div>
+                </section>
+              )}
             </aside>
           </div>
         </section>
