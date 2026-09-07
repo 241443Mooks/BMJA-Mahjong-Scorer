@@ -8,6 +8,12 @@ import {
   Info,
   Sparkles,
 } from 'lucide-react';
+import { useState } from 'react';
+import {
+  clearGameRecovery,
+  gameProgressSummary,
+  loadInProgressGameRecovery,
+} from '../game';
 
 type HomeLink = {
   title: string;
@@ -93,6 +99,21 @@ function LearningAction({ title, description, href, icon: Icon }: HomeLink) {
 }
 
 export function HomePage() {
+  const [recovered] = useState(() =>
+    typeof window === 'undefined'
+      ? null
+      : loadInProgressGameRecovery(window.localStorage),
+  );
+
+  const startNewGame = () => {
+    if (!recovered || typeof window === 'undefined') return;
+    if (!window.confirm('Start a new game? Your current game will be replaced.')) {
+      return;
+    }
+    clearGameRecovery(window.localStorage);
+    window.location.assign('/game');
+  };
+
   return (
     <div className="mahjong-shell min-h-screen">
       <header className="border-b border-[#d8ceb8] bg-[#f5f1e6]/95">
@@ -118,13 +139,40 @@ export function HomePage() {
         </section>
 
         <section className="mt-8 grid gap-4 md:grid-cols-2" aria-label="Scoring actions">
-          <PrimaryAction
-            title="Score a game"
-            description="Start a four-player game, score each hand, settle payments and keep running totals."
-            href="/game"
-            icon={Gamepad2}
-            dark
-          />
+          {recovered ? (
+            <div className="rounded-2xl border border-[#284d45] bg-[#284d45] p-6 text-[#f8f4e9] shadow-[var(--shadow-sm)] sm:p-7">
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#3b5e55] text-[#f3d8c7]">
+                <Gamepad2 size={20} strokeWidth={1.8} />
+              </div>
+              <div className="mt-8">
+                <h2 className="font-serif text-[30px] leading-tight">Continue game</h2>
+                <p className="mt-2 text-[13px] leading-6 text-[#c8d8d1]">
+                  {gameProgressSummary(recovered.game)} · {recovered.game.players.length} players
+                </p>
+              </div>
+              <a
+                href="/game"
+                className="mt-6 flex items-center justify-center gap-2 rounded-md bg-[#f3e8d4] px-4 py-3 text-[12px] font-bold text-[#284d45]"
+              >
+                Continue game <ArrowRight size={15} />
+              </a>
+              <button
+                type="button"
+                onClick={startNewGame}
+                className="mt-3 w-full rounded-md px-4 py-2 text-[11px] font-semibold text-[#c8d8d1] underline decoration-[#55756c] underline-offset-4 hover:text-[#f8f4e9]"
+              >
+                Start a new game
+              </button>
+            </div>
+          ) : (
+            <PrimaryAction
+              title="Score a game"
+              description="Start a four-player game, score each hand, settle payments and keep running totals."
+              href="/game"
+              icon={Gamepad2}
+              dark
+            />
+          )}
           <PrimaryAction
             title="Score a hand"
             description="Work out the score for one hand without starting a full game."

@@ -5,3 +5,4 @@ export * from './ruleset';
 export * from './game';
 export * from './hand-scorer-handoff';
 export * from './table-navigation';
+export * from './persistence';
