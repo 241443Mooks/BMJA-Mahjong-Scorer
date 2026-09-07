@@ -115,11 +115,16 @@
   aside { position: static !important; margin: 5mm 0 !important; }
   aside section { box-shadow: none !important; color: #172c27 !important; background: white !important; border: 1px solid #172c27 !important; }
   aside section * { color: inherit !important; }
-  details { display: block !important; break-inside: avoid; page-break-inside: avoid; }
+  details { display: block !important; }
   details > :not(summary) { display: block !important; }
   summary { list-style: none; }
+  .game-ledger-summary, .game-ledger-summary + div { break-after: avoid; page-break-after: avoid; }
+  .game-ledger-summary, .game-ledger-summary + div, .manual-score-record, .game-print-standings { break-inside: avoid; page-break-inside: avoid; }
+  .recorded-hand, .recorded-hand .rounded-md { break-inside: avoid; page-break-inside: avoid; }
+  .game-record-footer { margin-top: 8mm; border-top: 1px solid #777; padding-top: 3mm; color: #444; font-size: 8pt; }
   .tile-shadow { box-shadow: none; }
   img { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
-  .game-print-footer { margin-top: 8mm; border-top: 1px solid #777; padding-top: 3mm; color: #444; font-size: 8pt; }
   a { color: #172c27; text-decoration: underline; }
 }
+.game-record-footer { margin-top: 2rem; border-top: 1px solid #d8ceb8; padding-top: .75rem; display: flex; flex-wrap: wrap; gap: .35rem 1rem; font-size: 10px; color: #7a7769; }
+.game-record-footer a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }

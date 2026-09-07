@@ -1,3 +1,4 @@
+import * as React from "react";
 import { Check } from "lucide-react";
 import {
   bonusTileDefinition,
@@ -51,7 +52,6 @@ function RecordedTile({
       <img
         src={tileAssetUrl(artwork.asset)}
         alt=""
-        loading="lazy"
         className="h-full w-full rounded-[5px] bg-[#fffdf7] object-contain tile-shadow"
       />
       {winning && (
@@ -67,6 +67,16 @@ function RecordedTile({
 
 function RecordedGroup({ group, hand }: { group: HandSet; hand: MahjongHand }) {
   const provenance = resolveWinningTileProvenance(hand);
+  const exactWinningTile =
+    provenance?.target.type === "grouped-set" &&
+    provenance.target.setId === group.id &&
+    group.kind === "chow"
+      ? provenance.target.tileIndex
+      : undefined;
+  const completedByWinningTile =
+    provenance?.target.type === "grouped-set" &&
+    provenance.target.setId === group.id &&
+    group.kind !== "chow";
   return (
     <div className="rounded-md border border-[#e2d9c7] bg-[#fdfbf5] p-2">
       <div className="mb-1 font-mono text-[8px] uppercase tracking-[.12em] text-[#7a7769]">
@@ -77,14 +87,15 @@ function RecordedGroup({ group, hand }: { group: HandSet; hand: MahjongHand }) {
           <RecordedTile
             key={`${tileKey(tile)}-${index}`}
             tile={tile}
-            winning={
-              provenance?.target.type === "grouped-set" &&
-              provenance.target.setId === group.id &&
-              (group.kind !== "chow" || provenance.target.tileIndex === index)
-            }
+            winning={exactWinningTile === index}
           />
         ))}
       </div>
+      {completedByWinningTile && (
+        <div className="mt-1 text-[9px] text-[#ae6249]">
+          Winning tile completed this {group.kind}
+        </div>
+      )}
     </div>
   );
 }
@@ -137,18 +148,24 @@ function ScoreEvidence({ record }: { record: DetailedHandRecord }) {
 }
 
 /** Read-only rendering of the exact MahjongHand saved by the detailed scorer. */
-export function HandRecord({ record }: { record: DetailedHandRecord }) {
+export function HandRecord({
+  playerName,
+  record,
+}: {
+  playerName: string;
+  record: DetailedHandRecord;
+}) {
   const { hand } = record;
   const looseWinning =
     resolveWinningTileProvenance(hand)?.target.type === "loose-layout";
   return (
     <section
-      className="mt-3 rounded-lg border border-[#e2d9c7] bg-[#fbf8ed] p-3"
-      aria-label={`${detailedHandStatus(record)} with score ${record.finalScore}`}
+      className="recorded-hand mt-3 rounded-lg border border-[#e2d9c7] bg-[#fbf8ed] p-3"
+      aria-label={`${playerName} · ${detailedHandStatus(record)} with score ${record.finalScore}`}
     >
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <div className="font-mono text-[9px] uppercase tracking-[.14em] text-[#ae6249]">
-          {detailedHandStatus(record)}
+          {playerName} · {detailedHandStatus(record)}
         </div>
         {hand.isWinner && hand.winningMethod && (
           <div className="text-[10px] text-[#66746e]">
@@ -173,13 +190,14 @@ export function HandRecord({ record }: { record: DetailedHandRecord }) {
               <RecordedTile
                 key={`${tileKey(tile)}-${index}`}
                 tile={tile}
-                winning={
-                  looseWinning &&
-                  tileKey(tile) === tileKey(hand.winningTileProvenance!.tile)
-                }
               />
             ))}
           </div>
+          {looseWinning && (
+            <div className="mt-1 text-[9px] text-[#ae6249]">
+              Winning tile: {playingTileDefinition(hand.winningTileProvenance!.tile).label}
+            </div>
+          )}
         </div>
       )}
       {(hand.remainingTiles?.length ?? 0) > 0 && (
@@ -207,7 +225,6 @@ export function HandRecord({ record }: { record: DetailedHandRecord }) {
                   key={`${tile.family}-${tile.number}-${index}`}
                   src={tileAssetUrl(artwork.asset)}
                   alt={artwork.label}
-                  loading="lazy"
                   className="h-12 w-9 rounded-[5px] bg-[#fffdf7] object-contain tile-shadow sm:h-[60px] sm:w-[45px]"
                 />
               );

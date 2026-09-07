@@ -54,6 +54,9 @@ const windLabel = (wind: Wind) =>
 const formatChange = (value: number) =>
   `${value > 0 ? '+' : value < 0 ? '−' : ''}${Math.abs(value)}`;
 
+export const handCountLabel = (count: number) =>
+  `${count} ${count === 1 ? 'hand' : 'hands'} played`;
+
 export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedScore }: GameScorerProps) {
   const [recovered, setRecovered] = useState(() =>
     typeof window === 'undefined'
@@ -379,7 +382,7 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
       <main className="mx-auto grid max-w-[1440px] gap-6 px-5 py-7 lg:grid-cols-[minmax(0,1fr)_390px] lg:px-8">
         <div className="print-only game-print-heading">
           <h1>British Mahjong Scorer — Game record</h1>
-          <p>{game.isComplete ? 'Game complete' : 'Game in progress'} · {game.handHistory.length} hands played</p>
+          <p>{game.isComplete ? 'Game complete' : 'Game in progress'} · {handCountLabel(game.handHistory.length)}</p>
         </div>
         <section className="min-w-0 space-y-5">
           <div>
@@ -558,7 +561,7 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
         </section>
 
         <aside className="lg:col-start-2 lg:row-span-2 lg:row-start-1">
-          <section className="sticky top-5 overflow-hidden rounded-xl bg-[#284d45] text-[#f8f4e9] shadow-[var(--shadow-lg)]">
+          <section className="screen-only sticky top-5 overflow-hidden rounded-xl bg-[#284d45] text-[#f8f4e9] shadow-[var(--shadow-lg)]">
             <div className="border-b border-[#55756c] p-5">
               <div className="font-mono text-[10px] uppercase tracking-[.2em] text-[#d7a287]">
                 {game.isComplete ? 'Final Standings' : 'Round settlement'}
@@ -650,6 +653,16 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
               </div>
             )}
           </section>
+          <section className="print-only game-print-standings">
+            <div className="font-mono text-[10px] uppercase tracking-[.2em]">Confirmed standings</div>
+            <div className="mt-2 grid grid-cols-2 gap-x-5 gap-y-2 sm:grid-cols-4">
+              {game.players.map((player) => (
+                <div key={player.id}>
+                  <b>{player.name}</b><br />{formatChange(game.balances[player.id])}
+                </div>
+              ))}
+            </div>
+          </section>
         </aside>
 
         <section className="rounded-xl border border-[#d8ceb8] bg-[#fbf8ed] p-5 sm:p-6 lg:col-start-1">
@@ -662,6 +675,7 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
               <Printer size={14} /> Print / Save game
             </button>
           </div>
+          <p className="mb-4 font-mono text-[10px] uppercase tracking-[.14em] text-[#7a7769]">{handCountLabel(game.handHistory.length)}</p>
           {game.handHistory.length === 0 ? (
             <p className="text-[12px] text-[#8c8a7f]">
               Confirm the first hand to begin the ledger.
@@ -673,20 +687,15 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
                   key={hand.handNumber}
                   className="rounded-lg border border-[#e2d9c7] bg-[#fdfbf5] p-4"
                 >
-                  <summary className="cursor-pointer list-none text-[12px] font-semibold text-[#284d45]">
-                    Hand {hand.handNumber} ·{' '}
-                    {hand.outcome.type === 'draw'
-                      ? 'Draw'
-                      : `${game.players.find((player) => player.id === (hand.outcome.type === 'win' ? hand.outcome.winnerId : ''))?.name} won`}
-                    <span className="ml-2 font-normal text-[#7a7769]">
-                      East:{' '}
-                      {
-                        game.players.find(
-                          (player) => player.id === hand.eastPlayerId,
-                        )?.name
-                      }
-                    </span>
-                    <span className="ml-2 font-normal text-[#7a7769]">· {windLabel(hand.prevailingWind)} prevailing</span>
+                  <summary className="game-ledger-summary cursor-pointer list-none text-[#284d45]">
+                    <div className="font-serif text-[17px] font-bold leading-tight">
+                      Hand {hand.handNumber} · {hand.outcome.type === 'draw'
+                        ? 'Draw'
+                        : `${game.players.find((player) => player.id === (hand.outcome.type === 'win' ? hand.outcome.winnerId : ''))?.name} won`}
+                    </div>
+                    <div className="mt-1 text-[11px] font-normal text-[#7a7769]">
+                      {game.players.find((player) => player.id === hand.eastPlayerId)?.name} was East · {windLabel(hand.prevailingWind)} prevailing
+                    </div>
                   </summary>
                   <div className="mt-3 grid gap-2 sm:grid-cols-2">
                     {game.players.map((player) => (
@@ -722,8 +731,8 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
                     {game.players.map((player) => {
                       const record = hand.scoreRecords[player.id];
                       return record?.source === 'detailed-scorer'
-                        ? <HandRecord key={player.id} record={record} />
-                        : <div key={player.id} className="rounded-lg border border-[#e2d9c7] bg-[#fbf8ed] p-3 text-[10px] text-[#66746e]"><b>{player.name}</b><br />Score entered manually<br />No detailed hand was recorded.</div>;
+                        ? <HandRecord key={player.id} playerName={player.name} record={record} />
+                        : <div key={player.id} className="manual-score-record rounded-lg border border-[#e2d9c7] bg-[#fbf8ed] p-3 text-[10px] text-[#66746e]"><b>{player.name} · Score entered manually</b><br />No detailed hand was recorded.</div>;
                     })}
                   </div>
                 </details>
@@ -731,7 +740,7 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
             </div>
           )}
         </section>
-        <footer className="print-only game-print-footer lg:col-span-2">Mahjong tile artwork from xhokir/riichi-mahjong-tiles, based on FluffyStuff/riichi-mahjong-tiles, used under CC BY 4.0. <a href="https://buymeacoffee.com/sharronmo">Buy me a coffee</a></footer>
+        <footer className="game-record-footer lg:col-span-2"><span>mahjong.smooks.co.uk</span><span>Mahjong tile artwork from xhokir/riichi-mahjong-tiles, based on FluffyStuff/riichi-mahjong-tiles, used under CC BY 4.0.</span><a href="https://buymeacoffee.com/sharronmo">Buy me a coffee</a></footer>
       </main>
     </div>
   );
