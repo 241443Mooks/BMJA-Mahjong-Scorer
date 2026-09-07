@@ -100,3 +100,26 @@
 .mahjong-shell { min-height: 100dvh; overflow-x: clip; background: radial-gradient(circle at 85% 4%, rgba(190, 129, 87, .11), transparent 27rem), hsl(var(--background)); }
 .tile-shadow { box-shadow: 0 3px 0 rgba(37, 55, 49, .18), 0 6px 14px rgba(37, 55, 49, .08); }
 .fine-rule { background: linear-gradient(90deg, hsl(var(--accent)), transparent); height: 2px; }
+.print-only { display: none; }
+
+@media print {
+  @page { size: auto; margin: 12mm; }
+  body { background: white !important; color: #172c27 !important; font-size: 10pt; }
+  .screen-only { display: none !important; }
+  .print-only { display: block !important; }
+  .mahjong-shell { min-height: 0; background: white !important; overflow: visible; }
+  .game-print-heading { grid-column: 1 / -1; border-bottom: 1px solid #172c27; padding-bottom: 4mm; }
+  .game-print-heading h1 { font: 700 20pt Georgia, serif; margin: 0; }
+  .game-print-heading p { margin: 2mm 0 0; }
+  main { display: block !important; max-width: none !important; padding: 0 !important; }
+  aside { position: static !important; margin: 5mm 0 !important; }
+  aside section { box-shadow: none !important; color: #172c27 !important; background: white !important; border: 1px solid #172c27 !important; }
+  aside section * { color: inherit !important; }
+  details { display: block !important; break-inside: avoid; page-break-inside: avoid; }
+  details > :not(summary) { display: block !important; }
+  summary { list-style: none; }
+  .tile-shadow { box-shadow: none; }
+  img { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+  .game-print-footer { margin-top: 8mm; border-top: 1px solid #777; padding-top: 3mm; color: #444; font-size: 8pt; }
+  a { color: #172c27; text-decoration: underline; }
+}
