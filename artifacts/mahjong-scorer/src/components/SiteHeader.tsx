@@ -15,6 +15,7 @@ const navigationGroups = [
       ['Gameplay basics', '/gameplay-basics'],
       ['Scoring guide', '/guide#ordinary-scoring'],
       ['Special hands', '/special-hands'],
+      ['Mahjong rules compared', '/mahjong-rules-compared'],
     ],
   },
   {
