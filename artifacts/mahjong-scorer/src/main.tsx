@@ -4,10 +4,10 @@ import { createRoot } from 'react-dom/client';
 import App from './App';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { BeginnerGuide } from './guide/BeginnerGuide';
+import { GameplayBasics } from './guide/GameplayBasics';
 import { SpecialHandsCatalogue } from './guide/SpecialHandsCatalogue';
 import { AboutPage } from './home/AboutPage';
 import { HomePage } from './home/HomePage';
-import { ComingSoonPage } from './home/ComingSoonPage';
 
 import './index.css';
 
@@ -41,15 +41,7 @@ function RouteContent() {
     return <SpecialHandsCatalogue />;
   }
 
-  if (path === '/gameplay-basics') {
-    return (
-      <ComingSoonPage
-        kind="guide"
-        title="Gameplay basics"
-        description="A practical guide to the tiles, dealing, drawing and discarding, claiming, Kongs, Winds and how a British Mahjong game progresses."
-      />
-    );
-  }
+  if (path === '/gameplay-basics') return <GameplayBasics />;
 
   if (path === '/about') return <AboutPage />;
 
