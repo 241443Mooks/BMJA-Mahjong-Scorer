@@ -206,6 +206,12 @@ export function GameplayBasics() {
               <p className="mt-5 max-w-[740px] text-[15px] leading-7 text-[#596b65]">
                 British Mahjong is played by building a hand while taking one tile and discarding one tile in turn. You do not need to know all the scoring rules before you begin.
               </p>
+              <a
+                href="/mahjong-rules-compared"
+                className="mt-4 inline-flex items-center gap-2 text-[12px] font-semibold text-[#284d45] underline decoration-[#cfa58f] underline-offset-4 transition hover:text-[#ae6249] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]"
+              >
+                Not sure which Mahjong rules you play? Compare British, Hong Kong, Riichi, MCR and American Mahjong <ArrowRight size={13} />
+              </a>
 
               <div className="mt-7 rounded-xl bg-[#284d45] p-5 text-[#f8f4e9]">
                 <div className="flex items-start gap-3">

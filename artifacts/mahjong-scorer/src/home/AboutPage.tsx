@@ -169,6 +169,12 @@ export function AboutPage() {
                 <p className="mt-3 text-[13px] leading-6 text-[#596b65]">
                   Implementation decisions and known ambiguities are also recorded in the project’s engineering rules reference rather than hidden inside the code.
                 </p>
+                <a
+                  href="/mahjong-rules-compared"
+                  className="mt-4 inline-flex items-center gap-2 text-[12px] font-semibold text-[#284d45] underline decoration-[#cfa58f] underline-offset-4 transition hover:text-[#ae6249] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]"
+                >
+                  Compare British rules with Hong Kong, Riichi, MCR and American Mahjong <ArrowRight size={13} />
+                </a>
               </div>
 
               <div className="rounded-xl border border-[#c9b99d] bg-[#fdfbf5] p-5 sm:p-6">

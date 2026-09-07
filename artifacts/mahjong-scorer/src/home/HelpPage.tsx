@@ -197,7 +197,7 @@ const groups: HelpGroup[] = [
         id: 'ruleset',
         question: 'Does this support every form of Mahjong?',
         answer: 'No. It is built around the British rules implemented by this project.',
-        detail: 'It is not intended to be a universal Mahjong rules engine or to cover every house rule.',
+        detail: 'It is not intended to be a universal Mahjong rules engine or to cover every house rule. If you are unsure which family of rules you play, use the Mahjong rules comparison below.',
       },
       {
         id: 'account',
@@ -336,10 +336,11 @@ export function HelpPage() {
 
           <div className="border-t border-[#ddd3bf] px-5 py-9 sm:px-8 sm:py-11 lg:px-12">
             <h2 className="font-serif text-[28px] text-[#284d45]">Need the rules rather than the app help?</h2>
-            <div className="mt-5 grid gap-3 md:grid-cols-3">
+            <div className="mt-5 grid gap-3 md:grid-cols-2 lg:grid-cols-4">
               {[
                 ['/guide', BookOpen, 'Scoring guide', 'Learn points, doubles and scoring progressively.'],
                 ['/special-hands', Sparkles, 'Special hands', 'Browse the supported visual special-hand catalogue.'],
+                ['/mahjong-rules-compared', CircleHelp, 'Which Mahjong rules?', 'Compare British, Hong Kong, Riichi, MCR and American Mahjong.'],
                 ['/how-it-works', CircleHelp, 'How it works', 'See how evidence, scoring, settlement and the ledger fit together.'],
               ].map(([href, Icon, title, description]) => {
                 const LinkIcon = Icon as typeof BookOpen;
