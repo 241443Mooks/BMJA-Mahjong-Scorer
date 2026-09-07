@@ -10,6 +10,7 @@ import { FeaturesPage } from './home/FeaturesPage';
 import { HelpPage } from './home/HelpPage';
 import { HomePage } from './home/HomePage';
 import { HowItWorksPage } from './home/HowItWorksPage';
+import NotFound from './pages/not-found';
 
 import './index.css';
 
@@ -64,13 +65,34 @@ function setMeta(selector: string, attribute: string, value: string) {
   if (element) element.setAttribute(attribute, value);
 }
 
+function canonicalPathFor(currentPath: string) {
+  if (currentPath === '/beginner-guide') return '/guide';
+  if (currentPath === '/special-hand-catalogue') return '/special-hands';
+  return currentPath;
+}
+
 function applyRouteMetadata() {
-  const canonicalPath = path === '/beginner-guide' ? '/guide' : path === '/special-hand-catalogue' ? '/special-hands' : path;
-  const metadata = routeMetadata[canonicalPath] ?? routeMetadata['/'];
+  const canonicalPath = canonicalPathFor(path);
+  const metadata = routeMetadata[canonicalPath];
   const canonicalUrl = `${siteUrl}${canonicalPath === '/' ? '/' : canonicalPath}`;
+
+  if (!metadata) {
+    document.title = 'Page not found | British Mahjong Scorer';
+    setMeta('meta[name="description"]', 'content', 'The requested British Mahjong Scorer page could not be found.');
+    setMeta('meta[name="robots"]', 'content', 'noindex, follow');
+    setMeta('meta[property="og:title"]', 'content', 'Page not found | British Mahjong Scorer');
+    setMeta('meta[property="og:description"]', 'content', 'The requested British Mahjong Scorer page could not be found.');
+    setMeta('meta[property="og:url"]', 'content', `${siteUrl}${path}`);
+    setMeta('meta[name="twitter:title"]', 'content', 'Page not found | British Mahjong Scorer');
+    setMeta('meta[name="twitter:description"]', 'content', 'The requested British Mahjong Scorer page could not be found.');
+    const canonical = document.head.querySelector<HTMLLinkElement>('link[rel="canonical"]');
+    if (canonical) canonical.href = `${siteUrl}${path}`;
+    return;
+  }
 
   document.title = metadata.title;
   setMeta('meta[name="description"]', 'content', metadata.description);
+  setMeta('meta[name="robots"]', 'content', 'index, follow');
   setMeta('meta[property="og:title"]', 'content', metadata.title);
   setMeta('meta[property="og:description"]', 'content', metadata.description);
   setMeta('meta[property="og:url"]', 'content', canonicalUrl);
@@ -102,7 +124,7 @@ function RouteContent() {
   if (path === '/how-it-works') return <HowItWorksPage />;
   if (path === '/about') return <AboutPage />;
 
-  return <HomePage />;
+  return <NotFound />;
 }
 
 createRoot(document.getElementById('root')!, {
