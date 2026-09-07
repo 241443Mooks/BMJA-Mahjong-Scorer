@@ -7,6 +7,7 @@ import { GameplayBasics } from './guide/GameplayBasics';
 import { SpecialHandsCatalogue } from './guide/SpecialHandsCatalogue';
 import { AboutPage } from './home/AboutPage';
 import { FeaturesPage } from './home/FeaturesPage';
+import { HelpPage } from './home/HelpPage';
 import { HomePage } from './home/HomePage';
 import { HowItWorksPage } from './home/HowItWorksPage';
 
@@ -29,6 +30,7 @@ function RouteContent() {
 
   if (path === '/gameplay-basics') return <GameplayBasics />;
   if (path === '/features') return <FeaturesPage />;
+  if (path === '/help') return <HelpPage />;
   if (path === '/how-it-works') return <HowItWorksPage />;
   if (path === '/about') return <AboutPage />;
 
