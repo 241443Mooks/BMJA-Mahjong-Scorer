@@ -10,6 +10,7 @@ import { FeaturesPage } from './home/FeaturesPage';
 import { HelpPage } from './home/HelpPage';
 import { HomePage } from './home/HomePage';
 import { HowItWorksPage } from './home/HowItWorksPage';
+import { MahjongRulesComparedPage } from './home/MahjongRulesComparedPage';
 import NotFound from './pages/not-found';
 
 import './index.css';
@@ -53,6 +54,10 @@ const routeMetadata: Record<string, { title: string; description: string }> = {
   '/help': {
     title: 'British Mahjong Scorer Help',
     description: 'Get practical help with scoring games and hands, partial evidence, special situations, recovery, settlement and saving a game record.',
+  },
+  '/mahjong-rules-compared': {
+    title: 'British vs Riichi vs Hong Kong vs American Mahjong Rules',
+    description: 'Compare British, Hong Kong, Japanese Riichi, Chinese Official/MCR and American Mahjong. See how winning hands, scoring, Chows, Flowers, Jokers and special rules differ.',
   },
   '/about': {
     title: 'About British Mahjong Scorer',
@@ -122,6 +127,7 @@ function RouteContent() {
   if (path === '/features') return <FeaturesPage />;
   if (path === '/help') return <HelpPage />;
   if (path === '/how-it-works') return <HowItWorksPage />;
+  if (path === '/mahjong-rules-compared') return <MahjongRulesComparedPage />;
   if (path === '/about') return <AboutPage />;
 
   return <NotFound />;
