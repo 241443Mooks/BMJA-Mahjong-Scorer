@@ -1,4 +1,5 @@
 import { replayGame } from "./game";
+import type { Wind } from "../scoring";
 import type {
   GameState,
   HandOutcome,
@@ -171,4 +172,27 @@ export const loadGameRecovery = (
     clearGameRecovery(storage);
     return null;
   }
+};
+
+export const loadInProgressGameRecovery = (
+  storage: StorageLike,
+): RecoveredGame | null => {
+  const recovered = loadGameRecovery(storage);
+  if (!recovered || !recovered.game.isComplete) return recovered;
+  clearGameRecovery(storage);
+  return null;
+};
+
+const windRoundNumber: Record<Wind, number> = {
+  east: 1,
+  south: 2,
+  west: 3,
+  north: 4,
+};
+
+export const gameProgressSummary = (game: GameState): string => {
+  const handInRound =
+    game.handHistory.filter((hand) => hand.prevailingWind === game.prevailingWind)
+      .length + 1;
+  return `Round ${windRoundNumber[game.prevailingWind]} · Hand ${handInRound}`;
 };

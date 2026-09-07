@@ -3,7 +3,9 @@ import { confirmHand, createBmjaGame } from "./game";
 import {
   clearGameRecovery,
   GAME_SNAPSHOT_STORAGE_KEY,
+  gameProgressSummary,
   loadGameRecovery,
+  loadInProgressGameRecovery,
   saveGameRecovery,
 } from "./persistence";
 
@@ -117,6 +119,37 @@ describe("game recovery persistence", () => {
     storage.setItem(GAME_SNAPSHOT_STORAGE_KEY, JSON.stringify(saved));
 
     expect(loadGameRecovery(storage)).toBeNull();
+    expect(storage.getItem(GAME_SNAPSHOT_STORAGE_KEY)).toBeNull();
+  });
+
+  it("derives the recovered round and hand progress from game state", () => {
+    const afterFirstHand = confirmHand(newGame(), {
+      outcome: { type: "win", winnerId: "east" },
+      scores: { east: 0, south: 0, west: 0, north: 0 },
+    });
+
+    expect(gameProgressSummary(afterFirstHand)).toBe("Round 1 · Hand 2");
+  });
+
+  it("clears completed games instead of offering recovery", () => {
+    const storage = memoryStorage();
+    let game = newGame();
+    for (let hand = 0; hand < 16; hand += 1) {
+      const south = Object.entries(game.seats).find(
+        ([, wind]) => wind === "south",
+      );
+      game = confirmHand(game, {
+        outcome: { type: "win", winnerId: south![0] },
+        scores: { east: 0, south: 0, west: 0, north: 0 },
+      });
+    }
+    expect(game.isComplete).toBe(true);
+    saveGameRecovery(storage, game, "win", "east", {
+      scores: {},
+      scoreRecords: {},
+    });
+
+    expect(loadInProgressGameRecovery(storage)).toBeNull();
     expect(storage.getItem(GAME_SNAPSHOT_STORAGE_KEY)).toBeNull();
   });
 });

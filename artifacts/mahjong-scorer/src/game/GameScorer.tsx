@@ -22,7 +22,7 @@ import {
   returnAppliedScoreToTable,
   undoLastHand,
   clearGameRecovery,
-  loadGameRecovery,
+  loadInProgressGameRecovery,
   saveGameRecovery,
 } from '.';
 import type {
@@ -54,7 +54,9 @@ const formatChange = (value: number) =>
 
 export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedScore }: GameScorerProps) {
   const [recovered, setRecovered] = useState(() =>
-    typeof window === 'undefined' ? null : loadGameRecovery(window.localStorage),
+    typeof window === 'undefined'
+      ? null
+      : loadInProgressGameRecovery(window.localStorage),
   );
   const [names, setNames] = useState(['', '', '', '']);
   const [gameLength, setGameLength] = useState<GameLength>(recovered?.game.setup.gameLength ?? 'one-round');
@@ -84,6 +86,10 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
 
   useEffect(() => {
     if (!game || typeof window === 'undefined') return;
+    if (game.isComplete) {
+      clearGameRecovery(window.localStorage);
+      return;
+    }
     saveGameRecovery(
       window.localStorage,
       game,
