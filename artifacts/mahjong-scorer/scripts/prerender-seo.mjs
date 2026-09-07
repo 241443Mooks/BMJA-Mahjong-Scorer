@@ -31,10 +31,10 @@ function metadata(route, title, description) {
       '@type': 'WebApplication',
       name: 'British Mahjong Scorer',
       url,
-      applicationCategory: 'GameApplication',
+      applicationCategory: 'UtilitiesApplication',
       operatingSystem: 'Any',
       isAccessibleForFree: true,
-      creator: { '@type': 'Organization', name: 'SMooks' },
+      creator: { '@type': 'Person', name: 'SMooks' },
     })}</script>`
     : '';
 
@@ -60,7 +60,7 @@ if (!marker.test(shell)) throw new Error('SEO metadata markers were not found in
 
 for (const [route, title, description] of routes) {
   const html = shell.replace(marker, metadata(route, title, description));
-  const destination = route === '/' ? path.join(output, 'index.html') : path.join(output, route, 'index.html');
+  const destination = route === '/' ? path.join(output, 'index.html') : path.join(output, `${route}.html`);
   await mkdir(path.dirname(destination), { recursive: true });
   await writeFile(destination, html);
 }

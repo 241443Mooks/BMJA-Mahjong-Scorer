@@ -110,8 +110,9 @@ artifacts/mahjong-scorer/dist/public
 The scorer keeps its Vite + React architecture. Its build additionally writes
 route-specific static HTML metadata for the public pages, so search and social
 crawlers do not need to run the app to read titles, descriptions, canonicals or
-social previews. Cloudflare Pages serves those static route files before the
-SPA fallback handles other direct links.
+social previews. Cloudflare Pages serves each extensionless static route file
+(for example, `guide.html` at `/guide`) before its default SPA fallback handles
+other direct links.
 
 ## Search indexing after deployment
 
