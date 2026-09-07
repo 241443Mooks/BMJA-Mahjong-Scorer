@@ -18,12 +18,16 @@ The project is designed to be useful at the table without requiring players to l
 - winner and loser settlement, including East doubling
 - running balances, hand ledger and undo
 - local recovery of an in-progress game after refresh or browser restart
+- enriched hand-by-hand game history with settlement explanations and detailed hand evidence where recorded
+- completed-game final standings
+- Full game record or compact Game summary through the browser Print / Save as PDF flow
 
 ### Score an individual hand
 
 - visual tile entry using real Mahjong tile artwork
 - Pungs, Kongs, Chows and pairs
 - arbitrary Remaining tiles for unfinished losing hands
+- partial-evidence scoring for losing hands without forcing every irrelevant loose tile to be entered
 - Flowers and Seasons, including their own-Wind relationships
 - irregular special-hand layouts where normal sets do not fit
 - winning-tile provenance where a rule genuinely depends on the final tile
@@ -53,8 +57,10 @@ British Mahjong Scorer is intentionally beginner-first and browser-first.
 - Infer scoring facts from the hand where it is safe to do so.
 - Ask the player only for information that cannot be inferred reliably.
 - Treat “I’m not sure” conservatively rather than inventing evidence.
+- Allow partial losing-hand evidence to be scored without presenting it as a complete reconstruction.
 - Keep the main scoring flow focused on the hand being played; the full rule catalogue lives in the learner/reference pages.
 - Keep current game recovery local to the browser rather than requiring an account or cloud service.
+- Keep the canonical game ledger as the source of truth for printable game records rather than creating a second report engine.
 - Prefer small, testable rule changes with explicit source and interpretation notes.
 
 ## Rules and accuracy
@@ -129,6 +135,7 @@ indexing or ranking.
 Useful project documents include:
 
 - [`BMJA_RULES_REFERENCE.md`](BMJA_RULES_REFERENCE.md) — engineering rule source of truth
+- [`docs/PRODUCT_CONTENT_PLAN.md`](docs/PRODUCT_CONTENT_PLAN.md) — product-guide, features, USP and deeper content architecture
 - [`docs/BEGINNER_GUIDE_CONTENT.md`](docs/BEGINNER_GUIDE_CONTENT.md) — learner guide content
 - [`docs/SPECIAL_HAND_CATALOGUE_CONTENT.md`](docs/SPECIAL_HAND_CATALOGUE_CONTENT.md) — special-hand catalogue content
 - [`docs/GAMEPLAY_BASICS_CONTENT.md`](docs/GAMEPLAY_BASICS_CONTENT.md) — gameplay-basics content
@@ -137,12 +144,12 @@ Useful project documents include:
 
 ## Current development areas
 
-The core scoring, learner pages, local game recovery and site navigation are in place. Larger future areas currently include:
+The core scoring, learner pages, local game recovery, site navigation and printable canonical game record are in place. Larger future areas currently include:
 
-- detailed end-of-game reports
 - shared physical tile inventory / availability warnings
 - optional photo-based tile recognition
 - exploration of a lightweight solo practice mode
+- richer background product/help content described in [`docs/PRODUCT_CONTENT_PLAN.md`](docs/PRODUCT_CONTENT_PLAN.md)
 
 See the GitHub issues for the current implementation backlog and acceptance criteria.
 
