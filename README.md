@@ -107,6 +107,22 @@ The production build output is written to:
 artifacts/mahjong-scorer/dist/public
 ```
 
+The scorer keeps its Vite + React architecture. Its build additionally writes
+route-specific static HTML metadata for the public pages, so search and social
+crawlers do not need to run the app to read titles, descriptions, canonicals or
+social previews. Cloudflare Pages serves those static route files before the
+SPA fallback handles other direct links.
+
+## Search indexing after deployment
+
+After the SEO changes are deployed, the owner should verify the site in Google
+Search Console (DNS verification through Cloudflare is preferred), submit
+`https://mahjong.smooks.co.uk/sitemap.xml`, and request indexing for `/`,
+`/guide`, `/special-hands`, `/gameplay-basics` and `/hand`. The same sitemap
+should be submitted in Bing Webmaster Tools, and Cloudflare Crawler Hints /
+IndexNow can be enabled if available. Submission does not guarantee immediate
+indexing or ranking.
+
 ## Repository guides
 
 Useful project documents include:
