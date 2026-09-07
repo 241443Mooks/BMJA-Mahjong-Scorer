@@ -55,17 +55,17 @@ That is why the project includes both a scorer and learner-facing guides.
 
 ### Score a game
 
-Track a four-player game hand by hand, including player Winds, East, settlement between players, running balances and game progression.
+Track a four-player game hand by hand, including player Winds, East, settlement between players, running balances and game progression. Confirmed hands build an expandable game ledger, and the finished record can be printed or saved as either a full game record or a compact game summary.
 
 ### Score a hand
 
-Build one hand in detail and let the calculator work through the points, doubles, winning conditions and supported special patterns.
+Build one hand in detail and let the calculator work through the points, doubles, winning conditions and supported special patterns. For an unfinished losing hand, you can also enter only the scoring evidence you want to record; the scorer will not pretend that partial evidence is a complete reconstruction.
 
 ### Learn as you go
 
 The Gameplay basics, Scoring basics and Special hands guides explain the same rules the scorer uses, with real tile illustrations rather than requiring you to translate notation or rulebook language first.
 
-As the project develops, the scorer should increasingly explain relevant patterns **when they actually appear in your hand**, rather than presenting a large catalogue of rules during normal play.
+Inside the scorer, relevant detected patterns are surfaced when they actually apply instead of making you scan a permanent catalogue while playing.
 
 ---
 
@@ -98,10 +98,13 @@ The approach is:
 - use worked examples where useful
 - record interpretations where the source is ambiguous
 - ask the player for missing information when the scorer cannot safely infer it
+- provide an “I’m not sure” route where appropriate and score conservatively
+- distinguish partial evidence from a complete hand
+- distinguish manually entered numeric scores from calculated detailed hands
 - avoid claiming a special hand or bonus unless the entered evidence supports it
 - keep the score breakdown visible so a player can understand the result
 
-The project is still developing. If the scorer and your table disagree, the detailed score breakdown should make it easier to identify exactly which rule is responsible.
+If the scorer and your table disagree, the detailed score breakdown should make it easier to identify exactly which rule is responsible.
 
 ---
 
@@ -119,9 +122,26 @@ The learning pages are therefore intentionally visual and practical. They are co
 
 ## No account required
 
-The scorer is designed as a lightweight browser-based tool and currently does not require a user account to score a hand or game.
+The scorer is designed as a lightweight browser-based tool and does not require a user account to score a hand or game.
+
+An in-progress game is recovered locally in the same browser using browser storage, so ordinary refreshes, tab closure and browser restarts do not have to destroy the table’s current game. This is local recovery, not cloud sync or an online account history.
 
 The project favours simple, low-maintenance browser-side features where they are sufficient rather than adding accounts, servers or databases without a clear reason.
+
+---
+
+## Your game record stays tied to what was actually entered
+
+The live game ledger is also the source of truth for the printable game record.
+
+Where a player used the detailed hand scorer, the ledger can retain the recorded tile evidence and scoring breakdown. Where a score was entered manually, the record says so rather than inventing a hand that was never captured. Partial hand evidence remains labelled as partial.
+
+The game can be printed or saved through the browser as either:
+
+- a **Full game record**, including detailed tile/scoring evidence where it exists; or
+- a **Game summary**, focused on standings and the hand-by-hand results.
+
+There is no separate report engine rewriting the history after the game.
 
 ---
 
@@ -135,7 +155,7 @@ The project uses a pinned copy of the artwork at build time rather than loading 
 
 > Mahjong tile artwork from `xhokir/riichi-mahjong-tiles`, based on `FluffyStuff/riichi-mahjong-tiles`, used under CC BY 4.0.
 
-The same tile artwork is reused across the scorer, learner guides, special-hand examples and future report views so that the visual language stays consistent.
+The same tile artwork is reused across the scorer, learner guides, special-hand examples and saved game records so that the visual language stays consistent.
 
 ---
 
@@ -184,17 +204,19 @@ Recommended hierarchy:
 4. **Rules and sources** — visually distinct transparency panel.
 5. **Designed for beginners too** — short editorial section.
 6. **Accuracy and transparency** — restrained expandable/detail section if the page feels long.
-7. **Tile artwork / credits** — compact credit block, with CC BY 4.0 link in implementation.
-8. **Built in the open** — GitHub + production site links.
-9. **Support the project** — quiet Buy Me a Coffee card near the bottom, not a large donation banner.
+7. **No account / local recovery** — short practical privacy/product section.
+8. **Your game record** — explain the canonical ledger and Full/Summary print choices.
+9. **Tile artwork / credits** — compact credit block, with CC BY 4.0 link in implementation.
+10. **Built in the open** — GitHub + production site links.
+11. **Support the project** — quiet Buy Me a Coffee card near the bottom, not a large donation banner.
 
 ## Navigation
 
-Use the shared site header when issue #21 lands.
+Use the shared site header.
 
 - Logo / British Mahjong Scorer title → Home
 - Menu available top right
-- No separate oversized Back button is necessary once global navigation is consistent
+- No separate oversized Back button is necessary where the shared navigation already provides a clear route
 
 ## Links in implementation
 
@@ -216,6 +238,6 @@ Use real links for:
 - call this an official BMJA scorer
 - imply BMJA endorsement
 - reproduce substantial wording from the rules website or books
-- describe the project repository itself as open-source unless/until a project software licence is explicitly added
+- describe unimplemented backlog ideas as current features
 - turn the page into a technical architecture document
 - put donation messaging ahead of the project explanation
