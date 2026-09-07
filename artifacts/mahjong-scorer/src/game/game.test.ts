@@ -36,6 +36,7 @@ const rodDetailedScore: DetailedHandRecord = {
   },
   breakdown: {
     valid: true,
+    evidenceCompleteness: 'complete',
     validationErrors: [],
     pointRules: [],
     doubleRules: [],

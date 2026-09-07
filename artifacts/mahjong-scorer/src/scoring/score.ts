@@ -8,7 +8,7 @@ import {
 import { detectSpecialHands } from './special-hands';
 import { detectSpecialFishing, fishingScoreOptions } from './fishing';
 import type { GameContext, MahjongHand, ScoreBreakdown } from './types';
-import { validateHand } from './validation';
+import { classifyEvidenceCompleteness, validateHand } from './validation';
 
 export const DEFAULT_CONTEXT: GameContext = {
   playerWind: 'east',
@@ -26,13 +26,20 @@ export const scoreHand = (
   hand: MahjongHand,
   context: GameContext = DEFAULT_CONTEXT,
 ): ScoreBreakdown => {
-  const specialHands = detectSpecialHands(hand, context);
-  const fishingMatches = detectSpecialFishing(hand);
+  const validationErrors = validateHand(hand, context);
+  const evidenceCompleteness = classifyEvidenceCompleteness(
+    hand,
+    validationErrors,
+  );
+  // Invalid entries remain inspectable as before; only partial evidence must
+  // suppress conclusions that depend on tiles the scorer has not seen.
+  const canAnalyseWholeHand = evidenceCompleteness !== 'partial';
+  const specialHands = canAnalyseWholeHand ? detectSpecialHands(hand, context) : [];
+  const fishingMatches = canAnalyseWholeHand ? detectSpecialFishing(hand) : [];
   const matchedSpecial = specialHands
     .filter((result) => result.matched)
     .sort((a, b) => b.value - a.value)[0];
-  const validationErrors = validateHand(hand, context);
-  const purity = isPurityHand(hand);
+  const purity = canAnalyseWholeHand && isPurityHand(hand);
   const specialFinalDiscardDouble =
     matchedSpecial && hand.winningMethod === 'final-discard'
       ? [
@@ -168,6 +175,7 @@ export const scoreHand = (
 
   return {
     valid: validationErrors.length === 0,
+    evidenceCompleteness,
     validationErrors,
     pointRules,
     doubleRules,

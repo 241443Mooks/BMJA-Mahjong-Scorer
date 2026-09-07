@@ -51,6 +51,10 @@ const isValidScoreRecord = (value: unknown): boolean => {
     Array.isArray(value.hand.bonusTiles) &&
     isRecord(value.context) &&
     isRecord(value.breakdown) &&
+    (value.breakdown.evidenceCompleteness === undefined ||
+      value.breakdown.evidenceCompleteness === "partial" ||
+      value.breakdown.evidenceCompleteness === "complete" ||
+      value.breakdown.evidenceCompleteness === "invalid") &&
     Array.isArray(value.breakdown.validationErrors) &&
     Array.isArray(value.breakdown.pointRules) &&
     Array.isArray(value.breakdown.doubleRules) &&

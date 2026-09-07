@@ -58,6 +58,7 @@ const makeCalculatedResult = (
     },
     breakdown: {
       valid: true,
+      evidenceCompleteness: 'complete',
       validationErrors: [],
       pointRules: [],
       doubleRules: [],

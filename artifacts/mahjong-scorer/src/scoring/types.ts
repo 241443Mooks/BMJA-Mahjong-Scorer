@@ -142,6 +142,8 @@ export type SpecialFishingResult = {
 
 export type ScoreBreakdown = {
   valid: boolean;
+  /** Whether the entered tiles are enough for whole-hand analysis. */
+  evidenceCompleteness: 'partial' | 'complete' | 'invalid';
   validationErrors: string[];
   pointRules: RuleResult[];
   doubleRules: RuleResult[];

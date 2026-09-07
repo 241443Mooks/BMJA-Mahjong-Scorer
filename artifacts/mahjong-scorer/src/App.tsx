@@ -763,6 +763,15 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
               </section>
               <section className="animate-rise animate-rise-delay-1 rounded-xl border border-[#d8ceb8] bg-[#fbf8ed] p-5 shadow-[var(--shadow-sm)] sm:p-6">
                 <SectionLabel eyebrow="01 / hand" title="Arrange the tiles" count={tileProgressLabel} />
+                {!isWinner && score.evidenceCompleteness === 'partial' && (
+                  <div
+                    data-testid="notice-partial-hand"
+                    className="mb-4 rounded-lg border border-[#cfc3aa] bg-[#f7f1e3] px-3 py-2 text-[11px] leading-5 text-[#66746e]"
+                  >
+                    <strong className="text-[#284d45]">Partial hand — scoring entered sets and bonus tiles.</strong>{' '}
+                    Add all remaining tiles if you want the scorer to check whole-hand patterns or fishing.
+                  </div>
+                )}
                 {layoutMode === 'sets' ? (
                   <div className="mb-4 flex flex-col gap-3 rounded-lg border border-[#e2d9c7] bg-[#fdfbf5] p-3 sm:flex-row sm:items-center sm:justify-between">
                     <div className="min-w-0">
@@ -881,7 +890,7 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
                         <span>
                           <span className="block font-mono text-[10px] text-[#ae6249]">REMAINING TILES</span>
                           <span className="mt-1 block text-[11px] leading-5 text-[#7a7769]">
-                            Add every tile that is not already represented by a completed set or pair.
+                            Add any other tiles you want included. They are optional for scoring entered completed groups, but all 13 are needed for whole-hand patterns and fishing.
                           </span>
                         </span>
                         <span className="shrink-0 font-mono text-[10px] text-[#66746e]">
