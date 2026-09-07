@@ -1,4 +1,3 @@
-import { useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import App from './App';
@@ -13,25 +12,10 @@ import './index.css';
 
 const path = window.location.pathname.replace(/\/$/, '') || '/';
 
-function StandaloneHandRoute() {
-  useEffect(() => {
-    const frame = window.requestAnimationFrame(() => {
-      const button = Array.from(document.querySelectorAll<HTMLButtonElement>('button')).find(
-        (candidate) => candidate.textContent?.trim() === 'Detailed hand scorer',
-      );
-      button?.click();
-    });
-
-    return () => window.cancelAnimationFrame(frame);
-  }, []);
-
-  return <App />;
-}
-
 function RouteContent() {
   if (path === '/') return <HomePage />;
   if (path === '/game') return <App />;
-  if (path === '/hand') return <StandaloneHandRoute />;
+  if (path === '/hand') return <App initialView="hand" standaloneHand />;
 
   if (path === '/guide' || path === '/beginner-guide') {
     return <BeginnerGuide onClose={() => window.location.assign('/')} />;

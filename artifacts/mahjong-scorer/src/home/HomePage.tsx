@@ -9,6 +9,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { useState } from 'react';
+import { SiteHeader } from '../components/SiteHeader';
 import {
   clearGameRecovery,
   gameProgressSummary,
@@ -116,17 +117,7 @@ export function HomePage() {
 
   return (
     <div className="mahjong-shell min-h-screen">
-      <header className="border-b border-[#d8ceb8] bg-[#f5f1e6]/95">
-        <div className="mx-auto flex max-w-[1100px] items-center gap-3 px-5 py-4 lg:px-8">
-          <div className="flex h-10 w-10 items-center justify-center rounded-md bg-[#284d45] text-[#f5f1e6]">
-            <span className="font-serif text-[22px] font-bold">麻</span>
-          </div>
-          <div>
-            <div className="font-serif text-[20px] font-bold leading-none text-[#284d45]">British Mahjong Scorer</div>
-            <div className="mt-1 font-mono text-[8px] uppercase tracking-[.2em] text-[#ae6249]">Score · learn · understand</div>
-          </div>
-        </div>
-      </header>
+      <SiteHeader />
 
       <main className="mx-auto max-w-[1100px] px-5 py-9 lg:px-8 lg:py-14">
         <section className="max-w-[760px]">

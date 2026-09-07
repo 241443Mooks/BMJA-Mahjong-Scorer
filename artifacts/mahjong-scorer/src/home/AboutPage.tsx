@@ -1,5 +1,4 @@
 import {
-  ArrowLeft,
   ArrowRight,
   BookOpen,
   Calculator,
@@ -13,6 +12,7 @@ import {
   ShieldCheck,
   Sparkles,
 } from 'lucide-react';
+import { SiteHeader } from '../components/SiteHeader';
 
 type ActionLink = {
   title: string;
@@ -85,29 +85,7 @@ function ExternalTextLink({ href, children }: { href: string; children: React.Re
 export function AboutPage() {
   return (
     <div className="mahjong-shell min-h-screen">
-      <header className="border-b border-[#d8ceb8] bg-[#f5f1e6]/95">
-        <div className="mx-auto flex max-w-[1100px] items-center justify-between gap-4 px-5 py-4 lg:px-8">
-          <a
-            href="/"
-            className="flex items-center gap-3 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249] focus-visible:ring-offset-2"
-          >
-            <div className="flex h-10 w-10 items-center justify-center rounded-md bg-[#284d45] text-[#f5f1e6]">
-              <span className="font-serif text-[22px] font-bold">麻</span>
-            </div>
-            <div>
-              <div className="font-serif text-[20px] font-bold leading-none text-[#284d45]">British Mahjong Scorer</div>
-              <div className="mt-1 font-mono text-[8px] uppercase tracking-[.2em] text-[#ae6249]">About this project</div>
-            </div>
-          </a>
-
-          <a
-            href="/"
-            className="flex items-center gap-2 rounded-md border border-[#cfc3aa] bg-[#fbf8ed] px-3 py-2 text-[11px] font-semibold text-[#284d45] transition hover:bg-[#efe8da] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]"
-          >
-            <ArrowLeft size={14} /> Home
-          </a>
-        </div>
-      </header>
+      <SiteHeader />
 
       <main className="mx-auto max-w-[1100px] px-5 py-9 lg:px-8 lg:py-14">
         <article className="overflow-hidden rounded-2xl border border-[#d8ceb8] bg-[#fbf8ed] shadow-[var(--shadow-sm)]">

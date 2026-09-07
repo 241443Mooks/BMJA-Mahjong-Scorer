@@ -1,7 +1,6 @@
 import { useMemo, useRef, useState, useEffect } from 'react';
 import {
   ArrowRight,
-  BookOpen,
   Calculator,
   Check,
   History,
@@ -10,6 +9,7 @@ import {
   Trophy,
   Undo2,
 } from 'lucide-react';
+import { SiteHeader } from '../components/SiteHeader';
 import {
   applyManualScore,
   applyHandScorerSession,
@@ -248,31 +248,7 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
   if (!game) {
     return (
       <div className="mahjong-shell">
-        <header className="border-b border-[#d8ceb8] bg-[#f5f1e6]/90">
-          <div className="mx-auto flex max-w-[1100px] items-center justify-between gap-4 px-5 py-4 lg:px-8">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-md bg-[#284d45] text-[#f5f1e6]">
-                <span className="font-serif text-[22px] font-bold">麻</span>
-              </div>
-              <div>
-                <div className="font-mono text-[9px] uppercase tracking-[.24em] text-[#ae6249]">
-                  BMJA / GAME TABLE
-                </div>
-                <div className="font-serif text-[20px] font-bold leading-none text-[#284d45]">
-                  The Scorer
-                </div>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <a href="/guide" className="hidden items-center gap-2 rounded-md border border-[#cfc3aa] bg-[#fbf8ed] px-3 py-2 text-[11px] font-semibold text-[#284d45] sm:flex">
-                <BookOpen size={14} /> Beginner guide
-              </a>
-              <button type="button" onClick={() => onOpenHandScorer()} className="rounded-md border border-[#cfc3aa] bg-[#fbf8ed] px-3 py-2 text-[11px] font-semibold text-[#284d45]">
-                Detailed hand scorer
-              </button>
-            </div>
-          </div>
-        </header>
+        <SiteHeader />
 
         <main className="mx-auto max-w-[900px] px-5 py-10 lg:px-8 lg:py-14">
           <div className="mb-8">
@@ -350,7 +326,8 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
 
   return (
     <div className="mahjong-shell">
-      <header className="border-b border-[#d8ceb8] bg-[#f5f1e6]/90">
+      <SiteHeader />
+      <div className="border-b border-[#d8ceb8] bg-[#f5f1e6]/70">
         <div className="mx-auto flex max-w-[1440px] flex-wrap items-center justify-between gap-4 px-5 py-4 lg:px-8">
           <div>
             <div className="font-mono text-[9px] uppercase tracking-[.24em] text-[#ae6249]">
@@ -367,9 +344,6 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
             )}
           </div>
           <div className="flex gap-2">
-            <a href="/guide" className="hidden items-center gap-2 rounded-md border border-[#cfc3aa] bg-[#fbf8ed] px-3 py-2 text-[11px] font-semibold text-[#284d45] sm:flex">
-              <BookOpen size={14} /> Beginner guide
-            </a>
             <button
               type="button"
               data-testid="button-undo-hand"
@@ -396,7 +370,7 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
             </button>
           </div>
         </div>
-      </header>
+      </div>
 
       <main className="mx-auto grid max-w-[1440px] gap-6 px-5 py-7 lg:grid-cols-[minmax(0,1fr)_390px] lg:px-8">
         <section className="min-w-0 space-y-5">

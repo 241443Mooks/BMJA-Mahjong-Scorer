@@ -5,6 +5,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { Check, ChevronDown, CircleHelp, Copy, Minus, Plus, RotateCcw, Sparkles, X, AlertCircle } from 'lucide-react';
 import { GameScorer } from './game/GameScorer';
+import { SiteHeader } from './components/SiteHeader';
 import { handScorerLocalContext } from './game';
 import type {
   HandScorerContext,
@@ -258,6 +259,18 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
   const [showAllTiles, setShowAllTiles] = useState(false);
   const [expandedRule, setExpandedRule] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const hasUnsavedWork = !hasContext && (
+    sets.length !== defaultSets.length || sets.some((set) => set.tile !== null) || layoutMode !== 'sets' || looseTiles.length > 0 || remainingTiles.length > 0 || flowers.length > 0 || seasons.length > 0 || playerWind !== 'east' || prevailingWind !== 'east' || limit !== 1000 || isWinner || winningMethod !== 'wall' || originalCall || winningTileProvenance !== undefined || winningEventEvidence !== undefined
+  );
+  const leaveHand = () => {
+    if (hasUnsavedWork && !window.confirm('Leave this hand? The hand details you entered will be discarded.')) return;
+    onClose();
+  };
+  const navigateAway = (href: string) => {
+    if (hasUnsavedWork && !window.confirm('Leave this hand? The hand details you entered will be discarded.')) return false;
+    window.location.assign(href);
+    return false;
+  };
 
   const activeSet = sets.find(s => s.id === selectedSet);
   const numberOfKongs =
@@ -649,35 +662,7 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
 
   return (
     <div className="mahjong-shell">
-      <header className="border-b border-[#d8ceb8] bg-[#f5f1e6]/90 backdrop-blur-sm">
-        <div className="mx-auto flex max-w-[1440px] items-center justify-between gap-4 px-5 py-4 lg:px-8">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-md bg-[#284d45] text-[#f5f1e6] shadow-sm">
-              <span className="font-serif text-[22px] font-bold">麻</span>
-            </div>
-            <div>
-              <div className="font-mono text-[9px] uppercase tracking-[.24em] text-[#ae6249]">BMJA / TABLE TOOL</div>
-              <div className="font-serif text-[20px] font-bold leading-none text-[#284d45]">The Scorer</div>
-            </div>
-          </div>
-          <div className="hidden items-center gap-3 text-right sm:flex">
-            {hasContext && (
-              <button type="button" onClick={() => onClose()} className="rounded-md border border-[#cfc3aa] bg-[#fbf8ed] px-3 py-2 text-[11px] font-semibold text-[#284d45]">
-                Cancel
-              </button>
-            )}
-            {hasContext ? (
-              <button type="button" data-testid="button-apply-score" disabled={!score.valid} onClick={applyScore} className="rounded-md bg-[#284d45] px-4 py-2 text-[11px] font-bold text-[#f8f4e9] disabled:cursor-not-allowed disabled:opacity-40">
-                Apply {score.finalScore} to {context.playerName}
-              </button>
-            ) : (
-              <button type="button" onClick={() => onClose()} className="rounded-md bg-[#284d45] px-3 py-2 text-[11px] font-semibold text-[#f8f4e9]">
-                Return to game
-              </button>
-            )}
-          </div>
-        </div>
-      </header>
+      <SiteHeader onNavigate={navigateAway} />
 
       <main className="mx-auto grid max-w-[1440px] grid-cols-[minmax(0,1fr)] gap-6 px-5 py-7 lg:grid-cols-[minmax(0,1fr)_376px] lg:px-8 lg:py-9">
         <section className="min-w-0">
@@ -699,6 +684,9 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
                     The round winner changed. Review this hand and apply it again before confirming the round.
                   </div>
                 )}
+                <button type="button" onClick={leaveHand} className="mt-4 rounded-md border border-[#cfc3aa] bg-[#fbf8ed] px-3 py-2 text-[11px] font-semibold text-[#284d45] transition hover:bg-[#efe8da] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">
+                  {hasContext ? 'Back to game without applying a score' : 'Leave hand and go home'}
+                </button>
               </div>
               <div className="flex gap-2">
                 <button type="button" data-testid="button-load-example" onClick={loadExample} className="flex items-center gap-2 rounded-md border border-[#cfc3aa] bg-[#f8f4e9] px-3 py-2 text-[11px] font-semibold text-[#284d45] transition hover:-translate-y-0.5 hover:border-[#ae6249] focus:ring-2"><Sparkles size={14} /> Load example</button>
@@ -1318,13 +1306,13 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
                       <button type="button" data-testid="button-apply-score-mobile" disabled={!score.valid} onClick={applyScore} className="flex w-full items-center justify-center rounded-md bg-[#f3e8d4] px-4 py-3 text-[13px] font-bold text-[#284d45] disabled:cursor-not-allowed disabled:opacity-40">
                         Apply {score.finalScore} to {context.playerName}
                       </button>
-                      <button type="button" onClick={() => onClose()} className="mt-3 flex w-full items-center justify-center rounded-md border border-[#45665d] py-3 text-[13px] font-semibold text-[#c8d8d1]">
-                        Cancel
+                      <button type="button" onClick={leaveHand} className="mt-3 flex w-full items-center justify-center rounded-md border border-[#45665d] py-3 text-[13px] font-semibold text-[#c8d8d1]">
+                        Back to game without applying a score
                       </button>
                     </>
                   ) : (
-                    <button type="button" onClick={() => onClose()} className="flex w-full items-center justify-center rounded-md border border-[#45665d] bg-[#284d45] py-3 text-[13px] font-semibold text-[#f8f4e9]">
-                      Return to game
+                    <button type="button" onClick={leaveHand} className="flex w-full items-center justify-center rounded-md border border-[#45665d] bg-[#284d45] py-3 text-[13px] font-semibold text-[#f8f4e9]">
+                      Leave hand and go home
                     </button>
                   )}
                 </div>
@@ -1374,8 +1362,8 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
   );
 }
 
-export default function App() {
-  const [view, setView] = useState<'game' | 'hand'>('game');
+export default function App({ initialView = 'game', standaloneHand = false }: { initialView?: 'game' | 'hand'; standaloneHand?: boolean }) {
+  const [view, setView] = useState<'game' | 'hand'>(initialView);
   const [scorerContext, setScorerContext] = useState<HandScorerContext | null>(null);
   const [returnedScore, setReturnedScore] = useState<
     HandScorerResult | null | undefined
@@ -1389,6 +1377,10 @@ export default function App() {
   };
 
   const handleCloseHandScorer = (result?: HandScorerResult) => {
+    if (standaloneHand) {
+      window.location.assign('/');
+      return;
+    }
     setReturnedScore(result ?? null);
     setView('game');
   };
