@@ -1,4 +1,4 @@
-import type { BonusTile, PlayingTile } from '../scoring';
+import type { BonusTile, PlayingTile, Wind } from '../scoring';
 
 export type TileAssetKey =
   | 'Man1' | 'Man2' | 'Man3' | 'Man4' | 'Man5' | 'Man6' | 'Man7' | 'Man8' | 'Man9'
@@ -12,6 +12,13 @@ export type TileAssetKey =
 export type TileDefinition = {
   asset: TileAssetKey;
   label: string;
+};
+
+export type BonusTileDefinition = TileDefinition & {
+  family: BonusTile['family'];
+  number: BonusTile['number'];
+  name: string;
+  wind: Wind;
 };
 
 const tileAssets: Record<TileAssetKey, string> = {
@@ -107,10 +114,24 @@ export const playingTileDefinition = (tile: PlayingTile): TileDefinition => {
   };
 };
 
+export const BONUS_TILE_DEFINITIONS: readonly BonusTileDefinition[] = [
+  { family: 'flower', number: 1, name: 'Plum', wind: 'east', asset: 'Flower1', label: 'Flower 1, Plum, East' },
+  { family: 'flower', number: 2, name: 'Orchid', wind: 'south', asset: 'Flower2', label: 'Flower 2, Orchid, South' },
+  { family: 'flower', number: 3, name: 'Chrysanthemum', wind: 'west', asset: 'Flower3', label: 'Flower 3, Chrysanthemum, West' },
+  { family: 'flower', number: 4, name: 'Bamboo', wind: 'north', asset: 'Flower4', label: 'Flower 4, Bamboo, North' },
+  { family: 'season', number: 1, name: 'Spring', wind: 'east', asset: 'Season1', label: 'Season 1, Spring, East' },
+  { family: 'season', number: 2, name: 'Summer', wind: 'south', asset: 'Season2', label: 'Season 2, Summer, South' },
+  { family: 'season', number: 3, name: 'Autumn', wind: 'west', asset: 'Season3', label: 'Season 3, Autumn, West' },
+  { family: 'season', number: 4, name: 'Winter', wind: 'north', asset: 'Season4', label: 'Season 4, Winter, North' },
+];
+
 export const bonusTileDefinition = (
   family: BonusTile['family'],
   number: BonusTile['number'],
-): TileDefinition => ({
-  asset: `${family === 'flower' ? 'Flower' : 'Season'}${number}` as TileAssetKey,
-  label: `${family === 'flower' ? 'Flower' : 'Season'} ${number}`,
-});
+): BonusTileDefinition => {
+  const definition = BONUS_TILE_DEFINITIONS.find(
+    (tile) => tile.family === family && tile.number === number,
+  );
+  if (!definition) throw new Error(`Unknown bonus tile: ${family} ${number}`);
+  return definition;
+};

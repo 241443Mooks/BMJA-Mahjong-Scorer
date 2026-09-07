@@ -1,4 +1,5 @@
 import {
+  BONUS_TILE_DEFINITIONS,
   tileAssetUrl,
   type TileAssetKey,
   type TileDefinition,
@@ -26,14 +27,8 @@ const dragons: TileDefinition[] = [
   { asset: 'Hatsu', label: 'Green Dragon' },
   { asset: 'Haku', label: 'White Dragon' },
 ];
-const flowers: TileDefinition[] = Array.from({ length: 4 }, (_, index) => ({
-  asset: `Flower${index + 1}` as TileAssetKey,
-  label: `Flower ${index + 1}`,
-}));
-const seasons: TileDefinition[] = Array.from({ length: 4 }, (_, index) => ({
-  asset: `Season${index + 1}` as TileAssetKey,
-  label: `Season ${index + 1}`,
-}));
+const flowers = BONUS_TILE_DEFINITIONS.filter((tile) => tile.family === 'flower');
+const seasons = BONUS_TILE_DEFINITIONS.filter((tile) => tile.family === 'season');
 
 function TileArt({ tile, compact = false }: { tile: TileDefinition; compact?: boolean }) {
   return (

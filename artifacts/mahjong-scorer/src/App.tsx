@@ -11,6 +11,7 @@ import type {
   HandScorerResult,
 } from './game';
 import {
+  BONUS_TILE_DEFINITIONS,
   bonusTileDefinition,
   playingTileDefinition,
   tileAssetUrl,
@@ -65,7 +66,7 @@ const tileName = (tile: PlayingTile) => playingTileDefinition(tile).label;
 
 type UIHandSet = Omit<HandSet, 'tile'> & { tile: PlayingTile | null };
 const defaultSets: UIHandSet[] = [
-  { id: 'set-1', kind: 'chow', visibility: 'concealed', tile: null },
+  { id: 'set-1', kind: 'pung', visibility: 'concealed', tile: null },
 ];
 
 function TileFace({
@@ -120,14 +121,17 @@ function BonusTileButton({
   family,
   number,
   selected,
+  playerWind,
   onToggle,
 }: {
   family: BonusTile['family'];
   number: BonusTile['number'];
   selected: boolean;
+  playerWind: Wind;
   onToggle: () => void;
 }) {
   const artwork = bonusTileDefinition(family, number);
+  const isOwn = artwork.wind === playerWind;
   const selectedClass = family === 'flower'
     ? 'border-[#ae6249] bg-[#f5eadb] ring-2 ring-[#ae6249]/20'
     : 'border-[#284d45] bg-[#e9efea] ring-2 ring-[#284d45]/20';
@@ -139,7 +143,7 @@ function BonusTileButton({
       aria-label={artwork.label}
       aria-pressed={selected}
       onClick={onToggle}
-      className={`flex min-w-[58px] flex-col items-center rounded-lg border p-1.5 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249] ${
+      className={`relative flex min-w-[76px] flex-col items-center rounded-lg border p-1.5 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249] ${
         selected
           ? selectedClass
           : 'border-[#d8ceb8] bg-[#fdfbf5] hover:border-[#ae6249] hover:bg-[#fffaf0]'
@@ -151,7 +155,9 @@ function BonusTileButton({
         loading="lazy"
         className="h-[64px] w-[48px] rounded-[5px] bg-[#fffdf7] object-contain shadow-[0_2px_6px_rgba(48,57,49,.12)]"
       />
-      <span className="mt-1 text-[9px] font-semibold leading-4 text-[#66746e]">{artwork.label}</span>
+      <span className="mt-1 text-center text-[9px] font-semibold leading-3 text-[#66746e]">{artwork.name}</span>
+      <span className="mt-0.5 text-center text-[8px] leading-3 text-[#7a7769]">{family === 'flower' ? 'Flower' : 'Season'} {number} · {artwork.wind}</span>
+      {isOwn && <span className="mt-1 rounded bg-[#e6efe9] px-1 py-0.5 text-[8px] font-semibold text-[#284d45]">Own {family === 'flower' ? 'Flower' : 'Season'}</span>}
     </button>
   );
 }
@@ -496,9 +502,7 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
       ...current,
       {
         id,
-        kind: current.some((handSet) => handSet.kind === 'chow')
-          ? 'pung'
-          : 'chow',
+        kind: 'pung',
         visibility: 'concealed',
         tile: null,
       },
@@ -540,7 +544,7 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
     return true;
   }
   function clearHand() {
-    setSets([{ id: 'set-1', kind: 'chow', visibility: 'concealed', tile: null }]);
+    setSets([{ id: 'set-1', kind: 'pung', visibility: 'concealed', tile: null }]);
     setFlowers([]);
     setSeasons([]);
     setLooseTiles([]);
@@ -786,7 +790,7 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
                         <div className="flex items-center gap-2">
                           <span className="font-mono text-[10px] text-[#ae6249]">SET {String(index + 1).padStart(2, '0')}</span>
                            <select aria-label={`Set ${index + 1} type`} data-testid={`select-set-type-${index + 1}`} value={s.kind} onChange={(e) => updateSet(s.id, { kind: e.target.value as SetKind, tile: null })} className="cursor-pointer border-0 bg-transparent font-mono text-[10px] uppercase tracking-[.12em] text-[#284d45] outline-none">
-                             <option value="chow" disabled={sets.some((other) => other.id !== s.id && other.kind === 'chow')}>Chow</option><option value="pung">Pung</option><option value="kong">Kong</option><option value="pair">Pair</option>
+                             <option value="pung">Pung</option><option value="chow" disabled={sets.some((other) => other.id !== s.id && other.kind === 'chow')}>Chow</option><option value="kong">Kong</option><option value="pair">Pair</option>
                           </select>
                           <select aria-label={`Set ${index + 1} visibility`} data-testid={`select-set-visibility-${index + 1}`} value={s.visibility} onChange={(e) => updateSet(s.id, { visibility: e.target.value as Visibility })} className="cursor-pointer border-0 bg-transparent font-mono text-[10px] uppercase tracking-[.12em] text-[#284d45] outline-none">
                             <option value="concealed">Concealed</option><option value="exposed">Exposed</option>
@@ -1023,13 +1027,14 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
                   <div>
                     <div className="mb-2 font-mono text-[10px] uppercase tracking-[.15em] text-[#7a7769]">Flowers</div>
                     <div className="flex flex-wrap gap-2">
-                      {[1, 2, 3, 4].map((num) => (
+                      {BONUS_TILE_DEFINITIONS.filter((tile) => tile.family === 'flower').map((tile) => (
                         <BonusTileButton
-                          key={`flower-${num}`}
-                          family="flower"
-                          number={num as BonusTile['number']}
-                          selected={flowers.includes(num)}
-                          onToggle={() => toggleBonus('flower', num)}
+                          key={`${tile.family}-${tile.number}`}
+                          family={tile.family}
+                          number={tile.number}
+                          selected={flowers.includes(tile.number)}
+                          playerWind={playerWind}
+                          onToggle={() => toggleBonus(tile.family, tile.number)}
                         />
                       ))}
                     </div>
@@ -1037,13 +1042,14 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
                   <div>
                     <div className="mb-2 font-mono text-[10px] uppercase tracking-[.15em] text-[#7a7769]">Seasons</div>
                     <div className="flex flex-wrap gap-2">
-                      {[1, 2, 3, 4].map((num) => (
+                      {BONUS_TILE_DEFINITIONS.filter((tile) => tile.family === 'season').map((tile) => (
                         <BonusTileButton
-                          key={`season-${num}`}
-                          family="season"
-                          number={num as BonusTile['number']}
-                          selected={seasons.includes(num)}
-                          onToggle={() => toggleBonus('season', num)}
+                          key={`${tile.family}-${tile.number}`}
+                          family={tile.family}
+                          number={tile.number}
+                          selected={seasons.includes(tile.number)}
+                          playerWind={playerWind}
+                          onToggle={() => toggleBonus(tile.family, tile.number)}
                         />
                       ))}
                     </div>
