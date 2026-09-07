@@ -6,12 +6,15 @@ const siteUrl = 'https://mahjong.smooks.co.uk';
 const socialImage = `${siteUrl}/british-mahjong-scorer-social-preview.jpg`;
 const routes = [
   ['/', 'British Mahjong Scorer | Score Games & Hands', 'Score British Mahjong games and individual hands, track settlements, and learn British rules as you play.'],
-  ['/game', 'British Mahjong Game Scorer | Track a Full Game', 'Score a British Mahjong game for four players, calculate settlements, follow winds and keep a running ledger.'],
-  ['/hand', 'British Mahjong Hand Scorer | Calculate Your Score', 'Build a British Mahjong hand, calculate points and doubles, and see clear explanations of detected scoring patterns.'],
-  ['/gameplay-basics', 'How to Play British Mahjong | Beginner Guide', 'Learn the basics of British Mahjong: winds, dealing, turns, Chows, Pungs, Kongs, Flowers, Seasons and how a hand ends.'],
-  ['/guide', 'British Mahjong Scoring Guide | Points, Doubles & Fishing', 'A beginner-friendly guide to British Mahjong scoring, including points, doubles, Flowers and Seasons, fishing and settlements.'],
-  ['/special-hands', 'British Mahjong Special Hands | Patterns & Scores', 'Browse British Mahjong special hands with simple descriptions, scores and visual tile examples.'],
-  ['/about', 'About the British Mahjong Scorer', 'Why the British Mahjong Scorer was built, how it approaches beginner-friendly scoring, privacy, rules sources and project development.'],
+  ['/game', 'Score a British Mahjong Game | British Mahjong Scorer', 'Track four players hand by hand, calculate settlement, keep running balances and save the finished British Mahjong game record.'],
+  ['/hand', 'Score a British Mahjong Hand | British Mahjong Scorer', 'Build a British Mahjong hand visually and calculate supported points, doubles, patterns, special hands and fishing.'],
+  ['/gameplay-basics', 'British Mahjong Gameplay Basics | British Mahjong Scorer', 'Learn the basic flow of British Mahjong, including tiles, turns, calls, winning and the table structure.'],
+  ['/guide', 'British Mahjong Scoring Guide | British Mahjong Scorer', 'Learn British Mahjong scoring in plain English, with points, doubles, winning hands and practical examples.'],
+  ['/special-hands', 'British Mahjong Special Hands | British Mahjong Scorer', 'Browse supported British Mahjong special hands with visual examples and plain-English explanations.'],
+  ['/features', 'British Mahjong Scorer Features', 'See how British Mahjong Scorer handles full games, detailed and partial hands, explanations, recovery and printable game records.'],
+  ['/how-it-works', 'How British Mahjong Scorer Works', 'See how the scorer moves from game context and tile evidence to scoring, explanations, settlement and the final game record.'],
+  ['/help', 'British Mahjong Scorer Help', 'Get practical help with scoring games and hands, partial evidence, special situations, recovery, settlement and saving a game record.'],
+  ['/about', 'About British Mahjong Scorer', 'Learn why British Mahjong Scorer exists, which rules it uses, how uncertainty is handled and how browser-side game data works.'],
 ];
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const output = path.join(root, 'dist/public');
@@ -48,10 +51,12 @@ function metadata(route, title, description) {
     <meta property="og:type" content="website" />
     <meta property="og:url" content="${url}" />
     <meta property="og:image" content="${socialImage}" />
+    <meta property="og:image:alt" content="British Mahjong Scorer" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="${escapedTitle}" />
     <meta name="twitter:description" content="${escapedDescription}" />
-    <meta name="twitter:image" content="${socialImage}" />${structuredData}
+    <meta name="twitter:image" content="${socialImage}" />
+    <meta name="twitter:image:alt" content="British Mahjong Scorer" />${structuredData}
     <!-- seo:metadata:end -->`;
 }
 
