@@ -7,6 +7,7 @@ import { GameplayBasics } from './guide/GameplayBasics';
 import { SpecialHandsCatalogue } from './guide/SpecialHandsCatalogue';
 import { AboutPage } from './home/AboutPage';
 import { HomePage } from './home/HomePage';
+import { HowItWorksPage } from './home/HowItWorksPage';
 
 import './index.css';
 
@@ -26,7 +27,7 @@ function RouteContent() {
   }
 
   if (path === '/gameplay-basics') return <GameplayBasics />;
-
+  if (path === '/how-it-works') return <HowItWorksPage />;
   if (path === '/about') return <AboutPage />;
 
   return <HomePage />;
