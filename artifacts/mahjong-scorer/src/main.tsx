@@ -1,15 +1,52 @@
+import { useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import App from './App';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { BeginnerGuide } from './guide/BeginnerGuide';
+import { GameplayBasics } from './guide/GameplayBasics';
 import { SpecialHandsCatalogue } from './guide/SpecialHandsCatalogue';
+import { AboutPage } from './home/AboutPage';
+import { HomePage } from './home/HomePage';
 
 import './index.css';
 
 const path = window.location.pathname.replace(/\/$/, '') || '/';
-const isBeginnerGuide = path === '/guide' || path === '/beginner-guide';
-const isSpecialHandsCatalogue = path === '/special-hands' || path === '/special-hand-catalogue';
+
+function StandaloneHandRoute() {
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => {
+      const button = Array.from(document.querySelectorAll<HTMLButtonElement>('button')).find(
+        (candidate) => candidate.textContent?.trim() === 'Detailed hand scorer',
+      );
+      button?.click();
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, []);
+
+  return <App />;
+}
+
+function RouteContent() {
+  if (path === '/') return <HomePage />;
+  if (path === '/game') return <App />;
+  if (path === '/hand') return <StandaloneHandRoute />;
+
+  if (path === '/guide' || path === '/beginner-guide') {
+    return <BeginnerGuide onClose={() => window.location.assign('/')} />;
+  }
+
+  if (path === '/special-hands' || path === '/special-hand-catalogue') {
+    return <SpecialHandsCatalogue />;
+  }
+
+  if (path === '/gameplay-basics') return <GameplayBasics />;
+
+  if (path === '/about') return <AboutPage />;
+
+  return <HomePage />;
+}
 
 createRoot(document.getElementById('root')!, {
   // Keeps caught errors off reportError(), which would raise the dev overlay.
@@ -18,12 +55,6 @@ createRoot(document.getElementById('root')!, {
   },
 }).render(
   <ErrorBoundary>
-    {isBeginnerGuide ? (
-      <BeginnerGuide onClose={() => window.location.assign('/')} />
-    ) : isSpecialHandsCatalogue ? (
-      <SpecialHandsCatalogue />
-    ) : (
-      <App />
-    )}
+    <RouteContent />
   </ErrorBoundary>,
 );

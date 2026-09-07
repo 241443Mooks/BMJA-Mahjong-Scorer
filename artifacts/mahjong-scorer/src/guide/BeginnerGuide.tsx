@@ -1,10 +1,12 @@
 import { ArrowLeft, BookOpen, ChevronRight, CircleHelp, Sparkles } from 'lucide-react';
 import { SetExamples, TileGallery } from './MahjongTileGallery';
+import { BONUS_TILE_DEFINITIONS, tileAssetUrl } from '../tiles/MahjongTileArtwork';
 
 const sections = [
   { id: 'getting-started', label: 'Getting started' },
   { id: 'hand-shape', label: 'What makes a hand?' },
   { id: 'tiles', label: 'The tiles' },
+  { id: 'matching-bonus-tiles', label: 'Matching Flowers and Seasons' },
   { id: 'tile-count', label: '13 tiles and the winning tile' },
   { id: 'visibility', label: 'Exposed and concealed' },
   { id: 'ordinary-scoring', label: 'How scoring works' },
@@ -170,13 +172,37 @@ export function BeginnerGuide({ onClose }: { onClose: () => void }) {
               <Callout>If a tile count looks wrong, check that Flowers and Seasons are entered as bonus tiles and that any four-of-a-kind group is entered as a Kong rather than a Pung.</Callout>
             </GuideSection>
 
-            <GuideSection id="visibility" number="05" title="Exposed and concealed sets">
+            <GuideSection id="matching-bonus-tiles" number="05" title="Matching Flowers and Seasons">
+              <p>In British Mahjong, every Flower and Season belongs to one Wind. If the tile matches <strong className="text-[#284d45]">your own seat Wind</strong>, it gives an extra double.</p>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {(['east', 'south', 'west', 'north'] as const).map((wind) => {
+                  const tiles = BONUS_TILE_DEFINITIONS.filter((tile) => tile.wind === wind);
+                  return (
+                    <div key={wind} className="rounded-xl border border-[#dfd5c2] bg-[#fdfbf5] p-4">
+                      <h3 className="font-serif text-[19px] capitalize text-[#284d45]">{wind}</h3>
+                      <p className="mt-1 text-[10px] font-semibold uppercase tracking-[.12em] text-[#ae6249]">Matches {wind.charAt(0).toUpperCase() + wind.slice(1)}</p>
+                      <div className="mt-3 grid grid-cols-2 gap-3">
+                        {tiles.map((tile) => (
+                          <figure key={tile.asset} className="flex items-center gap-2">
+                            <img src={tileAssetUrl(tile.asset)} alt={tile.label} loading="lazy" className="h-[68px] w-[51px] rounded-[5px] bg-[#fffdf7] object-contain shadow-[0_2px_6px_rgba(48,57,49,.12)]" />
+                            <figcaption className="text-[11px] leading-4 text-[#596b65]"><strong className="block text-[#284d45]">{tile.name}</strong>{tile.family === 'flower' ? 'Flower' : 'Season'} {tile.number}</figcaption>
+                          </figure>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              <Callout><p>Your matching Flower and matching Season each give <strong>1 double</strong>.</p><p className="mt-2">This uses your <strong>seat Wind</strong>, not the prevailing Wind. All four Flowers, or all four Seasons, give <strong>two doubles in total</strong> for that complete set.</p></Callout>
+            </GuideSection>
+
+            <GuideSection id="visibility" number="06" title="Exposed and concealed sets">
               <p>A set is <strong className="text-[#284d45]">concealed</strong> if you made it entirely from tiles you drew yourself.</p>
               <p>A set is <strong className="text-[#284d45]">exposed</strong> if you claimed another player’s discard to complete it.</p>
               <p>Concealed Pungs and Kongs normally score more than exposed ones, which is why the scorer asks which applies. When the final winning tile creates a special exception, the app asks which tile completed Mah Jong rather than expecting you to know the rule.</p>
             </GuideSection>
 
-            <GuideSection id="ordinary-scoring" number="06" title="How ordinary scoring works">
+            <GuideSection id="ordinary-scoring" number="07" title="How ordinary scoring works">
               <p>British Mahjong scoring happens in stages. First the hand receives basic points, then any doubles are applied, and finally the normal table limit is applied.</p>
               <div className="grid gap-3 sm:grid-cols-3">
                 {[
