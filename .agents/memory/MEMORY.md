@@ -1,0 +1,1 @@
+- [GitHub branch updates](github-branch-updates.md) — shell push auth may be stale; connector fallback needs exact tree guards and chunked large-file payloads.

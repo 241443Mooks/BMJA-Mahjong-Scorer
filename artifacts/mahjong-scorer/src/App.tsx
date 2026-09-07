@@ -23,7 +23,6 @@ import type {
   SuitTile,
   SetKind,
   Visibility,
-  IncompleteSet,
   WinningTileProvenance,
   WinningEventEvidence,
 } from './scoring';
@@ -66,10 +65,6 @@ const tileName = (tile: PlayingTile) =>
       : `${tile.dragon} Dragon`;
 
 type UIHandSet = Omit<HandSet, 'tile'> & { tile: PlayingTile | null };
-type UIIncompleteSet = Omit<IncompleteSet, 'tile'> & {
-  tile: PlayingTile | null;
-};
-
 const defaultSets: UIHandSet[] = [
   { id: 'set-1', kind: 'chow', visibility: 'concealed', tile: null },
 ];
@@ -162,6 +157,9 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
   const [looseTiles, setLooseTiles] = useState<PlayingTile[]>(() =>
     initialHand?.looseTiles?.map((tile) => ({ ...tile })) ?? [],
   );
+  const [remainingTiles, setRemainingTiles] = useState<PlayingTile[]>(() =>
+    initialHand?.remainingTiles?.map((tile) => ({ ...tile })) ?? [],
+  );
   const [flowers, setFlowers] = useState<number[]>(() =>
     initialHand?.bonusTiles
       .filter((tile) => tile.family === 'flower')
@@ -185,11 +183,6 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
   );
   const [originalCall, setOriginalCall] = useState<boolean>(
     initialContext.isWinner ? initialHand?.originalCall ?? false : false,
-  );
-  const [incompleteSet, setIncompleteSet] = useState<UIIncompleteSet | null>(
-    initialHand?.incompleteSet
-      ? { ...initialHand.incompleteSet, tile: { ...initialHand.incompleteSet.tile } }
-      : null,
   );
   const [winningTileProvenance, setWinningTileProvenance] = useState<WinningTileProvenance | undefined>(
     initialHand?.winningTileProvenance
@@ -225,7 +218,9 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
   }, [playerWind]);
 
   const [selectedSet, setSelectedSet] = useState<string>(
-    initialHand?.sets[0]?.id ?? 'set-1',
+    initialHand?.remainingTiles?.length
+      ? 'remaining-tiles'
+      : initialHand?.sets[0]?.id ?? 'set-1',
   );
   const [activeSuit, setActiveSuit] = useState<string>('characters');
   const [showAllTiles, setShowAllTiles] = useState(false);
@@ -265,6 +260,9 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
     setSets(nextSets);
     setLayoutMode(savedHand?.looseTiles?.length ? 'special' : 'sets');
     setLooseTiles(savedHand?.looseTiles?.map((tile) => ({ ...tile })) ?? []);
+    setRemainingTiles(
+      savedHand?.remainingTiles?.map((tile) => ({ ...tile })) ?? [],
+    );
     setFlowers(
       savedHand?.bonusTiles
         .filter((tile) => tile.family === 'flower')
@@ -283,14 +281,6 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
     setOriginalCall(
       nextContext.isWinner ? savedHand?.originalCall ?? false : false,
     );
-    setIncompleteSet(
-      savedHand?.incompleteSet
-        ? {
-            ...savedHand.incompleteSet,
-            tile: { ...savedHand.incompleteSet.tile },
-          }
-        : null,
-    );
     setWinningTileProvenance(
       savedHand?.winningTileProvenance
         ? {
@@ -308,7 +298,11 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
     setReplacementAnswer(
       savedHand?.winningEventEvidence?.type === 'replacement-chain' ? 'yes' : null
     );
-    setSelectedSet(savedHand?.incompleteSet ? 'fishing-incomplete' : nextSets[0]?.id ?? '');
+    setSelectedSet(
+      savedHand?.remainingTiles?.length
+        ? 'remaining-tiles'
+        : nextSets[0]?.id ?? '',
+    );
     setExpandedRule(null);
     setCopied(false);
   }, [context]);
@@ -318,6 +312,8 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
     return {
       sets: layoutMode === 'sets' ? validSets : [],
       looseTiles: layoutMode === 'special' ? looseTiles : undefined,
+      remainingTiles:
+        !isWinner && layoutMode === 'sets' ? remainingTiles : undefined,
       bonusTiles: [
         ...flowers.map(n => bonus('flower', n as BonusTile['number'])),
         ...seasons.map(n => bonus('season', n as BonusTile['number']))
@@ -327,14 +323,8 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
       winningTileProvenance: isWinner && winningMethod !== 'initial-deal' ? winningTileProvenance : undefined,
       winningEventEvidence: effectiveWinningEventEvidence,
       originalCall: isWinner ? originalCall : false,
-      incompleteSet:
-        !isWinner &&
-        layoutMode === 'sets' &&
-        incompleteSet?.tile
-          ? { ...incompleteSet, tile: incompleteSet.tile }
-          : undefined,
     };
-  }, [sets, looseTiles, layoutMode, flowers, seasons, isWinner, winningMethod, originalCall, incompleteSet, winningTileProvenance, effectiveWinningEventEvidence]);
+  }, [sets, looseTiles, remainingTiles, layoutMode, flowers, seasons, isWinner, winningMethod, originalCall, winningTileProvenance, effectiveWinningEventEvidence]);
 
   useEffect(() => {
     if (winningTileProvenance) {
@@ -413,21 +403,23 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
     [gameContext, hand],
   );
 
-  const tileCount =
-    (layoutMode === 'special'
+  const enteredSets = sets.filter((s): s is HandSet => s.tile !== null);
+  const representedKongs =
+    layoutMode === 'sets'
+      ? enteredSets.filter((handSet) => handSet.kind === 'kong').length
+      : 0;
+  const physicalTileCount =
+    layoutMode === 'special'
       ? looseTiles.length
-      : sets
-          .filter((s) => s.tile !== null)
-          .flatMap((s) => expandedTiles(s as HandSet)).length +
-        (incompleteSet?.tile
-          ? incompleteSet.kind === 'single'
-            ? 1
-            : incompleteSet.kind === 'pair'
-              ? 2
-              : 3
-          : 0)) +
-    flowers.length +
-    seasons.length;
+      : enteredSets.flatMap(expandedTiles).length +
+        (!isWinner ? remainingTiles.length : 0);
+  const structuralTileCount = physicalTileCount - representedKongs;
+  const structuralTarget = isWinner ? 14 : 13;
+  const tileProgressLabel = `${structuralTileCount}/${structuralTarget} hand tiles${
+    representedKongs > 0
+      ? ` · ${physicalTileCount} physical with ${representedKongs} ${representedKongs === 1 ? 'Kong' : 'Kongs'}`
+      : ''
+  }`;
 
   function updateSet(id: string, updates: Partial<UIHandSet>) {
     if ('kind' in updates || 'tile' in updates) {
@@ -463,10 +455,9 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
       }
       return;
     }
-    if (selectedSet === 'fishing-incomplete') {
-      setIncompleteSet((current) =>
-        current ? { ...current, tile } : current,
-      );
+    if (!canAddStandardTile(tile)) return;
+    if (!isWinner && selectedSet === 'remaining-tiles') {
+      setRemainingTiles((current) => [...current, tile]);
       return;
     }
     if (!selectedSet) return;
@@ -488,12 +479,46 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
     ]);
     setSelectedSet(id);
   }
+  function canAddStandardTile(tile: PlayingTile): boolean {
+    if (layoutMode !== 'sets') return false;
+    let candidateSets = enteredSets;
+    let candidateRemaining = !isWinner ? remainingTiles : [];
+
+    if (!isWinner && selectedSet === 'remaining-tiles') {
+      candidateRemaining = [...candidateRemaining, tile];
+    } else {
+      const selected = sets.find((handSet) => handSet.id === selectedSet);
+      if (!selected) return false;
+      candidateSets = [
+        ...enteredSets.filter((handSet) => handSet.id !== selected.id),
+        { ...selected, tile },
+      ];
+    }
+
+    const candidatePhysicalTiles = [
+      ...candidateSets.flatMap(expandedTiles),
+      ...candidateRemaining,
+    ];
+    const candidateStructuralCount =
+      candidatePhysicalTiles.length -
+      candidateSets.filter((handSet) => handSet.kind === 'kong').length;
+    if (candidateStructuralCount > structuralTarget) return false;
+
+    const tally = new Map<string, number>();
+    for (const candidate of candidatePhysicalTiles) {
+      const key = tileKey(candidate);
+      const count = (tally.get(key) ?? 0) + 1;
+      if (count > 4) return false;
+      tally.set(key, count);
+    }
+    return true;
+  }
   function clearHand() {
     setSets([{ id: 'set-1', kind: 'chow', visibility: 'concealed', tile: null }]);
     setFlowers([]);
     setSeasons([]);
     setLooseTiles([]);
-    setIncompleteSet(null);
+    setRemainingTiles([]);
     setWinningTileProvenance(undefined);
     setWinningEventEvidence(undefined);
     setDiscardAnswer(null);
@@ -503,24 +528,30 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
   }
   function loadExample() {
     setLayoutMode('sets');
-    setIncompleteSet(null);
     setWinningTileProvenance(undefined);
     setWinningEventEvidence(undefined);
     setDiscardAnswer(null);
     setReplacementAnswer(null);
-    setSets([
+    const exampleIsWinner = context?.isWinner ?? true;
+    const exampleSets: UIHandSet[] = [
       { id: 'set-1', kind: 'chow', visibility: 'concealed', tile: suited('bamboo', 1) },
       { id: 'set-2', kind: 'pung', visibility: 'exposed', tile: suited('circles', 9) },
       { id: 'set-3', kind: 'pung', visibility: 'exposed', tile: suited('characters', 7) },
       { id: 'set-4', kind: 'pung', visibility: 'concealed', tile: wind('east') },
       { id: 'set-5', kind: 'pair', visibility: 'concealed', tile: dragon('red') },
-    ]);
+    ];
+    setSets(exampleIsWinner ? exampleSets : exampleSets.slice(0, 4));
+    setRemainingTiles(
+      exampleIsWinner
+        ? []
+        : [suited('bamboo', 9)],
+    );
     setFlowers([1, 4]);
     setSeasons([]);
-    setIsWinner(context?.isWinner ?? true);
+    setIsWinner(exampleIsWinner);
     setWinningMethod('wall');
     setOriginalCall(false);
-    setSelectedSet('set-1');
+    setSelectedSet(exampleIsWinner ? 'set-1' : 'remaining-tiles');
   }
   function toggleBonus(kind: 'flower' | 'season', num: number) {
     if (kind === 'flower') {
@@ -551,12 +582,7 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
           })),
           bonusTiles: hand.bonusTiles.map((tile) => ({ ...tile })),
           looseTiles: hand.looseTiles?.map((tile) => ({ ...tile })),
-          incompleteSet: hand.incompleteSet
-            ? {
-                ...hand.incompleteSet,
-                tile: { ...hand.incompleteSet.tile },
-              }
-            : undefined,
+          remainingTiles: hand.remainingTiles?.map((tile) => ({ ...tile })),
           winningTileProvenance: hand.winningTileProvenance
             ? {
                 tile: { ...hand.winningTileProvenance.tile },
@@ -654,7 +680,7 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
           <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-5 xl:grid-cols-[minmax(0,1.18fr)_minmax(280px,.82fr)]">
             <div className="min-w-0 space-y-5">
               <section className="animate-rise animate-rise-delay-1 rounded-xl border border-[#d8ceb8] bg-[#fbf8ed] p-5 shadow-[var(--shadow-sm)] sm:p-6">
-                <SectionLabel eyebrow="01 / hand" title="Arrange the tiles" count={`${tileCount} tiles entered`} />
+                <SectionLabel eyebrow="01 / hand" title="Arrange the tiles" count={tileProgressLabel} />
                 {layoutMode === 'sets' ? (
                   <div className="mb-4 flex flex-col gap-3 rounded-lg border border-[#e2d9c7] bg-[#fdfbf5] p-3 sm:flex-row sm:items-center sm:justify-between">
                     <div className="min-w-0">
@@ -751,118 +777,58 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
                       </div>
                     </div>
                     ))}
-                    {!isWinner && incompleteSet && (
-                      <div
-                        data-testid="card-fishing-incomplete"
-                        className={`rounded-lg border p-3 transition ${selectedSet === 'fishing-incomplete' ? 'border-[#ae6249]/60 bg-[#f7f1e3]' : 'border-[#e2d9c7] bg-[#fdfbf5]'}`}
-                        onClick={() => setSelectedSet('fishing-incomplete')}
-                      >
-                        <div className="mb-3 flex items-center justify-between gap-2">
-                          <span className="min-w-0 font-mono text-[10px] text-[#ae6249]">INCOMPLETE GROUP</span>
-                          <button
-                            type="button"
-                            aria-label="Remove incomplete group"
-                            data-testid="button-remove-incomplete-set"
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              setIncompleteSet(null);
-                              setSelectedSet(sets[0]?.id ?? '');
-                            }}
-                            className="shrink-0 text-[#ae6249] transition hover:text-[#8a4d38] focus:ring-2"
-                          >
-                            <X size={14} />
-                          </button>
-                        </div>
-                        <div className="mb-3 grid min-w-0 gap-2 sm:grid-cols-2">
-                          <label className="min-w-0">
-                            <span className="mb-1 block text-[10px] font-semibold text-[#7a7769]">Waiting shape</span>
-                            <select
-                              aria-label="Incomplete group type"
-                              data-testid="select-incomplete-type"
-                              value={incompleteSet.kind}
-                              onChange={(event) =>
-                                setIncompleteSet({
-                                  kind: event.target.value as IncompleteSet['kind'],
-                                  visibility: incompleteSet.visibility,
-                                  tile: null,
-                                })
-                              }
-                              className="block w-full min-w-0 cursor-pointer rounded-md border border-[#d7cbb5] bg-[#fdfbf5] px-2 py-2 text-[11px] text-[#284d45] outline-none"
-                            >
-                              <option value="single">Single (waiting for pair)</option>
-                              <option value="pair">Pair (waiting for pung)</option>
-                              <option value="pung">Pung (waiting for kong)</option>
-                            </select>
-                          </label>
-                          <label className="min-w-0">
-                            <span className="mb-1 block text-[10px] font-semibold text-[#7a7769]">Visibility</span>
-                            <select
-                              aria-label="Incomplete group visibility"
-                              data-testid="select-incomplete-visibility"
-                              value={incompleteSet.visibility}
-                              onChange={(event) =>
-                                setIncompleteSet((current) => ({
-                                  kind: current?.kind ?? 'single',
-                                  tile: current?.tile ?? null,
-                                  visibility: event.target.value as Visibility,
-                                }))
-                              }
-                              className="block w-full min-w-0 cursor-pointer rounded-md border border-[#d7cbb5] bg-[#fdfbf5] px-2 py-2 text-[11px] text-[#284d45] outline-none"
-                            >
-                              <option value="concealed">Concealed</option>
-                              <option value="exposed">Exposed</option>
-                            </select>
-                          </label>
-                        </div>
-                        <div className="flex min-h-[76px] items-center gap-2 overflow-x-auto pb-1">
-                          {incompleteSet?.tile ? (
-                            Array.from(
-                              {
-                                length:
-                                  incompleteSet.kind === 'single'
-                                    ? 1
-                                    : incompleteSet.kind === 'pair'
-                                      ? 2
-                                      : 3,
-                              },
-                              (_, index) => (
-                                <TileFace
-                                  key={`${tileKey(incompleteSet.tile!)}-${index}`}
-                                  tile={incompleteSet.tile!}
-                                  onRemove={() =>
-                                    setIncompleteSet((current) =>
-                                      current ? { ...current, tile: null } : current,
-                                    )
-                                  }
-                                />
-                              ),
-                            )
-                          ) : (
-                            <div className="flex h-[62px] w-full items-center justify-center rounded-md border border-dashed border-[#d7cbb5] text-[11px] text-[#9b988d]">
-                              Select the repeated tile currently held in this incomplete group
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    )}
                   </div>
                   <button type="button" data-testid="button-add-set" onClick={addSet} className="mt-4 flex w-full items-center justify-center gap-2 rounded-md border border-dashed border-[#cdbfa7] py-2.5 text-[11px] font-semibold text-[#66746e] transition hover:border-[#ae6249] hover:text-[#284d45] focus:ring-2"><Plus size={14} /> Add another set</button>
-                  {!isWinner && !incompleteSet && (
-                    <button
-                      type="button"
-                      data-testid="button-add-incomplete-set"
-                      onClick={() => {
-                        setIncompleteSet({
-                          kind: 'single',
-                          visibility: 'concealed',
-                          tile: null,
-                        });
-                        setSelectedSet('fishing-incomplete');
-                      }}
-                      className="mt-2 flex w-full items-center justify-center gap-2 rounded-md border border-dashed border-[#cdbfa7] py-2.5 text-[11px] font-semibold text-[#66746e] transition hover:border-[#ae6249] hover:text-[#284d45] focus:ring-2"
+                  {!isWinner && (
+                    <section
+                      data-testid="card-remaining-tiles"
+                      className={`mt-4 rounded-lg border p-3 transition ${
+                        selectedSet === 'remaining-tiles'
+                          ? 'border-[#ae6249]/60 bg-[#f7f1e3]'
+                          : 'border-[#e2d9c7] bg-[#fdfbf5]'
+                      }`}
                     >
-                      <Plus size={14} /> Add an incomplete set
-                    </button>
+                      <button
+                        type="button"
+                        data-testid="button-select-remaining-tiles"
+                        onClick={() => setSelectedSet('remaining-tiles')}
+                        className="mb-3 flex w-full items-start justify-between gap-3 rounded-md text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]"
+                      >
+                        <span>
+                          <span className="block font-mono text-[10px] text-[#ae6249]">REMAINING TILES</span>
+                          <span className="mt-1 block text-[11px] leading-5 text-[#7a7769]">
+                            Add every tile that is not already represented by a completed set or pair.
+                          </span>
+                        </span>
+                        <span className="shrink-0 font-mono text-[10px] text-[#66746e]">
+                          {remainingTiles.length} entered
+                        </span>
+                      </button>
+                      <p className="mb-2 text-[10px] font-semibold text-[#ae6249]">
+                        Tap an entered tile to remove it.
+                      </p>
+                      <div className="flex min-h-[76px] flex-wrap items-center gap-2 rounded-md border border-dashed border-[#d7cbb5] bg-[#fdfbf5] p-2">
+                        {remainingTiles.map((tile, index) => (
+                          <TileFace
+                            key={`${tileKey(tile)}-${index}`}
+                            tile={tile}
+                            actionLabel={`Remove ${tileName(tile)} from the remaining tiles`}
+                            actionTestId={`button-remove-remaining-tile-${index}`}
+                            onActivate={() =>
+                              setRemainingTiles((current) =>
+                                current.filter((_, tileIndex) => tileIndex !== index),
+                              )
+                            }
+                          />
+                        ))}
+                        {remainingTiles.length === 0 && (
+                          <div className="w-full text-center text-[11px] leading-5 text-[#9b988d]">
+                            Select this area, then choose leftover tiles from the tile bank.
+                            They do not need to form a group or be one tile from Mah Jong.
+                          </div>
+                        )}
+                      </div>
+                    </section>
                   )}
                 </>
                 )}
@@ -871,7 +837,7 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
               <section className="animate-rise animate-rise-delay-2 rounded-xl border border-[#d8ceb8] bg-[#fbf8ed] p-5 shadow-[var(--shadow-sm)] sm:p-6">
                 <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
                   <div><div className="font-mono text-[10px] font-medium uppercase tracking-[.2em] text-[#ae6249]">02 / tile bank</div><h2 className="mt-1 font-serif text-[22px] text-[#284d45]">Choose a tile</h2></div>
-                  <div className="font-mono text-[10px] text-[#7a7769]">Adding to <span className="text-[#ae6249]">{layoutMode === 'special' ? `special layout (${looseTiles.length}/${isWinner ? 14 : 13})` : selectedSet === 'fishing-incomplete' ? 'incomplete group' : activeSet ? `set ${sets.findIndex(s => s.id === selectedSet) + 1}` : '—'}</span></div>
+                  <div className="font-mono text-[10px] text-[#7a7769]">Adding to <span className="text-[#ae6249]">{layoutMode === 'special' ? `special layout (${looseTiles.length}/${isWinner ? 14 : 13})` : selectedSet === 'remaining-tiles' ? `Remaining tiles (${remainingTiles.length})` : activeSet ? `set ${sets.findIndex(s => s.id === selectedSet) + 1}` : '—'}</span></div>
                 </div>
                 <div className="mb-4 flex items-center gap-1 overflow-x-auto border-b border-[#e2d9c7] pb-2">
                   {suitOrder.map((suit) => (
@@ -892,14 +858,15 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
                           looseTiles.filter(
                             (candidate) =>
                               tileKey(candidate) === tileKey(tile),
-                          ).length >= 4)
+                          ).length >= 4) ||
+                        (layoutMode === 'sets' && !canAddStandardTile(tile))
                       }
                       className="transition hover:-translate-y-1 focus:ring-2 focus:ring-[#ae6249] disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:translate-y-0"
                     ><TileFace tile={tile} compact /></button>
                   ))}
                   {visibleTiles.length === 0 && <div className="text-[11px] text-[#7a7769] py-4">No valid tiles for this set type.</div>}
                 </div>
-                <div className="mt-4 flex items-start gap-2 text-[11px] leading-5 text-[#7a7769]"><CircleHelp size={14} className="mt-0.5 shrink-0 text-[#ae6249]" /> {layoutMode === 'special' ? 'Choose each tile individually; duplicate physical tiles may be added up to four times.' : 'Click a set, or add and select an incomplete set, then choose its representative tile (for a chow, pick the first tile 1-7).'}</div>
+                <div className="mt-4 flex items-start gap-2 text-[11px] leading-5 text-[#7a7769]"><CircleHelp size={14} className="mt-0.5 shrink-0 text-[#ae6249]" /> {layoutMode === 'special' ? 'Choose each tile individually; duplicate physical tiles may be added up to four times.' : isWinner ? 'Select a set, then choose its representative tile (for a chow, pick the first tile 1-7).' : 'Select a completed set to define it, or select Remaining tiles to add each leftover tile individually.'}</div>
               </section>
 
               {isWinner && isStructureComplete && winningMethod !== 'initial-deal' && (
@@ -1102,9 +1069,11 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
                         onChange={(e) => {
                            if (!hasContext) {
                              setIsWinner(e.target.checked);
-                             if (e.target.checked) {
-                               setIncompleteSet(null);
-                             } else {
+                              if (e.target.checked) {
+                                if (selectedSet === 'remaining-tiles') {
+                                  setSelectedSet(sets[0]?.id ?? '');
+                                }
+                              } else {
                                setWinningTileProvenance(undefined);
                              }
                            }

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { confirmHand, createBmjaGame } from './game';
+import { suited } from '../scoring';
+import { confirmHand, createBmjaGame, undoLastHand } from './game';
 import {
   applyHandScorerSession,
   applyManualScore,
@@ -157,6 +158,29 @@ describe('game hand-scorer handoff', () => {
     expect(game.handHistory).toEqual([]);
   });
 
+  it('preserves arbitrary remaining tiles in a non-winner handoff', () => {
+    const result = makeCalculatedResult('jenn', 44, false, 'remaining-tiles');
+    result.detailedHand.hand.remainingTiles = [
+      suited('bamboo', 2),
+      suited('characters', 5),
+      suited('circles', 8),
+    ];
+
+    const applied = applyHandScorerResult(
+      game,
+      { scores: {}, scoreRecords: {} },
+      billWins,
+      result,
+    );
+    const stored = applied.draft.scoreRecords.jenn;
+
+    expect(
+      stored?.source === 'detailed-scorer'
+        ? stored.hand.remainingTiles
+        : undefined,
+    ).toEqual(result.detailedHand.hand.remainingTiles);
+  });
+
   it('recalculation replaces the previous detailed record for that player', () => {
     const first = applyHandScorerResult(
       game,
@@ -269,6 +293,48 @@ describe('game hand-scorer handoff', () => {
       source: 'manual',
       finalScore: 80,
     });
+  });
+
+  it('retains remaining tiles through apply, confirmation, replay and undo', () => {
+    const bill = makeCalculatedResult('bill', 88, true, 'winner');
+    const jenn = makeCalculatedResult('jenn', 44, false, 'loser');
+    jenn.detailedHand.hand.remainingTiles = [
+      suited('bamboo', 1),
+      suited('bamboo', 2),
+      suited('bamboo', 3),
+      suited('characters', 4),
+      suited('characters', 5),
+      suited('characters', 7),
+      suited('circles', 2),
+      suited('circles', 6),
+      suited('circles', 8),
+      { family: 'wind', wind: 'north' },
+      { family: 'dragon', dragon: 'green' },
+    ];
+
+    let draft: RoundScoringDraft = { scores: {}, scoreRecords: {} };
+    draft = applyHandScorerResult(game, draft, billWins, bill).draft;
+    draft = applyHandScorerResult(game, draft, billWins, jenn).draft;
+    draft = applyManualScore(game, draft, 'ben', 32);
+    draft = applyManualScore(game, draft, 'jack', 20);
+
+    const first = confirmHand(game, {
+      outcome: billWins,
+      scores: draft.scores as Record<string, number>,
+      scoreRecords: draft.scoreRecords,
+    });
+    const afterSecond = confirmHand(first, {
+      outcome: { type: 'draw' },
+      scores: { jenn: 0, bill: 0, ben: 0, jack: 0 },
+    });
+    const replayed = undoLastHand(afterSecond);
+    const stored = replayed.handHistory[0].scoreRecords.jenn;
+
+    expect(
+      stored?.source === 'detailed-scorer'
+        ? stored.hand.remainingTiles
+        : undefined,
+    ).toEqual(jenn.detailedHand.hand.remainingTiles);
   });
 
   it('rejects a detailed result that contradicts the selected round winner', () => {

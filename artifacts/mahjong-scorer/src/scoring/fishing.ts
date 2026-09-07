@@ -6,7 +6,12 @@ import {
   scoreBonusTiles,
 } from './rules';
 import { detectSpecialHands } from './special-hands';
-import { expandedTiles, tileKey } from './tiles';
+import {
+  hasCompleteWinningShape,
+  playingTiles as handPlayingTiles,
+  structuralTileCount,
+  tileKey,
+} from './tiles';
 import {
   DRAGONS,
   SUITS,
@@ -76,76 +81,259 @@ export const FISHING_SPECIALS = (
 ).map((id) => ({ id, name: names[id], fishingValue: fishingValues[id] }));
 
 const currentTiles = (hand: MahjongHand) => [
-  ...hand.sets.flatMap(expandedTiles),
-  ...(hand.looseTiles ?? []),
-  ...(hand.incompleteSet
-    ? Array.from(
-        {
-          length:
-            hand.incompleteSet.kind === 'single'
-              ? 1
-              : hand.incompleteSet.kind === 'pair'
-                ? 2
-                : 3,
-        },
-        () => hand.incompleteSet!.tile,
-      )
-    : []),
+  ...handPlayingTiles(hand),
 ];
+
+type TileTally = Map<string, { tile: PlayingTile; count: number }>;
+
+const tallyTiles = (tiles: PlayingTile[]): TileTally => {
+  const tally: TileTally = new Map();
+  for (const tile of tiles) {
+    const key = tileKey(tile);
+    const current = tally.get(key);
+    tally.set(key, { tile, count: (current?.count ?? 0) + 1 });
+  }
+  return tally;
+};
+
+const cloneTally = (tally: TileTally): TileTally =>
+  new Map(
+    [...tally].map(([key, value]) => [key, { ...value }]),
+  );
+
+const removeTiles = (
+  tally: TileTally,
+  tiles: PlayingTile[],
+): TileTally | undefined => {
+  const next = cloneTally(tally);
+  for (const tile of tiles) {
+    const key = tileKey(tile);
+    const entry = next.get(key);
+    if (!entry || entry.count === 0) return undefined;
+    if (entry.count === 1) next.delete(key);
+    else next.set(key, { ...entry, count: entry.count - 1 });
+  }
+  return next;
+};
+
+const remainingPhysicalCount = (tally: TileTally): number =>
+  [...tally.values()].reduce((sum, entry) => sum + entry.count, 0);
+
+const nextTile = (tally: TileTally): PlayingTile | undefined =>
+  [...tally.entries()]
+    .sort(([left], [right]) => left.localeCompare(right))[0]?.[1].tile;
+
+const completionSetId = (sets: HandSet[], index: number): string => {
+  const base = `fishing-completion-${index + 1}`;
+  if (!sets.some((handSet) => handSet.id === base)) return base;
+  return `__${base}`;
+};
+
+const standardDecompositions = (
+  existingSets: HandSet[],
+  concealedTiles: PlayingTile[],
+): HandSet[][] => {
+  const results: HandSet[][] = [];
+  const existingPairs = existingSets.filter((handSet) => handSet.kind === 'pair').length;
+  const existingChows = existingSets.filter((handSet) => handSet.kind === 'chow').length;
+
+  const search = (
+    tally: TileTally,
+    generated: HandSet[],
+    pairsNeeded: number,
+    meldsNeeded: number,
+    chowsUsed: number,
+  ) => {
+    if (pairsNeeded < 0 || meldsNeeded < 0) return;
+    if (remainingPhysicalCount(tally) !== pairsNeeded * 2 + meldsNeeded * 3) {
+      return;
+    }
+    const tile = nextTile(tally);
+    if (!tile) {
+      if (pairsNeeded === 0 && meldsNeeded === 0) {
+        results.push([...existingSets, ...generated]);
+      }
+      return;
+    }
+
+    const addGroup = (
+      kind: 'pair' | 'pung' | 'chow',
+      members: PlayingTile[],
+      nextPairs: number,
+      nextMelds: number,
+      nextChows: number,
+    ) => {
+      const next = removeTiles(tally, members);
+      if (!next) return;
+      search(
+        next,
+        [
+          ...generated,
+          {
+            id: completionSetId(
+              [...existingSets, ...generated],
+              generated.length,
+            ),
+            kind,
+            tile,
+            visibility: 'concealed',
+          },
+        ],
+        nextPairs,
+        nextMelds,
+        nextChows,
+      );
+    };
+
+    if (pairsNeeded > 0) {
+      addGroup('pair', [tile, tile], pairsNeeded - 1, meldsNeeded, chowsUsed);
+    }
+    if (meldsNeeded > 0) {
+      addGroup(
+        'pung',
+        [tile, tile, tile],
+        pairsNeeded,
+        meldsNeeded - 1,
+        chowsUsed,
+      );
+      if (
+        chowsUsed < 1 &&
+        tile.family === 'suit' &&
+        tile.rank <= 7
+      ) {
+        const second = {
+          ...tile,
+          rank: (tile.rank + 1) as Extract<PlayingTile, { family: 'suit' }>['rank'],
+        };
+        const third = {
+          ...tile,
+          rank: (tile.rank + 2) as Extract<PlayingTile, { family: 'suit' }>['rank'],
+        };
+        addGroup(
+          'chow',
+          [tile, second, third],
+          pairsNeeded,
+          meldsNeeded - 1,
+          chowsUsed + 1,
+        );
+      }
+    }
+  };
+
+  if (
+    existingSets.length <= 5 &&
+    existingPairs <= 1 &&
+    existingChows <= 1
+  ) {
+    const pairsNeeded = 1 - existingPairs;
+    const meldsNeeded = 4 - (existingSets.length - existingPairs);
+    search(
+      tallyTiles(concealedTiles),
+      [],
+      pairsNeeded,
+      meldsNeeded,
+      existingChows,
+    );
+  }
+
+  if (
+    existingSets.length <= 7 &&
+    existingSets.every((handSet) => handSet.kind === 'pair')
+  ) {
+    search(
+      tallyTiles(concealedTiles),
+      [],
+      7 - existingSets.length,
+      0,
+      0,
+    );
+  }
+
+  return results;
+};
+
+const completedHands = (
+  hand: MahjongHand,
+  completingTile: PlayingTile,
+): MahjongHand[] => {
+  const completed: MahjongHand[] = [];
+  const finish = (
+    sets: HandSet[],
+    looseTiles?: PlayingTile[],
+  ): MahjongHand => ({
+    ...hand,
+    sets,
+    looseTiles,
+    remainingTiles: undefined,
+    isWinner: true,
+    winningMethod: undefined,
+    winningTileProvenance: undefined,
+    winningEventEvidence: undefined,
+    originalCall: false,
+  });
+
+  if (hand.looseTiles?.length) {
+    const irregular = finish([], [...hand.looseTiles, completingTile]);
+    return hasCompleteWinningShape(irregular) ? [irregular] : [];
+  }
+
+  const remaining = hand.remainingTiles ?? [];
+  if (hand.sets.length === 0) {
+    const irregular = finish([], [...remaining, completingTile]);
+    if (hasCompleteWinningShape(irregular)) completed.push(irregular);
+  }
+
+  for (const sets of standardDecompositions(
+    hand.sets,
+    [...remaining, completingTile],
+  )) {
+    const candidate = finish(sets);
+    if (hasCompleteWinningShape(candidate)) completed.push(candidate);
+  }
+
+  for (let index = 0; index < hand.sets.length; index += 1) {
+    const handSet = hand.sets[index];
+    if (
+      handSet.kind !== 'pair' ||
+      tileKey(handSet.tile) !== tileKey(completingTile)
+    ) {
+      continue;
+    }
+    const upgraded = hand.sets.map((candidate, candidateIndex) =>
+      candidateIndex === index
+        ? { ...candidate, kind: 'pung' as const }
+        : candidate,
+    );
+    for (const sets of standardDecompositions(upgraded, remaining)) {
+      const candidate = finish(sets);
+      if (hasCompleteWinningShape(candidate)) completed.push(candidate);
+    }
+  }
+
+  return completed;
+};
 
 const completesTarget = (
   hand: MahjongHand,
   target: FishingSpecialId,
   tile: PlayingTile,
-) => {
-  let completed: MahjongHand;
-  if (hand.incompleteSet) {
-    if (tileKey(tile) !== tileKey(hand.incompleteSet.tile)) return false;
-    const kind =
-      hand.incompleteSet.kind === 'single'
-        ? 'pair'
-        : hand.incompleteSet.kind === 'pair'
-          ? 'pung'
-          : 'kong';
-    const completedSet: HandSet = {
-      id: 'fishing-completion',
-      kind,
-      tile,
-      visibility: hand.incompleteSet.visibility,
-    };
-    completed = {
-      ...hand,
-      sets: [...hand.sets, completedSet],
-      looseTiles: undefined,
-      incompleteSet: undefined,
-      isWinner: true,
-      originalCall: false,
-    };
-  } else {
-    completed = {
-      ...hand,
-      sets: [],
-      looseTiles: [...(hand.looseTiles ?? []), tile],
-      incompleteSet: undefined,
-      isWinner: true,
-      originalCall: false,
-    };
-  }
-
-  if (target === 'purity') return isPurityHand(completed);
-  return (
-    detectSpecialHands(completed).find((special) => special.id === target)
-      ?.matched ?? false
+) =>
+  completedHands(hand, tile).some((completed) =>
+    target === 'purity'
+      ? isPurityHand(completed)
+      : detectSpecialHands(completed).some(
+          (special) => special.id === target && special.matched,
+        ),
   );
-};
 
 export const detectSpecialFishing = (
   hand: MahjongHand,
 ): SpecialFishingResult[] => {
   if (
     hand.isWinner ||
-    (!hand.incompleteSet &&
-      !(hand.sets.length === 0 && hand.looseTiles?.length === 13))
+    structuralTileCount(hand) !== 13 ||
+    ((hand.looseTiles?.length ?? 0) > 0 &&
+      (hand.sets.length > 0 || (hand.remainingTiles?.length ?? 0) > 0))
   ) {
     return [];
   }
@@ -175,21 +363,10 @@ export const detectSpecialFishing = (
 };
 
 export const fishingIntrinsicHand = (hand: MahjongHand): MahjongHand => {
-  const incomplete = hand.incompleteSet;
-  const intrinsicSet: HandSet | undefined =
-    incomplete && incomplete.kind !== 'single'
-      ? {
-          id: 'fishing-incomplete',
-          kind: incomplete.kind,
-          tile: incomplete.tile,
-          visibility: incomplete.visibility,
-        }
-      : undefined;
   return {
     ...hand,
-    sets: [...hand.sets, ...(intrinsicSet ? [intrinsicSet] : [])],
     looseTiles: undefined,
-    incompleteSet: undefined,
+    remainingTiles: undefined,
     isWinner: false,
     originalCall: false,
     winningMethod: undefined,

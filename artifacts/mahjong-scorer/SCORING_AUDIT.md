@@ -58,6 +58,28 @@ one-suit-with-chows scoring were found and removed.
     detailed score records, confirmation, replay and undo. No turn or discard
     history was introduced.
 
+## Unfinished losing-hand corrections
+
+20. Replaced the single typed incomplete group with arbitrary individually
+    entered Remaining tiles alongside completed scoring groups.
+21. Enforced 13 structural playing tiles for non-winners and 14 for winners.
+    Flowers and Seasons are excluded; each represented Kong contributes four
+    physical tiles but only three structural slots.
+22. Included Remaining tiles in playing-tile copy limits and whole-hand
+    suit/honour properties without scoring them as completed groups.
+23. Reworked grouped fishing to use only the actual entered remainder. Each
+    candidate draw is accepted only when the resulting tiles have a legal
+    concealed decomposition that completes a supported special. Existing
+    pairs may be upgraded to pungs when the draw matches.
+24. Preserved the direct 13-loose-tile fishing route for irregular specials,
+    and also allowed the same actual-content check when all 13 ordinary
+    Remaining tiles are ungrouped.
+25. Corrected Fourfold Plenty fishing fixtures to four completed Kongs plus a
+    single waiting for the pair. Promoting a pung to a Kong cannot itself
+    supply the missing structural tile.
+26. Preserved Remaining tiles in detailed score records, handoff, ledger
+    cloning, replay and undo paths.
+
 ## Hand-builder UX refinements
 
 - Kept Standard sets as the default entry route and moved the rare irregular
@@ -67,6 +89,12 @@ one-suit-with-chows scoring were found and removed.
   behavior.
 - Preserved the separate Standard-set and irregular-layout drafts when changing
   modes so switching entry route does not silently discard work.
+- Replaced “Incomplete group” with a touch- and keyboard-operable Remaining
+  tiles area. Every leftover tile can be added or removed individually.
+- Changed hand progress to the 13/14 structural playing-tile base, excluding
+  Flowers and Seasons and showing additional physical Kong tiles separately.
+- Prevented the tile bank from representing more than four physical copies or
+  exceeding the applicable structural hand size.
 
 ## Ambiguities retained rather than guessed
 

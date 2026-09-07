@@ -34,6 +34,24 @@ Use these markers when extending this document:
 - Honour tiles: Winds and Dragons.
 - Bonus tiles: Flowers and Seasons.
 
+## Hand size and unfinished hands
+
+**Implemented.** Flowers and Seasons do not occupy playing-tile slots. A
+non-winning hand contains 13 structural playing tiles and a winning hand
+contains 14. Each completed Kong is represented by four physical copies but
+occupies three structural slots, so every represented Kong adds one physical
+tile above the 13/14 base.
+
+For an ordinary non-winning hand, completed sets and pairs are entered as
+groups. Every other playing tile is entered individually under **Remaining
+tiles**. Those tiles may form any combination of singles, pairs or unfinished
+sequences; the hand does not have to be fishing. Remaining tiles do not score
+as completed sets, but they do count for hand composition, special-hand
+eligibility, copy limits and automatic fishing.
+
+The separate loose-tile layout remains available for whole irregular special
+patterns. It cannot be mixed with grouped sets or Remaining tiles.
+
 ## Standard set scoring
 
 ### Chows
@@ -164,7 +182,25 @@ draft so changing entry route does not silently discard work.
 
 Every matching special and every possible completing tile are retained in the score result and shown in the scorer. Where patterns overlap, each lawful fishing interpretation is calculated independently and the highest score is used. Equal-scoring alternatives remain visible, with one deterministic interpretation supplying the shared score.
 
-Irregular hands are entered as the 13 tiles currently held. Grouped hands retain complete sets and identify the exact incomplete group currently held: a single waiting to become a pair, a pair waiting to become a pung, or a pung waiting to become a kong. This avoids treating a completed special with `isWinner = false` as fishing.
+Irregular hands are entered as the 13 tiles currently held. Ordinary grouped
+hands retain their completed sets and the actual individual Remaining tiles.
+For each possible four-copies-safe draw, the scorer partitions the Remaining
+tiles plus that draw into legal concealed pairs, pungs and at most one chow,
+combines that interpretation with the completed groups, and runs the existing
+special detectors. An existing pair may also be completed into a pung when
+the drawn tile matches it. The ungrouped 13-tile irregular route continues to
+test the completed 14-tile layout directly.
+
+Fishing is only reported when at least one legal completed interpretation
+matches a supported special. A structurally complete but non-fishing losing
+hand remains valid. Remaining tiles also participate in all-suit/honour
+properties and the four-copy limit, preventing an omitted off-suit tile from
+creating false Purity fishing.
+
+Under corrected structural counting, adding a fourth tile to a represented
+pung does not add the missing fourteenth structural slot. Fourfold Plenty
+fishing is therefore recognized from four completed Kongs plus a single
+waiting to become the pair, not from the old three-Kongs-plus-pung shortcut.
 
 Published values implemented:
 

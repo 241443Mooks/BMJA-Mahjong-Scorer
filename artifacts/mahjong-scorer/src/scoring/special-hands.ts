@@ -23,6 +23,7 @@ type Detector = {
 const tiles = (hand: MahjongHand) => [
   ...hand.sets.flatMap(expandedTiles),
   ...(hand.looseTiles ?? []),
+  ...(hand.remainingTiles ?? []),
 ];
 const counts = (values: PlayingTile[]) =>
   values.reduce<Map<string, number>>((map, tile) => {

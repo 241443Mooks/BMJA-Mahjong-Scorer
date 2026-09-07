@@ -68,8 +68,21 @@ export const expandedTiles = (handSet: HandSet): PlayingTile[] => {
   return Array.from({ length: count }, () => handSet.tile);
 };
 
+export const representedKongCount = (hand: MahjongHand): number =>
+  hand.sets.filter((handSet) => handSet.kind === 'kong').length;
+
+export const playingTiles = (hand: MahjongHand): PlayingTile[] => [
+  ...hand.sets.flatMap(expandedTiles),
+  ...(hand.looseTiles ?? []),
+  ...(hand.remainingTiles ?? []),
+];
+
+/** A kong has four physical tiles but occupies three structural hand slots. */
+export const structuralTileCount = (hand: MahjongHand): number =>
+  playingTiles(hand).length - representedKongCount(hand);
+
 export const hasCompleteWinningShape = (hand: MahjongHand): boolean => {
-  if (!hand.isWinner || hand.incompleteSet) return false;
+  if (!hand.isWinner || (hand.remainingTiles?.length ?? 0) > 0) return false;
   if (hand.sets.length === 0) {
     return (hand.looseTiles?.length ?? 0) === 14;
   }
