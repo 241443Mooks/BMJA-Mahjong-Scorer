@@ -1,4 +1,5 @@
-import { ArrowLeft, BookOpen, ChevronRight, CircleHelp, Sparkles } from 'lucide-react';
+import { ChevronRight, CircleHelp, Sparkles } from 'lucide-react';
+import { SiteHeader } from '../components/SiteHeader';
 
 import { TileStrip, type TileAssetKey, type TileDefinition } from './MahjongTileGallery';
 
@@ -260,21 +261,7 @@ function CatalogueSection({ id, eyebrow, title, intro, hands }: { id: string; ey
 export function SpecialHandsCatalogue() {
   return (
     <div className="mahjong-shell">
-      <header className="border-b border-[#d8ceb8] bg-[#f5f1e6]/95">
-        <div className="mx-auto flex max-w-[1180px] items-center justify-between gap-4 px-5 py-4 lg:px-8">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-md bg-[#284d45] text-[#f5f1e6]"><Sparkles size={19} /></div>
-            <div>
-              <div className="font-mono text-[9px] uppercase tracking-[.24em] text-[#ae6249]">Learn British Mahjong</div>
-              <div className="font-serif text-[20px] font-bold leading-none text-[#284d45]">Special hands</div>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <a href="/guide" className="hidden items-center gap-2 rounded-md border border-[#cfc3aa] bg-[#fbf8ed] px-3 py-2 text-[11px] font-semibold text-[#284d45] transition hover:bg-[#efe8da] sm:flex"><BookOpen size={14} /> Beginner guide</a>
-            <a href="/" className="flex items-center gap-2 rounded-md border border-[#cfc3aa] bg-[#fbf8ed] px-3 py-2 text-[11px] font-semibold text-[#284d45] transition hover:bg-[#efe8da]"><ArrowLeft size={14} /> Scorer</a>
-          </div>
-        </div>
-      </header>
+      <SiteHeader />
 
       <main className="mx-auto max-w-[1180px] px-5 py-8 lg:px-8 lg:py-12">
         <section className="rounded-2xl border border-[#d8ceb8] bg-[#fbf8ed] px-5 py-9 shadow-[var(--shadow-sm)] sm:px-8 sm:py-11 lg:px-10">
