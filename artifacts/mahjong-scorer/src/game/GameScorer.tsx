@@ -21,6 +21,9 @@ import {
   reconcileDetailedHandsForOutcome,
   returnAppliedScoreToTable,
   undoLastHand,
+  clearGameRecovery,
+  loadGameRecovery,
+  saveGameRecovery,
 } from '.';
 import type {
   GameLength,
@@ -50,13 +53,16 @@ const formatChange = (value: number) =>
   `${value > 0 ? '+' : value < 0 ? '−' : ''}${Math.abs(value)}`;
 
 export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedScore }: GameScorerProps) {
+  const [recovered, setRecovered] = useState(() =>
+    typeof window === 'undefined' ? null : loadGameRecovery(window.localStorage),
+  );
   const [names, setNames] = useState(['', '', '', '']);
-  const [gameLength, setGameLength] = useState<GameLength>('one-round');
-  const [game, setGame] = useState<GameState | null>(null);
-  const [outcomeType, setOutcomeType] = useState<'win' | 'draw'>('win');
-  const [winnerId, setWinnerId] = useState('');
-  const [scores, setScores] = useState<RoundScoreDraft>({});
-  const [scoreRecords, setScoreRecords] = useState<PlayerScoreRecords>({});
+  const [gameLength, setGameLength] = useState<GameLength>(recovered?.game.setup.gameLength ?? 'one-round');
+  const [game, setGame] = useState<GameState | null>(recovered?.game ?? null);
+  const [outcomeType, setOutcomeType] = useState<'win' | 'draw'>(recovered?.outcomeType ?? 'win');
+  const [winnerId, setWinnerId] = useState(recovered?.winnerId ?? '');
+  const [scores, setScores] = useState<RoundScoreDraft>(recovered?.draft.scores ?? {});
+  const [scoreRecords, setScoreRecords] = useState<PlayerScoreRecords>(recovered?.draft.scoreRecords ?? {});
   const [error, setError] = useState('');
   const tableScoresRef = useRef<HTMLElement>(null);
 
@@ -75,6 +81,17 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
         : null,
     [game, outcomeType, winnerId],
   );
+
+  useEffect(() => {
+    if (!game || typeof window === 'undefined') return;
+    saveGameRecovery(
+      window.localStorage,
+      game,
+      outcomeType,
+      winnerId,
+      { scores, scoreRecords },
+    );
+  }, [game, outcomeType, scoreRecords, scores, winnerId]);
 
   useEffect(() => {
     if (returnedScore === undefined || !game || !outcome) return;
@@ -163,11 +180,24 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
     const seats = Object.fromEntries(
       players.map((player, index) => [player.id, GAME_WINDS[index]]),
     ) as SeatAssignments;
+    if (typeof window !== 'undefined') clearGameRecovery(window.localStorage);
+    setRecovered(null);
     const started = createBmjaGame(players, seats, undefined, gameLength);
     setGame(started);
     setScores({});
     setScoreRecords({});
     setWinnerId(players[0].id);
+    setError('');
+  };
+
+  const startOver = () => {
+    if (typeof window !== 'undefined') clearGameRecovery(window.localStorage);
+    setRecovered(null);
+    setGame(null);
+    setScores({});
+    setScoreRecords({});
+    setWinnerId('');
+    setOutcomeType('win');
     setError('');
   };
 
@@ -250,8 +280,8 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
               Seat the table.
             </h1>
             <p className="mt-4 max-w-[620px] text-[14px] leading-6 text-[#66746e]">
-              Enter players in their starting seats. Scores and history stay in
-              this browser until the page is refreshed.
+              Enter players in their starting seats. Your game stays in this
+              browser so you can continue after a refresh.
             </p>
           </div>
 
@@ -324,6 +354,11 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
               {game.players.find((player) => player.id === currentEastId)?.name}{' '}
               is East · {windLabel(game.prevailingWind)} prevailing
             </div>
+            {recovered && (
+              <p className="mt-1 text-[11px] font-semibold text-[#477562]">
+                Your saved game has been recovered.
+              </p>
+            )}
           </div>
           <div className="flex gap-2">
             <a href="/guide" className="hidden items-center gap-2 rounded-md border border-[#cfc3aa] bg-[#fbf8ed] px-3 py-2 text-[11px] font-semibold text-[#284d45] sm:flex">
@@ -337,6 +372,14 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
               className="flex items-center gap-2 rounded-md border border-[#cfc3aa] bg-[#fbf8ed] px-3 py-2 text-[11px] font-semibold text-[#66746e] disabled:opacity-40"
             >
               <Undo2 size={14} /> Undo last hand
+            </button>
+            <button
+              type="button"
+              data-testid="button-start-over"
+              onClick={startOver}
+              className="flex items-center gap-2 rounded-md border border-[#cfc3aa] bg-[#fbf8ed] px-3 py-2 text-[11px] font-semibold text-[#66746e]"
+            >
+              <RotateCcw size={14} /> Start over
             </button>
             <button
               type="button"
