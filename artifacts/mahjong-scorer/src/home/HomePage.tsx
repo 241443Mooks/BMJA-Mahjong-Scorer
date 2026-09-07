@@ -3,6 +3,7 @@ import {
   BookOpen,
   Calculator,
   CircleHelp,
+  Coffee,
   Gamepad2,
   Info,
   Sparkles,
@@ -162,6 +163,28 @@ export function HomePage() {
               </p>
             </div>
           </a>
+        </section>
+
+        <section className="mt-8">
+          <div className="rounded-xl border border-[#cfbfa4] bg-[#f5eadb] p-5 sm:flex sm:items-center sm:justify-between sm:gap-8 sm:p-6">
+            <div className="max-w-[650px]">
+              <div className="flex items-center gap-3">
+                <Coffee size={18} className="text-[#ae6249]" />
+                <h2 className="font-serif text-[25px] text-[#284d45]">Support the project</h2>
+              </div>
+              <p className="mt-2 text-[12px] leading-6 text-[#596b65]">
+                If the scorer has made a game easier to score, helped explain a rule or saved an argument over the table, you can support its continued development. There is no requirement to contribute.
+              </p>
+            </div>
+            <a
+              href="https://buymeacoffee.com/sharronmo"
+              target="_blank"
+              rel="noreferrer"
+              className="mt-4 inline-flex shrink-0 items-center gap-2 rounded-md bg-[#284d45] px-4 py-2.5 text-[11px] font-semibold text-[#f8f4e9] transition hover:bg-[#23443d] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249] focus-visible:ring-offset-2 sm:mt-0"
+            >
+              <Coffee size={15} /> Buy me a coffee
+            </a>
+          </div>
         </section>
       </main>
 
