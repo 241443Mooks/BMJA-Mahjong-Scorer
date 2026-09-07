@@ -59,6 +59,19 @@ Use distinct mobile test IDs, e.g. `mobile-button-suit-*` and `mobile-button-add
 
 The desktop Tile bank remains unchanged and visible from `sm` upward. It may be hidden visually below `sm` once the inline picker is working.
 
+### Implemented structure
+
+The mobile picker is rendered by the hand scorer directly beneath the active
+set, Remaining tiles card, or special-layout tile area. Its suit selection,
+visible tiles, insertion, copy limits, and Chow filtering all use the same
+state and functions as the desktop Tile bank. The mobile controls use the
+`mobile-button-suit-*` and `mobile-button-add-tile-*` test-ID namespaces.
+
+The mobile Game status summary is rendered before Arrange the tiles. In the
+standalone scorer it includes a Change game status action that takes the
+player to the existing editable controls; no second set of game-status inputs
+is created.
+
 ## Active destination
 
 The selected set/Remaining tiles card should remain visually distinct. The mobile picker itself should reinforce the destination in text rather than relying on colour.
