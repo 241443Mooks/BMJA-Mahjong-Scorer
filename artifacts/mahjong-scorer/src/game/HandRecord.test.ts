@@ -8,7 +8,8 @@ import type {
   SettlementTransaction,
 } from "./types";
 import { HandRecord, detailedHandStatus, settlementDescription } from "./HandRecord";
-import { handCountLabel } from "./GameScorer";
+import { handCountLabel, printStandings } from "./GameScorer";
+import { createBmjaGame } from "./game";
 
 const players: GamePlayer[] = [
   { id: "jenn", name: "Jenn" },
@@ -131,5 +132,14 @@ describe("game-record presentation", () => {
   it("uses canonical singular and plural ledger counts", () => {
     expect(handCountLabel(1)).toBe("1 hand played");
     expect(handCountLabel(3)).toBe("3 hands played");
+  });
+
+  it("keeps in-progress standings in player order but ranks completed games by canonical balance", () => {
+    const seats = { jenn: "east", andy: "south", louise: "west", smooks: "north" } as const;
+    const game = createBmjaGame(players, seats);
+    expect(printStandings(game).map((player) => player.id)).toEqual(["jenn", "andy", "louise", "smooks"]);
+
+    const complete = { ...game, isComplete: true, balances: { jenn: 20, andy: 40, louise: -10, smooks: -50 } };
+    expect(printStandings(complete).map((player) => player.id)).toEqual(["andy", "jenn", "louise", "smooks"]);
   });
 });

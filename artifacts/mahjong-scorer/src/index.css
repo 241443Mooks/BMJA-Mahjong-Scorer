@@ -120,7 +120,9 @@
   summary { list-style: none; }
   .game-ledger-summary, .game-ledger-summary + div { break-after: avoid; page-break-after: avoid; }
   .game-ledger-summary, .game-ledger-summary + div, .manual-score-record, .game-print-standings { break-inside: avoid; page-break-inside: avoid; }
-  .recorded-hand, .recorded-hand .rounded-md { break-inside: avoid; page-break-inside: avoid; }
+  .recorded-hand { break-inside: auto; page-break-inside: auto; }
+  .recorded-hand .rounded-md, .manual-score-record { break-inside: avoid; page-break-inside: avoid; }
+  .print-summary .recorded-hand, .print-summary .manual-score-record { display: none !important; }
   .game-record-footer { margin-top: 8mm; border-top: 1px solid #777; padding-top: 3mm; color: #444; font-size: 8pt; }
   .tile-shadow { box-shadow: none; }
   img { print-color-adjust: exact; -webkit-print-color-adjust: exact; }

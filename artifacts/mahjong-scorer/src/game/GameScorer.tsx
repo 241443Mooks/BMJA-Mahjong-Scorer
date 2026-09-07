@@ -57,6 +57,11 @@ const formatChange = (value: number) =>
 export const handCountLabel = (count: number) =>
   `${count} ${count === 1 ? 'hand' : 'hands'} played`;
 
+export const printStandings = (game: GameState) =>
+  game.isComplete
+    ? [...game.players].sort((a, b) => game.balances[b.id] - game.balances[a.id])
+    : game.players;
+
 export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedScore }: GameScorerProps) {
   const [recovered, setRecovered] = useState(() =>
     typeof window === 'undefined'
@@ -71,7 +76,10 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
   const [scores, setScores] = useState<RoundScoreDraft>(recovered?.draft.scores ?? {});
   const [scoreRecords, setScoreRecords] = useState<PlayerScoreRecords>(recovered?.draft.scoreRecords ?? {});
   const [error, setError] = useState('');
+  const [printMode, setPrintMode] = useState<'summary' | 'full' | null>(null);
   const tableScoresRef = useRef<HTMLElement>(null);
+  const ledgerDetailsRefs = useRef(new Map<number, HTMLDetailsElement>());
+  const printOpenStatesRef = useRef<Map<number, boolean> | null>(null);
 
   const currentEastId = game
     ? Object.entries(game.seats).find(([, seat]) => seat === 'east')?.[0]
@@ -103,6 +111,34 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
       { scores, scoreRecords },
     );
   }, [game, outcomeType, scoreRecords, scores, winnerId]);
+
+  useEffect(() => {
+    if (!printMode || typeof window === 'undefined') return;
+    if (printMode === 'full') {
+      printOpenStatesRef.current = new Map(
+        [...ledgerDetailsRefs.current].map(([handNumber, element]) => [handNumber, element.open]),
+      );
+      ledgerDetailsRefs.current.forEach((element) => { element.open = true; });
+    }
+    let restored = false;
+    const restore = () => {
+      if (restored) return;
+      restored = true;
+      printOpenStatesRef.current?.forEach((open, handNumber) => {
+        const element = ledgerDetailsRefs.current.get(handNumber);
+        if (element) element.open = open;
+      });
+      printOpenStatesRef.current = null;
+      setPrintMode(null);
+      window.removeEventListener('afterprint', restore);
+    };
+    window.addEventListener('afterprint', restore);
+    window.requestAnimationFrame(() => {
+      window.print();
+      restore();
+    });
+    return () => window.removeEventListener('afterprint', restore);
+  }, [printMode]);
 
   useEffect(() => {
     if (returnedScore === undefined || !game || !outcome) return;
@@ -250,7 +286,7 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
     resetRoundEntry(next);
   };
 
-  const printGame = () => window.print();
+  const printGame = (mode: 'summary' | 'full') => setPrintMode(mode);
 
   if (!game) {
     return (
@@ -332,7 +368,7 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
   }
 
   return (
-    <div className="mahjong-shell">
+    <div className={`mahjong-shell ${printMode === 'summary' ? 'print-summary' : ''}`}>
       <div className="screen-only"><SiteHeader /></div>
       <div className="screen-only border-b border-[#d8ceb8] bg-[#f5f1e6]/70">
         <div className="mx-auto flex max-w-[1440px] flex-wrap items-center justify-between gap-4 px-5 py-4 lg:px-8">
@@ -654,11 +690,11 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
             )}
           </section>
           <section className="print-only game-print-standings">
-            <div className="font-mono text-[10px] uppercase tracking-[.2em]">Confirmed standings</div>
+            <div className="font-mono text-[10px] uppercase tracking-[.2em]">{game.isComplete ? 'Final standings' : 'Confirmed standings'}</div>
             <div className="mt-2 grid grid-cols-2 gap-x-5 gap-y-2 sm:grid-cols-4">
-              {game.players.map((player) => (
+              {printStandings(game).map((player, index) => (
                 <div key={player.id}>
-                  <b>{player.name}</b><br />{formatChange(game.balances[player.id])}
+                  <b>{game.isComplete ? `${index + 1}. ` : ''}{player.name}</b><br />{formatChange(game.balances[player.id])}
                 </div>
               ))}
             </div>
@@ -671,9 +707,13 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
             <h2 className="font-serif text-[23px] text-[#284d45]">
               Game ledger
             </h2>
-            <button type="button" data-testid="button-print-game" onClick={printGame} className="screen-only ml-auto flex items-center gap-2 rounded-md border border-[#cfc3aa] bg-[#fdfbf5] px-3 py-2 text-[11px] font-semibold text-[#284d45]">
-              <Printer size={14} /> Print / Save game
-            </button>
+            <details className="screen-only ml-auto relative">
+              <summary className="flex cursor-pointer list-none items-center gap-2 rounded-md border border-[#cfc3aa] bg-[#fdfbf5] px-3 py-2 text-[11px] font-semibold text-[#284d45]"><Printer size={14} /> Print / Save game</summary>
+              <div className="absolute right-0 z-10 mt-2 w-64 rounded-lg border border-[#d8ceb8] bg-[#fbf8ed] p-2 shadow-[var(--shadow-md)]">
+                <button type="button" data-testid="button-print-full" onClick={() => printGame('full')} className="block w-full rounded-md px-3 py-2 text-left text-[11px] font-semibold text-[#284d45] hover:bg-[#efe8da]">Full game record<span className="mt-0.5 block font-normal text-[#7a7769]">Tiles, scoring evidence and full hand details</span></button>
+                <button type="button" data-testid="button-print-summary" onClick={() => printGame('summary')} className="mt-1 block w-full rounded-md px-3 py-2 text-left text-[11px] font-semibold text-[#284d45] hover:bg-[#efe8da]">Game summary<span className="mt-0.5 block font-normal text-[#7a7769]">Standings and hand-by-hand results</span></button>
+              </div>
+            </details>
           </div>
           <p className="mb-4 font-mono text-[10px] uppercase tracking-[.14em] text-[#7a7769]">{handCountLabel(game.handHistory.length)}</p>
           {game.handHistory.length === 0 ? (
@@ -685,6 +725,10 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
               {[...game.handHistory].reverse().map((hand) => (
                 <details
                   key={hand.handNumber}
+                  ref={(element) => {
+                    if (element) ledgerDetailsRefs.current.set(hand.handNumber, element);
+                    else ledgerDetailsRefs.current.delete(hand.handNumber);
+                  }}
                   className="rounded-lg border border-[#e2d9c7] bg-[#fdfbf5] p-4"
                 >
                   <summary className="game-ledger-summary cursor-pointer list-none text-[#284d45]">
