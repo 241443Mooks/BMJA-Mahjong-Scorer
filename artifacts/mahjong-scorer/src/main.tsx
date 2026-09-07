@@ -5,6 +5,7 @@ import App from './App';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { BeginnerGuide } from './guide/BeginnerGuide';
 import { SpecialHandsCatalogue } from './guide/SpecialHandsCatalogue';
+import { AboutPage } from './home/AboutPage';
 import { HomePage } from './home/HomePage';
 import { ComingSoonPage } from './home/ComingSoonPage';
 
@@ -50,15 +51,7 @@ function RouteContent() {
     );
   }
 
-  if (path === '/about') {
-    return (
-      <ComingSoonPage
-        kind="about"
-        title="About this project"
-        description="The home for the project story, rules sources, independence statement, artwork attribution and ways to support British Mahjong Scorer."
-      />
-    );
-  }
+  if (path === '/about') return <AboutPage />;
 
   return <HomePage />;
 }
