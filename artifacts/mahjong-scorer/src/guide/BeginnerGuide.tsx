@@ -165,6 +165,7 @@ export function BeginnerGuide({ onClose }: { onClose: () => void }) {
             <GuideSection id="tile-count" number="04" title="Your 13 tiles and the winning tile">
               <p>During normal play, the underlying hand structure contains <strong className="text-[#284d45]">13 playing tiles</strong>. When you go Mah Jong, the winning tile remains in the hand, giving a 14-tile completed structure.</p>
               <p>A Kong contains four identical tiles rather than three. Because a replacement tile is drawn after declaring a Kong, a hand with one or more Kongs can physically contain more than 13 or 14 playing tiles while still having the correct structure.</p>
+              <p>If you have not won, enter completed groups as sets and put every other playing tile under <strong className="text-[#284d45]">Remaining tiles</strong>. They can be singles, pairs or unfinished runs; you do not need to force them into a fishing shape.</p>
               <p>Flowers and Seasons are excluded from that structural total because each is set aside and replaced.</p>
               <Callout>If a tile count looks wrong, check that Flowers and Seasons are entered as bonus tiles and that any four-of-a-kind group is entered as a Kong rather than a Pung.</Callout>
             </GuideSection>

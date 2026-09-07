@@ -280,14 +280,26 @@ For each rule added or changed:
 4. Prefer published worked examples as golden fixtures when available.
 5. Do not change an expected test value merely to make current code pass; source interpretation comes first.
 
+## Rule-to-test and fixture map
+
+The focused test files below are the maintained implementation map. Golden fixtures cover interactions where an isolated rule test would be insufficient.
+
+| Rule area | Focused coverage | Interaction fixture coverage |
+| --- | --- | --- |
+| Tile identities, copy limits, hand size and Remaining tiles | `src/scoring/unfinished-hands.test.ts`, `src/scoring/score.test.ts` | `src/scoring/golden-fixtures.test.ts` |
+| Chow, Pung, Kong, honour-pair, bonus and Mah-Jong point values | `src/scoring/rules.test.ts` | `src/scoring/golden-fixtures.test.ts` |
+| Doubles, limits and special-score composition | `src/scoring/rules.test.ts`, `src/scoring/score.test.ts` | `src/scoring/golden-fixtures.test.ts` |
+| Tile-pattern specials and their fishing values | `src/scoring/special-hands.test.ts`, `src/scoring/fishing.test.ts`, `src/scoring/catalogue.test.ts` | `src/scoring/golden-fixtures.test.ts` |
+| Winning-tile provenance and event-dependent specials | `src/scoring/event-evidence.test.ts`, `src/scoring/special-hands.test.ts` | `src/scoring/golden-fixtures.test.ts` |
+| Settlement, East multipliers, rotation and draws | `src/game/settlement.test.ts`, `src/game/progression.test.ts` | `src/game/game.test.ts` |
+| Scorer-to-table hand application | `src/game/hand-scorer-handoff.test.ts`, `src/game/table-navigation.test.ts` | `src/game/game.test.ts` |
+
 ## Current backlog
 
-- #1 Complete missing layout-based BMJA special hands.
-- #2 Add BMJA special-hand fishing scores.
-- #4 Add event-based BMJA special hands.
 - #6 Add detailed end-of-game report.
 - #7 Add shared tile inventory and availability warnings.
 - #8 Add photo-based tile recognition.
+- #14 Persist and recover an in-progress game across refresh.
 
 ## Copyright / wording note
 

@@ -1,6 +1,6 @@
-# British Mahjong Beginner Guide — Content Draft
+# British Mahjong Beginner Guide — Content Source
 
-This document is the content source for a future beginner-friendly guide inside the British Mahjong Scorer.
+This document is the content source for the beginner-friendly guide at `/guide` (`/beginner-guide` is an alias) inside the British Mahjong Scorer.
 
 It is **not an official BMJA publication**. It is a project-owned learner guide based on the rules implemented in the scorer and the source hierarchy recorded in `BMJA_RULES_REFERENCE.md`.
 
@@ -10,7 +10,7 @@ The aim is not to reproduce a rulebook. The aim is to help a beginner understand
 
 ---
 
-## Recommended guide structure
+## Implemented guide structure
 
 Suggested top-level pages or expandable sections:
 
@@ -27,7 +27,7 @@ Suggested top-level pages or expandable sections:
 11. Glossary
 12. Full scoring reference
 
-The main learning flow should stay short and reassuring. Detailed tables, exhaustive doubles and the full special-hand catalogue should sit one level deeper under reference-style pages.
+The main learning flow stays short and reassuring. Detailed tables use progressive disclosure, and the full special-hand catalogue sits separately at `/special-hands`.
 
 ---
 
@@ -126,6 +126,10 @@ Kongs are the exception to the simple physical count.
 A Kong contains four identical tiles rather than three. When a Kong is declared, a replacement tile is drawn, so a hand containing one or more Kongs can physically contain more than 13 or 14 playing tiles while still having the correct underlying hand structure.
 
 The scorer should account for this automatically.
+
+## What if I have not won yet?
+
+Enter completed groups as sets. Put every other playing tile under **Remaining tiles**. They may be singles, pairs or unfinished sequences; they do not have to form one particular waiting shape. The scorer still counts them, checks the four-copy limit and looks for any supported special fishing automatically.
 
 ## What about Flowers and Seasons?
 
@@ -285,9 +289,9 @@ If it needs information that cannot be seen from the tiles, it asks a short ques
 
 This can lead to a separate reference catalogue.
 
-## Future special-hand catalogue design
+## Special-hand catalogue
 
-Each special-hand entry could contain:
+Each catalogue entry contains:
 
 - name
 - simple description of the pattern or event
@@ -483,16 +487,12 @@ Do not weaken the engineering reference for readability. Do not expose engineeri
 
 ---
 
-# Issue #5 completion notes
+# Issue #5 completion record
 
-Before closing issue #5, complete the following engineering/documentation housekeeping:
-
-- add an explicit rule-to-test / fixture mapping to `BMJA_RULES_REFERENCE.md`
-- remove completed backlog items #1, #2 and #4 from its current backlog section
-- add current relevant backlog items including #14 and #15
-- after issue #15 lands, update the reference and this guide to reflect the final arbitrary losing-hand / Remaining tiles model and corrected tile-count validation
-- ensure all public learner wording is project-owned paraphrase rather than copied rulebook/site text
-- keep source links available from the public reference/about section
+- The explicit rule-to-test / fixture mapping lives in `BMJA_RULES_REFERENCE.md`.
+- Completed #1, #2, #4 and #15 work is not retained as backlog.
+- The guide now describes the final **Remaining tiles** model for arbitrary unfinished losing hands and corrected Kong structural counting.
+- Public learner wording is project-owned paraphrase; the source hierarchy remains in `BMJA_RULES_REFERENCE.md`.
 
 ---
 

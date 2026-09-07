@@ -1,6 +1,7 @@
 import { useMemo, useRef, useState, useEffect } from 'react';
 import {
   ArrowRight,
+  BookOpen,
   Calculator,
   Check,
   History,
@@ -226,13 +227,14 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
                 </div>
               </div>
             </div>
-            <button
-              type="button"
-              onClick={() => onOpenHandScorer()}
-              className="rounded-md border border-[#cfc3aa] bg-[#fbf8ed] px-3 py-2 text-[11px] font-semibold text-[#284d45]"
-            >
-              Detailed hand scorer
-            </button>
+            <div className="flex items-center gap-2">
+              <a href="/guide" className="hidden items-center gap-2 rounded-md border border-[#cfc3aa] bg-[#fbf8ed] px-3 py-2 text-[11px] font-semibold text-[#284d45] sm:flex">
+                <BookOpen size={14} /> Beginner guide
+              </a>
+              <button type="button" onClick={() => onOpenHandScorer()} className="rounded-md border border-[#cfc3aa] bg-[#fbf8ed] px-3 py-2 text-[11px] font-semibold text-[#284d45]">
+                Detailed hand scorer
+              </button>
+            </div>
           </div>
         </header>
 
@@ -324,6 +326,9 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
             </div>
           </div>
           <div className="flex gap-2">
+            <a href="/guide" className="hidden items-center gap-2 rounded-md border border-[#cfc3aa] bg-[#fbf8ed] px-3 py-2 text-[11px] font-semibold text-[#284d45] sm:flex">
+              <BookOpen size={14} /> Beginner guide
+            </a>
             <button
               type="button"
               data-testid="button-undo-hand"
