@@ -662,6 +662,54 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
     return true;
   });
 
+  const tileIsDisabled = (tile: PlayingTile) =>
+    (layoutMode === 'special' &&
+      (looseTiles.length >= (isWinner ? 14 : 13) ||
+        looseTiles.filter((candidate) => tileKey(candidate) === tileKey(tile)).length >= 4)) ||
+    (layoutMode === 'sets' && !canAddStandardTile(tile));
+
+  const mobileDestinationLabel = (destination: string) => (
+    <div className="mb-3 flex items-baseline justify-between gap-3">
+      <h3 className="font-serif text-[18px] text-[#284d45]">Choose a tile</h3>
+      <span className="text-right font-mono text-[10px] text-[#ae6249]">{destination}</span>
+    </div>
+  );
+
+  const renderMobileTilePicker = (destination: string) => (
+    <div className="mt-3 rounded-md border border-[#d8ceb8] bg-[#f8f4e9] p-3 sm:hidden" data-testid="mobile-tile-picker">
+      {mobileDestinationLabel(destination)}
+      <div className="flex gap-1 overflow-x-auto border-b border-[#e2d9c7] pb-2">
+        {suitOrder.map((suit) => (
+          <button
+            type="button"
+            key={suit}
+            data-testid={`mobile-button-suit-${suit}`}
+            onClick={() => { setActiveSuit(suit); setShowAllTiles(false); }}
+            className={`shrink-0 rounded px-3 py-1.5 font-mono text-[10px] uppercase tracking-[.12em] transition ${activeSuit === suit && !showAllTiles ? 'bg-[#284d45] text-[#f8f4e9]' : 'text-[#7a7769] hover:bg-[#eee6d5]'}`}
+          >
+            {suitNames[suit]}
+          </button>
+        ))}
+      </div>
+      <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+        {visibleTiles.map((tile) => (
+          <button
+            type="button"
+            key={tileKey(tile)}
+            data-testid={`mobile-button-add-tile-${tileKey(tile)}`}
+            aria-label={`Add ${tileName(tile)}`}
+            onClick={() => addTile(tile)}
+            disabled={tileIsDisabled(tile)}
+            className="shrink-0 rounded-[7px] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249] disabled:cursor-not-allowed disabled:opacity-35"
+          >
+            <TileFace tile={tile} compact />
+          </button>
+        ))}
+        {visibleTiles.length === 0 && <div className="py-3 text-[11px] text-[#7a7769]">No valid tiles for this set type.</div>}
+      </div>
+    </div>
+  );
+
   return (
     <div className="mahjong-shell">
       <SiteHeader onNavigate={navigateAway} />
@@ -699,6 +747,20 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
 
           <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-5 xl:grid-cols-[minmax(0,1.18fr)_minmax(280px,.82fr)]">
             <div className="min-w-0 space-y-5">
+              <section className="rounded-xl border border-[#d8ceb8] bg-[#e8e1d1] p-4 sm:hidden" data-testid="mobile-game-status-summary">
+                <div className="font-mono text-[10px] font-medium uppercase tracking-[.2em] text-[#ae6249]">Game status</div>
+                <div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-2 text-[11px] text-[#66746e]">
+                  <span>Player wind <strong className="text-[#284d45]">{playerWind}</strong></span>
+                  <span>Prevailing <strong className="text-[#284d45]">{prevailingWind}</strong></span>
+                  <span>{isWinner ? 'Winner' : 'Not winner'}</span>
+                  {isWinner && <span>{availableWinningMethods.find((method) => method.value === winningMethod)?.label}</span>}
+                </div>
+                {!hasContext && (
+                  <button type="button" onClick={() => document.getElementById('game-status-controls')?.scrollIntoView({ behavior: 'smooth', block: 'start' })} className="mt-3 text-[11px] font-semibold text-[#284d45] underline decoration-[#ae6249] underline-offset-4">
+                    Change game status
+                  </button>
+                )}
+              </section>
               <section className="animate-rise animate-rise-delay-1 rounded-xl border border-[#d8ceb8] bg-[#fbf8ed] p-5 shadow-[var(--shadow-sm)] sm:p-6">
                 <SectionLabel eyebrow="01 / hand" title="Arrange the tiles" count={tileProgressLabel} />
                 {layoutMode === 'sets' ? (
@@ -770,6 +832,7 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
                       the tiles currently held; the scorer finds every legal
                       completing tile.
                     </p>
+                    {renderMobileTilePicker('Special layout')}
                   </div>
                 ) : (
                 <>
@@ -795,6 +858,7 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
                           <div className="flex h-[62px] w-full items-center justify-center rounded-md border border-dashed border-[#d7cbb5] text-[11px] text-[#9b988d]">Select a tile below to define this set</div>
                         )}
                       </div>
+                      {selectedSet === s.id && renderMobileTilePicker(`Adding to Set ${index + 1}`)}
                     </div>
                     ))}
                   </div>
@@ -848,13 +912,14 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
                           </div>
                         )}
                       </div>
+                      {selectedSet === 'remaining-tiles' && renderMobileTilePicker('Remaining tiles')}
                     </section>
                   )}
                 </>
                 )}
               </section>
 
-              <section className="animate-rise animate-rise-delay-2 rounded-xl border border-[#d8ceb8] bg-[#fbf8ed] p-5 shadow-[var(--shadow-sm)] sm:p-6">
+              <section className="hidden animate-rise animate-rise-delay-2 rounded-xl border border-[#d8ceb8] bg-[#fbf8ed] p-5 shadow-[var(--shadow-sm)] sm:block sm:p-6">
                 <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
                   <div><div className="font-mono text-[10px] font-medium uppercase tracking-[.2em] text-[#ae6249]">02 / tile bank</div><h2 className="mt-1 font-serif text-[22px] text-[#284d45]">Choose a tile</h2></div>
                   <div className="font-mono text-[10px] text-[#7a7769]">Adding to <span className="text-[#ae6249]">{layoutMode === 'special' ? `special layout (${looseTiles.length}/${isWinner ? 14 : 13})` : selectedSet === 'remaining-tiles' ? `Remaining tiles (${remainingTiles.length})` : activeSet ? `set ${sets.findIndex(s => s.id === selectedSet) + 1}` : '—'}</span></div>
@@ -873,15 +938,7 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
                       data-testid={`button-add-tile-${tileKey(tile)}`}
                       aria-label={`Add ${tileName(tile)}`}
                       onClick={() => addTile(tile)}
-                      disabled={
-                        layoutMode === 'special' &&
-                          (looseTiles.length >= (isWinner ? 14 : 13) ||
-                          looseTiles.filter(
-                            (candidate) =>
-                              tileKey(candidate) === tileKey(tile),
-                          ).length >= 4) ||
-                        (layoutMode === 'sets' && !canAddStandardTile(tile))
-                      }
+                      disabled={tileIsDisabled(tile)}
                       className="rounded-[7px] transition hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249] disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:translate-y-0"
                     ><TileFace tile={tile} compact /></button>
                   ))}
@@ -1049,7 +1106,7 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
             </div>
 
             <aside className="min-w-0 space-y-5">
-              <section className="animate-rise animate-rise-delay-1 min-w-0 rounded-xl border border-[#d8ceb8] bg-[#e8e1d1] p-5 sm:p-6">
+              <section id="game-status-controls" className="animate-rise animate-rise-delay-1 min-w-0 rounded-xl border border-[#d8ceb8] bg-[#e8e1d1] p-5 sm:p-6">
                 <SectionLabel eyebrow="05 / context" title="Game status" />
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
