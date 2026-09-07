@@ -36,18 +36,28 @@ Use these markers when extending this document:
 
 ## Hand size and unfinished hands
 
-**Implemented.** Flowers and Seasons do not occupy playing-tile slots. A
-non-winning hand contains 13 structural playing tiles and a winning hand
-contains 14. Each completed Kong is represented by four physical copies but
-occupies three structural slots, so every represented Kong adds one physical
-tile above the 13/14 base.
+**Implemented.** Flowers and Seasons do not occupy playing-tile slots. A real
+non-winning Mahjong hand contains 13 structural playing tiles and a winning
+hand contains 14. Each completed Kong is represented by four physical copies
+but occupies three structural slots, so every represented Kong adds one
+physical tile above the 13/14 base.
+
+The scorer's entry completeness is deliberately different from that real-hand
+size: a non-winner with fewer than 13 entered structural tiles is a valid
+**partial** evidence entry and is scored only from completed groups and bonus
+tiles that are actually entered. At exactly 13 entered structural tiles the
+evidence is **complete** and the scorer may assess whole-hand composition and
+fishing. More than 13 structural tiles, or otherwise impossible content, is
+**invalid**. A partial entry is never presented as a reconstruction of the
+player's full hand.
 
 For an ordinary non-winning hand, completed sets and pairs are entered as
 groups. Every other playing tile is entered individually under **Remaining
 tiles**. Those tiles may form any combination of singles, pairs or unfinished
 sequences; the hand does not have to be fishing. Remaining tiles do not score
-as completed sets, but they do count for hand composition, special-hand
-eligibility, copy limits and automatic fishing.
+as completed sets. They always count for copy limits; once all 13 structural
+tiles have been entered, they also participate in hand composition,
+special-hand eligibility and automatic fishing.
 
 The separate loose-tile layout remains available for whole irregular special
 patterns. It cannot be mixed with grouped sets or Remaining tiles.

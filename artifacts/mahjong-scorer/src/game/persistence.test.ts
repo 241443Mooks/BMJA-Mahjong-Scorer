@@ -50,6 +50,7 @@ describe("game recovery persistence", () => {
           context: { playerWind: "east", prevailingWind: "east", limit: 1000 },
           breakdown: {
             valid: true,
+            evidenceCompleteness: "complete",
             validationErrors: [],
             pointRules: [],
             doubleRules: [],

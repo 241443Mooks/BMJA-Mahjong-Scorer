@@ -43,6 +43,9 @@ const cloneDetailedHandRecord = (
   context: { ...record.context },
   breakdown: {
     ...record.breakdown,
+    // Previous saved detailed records predate explicit evidence completeness;
+    // they could only contain fully entered non-winning hands.
+    evidenceCompleteness: record.breakdown.evidenceCompleteness ?? 'complete',
     validationErrors: [...record.breakdown.validationErrors],
     pointRules: record.breakdown.pointRules.map((rule) => ({ ...rule })),
     doubleRules: record.breakdown.doubleRules.map((rule) => ({ ...rule })),

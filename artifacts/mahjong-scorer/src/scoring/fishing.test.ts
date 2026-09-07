@@ -310,7 +310,15 @@ describe('BMJA special-hand fishing detection', () => {
         ? { ...hand, remainingTiles: hand.remainingTiles.slice(0, -1) }
         : { ...hand, looseTiles: hand.looseTiles?.slice(0, 12) };
       expect(detectSpecialFishing(notFishing)).toEqual([]);
-      expect(scoreHand(notFishing).valid).toBe(false);
+      if (hand.remainingTiles) {
+        expect(scoreHand(notFishing)).toMatchObject({
+          valid: true,
+          evidenceCompleteness: 'partial',
+          specialFishing: undefined,
+        });
+      } else {
+        expect(scoreHand(notFishing).valid).toBe(false);
+      }
     },
   );
 

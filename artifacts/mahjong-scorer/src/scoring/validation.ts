@@ -10,6 +10,23 @@ import {
 } from './tiles';
 import type { GameContext, MahjongHand } from './types';
 
+export type EvidenceCompleteness = 'partial' | 'complete' | 'invalid';
+
+/**
+ * Classifies the amount of evidence independently of presentation text.
+ * A non-winner may be scored from completed groups before all thirteen
+ * structural tiles are known; full-layout analysis is reserved for complete
+ * evidence.
+ */
+export const classifyEvidenceCompleteness = (
+  hand: MahjongHand,
+  validationErrors: readonly string[],
+): EvidenceCompleteness => {
+  if (validationErrors.length > 0) return 'invalid';
+  if (hand.isWinner) return 'complete';
+  return structuralTileCount(hand) < 13 ? 'partial' : 'complete';
+};
+
 export const validateHand = (
   hand: MahjongHand,
   context?: GameContext,
@@ -57,11 +74,22 @@ export const validateHand = (
   }
 
   if (
-    structuralCount !== expectedStructuralCount ||
-    physicalCount !== expectedPhysicalCount
+    hand.isWinner &&
+    (structuralCount !== expectedStructuralCount ||
+      physicalCount !== expectedPhysicalCount)
   ) {
     errors.push(
-      `${hand.isWinner ? 'A winning hand' : 'A non-winning hand'} must contain ${expectedStructuralCount} structural playing tiles; each represented kong adds one extra physical tile.`,
+      `A winning hand must contain ${expectedStructuralCount} structural playing tiles; each represented kong adds one extra physical tile.`,
+    );
+  }
+
+  if (
+    !hand.isWinner &&
+    (structuralCount > expectedStructuralCount ||
+      physicalCount > expectedPhysicalCount)
+  ) {
+    errors.push(
+      'A non-winning hand cannot contain more than 13 structural playing tiles; each represented kong adds one extra physical tile.',
     );
   }
 

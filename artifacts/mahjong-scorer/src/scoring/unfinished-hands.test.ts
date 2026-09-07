@@ -26,6 +26,66 @@ const ordinaryLoser = (
 });
 
 describe('unfinished ordinary losing hands', () => {
+  it('scores one entered pung as valid partial evidence', () => {
+    const score = scoreHand({
+      sets: [set('bamboo-pung', 'pung', suited('bamboo', 2))],
+      bonusTiles: [],
+      isWinner: false,
+    });
+
+    expect(score).toMatchObject({
+      valid: true,
+      evidenceCompleteness: 'partial',
+      basePoints: 4,
+      scoringMode: 'standard',
+    });
+    expect(score.pointRules.map(({ id }) => id)).toContain('pung-bamboo-pung');
+  });
+
+  it('scores entered groups and bonus tiles without remaining tiles', () => {
+    const score = scoreHand(
+      {
+        sets: [
+          set('red-pung', 'pung', dragon('red'), 'exposed'),
+          set('nine-pung', 'pung', suited('circles', 9)),
+          set('east-pair', 'pair', wind('east')),
+        ],
+        bonusTiles: [bonus('flower', 1), bonus('season', 3)],
+        isWinner: false,
+      },
+      { playerWind: 'east', prevailingWind: 'south', limit: 1000 },
+    );
+
+    expect(score).toMatchObject({
+      valid: true,
+      evidenceCompleteness: 'partial',
+    });
+    expect(score.pointRules.map(({ id }) => id)).toEqual(
+      expect.arrayContaining([
+        'pung-red-pung',
+        'pung-nine-pung',
+        'own-wind-pair',
+        'bonus-flower-1',
+        'bonus-season-3',
+      ]),
+    );
+  });
+
+  it('treats twelve structural tiles as valid partial evidence', () => {
+    const score = scoreHand({
+      sets: [
+        set('one', 'pung', suited('bamboo', 1)),
+        set('two', 'pung', suited('bamboo', 2)),
+        set('three', 'pung', suited('bamboo', 3)),
+        set('four', 'pung', suited('bamboo', 4)),
+      ],
+      bonusTiles: [],
+      isWinner: false,
+    });
+
+    expect(score).toMatchObject({ valid: true, evidenceCompleteness: 'partial' });
+  });
+
   it('accepts thirteen structural tiles with multiple unrelated leftovers', () => {
     const hand = ordinaryLoser([
       suited('characters', 2),
@@ -89,13 +149,13 @@ describe('unfinished ordinary losing hands', () => {
       isWinner: false,
     };
 
-    expect(scoreHand(hand).valid).toBe(true);
+    expect(scoreHand(hand)).toMatchObject({
+      valid: true,
+      evidenceCompleteness: 'complete',
+    });
     expect(
-      scoreHand({ ...hand, remainingTiles: hand.remainingTiles?.slice(1) })
-        .validationErrors,
-    ).toContain(
-      'A non-winning hand must contain 13 structural playing tiles; each represented kong adds one extra physical tile.',
-    );
+      scoreHand({ ...hand, remainingTiles: hand.remainingTiles?.slice(1) }),
+    ).toMatchObject({ valid: true, evidenceCompleteness: 'partial' });
   });
 
   it('excludes Flowers and Seasons from the thirteen-tile structural base', () => {
@@ -137,6 +197,49 @@ describe('unfinished ordinary losing hands', () => {
     );
   });
 
+  it('rejects more than thirteen structural tiles', () => {
+    const score = scoreHand({
+      sets: [
+        set('one', 'pung', suited('bamboo', 1)),
+        set('two', 'pung', suited('bamboo', 2)),
+        set('three', 'pung', suited('bamboo', 3)),
+        set('four', 'pung', suited('bamboo', 4)),
+      ],
+      remainingTiles: [suited('bamboo', 5), suited('bamboo', 6)],
+      bonusTiles: [],
+      isWinner: false,
+    });
+
+    expect(score).toMatchObject({ valid: false, evidenceCompleteness: 'invalid' });
+    expect(score.validationErrors).toContain(
+      'A non-winning hand cannot contain more than 13 structural playing tiles; each represented kong adds one extra physical tile.',
+    );
+  });
+
+  it('does not infer purity, special hands or fishing from partial evidence', () => {
+    const hand: MahjongHand = {
+      sets: [
+        set('two', 'pung', suited('bamboo', 2)),
+        set('three', 'pung', suited('bamboo', 3)),
+        set('four', 'pung', suited('bamboo', 4)),
+        set('pair', 'pair', suited('bamboo', 8)),
+      ],
+      bonusTiles: [],
+      isWinner: false,
+    };
+
+    const score = scoreHand(hand);
+
+    expect(score).toMatchObject({
+      valid: true,
+      evidenceCompleteness: 'partial',
+      scoringMode: 'standard',
+    });
+    expect(score.specialHands).toEqual([]);
+    expect(score.specialFishing).toBeUndefined();
+    expect(score.specialFishingMatches).toEqual([]);
+  });
+
   it('uses remaining tiles to prevent false Purity fishing', () => {
     const hand: MahjongHand = {
       sets: [
@@ -156,6 +259,7 @@ describe('unfinished ordinary losing hands', () => {
     const score = scoreHand(hand);
 
     expect(score.valid).toBe(true);
+    expect(score.evidenceCompleteness).toBe('complete');
     expect(
       detectSpecialFishing(hand).some(({ id }) => id === 'purity'),
     ).toBe(false);
@@ -183,6 +287,7 @@ describe('unfinished ordinary losing hands', () => {
     const score = scoreHand(hand);
     expect(score).toMatchObject({
       valid: true,
+      evidenceCompleteness: 'complete',
       scoringMode: 'special',
     });
     expect(score.specialFishingMatches?.map(({ id }) => id)).toContain('purity');

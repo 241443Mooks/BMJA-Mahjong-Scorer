@@ -62,9 +62,12 @@ one-suit-with-chows scoring were found and removed.
 
 20. Replaced the single typed incomplete group with arbitrary individually
     entered Remaining tiles alongside completed scoring groups.
-21. Enforced 13 structural playing tiles for non-winners and 14 for winners.
-    Flowers and Seasons are excluded; each represented Kong contributes four
-    physical tiles but only three structural slots.
+21. Preserved the real 13 structural playing tiles for non-winners and 14 for
+    winners, while making the application's non-winner evidence requirement
+    explicit: fewer than 13 entered structural tiles is valid partial evidence,
+    exactly 13 is complete evidence, and excess or impossible content is
+    invalid. Flowers and Seasons are excluded; each represented Kong
+    contributes four physical tiles but only three structural slots.
 22. Included Remaining tiles in playing-tile copy limits and whole-hand
     suit/honour properties without scoring them as completed groups.
 23. Reworked grouped fishing to use only the actual entered remainder. Each
@@ -79,6 +82,9 @@ one-suit-with-chows scoring were found and removed.
     supply the missing structural tile.
 26. Preserved Remaining tiles in detailed score records, handoff, ledger
     cloning, replay and undo paths.
+27. Limited whole-hand composition, special-hand and fishing analysis to
+    complete non-winner evidence. Partial entries score only completed groups,
+    qualifying pair and bonus-tile rules that their entered tiles prove.
 
 ## Hand-builder UX refinements
 
