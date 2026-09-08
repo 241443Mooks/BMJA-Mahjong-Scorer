@@ -9,7 +9,7 @@
     "serve": "vite preview --config vite.config.ts --host 0.0.0.0",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run --config vitest.config.ts",
-    "screenshots:help": "node scripts/capture-help-screenshots.mjs"
+    "screenshots:help": "git submodule update --init --recursive --depth 1 && node scripts/capture-help-screenshots.mjs"
   },
   "devDependencies": {
     "@hookform/resolvers": "^3.10.0",
