@@ -43,6 +43,20 @@ export const phaseOneHelpInstructions: Record<string, ResponsiveInstructionProps
     alt: 'Ordinary hand builder showing completed Chow, Pung and pair groups with exposed and concealed controls.',
     tip: 'You are describing the groups on the table, not translating them into scoring notation first.',
   },
+  'partial-losing-hand': {
+    steps: [
+      'Leave Hand is winner off, then add the completed scoring sets or pair you can see.',
+      'Add any Flowers or Seasons that belong to the hand.',
+      'Use Remaining tiles for loose tiles you want recorded. You can stop before all 13 structural tiles are entered.',
+    ],
+    images: {
+      mobile: '/help/screenshots/partial-losing-hand-mobile.png',
+      tablet: '/help/screenshots/partial-losing-hand-tablet.png',
+      desktop: '/help/screenshots/partial-losing-hand-desktop.png',
+    },
+    alt: 'Partial losing hand in the scorer showing completed sets, Remaining tiles and partial-hand guidance.',
+    tip: 'Partial does not mean invalid. Complete evidence is only needed for conclusions that depend on the whole hand, such as whole-hand patterns and fishing.',
+  },
   'winning-tile': {
     steps: [
       'Enter the completed winning hand and its winning method.',
@@ -84,5 +98,19 @@ export const phaseOneHelpInstructions: Record<string, ResponsiveInstructionProps
     },
     alt: 'Expanded Game ledger entry showing two confirmed hands, player running totals and the settlement transactions for the latest hand.',
     tip: 'The ledger is the canonical game history. Running balances, correction and the saved game record all derive from the confirmed hands here.',
+  },
+  'save-game': {
+    steps: [
+      'Open Print / Save game above the game ledger.',
+      'Choose Full game record for the detailed evidence that was captured, or Game summary for a compact hand-by-hand record.',
+      'Use the browser print destination to print the record or save it as a PDF.',
+    ],
+    images: {
+      mobile: '/help/screenshots/print-save-mobile.png',
+      tablet: '/help/screenshots/print-save-tablet.png',
+      desktop: '/help/screenshots/print-save-desktop.png',
+    },
+    alt: 'Game ledger with the Print / Save game menu open, showing Full game record and Game summary choices.',
+    tip: 'Both choices come from the same confirmed game ledger; the summary simply leaves out the detailed tile and scoring-evidence cards.',
   },
 };
