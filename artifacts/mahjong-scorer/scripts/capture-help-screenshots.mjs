@@ -141,8 +141,29 @@ function startVite() {
       cwd: APP_DIR,
       env: { ...process.env, PORT: String(CAPTURE_PORT), BASE_PATH: '/' },
       stdio: ['ignore', 'pipe', 'pipe'],
+      detached: process.platform !== 'win32',
     },
   );
+}
+
+function stopVite(server) {
+  if (server.exitCode !== null) return;
+  try {
+    if (process.platform !== 'win32' && server.pid) {
+      process.kill(-server.pid, 'SIGTERM');
+    } else {
+      server.kill('SIGTERM');
+    }
+  } catch {
+    try {
+      server.kill('SIGTERM');
+    } catch {
+      // Runner/process cleanup will reap an already-stopped child.
+    }
+  }
+  server.stdout?.destroy();
+  server.stderr?.destroy();
+  server.unref();
 }
 
 async function waitForServer(server) {
@@ -175,8 +196,6 @@ async function waitForVisuals(page) {
       await document.fonts.ready;
     }
   });
-  // Tile artwork is local and small. A bounded settle delay avoids hanging on
-  // lazy images elsewhere on the page that are outside the capture area.
   await page.waitForTimeout(750);
 }
 
@@ -204,6 +223,7 @@ async function capturePartialLosingHand(browser, viewport) {
     deviceScaleFactor: 1,
   });
   const page = await context.newPage();
+  page.setDefaultTimeout(10_000);
   await page.goto(`${BASE_URL}/hand`, { waitUntil: 'networkidle' });
 
   const mobileWinner = page.getByTestId('mobile-checkbox-is-winner');
@@ -240,6 +260,7 @@ async function capturePrintSave(browser, viewport) {
     deviceScaleFactor: 1,
   });
   const page = await context.newPage();
+  page.setDefaultTimeout(10_000);
   await page.addInitScript(
     ({ key, snapshot }) => {
       window.localStorage.setItem(key, JSON.stringify(snapshot));
@@ -286,6 +307,7 @@ async function smokeTestHelp(browser) {
     deviceScaleFactor: 1,
   });
   const page = await context.newPage();
+  page.setDefaultTimeout(10_000);
   await page.goto(`${BASE_URL}/help#partial-losing-hand`, { waitUntil: 'networkidle' });
 
   const partialCard = page.locator('#partial-losing-hand');
@@ -340,7 +362,7 @@ async function main() {
       await browser.close();
     }
   } finally {
-    if (server.exitCode === null) server.kill('SIGTERM');
+    stopVite(server);
   }
 
   console.log(`Wrote help screenshots to ${OUTPUT_DIR}`);
