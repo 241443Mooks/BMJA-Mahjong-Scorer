@@ -16,6 +16,7 @@ import {
   ResponsiveInstruction,
   type ResponsiveInstructionProps,
 } from '../components/ResponsiveInstruction';
+import { phaseOneHelpInstructions } from './helpPhase1Instructions';
 
 type HelpItem = {
   id: string;
@@ -249,17 +250,19 @@ const groups: HelpGroup[] = [
 ];
 
 function HelpCard({ item }: { item: HelpItem }) {
+  const instruction = item.instruction ?? phaseOneHelpInstructions[item.id];
+
   return (
     <article
       id={item.id}
       className={`scroll-mt-24 rounded-xl border border-[#ddd3bf] bg-[#fdfbf5] p-5 sm:p-6 ${
-        item.instruction ? 'md:col-span-2' : ''
+        instruction ? 'md:col-span-2' : ''
       }`}
     >
       <h3 className="font-serif text-[22px] leading-tight text-[#284d45]">{item.question}</h3>
       <p className="mt-2 text-[13px] font-semibold leading-6 text-[#477562]">{item.answer}</p>
       {item.detail && <p className="mt-2 text-[12px] leading-6 text-[#66746e]">{item.detail}</p>}
-      {item.instruction && <ResponsiveInstruction {...item.instruction} />}
+      {instruction && <ResponsiveInstruction {...instruction} />}
     </article>
   );
 }
