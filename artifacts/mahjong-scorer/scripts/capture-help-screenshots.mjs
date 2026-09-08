@@ -168,28 +168,16 @@ async function waitForServer(server) {
 
 async function waitForVisuals(page) {
   await page.evaluate(async () => {
-    if (document.fonts?.ready) await document.fonts.ready;
-    const images = Array.from(document.images);
-    await Promise.all(
-      images.map(async (image) => {
-        if (!image.complete) {
-          await new Promise((resolve) => {
-            const finish = () => resolve();
-            image.addEventListener('load', finish, { once: true });
-            image.addEventListener('error', finish, { once: true });
-          });
-        }
-        if (typeof image.decode === 'function') {
-          try {
-            await image.decode();
-          } catch {
-            // Broken/unsupported image decode should not block documentation capture.
-          }
-        }
-      }),
-    );
+    document.querySelectorAll('img').forEach((image) => {
+      image.loading = 'eager';
+    });
+    if (document.fonts?.ready) {
+      await document.fonts.ready;
+    }
   });
-  await page.waitForTimeout(100);
+  // Tile artwork is local and small. A bounded settle delay avoids hanging on
+  // lazy images elsewhere on the page that are outside the capture area.
+  await page.waitForTimeout(750);
 }
 
 async function clickFirstEnabledTile(page, viewport) {
