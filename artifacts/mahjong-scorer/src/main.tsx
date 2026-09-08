@@ -12,58 +12,13 @@ import { HomePage } from './home/HomePage';
 import { HowItWorksPage } from './home/HowItWorksPage';
 import { MahjongRulesComparedPage } from './home/MahjongRulesComparedPage';
 import NotFound from './pages/not-found';
+import siteSeo from './site-seo.json';
 
 import './index.css';
 
 const path = window.location.pathname.replace(/\/$/, '') || '/';
-const siteUrl = 'https://mahjong.smooks.co.uk';
-
-const routeMetadata: Record<string, { title: string; description: string }> = {
-  '/': {
-    title: 'British Mahjong Scorer | Score Games & Hands',
-    description: 'Score British Mahjong games and individual hands, track settlements, and learn British rules as you play.',
-  },
-  '/game': {
-    title: 'Score a British Mahjong Game | British Mahjong Scorer',
-    description: 'Track four players hand by hand, calculate settlement, keep running balances and save the finished British Mahjong game record.',
-  },
-  '/hand': {
-    title: 'Score a British Mahjong Hand | British Mahjong Scorer',
-    description: 'Build a British Mahjong hand visually and calculate supported points, doubles, patterns, special hands and fishing.',
-  },
-  '/gameplay-basics': {
-    title: 'British Mahjong Gameplay Basics | British Mahjong Scorer',
-    description: 'Learn the basic flow of British Mahjong, including tiles, turns, calls, winning and the table structure.',
-  },
-  '/guide': {
-    title: 'British Mahjong Scoring Guide | British Mahjong Scorer',
-    description: 'Learn British Mahjong scoring in plain English, with points, doubles, winning hands and practical examples.',
-  },
-  '/special-hands': {
-    title: 'British Mahjong Special Hands | British Mahjong Scorer',
-    description: 'Browse supported British Mahjong special hands with visual examples and plain-English explanations.',
-  },
-  '/features': {
-    title: 'British Mahjong Scorer Features',
-    description: 'See how British Mahjong Scorer handles full games, detailed and partial hands, explanations, recovery and printable game records.',
-  },
-  '/how-it-works': {
-    title: 'How British Mahjong Scorer Works',
-    description: 'See how the scorer moves from game context and tile evidence to scoring, explanations, settlement and the final game record.',
-  },
-  '/help': {
-    title: 'British Mahjong Scorer Help',
-    description: 'Get practical help with scoring games and hands, partial evidence, special situations, recovery, settlement and saving a game record.',
-  },
-  '/mahjong-rules-compared': {
-    title: 'British vs Riichi vs Hong Kong vs American Mahjong Rules',
-    description: 'Compare British, Hong Kong, Japanese Riichi, Chinese Official/MCR and American Mahjong. See how winning hands, scoring, Chows, Flowers, Jokers and special rules differ.',
-  },
-  '/about': {
-    title: 'About British Mahjong Scorer',
-    description: 'Learn why British Mahjong Scorer exists, which rules it uses, how uncertainty is handled and how browser-side game data works.',
-  },
-};
+const { siteUrl, socialImagePath, webApplication, routes, aliases } = siteSeo;
+const routeMetadata = new Map(routes.map((route) => [route.path, route]));
 
 function setMeta(selector: string, attribute: string, value: string) {
   const element = document.head.querySelector<HTMLMetaElement>(selector);
@@ -71,14 +26,31 @@ function setMeta(selector: string, attribute: string, value: string) {
 }
 
 function canonicalPathFor(currentPath: string) {
-  if (currentPath === '/beginner-guide') return '/guide';
-  if (currentPath === '/special-hand-catalogue') return '/special-hands';
-  return currentPath;
+  return aliases.find((alias) => alias.path === currentPath)?.target ?? currentPath;
+}
+
+function applyStructuredData(canonicalPath: string, description: string) {
+  const existing = document.getElementById('web-application-structured-data');
+  if (canonicalPath !== '/') {
+    existing?.remove();
+    return;
+  }
+
+  const structuredData = {
+    description,
+    url: `${siteUrl}/`,
+    ...webApplication,
+  };
+  const script = existing instanceof HTMLScriptElement ? existing : document.createElement('script');
+  script.id = 'web-application-structured-data';
+  script.type = 'application/ld+json';
+  script.textContent = JSON.stringify(structuredData);
+  if (!existing) document.head.append(script);
 }
 
 function applyRouteMetadata() {
   const canonicalPath = canonicalPathFor(path);
-  const metadata = routeMetadata[canonicalPath];
+  const metadata = routeMetadata.get(canonicalPath);
   const canonicalUrl = `${siteUrl}${canonicalPath === '/' ? '/' : canonicalPath}`;
 
   if (!metadata) {
@@ -92,20 +64,24 @@ function applyRouteMetadata() {
     setMeta('meta[name="twitter:description"]', 'content', 'The requested British Mahjong Scorer page could not be found.');
     const canonical = document.head.querySelector<HTMLLinkElement>('link[rel="canonical"]');
     if (canonical) canonical.href = `${siteUrl}${path}`;
+    applyStructuredData(canonicalPath, '');
     return;
   }
 
   document.title = metadata.title;
   setMeta('meta[name="description"]', 'content', metadata.description);
-  setMeta('meta[name="robots"]', 'content', 'index, follow');
+  setMeta('meta[name="robots"]', 'content', metadata.indexable ? 'index, follow' : 'noindex, follow');
   setMeta('meta[property="og:title"]', 'content', metadata.title);
   setMeta('meta[property="og:description"]', 'content', metadata.description);
   setMeta('meta[property="og:url"]', 'content', canonicalUrl);
+  setMeta('meta[property="og:image"]', 'content', `${siteUrl}${socialImagePath}`);
   setMeta('meta[name="twitter:title"]', 'content', metadata.title);
   setMeta('meta[name="twitter:description"]', 'content', metadata.description);
+  setMeta('meta[name="twitter:image"]', 'content', `${siteUrl}${socialImagePath}`);
 
   const canonical = document.head.querySelector<HTMLLinkElement>('link[rel="canonical"]');
   if (canonical) canonical.href = canonicalUrl;
+  applyStructuredData(canonicalPath, metadata.description);
 }
 
 applyRouteMetadata();

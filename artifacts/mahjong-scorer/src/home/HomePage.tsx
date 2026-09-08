@@ -122,10 +122,10 @@ export function HomePage() {
       <main className="mx-auto max-w-[1100px] px-5 py-9 lg:px-8 lg:py-14">
         <section className="max-w-[760px]">
           <h1 className="font-serif text-[clamp(38px,6vw,58px)] leading-[1.02] text-[#284d45]">
-            British Mahjong, made easier to score and learn
+            British Mahjong scoring calculator, made easier to use and learn
           </h1>
           <p className="mt-4 max-w-[620px] text-[15px] leading-7 text-[#66746e]">
-            What would you like to do? Score a game, check a hand, or learn British Mahjong as you play.
+            A free browser-based tool: enter tiles visually to score an individual hand or a complete four-player game, then learn British Mahjong as you play.
           </p>
         </section>
 
@@ -166,7 +166,7 @@ export function HomePage() {
           )}
           <PrimaryAction
             title="Score a hand"
-            description="Work out the score for one hand without starting a full game."
+            description="Enter tiles visually to work out one hand without starting a full game."
             href="/hand"
             icon={Calculator}
           />
