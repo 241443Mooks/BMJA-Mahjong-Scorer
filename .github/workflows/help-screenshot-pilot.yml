@@ -44,6 +44,7 @@ jobs:
       - name: Build
         env:
           PORT: 4173
+          BASE_PATH: /
         run: pnpm --filter @workspace/mahjong-scorer build
 
       - name: Capture pilot screenshots and smoke-test responsive Help behaviour
