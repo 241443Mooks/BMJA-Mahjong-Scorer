@@ -2,23 +2,23 @@
 
 > **Purpose:** canonical product truth for `mahjong.smooks.co.uk`.
 >
-> This handbook records what the product currently does, how it behaves, what evidence it uses, what it deliberately does not infer, and which ideas remain future work. It is intentionally more exhaustive than any public page.
+> This handbook records what the product currently does, how it behaves, what evidence it uses, what it deliberately does not infer, and which ideas remain future work. It is intentionally more detailed than any single public page.
 >
-> **Baseline:** shipped application state after merged PR #32 on 7 September 2026.
+> **Baseline:** `main` reviewed on 8 September 2026, including merged product work through PR #62 and the subsequent README refresh.
 >
-> Public Features, Help, How it works, About and marketing copy should be derived from this handbook rather than becoming independent descriptions of the product.
+> Public Features, Help, How it works, About, learner content and marketing copy should be derived from this handbook and the engineering rules reference rather than becoming independent descriptions of the product.
 
 ---
 
 # 1. Product definition
 
-British Mahjong Scorer is a browser-based companion for scoring and learning the British Mahjong ruleset implemented by this project.
+British Mahjong Scorer is a free, browser-based **British Mahjong scoring calculator** and learning companion.
 
 It has three connected jobs:
 
-1. **Score accurately** — calculate individual hands and four-player games.
+1. **Score accurately** — calculate individual hands and complete four-player games using the British rules implemented by this project.
 2. **Explain what happened** — show why a score applies, how settlement works and what evidence supports the result.
-3. **Teach without interrupting play** — surface useful rules when they become relevant and keep deeper reference material available separately.
+3. **Teach without interrupting play** — surface useful rules when they become relevant and keep deeper learning/reference material available separately.
 
 The main product principle is:
 
@@ -26,11 +26,18 @@ The main product principle is:
 
 The main trust principle is:
 
-> **Never invent missing evidence. Calculate what can be supported, ask only when necessary, and say when something is unknown.**
+> **Never invent missing evidence. Calculate what can be supported, ask only when necessary, and treat unknown facts conservatively.**
 
-The product is deliberately **British-Mahjong-specific**, **beginner-first**, **browser-first** and **local-first where practical**.
+The product is deliberately:
 
-It is not intended to support every Mahjong ruleset or every house rule.
+- British-Mahjong-specific;
+- beginner-first;
+- evidence-first;
+- browser-first;
+- local-first where practical;
+- deterministic rather than AI-scored.
+
+It is not intended to support every Mahjong ruleset or every table/house rule.
 
 ---
 
@@ -40,7 +47,7 @@ Every capability in this handbook should use one of these states.
 
 ## Shipped
 
-Implemented in the current application and suitable to describe publicly as an available capability.
+Implemented on current `main` and suitable to describe publicly as available capability.
 
 ## Backlog
 
@@ -52,92 +59,46 @@ An idea being investigated. It may never ship and must not be presented as commi
 
 ## Explicitly not current product behaviour
 
-An idea intentionally excluded from an existing feature or MVP. It may be revisited separately but should not be implied by current wording.
+An idea intentionally excluded from the current product or an existing MVP. It may be revisited separately but should not be implied by current wording.
+
+When an issue remains administratively open but its implementation has already shipped, **current code behaviour takes precedence over issue state** for this handbook.
 
 ---
 
-# 3. Current product surfaces
+# 3. Current public product surfaces
 
-## `/`
+The current canonical public routes are defined in `artifacts/mahjong-scorer/src/site-seo.json`.
 
-**Status:** Shipped
+| Route | Status | Purpose |
+| --- | --- | --- |
+| `/` | Shipped | Action-led homepage and scoring-calculator entry point |
+| `/game` | Shipped | Four-player game scorer and canonical game ledger |
+| `/hand` | Shipped | Standalone British Mahjong hand calculator |
+| `/gameplay-basics` | Shipped | Beginner explanation of how British Mahjong is played |
+| `/guide` | Shipped | Beginner British Mahjong scoring guide |
+| `/special-hands` | Shipped | Visual catalogue of supported special hands |
+| `/features` | Shipped | Outcome-led explanation of current scorer capabilities |
+| `/how-it-works` | Shipped | Evidence → score → explanation → settlement → record model |
+| `/help` | Shipped | Searchable practical Help hub with responsive visual how-tos |
+| `/mahjong-rules-compared` | Shipped | British vs Hong Kong vs Riichi vs MCR vs American rules comparison |
+| `/about` | Shipped | Project purpose, rules, trust, privacy, attribution and support |
 
-Action-led homepage.
+Canonical aliases:
 
-Primary purpose:
+- `/beginner-guide` → `/guide`
+- `/special-hand-catalogue` → `/special-hands`
 
-- enter a full game scorer
-- enter a standalone hand scorer
-- reach learner/reference content
-- reach project/about information
-
-The homepage should remain concise. Rich feature, help and marketing content belongs behind it rather than replacing the action-first entry experience.
-
-## `/game`
-
-**Status:** Shipped
-
-Four-player game scorer and canonical game ledger.
-
-## `/hand`
-
-**Status:** Shipped
-
-Standalone detailed hand scorer.
-
-The same detailed hand-scoring model is also used from inside a full game.
-
-## `/gameplay-basics`
-
-**Status:** Shipped
-
-Learner-facing explanation of how British Mahjong is played.
-
-## `/guide`
-
-**Status:** Shipped
-
-Beginner scoring guide.
-
-Alias:
-
-- `/beginner-guide` redirects to `/guide`
-
-## `/special-hands`
-
-**Status:** Shipped
-
-Visual catalogue of supported special hands.
-
-Alias:
-
-- `/special-hand-catalogue` redirects to `/special-hands`
-
-## `/about`
-
-**Status:** Shipped
-
-Project purpose, rules/source transparency, independence statement, artwork attribution, data approach and support information.
-
-## Proposed future content routes
-
-These are **content work**, not yet shipped product routes:
-
-- `/features`
-- `/how-it-works`
-- `/help`
-
-See `PRODUCT_CONTENT_PLAN.md`.
+The homepage should remain concise and action-led. Rich explanation belongs behind it in the dedicated learner, Help, Features and How it works surfaces.
 
 ---
 
 # 4. Product-wide trust rules
 
-These rules apply across the product.
+These rules apply across the scorer, game history, learner explanations and public claims.
 
 ## 4.1 Evidence over assumption
 
-The application should only apply a rule when the entered tiles, entered game context or explicit user answer provide enough evidence.
+A rule should only be applied when the entered tiles, entered game context or explicit user answer provide enough evidence.
 
 If necessary evidence is unknown, the scorer should either:
 
@@ -145,9 +106,9 @@ If necessary evidence is unknown, the scorer should either:
 - ask a short relevant question; or
 - omit the uncertain bonus/pattern.
 
-It should not silently manufacture a favourable interpretation.
+It should not silently manufacture the most favourable interpretation.
 
-## 4.2 “I’m not sure” is a valid product state
+## 4.2 “I’m not sure” is a valid state
 
 Where the scorer asks for evidence the user may genuinely not know, an uncertainty route should remain available where practical.
 
@@ -160,8 +121,8 @@ A numeric score entered manually remains valid game input.
 However:
 
 - the app must not invent tiles;
-- the app must not imply the hand was calculated by the detailed scorer;
-- the game record should clearly identify it as manually entered;
+- the app must not imply that the hand was calculated by the detailed scorer;
+- historical/print records should identify the score as manually entered;
 - detailed scoring evidence should only appear when it actually exists.
 
 ## 4.4 Partial evidence is not a complete hand reconstruction
@@ -177,37 +138,44 @@ Whole-hand deductions that depend on unseen tiles are withheld until enough evid
 The same canonical scoring/game information should drive:
 
 - live scoring;
-- game settlement;
-- hand history;
+- settlement;
+- running balances;
+- game history;
 - explanatory evidence;
-- printed/saved game records.
+- local recovery;
+- printable/savable game records.
 
 Where stored settlement transactions exist, explanatory wording should use those transactions rather than reverse-engineering them from totals.
 
 Where a detailed hand record exists, the ledger should reuse that record rather than regenerate an imagined hand.
 
+## 4.6 One rules engine
+
+Public examples, Help content and future practice/example modes should reuse the normal scorer model wherever practical.
+
+Do not create a second scoring path merely to demonstrate or explain the first one.
+
 ---
 
-# 5. Full game scoring
+# 5. Full four-player game scoring
 
-**Status:** Shipped
+**Status:** Shipped  
+**Relevant route:** `/game`
 
-Relevant route: `/game`
+The full game scorer manages a British Mahjong game hand by hand rather than acting as a simple running total.
 
-The full game scorer manages a four-player British Mahjong game hand by hand.
-
-## 5.1 Game setup
+## 5.1 Game setup and progression
 
 The game flow supports:
 
 - four player names;
-- player seat-Wind context;
+- seat Winds;
 - East;
 - prevailing Wind;
-- game progression;
-- the project's supported game-length/progression behaviour.
+- the project's implemented game-length/progression behaviour;
+- winner and draw outcomes.
 
-The game state becomes the context for settlement and for detailed hand scoring opened from the game.
+Game context can be passed into the detailed hand scorer so own/prevailing Wind and event-sensitive scoring can be evaluated where applicable.
 
 ## 5.2 Per-player score entry
 
@@ -215,64 +183,40 @@ For a given hand, each player's score can come from either:
 
 ### Detailed calculated scoring
 
-The player opens the detailed hand scorer and builds enough of the hand to calculate the score.
+The player opens the detailed hand scorer and builds enough evidence for calculation.
 
-When applied back to the game, the game can retain structured scoring evidence alongside the numeric score.
+When applied back to the game, structured hand/scoring evidence can be retained alongside the numeric score.
 
 ### Manual numeric scoring
 
-The player simply enters the score.
+The player types the score directly.
 
-This allows the game scorer to remain usable even when:
+This keeps the game scorer useful when:
 
 - a player already knows their score;
-- the table chooses not to reconstruct every hand;
 - only one or two players want detailed scoring;
-- the hand was scored away from the application.
+- the table does not want to reconstruct every hand;
+- a hand was scored independently.
 
-Manual and calculated input can coexist within the same game and within the same confirmed hand.
+Manual and calculated scores can coexist in the same game and in the same confirmed hand.
 
-## 5.3 Winner and draw handling
+## 5.3 Settlement
 
-The game supports confirmed hands with a winner and draw outcomes according to the implemented game model.
-
-The winner context affects settlement.
-
-## 5.4 East and prevailing Wind
-
-The game tracks East and prevailing Wind progression rather than requiring the table to recalculate these externally each hand.
-
-Detailed hand scoring opened from the game receives relevant game context so own/prevailing Wind and event-sensitive scoring can be evaluated where applicable.
-
-## 5.5 Settlement
-
-**Status:** Shipped
-
-After hand scores are known, the game calculates settlement between players according to the implemented British Mahjong rules.
+After hand scores are known, the game calculates settlement according to the implemented British rules.
 
 This includes East doubling where applicable.
 
-Settlement is represented as canonical transactions rather than only as final net differences.
+Settlement is stored as canonical transactions, not only final net changes, so the app can explain who paid whom in plain English.
 
-That matters because the application can then explain settlement in plain English, for example conceptually:
-
-- Player A paid Player B 320.
-- Player C paid Player B 320.
-- East paid Player B 640 because the East payment was doubled.
-
-The exact wording is derived from actual stored settlement transactions.
-
-## 5.6 Preview before confirmation
+## 5.4 Preview before confirmation
 
 Settlement changes can be previewed before a hand is confirmed.
 
-Unconfirmed live entry should not be treated as historical game record data.
+Unconfirmed live entry is not historical game-record data.
 
-Only confirmed results belong in the canonical hand ledger.
+Only confirmed results belong in the canonical ledger.
 
-## 5.7 Confirmed hand ledger
-
-**Status:** Shipped
+## 5.5 Confirmed hand ledger
 
 The existing game ledger is the single canonical hand-history surface.
 
@@ -287,17 +231,15 @@ Each confirmed hand can include:
 - each player's running total after the hand;
 - settlement explanation;
 - detailed hand evidence where detailed scoring was used;
-- manual-score labelling where a manual numeric score was used.
+- manual-score labelling where a numeric score was entered manually.
 
 Entries use a compact expandable presentation on screen.
 
-The ledger is not a separate report generated later. It grows as the game is played.
+The ledger grows as the game is played; it is not a separate report reconstructed later.
 
-## 5.8 Detailed hands inside the ledger
+## 5.6 Detailed evidence inside history
 
-Where a player's score came from the detailed scorer, the stored detailed-hand record can be shown inside the confirmed ledger entry.
-
-Depending on what was actually entered, this may include:
+Where a player's score came from the detailed scorer, the stored record may include:
 
 - grouped sets;
 - exposed/concealed information;
@@ -306,142 +248,97 @@ Depending on what was actually entered, this may include:
 - Flowers and Seasons;
 - winning-tile provenance where known;
 - scoring breakdown;
-- matched patterns/special-hand result;
+- matched patterns or special-hand result;
 - fishing result where applicable;
-- base points/doubles/final score information.
+- base points, doubles and final score.
 
 The ledger must not add tiles that were not entered.
 
-If the hand record contains only partial evidence, it should be presented as partial evidence.
+If the stored record is partial evidence, it should be presented as partial evidence.
 
-## 5.9 Mixed evidence within one hand
+## 5.7 Mixed evidence is valid
 
-A confirmed game hand can legitimately contain different evidence levels for different players.
+One confirmed game hand can legitimately contain different evidence levels for different players.
 
-Example:
+For example, one player may have a complete detailed hand, another a partial detailed hand, another a manual numeric score and another a different complete detailed hand.
 
-- Jenn uses the detailed scorer and has a complete reconstructed hand;
-- SMooks enters only scoring Pungs and Flowers as partial evidence;
-- Andy enters a manual number;
-- Louise enters a different detailed hand.
+The ledger retains those distinctions.
 
-The ledger should retain those distinctions rather than pretending all four records were captured identically.
-
-## 5.10 Running balances
-
-**Status:** Shipped
+## 5.8 Running balances, correction and completion
 
 The game maintains running balances after each confirmed hand.
 
-These running totals form part of the hand history and final standings.
+Undo/correction is supported so an ordinary scoring mistake does not require restarting the entire game.
 
-## 5.11 Undo/correction
-
-**Status:** Shipped
-
-The game provides a way to undo/correct confirmed game progression rather than requiring the whole game to be restarted for an ordinary scoring mistake.
-
-Corrections should preserve the principle that current balances and progression derive from canonical confirmed history.
-
-## 5.12 Game completion
-
-**Status:** Shipped
-
-When the game reaches its implemented completion condition, the same game page presents the finished state.
-
-The completed state includes:
+When the game reaches its implemented completion condition, the same page presents:
 
 - Game complete;
-- number of confirmed hands played;
+- number of confirmed hands;
 - ranked final standings;
 - final balances;
 - winner.
-
-No separate report-generation workflow is required.
 
 ---
 
 # 6. Local game persistence and recovery
 
-**Status:** Shipped
+**Status:** Shipped  
+**Relevant implementation:** issue #14 / PR #23
 
-Relevant implementation: issue #14 / PR #23.
-
-## 6.1 User problem
-
-A browser refresh, accidental tab closure or browser restart should not casually destroy an in-progress game.
-
-## 6.2 Current behaviour
+A refresh, accidental tab closure or browser restart should not casually destroy an in-progress game.
 
 The application stores a versioned snapshot of relevant canonical game state in browser `localStorage`.
 
-This allows recovery on the same browser/device without requiring an account or server-side game history.
+This supports recovery on the same browser/device without requiring an account or server-side game-history service.
 
-## 6.3 Persisted information
-
-Persisted state includes relevant canonical game information such as:
+Persisted information includes relevant canonical game information such as:
 
 - game setup/player information;
 - progression context;
-- confirmed hand ledger/history;
+- confirmed ledger/history;
 - running balances;
 - detailed scoring records already applied to players;
-- current recoverable round/draft information supported by the implementation.
+- recoverable current-round/draft information supported by the implementation.
 
-Derived/transient presentation state should not become the source of truth merely because it was visible on screen.
+Malformed or incompatible saved snapshots should not prevent the app from loading. Incompatible persisted state is rejected/cleared defensively.
 
-## 6.4 What local recovery means
+An intentional Start over/new-game action clears or replaces the saved in-progress state so an obsolete game does not unexpectedly return.
 
-Local recovery means:
-
-- the data is stored in that browser's local storage;
-- refresh can recover the game;
-- closing/reopening can recover the game;
-- browser restart can recover the game.
-
-It does **not** mean:
+Local recovery does **not** mean:
 
 - account-based cloud history;
 - cross-device sync;
 - remote backup;
 - shared multiplayer state;
-- hosted reports.
-
-## 6.5 Defensive loading
-
-Malformed or incompatible saved snapshots should not prevent the application from loading.
-
-The persistence model is versioned so incompatible state can be rejected/cleared rather than being trusted blindly.
-
-## 6.6 Start over / new game
-
-An intentional reset or new-game action clears/replaces the saved in-progress state so an obsolete game does not unexpectedly return later.
+- hosted report storage.
 
 ---
 
-# 7. Standalone and in-game detailed hand scorer
+# 7. Detailed hand calculator
 
-**Status:** Shipped
+**Status:** Shipped  
+**Relevant route:** `/hand`, plus the same scorer opened from `/game`
 
-Relevant route: `/hand`, plus the hand scorer opened from `/game`.
+The standalone hand page is explicitly positioned as a **British Mahjong hand calculator** while retaining the British Mahjong Scorer product name.
 
-The detailed scorer uses the same underlying hand/scoring model whether used independently or as part of a game.
+The same underlying hand/scoring model is used independently and from inside a full game.
 
-## 7.1 Core user model
+## 7.1 Core evidence model
 
-The player describes:
+The player can describe:
 
-- relevant game status;
+- winner/non-winner context;
+- relevant Winds/game context;
 - grouped sets where appropriate;
 - Remaining tiles where appropriate;
-- Flowers/Seasons;
+- Flowers and Seasons;
 - irregular/special layouts where normal grouping does not fit;
 - winning method and limited event information where required;
-- winning tile provenance where required and known.
+- winning-tile provenance where required and known.
 
-The scoring engine then calculates only what the evidence supports.
+The scorer calculates only what the evidence supports.
 
-## 7.2 Standard grouped sets
+## 7.2 Normal grouped hand entry
 
 Supported structural group types include:
 
@@ -450,142 +347,104 @@ Supported structural group types include:
 - Kong;
 - Pair.
 
-The UI is beginner-oriented rather than requiring the user to encode the hand in notation.
+Sets retain exposed/concealed information where relevant.
 
-## 7.3 Exposed and concealed information
+The UI is visual and beginner-oriented rather than requiring notation.
 
-Sets retain exposed/concealed information where that distinction is relevant to scoring.
+## 7.3 Chow and structural constraints
 
-This evidence can influence points, doubles and special-hand conditions.
+The scorer enforces the project's implemented ordinary-hand restrictions and structural validation rather than silently accepting impossible/unsupported arrangements.
 
-## 7.4 Chow constraints
+## 7.4 Tile copy limits
 
-The scorer enforces the project's implemented ordinary-hand Chow restrictions rather than allowing structurally impossible/unsupported combinations without warning.
+The app prevents or rejects impossible entered inventories such as more than four copies of the same ordinary playing tile across relevant entered evidence.
 
-## 7.5 Tile copy limits
+Impossible inventory is distinct from incomplete evidence.
 
-The application prevents or rejects impossible entered inventories such as more than four copies of the same ordinary playing tile across the entered hand evidence.
+## 7.5 Kongs and hand counts
 
-Copy checks cover relevant entered sources including groups and Remaining tiles.
+A Kong contains four physical tiles but occupies one structural group slot.
 
-The application must distinguish an impossible inventory from merely incomplete evidence.
+Validation/counting accounts for this distinction.
 
-## 7.6 Kongs and hand counts
+## 7.6 Flowers and Seasons
 
-Kongs contain four physical tiles but occupy one structural group slot.
+Flowers and Seasons are bonus tiles and remain outside the ordinary structural 13/14 playing-tile base.
 
-The scorer's validation/counting logic accounts for this distinction.
-
-This prevents a valid hand containing a Kong from being rejected simply because its physical tile count is larger than the structural base count.
-
-## 7.7 Flowers and Seasons are bonus tiles
-
-Flowers and Seasons are handled separately from the ordinary structural 13/14 playing-tile base.
-
-They do not consume structural playing-tile slots.
-
-Their relationship to seat Wind is surfaced in the learner/scorer experience.
+Their seat-Wind relationships are surfaced in scorer/learner content rather than being hidden assumptions.
 
 ---
 
-# 8. Winning hands
+# 8. Winning hands and provenance
 
 **Status:** Shipped
-
-## 8.1 Complete winning-hand evidence
 
 A detailed winning hand normally requires enough evidence for the scorer to validate and calculate the completed hand.
 
-The scorer can then apply:
+The scorer can then apply the supported combination of:
 
 - base points;
-- relevant doubles;
+- doubles;
 - winning-method effects;
 - whole-hand patterns;
-- supported special hands;
-- relevant event-based specials;
-- limit handling according to the implemented rules.
+- special hands;
+- event-sensitive specials;
+- applicable limits.
 
-## 8.2 Winning method
+## 8.1 Winning method
 
 The scorer records the implemented winning-method context rather than treating every Mah Jong as identical.
 
-Relevant methods include the project's supported draw/claim contexts, such as ordinary discard/draw and specific replacement/last-tile/robbing/event circumstances.
+The method can be required evidence for bonuses or event-sensitive specials.
 
-The method can be required evidence for bonuses or special hands.
+## 8.2 Winning-tile provenance
 
-## 8.3 Winning-tile provenance
+**Relevant implementation:** issue #3 / PR #13
 
-**Status:** Shipped
+Some rules cannot be applied safely from the final 14-tile layout alone. They depend on which tile completed Mah Jong and, for grouped hands, which group it completed.
 
-Relevant implementation: issue #3 / PR #13.
-
-Some rules cannot be applied safely merely from the final 14-tile layout. They depend on which tile actually completed Mah Jong and, in grouped hands, which set/pair it completed.
-
-For relevant winning hands, the UI can ask:
+For relevant winning hands the UI can ask:
 
 > Which tile completed Mah Jong?
 
-The user selects from a reconstruction of the entered hand rather than a long detached dropdown.
+The user selects from the entered/reconstructed hand rather than a detached long dropdown.
 
 The model can retain:
 
 - winning tile identity;
-- completed group/set where relevant;
-- existing winning method as the source/claim context.
+- completed group where relevant;
+- existing winning method as source/claim context.
 
-## 8.4 Unknown winning tile
+If the user does not know, the scorer avoids winning-tile-sensitive exceptions that cannot be proved.
 
-If the user does not know which tile completed the hand, they can use an uncertainty path.
-
-The scorer should then avoid applying winning-tile-sensitive exceptions that cannot be proved.
-
-This may reduce the score compared with a fully evidenced hand; that is deliberate conservative behaviour.
-
-## 8.5 Provenance invalidation
-
-If the hand is edited after the winning tile was selected, stored provenance should be revalidated/cleared where it no longer matches the edited hand rather than remaining as stale evidence.
+If the hand is later edited, stale provenance should be revalidated or cleared.
 
 ---
 
-# 9. Losing hands and unfinished hands
+# 9. Losing hands, Remaining tiles and partial evidence
 
-**Status:** Shipped
+**Status:** Shipped  
+**Relevant implementation:** issue #15, PR #22 and PR #30
 
-Relevant implementation: issue #15, PR #22 and PR #30.
+This is a core product capability.
 
-This is a key product capability.
+## 9.1 Real structural count
 
-## 9.1 Actual Mahjong structural count
-
-A non-winning hand has a 13-tile structural playing base, with represented Kong fourth tiles handled separately and Flowers/Seasons excluded from this structural count.
+A non-winning hand has a 13-tile structural playing base, with represented Kong fourth tiles handled separately and Flowers/Seasons excluded from the structural count.
 
 ## 9.2 Remaining tiles
 
 A losing hand does not need to be forced into fake completed groups.
 
-The scorer supports arbitrary **Remaining tiles** for ordinary loose/uncompleted tile evidence.
-
-This allows realistic unfinished hands containing unrelated leftovers and partial shapes.
+The scorer supports arbitrary **Remaining tiles** for loose/uncompleted evidence.
 
 ## 9.3 Partial evidence
 
-A losing player may enter **fewer than all 13 structural playing tiles** and still receive a valid score for directly evidenced scoring elements.
+A losing player may enter fewer than all 13 structural playing tiles and still receive a valid score for directly evidenced scoring elements.
 
-Example:
+They do not have to reconstruct irrelevant loose tiles merely to score known components.
 
-A player might enter only:
-
-- a Red Dragon Pung;
-- a concealed 9 Circles Pung;
-- an own-Wind pair;
-- Flower 3.
-
-They do not have to reconstruct every unrelated loose tile merely to score those known components.
-
-## 9.4 What partial evidence can score
-
-When directly entered and independently scoreable, partial evidence can support items such as:
+Partial evidence can support directly evidenced items such as:
 
 - completed scoring Pungs;
 - completed Kongs;
@@ -593,84 +452,61 @@ When directly entered and independently scoreable, partial evidence can support 
 - bonus tiles;
 - other rule components whose truth does not depend on unseen tiles.
 
-## 9.5 What partial evidence cannot safely infer
+## 9.4 What partial evidence must not infer
 
-When fewer than the complete structural tiles are present, the scorer withholds deductions that depend on the unseen remainder.
-
-This includes, where applicable:
+Where unseen tiles could change the conclusion, the scorer withholds whole-hand deductions such as, where applicable:
 
 - whole-hand suit/honour composition;
 - Purity/one-suit conclusions;
 - no-Chow/all-Pung-style whole-hand conclusions;
-- special-hand completion claims requiring the entire layout;
-- special fishing detection requiring complete one-away evidence;
-- other whole-hand properties that unseen tiles could change.
+- special-hand completion claims requiring the complete layout;
+- special fishing detection requiring complete one-away evidence.
 
-## 9.6 Completeness states
-
-The conceptual distinction is:
+## 9.5 Completeness states
 
 ### Partial
 
-Fewer than the full structural tile count has been entered for a non-winning hand.
+Fewer than the full structural tiles have been entered for a non-winning hand.
 
-Valid for scoring directly evidenced components.
+Valid for directly evidenced scoring components.
 
 ### Complete evidence
 
 All required structural playing tiles for the non-winning hand have been entered.
 
-The scorer may run whole-hand and fishing analysis supported by that complete evidence.
+The scorer may run supported whole-hand and fishing analysis.
 
 ### Invalid
 
-The evidence describes an impossible/contradictory state, for example:
+The evidence describes an impossible/contradictory state, for example too many structural tiles or an impossible copy count.
 
-- too many structural tiles;
-- more than four copies of the same playing tile;
-- other structural contradictions caught by validation.
-
-Incomplete is not the same thing as invalid.
-
-## 9.7 User messaging
-
-Partial hand entry should be presented as a legitimate state, conceptually:
-
-> **Partial hand — scoring entered sets and bonus tiles.**
->
-> Add all remaining tiles if you want the scorer to check whole-hand patterns or fishing.
-
-The user should not be blocked merely because they do not care to enter irrelevant loose tiles.
+**Incomplete is not the same as invalid.**
 
 ---
 
-# 10. Irregular and special layouts
+# 10. Irregular/special layouts
 
 **Status:** Shipped
 
 Some supported special hands do not fit naturally into the ordinary grouped-set builder.
 
-The scorer provides a secondary **Special layout** / irregular layout route for those cases.
+The scorer provides a secondary Special layout/irregular route for these cases.
 
-This route is deliberately less prominent than ordinary sets because most hands should use the normal beginner flow.
+It is deliberately less prominent than ordinary set entry because normal sets are the primary user journey.
 
-Loose tile evidence is entered directly and used by the supported special-hand detectors.
-
-The scorer should not require a beginner to identify the special hand's name merely to choose this route.
+The user should not need to know the special hand's name merely to choose the irregular entry route.
 
 ---
 
-# 11. Ordinary scoring
+# 11. Scoring and explanation model
 
 **Status:** Shipped
 
-The scoring engine calculates the implemented British Mahjong scoring rules from the entered evidence.
+The deterministic rules engine calculates the implemented British Mahjong rules from the evidence supplied.
 
-The public product need not expose its internal rule-engine architecture, but the score breakdown should make the major components visible.
+The public score breakdown may include supported combinations of:
 
-This includes relevant combinations of:
-
-- base/set/pair points;
+- set/pair/base points;
 - bonus points where applicable;
 - doubles;
 - winning-method effects;
@@ -678,23 +514,13 @@ This includes relevant combinations of:
 - special-hand/fishing values;
 - applicable limits.
 
-The engineering rule source of truth is `BMJA_RULES_REFERENCE.md`, with implementation/testing detail in the scoring code and `SCORING_AUDIT.md`.
+The engineering rule source of truth is `BMJA_RULES_REFERENCE.md`, with implementation/testing detail in `artifacts/mahjong-scorer/SCORING_AUDIT.md` and the scorer tests.
 
-The product handbook describes behaviour; it does not replace those rule definitions.
+## 11.1 Contextual detected patterns
 
----
-
-# 12. Contextual detected patterns
-
-**Status:** Shipped
-
-Relevant implementation: issue #20 / PR #25.
-
-The working scorer should not show a permanent catalogue of every special hand/pattern during every scoring session.
+The working scorer does not display every possible special hand/pattern during every scoring session.
 
 Instead it surfaces patterns that actually apply to the entered evidence.
-
-Examples may include ordinary scoring patterns, relevant double rules, special-hand matches and fishing matches.
 
 A contextual callout can communicate:
 
@@ -706,99 +532,49 @@ The purpose is to answer:
 
 > Why did my score just change?
 
-The UI derives these explanations from existing structured scoring outputs rather than running a second independent detector solely for presentation.
+The UI derives these explanations from structured scorer outputs rather than running a second presentation-only rules engine.
 
-The complete browse-all catalogue remains on `/special-hands`.
+The full browse-all catalogue remains on `/special-hands`.
 
 ---
 
-# 13. Special hands
+# 12. Special hands and fishing
 
-**Status:** Shipped for the set currently implemented by the project.
+**Status:** Shipped for the set currently implemented by the project
 
-The scorer supports the project's documented BMJA-style special-hand catalogue, including the layout-based and event-based specials implemented through issues #1–#4.
+The scorer supports the project's documented special-hand catalogue, including layout-based and event-based specials implemented through issues #1–#4.
 
-## 13.1 Product principle
+For the exact current list and values, use `BMJA_RULES_REFERENCE.md` and `docs/SPECIAL_HAND_CATALOGUE_CONTENT.md` rather than duplicating rule-value tables here.
+
+## 12.1 Automatic recognition principle
 
 The user should generally not need to know the special-hand name before the scorer can recognise it.
 
-Where the entered tile evidence and game context are sufficient, detection is automatic.
+Where entered tile evidence and context are sufficient, detection is automatic.
 
-## 13.2 Layout-based specials
+## 12.2 Special-hand fishing
 
-Implemented work includes the project's supported final-layout special hands, including those added in issue #1 such as:
-
-- Knitting;
-- Triple Knitting;
-- Imperial Jade;
-- Gates of Heaven;
-- Wriggling Snake;
-
-alongside the other special hands already present in the catalogue/rules implementation.
-
-For the exact current list and values, use `BMJA_RULES_REFERENCE.md` and `SPECIAL_HAND_CATALOGUE_CONTENT.md` rather than duplicating rule-value tables here.
-
-## 13.3 Winning-tile-sensitive specials
-
-Certain special-hand exceptions depend on how the final tile completed the hand.
-
-Winning-tile provenance supports those decisions where required.
-
-If provenance is unknown, the scorer does not invent it.
-
----
-
-# 14. Special-hand fishing
-
-**Status:** Shipped
-
-Relevant implementation: issue #2 / PR #12.
-
-## 14.1 User problem
-
-A player who is one tile from a special hand should not have to know which named special they are fishing for before the scorer can calculate it.
-
-## 14.2 Detection model
+**Relevant implementation:** issue #2 / PR #12
 
 When complete non-winning evidence supports fishing analysis, the scorer can:
 
-- consider legal additional playing tiles that would not create an impossible fifth copy;
-- test the resulting completion against supported special-hand patterns;
+- consider legal additional tiles that would not create an impossible fifth copy;
+- test candidate completions against supported special-hand patterns;
 - identify possible completing tiles;
 - handle overlapping matches;
-- apply the highest lawful fishing result supported by the rules.
+- use the appropriate highest lawful fishing result according to the implemented rules.
 
-## 14.3 Multiple possible waits
+Partial losing-hand evidence does not trigger fishing claims where unseen tiles could change the result.
 
-A hand may be completable by more than one tile.
+## 12.3 Event-based specials
 
-The scorer can surface multiple possible completing tiles where supported by the detection result.
+**Relevant implementation:** issue #4 / PR #16
 
-## 14.4 Multiple matching specials
-
-A candidate completion can potentially satisfy more than one supported pattern.
-
-The calculation should not depend on arbitrary detector order. It evaluates lawful matches and uses the appropriate highest result according to the implemented rules.
-
-## 14.5 Partial evidence and fishing
-
-Special-hand fishing analysis requires sufficient complete evidence.
-
-A partial losing-hand entry does not trigger fishing claims when unseen tiles could change the answer.
-
----
-
-# 15. Event-based special hands
-
-**Status:** Shipped
-
-Relevant implementation: issue #4 / PR #16.
-
-The app deliberately does **not** maintain a complete turn-by-turn game event log merely to score a small number of event-sensitive specials.
+The app does not maintain a complete turn-by-turn event log merely to score a small number of event-sensitive specials.
 
 Instead it uses minimum necessary context and asks short conditional questions only in plausible cases.
 
-Implemented event-based work includes:
+Implemented event-sensitive work includes:
 
 - Heaven's Blessing;
 - Earth's Blessing;
@@ -806,271 +582,261 @@ Implemented event-based work includes:
 - Plucking the Moon from the Bottom of the Sea;
 - Twofold Fortune.
 
-## 15.1 Infer when possible
-
-Examples of the product approach:
-
-- East + the specific original-deal winning method can support Heaven's Blessing without a second redundant question;
-- replacement/loose-tile win + 5 Circles can support Gathering the Plum Blossom from the Roof;
-- last-wall-tile win + 1 Circles can support Plucking the Moon from the Bottom of the Sea.
-
-## 15.2 Ask only when necessary
-
-Where a required event fact cannot be inferred, the app asks only in the small subset of hands where it could matter.
-
-Examples include questions about:
-
-- whether a non-East discard win came from East's first discard;
-- the specific Kong/replacement sequence required for Twofold Fortune.
-
-## 15.3 Unknown answers
-
-If the user does not know the event fact, the scorer omits the unsupported special rather than assuming it happened.
+If an event fact is unknown, the unsupported special is omitted rather than assumed.
 
 ---
 
-# 16. Flowers and Seasons
+# 13. Manual numeric score fallback
 
 **Status:** Shipped
 
-Flowers and Seasons are represented visually and separately from structural playing tiles.
-
-The scorer/guide communicates their seat-Wind relationships rather than expecting a beginner to memorise hidden mappings.
-
-Current behaviour includes the project's implemented own Flower/own Season and complete Flower/Season set scoring logic.
-
-For exact scoring values, use the engineering rules reference rather than this product handbook.
-
----
-
-# 17. Manual numeric score fallback
-
-**Status:** Shipped
-
-A user can enter a numeric hand score without building the tiles.
-
-This is important for table usability.
-
-## Product behaviour
+A user can enter a numeric hand score without building tiles.
 
 Manual entry:
 
-- is accepted as a score for settlement/game progression;
+- is accepted for settlement/game progression;
 - does not create a fictional detailed hand;
-- does not produce a detailed rule breakdown that was never calculated;
+- does not produce a rule breakdown that was never calculated;
 - is labelled as manually entered in historical evidence where relevant.
 
-The product should never say or imply that a manually typed score has been verified against tiles.
+The product must never imply that a manually typed score was verified against tiles.
 
 ---
 
-# 18. Leaving and navigation
+# 14. Navigation and mobile table use
 
 **Status:** Shipped
 
-Relevant implementation: issue #21 / PR #24.
+## 14.1 Global navigation
 
-The major routes share a consistent site-level header/navigation pattern.
+Major routes share a consistent site-level header/navigation pattern.
 
-## 18.1 Global navigation
-
-The shared menu provides access to the main product and learner destinations.
+The menu is organised around clear product destinations rather than page-specific one-off navigation.
 
 The logo/site title returns home.
 
-## 18.2 Standalone hand exit
+## 14.2 Safe scorer exits
 
-A standalone hand scorer has an obvious way to leave.
+A standalone hand scorer has an obvious way to leave, with protection against silently discarding entered work where relevant.
 
-If leaving would discard entered hand work, the user should be warned rather than silently losing it.
+A scorer opened from a game has a clear cancel/return path and must not apply unfinished changes unless the user explicitly applies the score.
 
-## 18.3 In-game hand exit
+## 14.3 Current mobile hand-scoring hierarchy
 
-A detailed scorer opened from a game has a clear return/cancel path.
+The mobile flow is designed around the order a player needs to think at the table:
 
-Returning without applying a score must not quietly apply unfinished changes to the game.
+1. **Context** — winner/non-winner and relevant hand/game state first;
+2. **Hand** — normal grouped tile entry as the primary route;
+3. **Bonus/relevant special information** — including Flowers and Seasons and conditional information where needed;
+4. **Score and explanation** — the outcome of the entered evidence.
 
-## 18.4 Full game navigation
+Current mobile behaviour includes:
 
-Game persistence reduces the risk of accidental page navigation destroying a game, while deliberate reset/start-over remains explicit.
+- winner/non-winner context before normal tile building;
+- normal content in document flow;
+- compact picker associated with the active destination;
+- active destinations including sets, Remaining tiles and Special layout;
+- Special layout visually secondary to normal set entry;
+- partial-hand guidance positioned beside/above Remaining tiles rather than as a competing top-level action;
+- no confusing exposed mobile section-number jumps;
+- ordinary page scrolling to score/actions/footer;
+- desktop/tablet layout preserved rather than unnecessarily redesigned.
 
----
-
-# 19. Mobile hand entry
-
-**Status:** Shipped
-
-Relevant implementation: PR #28 after the earlier mobile experiment in PR #27.
-
-The current mobile design keeps content in normal document flow rather than relying on a large permanently fixed tile tray.
-
-Key mobile behaviour includes:
-
-- game status presented before tile arrangement where relevant;
-- compact tile picker inside the currently active destination;
-- the picker can move between active sets, Remaining tiles and Special layout;
-- mobile-friendly touch interaction;
-- normal page scrolling to later scoring/actions/footer;
-- desktop/tablet layout retained separately.
-
-The mobile UX should remain a table tool, not become a shrunken desktop form.
+The mobile experience should remain a table tool, not a shrunken desktop form.
 
 ---
 
-# 20. Game ledger as printable/savable record
+# 15. Canonical printable/savable game record
 
-**Status:** Shipped
+**Status:** Shipped  
+**Relevant implementation:** issue #6 / PR #32
 
-Relevant implementation: issue #6 / PR #32.
-
-This is an important product architecture decision.
-
-The app does **not** generate a separate reconstructed report from a parallel data model for the current product.
+The current product does **not** generate a separate reconstructed report from a parallel data model.
 
 Instead:
 
 > **The canonical game ledger is enriched enough to tell the story of the game, and the browser prints/saves that record.**
 
-## 20.1 Print / Save game
+## 15.1 Print / Save game
 
 The user can invoke browser print/save behaviour from the game record.
 
-The browser may then:
+The browser may then print physically or Save as PDF using destinations supported by the device/browser.
 
-- print physically;
-- Save as PDF;
-- use other print destinations supported by the user's device/browser.
+## 15.2 Full game record
 
-## 20.2 Full game record
+Full mode includes the detailed confirmed ledger history available, including tile/scoring evidence where actually recorded.
 
-**Status:** Shipped
+Collapsed ledger entries can be temporarily expanded for print and then returned to their prior screen state.
 
-Full mode includes the detailed confirmed history available in the ledger, including detailed hand/evidence content where it was actually recorded.
+## 15.3 Game summary
 
-Collapsed on-screen ledger entries can be temporarily expanded for the print output and then restored to their prior screen state.
-
-## 20.3 Game summary
-
-**Status:** Shipped
-
-Summary mode provides a more compact record focused on:
+Summary mode focuses on:
 
 - standings;
 - hand-by-hand results;
 - scores/changes/running totals;
 - confirmed game history.
 
-It deliberately excludes detailed tile/evidence cards even if a user happened to have them expanded on screen.
+It deliberately excludes detailed tile/evidence cards.
 
-## 20.4 Confirmed data only
+## 15.4 Confirmed data only
 
-The print record should contain confirmed history, not an unconfirmed live settlement preview or unfinished score-entry controls.
+Print output should contain confirmed history, not unconfirmed live settlement previews or unfinished score-entry controls.
 
-## 20.5 Completed vs in-progress records
+Completed games show ranked final standings; in-progress records reflect current confirmed standings/history without pretending completion.
 
-Completed games show ranked final standings.
+## 15.5 Current print non-goals
 
-An in-progress printed record reflects current confirmed standings/history rather than pretending the game is complete.
-
-## 20.6 Print presentation
-
-Print styling is designed to:
-
-- hide interactive-only controls/navigation;
-- expose relevant ledger details;
-- keep tile evidence readable;
-- allow detailed player records to flow across pages;
-- avoid unnecessary page-break fragmentation where practical;
-- remain understandable in greyscale;
-- include quiet project/artwork attribution/support information.
-
-## 20.7 What is not part of the current print feature
-
-The current product does not require:
+The current print/save feature does not provide:
 
 - custom PDF generation;
-- hosted report URLs;
+- hosted/shareable report URLs;
 - account-based report storage;
 - email delivery;
-- screenshot/PNG capture;
+- screenshot/PNG export;
 - native share-sheet report integration;
 - cross-game analytics;
-- AI-generated game commentary.
-
-These must not be implied by marketing for the current print/save feature.
+- AI-generated commentary.
 
 ---
 
-# 21. Learner content
+# 16. Learner, Help and reference ecosystem
 
 **Status:** Shipped
 
-The learner/reference pages are part of the product rather than detached documentation.
+The learning/reference surfaces are part of the product rather than detached repository documentation.
 
-## 21.1 Gameplay basics
+## 16.1 Gameplay basics — `/gameplay-basics`
 
-Explains how to play at a practical beginner level.
+Explains the practical flow of British Mahjong for learners.
 
-Canonical source draft:
+Source content: `docs/GAMEPLAY_BASICS_CONTENT.md`.
 
-- `docs/GAMEPLAY_BASICS_CONTENT.md`
+## 16.2 Scoring guide — `/guide`
 
-## 21.2 Beginner scoring guide
+Explains scoring progressively rather than dumping the full rule catalogue at once.
 
-Explains the scoring system progressively rather than presenting the full rule catalogue at once.
+Source content: `docs/BEGINNER_GUIDE_CONTENT.md`.
 
-Canonical source draft:
+## 16.3 Special hands — `/special-hands`
 
-- `docs/BEGINNER_GUIDE_CONTENT.md`
+Provides a browseable visual reference to supported special hands without forcing the full catalogue into the working scorer.
 
-## 21.3 Special-hand catalogue
+Source content: `docs/SPECIAL_HAND_CATALOGUE_CONTENT.md`.
 
-Provides a browseable visual reference to supported special hands without forcing that catalogue into the active scorer.
+## 16.4 Features — `/features`
 
-Canonical source draft:
+Explains what the current product can do in outcome-led language, including full games, detailed/partial scoring, explanations, recovery and printable records.
 
-- `docs/SPECIAL_HAND_CATALOGUE_CONTENT.md`
+Source content: `docs/FEATURES_CONTENT.md`.
 
-## 21.4 About / trust content
+## 16.5 How it works — `/how-it-works`
 
-Explains:
+Explains the evidence-first model through the six-step flow:
 
-- project purpose;
-- independent status;
-- rule sources;
-- accuracy/transparency approach;
-- no-account/local-first design;
-- artwork/licensing;
-- open development repository;
-- support route.
+> **Context → Evidence → Score → Explain → Settle → Record**
 
-Canonical source draft:
+The page reuses real product screenshots through compact `See it in the scorer` disclosures rather than becoming a mockup gallery.
 
-- `docs/ABOUT_THIS_PROJECT_CONTENT.md`
+Source content: `docs/HOW_IT_WORKS_CONTENT.md`.
+
+## 16.6 Help — `/help`
+
+Provides searchable, answer-first practical guidance covering game scoring, hand scoring, partial evidence, special situations, recovery, settlement, saving/printing and rules/trust questions.
+
+Stable anchors are used for direct linking where appropriate.
+
+Source content: `docs/HELP_CONTENT.md`.
+
+## 16.7 Mahjong rules compared — `/mahjong-rules-compared`
+
+Compares structural differences between:
+
+- British / BMJA-style Mahjong;
+- Hong Kong Mahjong;
+- Japanese Riichi;
+- Chinese Official / Mahjong Competition Rules (MCR);
+- American / NMJL-style Mah Jongg.
+
+Its purpose is to help users identify which Mahjong family they are actually playing and understand why scorers/rules are not interchangeable.
+
+It is not a universal rules engine and does not change the British scorer's ruleset.
+
+Source content: `docs/MAHJONG_RULES_COMPARED_CONTENT.md`.
+
+## 16.8 About — `/about`
+
+Explains project purpose, independent status, rule sources, evidence/uncertainty approach, data model, artwork/licensing and support.
+
+Source content: `docs/ABOUT_THIS_PROJECT_CONTENT.md`.
 
 ---
 
-# 22. Rules, sourcing and independence
+# 17. Responsive instructional screenshot system
+
+**Status:** Shipped
+
+The product contains a repeatable visual-manual system built from real deterministic product states.
+
+Phase 1 contains **eight instructional topics**, each with Mobile, Tablet and Desktop captures — **24 real product screenshots** in total:
+
+1. start a game;
+2. enter scores during a game;
+3. build an ordinary hand;
+4. score a partial losing hand;
+5. identify the tile that completed Mah Jong;
+6. understand the score and reasoning;
+7. read settlement and game history;
+8. print or save the game record.
+
+The Help page:
+
+- automatically selects an image suitable for the visitor's viewport;
+- allows a manual Mobile / Tablet / Desktop override;
+- keeps the chosen override across instructional blocks for the session.
+
+The How it works page reuses the same responsive screenshot infrastructure in compact collapsed disclosures.
+
+Screenshots are:
+
+- real application UI;
+- generated from deterministic states;
+- not manually cropped/redrawn mockups;
+- regenerated using `pnpm --filter @workspace/mahjong-scorer screenshots:help`;
+- protected by checks that required visible product images have loaded successfully before capture.
+
+The canonical screenshot folder is:
+
+`artifacts/mahjong-scorer/public/help/screenshots/`
+
+Do not edit committed instructional PNGs by hand when the UI changes; regenerate them.
+
+Low-priority polish remains in issue #60 to better differentiate the score-focused and reasoning-focused How it works screenshots.
+
+---
+
+# 18. Rules, sourcing and independence
 
 **Status:** Shipped product position
 
-The project implements the British Mahjong rules used by this scorer, based primarily on the published material referenced in `BMJA_RULES_REFERENCE.md`.
+The project implements the British Mahjong rules used by this scorer, based primarily on published material referenced in `BMJA_RULES_REFERENCE.md`.
 
-## 22.1 Independent project
+## 18.1 Independent project
 
-British Mahjong Scorer is an independent project.
+British Mahjong Scorer is independent.
 
 It must not be described as:
 
 - an official BMJA app;
-- BMJA-endorsed unless that ever becomes factually true;
-- authoritative for every British Mahjong group/house rule.
+- BMJA-endorsed unless that becomes factually true;
+- authoritative for every British Mahjong group or house rule.
 
-## 22.2 Public wording
+## 18.2 Public wording
 
-Public rule explanations are project-owned paraphrases rather than substantial reproduction of source text.
+Public rule explanations are project-owned paraphrases rather than substantial reproductions of source material.
 
-## 22.3 Engineering transparency
+## 18.3 Engineering transparency
 
 The project maintains:
 
@@ -1080,84 +846,91 @@ The project maintains:
 - test/fixture mapping;
 - a scoring audit.
 
-This helps make disagreements inspectable rather than hiding rule logic inside opaque code.
+If the scorer and a table disagree, the product should encourage inspection of the score breakdown and relevant rule rather than asserting infallibility.
 
-## 22.4 If the scorer and a table disagree
-
-The product should encourage inspection of the score breakdown and relevant rule rather than asserting infallibility.
-
-Possible reasons include:
+Possible causes include:
 
 - different house rules;
-- different Mahjong variant;
+- a different Mahjong variant;
 - missing/incorrect entered evidence;
 - a project interpretation;
 - an implementation defect.
 
-The application should make the relevant scoring reason visible enough that the disagreement can be located.
-
 ---
 
-# 23. Data and privacy model
+# 19. Data, privacy and technical boundary
 
 **Status:** Shipped current architecture
 
-The public scorer is a static browser application.
+The user-facing scorer is built with React, TypeScript, Vite and the project's current front-end stack, and is deployed on Cloudflare Pages.
 
-Ordinary scoring does not require a user account or backend database.
+Ordinary scoring does not require:
 
-## 23.1 Local saved game data
+- a user account;
+- sign-in;
+- a cloud game database;
+- a server-side scoring engine;
+- cross-device sync.
 
-In-progress game recovery uses browser local storage.
+In-progress game recovery uses browser `localStorage`.
 
-This data remains associated with the relevant browser/device unless the user/browser clears it.
+The current public product should therefore be described precisely as **no-account and local-recovery-first**, not broadly as “fully private” without a wider site/network audit.
 
-## 23.2 No account requirement
+Cloudflare Web Analytics may provide page/traffic analytics operationally; this does not change the local canonical game-state model.
 
-The user can score a hand or game without:
-
-- creating an account;
-- signing in;
-- creating a cloud profile.
-
-## 23.3 No claim of cloud backup
-
-Local recovery must not be marketed as cloud storage or synchronisation.
-
-## 23.4 Static hosting
-
-The site is deployed as a static web application on Cloudflare Pages.
-
-A backend is not required for ordinary scoring and learner use.
+Issue #44 proposes a future narrowly scoped product-insight/feedback endpoint. That work is not current product behaviour.
 
 ---
 
-# 24. Accessibility and interaction principles
+# 20. Accessibility and table-use principles
 
 The product should continue to favour:
 
-- ordinary semantic controls;
+- semantic controls;
 - keyboard-accessible navigation;
 - accessible labels for tile images/controls;
 - comfortable mobile touch targets;
 - meaningful headings;
 - warnings before destructive navigation where work would be lost;
 - text explanations rather than colour-only meaning;
-- printable records that remain understandable in greyscale.
+- print records that remain understandable in greyscale.
 
-Accessibility is part of product quality, not a separate optional feature claim.
+Readability is part of table usability. Issue #50 tracks further improvement to small supporting text for older and mobile users.
+
+Accessibility is a product-quality requirement, not a separate marketing flourish.
 
 ---
 
-# 25. SEO and public discoverability
+# 21. Search, metadata and discoverability
 
-**Status:** Shipped engineering readiness
+**Status:** Shipped engineering foundation  
+**Relevant work:** issue #29 / PR #31, later integration work, and calculator-discoverability PR #62
 
-Relevant implementation: issue #29 / PR #31.
+## 21.1 Calculator positioning
 
-The production build includes crawler-visible route-specific metadata for canonical public routes.
+The product name remains **British Mahjong Scorer**.
 
-Current canonical routes include:
+Public metadata and visible copy also accurately describe it as a:
+
+- British Mahjong calculator;
+- British Mahjong scoring calculator;
+- British Mahjong hand calculator where relevant.
+
+The homepage remains action-led rather than becoming a keyword-stuffed landing page.
+
+## 21.2 One canonical SEO configuration
+
+Public-route SEO configuration is centralised in:
+
+`artifacts/mahjong-scorer/src/site-seo.json`
+
+It contains the canonical site URL, social image, route paths, titles, descriptions, indexability, aliases and homepage WebApplication data.
+
+That shared configuration is reused by runtime/build behaviour so route metadata, prerender output and sitemap/redirect generation do not need separate hand-maintained route lists.
+
+## 21.3 Current canonical indexable routes
+
+The current set is:
 
 - `/`
 - `/game`
@@ -1165,628 +938,476 @@ Current canonical routes include:
 - `/gameplay-basics`
 - `/guide`
 - `/special-hands`
+- `/features`
+- `/how-it-works`
+- `/help`
+- `/mahjong-rules-compared`
 - `/about`
 
-The build includes relevant:
+## 21.4 Generated/public search signals
 
-- titles;
+The production build provides relevant:
+
+- route-specific titles;
 - descriptions;
 - canonical links;
 - Open Graph/Twitter metadata;
-- sitemap;
-- robots metadata/files;
 - social preview image;
-- minimal truthful structured data.
+- sitemap;
+- permissive `robots.txt` with sitemap reference;
+- Cloudflare Pages alias redirects;
+- truthful homepage WebApplication structured data.
 
-Operational search-engine submission/indexing remains an owner action and does not guarantee ranking.
+Homepage structured data includes factual alternate names, `en-GB`, free accessibility, a GBP 0 Offer and a concise implemented feature list.
 
-If `/features`, `/help` or `/how-it-works` are added later, SEO files/metadata should be updated as part of that implementation.
+Do not add fabricated ratings, reviews, awards or official-association claims.
+
+## 21.5 Retrieval/AI-discoverability guardrails
+
+Public discoverability should rely on normal crawlable factual content and metadata.
+
+Current direction explicitly avoids:
+
+- hidden AI-only keyword blocks;
+- bot-specific content variants;
+- `llms.txt` solely for discoverability;
+- fabricated structured-data claims.
+
+Operational search-engine verification, submission and ranking remain outside application truth and do not guarantee discovery.
 
 ---
 
-# 26. Artwork and licensing
+# 22. Artwork, licensing and support
+
+## 22.1 Tile artwork
 
 **Status:** Shipped
 
 Mahjong tile artwork is sourced from the project's pinned copy of the Regular SVG set from `xhokir/riichi-mahjong-tiles`, based on `FluffyStuff/riichi-mahjong-tiles`, under CC BY 4.0.
 
-The artwork is reused across:
-
-- tile entry;
-- learner guides;
-- special-hand examples;
-- detailed ledger evidence;
-- printed game records where relevant.
-
-Using one visual language reduces inconsistency and avoids hot-link dependence during play.
+It is reused across tile entry, learner guides, special-hand examples, detailed ledger evidence, screenshots and print records where relevant.
 
 See:
 
 - `THIRD_PARTY_NOTICES.md`
 - `docs/TILE_ASSET_DECISION.md`
 
-The project source code is MIT licensed as recorded in `LICENSE`, while original written content retains the separate copyright position described in the README unless explicitly stated otherwise.
+Project source code is MIT licensed as recorded in `LICENSE`. Original written content retains the separate copyright position described in the README unless explicitly stated otherwise.
 
----
-
-# 27. Support model
+## 22.2 Support model
 
 **Status:** Shipped
 
-The project includes a quiet Buy Me a Coffee support route.
+A quiet Buy Me a Coffee support route is available.
 
-Support messaging should remain secondary to gameplay and learning.
-
-It should not:
-
-- interrupt active scoring;
-- create a payment wall;
-- imply payment is required to use core scoring/learning functions.
-
-The support link may appear in appropriate low-friction locations such as:
-
-- About;
-- footer;
-- bottom of finished/printed game record.
+Support messaging should remain secondary to gameplay and learning and should not create a payment wall or interrupt active scoring.
 
 ---
 
-# 28. Product differentiation / USP truth bank
+# 23. Current shipped feature inventory
 
-These are **truthful current capability statements**, not claims of market uniqueness.
+This section is a compact product inventory. More specific behavioural sections above take precedence if wording ever conflicts.
 
-They may be reused in public marketing copy after tone/editing.
+## Game scoring
 
-## Built specifically around this British Mahjong ruleset
-
-The product is not trying to be a universal Mahjong calculator.
-
-Its scoring, special hands, fishing, settlement and learner content are built around the British rules implemented by the project.
-
-## Explains the score, not only the number
-
-The user can see relevant point/double/pattern reasoning and game settlement rather than receiving a bare total.
-
-## You do not need to know the special-hand name first
-
-Supported layout/fishing patterns are detected from entered evidence where sufficient.
-
-## Partial losing hands are legitimate input
-
-A player can enter only known scoring evidence rather than reconstructing every irrelevant loose tile.
-
-## Unknown means unknown
-
-The scorer supports conservative uncertainty rather than forcing the user to guess event/provenance facts.
-
-## Detailed scoring and the game record are connected
-
-A hand scored in detail can retain its evidence when applied to a game and later appear in the same canonical ledger/print record.
-
-## Refresh recovery without an account
-
-An in-progress game can recover locally after ordinary browser accidents without requiring sign-up.
-
-## The saved game record is the same history used during play
-
-The product enriches and prints the canonical ledger rather than constructing a second narrative report from scratch.
-
-## Beginner-first without hiding depth
-
-The working scorer surfaces relevant information contextually, while deeper learner/reference material is available separately.
-
-## Manual fallback remains available
-
-The table can type a score when detailed reconstruction is unnecessary, while the product keeps that evidence distinction explicit.
-
----
-
-# 29. Comprehensive “what if?” truth bank
-
-This section records the canonical answer behind future Help/FAQ content.
-
-## What if I only know part of a losing hand?
-
-Enter the scoring sets/bonus tiles you know.
-
-The scorer can calculate directly evidenced components and label the hand as partial.
-
-It will not infer whole-hand patterns or special fishing that depend on unseen tiles.
-
-## What if I only want to enter the sets that score?
-
-That is supported for a losing hand.
-
-You do not have to enter every irrelevant loose tile merely to receive a score for completed scoring evidence.
-
-## What if I enter all 13 structural tiles for a losing hand?
-
-The evidence becomes complete enough for the scorer to run the whole-hand/fishing analysis supported by the implementation.
-
-## What if I enter more than the legal structural count?
-
-The hand becomes invalid rather than being treated as merely partial.
-
-## What if I enter five copies of the same ordinary tile?
-
-The scorer rejects/warns about the impossible tile inventory.
-
-## What if I have a Kong and the physical tile count looks too high?
-
-The scorer understands that a Kong has four physical tiles while occupying one structural group slot.
-
-## What if I have Flowers or Seasons?
-
-Enter them separately as bonus tiles.
-
-They are not counted as part of the normal structural 13/14 playing-tile base.
-
-## What if my hand does not fit normal Pungs/Chows/Kongs/Pairs?
-
-Use the Special layout route for an irregular supported layout.
-
-It is intentionally secondary because ordinary hands should use standard sets.
-
-## What if I think I am fishing for a special hand but do not know its name?
-
-Enter the complete non-winning tile evidence.
-
-The scorer can detect supported one-tile-away special patterns and possible completing tiles automatically.
-
-## What if several special fishing patterns match?
-
-The scorer evaluates supported lawful matches rather than relying on the order in which detectors happen to run and applies the appropriate highest result.
-
-## What if I do not know which tile completed Mah Jong?
-
-Use the uncertainty route.
-
-The scorer will avoid winning-tile-sensitive exceptions it cannot prove.
-
-## What if I edit the hand after choosing the winning tile?
-
-Winning-tile provenance should be revalidated/cleared where the selected evidence is no longer valid.
-
-## What if I do not know whether a rare event-based special happened?
-
-Answer that you are not sure where the option is provided.
-
-The scorer omits the unsupported event special rather than assuming it occurred.
-
-## What if a rare special can be inferred from information already entered?
-
-The scorer should infer it rather than asking the same fact again.
-
-## What if I already know the numeric score?
-
-Enter it manually.
-
-It can be used for settlement/game progression, but the record will not pretend that a detailed hand was captured or verified.
-
-## What if only one player uses detailed scoring?
-
-That is fine.
-
-Detailed and manual scores can coexist. The ledger preserves the actual evidence available for each player.
-
-## What if I refresh during a game?
-
-The game should recover from the local saved snapshot on the same browser/device.
-
-## What if I close the browser and return later?
-
-The most recent compatible locally saved in-progress game can be recovered on the same browser/device.
-
-## What if the saved browser data is malformed or from an incompatible schema?
-
-It should not crash the application. Invalid/incompatible persisted state is rejected/cleared defensively.
-
-## What if I want to start again completely?
-
-Use the explicit Start over/new-game/clear action so the old saved snapshot does not reappear.
-
-## What if I accidentally leave a standalone hand?
-
-If entered work would be lost, the application should warn before discarding it.
-
-## What if I cancel a detailed scorer opened from a game?
-
-Return to the game without applying that unfinished detailed score.
-
-## What if I want to save the game?
-
-Use Print / Save game and the browser print flow.
-
-A browser can normally Save as PDF as one of its print destinations.
-
-## What if I want every captured tile and scoring detail in the saved record?
-
-Use **Full game record**.
-
-It exposes the detailed confirmed ledger evidence available.
-
-## What if I just want the standings and hand-by-hand results?
-
-Use **Game summary**.
-
-It omits detailed hand cards/tiles/evidence and remains focused on confirmed game results.
-
-## What if a hand entry is collapsed on screen when I print Full game record?
-
-The print flow temporarily exposes the necessary confirmed ledger detail and then restores the prior open/closed screen state.
-
-## What if the game is not finished but I want a record so far?
-
-The print system can represent current confirmed game history/standings without falsely presenting final completed-game standings.
-
-## What if the scorer and our table disagree?
-
-Inspect the scoring breakdown and compare the relevant rule.
-
-Possible causes include different house rules, different ruleset expectations, missing/incorrect entered evidence, a project interpretation or an implementation defect.
-
-## What if our group plays a different Mahjong variant?
-
-This scorer is not intended to be a universal rules engine. It targets the British ruleset documented by this project.
-
-## What if I want the game on another device?
-
-Current local recovery is not cross-device sync.
-
-There is no account/cloud game sync in the current product.
-
-## What if I want a shareable web link to the report?
-
-Hosted/shareable report URLs are not part of the current print/save feature.
-
-## What if I want to photograph my tiles and have the app recognise them?
-
-Photo-based recognition is backlog work (#8), not current functionality.
-
-## What if I want to practise alone against computer players?
-
-Solo practice is exploratory future work (#17), not current functionality.
-
-## What if multiple detailed hands at the same table imply impossible shared tile usage?
-
-Cross-player shared physical tile-inventory warnings are backlog work (#7), not current functionality.
-
----
-
-# 30. Current feature inventory
-
-This inventory is suitable as the source for future Features copy.
-
-## Game scoring — shipped
-
-- four-player game scoring;
-- player names;
-- seat Winds;
-- East tracking;
-- prevailing-Wind/game progression;
+- four-player game setup and scoring;
+- player names and seat Winds;
+- East/prevailing-Wind progression;
 - winner/draw handling;
 - manual or detailed player score entry;
-- settlement calculation;
-- East doubling;
-- stored settlement transactions;
+- automatic settlement;
+- East doubling where applicable;
+- canonical settlement transactions;
 - plain-English payment explanation;
 - settlement preview before confirmation;
 - confirmed hand ledger;
-- per-player hand scores;
-- per-player net changes;
-- running totals;
-- detailed scoring evidence in ledger where available;
+- per-player scores/net changes/running totals;
+- detailed evidence in ledger where available;
 - manual-score distinction;
-- undo/correction flow;
+- undo/correction;
 - local recovery;
 - completed-game ranked standings;
 - Full game record print/save;
 - Game summary print/save.
 
-## Hand scoring — shipped
+## Hand scoring
 
+- standalone hand calculator and in-game detailed scorer;
 - visual tile entry;
-- Pungs;
-- Chows;
-- Kongs;
-- pairs;
+- Pungs, Chows, Kongs and pairs;
 - exposed/concealed state;
 - Remaining tiles;
 - arbitrary unfinished losing-hand shapes;
 - partial losing-hand evidence;
 - complete losing-hand evidence;
 - structural/physical Kong counting;
-- Flowers;
-- Seasons;
-- bonus-tile/seat-Wind relationships;
-- copy-limit validation;
+- Flowers and Seasons;
+- copy-limit/structural validation;
 - ordinary points/doubles;
-- whole-hand pattern detection where evidence is complete;
+- whole-hand detection when evidence is complete;
 - contextual pattern explanations;
 - irregular/special layout entry;
 - supported special-hand detection;
-- automatic special fishing;
-- multiple completing tiles;
-- overlapping special fishing handling;
+- automatic supported special fishing;
+- multiple completing tiles where supported;
+- overlapping fishing-match handling;
 - winning method;
 - winning-tile provenance;
 - conservative unknown provenance;
 - minimum-context event-special handling;
 - conditional event questions;
 - conservative unknown event answers;
-- manual numeric scoring.
+- manual numeric scoring fallback.
 
-## Learning/reference — shipped
+## Learning/reference
 
 - gameplay basics;
 - beginner scoring guide;
-- tile-family explanations;
-- major/minor explanation;
+- tile-family and major/minor explanations;
 - Flower/Season guidance;
 - visual special-hand catalogue;
-- contextual scorer explanations;
+- Features page;
+- How it works page;
+- searchable Help hub;
+- responsive visual manual with 24 screenshots;
+- major Mahjong-ruleset comparison page;
 - About/project transparency;
-- engineering rules reference;
-- source/interpretation tracking.
+- contextual scorer explanations;
+- engineering rules/source/interpretation tracking.
 
-## Product experience — shipped
+## Product experience/discoverability
 
 - action-led homepage;
 - shared navigation;
 - safe scorer exits;
-- mobile hand-entry refinements;
-- accessible tile labels/semantic controls where implemented;
-- no account required;
+- mobile-first hand-entry refinements;
+- no account required for ordinary scoring;
 - local browser recovery;
-- static deployment;
-- route-specific SEO metadata;
+- static Cloudflare Pages deployment;
+- centralised route/SEO configuration;
+- route-specific crawler-visible metadata;
 - sitemap/robots/social metadata;
+- truthful WebApplication structured data;
 - quiet support link.
 
 ---
 
-# 31. Backlog and exploratory product boundary
+# 24. Current backlog and exploratory boundary
 
 These items must **not** be presented as current features.
 
-## #7 Shared tile inventory and availability warnings
+## #63 Reciprocal scorer ↔ learning links and safe return-to-game navigation
 
 **Status:** Backlog
 
 Future intent:
 
-- consider detailed hands already entered for other players in the same hand;
-- warn when another detailed hand would require impossible shared physical tile counts;
-- possibly disable choices that are definitely unavailable.
+- stronger contextual links between scorer explanations and learning/reference content;
+- stable deep-link anchors;
+- clear Return to game affordance on learner pages when a recoverable game exists;
+- no mutation/discard of game state merely because the user reads Help/reference content.
 
-Manual numeric scores would remain composition-unknown.
+## #64 Interactive prefilled special-hand examples
+
+**Status:** Backlog
+
+Future intent:
+
+- let catalogue examples open safely as deterministic prefilled `/hand` examples;
+- reuse canonical example data rather than duplicating truth;
+- never overwrite an active game;
+- return to the exact catalogue example.
+
+## #65 Tested scoring examples and lightweight practice
+
+**Status:** Backlog
+
+Future intent:
+
+- one substantive `/scoring-examples` hub;
+- worked examples backed by scorer tests/canonical data;
+- open a completed example in the normal scorer;
+- lightweight “build it yourself” practice without accounts, streaks or a second scoring engine.
+
+This is distinct from the broader computer-opponent exploration in #17.
+
+## #48 Progressive Web App / offline installability
+
+**Status:** Backlog
+
+Future intent:
+
+- installable home-screen/app-like experience;
+- web app manifest/icons;
+- safe service-worker caching;
+- core scoring usable offline after installation/loading;
+- preserve the existing canonical website/SEO/deployment model.
+
+No separate native Android/iOS app is required by this issue.
+
+## #49 Clearer beginner entry path
+
+**Status:** Backlog
+
+Future intent:
+
+- more obvious beginner route from the homepage;
+- contextual explanation of setup terms such as starting Winds/game length;
+- no mandatory onboarding wizard.
+
+## #50 Small-text readability improvement
+
+**Status:** Backlog
+
+Future intent:
+
+- improve readability of important supporting text on phones/tablets, especially for older players;
+- preserve visual hierarchy without relying on tiny text for essential information.
+
+## #51 Optional house-rule evidence gathering
+
+**Status:** Exploratory / discovery
+
+The canonical baseline remains the project's BMJA-style rules.
+
+House-rule support should only be implemented where evidence shows a repeated real-user need, and any future switches must be explicit rather than silently changing what “BMJA” means.
+
+## #44 Lightweight product insight and feedback
+
+**Status:** Backlog
+
+Future intent is narrowly scoped, privacy-conscious product evidence such as game start/completion/recovery/print events and end-of-game feedback.
+
+It is not current behaviour and must not be described as existing product telemetry.
+
+## #60 Differentiate How it works score/reasoning screenshots
+
+**Status:** Backlog / low-priority polish
+
+The current page is usable; this issue improves distinction between two existing visual examples without changing scoring behaviour or the screenshot architecture.
+
+## #7 Shared physical tile inventory
+
+**Status:** Backlog
+
+Future intent is cross-player availability/impossible-tile warnings when multiple detailed hands are known.
+
+Manual numeric scores remain composition-unknown.
 
 ## #8 Photo-based tile recognition
 
 **Status:** Backlog
 
-Future intent:
+Future intent is optional browser-side recognition feeding the same canonical hand/correction model.
 
-- optional photo input;
-- preferably browser-side recognition using an existing model;
-- feed recognition results into the same canonical hand/correction flow;
-- keep images client-side where practical;
-- Flowers/Seasons may need separate handling depending on model support.
+Photo recognition is not current functionality.
 
-Not current product behaviour.
-
-## #17 Lightweight solo practice mode
+## #17 Solo play against computer players
 
 **Status:** Exploratory
 
-Future concept:
+Future concept is one human against deterministic local browser bots reusing the current scoring/game models.
 
-- one human against three browser-based deterministic bots;
-- reuse existing tile/scoring/game models;
-- client-side only for initial experiment;
-- no ML/LLM requirement;
-- no account/backend/WebSocket requirement for the first experiment.
+It is not a committed current feature.
 
-The concept is not a committed current feature.
+## Explicitly not current product behaviour
 
-## Account/cloud sync
+No current product capability should be implied for:
 
-**Status:** Not current product
-
-No current commitment to:
-
-- accounts;
-- login-based game history;
-- cross-device sync;
-- cloud backup.
-
-## Hosted/shareable game reports
-
-**Status:** Not current product
-
-Current save behaviour is browser print/Save as PDF from the canonical ledger.
-
-## Cross-game analytics
-
-**Status:** Not current product
-
-No current player/game-history analytics dashboard.
-
-## AI commentary or scoring
-
-**Status:** Not current product
-
-The scoring engine is deterministic rules logic.
-
-Do not market it as “AI-powered”.
-
----
-
-# 32. Explicit non-goals and things not to imply
-
-Current public content must not imply:
-
-- official BMJA status or endorsement;
-- compatibility with all Mahjong variants;
-- support for every house rule;
-- perfect/guaranteed scoring accuracy;
-- cloud account storage;
+- account/cloud game history;
 - cross-device game sync;
 - online multiplayer;
-- solo computer opponents;
-- photo tile recognition;
-- automatic shared-table physical tile inventory;
-- hosted report links;
+- native app-store distribution;
+- hosted/shareable report URLs;
 - built-in email report delivery;
-- native image/screenshot export;
-- cross-game statistics;
-- AI-generated explanations;
+- native screenshot/PNG export;
+- cross-game player statistics/dashboarding;
 - AI scoring;
-- scorer verification of manually typed numeric scores;
-- complete reconstruction when only partial hand evidence was entered.
+- AI-generated game commentary.
 
 ---
 
-# 33. How the product works — canonical short explanation
+# 25. Comprehensive “what if?” truth bank
 
-This section is the source for future `/how-it-works` copy.
+This section records canonical answers behind Help/FAQ content.
 
-## Step 1 — Give the scorer the context it actually needs
+## What if I only know part of a losing hand?
 
-For a standalone hand, choose the relevant hand/game status.
+Enter the scoring sets and bonus tiles you know.
 
-Inside a full game, much of that context can already come from the game.
+The scorer can calculate directly evidenced components and treat the hand as partial. It will not infer whole-hand patterns or special fishing that depend on unseen tiles.
 
-## Step 2 — Enter the hand at the level of detail you need
+## What if I only want to enter the sets that score?
 
-For a winning hand, build the completed hand.
+That is supported for a losing hand. You do not have to reconstruct every irrelevant loose tile merely to receive a score for completed scoring evidence.
 
-For a losing hand, enter all tiles if you want whole-hand/fishing analysis, or only the scoring evidence you care about if a partial score is sufficient.
+## What if I enter all 13 structural tiles for a losing hand?
 
-You can also type a numeric score instead when detailed reconstruction is unnecessary.
+The evidence becomes complete enough for the supported whole-hand/fishing analysis to run.
 
-## Step 3 — The scorer applies only rules supported by the evidence
+## What if I enter too many structural tiles or five copies of one ordinary tile?
 
-It calculates points/doubles/patterns and uses whole-hand analysis only when the entered evidence is complete enough.
+That is invalid/impossible evidence, not merely partial evidence, and should be rejected/warned about.
 
-## Step 4 — The scorer asks only for facts it cannot safely infer
+## What if I have a Kong and the physical tile count looks high?
 
-Winning-tile and rare event questions appear only when they can affect the result.
+The scorer understands that a Kong has four physical tiles while occupying one structural group slot.
 
-“I’m not sure” reduces certainty rather than inventing an answer.
+## What if I have Flowers or Seasons?
 
-## Step 5 — Relevant scoring reasons are shown
+Enter them separately as bonus tiles. They are not part of the normal structural 13/14 playing-tile base.
 
-Detected patterns and scoring components explain why the score changed.
+## What if my hand does not fit normal Pungs/Chows/Kongs/Pairs?
 
-## Step 6 — In a game, the result becomes settlement and history
+Use the secondary Special layout route for an irregular supported layout.
 
-Player scores feed the canonical settlement calculation and confirmed ledger.
+## What if I think I am fishing for a special hand but do not know its name?
 
-## Step 7 — The ledger becomes the game record
+Enter complete non-winning tile evidence. The scorer can detect supported one-tile-away patterns and possible completing tiles automatically.
 
-At any appropriate point, the same confirmed history can be printed/saved as either a compact summary or a full detailed record.
+## What if several fishing patterns match?
+
+The scorer evaluates supported lawful matches rather than depending on detector order and applies the appropriate highest result.
+
+## What if I do not know which tile completed Mah Jong?
+
+Use the uncertainty route. The scorer avoids winning-tile-sensitive exceptions it cannot prove.
+
+## What if I edit the hand after choosing the winning tile?
+
+Stored provenance should be revalidated/cleared where it no longer matches the edited hand.
+
+## What if I do not know whether a rare event-based special happened?
+
+Use the “not sure”/unknown path where provided. The unsupported event special is omitted rather than assumed.
+
+## What if the rare special can be inferred from information already entered?
+
+The scorer should infer it instead of asking the same fact again.
+
+## What if I already know the score?
+
+Enter it manually. It can be used for game settlement/progression, but the record will not pretend a detailed hand was captured or verified.
+
+## What if only one player uses detailed scoring?
+
+That is valid. Detailed and manual scores can coexist and the ledger preserves the evidence actually available for each player.
+
+## What if I refresh or close the browser during a game?
+
+The most recent compatible in-progress game should recover from local storage on the same browser/device.
+
+## What if the saved browser data is malformed or incompatible?
+
+It should not prevent the application from loading. Invalid/incompatible state is rejected/cleared defensively.
+
+## What if I want to start again completely?
+
+Use the explicit Start over/new-game action so the old saved snapshot does not return.
+
+## What if I leave a standalone hand with unsaved work?
+
+The application should warn where leaving would discard entered work.
+
+## What if I cancel a detailed scorer opened from a game?
+
+Return to the game without applying the unfinished score.
+
+## What if I want to save the game?
+
+Use Print / Save game and the browser print flow. Save as PDF is normally available as a browser print destination.
+
+## What if I want every captured tile and scoring detail?
+
+Use **Full game record**.
+
+## What if I only want standings and hand-by-hand results?
+
+Use **Game summary**.
+
+## What if ledger entries are collapsed when I print the Full record?
+
+The print flow temporarily exposes the required confirmed detail and restores the prior screen state afterwards.
+
+## What if the game is unfinished but I want a record so far?
+
+The print system can represent current confirmed history/standings without falsely presenting final completed-game standings.
+
+## What if the scorer and our table disagree?
+
+Inspect the score breakdown and relevant rule. Possible reasons include different house rules, a different Mahjong variant, missing/incorrect evidence, a project interpretation or a defect.
+
+## What if our group plays Riichi, Hong Kong, MCR or American Mahjong?
+
+Use `/mahjong-rules-compared` to understand major differences, but do not expect this British scorer to calculate those rulesets.
+
+## What if I want the game on another device?
+
+Current local recovery is not cross-device sync.
+
+## What if I want a shareable web link to the report?
+
+Hosted/shareable report URLs are not part of the current print/save feature.
+
+## What if I want to photograph my tiles?
+
+Photo recognition is backlog work (#8), not current functionality.
+
+## What if I want the site installed like an app or to work offline?
+
+PWA/offline installability is backlog work (#48), not current functionality.
+
+## What if I want worked scoring examples or to practise building a hand?
+
+A tested worked-example/practice hub is backlog work (#65), not current functionality.
+
+## What if I want to tap a special-hand catalogue example and load it into the scorer?
+
+That interactive prefill path is backlog work (#64), not current functionality.
+
+## What if I want to read a rule during a live game and return directly to the game?
+
+Broader reciprocal scorer/reference linking and the reusable learner-page Return to game affordance are backlog work (#63). Existing navigation/recovery remains available, but do not describe the future contextual system as shipped yet.
+
+## What if our group uses house rules?
+
+The current baseline remains the documented British rules implemented by the project. Optional house-rule support is still evidence-gathering work (#51).
+
+## What if I want to practise alone against computer players?
+
+That remains exploratory future work (#17).
 
 ---
 
-# 34. Public content maintenance rules
-
-When a product behaviour changes, maintain sources in this order.
-
-## 1. Rule truth
-
-If scoring rules changed:
-
-- update scoring implementation/tests;
-- update `BMJA_RULES_REFERENCE.md`;
-- update `SCORING_AUDIT.md` where relevant.
-
-## 2. Product truth
-
-Update this handbook to reflect the behaviour users now experience.
-
-## 3. Learner/public content
-
-Update relevant content sources:
-
-- `HELP_CONTENT.md`;
-- `FEATURES_CONTENT.md`;
-- `HOW_IT_WORKS_CONTENT.md`;
-- `ABOUT_THIS_PROJECT_CONTENT.md`;
-- `BEGINNER_GUIDE_CONTENT.md`;
-- `GAMEPLAY_BASICS_CONTENT.md`;
-- `SPECIAL_HAND_CATALOGUE_CONTENT.md`;
-- `MARKETING_COPY_BANK.md`.
-
-## 4. Public route metadata
-
-If a new public canonical page ships, update:
-
-- route metadata;
-- sitemap;
-- canonical handling;
-- social metadata where relevant;
-- navigation/footer links where appropriate.
-
-Recommended PR checklist item:
-
-> **Content impact checked:** Product Handbook, Help, Features, How it works, About, learner guides and rules reference reviewed where relevant.
-
----
-
-# 35. Issue / PR implementation map
-
-This is a product-level map, not an exhaustive commit log.
-
-| Area | Issue / PR | Product result |
-|---|---|---|
-| Missing layout special hands | #1 / PR #11 | Complete the currently targeted layout-based special-hand set |
-| Automatic special fishing | #2 / PR #12 | Detect special fishing and completing tiles without requiring the user to name the special |
-| Winning-tile provenance | #3 / PR #13 | Capture final-tile evidence for rules that genuinely depend on it |
-| Event-based specials | #4 / PR #16 | Add five event-sensitive specials using minimal context/questions |
-| Learner/rules reference | #5 / PR #18 | Beginner guide, special-hand catalogue, rule/test mapping, tile artwork decision |
-| Canonical printable game record | #6 / PR #32 | Enriched ledger plus Full/Summary browser print/save modes |
-| Shared tile inventory | #7 | Backlog |
-| Photo tile recognition | #8 | Backlog |
-| Local game recovery | #14 / PR #23 | Versioned localStorage recovery without accounts |
-| Unfinished/partial losing hands | #15 / PR #22 + PR #30 | Remaining tiles, correct counting, partial-evidence scoring |
-| Solo practice | #17 | Exploratory |
-| Homepage/product entry | PR #19 | Action-led home and learner routes |
-| Contextual pattern callouts | #20 / PR #25 | Show only relevant detected scoring patterns in working scorer |
-| Navigation/safe exits | #21 / PR #24 | Shared site navigation and safer scorer leaving behaviour |
-| Mobile hand-scorer UX | PR #28 | In-flow mobile picker and phone usability refinements |
-| README current-product refresh | PR #26 | Repository front door reflects modern product |
-| SEO/indexing readiness | #29 / PR #31 | Static route metadata, redirects, sitemap, robots, social preview |
-
----
-
-# 36. Canonical product claims allowed today
+# 26. Canonical product claims allowed today
 
 These statements are safe foundations for public copy when phrased appropriately:
 
-- British Mahjong Scorer scores complete four-player games and individual hands.
+- British Mahjong Scorer is a free browser-based British Mahjong scoring calculator.
+- It scores complete four-player games and individual hands.
 - It can calculate detailed hand scores from visual tile entry.
 - It can also accept manually entered numeric scores.
 - Detailed and manual scores can coexist in the same game.
 - It calculates settlement and East doubling according to the implemented rules.
-- It keeps a hand-by-hand ledger with running balances.
+- It keeps a canonical hand-by-hand ledger with running balances.
 - It explains stored settlement transactions in plain English.
 - It supports partial scoring evidence for unfinished losing hands.
-- It distinguishes partial evidence from complete evidence.
+- It distinguishes partial, complete and invalid evidence.
 - It automatically detects supported special hands where the evidence is sufficient.
 - It automatically detects supported special-hand fishing from complete non-winning evidence.
-- It can ask for winning-tile/event facts only when they matter.
-- It supports uncertainty/conservative scoring where required facts are unknown.
-- It provides gameplay, scoring and special-hand learner guides.
+- It asks for winning-tile/event facts only when they matter.
+- It supports conservative scoring when required facts are unknown.
+- It provides gameplay, scoring, special-hand, Help, Features, How it works and rules-comparison content.
+- Help includes a responsive visual manual built from 24 real product screenshots.
 - It can recover an in-progress game locally after refresh/browser restart on the same browser/device.
 - It does not require an account for ordinary scoring.
-- Its final game record comes from the same canonical ledger used during play.
+- Its printable/savable game record comes from the same canonical ledger used during play.
 - It offers Full game record and Game summary browser print/save modes.
 - It is an independent project and not an official BMJA publication.
 
 ---
 
-# 37. Claims that require qualification
+# 27. Claims that require qualification
 
 ## “Accurate”
 
@@ -1794,7 +1415,7 @@ Prefer:
 
 - “built against the British rules documented by this project”;
 - “scoring rules are explicit and tested”;
-- “shows the scoring breakdown so the result can be checked”.
+- “shows the score breakdown so the result can be checked”.
 
 Avoid:
 
@@ -1809,13 +1430,13 @@ Prefer:
 - “in-progress recovery is stored locally in your browser”;
 - “ordinary scoring does not require cloud game-history storage”.
 
-Avoid broad privacy claims that would require a full site/network/privacy audit beyond the scoring architecture.
+Avoid broad privacy claims that would require a wider site/network/privacy audit.
 
 ## “Automatic”
 
-It is fair to describe detection as automatic where the scorer actually derives a result from entered evidence.
+It is fair to describe detection as automatic where the scorer derives the result from entered evidence.
 
-Do not imply the app can infer facts that it explicitly asks the user to provide.
+Do not imply the app can infer facts it explicitly asks the user to provide.
 
 ## “Complete hand scoring”
 
@@ -1823,9 +1444,47 @@ Detailed scoring is complete only to the extent the required evidence is entered
 
 Manual numeric input is not detailed scorer verification.
 
+## “App”
+
+The current product is a web application, but it is not yet an installable/offline PWA. Do not describe #48 as shipped.
+
+## “BMJA”
+
+The project can describe the British/BMJA-style rules it implements and sources, but must not imply official status or endorsement.
+
 ---
 
-# 38. Product voice principles
+# 28. Canonical How it works explanation
+
+The shipped `/how-it-works` page uses a six-step model.
+
+## Step 1 — Context
+
+Give the scorer the context it actually needs. Inside a full game, some context can already come from the game state.
+
+## Step 2 — Evidence
+
+Enter the hand at the level of detail needed: a completed winning hand, a complete losing hand, partial losing evidence, or a manual numeric score where detailed reconstruction is unnecessary.
+
+## Step 3 — Score
+
+The scorer applies only rules supported by the evidence and uses whole-hand analysis only when the input is complete enough.
+
+## Step 4 — Explain
+
+Relevant scoring components and detected patterns show why the score changed. If a material fact cannot be inferred, the scorer asks only when necessary and allows conservative uncertainty where practical.
+
+## Step 5 — Settle
+
+In a full game, player scores feed the canonical settlement calculation and running balances.
+
+## Step 6 — Record
+
+Confirmed results enter the canonical ledger, which becomes both the game history and the source for Full/Summary browser print-save records.
+
+---
+
+# 29. Product voice principles
 
 Public product content should be:
 
@@ -1839,7 +1498,7 @@ Public product content should be:
 - independent rather than authority-posturing;
 - restrained about marketing claims.
 
-Prefer:
+Prefer ideas such as:
 
 - “Enter what you know.”
 - “The scorer works out what it safely can.”
@@ -1856,21 +1515,112 @@ Avoid:
 
 ---
 
-# 39. Handbook maintenance status
+# 30. Public-content and product-truth maintenance
+
+The old handbook accumulated drift because the same status/route truth was repeated in too many places. This version deliberately consolidates that information.
+
+When product behaviour changes, maintain sources in this order.
+
+## 1. Rule truth
+
+If scoring rules changed:
+
+- update implementation/tests;
+- update `BMJA_RULES_REFERENCE.md`;
+- update `SCORING_AUDIT.md` where relevant.
+
+## 2. Product truth
+
+Update this handbook to reflect the behaviour users now experience.
+
+## 3. Public/learner source content
+
+Review relevant sources:
+
+- `HELP_CONTENT.md`;
+- `FEATURES_CONTENT.md`;
+- `HOW_IT_WORKS_CONTENT.md`;
+- `ABOUT_THIS_PROJECT_CONTENT.md`;
+- `BEGINNER_GUIDE_CONTENT.md`;
+- `GAMEPLAY_BASICS_CONTENT.md`;
+- `SPECIAL_HAND_CATALOGUE_CONTENT.md`;
+- `MAHJONG_RULES_COMPARED_CONTENT.md`;
+- `MARKETING_COPY_BANK.md`;
+- `INSTRUCTIONAL_SCREENSHOT_PLAN.md` where UI/how-to captures are affected.
+
+## 4. Public route/discoverability truth
+
+If a public canonical page or alias changes, update the shared `site-seo.json` configuration and ensure runtime/build/prerender/sitemap/robots/redirect output remains aligned.
+
+## 5. Screenshots
+
+If documented UI changes materially, regenerate affected instructional screenshots rather than hand-editing PNGs.
+
+Recommended PR checklist item:
+
+> **Content impact checked:** Product Handbook, Help, Features, How it works, learner/reference pages, rules reference, SEO route config and instructional screenshots reviewed where relevant.
+
+When repetition conflicts, the more specific behavioural section should be corrected first, then inventory/claims brought back into alignment.
+
+---
+
+# 31. Product-level issue / PR implementation map
+
+This is a product map, not an exhaustive commit log.
+
+| Area | Issue / PR | Product result |
+| --- | --- | --- |
+| Missing layout special hands | #1 / PR #11 | Complete the currently targeted layout-based special-hand set |
+| Automatic special fishing | #2 / PR #12 | Detect supported special fishing/completing tiles without naming the special first |
+| Winning-tile provenance | #3 / PR #13 | Capture final-tile evidence for rules that genuinely depend on it |
+| Event-based specials | #4 / PR #16 | Add five event-sensitive specials using minimal context/questions |
+| Learner/rules reference | #5 / PR #18 | Beginner guide, special-hand catalogue, rule/test mapping and tile-artwork decision |
+| Canonical printable game record | #6 / PR #32 | Enriched ledger plus Full/Summary browser print-save modes |
+| Local game recovery | #14 / PR #23 | Versioned localStorage recovery without accounts |
+| Unfinished/partial losing hands | #15 / PR #22 + PR #30 | Remaining tiles, correct counting and partial-evidence scoring |
+| Homepage/product entry | PR #19 | Action-led homepage and learner routes |
+| Contextual pattern callouts | #20 / PR #25 | Show only relevant detected patterns in the working scorer |
+| Navigation/safe exits | #21 / PR #24 | Shared site navigation and safe leaving behaviour |
+| Mobile hand-scorer UX | PR #28, later PR #55 | In-flow mobile picker plus context-first hierarchy and cleaner information order |
+| SEO/indexing foundation | #29 / PR #31 | Static route metadata, aliases, sitemap, robots and social preview |
+| Product-content system | PRs #33–#38 | Product plan, canonical handbook baseline, Features/Help/How-it-works source copy and marketing bank |
+| Background product pages | PRs #39–#43 | Shipped How it works, Features and Help plus navigation/SEO integration |
+| Mahjong rules comparison | PRs #45–#47 | Sourced rules-comparison content, live route and contextual internal links |
+| Responsive screenshot system | #53 / PR #56, #57 / PR #58 | Reusable Help how-tos and complete 8-topic / 24-image Phase 1 library |
+| How it works visual reuse | PR #59 | Reuse responsive scorer screenshots in six collapsed How it works disclosures |
+| Calculator discoverability / central SEO truth | #61 / PR #62 | Calculator wording, shared SEO configuration and enriched truthful WebApplication data |
+| README project-front-door refresh | direct main commit 1e3ae83 | Repository front door aligned to current shipped product and roadmap |
+| Shared tile inventory | #7 | Backlog |
+| Photo tile recognition | #8 | Backlog |
+| Solo computer-opponent practice | #17 | Exploratory |
+| Product insight/feedback | #44 | Backlog |
+| PWA/offline installability | #48 | Backlog |
+| Beginner entry path | #49 | Backlog |
+| Readability | #50 | Backlog |
+| House rules | #51 | Exploratory/discovery |
+| How it works screenshot differentiation | #60 | Low-priority polish |
+| Reciprocal scorer/reference links | #63 | Backlog |
+| Interactive special-hand examples | #64 | Backlog |
+| Tested scoring examples/practice | #65 | Backlog |
+
+---
+
+# 32. Handbook maintenance status
 
 This file should be reviewed whenever a feature PR changes user-facing behaviour.
 
-At minimum, future work should check:
+At minimum, future reviews should check:
 
-- feature status;
+- shipped/backlog status;
+- public route list;
 - What if? answers;
 - persistence implications;
 - ledger/evidence implications;
 - print implications;
-- learner-guide implications;
+- learner/Help implications;
+- screenshot implications;
+- SEO/discoverability implications;
 - public feature/marketing claims;
 - backlog/current-product boundary.
 
-The handbook is intentionally redundant in places: the goal is to make product truth easy to retrieve without requiring someone to reconstruct months of design decisions from closed GitHub issues.
-
-When repetition conflicts, the more specific behavioural section should be corrected and then the inventory/claim sections brought back into alignment.
+The handbook is intentionally detailed, but should avoid needless status duplication. The goal is to make product truth easy to retrieve without requiring someone to reconstruct design decisions from old GitHub issues.
