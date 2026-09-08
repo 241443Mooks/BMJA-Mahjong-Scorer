@@ -168,7 +168,7 @@ function SectionLabel({ eyebrow, title, count }: { eyebrow: string; title: strin
   return (
     <div className="mb-4 flex items-end justify-between gap-4">
       <div>
-        <div className="font-mono text-[10px] font-medium uppercase tracking-[.2em] text-[#ae6249]">{eyebrow}</div>
+        <div className="hidden font-mono text-[10px] font-medium uppercase tracking-[.2em] text-[#ae6249] sm:block">{eyebrow}</div>
         <h2 className="mt-1 font-serif text-[22px] leading-tight text-[#284d45]">{title}</h2>
       </div>
       {count && <span className="font-mono text-[11px] text-[#7a7769]">{count}</span>}
@@ -747,49 +747,46 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
 
           <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-5 xl:grid-cols-[minmax(0,1.18fr)_minmax(280px,.82fr)]">
             <div className="min-w-0 space-y-5">
-              <section className="rounded-xl border border-[#d8ceb8] bg-[#e8e1d1] p-4 sm:hidden" data-testid="mobile-game-status-summary">
-                <div className="font-mono text-[10px] font-medium uppercase tracking-[.2em] text-[#ae6249]">Game status</div>
-                <div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-2 text-[11px] text-[#66746e]">
-                  <span>Player wind <strong className="text-[#284d45]">{playerWind}</strong></span>
-                  <span>Prevailing <strong className="text-[#284d45]">{prevailingWind}</strong></span>
-                  <span>{isWinner ? 'Winner' : 'Not winner'}</span>
-                  {isWinner && <span>{availableWinningMethods.find((method) => method.value === winningMethod)?.label}</span>}
+              <section className="rounded-xl border border-[#d8ceb8] bg-[#e8e1d1] p-4 sm:hidden" data-testid="mobile-hand-context">
+                <h2 className="font-serif text-[22px] leading-tight text-[#284d45]">Hand context</h2>
+                <p className="mt-1 text-[11px] leading-5 text-[#66746e]">Choose the outcome before entering tiles so the scorer shows the right hand flow.</p>
+                <div className="mt-3 space-y-3">
+                  <label className={`flex items-center justify-between rounded-md bg-[#f4eddf] px-3 py-2.5 text-[12px] font-semibold text-[#284d45] ${hasContext ? 'cursor-not-allowed' : 'cursor-pointer'}`}>
+                    <span>Hand is winner{hasContext && <span className="ml-1 font-normal text-[#7a7769]">(Set on game screen)</span>}</span>
+                    <input
+                      type="checkbox"
+                      data-testid="mobile-checkbox-is-winner"
+                      checked={isWinner}
+                      disabled={hasContext}
+                      aria-readonly={hasContext}
+                      onChange={(e) => {
+                        if (!hasContext) {
+                          setIsWinner(e.target.checked);
+                          if (e.target.checked && selectedSet === 'remaining-tiles') setSelectedSet(sets[0]?.id ?? '');
+                          if (!e.target.checked) setWinningTileProvenance(undefined);
+                        }
+                      }}
+                      className="h-4 w-4 accent-[#284d45] disabled:cursor-not-allowed"
+                    />
+                  </label>
+                  {isWinner && (
+                    <label className="block min-w-0">
+                      <span className="mb-1.5 block font-mono text-[10px] uppercase tracking-[.15em] text-[#7a7769]">Winning method</span>
+                      <select data-testid="mobile-select-winning-method" value={winningMethod} onChange={(e) => setWinningMethod(e.target.value as WinningMethod)} className="w-full min-w-0 rounded-md border border-[#cfc3aa] bg-[#fdfbf5] px-3 py-2.5 text-[12px] font-semibold text-[#284d45] focus:ring-2">
+                        {availableWinningMethods.map((method) => <option key={method.value} value={method.value}>{method.label}</option>)}
+                      </select>
+                    </label>
+                  )}
                 </div>
-                {!hasContext && (
-                  <button type="button" onClick={() => document.getElementById('game-status-controls')?.scrollIntoView({ behavior: 'smooth', block: 'start' })} className="mt-3 text-[11px] font-semibold text-[#284d45] underline decoration-[#ae6249] underline-offset-4">
-                    Change game status
-                  </button>
-                )}
               </section>
               <section className="animate-rise animate-rise-delay-1 rounded-xl border border-[#d8ceb8] bg-[#fbf8ed] p-5 shadow-[var(--shadow-sm)] sm:p-6">
                 <SectionLabel eyebrow="01 / hand" title="Arrange the tiles" count={tileProgressLabel} />
-                {!isWinner && score.evidenceCompleteness === 'partial' && (
-                  <div
-                    data-testid="notice-partial-hand"
-                    className="mb-4 rounded-lg border border-[#cfc3aa] bg-[#f7f1e3] px-3 py-2 text-[11px] leading-5 text-[#66746e]"
-                  >
-                    <strong className="text-[#284d45]">Partial hand — scoring entered sets and bonus tiles.</strong>{' '}
-                    Add all remaining tiles if you want the scorer to check whole-hand patterns or fishing.
-                  </div>
-                )}
                 {layoutMode === 'sets' ? (
                   <div className="mb-4 flex flex-col gap-3 rounded-lg border border-[#e2d9c7] bg-[#fdfbf5] p-3 sm:flex-row sm:items-center sm:justify-between">
                     <div className="min-w-0">
                       <p className="text-[11px] font-semibold text-[#284d45]">Build with normal sets</p>
                       <p className="mt-0.5 text-[10px] leading-4 text-[#7a7769]">Add chows, pungs, kongs and a pair below.</p>
                     </div>
-                    <button
-                      type="button"
-                      data-testid="button-layout-special"
-                      onClick={() => {
-                        setWinningTileProvenance(undefined);
-                        setLayoutMode('special');
-                      }}
-                      className="flex shrink-0 flex-col items-start rounded-md border border-dashed border-[#cfc3aa] px-3 py-2 text-left transition hover:border-[#ae6249] hover:bg-[#f8f4e9] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249] sm:items-end sm:text-right"
-                    >
-                      <span className="text-[11px] font-semibold text-[#66746e]">My hand doesn’t fit normal sets</span>
-                      <span className="mt-0.5 text-[9px] text-[#8c8a7f]">Enter an irregular special hand</span>
-                    </button>
                   </div>
                 ) : (
                   <div className="mb-4 flex flex-col gap-3 rounded-lg border border-[#d8ceb8] bg-[#f7f1e3] p-3 sm:flex-row sm:items-center sm:justify-between">
@@ -881,6 +878,11 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
                           : 'border-[#e2d9c7] bg-[#fdfbf5]'
                       }`}
                     >
+                      {score.evidenceCompleteness === 'partial' && (
+                        <p data-testid="notice-partial-hand" className="mb-3 text-[10px] leading-4 text-[#66746e]">
+                          <strong className="text-[#284d45]">Partial hand is OK.</strong> Add Remaining tiles for whole-hand patterns and fishing checks.
+                        </p>
+                      )}
                       <button
                         type="button"
                         data-testid="button-select-remaining-tiles"
@@ -924,6 +926,17 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
                       {selectedSet === 'remaining-tiles' && renderMobileTilePicker('Remaining tiles')}
                     </section>
                   )}
+                  <button
+                    type="button"
+                    data-testid="button-layout-special"
+                    onClick={() => {
+                      setWinningTileProvenance(undefined);
+                      setLayoutMode('special');
+                    }}
+                    className="mt-4 text-left text-[11px] font-semibold text-[#66746e] underline decoration-[#cfc3aa] underline-offset-4 transition hover:text-[#284d45] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]"
+                  >
+                    Hand doesn’t fit normal sets? <span className="text-[#ae6249]">Use special layout</span>
+                  </button>
                 </>
                 )}
               </section>
