@@ -1,5 +1,5 @@
 import { spawn, spawnSync } from 'node:child_process';
-import { access, mkdir, writeFile } from 'node:fs/promises';
+import { access, mkdir, readdir, writeFile } from 'node:fs/promises';
 import { constants as fsConstants } from 'node:fs';
 import { createRequire } from 'node:module';
 import os from 'node:os';
@@ -18,6 +18,17 @@ const viewports = [
   { name: 'mobile', width: 390, height: 844 },
   { name: 'tablet', width: 820, height: 1180 },
   { name: 'desktop', width: 1440, height: 1000 },
+];
+
+const phaseOneScreenshotBases = [
+  'game-setup',
+  'game-table-score-entry',
+  'hand-builder-ordinary',
+  'partial-losing-hand',
+  'hand-winning-tile',
+  'hand-score-breakdown',
+  'game-ledger-settlement',
+  'print-save',
 ];
 
 const demoSnapshot = {
@@ -187,7 +198,8 @@ async function waitForServer(server) {
   throw new Error(`Timed out waiting for ${BASE_URL}.\n${lastError}`);
 }
 
-async function waitForVisuals(page) {
+async function waitForVisuals(page, target, label) {
+  await target.waitFor({ state: 'visible' });
   await page.evaluate(async () => {
     document.querySelectorAll('img').forEach((image) => {
       image.loading = 'eager';
@@ -196,7 +208,72 @@ async function waitForVisuals(page) {
       await document.fonts.ready;
     }
   });
-  await page.waitForTimeout(750);
+
+  const images = target.locator('img');
+  await images.evaluateAll(async (nodes, contextLabel) => {
+    for (const image of nodes) {
+      image.loading = 'eager';
+      if (!image.complete) {
+        await new Promise((resolve, reject) => {
+          const timer = window.setTimeout(
+            () => reject(new Error(`Timed out loading image in ${contextLabel}: ${image.currentSrc || image.src}`)),
+            5000,
+          );
+          image.addEventListener('load', () => {
+            window.clearTimeout(timer);
+            resolve(undefined);
+          }, { once: true });
+          image.addEventListener('error', () => {
+            window.clearTimeout(timer);
+            reject(new Error(`Image failed to load in ${contextLabel}: ${image.currentSrc || image.src}`));
+          }, { once: true });
+        });
+      }
+      if (image.naturalWidth <= 0 || image.naturalHeight <= 0) {
+        throw new Error(`Broken image in ${contextLabel}: ${image.currentSrc || image.src}`);
+      }
+    }
+  }, label);
+
+  await page.waitForTimeout(150);
+}
+
+async function captureElement(page, target, filename, label) {
+  await target.scrollIntoViewIfNeeded();
+  await waitForVisuals(page, target, label);
+  await target.screenshot({
+    path: path.join(OUTPUT_DIR, filename),
+    animations: 'disabled',
+  });
+}
+
+async function captureCombinedElements(page, targets, viewport, filename, label) {
+  for (const target of targets) {
+    await target.scrollIntoViewIfNeeded();
+    await waitForVisuals(page, target, label);
+  }
+
+  const boxes = [];
+  for (const target of targets) {
+    const box = await target.boundingBox();
+    if (!box) throw new Error(`Could not measure ${label}.`);
+    boxes.push(box);
+  }
+
+  const padding = 12;
+  const x = Math.max(0, Math.min(...boxes.map((box) => box.x)) - padding);
+  const y = Math.max(0, Math.min(...boxes.map((box) => box.y)) - padding);
+  const right = Math.min(
+    viewport.width,
+    Math.max(...boxes.map((box) => box.x + box.width)) + padding,
+  );
+  const bottom = Math.max(...boxes.map((box) => box.y + box.height)) + padding;
+
+  await page.screenshot({
+    path: path.join(OUTPUT_DIR, filename),
+    clip: { x, y, width: right - x, height: bottom - y },
+    animations: 'disabled',
+  });
 }
 
 async function clickFirstEnabledTile(page, viewport) {
@@ -215,6 +292,92 @@ async function clickFirstEnabledTile(page, viewport) {
   }
 
   throw new Error(`No enabled ${viewport.name} tile button was visible.`);
+}
+
+async function openExampleHand(browser, viewport) {
+  const context = await browser.newContext({
+    viewport: { width: viewport.width, height: viewport.height },
+    deviceScaleFactor: 1,
+  });
+  const page = await context.newPage();
+  page.setDefaultTimeout(10_000);
+  await page.goto(`${BASE_URL}/hand`, { waitUntil: 'networkidle' });
+  await page.getByTestId('button-load-example').click();
+  return { context, page };
+}
+
+async function openDemoGame(browser, viewport) {
+  const context = await browser.newContext({
+    viewport: { width: viewport.width, height: viewport.height },
+    deviceScaleFactor: 1,
+  });
+  const page = await context.newPage();
+  page.setDefaultTimeout(10_000);
+  await page.addInitScript(
+    ({ key, snapshot }) => {
+      window.localStorage.setItem(key, JSON.stringify(snapshot));
+    },
+    { key: storageKey, snapshot: demoSnapshot },
+  );
+  await page.goto(`${BASE_URL}/game`, { waitUntil: 'networkidle' });
+  return { context, page };
+}
+
+async function captureGameSetup(browser, viewport) {
+  const context = await browser.newContext({
+    viewport: { width: viewport.width, height: viewport.height },
+    deviceScaleFactor: 1,
+  });
+  const page = await context.newPage();
+  page.setDefaultTimeout(10_000);
+  await page.goto(`${BASE_URL}/game`, { waitUntil: 'networkidle' });
+
+  await page.getByTestId('input-player-east').fill('Alex');
+  await page.getByTestId('input-player-south').fill('Beth');
+  await page.getByTestId('input-player-west').fill('Chris');
+  await page.getByTestId('input-player-north').fill('Dee');
+
+  const setupSection = page.getByTestId('button-start-game').locator('xpath=ancestor::section[1]');
+  await captureElement(
+    page,
+    setupSection,
+    `game-setup-${viewport.name}.png`,
+    `${viewport.name} game setup`,
+  );
+  await context.close();
+}
+
+async function captureGameScoreEntry(browser, viewport) {
+  const { context, page } = await openDemoGame(browser, viewport);
+  await page.getByTestId('input-score-alex').fill('80');
+
+  const scoreSection = page.getByTestId('section-table-scores');
+  await captureElement(
+    page,
+    scoreSection,
+    `game-table-score-entry-${viewport.name}.png`,
+    `${viewport.name} game score entry`,
+  );
+  await context.close();
+}
+
+async function captureOrdinaryHand(browser, viewport) {
+  const { context, page } = await openExampleHand(browser, viewport);
+
+  await page.getByTestId('select-set-type-3').selectOption('kong');
+  await page.getByTestId('card-set-3').click();
+  await clickFirstEnabledTile(page, viewport);
+
+  const arrangeSection = page
+    .getByRole('heading', { name: 'Arrange the tiles' })
+    .locator('xpath=ancestor::section[1]');
+  await captureElement(
+    page,
+    arrangeSection,
+    `hand-builder-ordinary-${viewport.name}.png`,
+    `${viewport.name} ordinary hand builder`,
+  );
+  await context.close();
 }
 
 async function capturePartialLosingHand(browser, viewport) {
@@ -244,31 +407,60 @@ async function capturePartialLosingHand(browser, viewport) {
   const arrangeSection = page
     .getByRole('heading', { name: 'Arrange the tiles' })
     .locator('xpath=ancestor::section[1]');
-  await arrangeSection.scrollIntoViewIfNeeded();
-  await waitForVisuals(page);
+  await captureElement(
+    page,
+    arrangeSection,
+    `partial-losing-hand-${viewport.name}.png`,
+    `${viewport.name} partial losing hand`,
+  );
+  await context.close();
+}
 
-  await arrangeSection.screenshot({
-    path: path.join(OUTPUT_DIR, `partial-losing-hand-${viewport.name}.png`),
-    animations: 'disabled',
-  });
+async function captureWinningTile(browser, viewport) {
+  const { context, page } = await openExampleHand(browser, viewport);
+  const winningTileSection = page
+    .getByRole('heading', { name: 'The winning tile' })
+    .locator('xpath=ancestor::section[1]');
+  await captureElement(
+    page,
+    winningTileSection,
+    `hand-winning-tile-${viewport.name}.png`,
+    `${viewport.name} winning tile question`,
+  );
+  await context.close();
+}
+
+async function captureScoreBreakdown(browser, viewport) {
+  const { context, page } = await openExampleHand(browser, viewport);
+  const scoreCard = page.getByText('Current score', { exact: true }).locator('xpath=ancestor::section[1]');
+  const patterns = page.getByTestId('detected-patterns');
+  await patterns.waitFor({ state: 'visible' });
+  await captureCombinedElements(
+    page,
+    [scoreCard, patterns],
+    viewport,
+    `hand-score-breakdown-${viewport.name}.png`,
+    `${viewport.name} score breakdown`,
+  );
+  await context.close();
+}
+
+async function captureLedgerSettlement(browser, viewport) {
+  const { context, page } = await openDemoGame(browser, viewport);
+  const ledgerHeading = page.getByRole('heading', { name: 'Game ledger' });
+  const ledgerSection = ledgerHeading.locator('xpath=ancestor::section[1]');
+  await ledgerSection.locator('.game-ledger-summary').first().click();
+  await captureElement(
+    page,
+    ledgerSection,
+    `game-ledger-settlement-${viewport.name}.png`,
+    `${viewport.name} game ledger settlement`,
+  );
   await context.close();
 }
 
 async function capturePrintSave(browser, viewport) {
-  const context = await browser.newContext({
-    viewport: { width: viewport.width, height: viewport.height },
-    deviceScaleFactor: 1,
-  });
-  const page = await context.newPage();
-  page.setDefaultTimeout(10_000);
-  await page.addInitScript(
-    ({ key, snapshot }) => {
-      window.localStorage.setItem(key, JSON.stringify(snapshot));
-    },
-    { key: storageKey, snapshot: demoSnapshot },
-  );
-
-  await page.goto(`${BASE_URL}/game`, { waitUntil: 'networkidle' });
+  const { context, page } = await openDemoGame(browser, viewport);
   const ledgerHeading = page.getByRole('heading', { name: 'Game ledger' });
   await ledgerHeading.waitFor({ state: 'visible' });
   await ledgerHeading.scrollIntoViewIfNeeded();
@@ -277,9 +469,11 @@ async function capturePrintSave(browser, viewport) {
   await printSummary.click();
   const menu = page.getByTestId('button-print-full').locator('xpath=..');
   await menu.waitFor({ state: 'visible' });
-  await waitForVisuals(page);
 
   const ledgerHeader = ledgerHeading.locator('xpath=..');
+  await waitForVisuals(page, ledgerHeader, `${viewport.name} print/save ledger header`);
+  await waitForVisuals(page, menu, `${viewport.name} print/save menu`);
+
   const headerBox = await ledgerHeader.boundingBox();
   const menuBox = await menu.boundingBox();
   if (!headerBox || !menuBox) throw new Error('Could not measure the Print / Save capture area.');
@@ -301,6 +495,18 @@ async function capturePrintSave(browser, viewport) {
   await context.close();
 }
 
+async function verifyPhaseOneFiles() {
+  const filenames = new Set(await readdir(OUTPUT_DIR));
+  const expected = phaseOneScreenshotBases.flatMap((base) =>
+    viewports.map((viewport) => `${base}-${viewport.name}.png`),
+  );
+  const missing = expected.filter((filename) => !filenames.has(filename));
+  if (missing.length > 0) {
+    throw new Error(`Missing Phase 1 screenshots: ${missing.join(', ')}`);
+  }
+  console.log(`Verified all ${expected.length} Phase 1 screenshot files.`);
+}
+
 async function smokeTestHelp(browser) {
   const context = await browser.newContext({
     viewport: { width: 390, height: 844 },
@@ -308,33 +514,43 @@ async function smokeTestHelp(browser) {
   });
   const page = await context.newPage();
   page.setDefaultTimeout(10_000);
-  await page.goto(`${BASE_URL}/help#partial-losing-hand`, { waitUntil: 'networkidle' });
+  await page.goto(`${BASE_URL}/help#start-game`, { waitUntil: 'networkidle' });
 
-  const partialCard = page.locator('#partial-losing-hand');
-  const partialMobile = partialCard.getByRole('button', { name: 'mobile' });
-  if ((await partialMobile.getAttribute('aria-pressed')) !== 'true') {
+  const screenshotViewGroups = page.getByRole('group', { name: 'Screenshot view' });
+  const groupCount = await screenshotViewGroups.count();
+  if (groupCount !== 8) {
+    throw new Error(`Expected 8 Phase 1 how-to blocks, found ${groupCount}.`);
+  }
+
+  const startCard = page.locator('#start-game');
+  const startMobile = startCard.getByRole('button', { name: 'mobile' });
+  if ((await startMobile.getAttribute('aria-pressed')) !== 'true') {
     throw new Error('Mobile screenshot view was not selected automatically at 390px.');
   }
 
-  const partialImage = partialCard.locator('img[alt^="Partial losing hand"]');
-  const automaticSource = await partialImage.evaluate((image) => image.currentSrc);
-  if (!automaticSource.includes('partial-losing-hand-mobile.png')) {
+  const startImage = startCard.locator('img[alt^="New game setup"]');
+  const automaticSource = await startImage.evaluate((image) => image.currentSrc);
+  if (!automaticSource.includes('game-setup-mobile.png')) {
     throw new Error(`Expected mobile responsive image, got ${automaticSource}.`);
   }
 
-  await partialCard.getByRole('button', { name: 'tablet' }).click();
-  if (!(await partialImage.getAttribute('src'))?.includes('partial-losing-hand-tablet.png')) {
-    throw new Error('Tablet manual override did not replace the partial-hand image.');
+  await startCard.getByRole('button', { name: 'tablet' }).click();
+  if (!(await startImage.getAttribute('src'))?.includes('game-setup-tablet.png')) {
+    throw new Error('Tablet manual override did not replace the game-setup image.');
   }
 
-  const saveCard = page.locator('#save-game');
-  const saveTablet = saveCard.getByRole('button', { name: 'tablet' });
-  if ((await saveTablet.getAttribute('aria-pressed')) !== 'true') {
-    throw new Error('Manual screenshot view did not sync to the second Help block.');
+  const tabletButtons = page.getByRole('button', { name: 'tablet' });
+  if ((await tabletButtons.count()) !== 8) {
+    throw new Error('Not every Phase 1 how-to exposes the Tablet override.');
+  }
+  for (let index = 0; index < await tabletButtons.count(); index += 1) {
+    if ((await tabletButtons.nth(index).getAttribute('aria-pressed')) !== 'true') {
+      throw new Error('Manual screenshot view did not sync across every Phase 1 Help block.');
+    }
   }
 
   await page.reload({ waitUntil: 'networkidle' });
-  const reloadedTablet = page.locator('#partial-losing-hand').getByRole('button', { name: 'tablet' });
+  const reloadedTablet = page.locator('#start-game').getByRole('button', { name: 'tablet' });
   if ((await reloadedTablet.getAttribute('aria-pressed')) !== 'true') {
     throw new Error('Manual screenshot view did not persist for the browser session.');
   }
@@ -352,10 +568,17 @@ async function main() {
     const browser = await chromium.launch({ headless: true });
     try {
       for (const viewport of viewports) {
-        console.log(`Capturing ${viewport.name} help screenshots…`);
+        console.log(`Capturing ${viewport.name} Phase 1 help screenshots…`);
+        await captureGameSetup(browser, viewport);
+        await captureGameScoreEntry(browser, viewport);
+        await captureOrdinaryHand(browser, viewport);
         await capturePartialLosingHand(browser, viewport);
+        await captureWinningTile(browser, viewport);
+        await captureScoreBreakdown(browser, viewport);
+        await captureLedgerSettlement(browser, viewport);
         await capturePrintSave(browser, viewport);
       }
+      await verifyPhaseOneFiles();
       console.log('Checking responsive Help screenshot behaviour…');
       await smokeTestHelp(browser);
     } finally {
@@ -365,7 +588,7 @@ async function main() {
     stopVite(server);
   }
 
-  console.log(`Wrote help screenshots to ${OUTPUT_DIR}`);
+  console.log(`Wrote Phase 1 help screenshots to ${OUTPUT_DIR}`);
 }
 
 main().catch((error) => {
