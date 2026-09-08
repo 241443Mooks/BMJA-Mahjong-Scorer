@@ -12,12 +12,17 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { SiteHeader } from '../components/SiteHeader';
+import {
+  ResponsiveInstruction,
+  type ResponsiveInstructionProps,
+} from '../components/ResponsiveInstruction';
 
 type HelpItem = {
   id: string;
   question: string;
   answer: string;
   detail?: string;
+  instruction?: ResponsiveInstructionProps;
 };
 
 type HelpGroup = {
@@ -81,6 +86,20 @@ const groups: HelpGroup[] = [
         question: 'What if I only know part of a losing hand?',
         answer: 'Enter the scoring sets, pair and bonus tiles you know. You can stop there.',
         detail: 'Partial evidence is valid. The scorer calculates directly evidenced components and withholds whole-hand conclusions that unseen tiles could change.',
+        instruction: {
+          steps: [
+            'Leave Hand is winner off, then add the completed scoring sets or pair you can see.',
+            'Add any Flowers or Seasons that belong to the hand.',
+            'Use Remaining tiles for loose tiles you want recorded. You can stop before all 13 structural tiles are entered.',
+          ],
+          images: {
+            mobile: '/help/screenshots/partial-losing-hand-mobile.png',
+            tablet: '/help/screenshots/partial-losing-hand-tablet.png',
+            desktop: '/help/screenshots/partial-losing-hand-desktop.png',
+          },
+          alt: 'Partial losing hand in the scorer showing completed sets, Remaining tiles and partial-hand guidance.',
+          tip: 'Partial does not mean invalid. Complete evidence is only needed for conclusions that depend on the whole hand, such as whole-hand patterns and fishing.',
+        },
       },
       {
         id: 'remaining-tiles',
@@ -167,6 +186,20 @@ const groups: HelpGroup[] = [
         question: 'How do I save the game record?',
         answer: 'Use Print / Save game and your browser’s print flow.',
         detail: 'Most browsers provide Save as PDF as a print destination. The current product does not generate a separate hosted report or custom PDF file.',
+        instruction: {
+          steps: [
+            'Open Print / Save game above the game ledger.',
+            'Choose Full game record for the detailed evidence that was captured, or Game summary for a compact hand-by-hand record.',
+            'Use the browser print destination to print the record or save it as a PDF.',
+          ],
+          images: {
+            mobile: '/help/screenshots/print-save-mobile.png',
+            tablet: '/help/screenshots/print-save-tablet.png',
+            desktop: '/help/screenshots/print-save-desktop.png',
+          },
+          alt: 'Game ledger with the Print / Save game menu open, showing Full game record and Game summary choices.',
+          tip: 'Both choices come from the same confirmed game ledger; the summary simply leaves out the detailed tile and scoring-evidence cards.',
+        },
       },
       {
         id: 'full-v-summary',
@@ -217,10 +250,16 @@ const groups: HelpGroup[] = [
 
 function HelpCard({ item }: { item: HelpItem }) {
   return (
-    <article id={item.id} className="scroll-mt-24 rounded-xl border border-[#ddd3bf] bg-[#fdfbf5] p-5 sm:p-6">
+    <article
+      id={item.id}
+      className={`scroll-mt-24 rounded-xl border border-[#ddd3bf] bg-[#fdfbf5] p-5 sm:p-6 ${
+        item.instruction ? 'md:col-span-2' : ''
+      }`}
+    >
       <h3 className="font-serif text-[22px] leading-tight text-[#284d45]">{item.question}</h3>
       <p className="mt-2 text-[13px] font-semibold leading-6 text-[#477562]">{item.answer}</p>
       {item.detail && <p className="mt-2 text-[12px] leading-6 text-[#66746e]">{item.detail}</p>}
+      {item.instruction && <ResponsiveInstruction {...item.instruction} />}
     </article>
   );
 }
