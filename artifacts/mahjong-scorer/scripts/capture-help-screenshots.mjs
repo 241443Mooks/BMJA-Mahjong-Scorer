@@ -192,6 +192,24 @@ async function waitForVisuals(page) {
   await page.waitForTimeout(100);
 }
 
+async function clickFirstEnabledTile(page, viewport) {
+  const prefix = viewport.name === 'mobile'
+    ? 'mobile-button-add-tile-'
+    : 'button-add-tile-';
+  const buttons = page.locator(`[data-testid^="${prefix}"]`);
+  await buttons.first().waitFor({ state: 'attached' });
+
+  for (let index = 0; index < await buttons.count(); index += 1) {
+    const button = buttons.nth(index);
+    if ((await button.isVisible()) && (await button.isEnabled())) {
+      await button.click();
+      return;
+    }
+  }
+
+  throw new Error(`No enabled ${viewport.name} tile button was visible.`);
+}
+
 async function capturePartialLosingHand(browser, viewport) {
   const context = await browser.newContext({
     viewport: { width: viewport.width, height: viewport.height },
@@ -205,15 +223,12 @@ async function capturePartialLosingHand(browser, viewport) {
     if (await mobileWinner.isChecked()) await mobileWinner.uncheck();
   }
 
-  const visibleTile = () =>
-    page.locator('[data-testid^="button-add-tile-"]:visible:not([disabled])').first();
-
-  await visibleTile().click();
+  await clickFirstEnabledTile(page, viewport);
   await page.getByTestId('button-add-set').click();
-  await visibleTile().click();
+  await clickFirstEnabledTile(page, viewport);
   await page.getByTestId('button-select-remaining-tiles').click();
-  await visibleTile().click();
-  await visibleTile().click();
+  await clickFirstEnabledTile(page, viewport);
+  await clickFirstEnabledTile(page, viewport);
 
   const flowerOne = page.getByTestId('button-flower-1');
   if (await flowerOne.isVisible().catch(() => false)) await flowerOne.click();
@@ -255,22 +270,65 @@ async function capturePrintSave(browser, viewport) {
   await menu.waitFor({ state: 'visible' });
   await waitForVisuals(page);
 
-  const ledgerSection = ledgerHeading.locator('xpath=ancestor::section[1]');
-  const ledgerBox = await ledgerSection.boundingBox();
+  const ledgerHeader = ledgerHeading.locator('xpath=..');
+  const headerBox = await ledgerHeader.boundingBox();
   const menuBox = await menu.boundingBox();
-  if (!ledgerBox || !menuBox) throw new Error('Could not measure the Print / Save capture area.');
+  if (!headerBox || !menuBox) throw new Error('Could not measure the Print / Save capture area.');
 
   const padding = 12;
-  const x = Math.max(0, Math.min(ledgerBox.x, menuBox.x) - padding);
-  const y = Math.max(0, Math.min(ledgerBox.y, menuBox.y) - padding);
-  const right = Math.max(ledgerBox.x + ledgerBox.width, menuBox.x + menuBox.width) + padding;
-  const bottom = Math.max(ledgerBox.y + ledgerBox.height, menuBox.y + menuBox.height) + padding;
+  const x = Math.max(0, Math.min(headerBox.x, menuBox.x) - padding);
+  const y = Math.max(0, Math.min(headerBox.y, menuBox.y) - padding);
+  const right = Math.min(
+    viewport.width,
+    Math.max(headerBox.x + headerBox.width, menuBox.x + menuBox.width) + padding,
+  );
+  const bottom = Math.max(headerBox.y + headerBox.height, menuBox.y + menuBox.height) + padding;
 
   await page.screenshot({
     path: path.join(OUTPUT_DIR, `print-save-${viewport.name}.png`),
     clip: { x, y, width: right - x, height: bottom - y },
     animations: 'disabled',
   });
+  await context.close();
+}
+
+async function smokeTestHelp(browser) {
+  const context = await browser.newContext({
+    viewport: { width: 390, height: 844 },
+    deviceScaleFactor: 1,
+  });
+  const page = await context.newPage();
+  await page.goto(`${BASE_URL}/help#partial-losing-hand`, { waitUntil: 'networkidle' });
+
+  const partialCard = page.locator('#partial-losing-hand');
+  const partialMobile = partialCard.getByRole('button', { name: 'mobile' });
+  if ((await partialMobile.getAttribute('aria-pressed')) !== 'true') {
+    throw new Error('Mobile screenshot view was not selected automatically at 390px.');
+  }
+
+  const partialImage = partialCard.locator('img[alt^="Partial losing hand"]');
+  const automaticSource = await partialImage.evaluate((image) => image.currentSrc);
+  if (!automaticSource.includes('partial-losing-hand-mobile.png')) {
+    throw new Error(`Expected mobile responsive image, got ${automaticSource}.`);
+  }
+
+  await partialCard.getByRole('button', { name: 'tablet' }).click();
+  if (!(await partialImage.getAttribute('src'))?.includes('partial-losing-hand-tablet.png')) {
+    throw new Error('Tablet manual override did not replace the partial-hand image.');
+  }
+
+  const saveCard = page.locator('#save-game');
+  const saveTablet = saveCard.getByRole('button', { name: 'tablet' });
+  if ((await saveTablet.getAttribute('aria-pressed')) !== 'true') {
+    throw new Error('Manual screenshot view did not sync to the second Help block.');
+  }
+
+  await page.reload({ waitUntil: 'networkidle' });
+  const reloadedTablet = page.locator('#partial-losing-hand').getByRole('button', { name: 'tablet' });
+  if ((await reloadedTablet.getAttribute('aria-pressed')) !== 'true') {
+    throw new Error('Manual screenshot view did not persist for the browser session.');
+  }
+
   await context.close();
 }
 
@@ -288,6 +346,8 @@ async function main() {
         await capturePartialLosingHand(browser, viewport);
         await capturePrintSave(browser, viewport);
       }
+      console.log('Checking responsive Help screenshot behaviour…');
+      await smokeTestHelp(browser);
     } finally {
       await browser.close();
     }
