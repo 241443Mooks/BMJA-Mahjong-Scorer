@@ -176,7 +176,7 @@ function SectionLabel({ eyebrow, title, count }: { eyebrow: string; title: strin
   );
 }
 
-function HandScorer({ context, onClose }: { context: HandScorerContext | null; onClose: (result?: HandScorerResult) => void }) {
+function HandScorer({ context, onClose, standaloneHand }: { context: HandScorerContext | null; onClose: (result?: HandScorerResult) => void; standaloneHand: boolean }) {
   const hasContext = !!context;
   const initialContext = handScorerLocalContext(context);
   const initialHand = context?.detailedHand?.hand;
@@ -720,11 +720,13 @@ function HandScorer({ context, onClose }: { context: HandScorerContext | null; o
             <div className="mb-3 flex items-center gap-3"><div className="fine-rule w-10" /><span className="font-mono text-[10px] uppercase tracking-[.2em] text-[#ae6249]">New hand · ready to enter</span></div>
             <div className="flex flex-wrap items-end justify-between gap-4">
               <div>
-                <h1 className="font-serif text-[clamp(36px,5vw,62px)] leading-[.97] tracking-[-.03em] text-[#284d45]">Score a hand<br /><span className="text-[#ae6249]">with confidence.</span></h1>
+                <h1 className="font-serif text-[clamp(36px,5vw,62px)] leading-[.97] tracking-[-.03em] text-[#284d45]">{standaloneHand ? <>British Mahjong<br /><span className="text-[#ae6249]">hand calculator.</span></> : <>Score a hand<br /><span className="text-[#ae6249]">with confidence.</span></>}</h1>
                 <p className="mt-4 max-w-[560px] text-[14px] leading-6 text-[#66746e]">
                   {hasContext
                     ? `Calculating ${context.playerName}’s ${context.playerWind} hand during the ${context.prevailingWind} prevailing round.`
-                    : 'Enter each set as it sits on the table. The score builds beside you, with every point and double accounted for.'}
+                    : standaloneHand
+                      ? 'Enter your tiles visually as they sit on the table. The calculator shows supported points, doubles, special hands and fishing in a clear score breakdown.'
+                      : 'Enter each set as it sits on the table. The score builds beside you, with every point and double accounted for.'}
                 </p>
                 {context?.requiresRecalculation && (
                   <div
@@ -1460,6 +1462,7 @@ export default function App({ initialView = 'game', standaloneHand = false }: { 
               key={scorerSession}
               context={scorerContext}
               onClose={handleCloseHandScorer}
+              standaloneHand={standaloneHand}
             />
           </div>
           <Toaster />
