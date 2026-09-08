@@ -1,13 +1,16 @@
 import { useEffect, useState } from 'react';
 
-type DeviceView = 'mobile' | 'tablet' | 'desktop';
+export type DeviceView = 'mobile' | 'tablet' | 'desktop';
 
-type ScreenshotSet = Record<DeviceView, string>;
+export type ScreenshotSet = Record<DeviceView, string>;
 
-export type ResponsiveInstructionProps = {
-  steps: string[];
+export type ResponsiveScreenshotProps = {
   images: ScreenshotSet;
   alt: string;
+};
+
+export type ResponsiveInstructionProps = ResponsiveScreenshotProps & {
+  steps: string[];
   tip?: string;
 };
 
@@ -34,6 +37,36 @@ function storedOverride(): DeviceView | null {
   } catch {
     return null;
   }
+}
+
+export function ResponsiveScreenshot({
+  images,
+  alt,
+  view,
+}: ResponsiveScreenshotProps & { view?: DeviceView }) {
+  if (view) {
+    return (
+      <img
+        src={images[view]}
+        alt={alt}
+        loading="lazy"
+        className="mx-auto block max-h-[760px] max-w-full rounded-lg object-contain shadow-[var(--shadow-sm)]"
+      />
+    );
+  }
+
+  return (
+    <picture>
+      <source media="(min-width: 1024px)" srcSet={images.desktop} />
+      <source media="(min-width: 640px)" srcSet={images.tablet} />
+      <img
+        src={images.mobile}
+        alt={alt}
+        loading="lazy"
+        className="mx-auto block max-h-[760px] max-w-full rounded-lg object-contain shadow-[var(--shadow-sm)]"
+      />
+    </picture>
+  );
 }
 
 export function ResponsiveInstruction({
@@ -112,25 +145,7 @@ export function ResponsiveInstruction({
       </div>
 
       <div className="mt-3 overflow-hidden rounded-xl border border-[#d8ceb8] bg-[#eee8dc] p-2 sm:p-3">
-        {override ? (
-          <img
-            src={images[override]}
-            alt={alt}
-            loading="lazy"
-            className="mx-auto block max-h-[760px] max-w-full rounded-lg object-contain shadow-[var(--shadow-sm)]"
-          />
-        ) : (
-          <picture>
-            <source media="(min-width: 1024px)" srcSet={images.desktop} />
-            <source media="(min-width: 640px)" srcSet={images.tablet} />
-            <img
-              src={images.mobile}
-              alt={alt}
-              loading="lazy"
-              className="mx-auto block max-h-[760px] max-w-full rounded-lg object-contain shadow-[var(--shadow-sm)]"
-            />
-          </picture>
-        )}
+        <ResponsiveScreenshot images={images} alt={alt} view={override ?? undefined} />
       </div>
 
       {tip && (

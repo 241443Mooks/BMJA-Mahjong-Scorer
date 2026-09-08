@@ -3,6 +3,7 @@ import {
   BookOpen,
   Calculator,
   CheckCircle2,
+  ChevronDown,
   FileText,
   Gamepad2,
   HelpCircle,
@@ -11,17 +12,55 @@ import {
   Scale,
   ShieldCheck,
   Sparkles,
+  type LucideIcon,
 } from 'lucide-react';
+import {
+  ResponsiveScreenshot,
+  type ResponsiveScreenshotProps,
+} from '../components/ResponsiveInstruction';
 import { SiteHeader } from '../components/SiteHeader';
+import { phaseOneHelpInstructions } from './helpPhase1Instructions';
 
-const steps = [
-  ['01', 'Give the scorer the context', 'Tell it what matters for this hand or game: who is East, the player Wind, the prevailing Wind, whether the hand won and any winning circumstance the rules actually need.', Gamepad2],
-  ['02', 'Enter what you know', 'Build a complete hand, enter only the scoring evidence from an unfinished losing hand, or simply type a numeric score if you already know it.', Layers3],
-  ['03', 'It calculates what the evidence supports', 'The scoring engine applies the supported British Mahjong rules to the information you entered. Missing evidence stays missing rather than being guessed.', Calculator],
-  ['04', 'It shows the reasoning', 'Points, doubles, detected patterns, special hands and fishing are surfaced where the evidence supports them, so the total is not just a black-box number.', Sparkles],
-  ['05', 'The game settles the table', 'In a full game, confirmed scores become player-to-player settlement transactions, including East doubling where applicable, and update the running balances.', Scale],
-  ['06', 'The same history becomes the record', 'Confirmed hands build one canonical ledger as you play. At any point, that same ledger can be printed or saved as either a compact summary or a full detailed record.', FileText],
-] as const;
+type HowItWorksStep = {
+  number: string;
+  title: string;
+  text: string;
+  Icon: LucideIcon;
+  screenshot: ResponsiveScreenshotProps;
+};
+
+const steps: HowItWorksStep[] = [
+  {
+    number: '01', title: 'Give the scorer the context',
+    text: 'Tell it what matters for this hand or game: who is East, the player Wind, the prevailing Wind, whether the hand won and any winning circumstance the rules actually need.',
+    Icon: Gamepad2, screenshot: phaseOneHelpInstructions['start-game'],
+  },
+  {
+    number: '02', title: 'Enter what you know',
+    text: 'Build a complete hand, enter only the scoring evidence from an unfinished losing hand, or simply type a numeric score if you already know it.',
+    Icon: Layers3, screenshot: phaseOneHelpInstructions['ordinary-hand'],
+  },
+  {
+    number: '03', title: 'It calculates what the evidence supports',
+    text: 'The scoring engine applies the supported British Mahjong rules to the information you entered. Missing evidence stays missing rather than being guessed.',
+    Icon: Calculator, screenshot: phaseOneHelpInstructions.disagreement,
+  },
+  {
+    number: '04', title: 'It shows the reasoning',
+    text: 'Points, doubles, detected patterns, special hands and fishing are surfaced where the evidence supports them, so the total is not just a black-box number.',
+    Icon: Sparkles, screenshot: phaseOneHelpInstructions.disagreement,
+  },
+  {
+    number: '05', title: 'The game settles the table',
+    text: 'In a full game, confirmed scores become player-to-player settlement transactions, including East doubling where applicable, and update the running balances.',
+    Icon: Scale, screenshot: phaseOneHelpInstructions.settlement,
+  },
+  {
+    number: '06', title: 'The same history becomes the record',
+    text: 'Confirmed hands build one canonical ledger as you play. At any point, that same ledger can be printed or saved as either a compact summary or a full detailed record.',
+    Icon: FileText, screenshot: phaseOneHelpInstructions['save-game'],
+  },
+];
 
 const evidenceModes = [
   ['Complete', 'Enter the whole hand when you want the scorer to check whole-hand patterns, special hands and fishing where supported.'],
@@ -59,12 +98,21 @@ export function HowItWorksPage() {
               <p className="mt-3 text-[13px] leading-6 text-[#66746e]">The product follows one connected path rather than treating the hand scorer, settlement and game history as separate systems.</p>
             </div>
             <ol className="grid gap-3 md:grid-cols-2">
-              {steps.map(([number, title, text, Icon]) => (
+              {steps.map(({ number, title, text, Icon, screenshot }) => (
                 <li key={number} className="rounded-xl border border-[#d8ceb8] bg-[#fdfbf5] p-5 sm:p-6">
                   <div className="flex items-start gap-4">
                     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#efe8da] text-[#477562]"><Icon size={18} strokeWidth={1.8} /></div>
                     <div><div className="font-mono text-[9px] uppercase tracking-[.18em] text-[#ae6249]">{number}</div><h3 className="mt-1 font-serif text-[23px] leading-tight text-[#284d45]">{title}</h3><p className="mt-2 text-[12px] leading-6 text-[#66746e]">{text}</p></div>
                   </div>
+                  <details className="group mt-4 border-t border-[#e2d9c7] pt-3">
+                    <summary className="flex cursor-pointer list-none items-center justify-between gap-3 rounded-md px-1 py-1 text-[11px] font-semibold text-[#477562] transition hover:text-[#284d45] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249] focus-visible:ring-offset-2">
+                      <span>See it in the scorer</span>
+                      <ChevronDown size={16} className="shrink-0 transition-transform group-open:rotate-180" aria-hidden="true" />
+                    </summary>
+                    <div className="mt-3 overflow-hidden rounded-lg border border-[#d8ceb8] bg-[#eee8dc] p-2">
+                      <ResponsiveScreenshot {...screenshot} />
+                    </div>
+                  </details>
                 </li>
               ))}
             </ol>

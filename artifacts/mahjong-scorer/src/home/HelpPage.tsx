@@ -87,20 +87,6 @@ const groups: HelpGroup[] = [
         question: 'What if I only know part of a losing hand?',
         answer: 'Enter the scoring sets, pair and bonus tiles you know. You can stop there.',
         detail: 'Partial evidence is valid. The scorer calculates directly evidenced components and withholds whole-hand conclusions that unseen tiles could change.',
-        instruction: {
-          steps: [
-            'Leave Hand is winner off, then add the completed scoring sets or pair you can see.',
-            'Add any Flowers or Seasons that belong to the hand.',
-            'Use Remaining tiles for loose tiles you want recorded. You can stop before all 13 structural tiles are entered.',
-          ],
-          images: {
-            mobile: '/help/screenshots/partial-losing-hand-mobile.png',
-            tablet: '/help/screenshots/partial-losing-hand-tablet.png',
-            desktop: '/help/screenshots/partial-losing-hand-desktop.png',
-          },
-          alt: 'Partial losing hand in the scorer showing completed sets, Remaining tiles and partial-hand guidance.',
-          tip: 'Partial does not mean invalid. Complete evidence is only needed for conclusions that depend on the whole hand, such as whole-hand patterns and fishing.',
-        },
       },
       {
         id: 'remaining-tiles',
@@ -187,20 +173,6 @@ const groups: HelpGroup[] = [
         question: 'How do I save the game record?',
         answer: 'Use Print / Save game and your browser’s print flow.',
         detail: 'Most browsers provide Save as PDF as a print destination. The current product does not generate a separate hosted report or custom PDF file.',
-        instruction: {
-          steps: [
-            'Open Print / Save game above the game ledger.',
-            'Choose Full game record for the detailed evidence that was captured, or Game summary for a compact hand-by-hand record.',
-            'Use the browser print destination to print the record or save it as a PDF.',
-          ],
-          images: {
-            mobile: '/help/screenshots/print-save-mobile.png',
-            tablet: '/help/screenshots/print-save-tablet.png',
-            desktop: '/help/screenshots/print-save-desktop.png',
-          },
-          alt: 'Game ledger with the Print / Save game menu open, showing Full game record and Game summary choices.',
-          tip: 'Both choices come from the same confirmed game ledger; the summary simply leaves out the detailed tile and scoring-evidence cards.',
-        },
       },
       {
         id: 'full-v-summary',
