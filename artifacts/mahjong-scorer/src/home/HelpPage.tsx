@@ -12,6 +12,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { SiteHeader } from '../components/SiteHeader';
+import { ReturnToGame } from '../components/ReturnToGame';
 import {
   ResponsiveInstruction,
   type ResponsiveInstructionProps,
@@ -262,6 +263,7 @@ export function HelpPage() {
       <SiteHeader />
 
       <main className="mx-auto max-w-[1100px] px-5 py-9 lg:px-8 lg:py-14">
+        <ReturnToGame />
         <section className="overflow-hidden rounded-2xl border border-[#d8ceb8] bg-[#fbf8ed] shadow-[var(--shadow-sm)]">
           <div className="border-b border-[#ddd3bf] px-5 py-9 sm:px-8 sm:py-12 lg:px-12 lg:py-14">
             <div className="mb-4 flex items-center gap-3">
@@ -274,6 +276,7 @@ export function HelpPage() {
             <p className="mt-5 max-w-[760px] text-[15px] leading-7 text-[#596b65]">
               Search a question or browse by task. The answers start with what you can do now, then explain the evidence boundary only where it matters.
             </p>
+            <a href="/hand" className="mt-5 inline-flex min-h-10 items-center gap-2 rounded-md border border-[#c9b99d] bg-[#fdfbf5] px-4 text-[12px] font-semibold text-[#284d45] transition hover:bg-[#fffaf0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">Open the hand scorer <ArrowRight size={14} aria-hidden="true" /></a>
 
             <label className="mt-7 flex max-w-[680px] items-center gap-3 rounded-xl border border-[#cfc3aa] bg-[#fdfbf5] px-4 py-3 shadow-sm focus-within:ring-2 focus-within:ring-[#ae6249]">
               <Search size={18} className="shrink-0 text-[#ae6249]" />

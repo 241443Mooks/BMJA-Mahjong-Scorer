@@ -7,6 +7,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { SiteHeader } from '../components/SiteHeader';
+import { ReturnToGame } from '../components/ReturnToGame';
 import { tileAssetUrl, type TileAssetKey } from '../tiles/MahjongTileArtwork';
 
 const sections = [
@@ -175,6 +176,7 @@ export function GameplayBasics() {
       <SiteHeader />
 
       <main className="mx-auto max-w-[1180px] px-5 py-8 lg:px-8 lg:py-12">
+        <ReturnToGame />
         <div className="grid gap-8 lg:grid-cols-[250px_minmax(0,1fr)] lg:gap-12">
           <aside className="lg:sticky lg:top-5 lg:self-start">
             <div className="rounded-xl border border-[#d8ceb8] bg-[#fbf8ed] p-4 shadow-[var(--shadow-sm)]">

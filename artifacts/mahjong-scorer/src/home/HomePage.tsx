@@ -8,12 +8,11 @@ import {
   Info,
   Sparkles,
 } from 'lucide-react';
-import { useState } from 'react';
 import { SiteHeader } from '../components/SiteHeader';
+import { useInProgressGameRecovery } from '../components/ReturnToGame';
 import {
   clearGameRecovery,
   gameProgressSummary,
-  loadInProgressGameRecovery,
 } from '../game';
 
 type HomeLink = {
@@ -100,11 +99,7 @@ function LearningAction({ title, description, href, icon: Icon }: HomeLink) {
 }
 
 export function HomePage() {
-  const [recovered] = useState(() =>
-    typeof window === 'undefined'
-      ? null
-      : loadInProgressGameRecovery(window.localStorage),
-  );
+  const recovered = useInProgressGameRecovery();
 
   const startNewGame = () => {
     if (!recovered || typeof window === 'undefined') return;
