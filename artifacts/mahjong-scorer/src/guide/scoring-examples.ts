@@ -1,7 +1,7 @@
 import { bonus, dragon, expandedTiles, set, suited, wind } from '../scoring';
 import type { GameContext, MahjongHand, ScoreBreakdown, Wind } from '../scoring';
 import type { HandScorerContext } from '../game';
-import { bonusTileDefinition } from '../tiles/MahjongTileArtwork';
+import { bonusTileDefinition, playingTileDefinition } from '../tiles/MahjongTileArtwork';
 import { exampleHandScorerContext, exampleVisualTiles, specialHandExampleById } from './special-hand-examples';
 import type { TileDefinition } from './MahjongTileGallery';
 
@@ -90,3 +90,23 @@ export const resolveScorerExample = (id: string | null | undefined): ResolvedSco
 /** Practice has the same target/context but must never preload the learner's hand. */
 export const initialHandForExampleMode = (example: ResolvedScorerExample | undefined, practice: boolean) => practice ? undefined : example?.hand;
 export const handForScorerMode = (context: HandScorerContext | null, example: ResolvedScorerExample | undefined, practice: boolean) => example ? initialHandForExampleMode(example, practice) : context?.detailedHand?.hand;
+
+/** Fixed facts that must survive practice without preloading a learner tile, set or bonus selection. */
+export const practiceScorerContext = (example: ResolvedScorerExample | undefined) => ({
+  playerWind: example?.context.playerWind ?? 'east',
+  prevailingWind: example?.context.prevailingWind ?? 'east',
+  limit: example?.context.limit ?? 1000,
+  isWinner: example?.context.isWinner ?? false,
+  winningMethod: example?.hand.winningMethod ?? 'wall',
+  originalCall: example?.hand.originalCall ?? false,
+});
+
+export const practiceSetSummary = (example: WorkedScoringExample) => example.hand.sets.map((handSet) => {
+  const tile = playingTileDefinition(handSet.tile).label;
+  const label = handSet.kind === 'chow' && handSet.tile.family === 'suit'
+    ? `${handSet.tile.rank}–${handSet.tile.rank + 1}–${handSet.tile.rank + 2} ${handSet.tile.suit[0].toUpperCase()}${handSet.tile.suit.slice(1)} Chow`
+    : `${tile} ${handSet.kind[0].toUpperCase()}${handSet.kind.slice(1)}`;
+  return { id: handSet.id, label, visibility: handSet.visibility };
+});
+
+export const exampleExitLabel = (example: ResolvedScorerExample | undefined, fallback: string) => example?.returnLabel ?? fallback;

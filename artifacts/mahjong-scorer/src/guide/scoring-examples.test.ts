@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { scoreHand } from '../scoring';
 import { createBmjaGame } from '../game/game';
 import { GAME_SNAPSHOT_STORAGE_KEY, saveGameRecovery } from '../game/persistence';
-import { completedExampleHref, handForScorerMode, initialHandForExampleMode, practiceExampleHref, resolveScorerExample, scoringExampleBonusTiles, scoringExampleById, scoringExampleContext, scoringExamples } from './scoring-examples';
+import { completedExampleHref, exampleExitLabel, handForScorerMode, initialHandForExampleMode, practiceScorerContext, practiceSetSummary, practiceExampleHref, resolveScorerExample, scoringExampleBonusTiles, scoringExampleById, scoringExampleContext, scoringExamples } from './scoring-examples';
 
 describe('worked scoring examples', () => {
   it('asserts every published educational result through the real scoring engine', () => {
@@ -36,6 +36,23 @@ describe('worked scoring examples', () => {
   it('retains source-specific return labels', () => {
     expect(resolveScorerExample('all-pair-honours')?.returnLabel).toBe('Back to Special hands');
     expect(resolveScorerExample('all-pair-honours-bonus')?.returnLabel).toBe('Back to worked example');
+    expect(exampleExitLabel(resolveScorerExample('all-pair-honours'), 'Leave hand')).toBe('Back to Special hands');
+    expect(exampleExitLabel(resolveScorerExample('all-pair-honours-bonus'), 'Leave hand')).toBe('Back to worked example');
+  });
+
+  it('keeps grouped target structure and fixed non-tile context while practice input is empty', () => {
+    const mixed = scoringExampleById('concealed-pung')!;
+    expect(practiceSetSummary(mixed)).toEqual(expect.arrayContaining([
+      expect.objectContaining({ label: 'Red Dragon Pung', visibility: 'exposed' }),
+      expect.objectContaining({ label: '2–3–4 Bamboo Chow', visibility: 'exposed' }),
+      expect.objectContaining({ label: '5 Bamboo Pung', visibility: 'concealed' }),
+    ]));
+
+    const purity = scoringExampleById('concealed-kong-purity')!;
+    const resolved = resolveScorerExample(purity.id)!;
+    expect(handForScorerMode(scoringExampleContext(purity), resolved, true)).toBeUndefined();
+    expect(practiceScorerContext(resolved)).toMatchObject({ playerWind: 'east', prevailingWind: 'east', limit: 1000, isWinner: true, winningMethod: 'discard' });
+    expect(scoreHand(purity.hand, purity.context)).toMatchObject(purity.expected);
   });
 
   it('keeps a saved game byte-for-byte unchanged while resolving completed or practice examples', () => {
