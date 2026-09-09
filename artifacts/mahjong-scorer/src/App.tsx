@@ -7,7 +7,7 @@ import { Check, ChevronDown, CircleHelp, Copy, Plus, RotateCcw, Sparkles, X, Ale
 import { GameScorer } from './game/GameScorer';
 import { SiteHeader } from './components/SiteHeader';
 import { specialHandReferenceHref } from './guide/special-hand-references';
-import { initialHandForExampleMode, resolveScorerExample, scoringExampleById, scoringExampleTiles, type ResolvedScorerExample } from './guide/scoring-examples';
+import { handForScorerMode, resolveScorerExample, scoringExampleBonusTiles, scoringExampleById, scoringExampleTiles, type ResolvedScorerExample } from './guide/scoring-examples';
 import { TileStrip } from './guide/MahjongTileGallery';
 import { ReturnToGame } from './components/ReturnToGame';
 import { handScorerLocalContext } from './game';
@@ -191,7 +191,7 @@ function HandScorer({ context, onClose, standaloneHand, example, practice }: { c
   // An example borrows the hand contract only; it must never acquire the game callback.
   const hasContext = !!context && !example;
   const initialContext = handScorerLocalContext(context);
-  const initialHand = example ? initialHandForExampleMode(example, !!practice) : context?.detailedHand?.hand;
+  const initialHand = handForScorerMode(context, example, !!practice);
   const [sets, setSets] = useState<UIHandSet[]>(() =>
     initialHand
       ? initialHand.sets.map((handSet) => ({ ...handSet }))
@@ -313,7 +313,7 @@ function HandScorer({ context, onClose, standaloneHand, example, practice }: { c
 
   useEffect(() => {
     const nextContext = handScorerLocalContext(context);
-    const savedHand = context?.detailedHand?.hand;
+    const savedHand = handForScorerMode(context, example, !!practice);
     const nextSets = savedHand
       ? savedHand.sets.map((handSet) => ({ ...handSet }))
       : defaultSets.map((handSet) => ({ ...handSet }));
@@ -366,7 +366,7 @@ function HandScorer({ context, onClose, standaloneHand, example, practice }: { c
     );
     setExpandedRule(null);
     setCopied(false);
-  }, [context]);
+  }, [context, example, practice]);
 
   const hand = useMemo<MahjongHand>(() => {
     const validSets = sets.filter((s): s is HandSet => s.tile !== null);
@@ -733,10 +733,10 @@ function HandScorer({ context, onClose, standaloneHand, example, practice }: { c
         <section className="min-w-0">
           <div className="mb-7 animate-rise">
             {example && <>
-              <a data-testid="link-back-to-example" href={example.returnHref} className="mb-4 inline-flex min-h-10 items-center rounded-md border border-[#b8cdbf] bg-[#edf3ed] px-3 text-[11px] font-semibold text-[#284d45] transition hover:bg-[#dceade]">Back to worked example · {example.name}</a>
+              <a data-testid="link-back-to-example" href={example.returnHref} className="mb-4 inline-flex min-h-10 items-center rounded-md border border-[#b8cdbf] bg-[#edf3ed] px-3 text-[11px] font-semibold text-[#284d45] transition hover:bg-[#dceade]">{example.returnLabel} · {example.name}</a>
               <p className="mb-3 text-[11px] leading-5 text-[#66746e]">{practice ? 'Build this hand yourself with the normal scorer. The target is shown below; the worked result stays hidden until you ask for it.' : 'Example hand — change tiles or context to explore.'} Your saved game, if any, remains separate.</p>
               <ReturnToGame />
-              {practiceTarget && <section className="mb-5 rounded-xl border border-[#d8ceb8] bg-[#f5f1e6] p-4" data-testid="practice-target"><div className="font-mono text-[9px] uppercase tracking-[.16em] text-[#ae6249]">Build this hand yourself</div><p className="mt-2 text-[11px] leading-5 text-[#66746e]">Recreate these tiles and the {practiceTarget.context.playerWind} player / {practiceTarget.context.prevailingWind} prevailing context. Your hand begins empty and the normal scorer calculates what you enter.</p><div className="mt-3"><TileStrip tiles={scoringExampleTiles(practiceTarget)} ariaLabel={`Target tiles for ${practiceTarget.title}`} /></div><button type="button" data-testid="button-reveal-practice-answer" onClick={() => setShowPracticeAnswer(true)} className="mt-3 min-h-10 rounded-md border border-[#c9b99d] bg-[#fdfbf5] px-3 text-[11px] font-semibold">{showPracticeAnswer ? `Worked answer: ${practiceTarget.expected.finalScore} points` : 'Reveal worked answer'}</button>{showPracticeAnswer && <p className="mt-2 text-[11px] leading-5 text-[#66746e]">{practiceTarget.explanation}</p>}</section>}
+              {practiceTarget && <section className="mb-5 rounded-xl border border-[#d8ceb8] bg-[#f5f1e6] p-4" data-testid="practice-target"><div className="font-mono text-[9px] uppercase tracking-[.16em] text-[#ae6249]">Build this hand yourself</div><p className="mt-2 text-[11px] leading-5 text-[#66746e]">Recreate these tiles and the {practiceTarget.context.playerWind} player / {practiceTarget.context.prevailingWind} prevailing context. Your hand begins empty and the normal scorer calculates what you enter.</p><div className="mt-3"><TileStrip tiles={scoringExampleTiles(practiceTarget)} ariaLabel={`Target tiles for ${practiceTarget.title}`} /></div>{scoringExampleBonusTiles(practiceTarget).length > 0 && <div className="mt-3"><div className="font-mono text-[9px] uppercase tracking-[.14em] text-[#ae6249]">Bonus tiles</div><TileStrip tiles={scoringExampleBonusTiles(practiceTarget)} ariaLabel={`Bonus tiles for ${practiceTarget.title}`} /></div>}<button type="button" data-testid="button-reveal-practice-answer" onClick={() => setShowPracticeAnswer(true)} className="mt-3 min-h-10 rounded-md border border-[#c9b99d] bg-[#fdfbf5] px-3 text-[11px] font-semibold">{showPracticeAnswer ? `Worked answer: ${practiceTarget.expected.finalScore} points` : 'Reveal worked answer'}</button>{showPracticeAnswer && <p className="mt-2 text-[11px] leading-5 text-[#66746e]">{practiceTarget.explanation}</p>}</section>}
             </>}
             <div className="mb-3 flex items-center gap-3"><div className="fine-rule w-10" /><span className="font-mono text-[10px] uppercase tracking-[.2em] text-[#ae6249]">New hand · ready to enter</span></div>
             <div className="flex flex-wrap items-end justify-between gap-4">

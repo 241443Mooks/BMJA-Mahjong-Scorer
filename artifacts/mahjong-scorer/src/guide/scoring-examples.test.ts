@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { scoreHand } from '../scoring';
 import { createBmjaGame } from '../game/game';
 import { GAME_SNAPSHOT_STORAGE_KEY, saveGameRecovery } from '../game/persistence';
-import { completedExampleHref, initialHandForExampleMode, practiceExampleHref, resolveScorerExample, scoringExampleById, scoringExampleContext, scoringExamples } from './scoring-examples';
+import { completedExampleHref, handForScorerMode, initialHandForExampleMode, practiceExampleHref, resolveScorerExample, scoringExampleBonusTiles, scoringExampleById, scoringExampleContext, scoringExamples } from './scoring-examples';
 
 describe('worked scoring examples', () => {
   it('asserts every published educational result through the real scoring engine', () => {
@@ -20,7 +20,22 @@ describe('worked scoring examples', () => {
     expect(scoringExampleContext(example).detailedHand?.hand).toEqual(example.hand);
     expect(initialHandForExampleMode(resolveScorerExample(example.id), false)).toEqual(example.hand);
     expect(initialHandForExampleMode(resolveScorerExample(example.id), true)).toBeUndefined();
+    expect(handForScorerMode(scoringExampleContext(example), resolveScorerExample(example.id), false)).toEqual(example.hand);
+    expect(handForScorerMode(scoringExampleContext(example), resolveScorerExample(example.id), true)).toBeUndefined();
     expect(resolveScorerExample('missing-example')).toBeUndefined();
+  });
+
+  it('includes canonical Flower and Season artwork in a bonus target', () => {
+    const target = scoringExampleById('all-pair-honours-bonus')!;
+    expect(scoringExampleBonusTiles(target).map((tile) => tile.label)).toEqual([
+      'Flower 4, Bamboo, North',
+      'Season 2, Summer, South',
+    ]);
+  });
+
+  it('retains source-specific return labels', () => {
+    expect(resolveScorerExample('all-pair-honours')?.returnLabel).toBe('Back to Special hands');
+    expect(resolveScorerExample('all-pair-honours-bonus')?.returnLabel).toBe('Back to worked example');
   });
 
   it('keeps a saved game byte-for-byte unchanged while resolving completed or practice examples', () => {
