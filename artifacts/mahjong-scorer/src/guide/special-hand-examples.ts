@@ -22,7 +22,7 @@ export type SpecialHandExample = {
 };
 
 const examples: SpecialHandExample[] = [
-  { id: 'purity', name: 'Purity', hand: grouped([set('example-1','pung',p('circles',1)),set('example-2','pung',p('circles',3)),set('example-3','pung',p('circles',6)),set('example-4','pung',p('circles',9)),set('example-5','pair',p('circles',5))]) },
+  { id: 'purity', name: 'Purity', hand: grouped([set('example-1','pung',p('circles',1), 'exposed'),set('example-2','pung',p('circles',3)),set('example-3','pung',p('circles',6)),set('example-4','pung',p('circles',9)),set('example-5','pair',p('circles',5))]) },
   { id: 'all-pair-honours', name: 'All Pair Honours', hand: grouped([set('example-1','pair',p('bamboo',1)),set('example-2','pair',p('circles',9)),set('example-3','pair',p('characters',1)),set('example-4','pair',wind('east')),set('example-5','pair',wind('south')),set('example-6','pair',dragon('red')),set('example-7','pair',dragon('green'))]) },
   { id: 'all-winds-and-dragons', name: 'All Winds and Dragons', hand: grouped([set('example-1','pung',wind('east')),set('example-2','pung',wind('south')),set('example-3','pung',wind('west')),set('example-4','pung',wind('north')),set('example-5','pair',dragon('red'))]) },
   { id: 'heads-and-tails', name: 'Heads and Tails', hand: grouped([set('example-1','pung',p('bamboo',1)),set('example-2','pung',p('circles',9)),set('example-3','pung',p('characters',1)),set('example-4','pung',p('bamboo',9)),set('example-5','pair',p('characters',9))]) },

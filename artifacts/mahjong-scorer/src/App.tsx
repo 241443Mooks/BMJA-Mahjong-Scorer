@@ -1414,7 +1414,7 @@ function HandScorer({ context, onClose, standaloneHand, example }: { context: Ha
                     </>
                   ) : (
                     <button type="button" onClick={leaveHand} className="flex w-full items-center justify-center rounded-md border border-[#45665d] bg-[#284d45] py-3 text-[13px] font-semibold text-[#f8f4e9]">
-                      Leave hand and go home
+                      {example ? 'Back to Special hands' : 'Leave hand and go home'}
                     </button>
                   )}
                 </div>
