@@ -59,7 +59,7 @@ export function SiteHeader({ onNavigate }: SiteHeaderProps) {
       <div className="mx-auto flex max-w-[1440px] items-center justify-between gap-4 px-5 py-3 lg:px-8">
         <a href="/" onClick={(event) => navigate(event, '/')} className="flex min-h-11 items-center gap-3 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249] focus-visible:ring-offset-2">
           <span className="flex h-10 w-10 items-center justify-center rounded-md bg-[#284d45] font-serif text-[22px] font-bold text-[#f5f1e6]">麻</span>
-          <span className="font-serif text-[20px] font-bold leading-none text-[#284d45]">British Mahjong Scorer</span>
+          <span className="font-serif text-[20px] font-bold leading-none text-[#284d45]">Mahjong Reference</span>
         </a>
         <div className="relative">
           <button type="button" aria-label={open ? 'Close site navigation' : 'Open site navigation'} aria-expanded={open} aria-controls={menuId} onClick={() => setOpen((current) => !current)} className="flex min-h-11 min-w-11 items-center justify-center rounded-md border border-[#cfc3aa] bg-[#fbf8ed] text-[#284d45] transition hover:bg-[#efe8da] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]" >

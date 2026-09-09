@@ -1,10 +1,20 @@
 {
   "siteUrl": "https://mahjong.smooks.co.uk",
+  "brandName": "Mahjong Reference",
+  "strapline": "Rules, scoring and play — made clear.",
   "socialImagePath": "/british-mahjong-scorer-social-preview.jpg",
+  "webSite": {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "@id": "https://mahjong.smooks.co.uk/#website",
+    "name": "Mahjong Reference",
+    "url": "https://mahjong.smooks.co.uk",
+    "inLanguage": "en-GB"
+  },
   "webApplication": {
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    "name": "British Mahjong Scorer",
+    "name": "British Mahjong Scoring Calculator",
     "alternateName": ["British Mahjong Calculator", "British Mahjong Scoring Calculator"],
     "applicationCategory": "UtilitiesApplication",
     "operatingSystem": "Any",
@@ -16,21 +26,22 @@
       "Points, doubles, special hands and fishing calculations",
       "Four-player game scoring, settlement and running balances"
     ],
-    "creator": { "@type": "Person", "name": "SMooks" }
+    "creator": { "@type": "Person", "name": "SMooks" },
+    "isPartOf": { "@id": "https://mahjong.smooks.co.uk/#website" }
   },
   "routes": [
-    { "path": "/", "title": "British Mahjong Scoring Calculator | British Mahjong Scorer", "description": "Free British Mahjong scoring calculator. Enter tiles to score a hand, calculate points and doubles, check supported special hands, or score a full four-player game.", "indexable": true },
-    { "path": "/game", "title": "Score a British Mahjong Game | British Mahjong Scorer", "description": "Track four players hand by hand, calculate settlement, keep running balances and save the finished British Mahjong game record.", "indexable": true },
-    { "path": "/hand", "title": "British Mahjong Hand Calculator | British Mahjong Scorer", "description": "Enter a British Mahjong hand visually and calculate supported points, doubles, special hands and fishing, with a clear score breakdown.", "indexable": true },
-    { "path": "/scoring-examples", "title": "British Mahjong Scoring Examples | British Mahjong Scorer", "description": "Learn British Mahjong scoring from worked, test-backed hands covering points, doubles, Winds, bonus tiles, partial hands, fishing and special hands.", "indexable": true },
-    { "path": "/gameplay-basics", "title": "British Mahjong Gameplay Basics | British Mahjong Scorer", "description": "Learn the basic flow of British Mahjong, including tiles, turns, calls, winning and the table structure.", "indexable": true },
-    { "path": "/guide", "title": "British Mahjong Scoring Guide | British Mahjong Scorer", "description": "Learn British Mahjong scoring in plain English, with points, doubles, winning hands and practical examples.", "indexable": true },
-    { "path": "/special-hands", "title": "British Mahjong Special Hands | British Mahjong Scorer", "description": "Browse supported British Mahjong special hands with visual examples and plain-English explanations.", "indexable": true },
-    { "path": "/features", "title": "British Mahjong Scorer Features", "description": "See how British Mahjong Scorer handles full games, detailed and partial hands, explanations, recovery and printable game records.", "indexable": true },
-    { "path": "/how-it-works", "title": "How British Mahjong Scorer Works", "description": "See how the scorer moves from game context and tile evidence to scoring, explanations, settlement and the final game record.", "indexable": true },
-    { "path": "/help", "title": "British Mahjong Scorer Help", "description": "Get practical help with scoring games and hands, partial evidence, special situations, recovery, settlement and saving a game record.", "indexable": true },
-    { "path": "/mahjong-rules-compared", "title": "British vs Riichi vs Hong Kong vs American Mahjong Rules", "description": "Compare British, Hong Kong, Japanese Riichi, Chinese Official/MCR and American Mahjong. See how winning hands, scoring, Chows, Flowers, Jokers and special rules differ.", "indexable": true },
-    { "path": "/about", "title": "About British Mahjong Scorer", "description": "Learn why British Mahjong Scorer exists, which rules it uses, how uncertainty is handled and how browser-side game data works.", "indexable": true }
+    { "path": "/", "title": "British Mahjong Scoring Calculator | Mahjong Reference", "description": "Free British Mahjong scoring calculator. Enter tiles to score a hand, calculate points and doubles, check supported special hands, or score a full four-player game.", "indexable": true },
+    { "path": "/game", "title": "Score a British Mahjong Game | Mahjong Reference", "description": "Track four players hand by hand, calculate settlement, keep running balances and save the finished British Mahjong game record.", "indexable": true },
+    { "path": "/hand", "title": "British Mahjong Hand Calculator | Mahjong Reference", "description": "Enter a British Mahjong hand visually and calculate supported points, doubles, special hands and fishing, with a clear score breakdown.", "indexable": true },
+    { "path": "/scoring-examples", "title": "British Mahjong Scoring Examples | Mahjong Reference", "description": "Learn British Mahjong scoring from worked, test-backed hands covering points, doubles, Winds, bonus tiles, partial hands, fishing and special hands.", "indexable": true },
+    { "path": "/gameplay-basics", "title": "British Mahjong Gameplay Basics | Mahjong Reference", "description": "Learn the basic flow of British Mahjong, including tiles, turns, calls, winning and the table structure.", "indexable": true },
+    { "path": "/guide", "title": "British Mahjong Scoring Guide | Mahjong Reference", "description": "Learn British Mahjong scoring in plain English, with points, doubles, winning hands and practical examples.", "indexable": true },
+    { "path": "/special-hands", "title": "British Mahjong Special Hands | Mahjong Reference", "description": "Browse supported British Mahjong special hands with visual examples and plain-English explanations.", "indexable": true },
+    { "path": "/features", "title": "British Mahjong Scoring Calculator Features | Mahjong Reference", "description": "A free, dedicated, browser-based scoring calculator built specifically for British Mahjong: automatic scoring and full-game settlement.", "indexable": true },
+    { "path": "/how-it-works", "title": "How British Mahjong Scoring Works | Mahjong Reference", "description": "See how the scorer moves from game context and tile evidence to scoring, explanations, settlement and the final game record.", "indexable": true },
+    { "path": "/help", "title": "British Mahjong Scoring Help | Mahjong Reference", "description": "Get practical help with scoring games and hands, partial evidence, special situations, recovery, settlement and saving a game record.", "indexable": true },
+    { "path": "/mahjong-rules-compared", "title": "British vs Riichi vs Hong Kong vs American Mahjong Rules | Mahjong Reference", "description": "Compare British, Hong Kong, Japanese Riichi, Chinese Official/MCR and American Mahjong. See how winning hands, scoring, Chows, Flowers, Jokers and special rules differ.", "indexable": true },
+    { "path": "/about", "title": "About Mahjong Reference | British Mahjong Scoring", "description": "Learn why Mahjong Reference exists, which British / BMJA-style rules its current scorer uses, how uncertainty is handled and how browser-side game data works.", "indexable": true }
   ],
   "aliases": [
     { "path": "/beginner-guide", "target": "/guide" },

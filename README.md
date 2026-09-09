@@ -1,10 +1,10 @@
-# British Mahjong Scorer
+# Mahjong Reference
 
-A free, browser-based **British Mahjong scoring calculator** for scoring complete four-player games and individual hands, learning the rules, and understanding **why** a score applies.
+**Mahjong Reference** is a free, browser-based **British Mahjong scoring calculator** for scoring complete four-player games and individual hands, learning the rules, and understanding **why** a score applies. The current scoring profile is **British / BMJA-style**.
 
 **Live:** https://mahjong.smooks.co.uk
 
-British Mahjong Scorer is designed for use at the table. Players can enter scores directly or build hands visually with real Mahjong tile artwork. Where the entered tiles and game context provide enough evidence, the scorer calculates supported points, doubles, special hands and fishing automatically, then explains the result in plain English.
+Mahjong Reference is designed for use at the table. Players can enter scores directly or build hands visually with real Mahjong tile artwork. Where the entered tiles and game context provide enough evidence, the British / BMJA-style scorer calculates supported points, doubles, special hands and fishing automatically, then explains the result in plain English.
 
 The product is deliberately **beginner-first, evidence-first, browser-first and local-first**.
 
@@ -327,7 +327,7 @@ See [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md) and [`docs/TILE_ASSET_DEC
 
 ## Licence
 
-Project source code authored for British Mahjong Scorer is licensed under the **MIT License**. See [`LICENSE`](LICENSE).
+Project source code authored for Mahjong Reference is licensed under the **MIT License**. See [`LICENSE`](LICENSE).
 
 Original learner guides, explanatory copy, project documentation and other written content are not covered by the MIT License unless explicitly stated otherwise. Copyright (c) 2026 SMooks. All rights reserved unless otherwise stated.
 
@@ -335,6 +335,6 @@ Third-party materials keep their own licences and attribution requirements. See 
 
 ## Support the project
 
-If British Mahjong Scorer is useful to you, you can support its continued development at:
+If Mahjong Reference is useful to you, you can support its continued development at:
 
 **https://buymeacoffee.com/sharronmo**
