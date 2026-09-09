@@ -122,10 +122,10 @@ export function HomePage() {
       <main className="mx-auto max-w-[1100px] px-5 py-9 lg:px-8 lg:py-14">
         <section className="max-w-[760px]">
           <h1 className="font-serif text-[clamp(38px,6vw,58px)] leading-[1.02] text-[#284d45]">
-            British Mahjong, made easier to score and learn
+            British Mahjong scoring, made easier to calculate and learn
           </h1>
           <p className="mt-4 max-w-[620px] text-[15px] leading-7 text-[#66746e]">
-            What would you like to do? Score a game, check a hand, or learn British Mahjong as you play.
+            British Mahjong Scorer is a free, browser-based British Mahjong scoring calculator. Use visual tile entry to score an individual hand or a full four-player game, then learn the rules as you play.
           </p>
         </section>
 

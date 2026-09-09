@@ -1,6 +1,6 @@
 # British Mahjong Scorer
 
-A browser-based British Mahjong companion for **scoring games and hands, learning the rules, and understanding why a score applies**.
+A free, browser-based British Mahjong scoring calculator and companion for **scoring games and hands, learning the rules, and understanding why a score applies**.
 
 The project is designed to be useful at the table without requiring players to learn the scoring engine first. Where the entered tiles and game context provide enough evidence, the scorer detects patterns automatically and explains them in plain English.
 
