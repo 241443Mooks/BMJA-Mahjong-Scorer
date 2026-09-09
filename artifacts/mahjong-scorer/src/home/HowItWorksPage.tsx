@@ -19,6 +19,7 @@ import {
   type ResponsiveScreenshotProps,
 } from '../components/ResponsiveInstruction';
 import { SiteHeader } from '../components/SiteHeader';
+import { ReturnToGame } from '../components/ReturnToGame';
 import { phaseOneHelpInstructions } from './helpPhase1Instructions';
 
 type HowItWorksStep = {
@@ -80,6 +81,7 @@ export function HowItWorksPage() {
     <div className="mahjong-shell min-h-screen">
       <SiteHeader />
       <main className="mx-auto max-w-[1100px] px-5 py-9 lg:px-8 lg:py-14">
+        <ReturnToGame />
         <article className="overflow-hidden rounded-2xl border border-[#d8ceb8] bg-[#fbf8ed] shadow-[var(--shadow-sm)]">
           <section className="border-b border-[#ddd3bf] px-5 py-9 sm:px-8 sm:py-12 lg:px-12 lg:py-14">
             <div className="mb-4 flex items-center gap-3"><div className="fine-rule w-10" /><span className="font-mono text-[10px] uppercase tracking-[.2em] text-[#ae6249]">How it works</span></div>

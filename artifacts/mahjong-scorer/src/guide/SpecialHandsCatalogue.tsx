@@ -1,9 +1,13 @@
 import { ChevronRight, CircleHelp, Sparkles } from 'lucide-react';
+import { useEffect } from 'react';
 import { SiteHeader } from '../components/SiteHeader';
+import { ReturnToGame } from '../components/ReturnToGame';
+import { SPECIAL_HAND_ANCHORS } from './special-hand-references';
 
 import { TileStrip, type TileAssetKey, type TileDefinition } from './MahjongTileGallery';
 
 type SpecialCardData = {
+  id: keyof typeof SPECIAL_HAND_ANCHORS;
   name: string;
   description: string;
   winner: string;
@@ -32,6 +36,7 @@ const white = t('Haku', 'White Dragon');
 
 const normalSetSpecials: SpecialCardData[] = [
   {
+    id: 'purity',
     name: 'Purity',
     description: 'One numbered suit only, using Pungs and/or Kongs plus a pair. No Winds, Dragons or Chow.',
     winner: '3 doubles',
@@ -43,6 +48,7 @@ const normalSetSpecials: SpecialCardData[] = [
     detail: 'Purity is unusual because it is scored through doubles rather than as a fixed 500- or 1,000-point hand.',
   },
   {
+    id: 'all-pair-honours',
     name: 'All Pair Honours',
     description: 'Seven pairs made only from major tiles: suited 1s and 9s, Winds and Dragons.',
     winner: '500',
@@ -53,6 +59,7 @@ const normalSetSpecials: SpecialCardData[] = [
     visualNote: 'Seven major-tile pairs. This is different from Heads and Tails.',
   },
   {
+    id: 'all-winds-and-dragons',
     name: 'All Winds and Dragons',
     description: 'A complete hand made only from Winds and Dragons: four Pungs/Kongs and a pair.',
     winner: '1,000',
@@ -62,6 +69,7 @@ const normalSetSpecials: SpecialCardData[] = [
     tiles: combine(repeat(east, 3), repeat(south, 3), repeat(west, 3), repeat(north, 3), repeat(red, 2)),
   },
   {
+    id: 'heads-and-tails',
     name: 'Heads and Tails',
     description: 'A normal grouped hand made only from suited 1s and 9s. No Winds or Dragons.',
     winner: '1,000',
@@ -72,6 +80,7 @@ const normalSetSpecials: SpecialCardData[] = [
     visualNote: 'Four Pungs/Kongs plus a pair, all terminals.',
   },
   {
+    id: 'fourfold-plenty',
     name: 'Fourfold Plenty',
     description: 'Four Kongs and a pair.',
     winner: '1,000',
@@ -82,6 +91,7 @@ const normalSetSpecials: SpecialCardData[] = [
     visualNote: 'The extra physical tiles are the fourth tiles in each Kong.',
   },
   {
+    id: 'three-great-scholars',
     name: 'Three Great Scholars',
     description: 'Pungs or Kongs of all three Dragons, plus one more Pung/Kong and a pair.',
     winner: '1,000',
@@ -91,6 +101,7 @@ const normalSetSpecials: SpecialCardData[] = [
     tiles: combine(repeat(red, 3), repeat(green, 3), repeat(white, 3), repeat(east, 3), repeat(pin(5), 2)),
   },
   {
+    id: 'four-blessings',
     name: 'Four Blessings Hovering over the Door',
     description: 'Pungs or Kongs of all four Winds, plus a pair.',
     winner: '1,000',
@@ -100,6 +111,7 @@ const normalSetSpecials: SpecialCardData[] = [
     tiles: combine(repeat(east, 3), repeat(south, 3), repeat(west, 3), repeat(north, 3), repeat(green, 2)),
   },
   {
+    id: 'buried-treasure',
     name: 'Buried Treasure',
     description: 'A concealed hand of Pungs and a pair in one suit, with honours allowed. No Chow and no Kong.',
     winner: '1,000',
@@ -111,6 +123,7 @@ const normalSetSpecials: SpecialCardData[] = [
     detail: 'If the final tile was claimed, the scorer may ask which tile completed Mah Jong so it can check the narrow permitted final-set exception.',
   },
   {
+    id: 'imperial-jade',
     name: 'Imperial Jade',
     description: 'Only traditional green tiles: Green Dragon and Bamboo 2, 3, 4, 6 and 8.',
     winner: '1,000',
@@ -124,6 +137,7 @@ const normalSetSpecials: SpecialCardData[] = [
 
 const irregularSpecials: SpecialCardData[] = [
   {
+    id: 'knitting',
     name: 'Knitting',
     description: 'Seven pairs. Each pair uses the same number in two different suits.',
     winner: '500',
@@ -134,6 +148,7 @@ const irregularSpecials: SpecialCardData[] = [
     visualNote: 'Read the tiles as seven cross-suit same-number pairs.',
   },
   {
+    id: 'triple-knitting',
     name: 'Triple Knitting',
     description: 'Four same-number groups containing one tile from each suit, plus one cross-suit same-number pair.',
     winner: '500',
@@ -144,6 +159,7 @@ const irregularSpecials: SpecialCardData[] = [
     visualNote: 'Four three-suit number groups, then one same-number pair.',
   },
   {
+    id: 'thirteen-unique-wonders',
     name: 'Thirteen Unique Wonders',
     description: 'One of each of the 13 major/honour tile types, plus one duplicate to make the pair.',
     winner: '1,000',
@@ -154,6 +170,7 @@ const irregularSpecials: SpecialCardData[] = [
     visualNote: 'Six suited terminals + four Winds + three Dragons + one duplicate.',
   },
   {
+    id: 'gates-of-heaven',
     name: 'Gates of Heaven',
     description: 'One suit: three 1s, three 9s, one each of 2–8, with one of 2–8 duplicated.',
     winner: '1,000',
@@ -165,6 +182,7 @@ const irregularSpecials: SpecialCardData[] = [
     detail: 'If the hand was completed from a discard, the scorer uses the winning-tile selection to check the permitted terminal-Pung exception.',
   },
   {
+    id: 'wriggling-snake',
     name: 'Wriggling Snake',
     description: 'A pair of 1s, the sequence 2 through 9 in the same suit, plus one of each Wind.',
     winner: '1,000',
@@ -197,7 +215,7 @@ function EventTimeline({ steps, tile }: { steps: string[]; tile?: TileDefinition
 
 function SpecialCard({ hand }: { hand: SpecialCardData }) {
   return (
-    <article className="rounded-2xl border border-[#d8ceb8] bg-[#fbf8ed] p-5 shadow-[var(--shadow-sm)] sm:p-6">
+    <article id={SPECIAL_HAND_ANCHORS[hand.id]} className="scroll-mt-6 rounded-2xl border border-[#d8ceb8] bg-[#fbf8ed] p-5 shadow-[var(--shadow-sm)] sm:p-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <h3 className="font-serif text-[25px] leading-tight text-[#284d45]">{hand.name}</h3>
@@ -259,11 +277,18 @@ function CatalogueSection({ id, eyebrow, title, intro, hands }: { id: string; ey
 }
 
 export function SpecialHandsCatalogue() {
+  useEffect(() => {
+    const anchor = window.location.hash.slice(1);
+    if (!anchor) return;
+    requestAnimationFrame(() => document.getElementById(anchor)?.scrollIntoView({ block: 'start' }));
+  }, []);
+
   return (
     <div className="mahjong-shell">
       <SiteHeader />
 
       <main className="mx-auto max-w-[1180px] px-5 py-8 lg:px-8 lg:py-12">
+        <ReturnToGame />
         <section className="rounded-2xl border border-[#d8ceb8] bg-[#fbf8ed] px-5 py-9 shadow-[var(--shadow-sm)] sm:px-8 sm:py-11 lg:px-10">
           <div className="mb-4 flex items-center gap-3"><div className="fine-rule w-10" /><span className="font-mono text-[10px] uppercase tracking-[.2em] text-[#ae6249]">Visual catalogue</span></div>
           <h1 className="max-w-[800px] font-serif text-[clamp(38px,6vw,62px)] leading-[.98] text-[#284d45]">Special hands, made visual.</h1>
@@ -288,19 +313,19 @@ export function SpecialHandsCatalogue() {
           </div>
 
           <div className="space-y-4">
-            <SpecialCard hand={{ name: 'Heaven’s Blessing', description: 'East has Mah Jong immediately from the original dealt hand.', winner: '1,000', entry: 'Normal winner flow', detection: 'Detected automatically from “Mah Jong in original deal”' }} />
+            <SpecialCard hand={{ id: 'heavens-blessing', name: 'Heaven’s Blessing', description: 'East has Mah Jong immediately from the original dealt hand.', winner: '1,000', entry: 'Normal winner flow', detection: 'Detected automatically from “Mah Jong in original deal”' }} />
             <div className="-mt-2 mb-4"><EventTimeline steps={["East’s original deal", 'Already complete', 'Mah Jong']} /></div>
 
-            <SpecialCard hand={{ name: 'Earth’s Blessing', description: 'A non-East player goes Mah Jong using East’s very first discard.', winner: '1,000', entry: 'Normal winner flow · from discard', detection: 'The scorer may ask one short factual question', detail: 'Only when the circumstances make it possible, the scorer asks: “Was this East’s very first discard?” If you are not sure, it scores conservatively.' }} />
+            <SpecialCard hand={{ id: 'earths-blessing', name: 'Earth’s Blessing', description: 'A non-East player goes Mah Jong using East’s very first discard.', winner: '1,000', entry: 'Normal winner flow · from discard', detection: 'The scorer may ask one short factual question', detail: 'Only when the circumstances make it possible, the scorer asks: “Was this East’s very first discard?” If you are not sure, it scores conservatively.' }} />
             <div className="-mt-2 mb-4"><EventTimeline steps={["East’s first discard", 'Another player claims it', 'Mah Jong']} /></div>
 
-            <SpecialCard hand={{ name: 'Gathering the Plum Blossom from the Roof', description: 'Mah Jong is completed by drawing 5 Circles as a replacement tile.', winner: '1,000', entry: 'Normal winner flow · replacement tile', detection: 'Detected automatically from how you won + winning tile' }} />
+            <SpecialCard hand={{ id: 'gathering-the-plum-blossom-from-the-roof', name: 'Gathering the Plum Blossom from the Roof', description: 'Mah Jong is completed by drawing 5 Circles as a replacement tile.', winner: '1,000', entry: 'Normal winner flow · replacement tile', detection: 'Detected automatically from how you won + winning tile' }} />
             <div className="-mt-2 mb-4"><EventTimeline steps={['Replacement draw', '5 Circles', 'Mah Jong']} tile={pin(5)} /></div>
 
-            <SpecialCard hand={{ name: 'Plucking the Moon from the Bottom of the Sea', description: 'Mah Jong is completed with 1 Circles drawn as the final tile from the live wall.', winner: '1,000', entry: 'Normal winner flow · last wall tile', detection: 'Detected automatically from how you won + winning tile' }} />
+            <SpecialCard hand={{ id: 'plucking-the-moon-from-the-bottom-of-the-sea', name: 'Plucking the Moon from the Bottom of the Sea', description: 'Mah Jong is completed with 1 Circles drawn as the final tile from the live wall.', winner: '1,000', entry: 'Normal winner flow · last wall tile', detection: 'Detected automatically from how you won + winning tile' }} />
             <div className="-mt-2 mb-4"><EventTimeline steps={['Last tile in live wall', '1 Circles', 'Mah Jong']} tile={pin(1)} /></div>
 
-            <SpecialCard hand={{ name: 'Twofold Fortune', description: 'A Kong is made, its replacement tile completes another Kong, and the next replacement tile completes Mah Jong.', winner: '1,000', entry: 'Normal winner flow · replacement tile', detection: 'The scorer may ask one short factual question', detail: 'The final hand can show that two Kongs exist, but it cannot reconstruct the exact replacement sequence. “I’m not sure” therefore scores conservatively.' }} />
+            <SpecialCard hand={{ id: 'twofold-fortune', name: 'Twofold Fortune', description: 'A Kong is made, its replacement tile completes another Kong, and the next replacement tile completes Mah Jong.', winner: '1,000', entry: 'Normal winner flow · replacement tile', detection: 'The scorer may ask one short factual question', detail: 'The final hand can show that two Kongs exist, but it cannot reconstruct the exact replacement sequence. “I’m not sure” therefore scores conservatively.' }} />
             <div className="-mt-2"><EventTimeline steps={['Kong', 'Replacement tile', 'Second Kong', 'Replacement tile', 'Mah Jong']} /></div>
           </div>
         </section>
@@ -310,6 +335,7 @@ export function SpecialHandsCatalogue() {
             <div className="font-mono text-[9px] uppercase tracking-[.2em] text-[#d7a287]">The important bit</div>
             <h2 className="mt-2 font-serif text-[28px]">Recognition, not memorisation.</h2>
             <p className="mt-3 max-w-[700px] text-[12px] leading-6 text-[#c8d8d1]">Use this catalogue to understand a pattern after you encounter it. During play, enter the tiles and what happened; the scorer should do the recognition work for you.</p>
+            <a href="/hand" className="mt-4 inline-flex min-h-10 items-center rounded-md border border-[#6e8d84] px-3 text-[11px] font-semibold text-[#f8f4e9] transition hover:bg-[#31594f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f3d8c7]">Try a special hand in the hand scorer</a>
           </div>
         </section>
       </main>

@@ -6,6 +6,7 @@ import {
   gameProgressSummary,
   loadGameRecovery,
   loadInProgressGameRecovery,
+  recoverableGameForReturn,
   saveGameRecovery,
 } from "./persistence";
 
@@ -152,5 +153,28 @@ describe("game recovery persistence", () => {
 
     expect(loadInProgressGameRecovery(storage)).toBeNull();
     expect(storage.getItem(GAME_SNAPSHOT_STORAGE_KEY)).toBeNull();
+  });
+
+  it("reads a recoverable game without changing its saved snapshot", () => {
+    const storage = memoryStorage();
+    saveGameRecovery(storage, newGame(), "win", "east", {
+      scores: { east: 100 },
+      scoreRecords: { east: { source: "manual", finalScore: 100 } },
+    });
+    const before = storage.getItem(GAME_SNAPSHOT_STORAGE_KEY);
+
+    expect(loadInProgressGameRecovery(storage)?.game.isComplete).toBe(false);
+    expect(storage.getItem(GAME_SNAPSHOT_STORAGE_KEY)).toBe(before);
+  });
+
+  it("supplies a return target only for a valid in-progress game", () => {
+    const storage = memoryStorage();
+    expect(recoverableGameForReturn(storage)).toBeNull();
+
+    saveGameRecovery(storage, newGame(), "win", "east", {
+      scores: {},
+      scoreRecords: {},
+    });
+    expect(recoverableGameForReturn(storage)?.game.isComplete).toBe(false);
   });
 });

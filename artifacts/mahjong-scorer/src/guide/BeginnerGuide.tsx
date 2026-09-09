@@ -1,5 +1,6 @@
 import { BookOpen, ChevronRight, CircleHelp, Sparkles } from 'lucide-react';
 import { SiteHeader } from '../components/SiteHeader';
+import { ReturnToGame } from '../components/ReturnToGame';
 import { SetExamples, TileGallery } from './MahjongTileGallery';
 import { BONUS_TILE_DEFINITIONS, tileAssetUrl } from '../tiles/MahjongTileArtwork';
 
@@ -76,6 +77,7 @@ export function BeginnerGuide({ onClose }: { onClose: () => void }) {
       <SiteHeader />
 
       <main className="mx-auto max-w-[1180px] px-5 py-8 lg:px-8 lg:py-12">
+        <ReturnToGame />
         <div className="grid gap-8 lg:grid-cols-[250px_minmax(0,1fr)] lg:gap-12">
           <aside className="lg:sticky lg:top-5 lg:self-start">
             <div className="rounded-xl border border-[#d8ceb8] bg-[#fbf8ed] p-4 shadow-[var(--shadow-sm)]">
@@ -112,6 +114,7 @@ export function BeginnerGuide({ onClose }: { onClose: () => void }) {
                   <p className="mt-1 text-[12px] leading-5 text-[#c8d8d1]">The scorer can classify major and minor tiles, apply the arithmetic and detect many special patterns for you.</p>
                 </div>
               </div>
+              <a href="/hand" className="mt-5 inline-flex min-h-10 items-center rounded-md border border-[#c9b99d] bg-[#fdfbf5] px-4 text-[12px] font-semibold text-[#284d45] transition hover:bg-[#fffaf0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">Try this in the British Mahjong hand calculator</a>
               <p className="mt-5 text-[11px] leading-5 text-[#8c8a7f]">This is an independent learner guide. It is not an official BMJA publication.</p>
             </section>
 
