@@ -54,6 +54,26 @@ The central Pass 5 decision is:
 
 The immediate product still focuses on BMJA → Western → Companion catalogue → Outside the Box. Pass 5 exists so today's abstractions do not block later disciplines.
 
+### Pass 6 — public rules/reference content architecture
+
+- [PUBLIC_RULES_CONTENT_ARCHITECTURE.md](./PUBLIC_RULES_CONTENT_ARCHITECTURE.md) — public rules hub structure, page templates, comparison model, scorer-support disclosure, source/provenance policy, internal linking, SEO guardrails and phased rollout.
+
+The central Pass 6 decision is:
+
+> **Mahjong Reference may explain a ruleset before it can score that ruleset, but it must always say which rules the scorer actually supports.**
+
+The existing `/mahjong-rules-compared` route should be preserved as the broad comparison entry point rather than duplicated by a competing page.
+
+First-wave public content is intentionally small:
+
+- `/rules` hub;
+- British/BMJA rules entry point;
+- Western rules page after the Western evidence gate;
+- strengthened `/mahjong-rules-compared`;
+- `Which rules am I playing?` learner guide.
+
+Reference-only pages for Riichi, MCR and a named Hong Kong profile can follow before their scorers exist, provided the support state is explicit.
+
 ## Research principles
 
 1. Prefer governing bodies and formal rulebooks for standardised disciplines.
@@ -124,14 +144,15 @@ Before an Outside the Box production profile is considered version 1.0, confirm 
 - cannon/liability ordering;
 - any ordinary-play difference from BMJA not yet captured.
 
-## Next pass
+## Six-pass programme status
 
-Pass 6 should turn the research into a **public rules/reference content plan** without confusing reference coverage with scorer support.
+The research/planning programme is now complete:
 
-Likely output:
+1. research baseline — complete;
+2. provenance/crosswalk — complete;
+3. umbrella architecture plan — complete;
+4. bounded implementation issues — complete;
+5. future-ruleset roadmap — complete;
+6. public rules/reference architecture — complete.
 
-- `/rules` information architecture;
-- priority rules pages and comparisons;
-- source/provenance policy for public copy;
-- internal-linking/SEO structure;
-- explicit labels showing which disciplines are reference-only versus actually supported by the scorer.
+The next step is not more broad architecture discovery. It is controlled implementation beginning with **#83** and **#84**, while continuing the specific evidence work needed to unblock **#86** and **#88**.
