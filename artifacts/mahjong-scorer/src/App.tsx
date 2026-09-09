@@ -11,6 +11,7 @@ import { exampleExitLabel, handForScorerMode, practiceScorerContext, practiceSet
 import { TileStrip } from './guide/MahjongTileGallery';
 import { ReturnToGame } from './components/ReturnToGame';
 import { handScorerLocalContext } from './game';
+import { handScorerInitialBaseline, hasHandScorerUnsavedWork } from './game/hand-scorer-dirty-state';
 import type {
   HandScorerContext,
   HandScorerResult,
@@ -275,9 +276,12 @@ function HandScorer({ context, onClose, standaloneHand, example, practice }: { c
   const [copied, setCopied] = useState(false);
   const [showPracticeAnswer, setShowPracticeAnswer] = useState(false);
   const practiceTarget = practice ? scoringExampleById(example?.id) : undefined;
-  const hasUnsavedWork = !hasContext && (
-    sets.length !== defaultSets.length || sets.some((set) => set.tile !== null) || layoutMode !== 'sets' || looseTiles.length > 0 || remainingTiles.length > 0 || flowers.length > 0 || seasons.length > 0 || playerWind !== 'east' || prevailingWind !== 'east' || limit !== 1000 || isWinner || winningMethod !== 'wall' || originalCall || winningTileProvenance !== undefined || winningEventEvidence !== undefined
-  );
+  const initialBaseline = useMemo(() => handScorerInitialBaseline(initialHand, {
+    playerWind: initialContext.playerWind, prevailingWind: initialContext.prevailingWind, limit: initialContext.limit,
+    isWinner: initialContext.isWinner, winningMethod: initialHand?.winningMethod ?? (practice ? practiceContext.winningMethod : 'wall'),
+    originalCall: initialContext.isWinner ? initialHand?.originalCall ?? (practice ? practiceContext.originalCall : false) : false,
+  }), [context, example, practice]);
+  const hasUnsavedWork = !hasContext && hasHandScorerUnsavedWork({ sets, layoutMode, looseTiles, remainingTiles, flowers, seasons, playerWind, prevailingWind, limit, isWinner, winningMethod, originalCall, winningTileProvenance, winningEventEvidence }, initialBaseline);
   const leaveHand = () => {
     if (hasUnsavedWork && !window.confirm('Leave this hand? The hand details you entered will be discarded.')) return;
     if (example) { window.location.assign(example.returnHref); return; }
