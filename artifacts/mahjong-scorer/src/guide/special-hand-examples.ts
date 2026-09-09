@@ -46,8 +46,8 @@ const examples: SpecialHandExample[] = [
 export const specialHandExamples = examples;
 export const specialHandExampleById = (id: string | null | undefined) => examples.find((example) => example.id === id);
 export const specialHandExampleHref = (id: SpecialHandExample['id']) => `/hand?example=${id}`;
-export const exampleVisualTiles = (example: SpecialHandExample): TileDefinition[] => {
-  const tiles = [...example.hand.sets.flatMap(expandedTiles), ...(example.hand.looseTiles ?? [])];
+export const exampleVisualTiles = ({ hand }: Pick<SpecialHandExample, 'hand'>): TileDefinition[] => {
+  const tiles = [...hand.sets.flatMap(expandedTiles), ...(hand.looseTiles ?? []), ...(hand.remainingTiles ?? [])];
   return tiles.map((tile) => {
     if (tile.family === 'suit') {
       const prefix = tile.suit === 'circles' ? 'Pin' : tile.suit === 'bamboo' ? 'Sou' : 'Man';

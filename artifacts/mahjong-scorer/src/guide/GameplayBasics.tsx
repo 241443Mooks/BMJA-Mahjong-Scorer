@@ -488,6 +488,10 @@ export function GameplayBasics() {
                   <div className="font-serif text-[22px] text-[#284d45]">Scoring basics</div>
                   <div className="mt-2 flex items-center gap-2 text-[11px] text-[#66746e]">Points, doubles and settlement <ArrowRight size={13} className="text-[#ae6249] transition-transform group-hover:translate-x-1" /></div>
                 </a>
+                <a href="/scoring-examples" className="group rounded-xl border border-[#d8ceb8] bg-[#fdfbf5] p-5 transition hover:border-[#ae6249] hover:bg-[#fffaf0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">
+                  <div className="font-serif text-[22px] text-[#284d45]">Worked scoring examples</div>
+                  <div className="mt-2 flex items-center gap-2 text-[11px] text-[#66746e]">See a hand built into points and doubles <ArrowRight size={13} className="text-[#ae6249] transition-transform group-hover:translate-x-1" /></div>
+                </a>
                 <a href="/special-hands" className="group rounded-xl border border-[#d8ceb8] bg-[#fdfbf5] p-5 transition hover:border-[#ae6249] hover:bg-[#fffaf0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">
                   <div className="font-serif text-[22px] text-[#284d45]">Special hands</div>
                   <div className="mt-2 flex items-center gap-2 text-[11px] text-[#66746e]">Browse the visual catalogue <ArrowRight size={13} className="text-[#ae6249] transition-transform group-hover:translate-x-1" /></div>

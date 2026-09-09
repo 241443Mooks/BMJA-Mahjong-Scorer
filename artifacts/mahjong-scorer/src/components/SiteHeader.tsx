@@ -7,6 +7,7 @@ const navigationGroups = [
     destinations: [
       ['Score a game', '/game'],
       ['Score a hand', '/hand'],
+      ['Scoring examples', '/scoring-examples'],
     ],
   },
   {
