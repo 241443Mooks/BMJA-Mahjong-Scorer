@@ -757,6 +757,7 @@ function HandScorer({ context, onClose, standaloneHand, example, practice }: { c
                       ? 'Enter your tiles visually as they sit on the table. The calculator shows supported points, doubles, special hands and fishing in a clear score breakdown.'
                       : 'Enter each set as it sits on the table. The score builds beside you, with every point and double accounted for.'}
                 </p>
+                <p className="mt-3 max-w-[560px] text-[13px] leading-6 text-[#284d45]"><strong>Rules: British / BMJA-style.</strong> This calculator currently scores the British rules profile only.</p>
                 {context?.requiresRecalculation && (
                   <div
                     data-testid="notice-recalculation-required"

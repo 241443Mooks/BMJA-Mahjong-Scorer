@@ -237,16 +237,17 @@ Leave the scorer on the final result with **60** and the breakdown visible.
 
 **Screen action**
 
-Either remain on the completed hand or cut to a simple clean view of British Mahjong Scorer.
+Either remain on the completed hand or cut to a simple clean view of Mahjong Reference, with the British / BMJA-style rules label visible.
 
 End frame text:
 
-**Try the free British Mahjong Scorer**  
+**Mahjong Reference**
+**British / BMJA-style scoring**
 `mahjong.smooks.co.uk`
 
 **Voiceover**
 
-> You can calculate all of that by hand, but you don’t have to. British Mahjong Scorer lets you build the hand visually, works out the scoring rules supported by what you’ve entered, and shows you where the result came from. It’s free at mahjong.smooks.co.uk.
+> You can calculate all of that by hand, but you don’t have to. Mahjong Reference lets you build the hand visually, works out the supported British / BMJA-style scoring rules from what you’ve entered, and shows you where the result came from. It’s free at mahjong.smooks.co.uk.
 
 ---
 

@@ -98,7 +98,7 @@ export function AboutPage() {
               British Mahjong is easier to enjoy when the rules are easier to see.
             </h1>
             <p className="mt-5 max-w-[760px] text-[15px] leading-7 text-[#596b65]">
-              British Mahjong Scorer is a small independent project built to make British Mahjong easier to
+              Mahjong Reference is a small independent project built to make British Mahjong easier to
               <strong className="text-[#284d45]"> score, understand and learn while you play</strong>.
             </p>
             <p className="mt-4 max-w-[760px] text-[14px] leading-7 text-[#596b65]">
@@ -183,7 +183,7 @@ export function AboutPage() {
                   <div>
                     <h3 className="font-serif text-[21px] text-[#284d45]">Independent, and deliberately transparent</h3>
                     <p className="mt-2 text-[12px] leading-6 text-[#66746e]">
-                      British Mahjong Scorer is not an official British Mah-Jong Association product and does not claim BMJA endorsement. Where a rule is uncertain, the project should say so rather than quietly invent certainty.
+                      Mahjong Reference is not an official British Mah-Jong Association product and does not claim BMJA endorsement. Where a rule is uncertain, the project should say so rather than quietly invent certainty.
                     </p>
                   </div>
                 </div>
@@ -270,7 +270,7 @@ export function AboutPage() {
             </div>
 
             <p className="mt-6 text-[10px] leading-5 text-[#8c8a7f]">
-              The name British Mahjong Scorer describes the style of play this project supports. It does not imply ownership of British Mahjong, association with a governing body, or compatibility with every Mahjong ruleset.
+              Mahjong Reference is the site identity. Its current scorer supports British / BMJA-style rules; that does not imply ownership of British Mahjong, association with a governing body, or compatibility with every Mahjong ruleset.
             </p>
           </section>
         </article>
@@ -282,7 +282,7 @@ export function AboutPage() {
           href="/"
           className="text-[10px] font-semibold text-[#66746e] underline decoration-[#c9b99d] underline-offset-4 hover:text-[#ae6249] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]"
         >
-          Back to British Mahjong Scorer
+          Back to Mahjong Reference
         </a>
       </footer>
     </div>

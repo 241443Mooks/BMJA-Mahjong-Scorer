@@ -18,7 +18,7 @@ import siteSeo from './site-seo.json';
 import './index.css';
 
 const path = window.location.pathname.replace(/\/$/, '') || '/';
-const { siteUrl, socialImagePath, webApplication, routes, aliases } = siteSeo;
+const { brandName, siteUrl, socialImagePath, webApplication, webSite, routes, aliases } = siteSeo;
 const routeMetadata = new Map(routes.map((route) => [route.path, route]));
 
 function setMeta(selector: string, attribute: string, value: string) {
@@ -31,19 +31,21 @@ function canonicalPathFor(currentPath: string) {
 }
 
 function applyStructuredData(canonicalPath: string, description: string) {
-  const existing = document.getElementById('web-application-structured-data');
+  const existing = document.getElementById('site-structured-data');
   if (canonicalPath !== '/') {
     existing?.remove();
     return;
   }
 
   const structuredData = {
-    description,
-    url: `${siteUrl}/`,
-    ...webApplication,
+    '@context': 'https://schema.org',
+    '@graph': [
+      webSite,
+      { description, url: `${siteUrl}/`, ...webApplication },
+    ],
   };
   const script = existing instanceof HTMLScriptElement ? existing : document.createElement('script');
-  script.id = 'web-application-structured-data';
+  script.id = 'site-structured-data';
   script.type = 'application/ld+json';
   script.textContent = JSON.stringify(structuredData);
   if (!existing) document.head.append(script);
@@ -55,14 +57,14 @@ function applyRouteMetadata() {
   const canonicalUrl = `${siteUrl}${canonicalPath === '/' ? '/' : canonicalPath}`;
 
   if (!metadata) {
-    document.title = 'Page not found | British Mahjong Scorer';
-    setMeta('meta[name="description"]', 'content', 'The requested British Mahjong Scorer page could not be found.');
+    document.title = `Page not found | ${brandName}`;
+    setMeta('meta[name="description"]', 'content', 'The requested Mahjong Reference page could not be found.');
     setMeta('meta[name="robots"]', 'content', 'noindex, follow');
-    setMeta('meta[property="og:title"]', 'content', 'Page not found | British Mahjong Scorer');
-    setMeta('meta[property="og:description"]', 'content', 'The requested British Mahjong Scorer page could not be found.');
+    setMeta('meta[property="og:title"]', 'content', `Page not found | ${brandName}`);
+    setMeta('meta[property="og:description"]', 'content', 'The requested Mahjong Reference page could not be found.');
     setMeta('meta[property="og:url"]', 'content', `${siteUrl}${path}`);
-    setMeta('meta[name="twitter:title"]', 'content', 'Page not found | British Mahjong Scorer');
-    setMeta('meta[name="twitter:description"]', 'content', 'The requested British Mahjong Scorer page could not be found.');
+    setMeta('meta[name="twitter:title"]', 'content', `Page not found | ${brandName}`);
+    setMeta('meta[name="twitter:description"]', 'content', 'The requested Mahjong Reference page could not be found.');
     const canonical = document.head.querySelector<HTMLLinkElement>('link[rel="canonical"]');
     if (canonical) canonical.href = `${siteUrl}${path}`;
     applyStructuredData(canonicalPath, '');

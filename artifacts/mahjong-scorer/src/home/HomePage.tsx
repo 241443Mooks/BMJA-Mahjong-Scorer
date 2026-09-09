@@ -116,6 +116,7 @@ export function HomePage() {
 
       <main className="mx-auto max-w-[1100px] px-5 py-9 lg:px-8 lg:py-14">
         <section className="max-w-[760px]">
+          <p className="mb-3 font-mono text-[10px] uppercase tracking-[.2em] text-[#ae6249]">Rules, scoring and play — made clear.</p>
           <h1 className="font-serif text-[clamp(38px,6vw,58px)] leading-[1.02] text-[#284d45]">
             British Mahjong scoring calculator, made easier to use and learn
           </h1>

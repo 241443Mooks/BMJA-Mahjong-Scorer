@@ -123,7 +123,7 @@ Focus on the app's settlement explanation / net changes.
 
 ### 9. Product close
 
-> If you want to try the same flow yourself, British Mahjong Scorer is free at mahjong.smooks.co.uk.
+> If you want to try the same British / BMJA-style flow yourself, Mahjong Reference is free at mahjong.smooks.co.uk.
 
 ## Recording note
 

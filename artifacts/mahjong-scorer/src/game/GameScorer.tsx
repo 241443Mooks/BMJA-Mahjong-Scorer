@@ -297,9 +297,7 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
           <div className="mb-8">
             <div className="mb-3 flex items-center gap-3">
               <div className="fine-rule w-10" />
-              <span className="font-mono text-[10px] uppercase tracking-[.2em] text-[#ae6249]">
-                New BMJA game
-              </span>
+              <span className="font-mono text-[10px] uppercase tracking-[.2em] text-[#ae6249]">New game</span>
             </div>
             <h1 className="font-serif text-[clamp(38px,6vw,62px)] leading-none text-[#284d45]">
               Seat the table.
@@ -308,6 +306,7 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
               Enter players in their starting seats. Your game stays in this
               browser so you can continue after a refresh.
             </p>
+            <p className="mt-3 max-w-[620px] text-[13px] leading-6 text-[#284d45]"><strong>Rules: British / BMJA-style.</strong> This game scorer calculates the British rules profile and settlement only.</p>
           </div>
 
           <section className="rounded-xl border border-[#d8ceb8] bg-[#fbf8ed] p-5 shadow-[var(--shadow-sm)] sm:p-7">
@@ -380,6 +379,7 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
               {game.players.find((player) => player.id === currentEastId)?.name}{' '}
               is East · {windLabel(game.prevailingWind)} prevailing
             </div>
+            <p className="mt-1 text-[12px] leading-5 text-[#66746e]"><strong className="text-[#284d45]">Rules: British / BMJA-style.</strong> British scoring and settlement are active for this game.</p>
             {recovered && (
               <p className="mt-1 text-[11px] font-semibold text-[#477562]">
                 Your saved game has been recovered.
@@ -417,7 +417,7 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
 
       <main className="mx-auto grid max-w-[1440px] gap-6 px-5 py-7 lg:grid-cols-[minmax(0,1fr)_390px] lg:px-8">
         <div className="print-only game-print-heading">
-          <h1>British Mahjong Scorer — Game record</h1>
+          <h1>Mahjong Reference — British Mahjong game record</h1>
           <p>{game.isComplete ? 'Game complete' : 'Game in progress'} · {handCountLabel(game.handHistory.length)}</p>
         </div>
         <section className="min-w-0 space-y-5">

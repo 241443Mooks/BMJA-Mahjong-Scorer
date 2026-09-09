@@ -512,7 +512,7 @@ export function GameplayBasics() {
 
       <footer className="mx-auto flex max-w-[1180px] flex-wrap items-center justify-between gap-3 border-t border-[#d8ceb8] px-5 py-5 lg:px-8">
         <p className="text-[10px] leading-5 text-[#8c8a7f]">Independent learner guide · not an official BMJA publication.</p>
-        <a href="/" className="text-[10px] font-semibold text-[#66746e] underline decoration-[#c9b99d] underline-offset-4 hover:text-[#ae6249] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">Back to British Mahjong Scorer</a>
+        <a href="/" className="text-[10px] font-semibold text-[#66746e] underline decoration-[#c9b99d] underline-offset-4 hover:text-[#ae6249] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">Back to Mahjong Reference</a>
       </footer>
     </div>
   );

@@ -17,10 +17,12 @@ function metadata({ path: route, title, description, indexable }) {
   const escapedTitle = escapeHtml(title);
   const escapedDescription = escapeHtml(description);
   const structuredData = route === '/'
-    ? `\n    <script id="web-application-structured-data" type="application/ld+json">${JSON.stringify({
-      description,
-      url,
-      ...seo.webApplication,
+    ? `\n    <script id="site-structured-data" type="application/ld+json">${JSON.stringify({
+      '@context': 'https://schema.org',
+      '@graph': [
+        seo.webSite,
+        { description, url, ...seo.webApplication },
+      ],
     })}</script>`
     : '';
 
@@ -32,14 +34,15 @@ function metadata({ path: route, title, description, indexable }) {
     <meta property="og:title" content="${escapedTitle}" />
     <meta property="og:description" content="${escapedDescription}" />
     <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="${escapeHtml(seo.brandName)}" />
     <meta property="og:url" content="${url}" />
     <meta property="og:image" content="${socialImage}" />
-    <meta property="og:image:alt" content="British Mahjong Scorer" />
+    <meta property="og:image:alt" content="Mahjong Reference" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="${escapedTitle}" />
     <meta name="twitter:description" content="${escapedDescription}" />
     <meta name="twitter:image" content="${socialImage}" />
-    <meta name="twitter:image:alt" content="British Mahjong Scorer" />${structuredData}
+    <meta name="twitter:image:alt" content="Mahjong Reference" />${structuredData}
     <!-- seo:metadata:end -->`;
 }
 

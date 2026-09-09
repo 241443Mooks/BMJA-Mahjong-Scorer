@@ -109,11 +109,12 @@ export function FeaturesPage() {
               <span className="font-mono text-[10px] uppercase tracking-[.2em] text-[#ae6249]">Features</span>
             </div>
             <h1 className="max-w-[820px] font-serif text-[clamp(38px,6vw,62px)] leading-[.98] text-[#284d45]">
-              British Mahjong scoring without keeping the whole rulebook in your head.
+              Free British Mahjong scoring calculator.
             </h1>
             <p className="mt-5 max-w-[760px] text-[15px] leading-7 text-[#596b65]">
-              Score a complete game, calculate individual hands, understand why a score applies, and keep a clear record of what happened — all in the browser, with no account required.
+              <strong className="font-semibold text-[#284d45]">A free, dedicated, browser-based scoring calculator built specifically for British Mahjong.</strong> Enter a hand visually and Mahjong Reference automatically calculates supported points, doubles, special hands and fishing — or score and settle a complete four-player game.
             </p>
+            <p className="mt-3 font-mono text-[10px] uppercase tracking-[.14em] text-[#66746e]">Dedicated to British rules. Automatic scoring. Full-game settlement.</p>
             <div className="mt-7 flex flex-wrap gap-3">
               <a href="/game" className="inline-flex items-center gap-2 rounded-md bg-[#284d45] px-4 py-2.5 text-[11px] font-semibold text-[#f8f4e9] transition hover:bg-[#23443d] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249] focus-visible:ring-offset-2">
                 Score a game <ArrowRight size={14} />

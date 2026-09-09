@@ -1,6 +1,6 @@
-# British Mahjong Scorer — Video Series
+# Mahjong Reference — British Mahjong Video Series
 
-This directory contains the planned evergreen screen-recording series for British Mahjong Scorer.
+This directory contains the planned evergreen screen-recording series for Mahjong Reference. The reusable brand is **Mahjong Reference**; every scoring demonstration should state that its rules context is **British / BMJA-style** and use `mahjong.smooks.co.uk` as its CTA.
 
 The first five videos deliberately describe **one shared four-player hand** rather than five unrelated demos.
 
@@ -259,7 +259,7 @@ Planned script: `05-settlement.md`
 
 All videos in this series should use:
 
-- real British Mahjong Scorer UI;
+- real Mahjong Reference UI, with its British / BMJA-style rules context visible;
 - screen recording rather than physical tiles;
 - SMooks' own voice recorded separately from the screen capture;
 - light editing only;
