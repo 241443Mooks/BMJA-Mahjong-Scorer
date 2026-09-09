@@ -7,7 +7,8 @@ import { Check, ChevronDown, CircleHelp, Copy, Plus, RotateCcw, Sparkles, X, Ale
 import { GameScorer } from './game/GameScorer';
 import { SiteHeader } from './components/SiteHeader';
 import { specialHandReferenceHref } from './guide/special-hand-references';
-import { exampleHandScorerContext, specialHandExampleById, type SpecialHandExample } from './guide/special-hand-examples';
+import { initialHandForExampleMode, resolveScorerExample, scoringExampleById, scoringExampleTiles, type ResolvedScorerExample } from './guide/scoring-examples';
+import { TileStrip } from './guide/MahjongTileGallery';
 import { ReturnToGame } from './components/ReturnToGame';
 import { handScorerLocalContext } from './game';
 import type {
@@ -186,11 +187,11 @@ function SectionLabel({ eyebrow, title, count }: { eyebrow: string; title: strin
   );
 }
 
-function HandScorer({ context, onClose, standaloneHand, example }: { context: HandScorerContext | null; onClose: (result?: HandScorerResult) => void; standaloneHand: boolean; example?: SpecialHandExample }) {
+function HandScorer({ context, onClose, standaloneHand, example, practice }: { context: HandScorerContext | null; onClose: (result?: HandScorerResult) => void; standaloneHand: boolean; example?: ResolvedScorerExample; practice?: boolean }) {
   // An example borrows the hand contract only; it must never acquire the game callback.
   const hasContext = !!context && !example;
   const initialContext = handScorerLocalContext(context);
-  const initialHand = context?.detailedHand?.hand;
+  const initialHand = example ? initialHandForExampleMode(example, !!practice) : context?.detailedHand?.hand;
   const [sets, setSets] = useState<UIHandSet[]>(() =>
     initialHand
       ? initialHand.sets.map((handSet) => ({ ...handSet }))
@@ -271,12 +272,14 @@ function HandScorer({ context, onClose, standaloneHand, example }: { context: Ha
   const [showAllTiles, setShowAllTiles] = useState(false);
   const [expandedRule, setExpandedRule] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [showPracticeAnswer, setShowPracticeAnswer] = useState(false);
+  const practiceTarget = practice ? scoringExampleById(example?.id) : undefined;
   const hasUnsavedWork = !hasContext && (
     sets.length !== defaultSets.length || sets.some((set) => set.tile !== null) || layoutMode !== 'sets' || looseTiles.length > 0 || remainingTiles.length > 0 || flowers.length > 0 || seasons.length > 0 || playerWind !== 'east' || prevailingWind !== 'east' || limit !== 1000 || isWinner || winningMethod !== 'wall' || originalCall || winningTileProvenance !== undefined || winningEventEvidence !== undefined
   );
   const leaveHand = () => {
     if (hasUnsavedWork && !window.confirm('Leave this hand? The hand details you entered will be discarded.')) return;
-    if (example) { window.location.assign(`/special-hands#${example.id}`); return; }
+    if (example) { window.location.assign(example.returnHref); return; }
     onClose();
   };
   const navigateAway = (href: string) => {
@@ -730,9 +733,10 @@ function HandScorer({ context, onClose, standaloneHand, example }: { context: Ha
         <section className="min-w-0">
           <div className="mb-7 animate-rise">
             {example && <>
-              <a data-testid="link-back-to-special-hand" href={`/special-hands#${example.id}`} className="mb-4 inline-flex min-h-10 items-center rounded-md border border-[#b8cdbf] bg-[#edf3ed] px-3 text-[11px] font-semibold text-[#284d45] transition hover:bg-[#dceade]">Back to Special hands · {example.name}</a>
-              <p className="mb-3 text-[11px] leading-5 text-[#66746e]">Example hand — change tiles or context to explore. Your saved game, if any, remains separate.</p>
+              <a data-testid="link-back-to-example" href={example.returnHref} className="mb-4 inline-flex min-h-10 items-center rounded-md border border-[#b8cdbf] bg-[#edf3ed] px-3 text-[11px] font-semibold text-[#284d45] transition hover:bg-[#dceade]">Back to worked example · {example.name}</a>
+              <p className="mb-3 text-[11px] leading-5 text-[#66746e]">{practice ? 'Build this hand yourself with the normal scorer. The target is shown below; the worked result stays hidden until you ask for it.' : 'Example hand — change tiles or context to explore.'} Your saved game, if any, remains separate.</p>
               <ReturnToGame />
+              {practiceTarget && <section className="mb-5 rounded-xl border border-[#d8ceb8] bg-[#f5f1e6] p-4" data-testid="practice-target"><div className="font-mono text-[9px] uppercase tracking-[.16em] text-[#ae6249]">Build this hand yourself</div><p className="mt-2 text-[11px] leading-5 text-[#66746e]">Recreate these tiles and the {practiceTarget.context.playerWind} player / {practiceTarget.context.prevailingWind} prevailing context. Your hand begins empty and the normal scorer calculates what you enter.</p><div className="mt-3"><TileStrip tiles={scoringExampleTiles(practiceTarget)} ariaLabel={`Target tiles for ${practiceTarget.title}`} /></div><button type="button" data-testid="button-reveal-practice-answer" onClick={() => setShowPracticeAnswer(true)} className="mt-3 min-h-10 rounded-md border border-[#c9b99d] bg-[#fdfbf5] px-3 text-[11px] font-semibold">{showPracticeAnswer ? `Worked answer: ${practiceTarget.expected.finalScore} points` : 'Reveal worked answer'}</button>{showPracticeAnswer && <p className="mt-2 text-[11px] leading-5 text-[#66746e]">{practiceTarget.explanation}</p>}</section>}
             </>}
             <div className="mb-3 flex items-center gap-3"><div className="fine-rule w-10" /><span className="font-mono text-[10px] uppercase tracking-[.2em] text-[#ae6249]">New hand · ready to enter</span></div>
             <div className="flex flex-wrap items-end justify-between gap-4">
@@ -756,7 +760,7 @@ function HandScorer({ context, onClose, standaloneHand, example }: { context: Ha
                   </div>
                 )}
                 <button type="button" onClick={leaveHand} className="mt-4 rounded-md border border-[#cfc3aa] bg-[#fbf8ed] px-3 py-2 text-[11px] font-semibold text-[#284d45] transition hover:bg-[#efe8da] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">
-                  {example ? 'Back to Special hands' : hasContext ? 'Back to game without applying a score' : 'Leave hand and go home'}
+                  {example ? 'Back to worked example' : hasContext ? 'Back to game without applying a score' : 'Leave hand and go home'}
                 </button>
               </div>
               <div className="flex gap-2">
@@ -1444,9 +1448,9 @@ function HandScorer({ context, onClose, standaloneHand, example }: { context: Ha
 }
 
 export default function App({ initialView = 'game', standaloneHand = false }: { initialView?: 'game' | 'hand'; standaloneHand?: boolean }) {
-  const example = standaloneHand && typeof window !== 'undefined'
-    ? specialHandExampleById(new URLSearchParams(window.location.search).get('example'))
-    : undefined;
+  const search = standaloneHand && typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : undefined;
+  const practice = !!search?.get('practice');
+  const example = search ? resolveScorerExample(search.get('example') ?? search.get('practice')) : undefined;
   const [view, setView] = useState<'game' | 'hand'>(initialView);
   const [scorerContext, setScorerContext] = useState<HandScorerContext | null>(null);
   const [returnedScore, setReturnedScore] = useState<
@@ -1483,10 +1487,11 @@ export default function App({ initialView = 'game', standaloneHand = false }: { 
           <div className={view === 'hand' ? 'block' : 'hidden'}>
             <HandScorer
               key={scorerSession}
-              context={example ? exampleHandScorerContext(example) : scorerContext}
+              context={example ? example.context : scorerContext}
               onClose={handleCloseHandScorer}
               standaloneHand={standaloneHand}
               example={example}
+              practice={practice && !!example}
             />
           </div>
           <Toaster />
