@@ -56,6 +56,7 @@ The same detailed scoring model can be used as a standalone calculator or opened
 - event-sensitive special-hand questions only when required
 - contextual explanations for patterns that actually apply
 - conservative handling of `I'm not sure` / unknown evidence
+- safe prefilled example hands opened from the learning/reference pages
 
 A partial losing hand can still receive the score that is directly supported by the entered sets and bonus tiles. Whole-hand properties, special hands and fishing are withheld until the evidence is complete enough to support them.
 
@@ -68,6 +69,7 @@ The scorer reuses structured scoring output to explain what it has recognised.
 - detected-pattern callouts
 - special-hand results
 - fishing results and possible completing tiles where supported
+- component-aware special/fishing calculations, keeping fixed values separate from bonus-tile doubles
 - settlement explanations based on the actual stored transactions
 - clear distinction between calculated evidence and manually entered scores
 
@@ -75,13 +77,14 @@ Unmatched special hands are not dumped into the working scorer. The full catalog
 
 ### Learn British Mahjong alongside the scorer
 
-The live site now includes a connected set of learner and reference pages:
+The live site includes a connected set of learner and reference pages:
 
 | Route | Purpose |
 | --- | --- |
 | `/` | Action-led homepage and calculator entry point |
 | `/game` | Four-player game scorer and canonical ledger |
 | `/hand` | Standalone British Mahjong hand calculator |
+| `/scoring-examples` | Tested worked hands with prefilled scorer links and build-it-yourself practice |
 | `/gameplay-basics` | How British Mahjong is played |
 | `/guide` | Beginner scoring guide |
 | `/special-hands` | Visual catalogue of supported special hands |
@@ -95,6 +98,23 @@ Legacy learner aliases redirect to the canonical pages:
 
 - `/beginner-guide` → `/guide`
 - `/special-hand-catalogue` → `/special-hands`
+
+### Worked examples and build-it-yourself practice
+
+The worked-example system uses the real scoring engine rather than a separate teaching calculator.
+
+The `/scoring-examples` hub currently contains six test-backed examples covering ordinary scoring, exposed/concealed sets, Winds and Dragons, bonus tiles, partial losing hands, fishing and special-hand component scoring.
+
+Each suitable example can:
+
+- open as a safe prefilled standalone scorer state;
+- open as a **Build it yourself** practice state with the learner's tiles and bonus selections empty;
+- preserve the material target context such as player Wind, prevailing Wind, winner/non-winner state, winning method and table limit;
+- show grouped set kind/visibility where that affects reconstruction;
+- reveal the worked answer without replacing the learner's entered state; and
+- return to the exact worked example or special-hand reference that launched it.
+
+Example/practice states are kept separate from the saved four-player game. If a recoverable game exists, learner/reference pages and example modes can surface **Return to game** without overwriting or mutating that saved game.
 
 ### Responsive visual help
 
@@ -160,6 +180,8 @@ The same underlying game/scoring information drives:
 - explanations
 - recovery
 - printable Full/Summary records
+- worked scoring examples and expected-result tests
+- safe prefilled/practice scorer states
 
 This is intentional: there should be one scoring/game truth, not several parallel interpretations of it.
 
@@ -220,6 +242,8 @@ The production build reuses it to generate:
 
 This avoids maintaining separate hard-coded route lists in the runtime app, prerender step and sitemap.
 
+Shareable query-string example/practice states remain application states rather than separate indexable documents. Canonical public content lives on routes such as `/hand`, `/special-hands` and `/scoring-examples`.
+
 ## Run locally
 
 This is a pnpm workspace. From the repository root:
@@ -247,7 +271,7 @@ The production build output is written to:
 artifacts/mahjong-scorer/dist/public
 ```
 
-Recent merged product work has been validated against the full Vitest suite, typechecking and production build. The latest merged calculator-discoverability work reported **187 passing tests across 17 files**.
+Recent merged product work has been validated against the full Vitest suite, typechecking and production build. The latest merged worked-example/practice implementation reported **206 passing tests**, with typecheck, production build and Cloudflare Pages deployment checks passing.
 
 ### Regenerate the instructional screenshot library
 
@@ -275,29 +299,23 @@ The repository contains more than implementation code. Important project documen
 - [`docs/SPECIAL_HAND_CATALOGUE_CONTENT.md`](docs/SPECIAL_HAND_CATALOGUE_CONTENT.md) — supported special-hand catalogue source
 - [`docs/GAMEPLAY_BASICS_CONTENT.md`](docs/GAMEPLAY_BASICS_CONTENT.md) — gameplay-basics source
 - [`docs/ABOUT_THIS_PROJECT_CONTENT.md`](docs/ABOUT_THIS_PROJECT_CONTENT.md) — project/about source
+- [`docs/video-series/README.md`](docs/video-series/README.md) — canonical five-video teaching-series plan and shared example hand
 - [`docs/MOBILE_HAND_SCORER_UX_V2.md`](docs/MOBILE_HAND_SCORER_UX_V2.md) — mobile hand-entry UX direction
 - [`docs/TILE_ASSET_DECISION.md`](docs/TILE_ASSET_DECISION.md) — tile artwork source and attribution decision
 - [`BMJA_RULES_REFERENCE.md`](BMJA_RULES_REFERENCE.md) — engineering rules source of truth
 
 ## Current roadmap
 
-The core scorer, full-game flow, learner pages, Help system, local recovery, printable canonical game records, responsive visual manual and public discovery/SEO foundation are already shipped.
+The core scorer, full-game flow, learner pages, Help system, local recovery, printable canonical game records, responsive visual manual, public discovery/SEO foundation, reciprocal scorer/learning navigation, safe special-hand examples and tested worked-example/practice flow are already shipped.
 
-Current/future work is deliberately kept separate from the live feature description. Notable open directions include:
+The most relevant open directions now are:
 
-- reciprocal scorer ↔ learning links and safe return-to-game navigation — [#63](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/63)
-- interactive prefilled special-hand catalogue examples — [#64](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/64)
-- tested scoring examples with lightweight build-it-yourself practice — [#65](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/65)
-- installable/offline Progressive Web App support — [#48](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/48)
-- clearer beginner entry path — [#49](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/49)
-- small-text/readability improvements for mobile and older players — [#50](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/50)
-- evidence gathering for optional house-rule support — [#51](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/51)
-- lightweight privacy-conscious product insight/feedback — [#44](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/44)
-- shared physical tile inventory/availability warnings — [#7](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/7)
-- optional photo-based tile recognition — [#8](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/8)
-- exploratory local solo practice mode — [#17](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/17)
+- separate global product branding from the active British/BMJA-style rules profile before wider expansion — [#76](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/76)
+- finish the bounded Western/Australian Mahjong discoverability research and decide the public `/western-mahjong` implementation — [#72](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/72), with draft research PR [#73](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/pull/73)
+- record and publish the five-part worked-hand/settlement teaching series — [#66–#70](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/66)
+- make the scorer installable/offline as a Progressive Web App — [#48](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/48)
 
-The GitHub issues contain the acceptance criteria and implementation boundaries for active work.
+Other discovery and product experiments remain tracked in GitHub issues rather than being duplicated exhaustively here. The issue tracker contains the current acceptance criteria and implementation boundaries.
 
 ## Artwork
 
