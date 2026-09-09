@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { SiteHeader } from '../components/SiteHeader';
 import { ReturnToGame } from '../components/ReturnToGame';
 import { SPECIAL_HAND_ANCHORS } from './special-hand-references';
+import { exampleVisualTiles, specialHandExampleById, specialHandExampleHref } from './special-hand-examples';
 
 import { TileStrip, type TileAssetKey, type TileDefinition } from './MahjongTileGallery';
 
@@ -214,6 +215,8 @@ function EventTimeline({ steps, tile }: { steps: string[]; tile?: TileDefinition
 }
 
 function SpecialCard({ hand }: { hand: SpecialCardData }) {
+  const example = specialHandExampleById(hand.id);
+  const visualTiles = example ? exampleVisualTiles(example) : hand.tiles;
   return (
     <article id={SPECIAL_HAND_ANCHORS[hand.id]} className="scroll-mt-6 rounded-2xl border border-[#d8ceb8] bg-[#fbf8ed] p-5 shadow-[var(--shadow-sm)] sm:p-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -235,9 +238,9 @@ function SpecialCard({ hand }: { hand: SpecialCardData }) {
         </div>
       </div>
 
-      {hand.tiles && (
+      {visualTiles && (
         <div className="mt-5">
-          <TileStrip tiles={hand.tiles} ariaLabel={`${hand.name} example: ${hand.tiles.map((tile) => tile.label).join(', ')}`} />
+          <TileStrip tiles={visualTiles} ariaLabel={`${hand.name} example: ${visualTiles.map((tile) => tile.label).join(', ')}`} />
           {hand.visualNote && <p className="mt-1 text-[10px] leading-4 text-[#8c8a7f]">{hand.visualNote}</p>}
         </div>
       )}
@@ -259,6 +262,7 @@ function SpecialCard({ hand }: { hand: SpecialCardData }) {
           <p className="mt-2 text-[11px] leading-5 text-[#66746e]">{hand.detail}</p>
         </details>
       )}
+      {example && <a href={specialHandExampleHref(example.id)} className="mt-4 inline-flex min-h-10 items-center rounded-md border border-[#b8cdbf] bg-[#edf3ed] px-3 text-[11px] font-semibold text-[#284d45] transition hover:border-[#477562] hover:bg-[#dceade] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">Try this hand in the scorer <ChevronRight className="ml-1" size={14} aria-hidden="true" /></a>}
     </article>
   );
 }
