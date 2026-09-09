@@ -19,11 +19,17 @@ This is a research conclusion, not yet an implementation decision.
 
 ## Files
 
+### Pass 1 — preserve the research baseline
+
 - [RESEARCH_BASELINE_2026-09-09.md](./RESEARCH_BASELINE_2026-09-09.md) — preserved findings from the 9 September 2026 deep research pass.
 - [RULESET_LANDSCAPE.md](./RULESET_LANDSCAPE.md) — high-level comparison of recognised rules families and where they differ architecturally.
 - [SOURCE_REGISTER.md](./SOURCE_REGISTER.md) — sources, authority level, intended use and open verification gaps.
 
-A detailed rule-by-rule provenance matrix will be added in a later pass. That matrix should distinguish **verified**, **needs primary source** and **needs club confirmation** at rule level.
+### Pass 2 — turn research into rule-level evidence
+
+- [PROVENANCE_MODEL.md](./PROVENANCE_MODEL.md) — stable rule/pattern IDs, evidence statuses, source locators, versioning and implementation gates.
+- [BMJA_WESTERN_OTB_CROSSWALK.md](./BMJA_WESTERN_OTB_CROSSWALK.md) — first rule-level crosswalk for British/BMJA, Thompson & Maloney Western and Outside the Box.
+- [SPECIAL_HANDS_PROVENANCE.md](./SPECIAL_HANDS_PROVENANCE.md) — initial canonical-pattern and profile-binding map for shared and Western/OTB special hands.
 
 ## Research principles
 
@@ -36,6 +42,27 @@ A detailed rule-by-rule provenance matrix will be added in a later pass. That ma
 7. Preserve uncertainty explicitly rather than resolving it by guesswork.
 8. Keep copyrighted source material as research evidence; write original explanations, tables and diagrams for Mahjong Reference.
 
+## Evidence model
+
+Pass 2 introduces explicit evidence states:
+
+- `verified`
+- `verified-club`
+- `needs-primary-source`
+- `needs-club-confirmation`
+- `secondary-only`
+- `conflict`
+
+The project should not turn unverified research into executable scoring rules merely because a likely relationship is convenient for implementation.
+
+A key architecture finding is now explicit:
+
+> **A canonical hand pattern must not contain its score.**
+
+The active rules profile should bind local name, score, fishing value, exposure policy and provenance to that pattern.
+
+`Three Great Scholars` is the reference example: BMJA, Thompson & Maloney and Outside the Box recognise the same broad hand identity but the documented values are not identical.
+
 ## Product implication
 
 The emerging product opportunity is broader than a scorer with a few house-rule toggles. Mahjong Reference may eventually support:
@@ -47,3 +74,35 @@ The emerging product opportunity is broader than a scorer with a few house-rule 
 - public comparison/reference content showing where rules come from and how variants differ.
 
 The first implementation target remains conservative: preserve current BMJA behaviour, verify a Western baseline, then prove the model using Outside the Box as a real club profile.
+
+## Current evidence priorities
+
+Before a Western production profile is considered verified, inspect **The Game of Mah Jong Illustrated** for:
+
+- ordinary scoring values;
+- Chow/calling rules;
+- doublings;
+- Flowers/Seasons;
+- settlement, especially loser-to-loser settlement;
+- East/dealer treatment;
+- fishing semantics;
+- Goulash;
+- penalties;
+- progression.
+
+Before an Outside the Box production profile is considered version 1.0, confirm with Rachel:
+
+- Little/Big Dragon/Wind stacking;
+- exposed half/full special-hand interpretation;
+- which imported Western hands have local modifications;
+- cannon/liability ordering;
+- any ordinary-play difference from BMJA not yet captured.
+
+## Likely next pass
+
+Pass 3 should use the evidence model to reshape the project plan rather than changing scoring code immediately. Likely work:
+
+1. rewrite issue #51 from speculative “house-rule switches” into a versioned rules-profile architecture issue;
+2. create implementation child issues for canonical patterns, BMJA migration, Western baseline and Outside the Box;
+3. define the zero-behaviour-change BMJA migration acceptance tests;
+4. identify the first cross-profile golden fixtures from `SPECIAL_HANDS_PROVENANCE.md`.

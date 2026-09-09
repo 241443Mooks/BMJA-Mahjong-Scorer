@@ -108,6 +108,7 @@ Known outstanding questions:
 2. How exactly should exposed half/full special-hand values be interpreted?
 3. Which non-BMJA hands are imported unchanged from Western sources and which, if any, are locally modified?
 4. What is the exact cannon/liability settlement order when multiple liability conditions could apply?
+5. Does ordinary play deliberately differ from BMJA anywhere beyond the documented special-hand / Goulash / penalty material?
 
 Do not generalise a club rule into "Western Mahjong" without independent Western-source support.
 
@@ -134,18 +135,74 @@ The evidence does **not** support:
 
 BMJA predates Thompson & Maloney's principal Western reference works.
 
-## Next-pass work
+## Pass 2 — rule-level evidence model
 
-The next research-documentation pass should convert this source register into a **rule-level provenance matrix**.
+The source register now feeds three pass-2 research artefacts:
 
-For each rule or special hand, capture:
+- `PROVENANCE_MODEL.md`
+- `BMJA_WESTERN_OTB_CROSSWALK.md`
+- `SPECIAL_HANDS_PROVENANCE.md`
+
+For each rule or special hand, the evidence model now expects:
 
 - stable rule/pattern ID;
 - source/profile;
-- exact source locator (URL section, page, edition);
-- status: `verified`, `needs-primary-source`, or `needs-club-confirmation`;
-- whether the rule is identical, a subset, an override or unique to the profile;
+- source locator (URL section, page, edition or temporary photo/guide locator);
+- status such as `verified`, `verified-club`, `needs-primary-source`, `needs-club-confirmation`, `secondary-only` or `conflict`;
+- relation to another profile (`identical`, `subset`, `superset`, `override`, `alias`, `unique`, `unknown`);
 - implementation impact;
 - unresolved ambiguity.
 
-That matrix should become the evidence input for the eventual rules-profile architecture and golden test suite.
+The first crosswalk intentionally leaves Western ordinary-game rules marked `needs-primary-source` until *The Game of Mah Jong Illustrated* is checked.
+
+## Remaining evidence backlog
+
+### Western baseline
+
+Still obtain/index exact evidence for:
+
+- ordinary intrinsic scoring;
+- Chows/calling rules;
+- doubles;
+- Flowers/Seasons;
+- settlement, especially loser-to-loser settlement;
+- East/dealer treatment;
+- fishing semantics;
+- Goulash;
+- penalties;
+- progression.
+
+### Companion indexing
+
+For each production-used special hand, record:
+
+- edition/year;
+- exact page;
+- local hand name;
+- structural synopsis;
+- winning value;
+- fishing value;
+- exposure rule.
+
+### BMJA locator refinement
+
+The approved BMJA source family is already authoritative, but exact heading-level locators should still be added for:
+
+- penalties;
+- Goulash sub-rules;
+- progression;
+- exposure edge cases.
+
+### Outside the Box confirmation
+
+Resolve the five questions listed above before treating the first club profile as version 1.0.
+
+## Likely next pass
+
+Use the pass-2 evidence model to reshape the implementation backlog:
+
+1. rewrite issue #51 as the umbrella versioned rules-profile architecture issue;
+2. create implementation child issues for canonical patterns, BMJA migration, Western baseline, Companion catalogue and Outside the Box;
+3. define zero-behaviour-change BMJA migration tests;
+4. define cross-profile golden fixtures;
+5. keep wider disciplines documented but out of immediate implementation scope.
