@@ -13,23 +13,46 @@ As of 9 September 2026, the working model is:
 - Thompson & Maloney's **The Game of Mah Jong Illustrated** is the key published Western rules reference identified by the research.
 - Thompson & Maloney's **The Mah Jong Player's Companion** is a supplementary special-hand/reference catalogue, not a complete rules text.
 - **Outside the Box** is a useful real-world club profile: British-style ordinary scoring plus a mixture of official British hands, additional Western hands and local conventions.
-- Other major rules families (Hong Kong, Riichi, MCR, American/NMJL) reuse many tile patterns but use materially different scoring grammars and settlement systems.
+- Other major rules families reuse many tile/pattern concepts but often require materially different scoring and settlement strategies.
 
-This is a research conclusion, not yet an implementation decision.
+This remains an evidence-led working model, not permission to infer missing rules.
 
-## Files
+## Research/documentation passes
 
 ### Pass 1 — preserve the research baseline
 
 - [RESEARCH_BASELINE_2026-09-09.md](./RESEARCH_BASELINE_2026-09-09.md) — preserved findings from the 9 September 2026 deep research pass.
-- [RULESET_LANDSCAPE.md](./RULESET_LANDSCAPE.md) — high-level comparison of recognised rules families and where they differ architecturally.
-- [SOURCE_REGISTER.md](./SOURCE_REGISTER.md) — sources, authority level, intended use and open verification gaps.
+- [RULESET_LANDSCAPE.md](./RULESET_LANDSCAPE.md) — high-level comparison of recognised rules families and scoring grammars.
+- [SOURCE_REGISTER.md](./SOURCE_REGISTER.md) — sources, authority levels, intended use and open verification gaps.
 
 ### Pass 2 — turn research into rule-level evidence
 
 - [PROVENANCE_MODEL.md](./PROVENANCE_MODEL.md) — stable rule/pattern IDs, evidence statuses, source locators, versioning and implementation gates.
-- [BMJA_WESTERN_OTB_CROSSWALK.md](./BMJA_WESTERN_OTB_CROSSWALK.md) — first rule-level crosswalk for British/BMJA, Thompson & Maloney Western and Outside the Box.
-- [SPECIAL_HANDS_PROVENANCE.md](./SPECIAL_HANDS_PROVENANCE.md) — initial canonical-pattern and profile-binding map for shared and Western/OTB special hands.
+- [BMJA_WESTERN_OTB_CROSSWALK.md](./BMJA_WESTERN_OTB_CROSSWALK.md) — first rule-level comparison for British/BMJA, Thompson & Maloney Western and Outside the Box.
+- [SPECIAL_HANDS_PROVENANCE.md](./SPECIAL_HANDS_PROVENANCE.md) — canonical-pattern/profile-binding model and initial shared-hand provenance.
+
+### Pass 3 / 4 — convert research into the delivery plan
+
+These passes are represented in GitHub issues rather than additional rules documents:
+
+- #51 — umbrella rules-profile architecture plan
+- #83 — versioned rules-profile framework
+- #84 — canonical Mahjong hand-pattern model
+- #85 — BMJA migration with zero behaviour change
+- #86 — verified Thompson & Maloney Western baseline
+- #87 — Companion special-hand catalogue pack
+- #88 — Outside the Box named club profile
+- #89 — cross-ruleset golden tests and 10 October validation
+
+### Pass 5 — protect the architecture for future disciplines
+
+- [FUTURE_RULESET_ROADMAP.md](./FUTURE_RULESET_ROADMAP.md) — future ruleset taxonomy, shared primitives, separate scoring strategies, implementation order and design guardrails for Hong Kong, Riichi, MCR, American, Taiwanese, Singaporean/Malaysian and Sichuan families.
+
+The central Pass 5 decision is:
+
+> **Build a shared Mahjong platform with pluggable rules/scoring/settlement strategies, not one universal British scorer with an expanding collection of switches.**
+
+The immediate product still focuses on BMJA → Western → Companion catalogue → Outside the Box. Pass 5 exists so today's abstractions do not block later disciplines.
 
 ## Research principles
 
@@ -44,7 +67,7 @@ This is a research conclusion, not yet an implementation decision.
 
 ## Evidence model
 
-Pass 2 introduces explicit evidence states:
+Pass 2 introduced explicit evidence states:
 
 - `verified`
 - `verified-club`
@@ -55,27 +78,30 @@ Pass 2 introduces explicit evidence states:
 
 The project should not turn unverified research into executable scoring rules merely because a likely relationship is convenient for implementation.
 
-A key architecture finding is now explicit:
+A key architecture finding is:
 
 > **A canonical hand pattern must not contain its score.**
 
-The active rules profile should bind local name, score, fishing value, exposure policy and provenance to that pattern.
+The active rules profile should bind local name, score, fishing/ready treatment, exposure policy, catalogue membership and provenance to that pattern.
 
 `Three Great Scholars` is the reference example: BMJA, Thompson & Maloney and Outside the Box recognise the same broad hand identity but the documented values are not identical.
 
-## Product implication
+## Architecture guardrails now established
 
-The emerging product opportunity is broader than a scorer with a few house-rule toggles. Mahjong Reference may eventually support:
+The near-term rules-profile work must not assume that every future Mahjong discipline:
 
-- named, versioned rules profiles;
-- reusable canonical hand/pattern definitions;
-- profile-specific scoring bindings;
-- named club profiles composed from established rules plus documented local overrides;
-- public comparison/reference content showing where rules come from and how variants differ.
+- uses 144 tiles;
+- uses Flowers/Seasons;
+- uses four groups plus a pair as its only winning grammar;
+- scores with base points and doubles;
+- has a concept equivalent to British fishing;
+- treats the dealer like BMJA East;
+- ends a hand immediately after one winner;
+- can be represented safely by an unversioned `ruleset` string.
 
-The first implementation target remains conservative: preserve current BMJA behaviour, verify a Western baseline, then prove the model using Outside the Box as a real club profile.
+Where a future discipline changes the **mathematical grammar**, it should get a dedicated scoring strategy rather than being simulated through unrelated toggles.
 
-## Current evidence priorities
+## Immediate evidence priorities
 
 Before a Western production profile is considered verified, inspect **The Game of Mah Jong Illustrated** for:
 
@@ -98,11 +124,14 @@ Before an Outside the Box production profile is considered version 1.0, confirm 
 - cannon/liability ordering;
 - any ordinary-play difference from BMJA not yet captured.
 
-## Likely next pass
+## Next pass
 
-Pass 3 should use the evidence model to reshape the project plan rather than changing scoring code immediately. Likely work:
+Pass 6 should turn the research into a **public rules/reference content plan** without confusing reference coverage with scorer support.
 
-1. rewrite issue #51 from speculative “house-rule switches” into a versioned rules-profile architecture issue;
-2. create implementation child issues for canonical patterns, BMJA migration, Western baseline and Outside the Box;
-3. define the zero-behaviour-change BMJA migration acceptance tests;
-4. identify the first cross-profile golden fixtures from `SPECIAL_HANDS_PROVENANCE.md`.
+Likely output:
+
+- `/rules` information architecture;
+- priority rules pages and comparisons;
+- source/provenance policy for public copy;
+- internal-linking/SEO structure;
+- explicit labels showing which disciplines are reference-only versus actually supported by the scorer.
