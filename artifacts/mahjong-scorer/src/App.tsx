@@ -7,6 +7,8 @@ import { Check, ChevronDown, CircleHelp, Copy, Plus, RotateCcw, Sparkles, X, Ale
 import { GameScorer } from './game/GameScorer';
 import { SiteHeader } from './components/SiteHeader';
 import { specialHandReferenceHref } from './guide/special-hand-references';
+import { exampleHandScorerContext, specialHandExampleById, type SpecialHandExample } from './guide/special-hand-examples';
+import { ReturnToGame } from './components/ReturnToGame';
 import { handScorerLocalContext } from './game';
 import type {
   HandScorerContext,
@@ -184,8 +186,9 @@ function SectionLabel({ eyebrow, title, count }: { eyebrow: string; title: strin
   );
 }
 
-function HandScorer({ context, onClose, standaloneHand }: { context: HandScorerContext | null; onClose: (result?: HandScorerResult) => void; standaloneHand: boolean }) {
-  const hasContext = !!context;
+function HandScorer({ context, onClose, standaloneHand, example }: { context: HandScorerContext | null; onClose: (result?: HandScorerResult) => void; standaloneHand: boolean; example?: SpecialHandExample }) {
+  // An example borrows the hand contract only; it must never acquire the game callback.
+  const hasContext = !!context && !example;
   const initialContext = handScorerLocalContext(context);
   const initialHand = context?.detailedHand?.hand;
   const [sets, setSets] = useState<UIHandSet[]>(() =>
@@ -273,6 +276,7 @@ function HandScorer({ context, onClose, standaloneHand }: { context: HandScorerC
   );
   const leaveHand = () => {
     if (hasUnsavedWork && !window.confirm('Leave this hand? The hand details you entered will be discarded.')) return;
+    if (example) { window.location.assign(`/special-hands#${example.id}`); return; }
     onClose();
   };
   const navigateAway = (href: string) => {
@@ -620,7 +624,7 @@ function HandScorer({ context, onClose, standaloneHand }: { context: HandScorerC
   }
 
   function applyScore() {
-    if (!context || !score.valid) return;
+    if (!context || example || !score.valid) return;
     onClose({
       playerId: context.playerId,
       score: score.finalScore,
@@ -725,12 +729,19 @@ function HandScorer({ context, onClose, standaloneHand }: { context: HandScorerC
       <main className="mx-auto grid max-w-[1440px] grid-cols-[minmax(0,1fr)] gap-6 px-5 py-7 lg:grid-cols-[minmax(0,1fr)_376px] lg:px-8 lg:py-9">
         <section className="min-w-0">
           <div className="mb-7 animate-rise">
+            {example && <>
+              <a data-testid="link-back-to-special-hand" href={`/special-hands#${example.id}`} className="mb-4 inline-flex min-h-10 items-center rounded-md border border-[#b8cdbf] bg-[#edf3ed] px-3 text-[11px] font-semibold text-[#284d45] transition hover:bg-[#dceade]">Back to Special hands · {example.name}</a>
+              <p className="mb-3 text-[11px] leading-5 text-[#66746e]">Example hand — change tiles or context to explore. Your saved game, if any, remains separate.</p>
+              <ReturnToGame />
+            </>}
             <div className="mb-3 flex items-center gap-3"><div className="fine-rule w-10" /><span className="font-mono text-[10px] uppercase tracking-[.2em] text-[#ae6249]">New hand · ready to enter</span></div>
             <div className="flex flex-wrap items-end justify-between gap-4">
               <div>
                 <h1 className="font-serif text-[clamp(36px,5vw,62px)] leading-[.97] tracking-[-.03em] text-[#284d45]">{standaloneHand ? <>British Mahjong<br /><span className="text-[#ae6249]">hand calculator.</span></> : <>Score a hand<br /><span className="text-[#ae6249]">with confidence.</span></>}</h1>
                 <p className="mt-4 max-w-[560px] text-[14px] leading-6 text-[#66746e]">
-                  {hasContext
+                  {example
+                    ? `Example: ${example.name}. This uses the normal scorer; change it to explore.`
+                    : hasContext
                     ? `Calculating ${context.playerName}’s ${context.playerWind} hand during the ${context.prevailingWind} prevailing round.`
                     : standaloneHand
                       ? 'Enter your tiles visually as they sit on the table. The calculator shows supported points, doubles, special hands and fishing in a clear score breakdown.'
@@ -745,7 +756,7 @@ function HandScorer({ context, onClose, standaloneHand }: { context: HandScorerC
                   </div>
                 )}
                 <button type="button" onClick={leaveHand} className="mt-4 rounded-md border border-[#cfc3aa] bg-[#fbf8ed] px-3 py-2 text-[11px] font-semibold text-[#284d45] transition hover:bg-[#efe8da] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">
-                  {hasContext ? 'Back to game without applying a score' : 'Leave hand and go home'}
+                  {example ? 'Back to Special hands' : hasContext ? 'Back to game without applying a score' : 'Leave hand and go home'}
                 </button>
               </div>
               <div className="flex gap-2">
@@ -1403,7 +1414,7 @@ function HandScorer({ context, onClose, standaloneHand }: { context: HandScorerC
                     </>
                   ) : (
                     <button type="button" onClick={leaveHand} className="flex w-full items-center justify-center rounded-md border border-[#45665d] bg-[#284d45] py-3 text-[13px] font-semibold text-[#f8f4e9]">
-                      Leave hand and go home
+                      {example ? 'Back to Special hands' : 'Leave hand and go home'}
                     </button>
                   )}
                 </div>
@@ -1433,6 +1444,9 @@ function HandScorer({ context, onClose, standaloneHand }: { context: HandScorerC
 }
 
 export default function App({ initialView = 'game', standaloneHand = false }: { initialView?: 'game' | 'hand'; standaloneHand?: boolean }) {
+  const example = standaloneHand && typeof window !== 'undefined'
+    ? specialHandExampleById(new URLSearchParams(window.location.search).get('example'))
+    : undefined;
   const [view, setView] = useState<'game' | 'hand'>(initialView);
   const [scorerContext, setScorerContext] = useState<HandScorerContext | null>(null);
   const [returnedScore, setReturnedScore] = useState<
@@ -1469,9 +1483,10 @@ export default function App({ initialView = 'game', standaloneHand = false }: { 
           <div className={view === 'hand' ? 'block' : 'hidden'}>
             <HandScorer
               key={scorerSession}
-              context={scorerContext}
+              context={example ? exampleHandScorerContext(example) : scorerContext}
               onClose={handleCloseHandScorer}
               standaloneHand={standaloneHand}
+              example={example}
             />
           </div>
           <Toaster />

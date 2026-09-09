@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { SiteHeader } from '../components/SiteHeader';
 import { ReturnToGame } from '../components/ReturnToGame';
 import { SPECIAL_HAND_ANCHORS } from './special-hand-references';
+import { exampleVisualTiles, specialHandExampleById, specialHandExampleHref } from './special-hand-examples';
 
 import { TileStrip, type TileAssetKey, type TileDefinition } from './MahjongTileGallery';
 
@@ -17,6 +18,8 @@ type SpecialCardData = {
   tiles?: TileDefinition[];
   visualNote?: string;
   detail?: string;
+  /** Event cards teach the winning circumstances with their timeline, not a generic final hand. */
+  visualPolicy?: 'tile-example' | 'event-timeline';
 };
 
 const t = (asset: TileAssetKey, label: string): TileDefinition => ({ asset, label });
@@ -214,6 +217,10 @@ function EventTimeline({ steps, tile }: { steps: string[]; tile?: TileDefinition
 }
 
 function SpecialCard({ hand }: { hand: SpecialCardData }) {
+  const example = specialHandExampleById(hand.id);
+  const visualTiles = hand.visualPolicy === 'event-timeline'
+    ? undefined
+    : example ? exampleVisualTiles(example) : hand.tiles;
   return (
     <article id={SPECIAL_HAND_ANCHORS[hand.id]} className="scroll-mt-6 rounded-2xl border border-[#d8ceb8] bg-[#fbf8ed] p-5 shadow-[var(--shadow-sm)] sm:p-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -235,9 +242,9 @@ function SpecialCard({ hand }: { hand: SpecialCardData }) {
         </div>
       </div>
 
-      {hand.tiles && (
+      {visualTiles && (
         <div className="mt-5">
-          <TileStrip tiles={hand.tiles} ariaLabel={`${hand.name} example: ${hand.tiles.map((tile) => tile.label).join(', ')}`} />
+          <TileStrip tiles={visualTiles} ariaLabel={`${hand.name} example: ${visualTiles.map((tile) => tile.label).join(', ')}`} />
           {hand.visualNote && <p className="mt-1 text-[10px] leading-4 text-[#8c8a7f]">{hand.visualNote}</p>}
         </div>
       )}
@@ -259,6 +266,7 @@ function SpecialCard({ hand }: { hand: SpecialCardData }) {
           <p className="mt-2 text-[11px] leading-5 text-[#66746e]">{hand.detail}</p>
         </details>
       )}
+      {example && <a href={specialHandExampleHref(example.id)} className="mt-4 inline-flex min-h-10 items-center rounded-md border border-[#b8cdbf] bg-[#edf3ed] px-3 text-[11px] font-semibold text-[#284d45] transition hover:border-[#477562] hover:bg-[#dceade] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">Try this hand in the scorer <ChevronRight className="ml-1" size={14} aria-hidden="true" /></a>}
     </article>
   );
 }
@@ -313,19 +321,19 @@ export function SpecialHandsCatalogue() {
           </div>
 
           <div className="space-y-4">
-            <SpecialCard hand={{ id: 'heavens-blessing', name: 'Heaven’s Blessing', description: 'East has Mah Jong immediately from the original dealt hand.', winner: '1,000', entry: 'Normal winner flow', detection: 'Detected automatically from “Mah Jong in original deal”' }} />
+            <SpecialCard hand={{ id: 'heavens-blessing', name: 'Heaven’s Blessing', description: 'East has Mah Jong immediately from the original dealt hand.', winner: '1,000', entry: 'Normal winner flow', detection: 'Detected automatically from “Mah Jong in original deal”', visualPolicy: 'event-timeline' }} />
             <div className="-mt-2 mb-4"><EventTimeline steps={["East’s original deal", 'Already complete', 'Mah Jong']} /></div>
 
-            <SpecialCard hand={{ id: 'earths-blessing', name: 'Earth’s Blessing', description: 'A non-East player goes Mah Jong using East’s very first discard.', winner: '1,000', entry: 'Normal winner flow · from discard', detection: 'The scorer may ask one short factual question', detail: 'Only when the circumstances make it possible, the scorer asks: “Was this East’s very first discard?” If you are not sure, it scores conservatively.' }} />
+            <SpecialCard hand={{ id: 'earths-blessing', name: 'Earth’s Blessing', description: 'A non-East player goes Mah Jong using East’s very first discard.', winner: '1,000', entry: 'Normal winner flow · from discard', detection: 'The scorer may ask one short factual question', detail: 'Only when the circumstances make it possible, the scorer asks: “Was this East’s very first discard?” If you are not sure, it scores conservatively.', visualPolicy: 'event-timeline' }} />
             <div className="-mt-2 mb-4"><EventTimeline steps={["East’s first discard", 'Another player claims it', 'Mah Jong']} /></div>
 
-            <SpecialCard hand={{ id: 'gathering-the-plum-blossom-from-the-roof', name: 'Gathering the Plum Blossom from the Roof', description: 'Mah Jong is completed by drawing 5 Circles as a replacement tile.', winner: '1,000', entry: 'Normal winner flow · replacement tile', detection: 'Detected automatically from how you won + winning tile' }} />
+            <SpecialCard hand={{ id: 'gathering-the-plum-blossom-from-the-roof', name: 'Gathering the Plum Blossom from the Roof', description: 'Mah Jong is completed by drawing 5 Circles as a replacement tile.', winner: '1,000', entry: 'Normal winner flow · replacement tile', detection: 'Detected automatically from how you won + winning tile', visualPolicy: 'event-timeline' }} />
             <div className="-mt-2 mb-4"><EventTimeline steps={['Replacement draw', '5 Circles', 'Mah Jong']} tile={pin(5)} /></div>
 
-            <SpecialCard hand={{ id: 'plucking-the-moon-from-the-bottom-of-the-sea', name: 'Plucking the Moon from the Bottom of the Sea', description: 'Mah Jong is completed with 1 Circles drawn as the final tile from the live wall.', winner: '1,000', entry: 'Normal winner flow · last wall tile', detection: 'Detected automatically from how you won + winning tile' }} />
+            <SpecialCard hand={{ id: 'plucking-the-moon-from-the-bottom-of-the-sea', name: 'Plucking the Moon from the Bottom of the Sea', description: 'Mah Jong is completed with 1 Circles drawn as the final tile from the live wall.', winner: '1,000', entry: 'Normal winner flow · last wall tile', detection: 'Detected automatically from how you won + winning tile', visualPolicy: 'event-timeline' }} />
             <div className="-mt-2 mb-4"><EventTimeline steps={['Last tile in live wall', '1 Circles', 'Mah Jong']} tile={pin(1)} /></div>
 
-            <SpecialCard hand={{ id: 'twofold-fortune', name: 'Twofold Fortune', description: 'A Kong is made, its replacement tile completes another Kong, and the next replacement tile completes Mah Jong.', winner: '1,000', entry: 'Normal winner flow · replacement tile', detection: 'The scorer may ask one short factual question', detail: 'The final hand can show that two Kongs exist, but it cannot reconstruct the exact replacement sequence. “I’m not sure” therefore scores conservatively.' }} />
+            <SpecialCard hand={{ id: 'twofold-fortune', name: 'Twofold Fortune', description: 'A Kong is made, its replacement tile completes another Kong, and the next replacement tile completes Mah Jong.', winner: '1,000', entry: 'Normal winner flow · replacement tile', detection: 'The scorer may ask one short factual question', detail: 'The final hand can show that two Kongs exist, but it cannot reconstruct the exact replacement sequence. “I’m not sure” therefore scores conservatively.', visualPolicy: 'event-timeline' }} />
             <div className="-mt-2"><EventTimeline steps={['Kong', 'Replacement tile', 'Second Kong', 'Replacement tile', 'Mah Jong']} /></div>
           </div>
         </section>
