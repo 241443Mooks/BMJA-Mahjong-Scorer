@@ -19,6 +19,16 @@ describe('catalogue scorer examples', () => {
     expect(specialHandExampleById('not-a-hand')).toBeUndefined();
   });
 
+  it('does not touch an existing recovery snapshot while resolving examples', () => {
+    // URL resolution is deliberately pure: example mode has no storage dependency.
+    const storage = new Map([['bmja-mahjong-scorer/game-snapshot', '{"a":"saved-game"}']]);
+    const before = storage.get('bmja-mahjong-scorer/game-snapshot');
+    expect(specialHandExampleById('purity')?.name).toBe('Purity');
+    expect(specialHandExampleById('unknown')).toBeUndefined();
+    expect(storage.get('bmja-mahjong-scorer/game-snapshot')).toBe(before);
+    expect(storage.size).toBe(1);
+  });
+
   it('keeps event examples truthful about missing winning-tile evidence', () => {
     for (const id of ['gathering-the-plum-blossom-from-the-roof', 'plucking-the-moon-from-the-bottom-of-the-sea'] as const) {
       const example = specialHandExampleById(id)!;
