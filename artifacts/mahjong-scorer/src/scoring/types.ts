@@ -111,6 +111,23 @@ export type GameContext = {
   limit: number;
 };
 
+/** Stable explanation keys. These are deliberately separate from display copy and per-hand rule ids. */
+export type RuleReferenceId =
+  | 'pung-minor'
+  | 'pung-major'
+  | 'kong-minor'
+  | 'kong-major'
+  | 'dragon-pair'
+  | 'own-wind-pair'
+  | 'prevailing-wind-pair'
+  | 'bonus-tile-points'
+  | 'mahjong-points'
+  | 'live-wall-win'
+  | 'own-flower-double'
+  | 'own-season-double'
+  | 'flower-bouquet-double'
+  | 'season-bouquet-double';
+
 export type RuleResult = {
   id: string;
   label: string;
@@ -118,6 +135,8 @@ export type RuleResult = {
   amount: number;
   unit: 'points' | 'doubles';
   source?: string;
+  /** Stable key used by the explanation layer for deep links. */
+  referenceId?: RuleReferenceId;
 };
 
 export type SpecialHandResult = {
