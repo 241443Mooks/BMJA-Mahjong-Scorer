@@ -1,4 +1,4 @@
-import { CURRENT_RULESET, resolveRulesProfile } from './ruleset';
+import { BMJA_PROFILE_REF, resolveRulesProfile } from './ruleset';
 import type {
   GameState,
   HandScorerLocalContext,
@@ -197,6 +197,7 @@ export const handScorerLocalContext = (
 ): HandScorerLocalContext => ({
   playerWind: context?.playerWind ?? 'east',
   prevailingWind: context?.prevailingWind ?? 'east',
-  limit: context?.limit ?? CURRENT_RULESET.defaultLimit,
+  limit:
+    context?.limit ?? resolveRulesProfile(BMJA_PROFILE_REF).defaultLimit,
   isWinner: context?.isWinner ?? false,
 });

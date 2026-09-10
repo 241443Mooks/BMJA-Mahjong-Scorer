@@ -466,8 +466,11 @@ function HandScorer({ context, onClose, standaloneHand, example, practice }: { c
   );
 
   const scoringProfile = useMemo(
-    () => resolveRulesProfile(context?.rulesProfile ?? BMJA_PROFILE_REF),
-    [context?.rulesProfile],
+    () =>
+      context
+        ? resolveRulesProfile(context.rulesProfile)
+        : resolveRulesProfile(BMJA_PROFILE_REF),
+    [context],
   );
 
   const score = useMemo(
@@ -1499,7 +1502,7 @@ export default function App({ initialView = 'game', standaloneHand = false }: { 
           <div className={view === 'hand' ? 'block' : 'hidden'}>
             <HandScorer
               key={scorerSession}
-              context={example ? example.context : scorerContext}
+              context={scorerContext}
               onClose={handleCloseHandScorer}
               standaloneHand={standaloneHand}
               example={example}

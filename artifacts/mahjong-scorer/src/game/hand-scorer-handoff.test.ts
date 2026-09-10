@@ -9,6 +9,7 @@ import {
   handScorerLocalContext,
   reconcileDetailedHandsForOutcome,
 } from './hand-scorer-handoff';
+import { BMJA_PROFILE_REF, resolveRulesProfile } from './ruleset';
 import type {
   HandScorerResult,
   RoundScoringDraft,
@@ -77,12 +78,13 @@ const makeCalculatedResult = (
 
 describe('game hand-scorer handoff', () => {
   it('passes the selected player and live game context into the hand scorer', () => {
-    expect(
-      createHandScorerContext(game, 'bill', {
+    const context = createHandScorerContext(game, 'bill', {
         type: 'win',
         winnerId: 'bill',
-      }),
-    ).toEqual({
+      });
+
+    expect(context.rulesProfile).toBe(game.setup.rulesProfile);
+    expect(context).toEqual({
       rulesProfile: { id: 'bmja', version: '1.0' },
       playerId: 'bill',
       playerName: 'Bill',
@@ -91,6 +93,12 @@ describe('game hand-scorer handoff', () => {
       isWinner: true,
       limit: 1000,
     });
+  });
+
+  it('defaults a standalone scorer session explicitly to bmja@1.0', () => {
+    expect(handScorerLocalContext(null).limit).toBe(
+      resolveRulesProfile(BMJA_PROFILE_REF).defaultLimit,
+    );
   });
 
   it('resets winner state when a winner is opened before a non-winner', () => {

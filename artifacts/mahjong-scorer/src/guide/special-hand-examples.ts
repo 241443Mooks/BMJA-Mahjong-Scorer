@@ -1,6 +1,6 @@
 import { dragon, expandedTiles, suited, wind } from '../scoring';
 import type { MahjongHand, PlayingTile, Wind, WinningMethod } from '../scoring';
-import type { HandScorerContext } from '../game';
+import type { HandScorerExampleContext } from '../game';
 import { SPECIAL_HAND_ANCHORS } from './special-hand-references';
 import type { TileAssetKey, TileDefinition } from './MahjongTileGallery';
 
@@ -58,4 +58,4 @@ export const exampleVisualTiles = ({ hand }: Pick<SpecialHandExample, 'hand'>): 
     return { asset: ({ red: 'Chun', green: 'Hatsu', white: 'Haku' }[tile.dragon]) as TileAssetKey, label: `${tile.dragon[0].toUpperCase()}${tile.dragon.slice(1)} Dragon` };
   });
 };
-export const exampleHandScorerContext = (example: SpecialHandExample): HandScorerContext => ({ playerId: 'catalogue-example', playerName: example.name, playerWind: example.playerWind ?? 'east', prevailingWind: 'east', isWinner: true, limit: 1000, detailedHand: { source: 'detailed-scorer', hand: example.hand, context: { playerWind: example.playerWind ?? 'east', prevailingWind: 'east', limit: 1000 }, breakdown: { valid: false, evidenceCompleteness: 'invalid', validationErrors: [], pointRules: [], doubleRules: [], specialHands: [], basePoints: 0, doubles: 0, uncappedScore: 0, finalScore: 0, limitApplied: false, scoringMode: 'standard', calculationComponents: [] }, finalScore: 0 } });
+export const exampleHandScorerContext = (example: SpecialHandExample): HandScorerExampleContext => ({ playerId: 'catalogue-example', playerName: example.name, playerWind: example.playerWind ?? 'east', prevailingWind: 'east', isWinner: true, limit: 1000, detailedHand: { source: 'detailed-scorer', hand: example.hand, context: { playerWind: example.playerWind ?? 'east', prevailingWind: 'east', limit: 1000 }, breakdown: { valid: false, evidenceCompleteness: 'invalid', validationErrors: [], pointRules: [], doubleRules: [], specialHands: [], basePoints: 0, doubles: 0, uncappedScore: 0, finalScore: 0, limitApplied: false, scoringMode: 'standard', calculationComponents: [] }, finalScore: 0 } });
