@@ -1,0 +1,84 @@
+name: Issue 95 one-off patch and validation
+
+on:
+  push:
+    branches:
+      - issue-95-rule-deep-links
+
+permissions:
+  contents: write
+
+jobs:
+  patch-test-and-commit:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: issue-95-rule-deep-links
+
+      - name: Patch scorer routing
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('artifacts/mahjong-scorer/src/App.tsx')
+          text = path.read_text()
+
+          old_import = "import { specialHandReferenceHref } from './guide/special-hand-references';"
+          new_import = "import { detectedPatternReferenceHref } from './guide/detected-pattern-references';"
+          old_router = """const patternReferenceHref = (pattern: { id: string; type: string }) => {
+            if (pattern.type === 'points') return '/guide#ordinary-scoring';
+            if (pattern.type === 'doubles') return '/guide#doubles';
+            if (pattern.type === 'special') return specialHandReferenceHref(pattern.id.replace('special-', ''));
+            if (pattern.type === 'fishing') return specialHandReferenceHref(pattern.id.replace('fishing-', '')) ?? '/guide#fishing';
+            return undefined;
+          };
+          """
+          old_call = 'const referenceHref = patternReferenceHref(pattern);'
+          new_call = 'const referenceHref = detectedPatternReferenceHref(pattern);'
+
+          for needle, label in [
+              (old_import, 'old import'),
+              (old_router, 'local broad router'),
+              (old_call, 'old router call'),
+          ]:
+              count = text.count(needle)
+              if count != 1:
+                  raise SystemExit(f'Expected exactly one {label}; found {count}')
+
+          text = text.replace(old_import, new_import)
+          text = text.replace(old_router, '')
+          text = text.replace(old_call, new_call)
+          path.write_text(text)
+          PY
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Test scorer
+        run: pnpm --filter @workspace/mahjong-scorer test
+
+      - name: Typecheck scorer
+        run: pnpm --filter @workspace/mahjong-scorer typecheck
+
+      - name: Build scorer
+        run: pnpm --filter @workspace/mahjong-scorer build
+
+      - name: Remove one-off workflow and commit validated patch
+        run: |
+          rm .github/workflows/issue-95-one-off.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add artifacts/mahjong-scorer/src/App.tsx .github/workflows/issue-95-one-off.yml
+          git commit -m 'Route detected patterns to exact guide references'
+          git push origin HEAD:issue-95-rule-deep-links
