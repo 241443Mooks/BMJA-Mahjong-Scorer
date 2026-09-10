@@ -1,5 +1,5 @@
 import { FISHING_SPECIALS } from "./fishing";
-import type { ScoreBreakdown } from "./types";
+import type { RuleReferenceId, ScoreBreakdown } from "./types";
 
 export type DetectedPattern = {
   id: string;
@@ -7,6 +7,7 @@ export type DetectedPattern = {
   type: "points" | "doubles" | "special" | "fishing";
   effect: string;
   explanation: string;
+  referenceId?: RuleReferenceId;
   selected?: boolean;
 };
 
@@ -25,6 +26,7 @@ export const detectedPatterns = (score: ScoreBreakdown): DetectedPattern[] => [
     type: "points" as const,
     effect: `+${amountLabel(rule.amount, "point")}`,
     explanation: rule.description,
+    ...(rule.referenceId ? { referenceId: rule.referenceId } : {}),
   })),
   ...score.doubleRules.map((rule) => ({
     id: `doubles-${rule.id}`,
@@ -32,6 +34,7 @@ export const detectedPatterns = (score: ScoreBreakdown): DetectedPattern[] => [
     type: "doubles" as const,
     effect: amountLabel(rule.amount, "double"),
     explanation: rule.description,
+    ...(rule.referenceId ? { referenceId: rule.referenceId } : {}),
   })),
   ...score.specialHands
     .filter((special) => special.matched)
