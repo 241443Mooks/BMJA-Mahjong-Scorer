@@ -1,4 +1,4 @@
-import { CURRENT_RULESET } from './ruleset';
+import { CURRENT_RULESET, resolveRulesProfile } from './ruleset';
 import type {
   GameState,
   HandScorerLocalContext,
@@ -28,7 +28,7 @@ export const createHandScorerContext = (
     playerWind: game.seats[playerId],
     prevailingWind: game.prevailingWind,
     isWinner: outcome?.type === 'win' && outcome.winnerId === playerId,
-    limit: CURRENT_RULESET.defaultLimit,
+    limit: resolveRulesProfile(game.setup.rulesProfile).defaultLimit,
     ...(scoreRecord?.source === 'detailed-scorer'
       ? {
           detailedHand: scoreRecord,

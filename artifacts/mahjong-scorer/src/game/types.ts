@@ -9,6 +9,11 @@ export const GAME_WINDS: Wind[] = ['east', 'south', 'west', 'north'];
 
 export type PlayerId = string;
 
+export type RulesProfileRef = {
+  readonly id: string;
+  readonly version: string;
+};
+
 export type GamePlayer = {
   id: PlayerId;
   name: string;
@@ -69,6 +74,7 @@ export type ConfirmedHand = {
 export type GameLength = 'one-round' | 'full-game';
 
 export type GameSetup = {
+  rulesProfile: RulesProfileRef;
   players: GamePlayer[];
   startingSeats: SeatAssignments;
   startingPrevailingWind: Wind;
@@ -77,7 +83,8 @@ export type GameSetup = {
 };
 
 export type GameState = {
-  rulesetId: 'bmja';
+  /** @deprecated Use setup.rulesProfile.id; retained for compatibility. */
+  rulesetId: string;
   setup: GameSetup;
   players: GamePlayer[];
   seats: SeatAssignments;
@@ -96,9 +103,10 @@ export type HandScoreInput = {
 };
 
 export type GameRuleset = {
-  id: 'bmja';
-  name: string;
-  defaultLimit: number;
+  readonly id: string;
+  readonly version: string;
+  readonly name: string;
+  readonly defaultLimit: number;
   scoreHand: (input: HandScoreInput) => ScoreBreakdown;
   settleRound: (
     players: GamePlayer[],

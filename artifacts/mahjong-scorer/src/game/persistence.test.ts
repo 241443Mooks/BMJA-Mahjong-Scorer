@@ -9,6 +9,7 @@ import {
   recoverableGameForReturn,
   saveGameRecovery,
 } from "./persistence";
+import { BMJA_PROFILE_REF } from "./ruleset";
 
 const memoryStorage = () => {
   const values = new Map<string, string>();
@@ -73,11 +74,56 @@ describe("game recovery persistence", () => {
     });
 
     expect(loadGameRecovery(storage)).toMatchObject({
-      game: { balances: game.balances, handHistory: game.handHistory },
+      game: {
+        setup: { rulesProfile: BMJA_PROFILE_REF },
+        balances: game.balances,
+        handHistory: game.handHistory,
+      },
       outcomeType: "win",
       winnerId: "south",
       draft: { scores: { south: 88 } },
     });
+  });
+
+  it("persists the exact rules profile identity with new saves", () => {
+    const storage = memoryStorage();
+    saveGameRecovery(storage, newGame(), "win", "east", {
+      scores: {},
+      scoreRecords: {},
+    });
+
+    const saved = JSON.parse(storage.getItem(GAME_SNAPSHOT_STORAGE_KEY)!);
+    expect(saved.version).toBe(1);
+    expect(saved.game.setup.rulesProfile).toEqual(BMJA_PROFILE_REF);
+  });
+
+  it("recovers legacy v1 snapshots without profile metadata as BMJA 1.0", () => {
+    const storage = memoryStorage();
+    saveGameRecovery(storage, newGame(), "win", "east", {
+      scores: {},
+      scoreRecords: {},
+    });
+    const legacy = JSON.parse(storage.getItem(GAME_SNAPSHOT_STORAGE_KEY)!);
+    delete legacy.game.setup.rulesProfile;
+    storage.setItem(GAME_SNAPSHOT_STORAGE_KEY, JSON.stringify(legacy));
+
+    const recovered = loadGameRecovery(storage);
+    expect(recovered?.game.setup.rulesProfile).toEqual(BMJA_PROFILE_REF);
+    expect(recovered?.game.rulesetId).toBe("bmja");
+  });
+
+  it("does not silently replace an unknown saved profile with BMJA", () => {
+    const storage = memoryStorage();
+    saveGameRecovery(storage, newGame(), "win", "east", {
+      scores: {},
+      scoreRecords: {},
+    });
+    const saved = JSON.parse(storage.getItem(GAME_SNAPSHOT_STORAGE_KEY)!);
+    saved.game.setup.rulesProfile = { id: "bmja", version: "999" };
+    storage.setItem(GAME_SNAPSHOT_STORAGE_KEY, JSON.stringify(saved));
+
+    expect(loadGameRecovery(storage)).toBeNull();
+    expect(storage.getItem(GAME_SNAPSHOT_STORAGE_KEY)).toBeNull();
   });
 
   it("clears a saved game for intentional start-over/new-game actions", () => {
