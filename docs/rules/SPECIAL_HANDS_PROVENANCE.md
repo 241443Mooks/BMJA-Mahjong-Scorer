@@ -76,7 +76,7 @@ must contain only the structural predicate. Each profile binding supplies the sc
 
 `western-tm@0.1` is the first executable Thompson & Maloney profile. It is deliberately provisional: its ordinary game reuses the existing BMJA-compatible British/Western base for ordinary scoring and validation; Pung, Kong and pair values; Flowers and Seasons; ordinary doubles; East and prevailing-wind treatment; settlement; progression; and ordinary winner handling. Each of those reused domains is **provisional-compatible**, not `verified-identical`: no credible contrary evidence is currently known, but direct T&M primary-source verification remains pending.
 
-Three Great Scholars is the sole verified profile-local override in this version: it binds the existing canonical detector as `Three Great Scholars`, with winning value 1,500 and fishing value 600. The BMJA binding remains 1,000 / 400. This does not claim that Western rules extend or derive from BMJA; it is a bounded implementation reuse pending primary-source review.
+Three Great Scholars is the sole verified Western special-hand binding in this version: it binds the existing canonical detector as `Three Great Scholars`, with winning value 1,500 and fishing value 600. The BMJA binding remains 1,000 / 400. Other BMJA special hands are not implicitly Western members; #87 must add each Companion binding through provenance-controlled evidence. This does not claim that Western rules extend or derive from BMJA; it is a bounded implementation reuse pending primary-source review.
 
 Do not promote this profile to `western-tm@1.0` while executable provisional-compatible assumptions remain.
 

@@ -177,7 +177,12 @@ export const scoreHand = (
     (sum, component) => sum + component.subtotal,
     0,
   );
-  const finalScore = Math.min(uncappedScore, context.limit);
+  // A published fixed special value is not silently reduced by the ordinary
+  // profile cap. Ordinary and fishing scores retain the profile limit.
+  const effectiveLimit = matchedSpecial
+    ? Math.max(context.limit, matchedSpecial.value)
+    : context.limit;
+  const finalScore = Math.min(uncappedScore, effectiveLimit);
 
   return {
     valid: validationErrors.length === 0,

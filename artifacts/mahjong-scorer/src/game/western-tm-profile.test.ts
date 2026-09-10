@@ -55,6 +55,19 @@ const scholarsFishing: MahjongHand = {
   bonusTiles: [],
   isWinner: false,
 };
+const allPairHonours: MahjongHand = {
+  sets: [
+    set('1', 'pair', wind('east')),
+    set('2', 'pair', wind('south')),
+    set('3', 'pair', suited('bamboo', 1)),
+    set('4', 'pair', suited('characters', 9)),
+    set('5', 'pair', dragon('red')),
+    set('6', 'pair', dragon('green')),
+    set('7', 'pair', dragon('white')),
+  ],
+  bonusTiles: [],
+  isWinner: true,
+};
 
 describe('western-tm@0.1 provisional profile', () => {
   it('resolves separately and persists/replays its exact version', () => {
@@ -127,6 +140,25 @@ describe('western-tm@0.1 provisional profile', () => {
     expect(western.finalScore).toBe(600);
   });
 
+  it('does not inherit BMJA special-hand membership without a Western binding', () => {
+    expect(
+      BMJA_RULESET.scoreHand({
+        hand: allPairHonours,
+        playerWind: 'east',
+        prevailingWind: 'east',
+      }).specialHands.find((hand) => hand.id === 'all-pair-honours'),
+    ).toMatchObject({ matched: true, value: 500 });
+    expect(
+      WESTERN_TM_RULESET.scoreHand({
+        hand: allPairHonours,
+        playerWind: 'east',
+        prevailingWind: 'east',
+      }).specialHands,
+    ).toEqual([
+      expect.objectContaining({ id: 'three-great-scholars', matched: false }),
+    ]);
+  });
+
   it('reuses ordinary scoring, settlement, and progression without a second engine', () => {
     const ordinary = {
       sets: [
@@ -154,5 +186,37 @@ describe('western-tm@0.1 provisional profile', () => {
     });
     expect(WESTERN_TM_RULESET.settleRound).toBe(BMJA_RULESET.settleRound);
     expect(WESTERN_TM_RULESET.progressGame).toBe(BMJA_RULESET.progressGame);
+  });
+
+  it('keeps ordinary scores at the shared cap while allowing the fixed Western special value', () => {
+    const cappedOrdinary: MahjongHand = {
+      sets: [
+        set('red', 'pung', dragon('red'), 'exposed'),
+        set('green', 'pung', dragon('green')),
+        set('east', 'pung', wind('east')),
+        set('minor', 'pung', suited('bamboo', 5)),
+        set('pair', 'pair', wind('south')),
+      ],
+      bonusTiles: [bonus('flower', 1)],
+      isWinner: true,
+      winningMethod: 'wall',
+    };
+    const input = {
+      hand: cappedOrdinary,
+      playerWind: 'east' as const,
+      prevailingWind: 'east' as const,
+    };
+    const bmja = BMJA_RULESET.scoreHand(input);
+    const western = WESTERN_TM_RULESET.scoreHand(input);
+    expect(bmja.uncappedScore).toBeGreaterThan(1000);
+    expect(bmja.finalScore).toBe(1000);
+    expect(western.finalScore).toBe(1000);
+    expect(
+      WESTERN_TM_RULESET.scoreHand({
+        hand: scholars,
+        playerWind: 'east',
+        prevailingWind: 'east',
+      }).finalScore,
+    ).toBe(1500);
   });
 });

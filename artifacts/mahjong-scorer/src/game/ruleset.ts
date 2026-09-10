@@ -1,8 +1,5 @@
 import { scoreHand } from '../scoring';
-import {
-  bmjaSpecialHandBindings,
-  type SpecialHandPatternBinding,
-} from '../scoring/special-hands';
+import type { SpecialHandPatternBinding } from '../scoring/special-hands';
 import { progressBmjaGame } from './progression';
 import { settleBmjaRound } from './settlement';
 import type { GameRuleset, RulesProfileRef } from './types';
@@ -28,25 +25,23 @@ export const WESTERN_TM_PROFILE_REF: RulesProfileRef = Object.freeze({
   version: '0.1',
 });
 
-const westernTmSpecialHandBindings: SpecialHandPatternBinding[] =
-  bmjaSpecialHandBindings.map((binding) =>
-    binding.patternId === 'three-great-scholars'
-      ? {
-          ...binding,
-          profile: WESTERN_TM_PROFILE_REF,
-          name: 'Three Great Scholars',
-          value: 1500,
-          fishingValue: 600,
-        }
-      : { ...binding, profile: WESTERN_TM_PROFILE_REF },
-  );
+const westernTmSpecialHandBindings: SpecialHandPatternBinding[] = [
+  {
+    patternId: 'three-great-scholars',
+    profile: WESTERN_TM_PROFILE_REF,
+    name: 'Three Great Scholars',
+    description: 'A pung or kong of each of the three dragons.',
+    value: 1500,
+    fishingValue: 600,
+  },
+];
 
 export const WESTERN_TM_RULESET: GameRuleset = Object.freeze({
   id: WESTERN_TM_PROFILE_REF.id,
   version: WESTERN_TM_PROFILE_REF.version,
   name: 'Western — Thompson & Maloney (provisional)',
-  defaultLimit: 1500,
-  scoreHand: ({ hand, playerWind, prevailingWind, limit = 1500 }) =>
+  defaultLimit: 1000,
+  scoreHand: ({ hand, playerWind, prevailingWind, limit = 1000 }) =>
     scoreHand(
       hand,
       { playerWind, prevailingWind, limit },
