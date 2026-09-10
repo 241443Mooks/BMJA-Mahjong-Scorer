@@ -10,14 +10,20 @@ import type {
   PlayingTile,
   SpecialHandResult,
 } from './types';
+import type { RulesProfileRef } from '../game/types';
 
-type Detector = {
+export type CanonicalSpecialHandPattern = {
   id: string;
+  eventBased?: boolean;
+  detect: (hand: MahjongHand, context?: GameContext) => boolean;
+};
+
+export type SpecialHandPatternBinding = {
+  patternId: string;
+  profile: RulesProfileRef;
   name: string;
   description: string;
   value: number;
-  eventBased?: boolean;
-  detect: (hand: MahjongHand, context?: GameContext) => boolean;
 };
 
 const tiles = (hand: MahjongHand) => [
@@ -59,8 +65,7 @@ const isGreenTile = (tile: PlayingTile) =>
       [2, 3, 4, 6, 8].includes(tile.rank);
 
 const isClaimedCompletion = (hand: MahjongHand) =>
-  hand.winningMethod === 'discard' ||
-  hand.winningMethod === 'final-discard';
+  hand.winningMethod === 'discard' || hand.winningMethod === 'final-discard';
 
 const isWinningTile = (
   hand: MahjongHand,
@@ -110,13 +115,9 @@ const buriedVisibilityIsAllowed = (hand: MahjongHand) => {
  * Special-hand detectors are independent: each receives only the canonical
  * MahjongHand and returns a boolean. Adding one cannot alter another.
  */
-export const specialHandDetectors: Detector[] = [
+export const canonicalSpecialHandPatterns: CanonicalSpecialHandPattern[] = [
   {
     id: 'knitting',
-    name: 'Knitting',
-    description:
-      'Seven pairs, each pairing the same number across two different suits; pairs may repeat.',
-    value: 500,
     detect: (hand) => {
       const all = tiles(hand);
       const tally = suitedRankCounts(all);
@@ -132,10 +133,6 @@ export const specialHandDetectors: Detector[] = [
   },
   {
     id: 'triple-knitting',
-    name: 'Triple Knitting',
-    description:
-      'Four same-number groups across all three suits, plus a same-number pair across two suits.',
-    value: 500,
     detect: (hand) => {
       const all = tiles(hand);
       const tally = suitedRankCounts(all);
@@ -185,10 +182,6 @@ export const specialHandDetectors: Detector[] = [
   },
   {
     id: 'all-pair-honours',
-    name: 'All pair honours',
-    description:
-      'Seven pairs of major tiles: 1s, 9s, winds and dragons; repeated pairs are allowed.',
-    value: 500,
     detect: (hand) =>
       hand.isWinner &&
       hand.sets.length === 7 &&
@@ -202,10 +195,6 @@ export const specialHandDetectors: Detector[] = [
   },
   {
     id: 'imperial-jade',
-    name: 'Imperial Jade',
-    description:
-      'Four pungs/kongs and a pair using only Green Dragon or Bamboo 2, 3, 4, 6 and 8.',
-    value: 1000,
     detect: (hand) => {
       const all = tiles(hand);
       return (
@@ -221,10 +210,6 @@ export const specialHandDetectors: Detector[] = [
   },
   {
     id: 'thirteen-unique-wonders',
-    name: 'Thirteen unique wonders',
-    description:
-      'One of every terminal, wind and dragon, plus a pair of any one.',
-    value: 1000,
     detect: (hand) => {
       if (!hand.isWinner) return false;
       const all = tiles(hand);
@@ -253,10 +238,6 @@ export const specialHandDetectors: Detector[] = [
   },
   {
     id: 'gates-of-heaven',
-    name: 'The Gates of Heaven',
-    description:
-      'A concealed one-suit layout with three 1s, three 9s, 2 through 8, and one of 2 through 8 paired.',
-    value: 1000,
     detect: (hand) => {
       const all = tiles(hand);
       if (
@@ -283,18 +264,14 @@ export const specialHandDetectors: Detector[] = [
         [2, 3, 4, 5, 6, 7, 8].every((rank) =>
           [1, 2].includes(ranks.get(rank) ?? 0),
         ) &&
-        [2, 3, 4, 5, 6, 7, 8].filter((rank) => ranks.get(rank) === 2)
-          .length === 1 &&
+        [2, 3, 4, 5, 6, 7, 8].filter((rank) => ranks.get(rank) === 2).length ===
+          1 &&
         gatesCompletionIsAllowed(hand, suited[0].suit)
       );
     },
   },
   {
     id: 'wriggling-snake',
-    name: 'The Wriggling Snake',
-    description:
-      'A pair of suited 1s, suited 2 through 9 in that suit, and one of each Wind.',
-    value: 1000,
     detect: (hand) => {
       const all = tiles(hand);
       if (
@@ -337,10 +314,6 @@ export const specialHandDetectors: Detector[] = [
   },
   {
     id: 'all-winds-and-dragons',
-    name: 'All Winds and Dragons',
-    description:
-      'Four pungs/kongs and a pair, all made from winds and dragons.',
-    value: 1000,
     detect: (hand) => {
       const all = tiles(hand);
       return (
@@ -356,9 +329,6 @@ export const specialHandDetectors: Detector[] = [
   },
   {
     id: 'heads-and-tails',
-    name: 'Heads and Tails',
-    description: 'Four pungs/kongs and a pair, all made from suited 1s and 9s.',
-    value: 1000,
     detect: (hand) => {
       const all = tiles(hand);
       return (
@@ -373,9 +343,6 @@ export const specialHandDetectors: Detector[] = [
   },
   {
     id: 'fourfold-plenty',
-    name: 'Fourfold Plenty',
-    description: 'Four kongs and a pair.',
-    value: 1000,
     detect: (hand) =>
       hand.isWinner &&
       hand.sets.length === 5 &&
@@ -384,9 +351,6 @@ export const specialHandDetectors: Detector[] = [
   },
   {
     id: 'three-great-scholars',
-    name: 'Three great scholars',
-    description: 'A pung or kong of each of the three dragons.',
-    value: 1000,
     detect: (hand) => {
       const dragons = new Set(
         hand.sets
@@ -409,9 +373,6 @@ export const specialHandDetectors: Detector[] = [
   },
   {
     id: 'four-blessings',
-    name: 'Four Blessings Hovering over the Door',
-    description: 'A pung or kong of each wind, plus any pair.',
-    value: 1000,
     detect: (hand) => {
       const windSets = hand.sets.filter(
         (set) =>
@@ -433,10 +394,6 @@ export const specialHandDetectors: Detector[] = [
   },
   {
     id: 'buried-treasure',
-    name: 'Buried treasure',
-    description:
-      'Four concealed pungs and a concealed pair, using one suit with optional winds/dragons.',
-    value: 1000,
     detect: (hand) =>
       hand.isWinner &&
       hand.sets.length === 5 &&
@@ -451,10 +408,6 @@ export const specialHandDetectors: Detector[] = [
   },
   {
     id: 'heavens-blessing',
-    name: "Heaven's Blessing",
-    description:
-      'East makes Mah Jong immediately with the original fourteen dealt tiles.',
-    value: 1000,
     eventBased: true,
     detect: (hand, context) =>
       hand.isWinner &&
@@ -465,10 +418,6 @@ export const specialHandDetectors: Detector[] = [
   },
   {
     id: 'earths-blessing',
-    name: "Earth's Blessing",
-    description:
-      "A non-East player makes Mah Jong with East's first discard.",
-    value: 1000,
     eventBased: true,
     detect: (hand, context) =>
       hand.isWinner &&
@@ -481,10 +430,6 @@ export const specialHandDetectors: Detector[] = [
   },
   {
     id: 'gathering-plum-blossom',
-    name: 'Gathering the Plum Blossom from the Roof',
-    description:
-      'A replacement tile is 5 Circles and completes Mah Jong.',
-    value: 1000,
     eventBased: true,
     detect: (hand) =>
       hand.isWinner &&
@@ -493,10 +438,6 @@ export const specialHandDetectors: Detector[] = [
   },
   {
     id: 'plucking-moon',
-    name: 'Plucking the Moon from the Bottom of the Sea',
-    description:
-      'The last wall tile is 1 Circles and completes Mah Jong.',
-    value: 1000,
     eventBased: true,
     detect: (hand) =>
       hand.isWinner &&
@@ -505,10 +446,6 @@ export const specialHandDetectors: Detector[] = [
   },
   {
     id: 'twofold-fortune',
-    name: 'Twofold Fortune',
-    description:
-      'One kong replacement completes another kong, whose replacement completes Mah Jong.',
-    value: 1000,
     eventBased: true,
     detect: (hand) =>
       hand.isWinner &&
@@ -519,19 +456,183 @@ export const specialHandDetectors: Detector[] = [
   },
 ];
 
+const BMJA_SPECIAL_HAND_PROFILE: RulesProfileRef = Object.freeze({
+  id: 'bmja',
+  version: '1.0',
+});
+const bmjaBinding = (
+  patternId: string,
+  name: string,
+  description: string,
+  value: number,
+): SpecialHandPatternBinding => ({
+  patternId,
+  profile: BMJA_SPECIAL_HAND_PROFILE,
+  name,
+  description,
+  value,
+});
+export const bmjaSpecialHandBindings = [
+  bmjaBinding(
+    'knitting',
+    'Knitting',
+    'Seven pairs, each pairing the same number across two different suits; pairs may repeat.',
+    500,
+  ),
+  bmjaBinding(
+    'triple-knitting',
+    'Triple Knitting',
+    'Four same-number groups across all three suits, plus a same-number pair across two suits.',
+    500,
+  ),
+  bmjaBinding(
+    'all-pair-honours',
+    'All pair honours',
+    'Seven pairs of major tiles: 1s, 9s, winds and dragons; repeated pairs are allowed.',
+    500,
+  ),
+  bmjaBinding(
+    'imperial-jade',
+    'Imperial Jade',
+    'Four pungs/kongs and a pair using only Green Dragon or Bamboo 2, 3, 4, 6 and 8.',
+    1000,
+  ),
+  bmjaBinding(
+    'thirteen-unique-wonders',
+    'Thirteen unique wonders',
+    'One of every terminal, wind and dragon, plus a pair of any one.',
+    1000,
+  ),
+  bmjaBinding(
+    'gates-of-heaven',
+    'The Gates of Heaven',
+    'A concealed one-suit layout with three 1s, three 9s, 2 through 8, and one of 2 through 8 paired.',
+    1000,
+  ),
+  bmjaBinding(
+    'wriggling-snake',
+    'The Wriggling Snake',
+    'A pair of suited 1s, suited 2 through 9 in that suit, and one of each Wind.',
+    1000,
+  ),
+  bmjaBinding(
+    'all-winds-and-dragons',
+    'All Winds and Dragons',
+    'Four pungs/kongs and a pair, all made from winds and dragons.',
+    1000,
+  ),
+  bmjaBinding(
+    'heads-and-tails',
+    'Heads and Tails',
+    'Four pungs/kongs and a pair, all made from suited 1s and 9s.',
+    1000,
+  ),
+  bmjaBinding(
+    'fourfold-plenty',
+    'Fourfold Plenty',
+    'Four kongs and a pair.',
+    1000,
+  ),
+  bmjaBinding(
+    'three-great-scholars',
+    'Three great scholars',
+    'A pung or kong of each of the three dragons.',
+    1000,
+  ),
+  bmjaBinding(
+    'four-blessings',
+    'Four Blessings Hovering over the Door',
+    'A pung or kong of each wind, plus any pair.',
+    1000,
+  ),
+  bmjaBinding(
+    'buried-treasure',
+    'Buried treasure',
+    'Four concealed pungs and a concealed pair, using one suit with optional winds/dragons.',
+    1000,
+  ),
+  bmjaBinding(
+    'heavens-blessing',
+    "Heaven's Blessing",
+    'East makes Mah Jong immediately with the original fourteen dealt tiles.',
+    1000,
+  ),
+  bmjaBinding(
+    'earths-blessing',
+    "Earth's Blessing",
+    "A non-East player makes Mah Jong with East's first discard.",
+    1000,
+  ),
+  bmjaBinding(
+    'gathering-plum-blossom',
+    'Gathering the Plum Blossom from the Roof',
+    'A replacement tile is 5 Circles and completes Mah Jong.',
+    1000,
+  ),
+  bmjaBinding(
+    'plucking-moon',
+    'Plucking the Moon from the Bottom of the Sea',
+    'The last wall tile is 1 Circles and completes Mah Jong.',
+    1000,
+  ),
+  bmjaBinding(
+    'twofold-fortune',
+    'Twofold Fortune',
+    'One kong replacement completes another kong, whose replacement completes Mah Jong.',
+    1000,
+  ),
+];
+export const resolveSpecialHandBindings = (
+  profile: RulesProfileRef,
+  bindings = bmjaSpecialHandBindings,
+  patterns = canonicalSpecialHandPatterns,
+) => {
+  const patternsById = new Map(
+    patterns.map((pattern) => [pattern.id, pattern]),
+  );
+  for (const binding of bindings)
+    if (!patternsById.has(binding.patternId))
+      throw new Error(
+        `Unknown canonical special-hand pattern "${binding.patternId}".`,
+      );
+  return bindings
+    .filter(
+      (binding) =>
+        binding.profile.id === profile.id &&
+        binding.profile.version === profile.version,
+    )
+    .map((binding) => ({
+      binding,
+      pattern: patternsById.get(binding.patternId)!,
+    }));
+};
+const bmjaSpecialHandPatterns = resolveSpecialHandBindings(
+  BMJA_SPECIAL_HAND_PROFILE,
+);
+export const specialHandDetectors = bmjaSpecialHandPatterns.map(
+  ({ binding, pattern }) => ({
+    id: pattern.id,
+    name: binding.name,
+    description: binding.description,
+    value: binding.value,
+    eventBased: pattern.eventBased,
+    detect: pattern.detect,
+  }),
+);
+
 export const detectSpecialHands = (
   hand: MahjongHand,
   context?: GameContext,
 ): SpecialHandResult[] =>
-  specialHandDetectors.map((detector) => ({
-    id: detector.id,
-    name: detector.name,
-    description: detector.description,
-    value: detector.value,
-    matched: detector.detect(hand, context),
+  bmjaSpecialHandPatterns.map(({ binding, pattern }) => ({
+    id: pattern.id,
+    name: binding.name,
+    description: binding.description,
+    value: binding.value,
+    matched: pattern.detect(hand, context),
   }));
 
 export const matchesSupportedIrregularLayout = (hand: MahjongHand): boolean =>
-  specialHandDetectors
-    .filter((detector) => detector.eventBased !== true)
-    .some((detector) => detector.detect(hand));
+  bmjaSpecialHandPatterns
+    .filter(({ pattern }) => pattern.eventBased !== true)
+    .some(({ pattern }) => pattern.detect(hand));
