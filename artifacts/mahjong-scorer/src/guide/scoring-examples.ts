@@ -1,6 +1,6 @@
 import { bonus, dragon, expandedTiles, set, suited, wind } from '../scoring';
 import type { GameContext, MahjongHand, ScoreBreakdown, Wind } from '../scoring';
-import type { HandScorerContext } from '../game';
+import type { HandScorerContext, HandScorerExampleContext } from '../game';
 import { bonusTileDefinition, playingTileDefinition } from '../tiles/MahjongTileArtwork';
 import { exampleHandScorerContext, exampleVisualTiles, specialHandExampleById } from './special-hand-examples';
 import type { TileDefinition } from './MahjongTileGallery';
@@ -72,11 +72,11 @@ export const scoringExamples: WorkedScoringExample[] = [
 export const scoringExampleById = (id: string | null | undefined) => scoringExamples.find((example) => example.id === id);
 export const completedExampleHref = (id: string) => `/hand?example=${encodeURIComponent(id)}`;
 export const practiceExampleHref = (id: string) => `/hand?practice=${encodeURIComponent(id)}`;
-export const scoringExampleContext = (example: WorkedScoringExample): HandScorerContext => ({ playerId: 'worked-example', playerName: example.title, playerWind: example.context.playerWind, prevailingWind: example.context.prevailingWind, isWinner: example.hand.isWinner, limit: example.context.limit, detailedHand: { source: 'detailed-scorer', hand: example.hand, context: example.context, breakdown: { valid: false, evidenceCompleteness: 'invalid', validationErrors: [], pointRules: [], doubleRules: [], specialHands: [], basePoints: 0, doubles: 0, uncappedScore: 0, finalScore: 0, limitApplied: false, scoringMode: 'standard', calculationComponents: [] }, finalScore: 0 } });
+export const scoringExampleContext = (example: WorkedScoringExample): HandScorerExampleContext => ({ playerId: 'worked-example', playerName: example.title, playerWind: example.context.playerWind, prevailingWind: example.context.prevailingWind, isWinner: example.hand.isWinner, limit: example.context.limit, detailedHand: { source: 'detailed-scorer', hand: example.hand, context: example.context, breakdown: { valid: false, evidenceCompleteness: 'invalid', validationErrors: [], pointRules: [], doubleRules: [], specialHands: [], basePoints: 0, doubles: 0, uncappedScore: 0, finalScore: 0, limitApplied: false, scoringMode: 'standard', calculationComponents: [] }, finalScore: 0 } });
 export const scoringExampleTiles = (example: WorkedScoringExample): TileDefinition[] => exampleVisualTiles({ hand: example.hand });
 export const scoringExampleBonusTiles = (example: WorkedScoringExample): TileDefinition[] => example.hand.bonusTiles.map((tile) => bonusTileDefinition(tile.family, tile.number));
 
-export type ResolvedScorerExample = { id: string; name: string; hand: MahjongHand; context: HandScorerContext; returnHref: string; returnLabel: string; };
+export type ResolvedScorerExample = { id: string; name: string; hand: MahjongHand; context: HandScorerExampleContext; returnHref: string; returnLabel: string; };
 export const resolveScorerExample = (id: string | null | undefined): ResolvedScorerExample | undefined => {
   const worked = scoringExampleById(id);
   if (worked) return { id: worked.id, name: worked.title, hand: worked.hand, context: scoringExampleContext(worked), returnHref: worked.returnHref, returnLabel: 'Back to worked example' };
@@ -89,7 +89,7 @@ export const resolveScorerExample = (id: string | null | undefined): ResolvedSco
 
 /** Practice has the same target/context but must never preload the learner's hand. */
 export const initialHandForExampleMode = (example: ResolvedScorerExample | undefined, practice: boolean) => practice ? undefined : example?.hand;
-export const handForScorerMode = (context: HandScorerContext | null, example: ResolvedScorerExample | undefined, practice: boolean) => example ? initialHandForExampleMode(example, practice) : context?.detailedHand?.hand;
+export const handForScorerMode = (context: HandScorerContext | HandScorerExampleContext | null, example: ResolvedScorerExample | undefined, practice: boolean) => example ? initialHandForExampleMode(example, practice) : context?.detailedHand?.hand;
 
 /** Fixed facts that must survive practice without preloading a learner tile, set or bonus selection. */
 export const practiceScorerContext = (example: ResolvedScorerExample | undefined) => ({

@@ -121,6 +121,7 @@ export type GameRuleset = {
 };
 
 export type HandScorerContext = {
+  rulesProfile: RulesProfileRef;
   playerId: string;
   playerName: string;
   playerWind: Wind;
@@ -130,6 +131,11 @@ export type HandScorerContext = {
   detailedHand?: DetailedHandRecord;
   requiresRecalculation?: boolean;
 };
+
+export type HandScorerExampleContext = Omit<
+  HandScorerContext,
+  'rulesProfile'
+>;
 
 export type HandScorerResult = {
   playerId: string;

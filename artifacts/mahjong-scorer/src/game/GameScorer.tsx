@@ -18,11 +18,11 @@ import {
   confirmHand,
   createBmjaGame,
   createHandScorerContext,
-  CURRENT_RULESET,
   GAME_WINDS,
   reconcileDetailedHandsForOutcome,
   returnAppliedScoreToTable,
   undoLastHand,
+  resolveRulesProfile,
   clearGameRecovery,
   loadInProgressGameRecovery,
   saveGameRecovery,
@@ -62,6 +62,21 @@ export const printStandings = (game: GameState) =>
     ? [...game.players].sort((a, b) => game.balances[b.id] - game.balances[a.id])
     : game.players;
 
+export const previewRoundSettlement = (
+  game: GameState,
+  outcome: HandOutcome,
+  scores: RoundScoreDraft,
+) => {
+  const fullScores = Object.fromEntries(
+    game.players.map((player) => [player.id, scores[player.id] ?? 0]),
+  ) as PlayerAmounts;
+  return resolveRulesProfile(game.setup.rulesProfile).settleRound(
+    game.players,
+    game.seats,
+    { outcome, scores: fullScores },
+  );
+};
+
 export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedScore }: GameScorerProps) {
   const [recovered, setRecovered] = useState(() =>
     typeof window === 'undefined'
@@ -84,6 +99,9 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
   const currentEastId = game
     ? Object.entries(game.seats).find(([, seat]) => seat === 'east')?.[0]
     : undefined;
+  const activeRulesProfile = game
+    ? resolveRulesProfile(game.setup.rulesProfile)
+    : null;
 
   const outcome = useMemo<HandOutcome | null>(
     () =>
@@ -199,12 +217,8 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
 
   const preview = useMemo(() => {
     if (!game || !outcome) return null;
-    const fullScores = Object.fromEntries(game.players.map(p => [p.id, scores[p.id] ?? 0])) as PlayerAmounts;
     try {
-      return CURRENT_RULESET.settleRound(game.players, game.seats, {
-        outcome,
-        scores: fullScores,
-      });
+      return previewRoundSettlement(game, outcome, scores);
     } catch {
       return null;
     }
@@ -373,7 +387,7 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
         <div className="mx-auto flex max-w-[1440px] flex-wrap items-center justify-between gap-4 px-5 py-4 lg:px-8">
           <div>
             <div className="font-mono text-[9px] uppercase tracking-[.24em] text-[#ae6249]">
-              Hand {game.handHistory.length + 1} / {CURRENT_RULESET.name}
+              Hand {game.handHistory.length + 1} / {activeRulesProfile?.name}
             </div>
             <div className="font-serif text-[21px] font-bold text-[#284d45]">
               {game.players.find((player) => player.id === currentEastId)?.name}{' '}
