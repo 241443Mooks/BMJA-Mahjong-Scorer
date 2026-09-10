@@ -2,6 +2,7 @@ import { expandedTiles, isMajor, windNumber } from './tiles';
 import type {
   GameContext,
   MahjongHand,
+  RuleReferenceId,
   RuleResult,
   Wind,
 } from './types';
@@ -11,14 +12,30 @@ const point = (
   label: string,
   description: string,
   amount: number,
-): RuleResult => ({ id, label, description, amount, unit: 'points' });
+  referenceId?: RuleReferenceId,
+): RuleResult => ({
+  id,
+  label,
+  description,
+  amount,
+  unit: 'points',
+  ...(referenceId ? { referenceId } : {}),
+});
 
 const double = (
   id: string,
   label: string,
   description: string,
   amount = 1,
-): RuleResult => ({ id, label, description, amount, unit: 'doubles' });
+  referenceId?: RuleReferenceId,
+): RuleResult => ({
+  id,
+  label,
+  description,
+  amount,
+  unit: 'doubles',
+  ...(referenceId ? { referenceId } : {}),
+});
 
 /**
  * BMJA rule: chows score no basic points. They are deliberately omitted.
@@ -35,6 +52,7 @@ export const scorePungs = (hand: MahjongHand): RuleResult[] =>
         `${set.visibility === 'concealed' ? 'Concealed' : 'Exposed'} ${major ? 'major' : 'minor'} pung`,
         'Pung value from tile class and exposure.',
         amount,
+        major ? 'pung-major' : 'pung-minor',
       ),
     ];
   });
@@ -54,6 +72,7 @@ export const scoreKongs = (hand: MahjongHand): RuleResult[] =>
         `${set.visibility === 'concealed' ? 'Concealed' : 'Exposed'} ${major ? 'major' : 'minor'} kong`,
         'Kong value from tile class and exposure.',
         amount,
+        major ? 'kong-major' : 'kong-minor',
       ),
     ];
   });
@@ -70,14 +89,26 @@ export const scoreHonorPairs = (
     if (set.kind !== 'pair') return [];
     if (set.tile.family === 'dragon') {
       return [
-        point('dragon-pair', 'Pair of dragons', 'Any dragon pair scores 2.', 2),
+        point(
+          'dragon-pair',
+          'Pair of dragons',
+          'Any dragon pair scores 2.',
+          2,
+          'dragon-pair',
+        ),
       ];
     }
     if (set.tile.family !== 'wind') return [];
     const results: RuleResult[] = [];
     if (set.tile.wind === context.playerWind) {
       results.push(
-        point('own-wind-pair', 'Pair of own wind', 'Own wind pair scores 2.', 2),
+        point(
+          'own-wind-pair',
+          'Pair of own wind',
+          'Own wind pair scores 2.',
+          2,
+          'own-wind-pair',
+        ),
       );
     }
     if (set.tile.wind === context.prevailingWind) {
@@ -87,6 +118,7 @@ export const scoreHonorPairs = (
           'Pair of prevailing wind',
           'Prevailing wind pair scores 2.',
           2,
+          'prevailing-wind-pair',
         ),
       );
     }
@@ -101,6 +133,7 @@ export const scoreBonusTiles = (hand: MahjongHand): RuleResult[] =>
       `${tile.family === 'flower' ? 'Flower' : 'Season'} ${tile.number}`,
       'Every bonus tile scores 4.',
       4,
+      'bonus-tile-points',
     ),
   );
 
@@ -111,7 +144,13 @@ export const scoreBonusTiles = (hand: MahjongHand): RuleResult[] =>
 export const scoreWinningPoints = (hand: MahjongHand): RuleResult[] => {
   if (!hand.isWinner) return [];
   const rules = [
-    point('mahjong', 'Going Mah-Jong', 'A completed winning hand scores 20.', 20),
+    point(
+      'mahjong',
+      'Going Mah-Jong',
+      'A completed winning hand scores 20.',
+      20,
+      'mahjong-points',
+    ),
   ];
   if (hand.winningMethod === 'wall') {
     rules.push(
@@ -120,6 +159,7 @@ export const scoreWinningPoints = (hand: MahjongHand): RuleResult[] => {
         'Winning from the live wall',
         'A winning tile drawn from the live wall scores 2.',
         2,
+        'live-wall-win',
       ),
     );
   }
@@ -190,6 +230,10 @@ export const scoreBonusDoubles = (
   const ownNumber = windNumber(context.playerWind);
   for (const family of ['flower', 'season'] as const) {
     const familyTiles = hand.bonusTiles.filter((tile) => tile.family === family);
+    const ownReference: RuleReferenceId =
+      family === 'flower' ? 'own-flower-double' : 'own-season-double';
+    const bouquetReference: RuleReferenceId =
+      family === 'flower' ? 'flower-bouquet-double' : 'season-bouquet-double';
     if (familyTiles.length === 4) {
       rules.push(
         double(
@@ -197,6 +241,7 @@ export const scoreBonusDoubles = (
           `Bouquet of ${family}s`,
           `All four ${family}s give two doubles, including the own ${family}.`,
           2,
+          bouquetReference,
         ),
       );
     } else if (familyTiles.some((tile) => tile.number === ownNumber)) {
@@ -205,6 +250,8 @@ export const scoreBonusDoubles = (
           `own-${family}`,
           `Own ${family}`,
           `The ${family} matching the player's wind gives one double.`,
+          1,
+          ownReference,
         ),
       );
     }
