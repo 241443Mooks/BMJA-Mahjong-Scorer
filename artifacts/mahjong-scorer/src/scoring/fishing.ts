@@ -322,6 +322,7 @@ export const detectSpecialFishing = (
   hand: MahjongHand,
   bindings?: SpecialHandPatternBinding[],
 ): SpecialFishingResult[] => {
+  const usesExplicitBindings = bindings !== undefined;
   const effectiveBindings = bindings ?? bmjaSpecialHandBindings;
   if (
     hand.isWinner ||
@@ -336,11 +337,15 @@ export const detectSpecialFishing = (
     const key = tileKey(tile);
     tally.set(key, (tally.get(key) ?? 0) + 1);
   }
-  const fishingValueFor = (id: FishingSpecialId) =>
-    effectiveBindings.find((binding) => binding.patternId === id)
-      ?.fishingValue ?? fishingValues[id];
+  const bindingFor = (id: FishingSpecialId) =>
+    effectiveBindings.find((binding) => binding.patternId === id);
   return FISHING_SPECIALS.flatMap(({ id, name }) => {
-    const fishingValue = fishingValueFor(id);
+    const binding = bindingFor(id);
+    // An explicit profile owns both catalogue membership and fishing metadata.
+    // The legacy BMJA table is retained only for the no-profile API.
+    if (usesExplicitBindings && (!binding || binding.fishingValue === undefined))
+      return [];
+    const fishingValue = binding?.fishingValue ?? fishingValues[id];
     const completingTiles = playingTiles.filter(
       (tile) =>
         (tally.get(tileKey(tile)) ?? 0) < 4 &&
@@ -350,7 +355,7 @@ export const detectSpecialFishing = (
       ? [
           {
             id,
-            name,
+            name: binding?.name ?? name,
             fishingValue,
             completingTiles,
             intrinsicApplied: false,

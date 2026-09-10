@@ -55,6 +55,17 @@ const scholarsFishing: MahjongHand = {
   bonusTiles: [],
   isWinner: false,
 };
+const purityFishing: MahjongHand = {
+  sets: [
+    set('1', 'pung', suited('bamboo', 2)),
+    set('2', 'pung', suited('bamboo', 3)),
+    set('3', 'kong', suited('bamboo', 6)),
+    set('4', 'pair', suited('bamboo', 8)),
+  ],
+  remainingTiles: [suited('bamboo', 4), suited('bamboo', 4)],
+  bonusTiles: [],
+  isWinner: false,
+};
 const allPairHonours: MahjongHand = {
   sets: [
     set('1', 'pair', wind('east')),
@@ -138,6 +149,29 @@ describe('western-tm@0.1 provisional profile', () => {
     });
     expect(bmja.finalScore).toBe(400);
     expect(western.finalScore).toBe(600);
+  });
+
+  it('keeps fishing catalogue membership and values profile-local', () => {
+    const bmjaPurity = BMJA_RULESET.scoreHand({
+      hand: purityFishing,
+      playerWind: 'east',
+      prevailingWind: 'east',
+    });
+    const westernPurity = WESTERN_TM_RULESET.scoreHand({
+      hand: purityFishing,
+      playerWind: 'east',
+      prevailingWind: 'east',
+    });
+    expect(bmjaPurity.specialFishingMatches).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: 'purity',
+          fishingValue: 'three-doubles',
+        }),
+      ]),
+    );
+    expect(westernPurity.specialFishing).toBeUndefined();
+    expect(westernPurity.specialFishingMatches).toEqual([]);
   });
 
   it('does not inherit BMJA special-hand membership without a Western binding', () => {
