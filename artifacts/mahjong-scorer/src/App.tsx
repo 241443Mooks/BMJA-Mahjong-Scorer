@@ -11,6 +11,7 @@ import { exampleExitLabel, handForScorerMode, practiceScorerContext, practiceSet
 import { TileStrip } from './guide/MahjongTileGallery';
 import { ReturnToGame } from './components/ReturnToGame';
 import { handScorerLocalContext } from './game';
+import { BMJA_PROFILE_REF, resolveRulesProfile } from './game/ruleset';
 import { handScorerInitialBaseline, hasHandScorerUnsavedWork } from './game/hand-scorer-dirty-state';
 import type {
   HandScorerContext,
@@ -39,7 +40,6 @@ import type {
   WinningEventEvidence,
 } from './scoring';
 import {
-  scoreHand,
   detectedPatterns,
   isFirstDiscardEvidenceCandidate,
   isReplacementSequenceEvidenceCandidate,
@@ -465,9 +465,14 @@ function HandScorer({ context, onClose, standaloneHand, example, practice }: { c
     [limit, playerWind, prevailingWind],
   );
 
+  const scoringProfile = useMemo(
+    () => resolveRulesProfile(context?.rulesProfile ?? BMJA_PROFILE_REF),
+    [context?.rulesProfile],
+  );
+
   const score = useMemo(
-    () => scoreHand(hand, gameContext),
-    [gameContext, hand],
+    () => scoringProfile.scoreHand({ ...gameContext, hand }),
+    [gameContext, hand, scoringProfile],
   );
   const patterns = useMemo(() => detectedPatterns(score), [score]);
 

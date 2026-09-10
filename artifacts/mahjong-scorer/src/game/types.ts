@@ -121,6 +121,8 @@ export type GameRuleset = {
 };
 
 export type HandScorerContext = {
+  /** Present for game-launched sessions; standalone modes default explicitly to BMJA. */
+  rulesProfile?: RulesProfileRef;
   playerId: string;
   playerName: string;
   playerWind: Wind;

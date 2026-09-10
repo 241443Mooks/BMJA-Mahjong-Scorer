@@ -23,6 +23,7 @@ export const createHandScorerContext = (
   }
 
   return {
+    rulesProfile: game.setup.rulesProfile,
     playerId,
     playerName: player.name,
     playerWind: game.seats[playerId],

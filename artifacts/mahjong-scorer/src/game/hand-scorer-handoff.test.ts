@@ -83,6 +83,7 @@ describe('game hand-scorer handoff', () => {
         winnerId: 'bill',
       }),
     ).toEqual({
+      rulesProfile: { id: 'bmja', version: '1.0' },
       playerId: 'bill',
       playerName: 'Bill',
       playerWind: 'south',
