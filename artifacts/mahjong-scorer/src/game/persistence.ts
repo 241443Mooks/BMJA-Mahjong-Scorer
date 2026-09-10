@@ -1,19 +1,26 @@
 import { replayGame } from "./game";
+import { BMJA_PROFILE_REF } from "./ruleset";
 import type { Wind } from "../scoring";
 import type {
+  GameSetup,
   GameState,
   HandOutcome,
   RoundInput,
   RoundScoringDraft,
+  RulesProfileRef,
 } from "./types";
 
 export const GAME_SNAPSHOT_STORAGE_KEY = "bmja-mahjong-scorer/game-snapshot";
 const GAME_SNAPSHOT_VERSION = 1;
 
+type PersistedGameSetup = Omit<GameSetup, "rulesProfile"> & {
+  rulesProfile?: RulesProfileRef;
+};
+
 type PersistedGameSnapshot = {
   version: typeof GAME_SNAPSHOT_VERSION;
   game: {
-    setup: GameState["setup"];
+    setup: PersistedGameSetup;
     rounds: RoundInput[];
   };
   currentRound: {
@@ -34,6 +41,13 @@ type StorageLike = Pick<Storage, "getItem" | "setItem" | "removeItem">;
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
+
+const isRulesProfileRef = (value: unknown): value is RulesProfileRef =>
+  isRecord(value) &&
+  typeof value.id === "string" &&
+  value.id.length > 0 &&
+  typeof value.version === "string" &&
+  value.version.length > 0;
 
 const isFiniteAmountMap = (value: unknown, playerIds: Set<string>) =>
   isRecord(value) &&
@@ -72,6 +86,11 @@ const isValidSnapshotShape = (
   if (!isRecord(value.game.setup) || !Array.isArray(value.game.rounds))
     return false;
   if (
+    value.game.setup.rulesProfile !== undefined &&
+    !isRulesProfileRef(value.game.setup.rulesProfile)
+  )
+    return false;
+  if (
     !Array.isArray(value.game.setup.players) ||
     value.game.setup.players.length !== 4
   )
@@ -106,6 +125,11 @@ const isValidSnapshotShape = (
     )
   );
 };
+
+const normalisePersistedSetup = (setup: PersistedGameSetup): GameSetup => ({
+  ...setup,
+  rulesProfile: { ...(setup.rulesProfile ?? BMJA_PROFILE_REF) },
+});
 
 const roundsFrom = (game: GameState): RoundInput[] =>
   game.handHistory.map(({ outcome, scores, scoreRecords }) => ({
@@ -160,7 +184,10 @@ export const loadGameRecovery = (
   }
 
   try {
-    const game = replayGame(parsed.game.setup, parsed.game.rounds);
+    const game = replayGame(
+      normalisePersistedSetup(parsed.game.setup),
+      parsed.game.rounds,
+    );
     const { outcomeType, winnerId, draft } = parsed.currentRound;
     if (
       (outcomeType === "win" &&
