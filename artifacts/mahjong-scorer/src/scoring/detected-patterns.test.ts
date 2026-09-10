@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { detectedPatterns } from "./detected-patterns";
 import { scoreHand } from "./score";
-import { dragon, set, suited, wind } from "./tiles";
+import { bonus, dragon, set, suited, wind } from "./tiles";
 import type { MahjongHand } from "./types";
 
 const ordinaryWinner: MahjongHand = {
@@ -35,6 +35,59 @@ describe("detected pattern callouts", () => {
       ]),
     );
     expect(patterns.map((pattern) => pattern.name)).not.toContain("Purity");
+  });
+
+  it("carries stable guide reference ids for ordinary scoring explanations", () => {
+    const patterns = detectedPatterns(
+      scoreHand(
+        {
+          sets: [
+            set("minor", "pung", suited("bamboo", 2), "concealed"),
+            set("major-kong", "kong", wind("south"), "exposed"),
+            set("chow", "chow", suited("circles", 3), "exposed"),
+            set("other", "pung", suited("characters", 5), "exposed"),
+            set("pair", "pair", dragon("red"), "concealed"),
+          ],
+          bonusTiles: [bonus("flower", 1)],
+          isWinner: true,
+          winningMethod: "wall",
+        },
+        { playerWind: "east", prevailingWind: "west", limit: 1000 },
+      ),
+    );
+
+    expect(patterns).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: "points-pung-minor",
+          referenceId: "pung-minor",
+        }),
+        expect.objectContaining({
+          id: "points-kong-major-kong",
+          referenceId: "kong-major",
+        }),
+        expect.objectContaining({
+          id: "points-dragon-pair",
+          referenceId: "dragon-pair",
+        }),
+        expect.objectContaining({
+          id: "points-bonus-flower-1",
+          referenceId: "bonus-tile-points",
+        }),
+        expect.objectContaining({
+          id: "points-mahjong",
+          referenceId: "mahjong-points",
+        }),
+        expect.objectContaining({
+          id: "points-live-wall-win",
+          referenceId: "live-wall-win",
+        }),
+        expect.objectContaining({
+          id: "doubles-own-flower",
+          referenceId: "own-flower-double",
+        }),
+      ]),
+    );
   });
 
   it("shows a matched special hand with its existing description and value", () => {
