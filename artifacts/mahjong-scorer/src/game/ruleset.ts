@@ -1,4 +1,8 @@
 import { scoreHand } from '../scoring';
+import {
+  bmjaSpecialHandBindings,
+  type SpecialHandPatternBinding,
+} from '../scoring/special-hands';
 import { progressBmjaGame } from './progression';
 import { settleBmjaRound } from './settlement';
 import type { GameRuleset, RulesProfileRef } from './types';
@@ -19,10 +23,44 @@ export const BMJA_PROFILE_REF: RulesProfileRef = Object.freeze({
   version: BMJA_RULESET.version,
 });
 
+export const WESTERN_TM_PROFILE_REF: RulesProfileRef = Object.freeze({
+  id: 'western-tm',
+  version: '0.1',
+});
+
+const westernTmSpecialHandBindings: SpecialHandPatternBinding[] =
+  bmjaSpecialHandBindings.map((binding) =>
+    binding.patternId === 'three-great-scholars'
+      ? {
+          ...binding,
+          profile: WESTERN_TM_PROFILE_REF,
+          name: 'Three Great Scholars',
+          value: 1500,
+          fishingValue: 600,
+        }
+      : { ...binding, profile: WESTERN_TM_PROFILE_REF },
+  );
+
+export const WESTERN_TM_RULESET: GameRuleset = Object.freeze({
+  id: WESTERN_TM_PROFILE_REF.id,
+  version: WESTERN_TM_PROFILE_REF.version,
+  name: 'Western — Thompson & Maloney (provisional)',
+  defaultLimit: 1500,
+  scoreHand: ({ hand, playerWind, prevailingWind, limit = 1500 }) =>
+    scoreHand(
+      hand,
+      { playerWind, prevailingWind, limit },
+      westernTmSpecialHandBindings,
+    ),
+  settleRound: settleBmjaRound,
+  progressGame: progressBmjaGame,
+});
+
 const profileKey = ({ id, version }: RulesProfileRef) => `${id}@${version}`;
 
 const RULES_PROFILE_REGISTRY = new Map<string, GameRuleset>([
   [profileKey(BMJA_PROFILE_REF), BMJA_RULESET],
+  [profileKey(WESTERN_TM_PROFILE_REF), WESTERN_TM_RULESET],
 ]);
 
 export const resolveRulesProfile = (profile: RulesProfileRef): GameRuleset => {

@@ -110,6 +110,8 @@ A key architecture finding is:
 
 The active rules profile should bind local name, score, fishing/ready treatment, exposure policy, catalogue membership and provenance to that pattern.
 
+The executable `western-tm@0.1` profile is provisional. It currently reuses the BMJA-compatible British/Western base for ordinary scoring, validation, tile values, bonus tiles, doubles, wind treatment, settlement, progression and ordinary winner handling. These domains are recorded as **provisional-compatible**, not primary-source-verified identity. Its first verified different binding is Three Great Scholars (1,500 winning / 600 fishing, versus BMJA 1,000 / 400). Do not create `western-tm@1.0` while those executable provisional assumptions remain.
+
 `Three Great Scholars` is the reference example: BMJA, Thompson & Maloney and Outside the Box recognise the same broad hand identity but the documented values are not identical.
 
 ## Architecture guardrails now established

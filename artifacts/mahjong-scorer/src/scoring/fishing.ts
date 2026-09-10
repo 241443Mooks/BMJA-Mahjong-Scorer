@@ -5,7 +5,11 @@ import {
   scoreBonusDoubles,
   scoreBonusTiles,
 } from './rules';
-import { detectSpecialHands } from './special-hands';
+import {
+  bmjaSpecialHandBindings,
+  detectSpecialHands,
+  type SpecialHandPatternBinding,
+} from './special-hands';
 import {
   hasCompleteWinningShape,
   playingTiles as handPlayingTiles,
@@ -26,14 +30,11 @@ import {
 
 const playingTiles: PlayingTile[] = [
   ...SUITS.flatMap((suit) =>
-    Array.from(
-      { length: 9 },
-      (_, index): PlayingTile => ({
-        family: 'suit',
-        suit,
-        rank: (index + 1) as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9,
-      }),
-    ),
+    Array.from({ length: 9 }, (_, index): PlayingTile => ({
+      family: 'suit',
+      suit,
+      rank: (index + 1) as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9,
+    })),
   ),
   ...WINDS.map((wind): PlayingTile => ({ family: 'wind', wind })),
   ...DRAGONS.map((dragon): PlayingTile => ({ family: 'dragon', dragon })),
@@ -56,10 +57,7 @@ const names: Record<FishingSpecialId, string> = {
   'thirteen-unique-wonders': 'Thirteen unique wonders',
 };
 
-const fishingValues: Record<
-  FishingSpecialId,
-  number | 'three-doubles'
-> = {
+const fishingValues: Record<FishingSpecialId, number | 'three-doubles'> = {
   purity: 'three-doubles',
   'all-pair-honours': 200,
   knitting: 200,
@@ -76,13 +74,11 @@ const fishingValues: Record<
   'thirteen-unique-wonders': 400,
 };
 
-export const FISHING_SPECIALS = (
-  Object.keys(names) as FishingSpecialId[]
-).map((id) => ({ id, name: names[id], fishingValue: fishingValues[id] }));
+export const FISHING_SPECIALS = (Object.keys(names) as FishingSpecialId[]).map(
+  (id) => ({ id, name: names[id], fishingValue: fishingValues[id] }),
+);
 
-const currentTiles = (hand: MahjongHand) => [
-  ...handPlayingTiles(hand),
-];
+const currentTiles = (hand: MahjongHand) => [...handPlayingTiles(hand)];
 
 type TileTally = Map<string, { tile: PlayingTile; count: number }>;
 
@@ -97,9 +93,7 @@ const tallyTiles = (tiles: PlayingTile[]): TileTally => {
 };
 
 const cloneTally = (tally: TileTally): TileTally =>
-  new Map(
-    [...tally].map(([key, value]) => [key, { ...value }]),
-  );
+  new Map([...tally].map(([key, value]) => [key, { ...value }]));
 
 const removeTiles = (
   tally: TileTally,
@@ -120,8 +114,9 @@ const remainingPhysicalCount = (tally: TileTally): number =>
   [...tally.values()].reduce((sum, entry) => sum + entry.count, 0);
 
 const nextTile = (tally: TileTally): PlayingTile | undefined =>
-  [...tally.entries()]
-    .sort(([left], [right]) => left.localeCompare(right))[0]?.[1].tile;
+  [...tally.entries()].sort(([left], [right]) =>
+    left.localeCompare(right),
+  )[0]?.[1].tile;
 
 const completionSetId = (sets: HandSet[], index: number): string => {
   const base = `fishing-completion-${index + 1}`;
@@ -134,8 +129,12 @@ const standardDecompositions = (
   concealedTiles: PlayingTile[],
 ): HandSet[][] => {
   const results: HandSet[][] = [];
-  const existingPairs = existingSets.filter((handSet) => handSet.kind === 'pair').length;
-  const existingChows = existingSets.filter((handSet) => handSet.kind === 'chow').length;
+  const existingPairs = existingSets.filter(
+    (handSet) => handSet.kind === 'pair',
+  ).length;
+  const existingChows = existingSets.filter(
+    (handSet) => handSet.kind === 'chow',
+  ).length;
 
   const search = (
     tally: TileTally,
@@ -196,18 +195,20 @@ const standardDecompositions = (
         meldsNeeded - 1,
         chowsUsed,
       );
-      if (
-        chowsUsed < 1 &&
-        tile.family === 'suit' &&
-        tile.rank <= 7
-      ) {
+      if (chowsUsed < 1 && tile.family === 'suit' && tile.rank <= 7) {
         const second = {
           ...tile,
-          rank: (tile.rank + 1) as Extract<PlayingTile, { family: 'suit' }>['rank'],
+          rank: (tile.rank + 1) as Extract<
+            PlayingTile,
+            { family: 'suit' }
+          >['rank'],
         };
         const third = {
           ...tile,
-          rank: (tile.rank + 2) as Extract<PlayingTile, { family: 'suit' }>['rank'],
+          rank: (tile.rank + 2) as Extract<
+            PlayingTile,
+            { family: 'suit' }
+          >['rank'],
         };
         addGroup(
           'chow',
@@ -220,11 +221,7 @@ const standardDecompositions = (
     }
   };
 
-  if (
-    existingSets.length <= 5 &&
-    existingPairs <= 1 &&
-    existingChows <= 1
-  ) {
+  if (existingSets.length <= 5 && existingPairs <= 1 && existingChows <= 1) {
     const pairsNeeded = 1 - existingPairs;
     const meldsNeeded = 4 - (existingSets.length - existingPairs);
     search(
@@ -240,13 +237,7 @@ const standardDecompositions = (
     existingSets.length <= 7 &&
     existingSets.every((handSet) => handSet.kind === 'pair')
   ) {
-    search(
-      tallyTiles(concealedTiles),
-      [],
-      7 - existingSets.length,
-      0,
-      0,
-    );
+    search(tallyTiles(concealedTiles), [], 7 - existingSets.length, 0, 0);
   }
 
   return results;
@@ -283,10 +274,10 @@ const completedHands = (
     if (hasCompleteWinningShape(irregular)) completed.push(irregular);
   }
 
-  for (const sets of standardDecompositions(
-    hand.sets,
-    [...remaining, completingTile],
-  )) {
+  for (const sets of standardDecompositions(hand.sets, [
+    ...remaining,
+    completingTile,
+  ])) {
     const candidate = finish(sets);
     if (hasCompleteWinningShape(candidate)) completed.push(candidate);
   }
@@ -317,18 +308,21 @@ const completesTarget = (
   hand: MahjongHand,
   target: FishingSpecialId,
   tile: PlayingTile,
+  bindings: SpecialHandPatternBinding[],
 ) =>
   completedHands(hand, tile).some((completed) =>
     target === 'purity'
       ? isPurityHand(completed)
-      : detectSpecialHands(completed).some(
+      : detectSpecialHands(completed, undefined, bindings).some(
           (special) => special.id === target && special.matched,
         ),
   );
 
 export const detectSpecialFishing = (
   hand: MahjongHand,
+  bindings?: SpecialHandPatternBinding[],
 ): SpecialFishingResult[] => {
+  const effectiveBindings = bindings ?? bmjaSpecialHandBindings;
   if (
     hand.isWinner ||
     structuralTileCount(hand) !== 13 ||
@@ -342,11 +336,15 @@ export const detectSpecialFishing = (
     const key = tileKey(tile);
     tally.set(key, (tally.get(key) ?? 0) + 1);
   }
-  return FISHING_SPECIALS.flatMap(({ id, name, fishingValue }) => {
+  const fishingValueFor = (id: FishingSpecialId) =>
+    effectiveBindings.find((binding) => binding.patternId === id)
+      ?.fishingValue ?? fishingValues[id];
+  return FISHING_SPECIALS.flatMap(({ id, name }) => {
+    const fishingValue = fishingValueFor(id);
     const completingTiles = playingTiles.filter(
       (tile) =>
         (tally.get(tileKey(tile)) ?? 0) < 4 &&
-        completesTarget(hand, id, tile),
+        completesTarget(hand, id, tile, effectiveBindings),
     );
     return completingTiles.length
       ? [

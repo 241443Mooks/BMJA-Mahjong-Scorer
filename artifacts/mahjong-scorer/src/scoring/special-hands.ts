@@ -24,6 +24,8 @@ export type SpecialHandPatternBinding = {
   name: string;
   description: string;
   value: number;
+  /** Fixed value while one tile away, when this profile has published one. */
+  fishingValue?: number;
 };
 
 const tiles = (hand: MahjongHand) => [
@@ -460,18 +462,25 @@ const BMJA_SPECIAL_HAND_PROFILE: RulesProfileRef = Object.freeze({
   id: 'bmja',
   version: '1.0',
 });
-const bmjaBinding = (
+const bindingFor = (
+  profile: RulesProfileRef,
   patternId: string,
   name: string,
   description: string,
   value: number,
 ): SpecialHandPatternBinding => ({
   patternId,
-  profile: BMJA_SPECIAL_HAND_PROFILE,
+  profile,
   name,
   description,
   value,
 });
+const bmjaBinding = (
+  patternId: string,
+  name: string,
+  description: string,
+  value: number,
+) => bindingFor(BMJA_SPECIAL_HAND_PROFILE, patternId, name, description, value);
 export const bmjaSpecialHandBindings = [
   bmjaBinding(
     'knitting',
@@ -623,8 +632,12 @@ export const specialHandDetectors = bmjaSpecialHandPatterns.map(
 export const detectSpecialHands = (
   hand: MahjongHand,
   context?: GameContext,
+  bindings = bmjaSpecialHandBindings,
 ): SpecialHandResult[] =>
-  bmjaSpecialHandPatterns.map(({ binding, pattern }) => ({
+  resolveSpecialHandBindings(
+    bindings[0]?.profile ?? BMJA_SPECIAL_HAND_PROFILE,
+    bindings,
+  ).map(({ binding, pattern }) => ({
     id: pattern.id,
     name: binding.name,
     description: binding.description,
