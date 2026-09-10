@@ -5,7 +5,10 @@ import {
   scoreBonusTiles,
   isPurityHand,
 } from './rules';
-import { detectSpecialHands } from './special-hands';
+import {
+  detectSpecialHands,
+  type SpecialHandPatternBinding,
+} from './special-hands';
 import { detectSpecialFishing, fishingScoreOptions } from './fishing';
 import type { GameContext, MahjongHand, ScoreBreakdown } from './types';
 import { classifyEvidenceCompleteness, validateHand } from './validation';
@@ -25,6 +28,7 @@ export const DEFAULT_CONTEXT: GameContext = {
 export const scoreHand = (
   hand: MahjongHand,
   context: GameContext = DEFAULT_CONTEXT,
+  specialHandBindings?: SpecialHandPatternBinding[],
 ): ScoreBreakdown => {
   const validationErrors = validateHand(hand, context);
   const evidenceCompleteness = classifyEvidenceCompleteness(
@@ -34,8 +38,12 @@ export const scoreHand = (
   // Invalid entries remain inspectable as before; only partial evidence must
   // suppress conclusions that depend on tiles the scorer has not seen.
   const canAnalyseWholeHand = evidenceCompleteness !== 'partial';
-  const specialHands = canAnalyseWholeHand ? detectSpecialHands(hand, context) : [];
-  const fishingMatches = canAnalyseWholeHand ? detectSpecialFishing(hand) : [];
+  const specialHands = canAnalyseWholeHand
+    ? detectSpecialHands(hand, context, specialHandBindings)
+    : [];
+  const fishingMatches = canAnalyseWholeHand
+    ? detectSpecialFishing(hand, specialHandBindings)
+    : [];
   const matchedSpecial = specialHands
     .filter((result) => result.matched)
     .sort((a, b) => b.value - a.value)[0];
@@ -119,8 +127,7 @@ export const scoreHand = (
               label: 'Bonus tiles',
               base: bonusPoints,
               doubles: bonusDoubles + finalDiscardDouble,
-              subtotal:
-                bonusPoints * 2 ** (bonusDoubles + finalDiscardDouble),
+              subtotal: bonusPoints * 2 ** (bonusDoubles + finalDiscardDouble),
             },
           ]
         : []),
@@ -149,8 +156,7 @@ export const scoreHand = (
               label: 'Bonus tiles',
               base: bonusPoints,
               doubles: bonusDoubles + finalDiscardDouble,
-              subtotal:
-                bonusPoints * 2 ** (bonusDoubles + finalDiscardDouble),
+              subtotal: bonusPoints * 2 ** (bonusDoubles + finalDiscardDouble),
             },
           ]
         : []),
@@ -171,7 +177,12 @@ export const scoreHand = (
     (sum, component) => sum + component.subtotal,
     0,
   );
-  const finalScore = Math.min(uncappedScore, context.limit);
+  // A published fixed special value is not silently reduced by the ordinary
+  // profile cap. Ordinary and fishing scores retain the profile limit.
+  const effectiveLimit = matchedSpecial
+    ? Math.max(context.limit, matchedSpecial.value)
+    : context.limit;
+  const finalScore = Math.min(uncappedScore, effectiveLimit);
 
   return {
     valid: validationErrors.length === 0,
