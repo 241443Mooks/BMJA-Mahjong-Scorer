@@ -1,4 +1,4 @@
-import { CURRENT_RULESET } from './ruleset';
+import { BMJA_PROFILE_REF, resolveRulesProfile } from './ruleset';
 import { assertDetailedWinnerMatchesOutcome } from './hand-scorer-handoff';
 import type {
   ConfirmedHand,
@@ -11,11 +11,16 @@ import type {
   PlayerScoreRecords,
   PlayerScoreRecord,
   RoundInput,
+  RulesProfileRef,
   SeatAssignments,
 } from './types';
 
 const cloneAmounts = (amounts: PlayerAmounts): PlayerAmounts => ({ ...amounts });
 const cloneSeats = (seats: SeatAssignments): SeatAssignments => ({ ...seats });
+const cloneRulesProfile = (profile: RulesProfileRef): RulesProfileRef => ({
+  id: profile.id,
+  version: profile.version,
+});
 
 const cloneDetailedHandRecord = (
   record: DetailedHandRecord,
@@ -62,6 +67,7 @@ const cloneScoreRecord = (record: PlayerScoreRecord): PlayerScoreRecord =>
     : { ...record };
 
 const validateSetup = (setup: GameSetup) => {
+  resolveRulesProfile(setup.rulesProfile);
   if (setup.players.length !== 4) {
     throw new Error('A game requires exactly four players.');
   }
@@ -118,11 +124,14 @@ export const createBmjaGame = (
   startingSeats: SeatAssignments,
   startingBalances?: PlayerAmounts,
   gameLength: GameLength = 'full-game',
+  rulesProfile: RulesProfileRef = BMJA_PROFILE_REF,
 ): GameState => {
+  const ruleset = resolveRulesProfile(rulesProfile);
   const balances =
     startingBalances ??
     Object.fromEntries(players.map((player) => [player.id, 0]));
   const setup: GameSetup = {
+    rulesProfile: cloneRulesProfile(rulesProfile),
     players: players.map((player) => ({ ...player })),
     startingSeats: cloneSeats(startingSeats),
     startingPrevailingWind: 'east',
@@ -131,7 +140,7 @@ export const createBmjaGame = (
   };
   validateSetup(setup);
   return {
-    rulesetId: CURRENT_RULESET.id,
+    rulesetId: ruleset.id,
     setup,
     players: setup.players.map((player) => ({ ...player })),
     seats: cloneSeats(startingSeats),
@@ -148,7 +157,8 @@ const applyRound = (state: GameState, round: RoundInput): GameState => {
     throw new Error('Game is already complete.');
   }
 
-  const settlement = CURRENT_RULESET.settleRound(
+  const ruleset = resolveRulesProfile(state.setup.rulesProfile);
+  const settlement = ruleset.settleRound(
     state.players,
     state.seats,
     round,
@@ -160,7 +170,7 @@ const applyRound = (state: GameState, round: RoundInput): GameState => {
       state.balances[player.id] + settlement.changes[player.id],
     ]),
   );
-  const progression = CURRENT_RULESET.progressGame(
+  const progression = ruleset.progressGame(
     state.players,
     {
       seats: state.seats,
@@ -219,6 +229,7 @@ export const replayGame = (
     setup.startingSeats,
     setup.startingBalances,
     setup.gameLength,
+    setup.rulesProfile,
   );
   for (const round of rounds) state = applyRound(state, round);
   return state;
