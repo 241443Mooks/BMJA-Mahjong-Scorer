@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { BookOpen, ChevronRight, CircleHelp, Sparkles } from 'lucide-react';
 import { SiteHeader } from '../components/SiteHeader';
 import { ReturnToGame } from '../components/ReturnToGame';
@@ -72,6 +73,27 @@ function Callout({ children }: { children: React.ReactNode }) {
 }
 
 export function BeginnerGuide({ onClose }: { onClose: () => void }) {
+  useEffect(() => {
+    const revealHashTarget = () => {
+      const rawHash = window.location.hash.slice(1);
+      if (!rawHash) return;
+
+      const target = document.getElementById(decodeURIComponent(rawHash));
+      if (!target) return;
+
+      const containingDetails = target.closest('details');
+      if (containingDetails) containingDetails.open = true;
+
+      window.requestAnimationFrame(() => {
+        target.scrollIntoView({ block: 'start' });
+      });
+    };
+
+    revealHashTarget();
+    window.addEventListener('hashchange', revealHashTarget);
+    return () => window.removeEventListener('hashchange', revealHashTarget);
+  }, []);
+
   return (
     <div className="mahjong-shell">
       <SiteHeader />
@@ -178,7 +200,10 @@ export function BeginnerGuide({ onClose }: { onClose: () => void }) {
                   );
                 })}
               </div>
-              <Callout><p>Your matching Flower and matching Season each give <strong>1 double</strong>.</p><p className="mt-2">This uses your <strong>seat Wind</strong>, not the prevailing Wind. All four Flowers, or all four Seasons, give <strong>two doubles in total</strong> for that complete set.</p></Callout>
+              <Callout>
+                <p id="rule-own-bonus-double" className="scroll-mt-24">Your matching Flower and matching Season each give <strong>1 double</strong>.</p>
+                <p id="rule-bonus-bouquet-double" className="mt-2 scroll-mt-24">This uses your <strong>seat Wind</strong>, not the prevailing Wind. All four Flowers, or all four Seasons, give <strong>two doubles in total</strong> for that complete set.</p>
+              </Callout>
             </GuideSection>
 
             <GuideSection id="visibility" number="06" title="Exposed and concealed sets">
@@ -209,21 +234,21 @@ export function BeginnerGuide({ onClose }: { onClose: () => void }) {
                     <table className="w-full min-w-[430px] text-left">
                       <thead className="font-mono text-[9px] uppercase tracking-[.12em] text-[#8c8a7f]"><tr><th className="pb-2">Set</th><th className="pb-2">Tile</th><th className="pb-2">Exposed</th><th className="pb-2">Concealed</th></tr></thead>
                       <tbody className="divide-y divide-[#e8e0d1]">
-                        <tr><td className="py-2">Pung</td><td>Minor</td><td>2</td><td>4</td></tr>
-                        <tr><td className="py-2">Pung</td><td>Major</td><td>4</td><td>8</td></tr>
-                        <tr><td className="py-2">Kong</td><td>Minor</td><td>8</td><td>16</td></tr>
-                        <tr><td className="py-2">Kong</td><td>Major</td><td>16</td><td>32</td></tr>
+                        <tr id="rule-pung-minor" className="scroll-mt-24"><td className="py-2">Pung</td><td>Minor</td><td>2</td><td>4</td></tr>
+                        <tr id="rule-pung-major" className="scroll-mt-24"><td className="py-2">Pung</td><td>Major</td><td>4</td><td>8</td></tr>
+                        <tr id="rule-kong-minor" className="scroll-mt-24"><td className="py-2">Kong</td><td>Minor</td><td>8</td><td>16</td></tr>
+                        <tr id="rule-kong-major" className="scroll-mt-24"><td className="py-2">Kong</td><td>Major</td><td>16</td><td>32</td></tr>
                       </tbody>
                     </table>
                   </div>
                   <ul className="list-disc space-y-1 pl-5">
                     <li>Chow: 0 points</li>
-                    <li>Dragon pair: 2 points</li>
-                    <li>Own Wind pair: 2 points</li>
-                    <li>Prevailing Wind pair: 2 points</li>
-                    <li>Each Flower or Season: 4 points</li>
-                    <li>Mah Jong: 20 points</li>
-                    <li>Winning from the live wall: 2 additional points</li>
+                    <li id="rule-dragon-pair" className="scroll-mt-24">Dragon pair: 2 points</li>
+                    <li id="rule-own-wind-pair" className="scroll-mt-24">Own Wind pair: 2 points</li>
+                    <li id="rule-prevailing-wind-pair" className="scroll-mt-24">Prevailing Wind pair: 2 points</li>
+                    <li id="rule-bonus-tile-points" className="scroll-mt-24">Each Flower or Season: 4 points</li>
+                    <li id="rule-mahjong-points" className="scroll-mt-24">Mah Jong: 20 points</li>
+                    <li id="rule-live-wall-win" className="scroll-mt-24">Winning from the live wall: 2 additional points</li>
                   </ul>
                 </div>
               </details>
