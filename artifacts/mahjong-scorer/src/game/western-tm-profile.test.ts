@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { bonus, dragon, set, suited, wind } from '../scoring';
+import { canonicalSpecialHandPatterns } from '../scoring/special-hands';
 import type { MahjongHand } from '../scoring';
 import { createBmjaGame } from './game';
 import {
@@ -8,6 +9,7 @@ import {
   resolveRulesProfile,
   WESTERN_TM_PROFILE_REF,
   WESTERN_TM_RULESET,
+  westernTmSpecialHandBindings,
 } from './ruleset';
 import { loadGameRecovery, saveGameRecovery } from './persistence';
 import type { GamePlayer, SeatAssignments } from './types';
@@ -79,6 +81,24 @@ const allPairHonours: MahjongHand = {
   bonusTiles: [],
   isWinner: true,
 };
+const uniqueWonder: MahjongHand = { sets: [], looseTiles: [suited('bamboo', 1), suited('bamboo', 9), suited('characters', 1), suited('characters', 9), suited('circles', 1), suited('circles', 9), wind('east'), wind('south'), wind('west'), wind('north'), dragon('red'), dragon('green'), dragon('white'), wind('east')], bonusTiles: [], isWinner: true };
+const fourBlessings: MahjongHand = { sets: [set('east', 'pung', wind('east')), set('south', 'pung', wind('south')), set('west', 'pung', wind('west')), set('north', 'pung', wind('north')), set('pair', 'pair', dragon('red'))], bonusTiles: [], isWinner: true };
+const allWindsAndDragons: MahjongHand = { sets: [set('east', 'pung', wind('east')), set('south', 'pung', wind('south')), set('red', 'pung', dragon('red')), set('green', 'pung', dragon('green')), set('pair', 'pair', dragon('white'))], bonusTiles: [], isWinner: true };
+const headsAndTails: MahjongHand = { sets: [set('b1', 'pung', suited('bamboo', 1)), set('b9', 'pung', suited('bamboo', 9)), set('c1', 'pung', suited('characters', 1)), set('c9', 'pung', suited('characters', 9)), set('pair', 'pair', suited('circles', 1))], bonusTiles: [], isWinner: true };
+const westernBatch: Array<{
+  id: string;
+  name: string;
+  value: number;
+  fishingValue: number;
+  hand: MahjongHand;
+  fishing?: MahjongHand;
+}> = [
+  { id: 'thirteen-unique-wonders', name: 'Unique Wonder', value: 2000, fishingValue: 800, hand: uniqueWonder, fishing: { sets: [], looseTiles: uniqueWonder.looseTiles!.slice(0, -1), bonusTiles: [], isWinner: false } },
+  { id: 'all-pair-honours', name: 'All Pair Honours', value: 1000, fishingValue: 400, hand: allPairHonours },
+  { id: 'four-blessings', name: 'Four Blessings', value: 1500, fishingValue: 600, hand: fourBlessings, fishing: { sets: [set('east', 'pung', wind('east')), set('south', 'pung', wind('south')), set('west', 'pung', wind('west')), set('pair', 'pair', dragon('red'))], remainingTiles: [wind('north'), wind('north')], bonusTiles: [], isWinner: false } },
+  { id: 'all-winds-and-dragons', name: 'All Winds and Dragons', value: 1000, fishingValue: 400, hand: allWindsAndDragons, fishing: { sets: [set('east', 'pung', wind('east')), set('south', 'pung', wind('south')), set('red', 'pung', dragon('red')), set('pair', 'pair', dragon('green'))], remainingTiles: [wind('west'), wind('west')], bonusTiles: [], isWinner: false } },
+  { id: 'heads-and-tails', name: 'Heads and Tails', value: 1000, fishingValue: 400, hand: headsAndTails, fishing: { sets: [set('b1', 'pung', suited('bamboo', 1)), set('b9', 'pung', suited('bamboo', 9)), set('c1', 'pung', suited('characters', 1)), set('pair', 'pair', suited('characters', 9))], remainingTiles: [suited('circles', 1), suited('circles', 1)], bonusTiles: [], isWinner: false } },
+];
 
 describe('western-tm@0.1 provisional profile', () => {
   it('resolves separately and persists/replays its exact version', () => {
@@ -174,7 +194,18 @@ describe('western-tm@0.1 provisional profile', () => {
     expect(westernPurity.specialFishingMatches).toEqual([]);
   });
 
-  it('does not inherit BMJA special-hand membership without a Western binding', () => {
+  it('binds the five evidenced Companion hands to existing canonical detectors', () => {
+    expect(westernTmSpecialHandBindings).toHaveLength(6);
+    for (const fixture of westernBatch) {
+      expect(canonicalSpecialHandPatterns.filter(({ id }) => id === fixture.id)).toHaveLength(1);
+      expect(WESTERN_TM_RULESET.scoreHand({ hand: fixture.hand, playerWind: 'east', prevailingWind: 'east' }).specialHands).toContainEqual(expect.objectContaining({ id: fixture.id, name: fixture.name, value: fixture.value, matched: true }));
+      if (fixture.fishing) {
+        expect(WESTERN_TM_RULESET.scoreHand({ hand: fixture.fishing, playerWind: 'east', prevailingWind: 'east' }).specialFishingMatches).toContainEqual(expect.objectContaining({ id: fixture.id, fishingValue: fixture.fishingValue }));
+      }
+    }
+  });
+
+  it('does not inherit an unbound BMJA special-hand membership', () => {
     expect(
       BMJA_RULESET.scoreHand({
         hand: allPairHonours,
@@ -184,13 +215,11 @@ describe('western-tm@0.1 provisional profile', () => {
     ).toMatchObject({ matched: true, value: 500 });
     expect(
       WESTERN_TM_RULESET.scoreHand({
-        hand: allPairHonours,
+        hand: { sets: [set('one', 'pung', dragon('green')), set('two', 'pung', suited('bamboo', 2)), set('three', 'pung', suited('bamboo', 4)), set('four', 'pung', suited('bamboo', 8)), set('five', 'pair', suited('bamboo', 6))], bonusTiles: [], isWinner: true },
         playerWind: 'east',
         prevailingWind: 'east',
-      }).specialHands,
-    ).toEqual([
-      expect.objectContaining({ id: 'three-great-scholars', matched: false }),
-    ]);
+      }).specialHands.find((hand) => hand.id === 'imperial-jade'),
+    ).toBeUndefined();
   });
 
   it('reuses ordinary scoring, settlement, and progression without a second engine', () => {
@@ -252,5 +281,6 @@ describe('western-tm@0.1 provisional profile', () => {
         prevailingWind: 'east',
       }).finalScore,
     ).toBe(1500);
+    expect(WESTERN_TM_RULESET.scoreHand({ hand: uniqueWonder, playerWind: 'east', prevailingWind: 'east' }).finalScore).toBe(2000);
   });
 });

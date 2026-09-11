@@ -183,6 +183,10 @@ These records are sufficiently clear in the supplied synopsis photographs to dri
 
 These six are the safest current cross-profile cases because their synopsis definitions can be compared directly with existing canonical predicates without inventing a new detector.
 
+Implementation status: #87 binds Unique Wonder, All Pair Honours, Four Blessings,
+All Winds and Dragons, and Heads and Tails in `western-tm@0.1`. The page and
+edition locators in the table remain the provenance for those bindings.
+
 ## 5. Existing-detector candidates that must **not** be bound yet
 
 ### Wriggly Snake

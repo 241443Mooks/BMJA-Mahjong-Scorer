@@ -25,7 +25,7 @@ export const WESTERN_TM_PROFILE_REF: RulesProfileRef = Object.freeze({
   version: '0.1',
 });
 
-const westernTmSpecialHandBindings: SpecialHandPatternBinding[] = [
+export const westernTmSpecialHandBindings: SpecialHandPatternBinding[] = [
   {
     patternId: 'three-great-scholars',
     profile: WESTERN_TM_PROFILE_REF,
@@ -33,6 +33,35 @@ const westernTmSpecialHandBindings: SpecialHandPatternBinding[] = [
     description: 'A pung or kong of each of the three dragons.',
     value: 1500,
     fishingValue: 600,
+  },
+  {
+    patternId: 'thirteen-unique-wonders', profile: WESTERN_TM_PROFILE_REF,
+    name: 'Unique Wonder',
+    description: 'One of every terminal, wind and dragon, plus a pair of any one.',
+    value: 2000, fishingValue: 800,
+  },
+  {
+    patternId: 'all-pair-honours', profile: WESTERN_TM_PROFILE_REF,
+    name: 'All Pair Honours',
+    description: 'Seven pairs of major tiles: 1s, 9s, winds and dragons; repeated pairs are allowed.',
+    value: 1000, fishingValue: 400,
+  },
+  {
+    patternId: 'four-blessings', profile: WESTERN_TM_PROFILE_REF,
+    name: 'Four Blessings', description: 'A pung or kong of each wind, plus any pair.',
+    value: 1500, fishingValue: 600,
+  },
+  {
+    patternId: 'all-winds-and-dragons', profile: WESTERN_TM_PROFILE_REF,
+    name: 'All Winds and Dragons',
+    description: 'Four pungs/kongs and a pair, all made from winds and dragons.',
+    value: 1000, fishingValue: 400,
+  },
+  {
+    patternId: 'heads-and-tails', profile: WESTERN_TM_PROFILE_REF,
+    name: 'Heads and Tails',
+    description: 'Four pungs/kongs and a pair, all made from suited 1s and 9s.',
+    value: 1000, fishingValue: 400,
   },
 ];
 
