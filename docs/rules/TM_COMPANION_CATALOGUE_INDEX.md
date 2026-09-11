@@ -187,6 +187,22 @@ Implementation status: #87 binds Unique Wonder, All Pair Honours, Four Blessings
 All Winds and Dragons, and Heads and Tails in `western-tm@0.1`. The page and
 edition locators in the table remain the provenance for those bindings.
 
+### Phase 2 implementation status
+
+The following five 1997 Companion structures are implemented as new, neutral
+canonical patterns and are bound only in `western-tm@0.1`, each at 1,000 / 400:
+
+| T&M hand | Synopsis/detail locator | Canonical pattern ID |
+|---|---|---|
+| Wriggly Dragon | p. 56; detail p. 11 / 31 | `wriggly-dragon` |
+| Hachi Ban | p. 56; detail pp. 10, 25, 30, 32 | `hachi-ban` |
+| Dragonette | p. 57; detail pp. 24, 39 | `dragonette` |
+| Windfall | p. 57; detail pp. 24, 27 | `windfall` |
+| All Pair Ruby Jade | p. 57; detail pp. 23, 32, 53 | `all-pair-ruby-jade` |
+
+These patterns are not BMJA members. The unresolved entries below remain
+unverified or unimplemented; Phase 2 does not alter their status.
+
 ## 5. Existing-detector candidates that must **not** be bound yet
 
 ### Wriggly Snake

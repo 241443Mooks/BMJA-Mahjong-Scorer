@@ -46,7 +46,12 @@ export type FishingSpecialId =
   | 'fourfold-plenty'
   | 'gates-of-heaven'
   | 'wriggling-snake'
-  | 'thirteen-unique-wonders';
+  | 'thirteen-unique-wonders'
+  | 'wriggly-dragon'
+  | 'hachi-ban'
+  | 'dragonette'
+  | 'windfall'
+  | 'all-pair-ruby-jade';
 
 export type WinningMethod =
   | 'initial-deal'
