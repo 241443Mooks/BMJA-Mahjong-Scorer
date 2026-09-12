@@ -289,6 +289,25 @@ shown below. A Pung-only source term is retained as Pung-only in its detector.
 | Red Lily | pp. 37, 54; 58, 60 | `red-and-white-dragon-melds-with-red-bamboo` | 2,000 / 800 | two dots; exposed full | red Bamboo ranks 1,5,7,9 |
 | Ruby Jade | pp. 37, 54; 58, 60 | `red-and-green-dragon-melds-with-bamboo` | 1,000 / 400 | two dots; exposed full | source does not state a stronger red/green distribution rule |
 
+### Pass 4E implementation status
+
+The following eight evidence-complete Companion entries are implemented only in
+`western-tm@0.1`. Their canonical IDs describe structure; names, values and
+fishing values are profile-local. The synopsis shows no exposure marker; where
+a hand represents a Pung/Kong, the established normalization does not grant
+that group exposed eligibility.
+
+| T&M hand | Locator | Canonical pattern ID | Winning / fishing | Representation note |
+|---|---|---|---:|---|
+| Greta's Dragon | p. 13; pp. 56, 59 | `suit-run-one-to-seven-with-winds-and-dragon-pung` | 1,000 / 400 | complete loose 1–7 run, four Wind singles and one Dragon Pung |
+| Dragon's Run | N/I detail; p. 59 | `full-suit-run-with-dragon-singles-and-wind-pair` | 1,500 / 600 | complete loose 1–9 run, three Dragon singles and a Wind pair |
+| Yin Yang | pp. 14, 50; pp. 56, 60 | `two-suit-pairs-and-chows-one-two-five-six-nine` | 1,000 / 400 | complete loose two-suit layout; either suit may carry either half |
+| Little Robert | p. 16; p. 56 | `three-suit-chows-with-suited-meld-and-pair` | 500 / 200 | grouped five-set shape; suited Pung/Kong and pair need not share a suit; represented Pung/Kong concealed-only |
+| Moon at Bottom of Well | pp. 15, 47; pp. 56, 59 | `circle-chows-with-one-two-three-four-five-six-seven-eight-nine` | 1,000 / 400 | grouped Circle-only four-Chow shape containing 123, 456 and 789 |
+| Windy Chow | pp. 18, 26; pp. 56, 57 | `wind-pair-with-three-suit-chows` | 500 / 200 | complete loose Wind pair/singles plus a Chow in every suit; truthfully overlaps Chop Suey and Chow Mein |
+| Chop Suey | pp. 18, 26; pp. 56, 57 | `wind-pair-with-three-suit-one-two-three-chows` | 500 / 200 | complete loose 123-in-every-suit subset of Windy Chow; precedence prevents stacking |
+| Chow Mein | pp. 18, 26; pp. 56, 57 | `wind-pair-with-three-suit-seven-eight-nine-chows` | 500 / 200 | complete loose 789-in-every-suit subset of Windy Chow; precedence prevents stacking |
+
 ## 5. Existing-detector candidates that must **not** be bound yet
 
 ### Wriggly Snake
