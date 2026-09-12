@@ -25,7 +25,7 @@ const oneChowPurity: MahjongHand = {
 describe('western-tm@0.1 Companion Phase 3C: calculated Purity', () => {
   it('binds exactly one calculated Purity to the distinct canonical structure', () => {
     const bindings = westernTmSpecialHandBindings.filter(({ patternId }) => patternId === 'purity-one-chow');
-    expect(westernTmSpecialHandBindings).toHaveLength(21);
+    expect(westernTmSpecialHandBindings).toHaveLength(25);
     expect(canonicalSpecialHandPatterns.filter(({ id }) => id === 'purity-one-chow')).toHaveLength(1);
     expect(bindings).toEqual([expect.objectContaining({ name: 'Purity', scoreModel: { kind: 'calculated', exposure: { multiplier: 0.5, triggerSetKinds: ['pung', 'kong'], forbiddenSetKinds: ['chow'] } } })]);
     expect(bindings[0]).not.toHaveProperty('value');

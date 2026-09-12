@@ -60,7 +60,11 @@ export type FishingSpecialId =
   | 'four-bamboo-one-and-five-green-bamboo-pairs'
   | 'seven-pairs-one-suit'
   | 'seven-pairs-one-suit-with-honours'
-  | 'dragon-pair-with-five-suited-pairs';
+  | 'dragon-pair-with-five-suited-pairs'
+  | 'run-one-to-nine-with-same-suit-pung-and-pair'
+  | 'run-one-to-nine-with-wind-pung-and-pair'
+  | 'run-one-to-nine-with-dragon-pung-and-pair'
+  | 'run-one-to-nine-with-honour-pung-and-any-pair';
 
 export type WinningMethod =
   | 'initial-deal'

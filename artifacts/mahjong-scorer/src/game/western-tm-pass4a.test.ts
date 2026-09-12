@@ -61,7 +61,7 @@ describe('western-tm@0.1 Companion catalogue Pass 4A', () => {
   });
 
   it('binds the seven fixed hands only to Western, at their local values', () => {
-    expect(westernTmSpecialHandBindings).toHaveLength(21);
+    expect(westernTmSpecialHandBindings).toHaveLength(25);
     for (const fixture of fixtures) {
       const pattern = canonicalSpecialHandPatterns.find(({ id }) => id === fixture.id);
       expect(pattern?.detect(fixture.hand)).toBe(true);

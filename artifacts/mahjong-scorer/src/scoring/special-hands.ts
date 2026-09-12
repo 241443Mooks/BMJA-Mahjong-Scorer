@@ -33,11 +33,13 @@ export type FixedSpecialHandPatternBinding =
   /** Fixed value while one tile away, when this profile has published one. */
   fishingValue?: number;
   /** Profile-local treatment for represented exposed Pung/Kong groups. */
-  exposure?: {
-    allowed: true;
-    exposedValue?: number;
-    exposedFishingValue?: number;
-  };
+  exposure?:
+    | { allowed: false }
+    | {
+        allowed: true;
+        exposedValue?: number;
+        exposedFishingValue?: number;
+      };
 };
 
 export type CalculatedSpecialHandPatternBinding =
@@ -97,6 +99,11 @@ const hasRepresentedExposedMeld = (hand: MahjongHand) =>
       set.visibility === 'exposed' && (set.kind === 'pung' || set.kind === 'kong'),
   );
 
+const fixedBindingAllowsHand = (
+  hand: MahjongHand,
+  binding: FixedSpecialHandPatternBinding,
+) => binding.exposure?.allowed !== false || !hasRepresentedExposedMeld(hand);
+
 export const specialHandValueFor = (
   hand: MahjongHand,
   binding: FixedSpecialHandPatternBinding,
@@ -140,6 +147,29 @@ const isCompleteLooseLayout = (hand: MahjongHand) => {
     all.length === 14 &&
     hasAtMostFourCopies(all)
   );
+};
+
+const groupedRunShape = (hand: MahjongHand) => {
+  if (
+    !hand.isWinner ||
+    hand.sets.length !== 5 ||
+    (hand.looseTiles?.length ?? 0) !== 0 ||
+    (hand.remainingTiles?.length ?? 0) !== 0
+  ) return undefined;
+  const chows = hand.sets.filter((set) => set.kind === 'chow');
+  const pungOrKong = hand.sets.filter(
+    (set) => set.kind === 'pung' || set.kind === 'kong',
+  );
+  const pairs = hand.sets.filter((set) => set.kind === 'pair');
+  if (chows.length !== 3 || pungOrKong.length !== 1 || pairs.length !== 1) return undefined;
+  const chowSuit = chows[0]?.tile.family === 'suit' ? chows[0].tile.suit : undefined;
+  if (
+    !chowSuit ||
+    chows.some((set) => set.tile.family !== 'suit' || set.tile.suit !== chowSuit) ||
+    ![1, 4, 7].every((rank) => chows.some((set) => set.tile.family === 'suit' && set.tile.rank === rank)) ||
+    !hasAtMostFourCopies(tiles(hand))
+  ) return undefined;
+  return { chowSuit, pungOrKong: pungOrKong[0], pair: pairs[0] };
 };
 
 const hasExactlyOneOfEachWind = (values: PlayingTile[]) =>
@@ -260,6 +290,36 @@ const buriedVisibilityIsAllowed = (hand: MahjongHand) => {
  * MahjongHand and returns a boolean. Adding one cannot alter another.
  */
 export const canonicalSpecialHandPatterns: CanonicalSpecialHandPattern[] = [
+  {
+    id: 'run-one-to-nine-with-same-suit-pung-and-pair',
+    detect: (hand) => {
+      const shape = groupedRunShape(hand);
+      return shape !== undefined &&
+        shape.pungOrKong.tile.family === 'suit' && shape.pungOrKong.tile.suit === shape.chowSuit &&
+        shape.pair.tile.family === 'suit' && shape.pair.tile.suit === shape.chowSuit;
+    },
+  },
+  {
+    id: 'run-one-to-nine-with-wind-pung-and-pair',
+    detect: (hand) => {
+      const shape = groupedRunShape(hand);
+      return shape !== undefined && shape.pungOrKong.tile.family === 'wind' && shape.pair.tile.family === 'wind';
+    },
+  },
+  {
+    id: 'run-one-to-nine-with-dragon-pung-and-pair',
+    detect: (hand) => {
+      const shape = groupedRunShape(hand);
+      return shape !== undefined && shape.pungOrKong.tile.family === 'dragon' && shape.pair.tile.family === 'dragon';
+    },
+  },
+  {
+    id: 'run-one-to-nine-with-honour-pung-and-any-pair',
+    detect: (hand) => {
+      const shape = groupedRunShape(hand);
+      return shape !== undefined && shape.pungOrKong.tile.family !== 'suit';
+    },
+  },
   {
     id: 'purity-one-chow',
     detect: (hand) => {
@@ -993,7 +1053,7 @@ export const detectSpecialHands = (
           description: binding.description,
           scoreModel: 'fixed' as const,
           value: specialHandValueFor(hand, binding),
-          matched: pattern.detect(hand, context),
+          matched: pattern.detect(hand, context) && fixedBindingAllowsHand(hand, binding),
         }
       : {
           id: pattern.id,

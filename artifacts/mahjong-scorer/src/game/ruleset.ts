@@ -99,6 +99,10 @@ export const westernTmSpecialHandBindings: SpecialHandPatternBinding[] = [
     fishingValue: 400,
     exposure: { allowed: true, exposedValue: 500, exposedFishingValue: 200 },
   },
+  { patternId: 'run-one-to-nine-with-same-suit-pung-and-pair', profile: WESTERN_TM_PROFILE_REF, name: 'Run, Pung & Pair', description: 'A 1–9 run as three chows, with a Pung/Kong and pair in the same suit.', value: 1000, fishingValue: 400, exposure: { allowed: false } },
+  { patternId: 'run-one-to-nine-with-wind-pung-and-pair', profile: WESTERN_TM_PROFILE_REF, name: 'Guardian Winds', description: 'A 1–9 run, plus a Wind Pung/Kong and Wind pair.', value: 1000, fishingValue: 400, exposure: { allowed: false } },
+  { patternId: 'run-one-to-nine-with-dragon-pung-and-pair', profile: WESTERN_TM_PROFILE_REF, name: 'Guardian Dragons', description: 'A 1–9 run, plus a Dragon Pung/Kong and Dragon pair.', value: 1000, fishingValue: 400, exposure: { allowed: false } },
+  { patternId: 'run-one-to-nine-with-honour-pung-and-any-pair', profile: WESTERN_TM_PROFILE_REF, name: 'Grand Sequence', description: 'A 1–9 run, an honour Pung/Kong, and any pair.', value: 1000, fishingValue: 400, exposure: { allowed: false } },
 ];
 
 export const WESTERN_TM_RULESET: GameRuleset = Object.freeze({
