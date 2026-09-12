@@ -52,7 +52,8 @@ export type FishingSpecialId =
   | 'hachi-ban'
   | 'dragonette'
   | 'windfall'
-  | 'all-pair-ruby-jade';
+  | 'all-pair-ruby-jade'
+  | 'golden-gates';
 
 export type WinningMethod =
   | 'initial-deal'

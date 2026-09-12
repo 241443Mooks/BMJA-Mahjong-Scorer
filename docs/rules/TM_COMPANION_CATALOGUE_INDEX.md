@@ -208,6 +208,17 @@ The detail pages verify Hachi Ban as one concealed 1,000 / 400 hand: a 1–8 or
 of Dragons. The examples on pp. 10, 25, 30 and 32 are valid choices within that
 rule, not different scoring variants.
 
+### Golden Gates
+
+Source: 1997 Companion detail p. 25. Implemented for `western-tm@0.1` as
+the neutral canonical pattern `golden-gates`: four pairs of 2, 4, 6 and 8 in
+one suit, with a Pung/Kong of that suit's 1 or 9 and its corresponding Dragon
+(Bamboo/Green, Characters/Red, Circles/White). The concealed value is 1,000
+and fishing value 400. The detail page permits either Pung/Kong to be exposed,
+at 500 and fishing 200. This is the reference implementation for the first
+profile-local exposure-value binding seam; the detector itself carries no
+profile or score data.
+
 ## 5. Existing-detector candidates that must **not** be bound yet
 
 ### Wriggly Snake
@@ -219,6 +230,7 @@ The current canonical detector is narrower: it expects the duplicated suited til
 
 Status: implemented for `western-tm@0.1` as the distinct canonical structural pattern
 `wriggling-snake-any-pair`, bound locally as Wriggly Snake at 1,000 / 400.
+
 The Companion detail evidence verifies that any tile in the 13-tile base structure
 may be paired. This differs from the current BMJA `wriggling-snake` predicate, so
 the predicates remain separate for now. They may only be consolidated if future
