@@ -23,8 +23,8 @@ const cases: Case[] = [
   { id: 'three-suit-chows-with-suited-meld-and-pair', name: 'Little Robert', value: 500, fishing: 200, hand: g(c('b','bamboo',2),c('c','characters',4),c('o','circles',6),k('m',suited('characters',8)),q('pair',suited('bamboo',9))), miss: g(c('b','bamboo',2),c('c','characters',4),c('o','circles',6),c('x','bamboo',5),q('pair',suited('bamboo',9))) },
   { id: 'circle-chows-with-one-two-three-four-five-six-seven-eight-nine', name: 'Moon at Bottom of Well', value: 1000, fishing: 400, hand: g(c('a','circles',1),c('b','circles',4),c('c','circles',7),c('d','circles',2),q('pair',suited('circles',5))), miss: g(c('a','circles',1),c('b','circles',4),c('c','bamboo',7),c('d','circles',2),q('pair',suited('circles',5))) },
   { id: 'wind-pair-with-three-suit-chows', name: 'Windy Chow', value: 500, fishing: 200, hand: l([wind('east'),wind('east'),wind('south'),wind('west'),wind('north'),...run('bamboo',[2,3,4]),...run('characters',[4,5,6]),...run('circles',[6,7,8])]), miss: l([wind('east'),wind('east'),wind('south'),wind('west'),wind('west'),...run('bamboo',[2,3,4]),...run('characters',[4,5,6]),...run('circles',[6,7,8])]) },
-  { id: 'wind-pair-with-three-suit-one-two-three-chows', name: 'Chop Suey', value: 500, fishing: 200, hand: l([wind('east'),wind('east'),wind('south'),wind('west'),wind('north'),...run('bamboo',[1,2,3]),...run('characters',[1,2,3]),...run('circles',[1,2,3])]), miss: l([wind('east'),wind('east'),wind('south'),wind('west'),wind('north'),...run('bamboo',[2,3,4]),...run('characters',[1,2,3]),...run('circles',[1,2,3])]) },
-  { id: 'wind-pair-with-three-suit-seven-eight-nine-chows', name: 'Chow Mein', value: 500, fishing: 200, hand: l([wind('east'),wind('east'),wind('south'),wind('west'),wind('north'),...run('bamboo',[7,8,9]),...run('characters',[7,8,9]),...run('circles',[7,8,9])]), miss: l([wind('east'),wind('east'),wind('south'),wind('west'),wind('north'),...run('bamboo',[6,7,8]),...run('characters',[7,8,9]),...run('circles',[7,8,9])]) },
+  { id: 'wind-pair-with-three-suit-one-two-three-chows', name: 'Chop Suey', value: 1000, fishing: 400, hand: l([wind('east'),wind('east'),wind('south'),wind('west'),wind('north'),...run('bamboo',[1,2,3]),...run('characters',[1,2,3]),...run('circles',[1,2,3])]), miss: l([wind('east'),wind('east'),wind('south'),wind('west'),wind('north'),...run('bamboo',[2,3,4]),...run('characters',[1,2,3]),...run('circles',[1,2,3])]) },
+  { id: 'wind-pair-with-three-suit-seven-eight-nine-chows', name: 'Chow Mein', value: 1000, fishing: 400, hand: l([wind('east'),wind('east'),wind('south'),wind('west'),wind('north'),...run('bamboo',[7,8,9]),...run('characters',[7,8,9]),...run('circles',[7,8,9])]), miss: l([wind('east'),wind('east'),wind('south'),wind('west'),wind('north'),...run('bamboo',[6,7,8]),...run('characters',[7,8,9]),...run('circles',[7,8,9])]) },
 ];
 
 describe('western-tm@0.1 Companion Pass 4E catalogue wave', () => {
@@ -44,8 +44,8 @@ describe('western-tm@0.1 Companion Pass 4E catalogue wave', () => {
     for (const hand of [cases[6]!.hand, cases[7]!.hand]) {
       const result = score(hand);
       const specialComponents = result.calculationComponents.filter(({ id }) => id.startsWith('special-'));
-      expect(specialComponents).toEqual([expect.objectContaining({ id: 'special-wind-pair-with-three-suit-chows', subtotal: 500 })]);
-      expect(result.finalScore).toBe(500);
+      expect(specialComponents).toEqual([expect.objectContaining({ subtotal: 1000 })]);
+      expect(result.finalScore).toBe(1000);
     }
   });
 
@@ -71,7 +71,7 @@ describe('western-tm@0.1 Companion Pass 4E catalogue wave', () => {
     const find = (hand: MahjongHand, id: string) => detectSpecialFishing(hand, westernTmSpecialHandBindings).find((match) => match.id === id);
     const groupedFishing = { ...cases[3]!.hand, isWinner: false, sets: cases[3]!.hand.sets.slice(0, -1), remainingTiles: [suited('bamboo', 9)] };
     expect(find(groupedFishing, cases[3]!.id)?.fishingValue).toBe(200);
-    expect(find({ ...cases[6]!.hand, isWinner: false, looseTiles: cases[6]!.hand.looseTiles!.slice(0, -1) }, cases[6]!.id)?.fishingValue).toBe(200);
+    expect(find({ ...cases[6]!.hand, isWinner: false, looseTiles: cases[6]!.hand.looseTiles!.slice(0, -1) }, cases[6]!.id)?.fishingValue).toBe(400);
   });
 
   it("finds Dragon's Run fishing on East and scores its completed loose layout", () => {

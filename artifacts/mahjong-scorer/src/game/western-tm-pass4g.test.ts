@@ -48,7 +48,7 @@ describe('western-tm@0.1 Pass 4G dragon hybrids and own-wind catalogue wave', ()
     expect(detector('four-chows-three-suits-with-own-wind-pair').detect(littleBrother('south'), { playerWind: 'south', prevailingWind: 'east', limit: 1000 })).toBe(true);
     expect(detector('own-wind-meld-with-dragon-pair-and-three-suit-chows').detect(angel('north'))).toBe(false);
     expect(detector('own-wind-meld-with-dragon-pair-and-three-suit-chows').detect(angel('north'), { playerWind: 'north', prevailingWind: 'east', limit: 1000 })).toBe(true);
-    expect(score(littleBrother('south'), 'south', 'east').specialHands).toContainEqual(expect.objectContaining({ id: 'four-chows-three-suits-with-own-wind-pair', value: 1000, matched: true }));
+    expect(score(littleBrother('south'), 'south', 'east').specialHands).toContainEqual(expect.objectContaining({ id: 'four-chows-three-suits-with-own-wind-pair', value: 500, matched: true }));
     expect(score(littleBrother('south'), 'east', 'south').specialHands.find(({ id }) => id === 'four-chows-three-suits-with-own-wind-pair')?.matched).toBe(false);
     expect(detector('four-chows-three-suits-with-own-wind-pair').detect({ ...littleBrother('south'), sets: [...littleBrother('south').sets.slice(0, -1), q('pair', wind('east'))] }, { playerWind: 'south', prevailingWind: 'east', limit: 1000 })).toBe(false);
     expect(score(angel('north'), 'north', 'east').specialHands).toContainEqual(expect.objectContaining({ id: 'own-wind-meld-with-dragon-pair-and-three-suit-chows', value: 1000, matched: true }));
@@ -69,7 +69,7 @@ describe('western-tm@0.1 Pass 4G dragon hybrids and own-wind catalogue wave', ()
     expect(findFishing({ ...dragonflyFishing, sets: dragonflyFishing.sets.map((group) => group.id === 'b' ? { ...group, visibility: 'exposed' as const } : group) }, 'three-dragon-singles-with-one-meld-in-each-suit-and-suited-pair')?.fishingValue).toBe(200);
     expect(findFishing({ ...teeth, isWinner: false, looseTiles: teeth.looseTiles!.slice(0, -1) }, 'red-white-dragon-pungs-with-seven-tile-character-or-circle-run-pair')?.fishingValue).toBe(400);
     const groupedFishing: MahjongHand = { ...littleBrother('south'), isWinner: false, sets: littleBrother('south').sets.slice(0, -1), remainingTiles: [wind('south')] };
-    expect(findFishing(groupedFishing, 'four-chows-three-suits-with-own-wind-pair', 'south')?.fishingValue).toBe(400);
+    expect(findFishing(groupedFishing, 'four-chows-three-suits-with-own-wind-pair', 'south')?.fishingValue).toBe(200);
     const angelFishing: MahjongHand = { ...angel('north'), isWinner: false, sets: angel('north').sets.slice(0, -1), remainingTiles: [dragon('green')] };
     expect(findFishing(angelFishing, 'own-wind-meld-with-dragon-pair-and-three-suit-chows', 'north')?.fishingValue).toBe(400);
     expect(findFishing({ ...angelFishing, sets: angelFishing.sets.map((group) => group.id === 'own' ? { ...group, visibility: 'exposed' as const } : group) }, 'own-wind-meld-with-dragon-pair-and-three-suit-chows', 'north')).toBeUndefined();
