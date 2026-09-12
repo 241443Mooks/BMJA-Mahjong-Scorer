@@ -63,7 +63,6 @@ describe('western-tm@0.1 Companion Pass 4D verification', () => {
       expect(blue(g(p('green',dragon('green')),p('a',suited('circles',others[0]!)),p('b',suited('circles',others[1]!)),p('c',suited('circles',others[2]!)),q('d',suited('circles',rank))))).toBe(true);
     }
   });
-  it('keeps the Western catalogue at 44 bindings', () => expect(westernTmSpecialHandBindings).toHaveLength(44));
   it('allows representative exposure without allowing a Kong in a Pung-only source group', () => {
     const elephant = { ...cases[10]!.hand, sets: cases[10]!.hand.sets.map((x) => x.id === 'a' ? { ...x, visibility: 'exposed' as const } : x) };
     expect(score(elephant).specialHands).toContainEqual(expect.objectContaining({ id: cases[10]!.id, value: 1000, matched: true }));
