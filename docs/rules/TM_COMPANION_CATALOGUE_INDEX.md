@@ -509,19 +509,10 @@ For every binding:
 - fixed values above the ordinary 1,000 cap survive correctly;
 - fishing value is profile-local.
 
-Do not include Wriggly Snake, Imperial Jade, Knitting, Triple Knitting, Gates of Heaven or Purity in the first batch.
-
-## 9. Next evidence requests — only when needed
-
-The current photographs are enough for this pass and for the first Codex batch.
-
-Targeted detail-page photographs are needed next only for ambiguity-resolution, especially:
-
-- p. 36 / 52 — Imperial Jade Chow/exposure treatment;
-- p. 20 — Knitting / Triple Knitting exact predicates;
-- p. 48 — Purity calculated-score treatment.
-
-This keeps source capture demand-driven rather than requiring the whole book.
+Earlier evidence questions concerning Wriggly Snake, Imperial Jade, Knitting,
+Triple Knitting, Gates of Heaven and Purity have now been resolved through subsequent
+detail-page review and implementation passes. No outstanding Companion
+hand-definition evidence requests remain.
 
 ## 10. Pass-1 conclusion
 
