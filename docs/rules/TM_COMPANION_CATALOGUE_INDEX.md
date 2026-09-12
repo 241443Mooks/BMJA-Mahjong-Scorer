@@ -1,5 +1,13 @@
 # Thompson & Maloney Companion catalogue index — pass 1
 
+## Pass 4F implementation — Wind-family hybrid catalogue wave
+
+Five p.57 entries are now bound in `western-tm@0.1`: Windy Ones (`wind-pair-with-three-suit-rank-one-melds`), Windy Nines (`wind-pair-with-three-suit-rank-nine-melds`), Windvane (`wind-pair-with-one-meld-in-each-suit`), Three Sisters (`wind-pair-with-three-suit-rank-three-melds`), and Seven Brothers (`wind-pair-with-three-suit-rank-seven-melds`). Each is 1,000 winning / 400 fishing; p.58 independently corroborates the Windy Ones and Windy Nines values.
+
+Their shared canonical hybrid representation is three represented suited Pungs/Kongs (one per suit), a represented Wind pair, and three loose distinct Winds: the pair and singles together contain ESWN with exactly the pair Wind duplicated. Windy Ones, Nines, Three Sisters and Seven Brothers fix the meld rank to 1, 9, 3 and 7 respectively; Windvane deliberately leaves its three suited ranks independent. One-dot entries allow represented Pungs/Kongs and halve to 500 / 200 when exposed. Windvane has no red dot, so represented Pungs/Kongs must remain concealed.
+
+The fixed-rank forms truthfully overlap Windvane; scoring selects one 1,000-point special rather than stacking both. The family earned a small profile-local hybrid fishing seam: with explicit bindings, a 13-tile hand may retain represented sets plus loose tiles (and no remaining tiles), then appends the completing tile to loose tiles for canonical detection. Legacy BMJA fishing retains its mixed-representation guard.
+
 Status: research/evidence artefact for issue #87.  
 Source: Patricia A. Thompson & Betty Maloney, *The Mah Jong Player's Companion* (1997).
 

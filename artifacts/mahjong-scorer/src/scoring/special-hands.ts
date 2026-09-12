@@ -230,6 +230,35 @@ const hasWindPairAndSingles = (values: PlayingTile[]) => {
     [...tally.values()].every((count) => count === 1 || count === 2);
 };
 
+const windPairWithThreeSuitMelds = (hand: MahjongHand, requiredRank?: number) => {
+  const all = tiles(hand);
+  const melds = hand.sets.filter((set) => set.kind === 'pung' || set.kind === 'kong');
+  const pairs = hand.sets.filter((set) => set.kind === 'pair');
+  const looseWinds = hand.looseTiles ?? [];
+  if (
+    !hand.isWinner ||
+    hand.sets.length !== 4 ||
+    melds.length !== 3 ||
+    pairs.length !== 1 ||
+    looseWinds.length !== 3 ||
+    (hand.remainingTiles?.length ?? 0) !== 0 ||
+    all.length !== 14 + hand.sets.filter((set) => set.kind === 'kong').length ||
+    !hasAtMostFourCopies(all)
+  ) return false;
+  const pair = pairs[0];
+  if (pair?.tile.family !== 'wind' || looseWinds.some((tile) => tile.family !== 'wind')) return false;
+  const windCounts = counts([pair.tile, pair.tile, ...looseWinds]);
+  if (!hasWindPairAndSingles([pair.tile, pair.tile, ...looseWinds])) return false;
+  if (windCounts.get(`wind-${pair.tile.wind}`) !== 2) return false;
+  return ['bamboo', 'characters', 'circles'].every((suit) =>
+    melds.filter((set) =>
+      set.tile.family === 'suit' &&
+      set.tile.suit === suit &&
+      (requiredRank === undefined || set.tile.rank === requiredRank),
+    ).length === 1,
+  );
+};
+
 const hasChowInEachSuit = (
   values: PlayingTile[],
   rank?: Extract<PlayingTile, { family: 'suit' }>['rank'],
@@ -581,6 +610,11 @@ export const canonicalSpecialHandPatterns: CanonicalSpecialHandPattern[] = [
   { id: 'wind-pair-with-three-suit-chows', detect: (hand) => { if (!isCompleteLooseLayout(hand)) return false; const all = tiles(hand); return hasWindPairAndSingles(all.filter((tile) => tile.family === 'wind')) && hasChowInEachSuit(all.filter((tile) => tile.family === 'suit')); } },
   { id: 'wind-pair-with-three-suit-one-two-three-chows', detect: (hand) => { if (!isCompleteLooseLayout(hand)) return false; const all = tiles(hand); return hasWindPairAndSingles(all.filter((tile) => tile.family === 'wind')) && hasChowInEachSuit(all.filter((tile) => tile.family === 'suit'), 1); } },
   { id: 'wind-pair-with-three-suit-seven-eight-nine-chows', detect: (hand) => { if (!isCompleteLooseLayout(hand)) return false; const all = tiles(hand); return hasWindPairAndSingles(all.filter((tile) => tile.family === 'wind')) && hasChowInEachSuit(all.filter((tile) => tile.family === 'suit'), 7); } },
+  { id: 'wind-pair-with-three-suit-rank-one-melds', detect: (hand) => windPairWithThreeSuitMelds(hand, 1) },
+  { id: 'wind-pair-with-three-suit-rank-nine-melds', detect: (hand) => windPairWithThreeSuitMelds(hand, 9) },
+  { id: 'wind-pair-with-one-meld-in-each-suit', detect: (hand) => windPairWithThreeSuitMelds(hand) },
+  { id: 'wind-pair-with-three-suit-rank-three-melds', detect: (hand) => windPairWithThreeSuitMelds(hand, 3) },
+  { id: 'wind-pair-with-three-suit-rank-seven-melds', detect: (hand) => windPairWithThreeSuitMelds(hand, 7) },
   { id: 'three-suit-chows-with-suited-meld-and-pair', detect: (hand) => { if (!hand.isWinner || hand.sets.length !== 5 || (hand.looseTiles?.length ?? 0) !== 0 || (hand.remainingTiles?.length ?? 0) !== 0 || !hasAtMostFourCopies(tiles(hand))) return false; const chows = hand.sets.filter((set) => set.kind === 'chow'), melds = hand.sets.filter((set) => set.kind === 'pung' || set.kind === 'kong'), pairs = hand.sets.filter((set) => set.kind === 'pair'); return chows.length === 3 && melds.length === 1 && pairs.length === 1 && chows.every((set) => set.tile.family === 'suit' && set.tile.rank <= 7) && new Set(chows.map((set) => set.tile.family === 'suit' ? set.tile.suit : undefined)).size === 3 && melds[0]?.tile.family === 'suit' && pairs[0]?.tile.family === 'suit'; } },
   { id: 'circle-chows-with-one-two-three-four-five-six-seven-eight-nine', detect: (hand) => { if (!hand.isWinner || hand.sets.length !== 5 || (hand.looseTiles?.length ?? 0) !== 0 || (hand.remainingTiles?.length ?? 0) !== 0 || !hasAtMostFourCopies(tiles(hand))) return false; const chows = hand.sets.filter((set) => set.kind === 'chow'); const pair = hand.sets.find((set) => set.kind === 'pair'); return chows.length === 4 && pair?.tile.family === 'suit' && pair.tile.suit === 'circles' && chows.every((set) => set.tile.family === 'suit' && set.tile.suit === 'circles' && set.tile.rank <= 7) && [1, 4, 7].every((rank) => chows.some((set) => set.tile.family === 'suit' && set.tile.rank === rank)); } },
   {
