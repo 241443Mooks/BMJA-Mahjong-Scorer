@@ -10,6 +10,7 @@ import type {
   PlayingTile,
   SetKind,
   SpecialHandResult,
+  WinningMethod,
 } from './types';
 import type { RulesProfileRef } from '../game/types';
 
@@ -24,6 +25,8 @@ type CommonSpecialHandPatternBinding = {
   profile: RulesProfileRef;
   name: string;
   description: string;
+  /** Profile-local permitted win methods for this matched structural special. */
+  winningMethods?: WinningMethod[];
 };
 
 export type FixedSpecialHandPatternBinding =
@@ -102,7 +105,17 @@ const hasRepresentedExposedMeld = (hand: MahjongHand) =>
 const fixedBindingAllowsHand = (
   hand: MahjongHand,
   binding: FixedSpecialHandPatternBinding,
-) => binding.exposure?.allowed !== false || !hasRepresentedExposedMeld(hand);
+) =>
+  (binding.exposure?.allowed !== false || !hasRepresentedExposedMeld(hand)) &&
+  (binding.winningMethods === undefined ||
+    (hand.winningMethod !== undefined &&
+      binding.winningMethods.includes(hand.winningMethod)));
+
+const bindingAllowsHand = (hand: MahjongHand, binding: SpecialHandPatternBinding) =>
+  !isFixedSpecialHandBinding(binding)
+    ? binding.winningMethods === undefined ||
+      (hand.winningMethod !== undefined && binding.winningMethods.includes(hand.winningMethod))
+    : fixedBindingAllowsHand(hand, binding);
 
 export const specialHandValueFor = (
   hand: MahjongHand,
@@ -147,6 +160,40 @@ const isCompleteLooseLayout = (hand: MahjongHand) => {
     all.length === 14 &&
     hasAtMostFourCopies(all)
   );
+};
+
+const hasFourWindsWithSingleSuitRankMultiplicities = (
+  hand: MahjongHand,
+  multiplicities: Readonly<Record<number, number>>,
+) => {
+  if (!isCompleteLooseLayout(hand)) return false;
+  const all = tiles(hand);
+  const winds = all.filter((tile) => tile.family === 'wind');
+  const suited = all.filter(
+    (tile): tile is Extract<PlayingTile, { family: 'suit' }> => tile.family === 'suit',
+  );
+  if (winds.length !== 4 || !hasExactlyOneOfEachWind(winds) || suited.length !== 10) return false;
+  const suit = suited[0]?.suit;
+  if (!suit || suited.some((tile) => tile.suit !== suit)) return false;
+  const tally = counts(suited);
+  return tally.size === Object.keys(multiplicities).length && Object.entries(multiplicities).every(
+    ([rank, count]) => tally.get(`${suit}-${rank}`) === count,
+  );
+};
+
+const fourTileSuitRunStartsWithHonourPair = (hand: MahjongHand) => {
+  if (!isCompleteLooseLayout(hand)) return undefined;
+  const all = tiles(hand);
+  const honours = all.filter((tile) => tile.family !== 'suit');
+  const suited = all.filter((tile): tile is Extract<PlayingTile, { family: 'suit' }> => tile.family === 'suit');
+  if (honours.length !== 2 || tileKey(honours[0]!) !== tileKey(honours[1]!) || suited.length !== 12) return undefined;
+  const starts = ['bamboo', 'characters', 'circles'].map((suit) => {
+    const ranks = suited.filter((tile) => tile.suit === suit).map((tile) => tile.rank).sort((a, b) => a - b);
+    return ranks.length === 4 && ranks[3]! - ranks[0]! === 3 && new Set(ranks).size === 4 ? ranks[0] : undefined;
+  });
+  return starts.every((start) => start !== undefined)
+    ? (starts as number[])
+    : undefined;
 };
 
 const groupedRunShape = (hand: MahjongHand) => {
@@ -1453,6 +1500,38 @@ export const canonicalSpecialHandPatterns: CanonicalSpecialHandPattern[] = [
       hand.winningEventEvidence.kongDeclarations === 2 &&
       hand.sets.filter((set) => set.kind === 'kong').length >= 2,
   },
+  {
+    id: 'three-four-tile-suit-runs-with-honour-pair',
+    detect: (hand) => {
+      const starts = fourTileSuitRunStartsWithHonourPair(hand);
+      return starts !== undefined && new Set(starts).size !== 1;
+    },
+  },
+  {
+    id: 'three-matching-four-tile-suit-runs-with-honour-pair',
+    detect: (hand) => {
+      const starts = fourTileSuitRunStartsWithHonourPair(hand);
+      return starts !== undefined && new Set(starts).size === 1;
+    },
+  },
+  {
+    id: 'seven-pairs-all-from-wall',
+    detect: (hand) => isCompleteLooseLayout(hand) && counts(tiles(hand)).size === 7 && [...counts(tiles(hand)).values()].every((count) => count === 2),
+  },
+  {
+    id: 'four-concealed-chows-one-suit-from-wall',
+    detect: (hand) => {
+      if (!hand.isWinner || hand.sets.length !== 5 || (hand.looseTiles?.length ?? 0) !== 0 || (hand.remainingTiles?.length ?? 0) !== 0) return false;
+      const chows = hand.sets.filter((set) => set.kind === 'chow');
+      const pairs = hand.sets.filter((set) => set.kind === 'pair');
+      const suit = chows[0]?.tile.family === 'suit' ? chows[0].tile.suit : undefined;
+      return chows.length === 4 && pairs.length === 1 && suit !== undefined &&
+        hand.sets.every((set) => set.visibility === 'concealed' && set.tile.family === 'suit' && set.tile.suit === suit) &&
+        chows.every((set) => set.tile.family === 'suit' && set.tile.rank <= 7) && hasAtMostFourCopies(tiles(hand));
+    },
+  },
+  { id: 'four-winds-with-one-two-two-fours-three-sixes-four-eights', detect: (hand) => hasFourWindsWithSingleSuitRankMultiplicities(hand, { 2: 1, 4: 2, 6: 3, 8: 4 }) },
+  { id: 'four-winds-with-four-twos-three-fours-two-sixes-one-eight', detect: (hand) => hasFourWindsWithSingleSuitRankMultiplicities(hand, { 2: 4, 4: 3, 6: 2, 8: 1 }) },
 ];
 
 const BMJA_SPECIAL_HAND_PROFILE: RulesProfileRef = Object.freeze({
@@ -1651,6 +1730,7 @@ export const detectSpecialHands = (
           scoreModel: 'calculated' as const,
           matched:
             pattern.detect(hand, context) &&
+            bindingAllowsHand(hand, binding) &&
             !hasUnsupportedCalculatedExposure(hand, binding),
         },
   );

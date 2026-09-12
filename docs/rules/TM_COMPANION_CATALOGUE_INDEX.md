@@ -1,5 +1,18 @@
 # Thompson & Maloney Companion catalogue index — pass 1
 
+## Final catalogue implementation — Pass 4L
+
+The 1997 Thompson & Maloney Companion catalogue is now implemented at **84 / 84 unique named hands** in the Western `western-tm@0.1` profile. It has **85 raw bindings**, intentionally: **Big Robert** has two mutually exclusive structural score variants rather than a conditional-value abstraction.
+
+- `three-four-tile-suit-runs-with-honour-pair` is normal Big Robert (detail p.14): one four-tile consecutive run in each suit and an identical Wind or Dragon pair, where the three run starts differ; **500 / 200 fishing**.
+- `three-matching-four-tile-suit-runs-with-honour-pair` is the same-number Big Robert form (detail p.14): matching four-tile runs in all three suits plus the honour pair; **1,000 / 400 fishing**.
+- `seven-pairs-all-from-wall` is Seven Twins (detail p.22): seven distinct loose pairs; **500 / 200**. Its winning tile must be `wall` or `last-wall-tile`; fishing evaluates the lawful hypothetical wall completion.
+- `four-concealed-chows-one-suit-from-wall` is Chow Chow (detail p.15; Full Synopsis pp.56/59): four concealed same-suit Chows plus a same-suit pair; **500 / 200** and the same wall-only winning semantics.
+- `four-winds-with-one-two-two-fours-three-sixes-four-eights` is Up You Go (Full Synopsis p.57, not illustrated): ESWN plus one-suit 2, 44, 666, 8888; **2,000 / 800**.
+- `four-winds-with-four-twos-three-fours-two-sixes-one-eight` is Down You Go (Full Synopsis p.57, not illustrated): ESWN plus one-suit 2222, 444, 66, 8; **2,000 / 800**.
+
+Up You Go and Down You Go are intentionally complete loose 14-physical-tile layouts. Their four-of-a-kind is concealed by that representation; it is not converted to a declared Kong, which would invent a replacement tile and an extra physical-tile requirement. These bindings complete this Companion source only; they do not claim broader Western standardisation.
+
 ## Pass 4K implementation — Mixed Chow family
 
 The Western `western-tm@0.1` catalogue now has **79 bindings**. This wave adds four 1997 Companion entries from the Chows/Dragons synopsis: **Three Philosophers** (detail p.15 / Full Synopsis p.56), **Crazy Chows** (p.16 / p.56), **Apple Blossom** (p.19 / pp.56, 58), and **The Professors** (p.19 / p.56).
