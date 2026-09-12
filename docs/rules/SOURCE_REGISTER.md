@@ -102,13 +102,18 @@ Copyright guardrail:
 
 The guide is authoritative for the Outside the Box club's documented rules, subject to clarification by Rachel where wording is ambiguous.
 
-Known outstanding questions:
+Pages 12–14 and the issue transcription now resolve the complete photographed
+special-hand inventory (33 unique hands), four explicit T&M binding overrides,
+the ordinary point table, settlement, Goulash state/legality and incident facts.
+The implementation-facing record is
+`OUTSIDE_THE_BOX_PROFILE_CROSSWALK.md`.
 
-1. Do Little/Big Dragon and Little/Big Wind bonuses stack with individual set doubles or replace them?
-2. How exactly should exposed half/full special-hand values be interpreted?
-3. Which non-BMJA hands are imported unchanged from Western sources and which, if any, are locally modified?
-4. What is the exact cannon/liability settlement order when multiple liability conditions could apply?
-5. Does ordinary play deliberately differ from BMJA anywhere beyond the documented special-hand / Goulash / penalty material?
+Genuine outstanding questions:
+
+1. Do Little/Big Dragon and Little/Big Wind bonuses stack with individual set doubles?
+2. Does Grand Sequence require a suited pair, excluding the broader current Western pattern?
+3. Does All Pair Ruby Jade permit any Bamboo ranks or only the T&M red/green subset?
+4. What are Purity's exact winning, fishing and exposure fields, whose photographed table alignment is unclear?
 
 Do not generalise a club rule into "Western Mahjong" without independent Western-source support.
 
@@ -195,7 +200,7 @@ The approved BMJA source family is already authoritative, but exact heading-leve
 
 ### Outside the Box confirmation
 
-Resolve the five questions listed above before treating the first club profile as version 1.0.
+Resolve the five questions listed above before treating the first club profile as version 1.0; do not reopen points, settlement, Goulash or penalty questions already resolved by the supplied guide.
 
 ## Likely next pass
 
