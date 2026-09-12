@@ -172,6 +172,27 @@ const groupedRunShape = (hand: MahjongHand) => {
   return { chowSuit, pungOrKong: pungOrKong[0], pair: pairs[0] };
 };
 
+/** A complete ordinary grouped hand, keeping structure and physical tiles separate. */
+const groupedShape = (hand: MahjongHand, meldCount: number, pairCount = 1) => {
+  const all = tiles(hand);
+  const melds = hand.sets.filter((set) => set.kind === 'pung' || set.kind === 'kong');
+  const pairs = hand.sets.filter((set) => set.kind === 'pair');
+  return hand.isWinner &&
+    hand.sets.length === meldCount + pairCount &&
+    (hand.looseTiles?.length ?? 0) === 0 &&
+    (hand.remainingTiles?.length ?? 0) === 0 &&
+    melds.length === meldCount && pairs.length === pairCount &&
+    all.length === 14 + hand.sets.filter((set) => set.kind === 'kong').length &&
+    hasAtMostFourCopies(all)
+    ? { melds, pairs, all }
+    : undefined;
+};
+
+const isSuitRank = (tile: PlayingTile, suit: Extract<PlayingTile, { family: 'suit' }>['suit'], ranks: readonly number[]) =>
+  tile.family === 'suit' && tile.suit === suit && ranks.includes(tile.rank);
+
+const isPung = (kind: SetKind) => kind === 'pung';
+
 const hasExactlyOneOfEachWind = (values: PlayingTile[]) =>
   ['east', 'south', 'west', 'north'].every(
     (value) => counts(values).get(`wind-${value}`) === 1,
@@ -319,6 +340,137 @@ export const canonicalSpecialHandPatterns: CanonicalSpecialHandPattern[] = [
       const shape = groupedRunShape(hand);
       return shape !== undefined && shape.pungOrKong.tile.family !== 'suit';
     },
+  },
+  {
+    id: 'full-suit-run-with-honour-pung-and-opposite-honour-pair',
+    detect: (hand) => {
+      const shape = groupedRunShape(hand);
+      return shape !== undefined &&
+        ((shape.pungOrKong.tile.family === 'wind' && shape.pair.tile.family === 'dragon') ||
+          (shape.pungOrKong.tile.family === 'dragon' && shape.pair.tile.family === 'wind'));
+    },
+  },
+  {
+    id: 'all-pair-green-dragon-and-bamboo',
+    detect: (hand) => {
+      if (!isCompleteLooseLayout(hand)) return false;
+      const all = tiles(hand);
+      const tally = counts(all);
+      return all.every((tile) => tile.family === 'dragon' ? tile.dragon === 'green' : isSuitRank(tile, 'bamboo', [2, 3, 4, 6, 8])) &&
+        [...tally.values()].every((count) => count === 2 || count === 4) &&
+        (tally.get('dragon-green') === 2 || tally.get('dragon-green') === 4) &&
+        [...tally.values()].reduce((sum, count) => sum + count / 2, 0) === 7;
+    },
+  },
+  {
+    id: 'four-wind-pairs-with-two-dragon-melds',
+    detect: (hand) => {
+      const shape = groupedShape(hand, 2, 4);
+      const winds = shape?.pairs.filter((set) => set.tile.family === 'wind') ?? [];
+      return shape !== undefined && winds.length === 4 &&
+        new Set(winds.map((set) => set.tile.family === 'wind' ? set.tile.wind : undefined)).size === 4 &&
+        shape.melds.every((set) => set.tile.family === 'dragon');
+    },
+  },
+  {
+    id: 'red-dragon-pung-with-character-melds',
+    detect: (hand) => {
+      const shape = groupedShape(hand, 4);
+      return shape !== undefined && shape.melds.filter((set) => set.tile.family === 'dragon' && set.tile.dragon === 'red' && isPung(set.kind)).length === 1 &&
+        shape.melds.filter((set) => isSuitRank(set.tile, 'characters', [1,2,3,4,5,6,7,8,9])).length === 3 &&
+        isSuitRank(shape.pairs[0].tile, 'characters', [1,2,3,4,5,6,7,8,9]);
+    },
+  },
+  {
+    id: 'white-dragon-pung-with-circle-melds',
+    detect: (hand) => {
+      const shape = groupedShape(hand, 4);
+      return shape !== undefined && shape.melds.filter((set) => set.tile.family === 'dragon' && set.tile.dragon === 'white' && isPung(set.kind)).length === 1 &&
+        shape.melds.filter((set) => isSuitRank(set.tile, 'circles', [1,2,3,4,5,6,7,8,9])).length === 3 && isSuitRank(shape.pairs[0].tile, 'circles', [1,2,3,4,5,6,7,8,9]);
+    },
+  },
+  {
+    id: 'one-suit-odd-melds',
+    detect: (hand) => {
+      const shape = groupedShape(hand, 4);
+      const suit = shape?.all[0]?.family === 'suit' ? shape.all[0].suit : undefined;
+      return shape !== undefined && suit !== undefined && shape.all.every((tile) => isSuitRank(tile, suit, [1,3,5,7,9]));
+    },
+  },
+  {
+    id: 'two-odd-suits-and-one-even-suit',
+    detect: (hand) => {
+      if (!isCompleteLooseLayout(hand)) return false;
+      const tally = counts(tiles(hand));
+      const suits = ['bamboo', 'characters', 'circles'] as const;
+      return suits.some((evenSuit) => suits.filter((suit) => suit !== evenSuit).every((suit) => [1,3,5,7,9].every((rank) => tally.get(`${suit}-${rank}`) === 1)) && [2,4,6,8].every((rank) => tally.get(`${evenSuit}-${rank}`) === 1) && tally.size === 14);
+    },
+  },
+  {
+    id: 'four-chows-three-suits-one-two-one',
+    detect: (hand) => {
+      if (!hand.isWinner || hand.sets.length !== 5 || (hand.looseTiles?.length ?? 0) !== 0 || (hand.remainingTiles?.length ?? 0) !== 0 || !hasAtMostFourCopies(tiles(hand))) return false;
+      const chows = hand.sets.filter((set) => set.kind === 'chow' && set.tile.family === 'suit'); const pair = hand.sets.find((set) => set.kind === 'pair');
+      if (chows.length !== 4 || !pair || pair.tile.family !== 'suit' || chows.some((set) => set.tile.family !== 'suit')) return false;
+      const bySuit = new Map<string, number>(); for (const chow of chows) if (chow.tile.family === 'suit') bySuit.set(chow.tile.suit, (bySuit.get(chow.tile.suit) ?? 0) + 1);
+      return bySuit.size === 3 && [...bySuit.values()].sort().join(',') === '1,1,2' && (bySuit.get(pair.tile.suit) ?? 0) === 1;
+    },
+  },
+  {
+    id: 'parallel-suit-rank-melds-with-honours',
+    detect: (hand) => {
+      const shape = groupedShape(hand, 4);
+      if (!shape) return false;
+      const suited = shape.melds.filter((set) => set.tile.family === 'suit'); const honours = shape.melds.filter((set) => set.tile.family !== 'suit');
+      const suitTiles = suited.map((set) => set.tile).filter((tile): tile is Extract<PlayingTile, { family: 'suit' }> => tile.family === 'suit');
+      return suited.length === 3 && honours.length === 1 && shape.pairs[0].tile.family !== 'suit' && new Set(suitTiles.map((tile) => tile.suit)).size === 3 && new Set(suitTiles.map((tile) => tile.rank)).size === 1 && suitTiles[0].rank >= 2 && suitTiles[0].rank <= 8;
+    },
+  },
+  {
+    id: 'green-dragon-pung-with-blue-circle-melds',
+    detect: (hand) => {
+      const shape = groupedShape(hand, 4); const blue = [2,3,4,5,8,9];
+      return shape !== undefined && shape.melds.some((set) => set.tile.family === 'dragon' && set.tile.dragon === 'green' && isPung(set.kind)) && shape.melds.filter((set) => isSuitRank(set.tile, 'circles', blue)).length === 3 && isSuitRank(shape.pairs[0].tile, 'circles', blue);
+    },
+  },
+  {
+    id: 'white-dragon-meld-with-even-circle-melds',
+    detect: (hand) => {
+      const shape = groupedShape(hand, 4); const even = [2,4,6,8];
+      return shape !== undefined && shape.melds.some((set) => set.tile.family === 'dragon' && set.tile.dragon === 'white') && shape.melds.filter((set) => isSuitRank(set.tile, 'circles', even)).length === 3 && isSuitRank(shape.pairs[0].tile, 'circles', even);
+    },
+  },
+  {
+    id: 'white-dragon-pung-with-odd-character-melds',
+    detect: (hand) => { const shape = groupedShape(hand, 4); return shape !== undefined && shape.melds.some((set) => set.tile.family === 'dragon' && set.tile.dragon === 'white' && isPung(set.kind)) && shape.melds.filter((set) => isSuitRank(set.tile, 'characters', [1,3,5,7,9])).length === 3 && isSuitRank(shape.pairs[0].tile, 'characters', [1,3,5,7,9]); },
+  },
+  {
+    id: 'red-dragon-pung-with-even-character-melds',
+    detect: (hand) => { const shape = groupedShape(hand, 4); return shape !== undefined && shape.melds.some((set) => set.tile.family === 'dragon' && set.tile.dragon === 'red' && isPung(set.kind)) && shape.melds.filter((set) => isSuitRank(set.tile, 'characters', [2,4,6,8])).length === 3 && isSuitRank(shape.pairs[0].tile, 'characters', [2,4,6,8]); },
+  },
+  {
+    id: 'green-dragon-pung-with-bamboo-melds',
+    detect: (hand) => { const shape = groupedShape(hand, 4); return shape !== undefined && shape.melds.some((set) => set.tile.family === 'dragon' && set.tile.dragon === 'green' && isPung(set.kind)) && shape.melds.filter((set) => isSuitRank(set.tile, 'bamboo', [1,2,3,4,5,6,7,8,9])).length === 3 && isSuitRank(shape.pairs[0].tile, 'bamboo', [1,2,3,4,5,6,7,8,9]); },
+  },
+  {
+    id: 'green-and-white-dragon-melds-with-green-bamboo',
+    detect: (hand) => { const shape = groupedShape(hand, 4); const green = [2,3,4,6,8]; return shape !== undefined && ['green','white'].every((value) => shape.melds.some((set) => set.tile.family === 'dragon' && set.tile.dragon === value)) && shape.melds.filter((set) => isSuitRank(set.tile, 'bamboo', green)).length === 2 && isSuitRank(shape.pairs[0].tile, 'bamboo', green); },
+  },
+  {
+    id: 'red-and-green-dragon-pungs-with-three-suits',
+    detect: (hand) => { const shape = groupedShape(hand, 4); const suits = ['bamboo','circles','characters'] as const; return shape !== undefined && shape.melds.some((set) => set.tile.family === 'dragon' && set.tile.dragon === 'red' && isPung(set.kind)) && shape.pairs[0].tile.family === 'dragon' && shape.pairs[0].tile.dragon === 'green' && suits.every((suit) => shape.melds.some((set) => isSuitRank(set.tile, suit, suit === 'bamboo' ? [1,5,7,9] : [1,2,3,4,5,6,7,8,9]) && isPung(set.kind))); },
+  },
+  {
+    id: 'red-dragon-meld-with-red-bamboo-melds',
+    detect: (hand) => { const shape = groupedShape(hand, 4); const red = [1,5,7,9]; return shape !== undefined && shape.melds.some((set) => set.tile.family === 'dragon' && set.tile.dragon === 'red') && shape.melds.filter((set) => isSuitRank(set.tile, 'bamboo', red)).length === 3 && isSuitRank(shape.pairs[0].tile, 'bamboo', red); },
+  },
+  {
+    id: 'red-and-white-dragon-melds-with-red-bamboo',
+    detect: (hand) => { const shape = groupedShape(hand, 4); const red = [1,5,7,9]; return shape !== undefined && ['red','white'].every((value) => shape.melds.some((set) => set.tile.family === 'dragon' && set.tile.dragon === value)) && shape.melds.filter((set) => isSuitRank(set.tile, 'bamboo', red)).length === 2 && isSuitRank(shape.pairs[0].tile, 'bamboo', red); },
+  },
+  {
+    id: 'red-and-green-dragon-melds-with-bamboo',
+    detect: (hand) => { const shape = groupedShape(hand, 4); return shape !== undefined && ['red','green'].every((value) => shape.melds.some((set) => set.tile.family === 'dragon' && set.tile.dragon === value)) && shape.melds.filter((set) => isSuitRank(set.tile, 'bamboo', [1,2,3,4,5,6,7,8,9])).length === 2 && isSuitRank(shape.pairs[0].tile, 'bamboo', [1,2,3,4,5,6,7,8,9]); },
   },
   {
     id: 'purity-one-chow',

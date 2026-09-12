@@ -259,6 +259,36 @@ Reusable rule earned: fixed profile bindings can explicitly forbid represented
 exposed Pung/Kong groups without putting profile visibility rules into the
 canonical detector.
 
+### Pass 4D implementation status
+
+The following nineteen evidenced Companion entries are implemented only in
+`western-tm@0.1`. Canonical IDs state the tile structure; names, values,
+fishing values and visibility rules remain binding-local. Two-dot rows use
+`exposure: { allowed: true }`; Dragon's Tail has the one-dot normalisation
+shown below. A Pung-only source term is retained as Pung-only in its detector.
+
+| T&M hand | Locator | Canonical pattern ID | Winning / fishing | Source marker and normalised exposure | Physical-realisation note |
+|---|---|---|---:|---|---|
+| Dragon's Tail | pp. 12, 41; 56, 59 | `full-suit-run-with-honour-pung-and-opposite-honour-pair` | 1,000 / 400 | one dot; exposed 500 / 200 | ordinary five-set shape |
+| All Pair Jade | pp. 23, 32, 52; 57, 60 | `all-pair-green-dragon-and-bamboo` | 1,000 / 400 | none | seven loose pairs; Green Dragon may occupy one or two pairs |
+| Windy Dragons | pp. 25, 46; 57, 58 | `four-wind-pairs-with-two-dragon-melds` | 1,000 / 400 | two dots; exposed full | four pairs and two Dragon melds |
+| Red Coral | pp. 35, 60; 58, 60 | `red-dragon-pung-with-character-melds` | 1,000 / 400 | two dots; exposed full | Red Dragon group remains Pung-only |
+| White Opal | pp. 35, 60; 58, 60 | `white-dragon-pung-with-circle-melds` | 1,000 / 400 | two dots; exposed full | White Dragon group remains Pung-only |
+| Chinese Odds | p. 49; 59 | `one-suit-odd-melds` | 500 / 200 | two dots; exposed full | grouped five-set shape |
+| Odds & Evens | p. 60 | `two-odd-suits-and-one-even-suit` | 1,000 / 400 | none | complete loose 5 + 5 + 4 layout |
+| Robin | p. 60 | `four-chows-three-suits-one-two-one` | 500 / 200 | none | four Chows and pair |
+| Numbers in Parallel | p. 43; 59 | `parallel-suit-rank-melds-with-honours` | 1,500 / 600 | two dots; exposed full | one logical meld per suit |
+| Blue Mountains | p. 60 | `green-dragon-pung-with-blue-circle-melds` | 1,000 / 400 | two dots; exposed full | Green Dragon group remains Pung-only |
+| White Elephant | p. 60 | `white-dragon-meld-with-even-circle-melds` | 1,000 / 400 | two dots; exposed full | even Circle ranks 2,4,6,8; White Dragon permits Pung/Kong |
+| Driven Snow | p. 60 | `white-dragon-pung-with-odd-character-melds` | 1,000 / 400 | two dots; exposed full | White Dragon group remains Pung-only |
+| Dragon's Scales | p. 60 | `red-dragon-pung-with-even-character-melds` | 1,000 / 400 | two dots; exposed full | Red Dragon group remains Pung-only |
+| Green Jade | pp. 35, 53; 58, 60 | `green-dragon-pung-with-bamboo-melds` | 1,000 / 400 | two dots; exposed full | source's red-or-green Bamboo family does not add a distribution rule |
+| Lily of the Valley | pp. 36, 52; 58, 60 | `green-and-white-dragon-melds-with-green-bamboo` | 2,000 / 800 | two dots; exposed full | green Bamboo ranks 2,3,4,6,8 |
+| Red Waratah | p. 34; 58 | `red-and-green-dragon-pungs-with-three-suits` | 1,000 / 400 | two dots; exposed full | three suited groups and Red Dragon remain Pung-only |
+| Royal Ruby | pp. 37, 54; 58, 60 | `red-dragon-meld-with-red-bamboo-melds` | 2,000 / 800 | two dots; exposed full | red Bamboo ranks 1,5,7,9 |
+| Red Lily | pp. 37, 54; 58, 60 | `red-and-white-dragon-melds-with-red-bamboo` | 2,000 / 800 | two dots; exposed full | red Bamboo ranks 1,5,7,9 |
+| Ruby Jade | pp. 37, 54; 58, 60 | `red-and-green-dragon-melds-with-bamboo` | 1,000 / 400 | two dots; exposed full | source does not state a stronger red/green distribution rule |
+
 ## 5. Existing-detector candidates that must **not** be bound yet
 
 ### Wriggly Snake
