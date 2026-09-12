@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { dragon, set, suited } from '../scoring';
 import type { MahjongHand } from '../scoring';
 import { bmjaSpecialHandBindings, canonicalSpecialHandPatterns, isFixedSpecialHandBinding } from '../scoring/special-hands';
+import { detectSpecialFishing } from '../scoring/fishing';
+import { WESTERN_TM_RULESET } from './ruleset';
 import { westernTmSpecialHandBindings } from './western-tm-catalogue';
 
 const fixed = [
@@ -44,6 +46,7 @@ describe('western-tm@0.1 Companion Pass 4D bindings', () => {
     expect(fixed.every(([patternId]) => western.has(patternId))).toBe(true);
   });
 
+
   it('recognises White Elephant only with even Circle groups, including Circle 6', () => {
     const detector = canonicalSpecialHandPatterns.find(
       (pattern) => pattern.id === 'white-dragon-meld-with-even-circle-melds',
@@ -63,5 +66,19 @@ describe('western-tm@0.1 Companion Pass 4D bindings', () => {
     expect(detector.detect(hand(3))).toBe(false);
     expect(detector.detect(hand(5))).toBe(false);
     expect(detector.detect(hand(9))).toBe(false);
+  });
+
+  it('finds All Pair Jade fishing from its pure loose 13-tile layout', () => {
+    const complete: MahjongHand = {
+      sets: [], bonusTiles: [], isWinner: true,
+      looseTiles: [dragon('green'), dragon('green'), ...[2, 2, 2, 2, 3, 3, 4, 4, 6, 6, 8, 8].map((rank) => suited('bamboo', rank as 2 | 3 | 4 | 6 | 8))],
+    };
+    const pattern = canonicalSpecialHandPatterns.find((entry) => entry.id === 'all-pair-green-dragon-and-bamboo')!;
+    expect(pattern.detect(complete)).toBe(true);
+    const fishing = { ...complete, isWinner: false, looseTiles: complete.looseTiles!.slice(0, -1) };
+    const direct = detectSpecialFishing(fishing, westernTmSpecialHandBindings).find((entry) => entry.id === 'all-pair-green-dragon-and-bamboo');
+    expect(direct?.fishingValue).toBe(400);
+    expect(direct?.completingTiles).toContainEqual(suited('bamboo', 8));
+    expect(WESTERN_TM_RULESET.scoreHand({ hand: fishing, playerWind: 'east', prevailingWind: 'east' }).specialFishingMatches).toContainEqual(expect.objectContaining({ id: 'all-pair-green-dragon-and-bamboo', fishingValue: 400 }));
   });
 });
