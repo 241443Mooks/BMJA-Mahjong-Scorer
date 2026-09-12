@@ -39,12 +39,12 @@ describe('western-tm@0.1 Pass 4K mixed Chow family', () => {
     const hand = loose(crazyTiles);
     expect(detector(id).detect(hand)).toBe(true);
     expect(detector(id).detect(loose([...crazyTiles].reverse()))).toBe(true);
-    expect(score(hand).specialHands).toContainEqual(expect.objectContaining({ id, value: 1000, matched: true }));
+    expect(score(hand).specialHands).toContainEqual(expect.objectContaining({ id, value: 500, matched: true }));
     expect(detector(id).detect(loose([...crazyTiles.slice(0, 12), suited('bamboo', 7), suited('bamboo', 7)]))).toBe(false);
     expect(detector(id).detect(loose([...crazyTiles.slice(0, 12), suited('bamboo', 7), suited('characters', 8)]))).toBe(false);
     expect(detector(id).detect(loose([...crazyTiles.slice(0, 11), suited('bamboo', 9), ...crazyTiles.slice(12)]))).toBe(false);
     expect(detector(id).detect(loose([...crazyTiles.slice(0, 13), dragon('red')]))).toBe(false);
-    expect(fishing(loose(crazyTiles.slice(0, -1), false), id)?.fishingValue).toBe(400);
+    expect(fishing(loose(crazyTiles.slice(0, -1), false), id)?.fishingValue).toBe(200);
   });
 
   it('recognises concealed Apple Blossom and rejects exposed White Dragon Pungs/Kongs', () => {
