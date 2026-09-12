@@ -25,6 +25,39 @@ const wrigglyDragon = looseWinner([
     suited('circles', (index + 1) as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9),
   ),
 ]);
+const hachiBan = looseWinner([
+  wind('east'),
+  wind('east'),
+  wind('south'),
+  wind('south'),
+  wind('west'),
+  wind('west'),
+  ...Array.from({ length: 8 }, (_, index) =>
+    suited('characters', (index + 1) as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9),
+  ),
+]);
+const hachiBanDragonPairs = looseWinner([
+  dragon('green'),
+  dragon('green'),
+  dragon('green'),
+  dragon('green'),
+  dragon('red'),
+  dragon('red'),
+  ...Array.from({ length: 8 }, (_, index) =>
+    suited('circles', (index + 2) as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9),
+  ),
+]);
+const hachiBanMixedHonours = looseWinner([
+  wind('east'),
+  wind('east'),
+  wind('south'),
+  wind('south'),
+  dragon('red'),
+  dragon('red'),
+  ...Array.from({ length: 8 }, (_, index) =>
+    suited('circles', (index + 2) as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9),
+  ),
+]);
 const dragonette = looseWinner([
   wind('east'),
   wind('south'),
@@ -85,6 +118,15 @@ const phaseTwo = [
     ]),
   },
   {
+    id: 'hachi-ban',
+    name: 'Hachi Ban',
+    hand: hachiBan,
+    nearMiss: looseWinner([
+      ...hachiBan.looseTiles!.slice(0, -1),
+      wind('north'),
+    ]),
+  },
+  {
     id: 'dragonette',
     name: 'Dragonette',
     hand: dragonette,
@@ -133,8 +175,8 @@ describe('western-tm@0.1 Companion catalogue Phase 2', () => {
   });
 
   it('binds each new detector only to the Western catalogue at 1000/400', () => {
-    expect(phaseTwo).toHaveLength(4);
-    expect(westernTmSpecialHandBindings).toHaveLength(10);
+    expect(phaseTwo).toHaveLength(5);
+    expect(westernTmSpecialHandBindings).toHaveLength(11);
     for (const { id, name, hand } of phaseTwo) {
       expect(
         westernTmSpecialHandBindings.filter(
@@ -159,6 +201,14 @@ describe('western-tm@0.1 Companion catalogue Phase 2', () => {
         }).specialHands.some((special) => special.id === id),
       ).toBe(false);
     }
+  });
+
+  it('accepts either verified honour-pair form without mixing them', () => {
+    const hachiBanPattern = canonicalSpecialHandPatterns.find(
+      (pattern) => pattern.id === 'hachi-ban',
+    );
+    expect(hachiBanPattern?.detect(hachiBanDragonPairs)).toBe(true);
+    expect(hachiBanPattern?.detect(hachiBanMixedHonours)).toBe(false);
   });
 
   it('finds each new Western hand while fishing for its final ungrouped tile', () => {

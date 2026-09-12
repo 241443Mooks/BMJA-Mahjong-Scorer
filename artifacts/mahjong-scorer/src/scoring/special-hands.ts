@@ -89,6 +89,12 @@ const arePairsInOneSuit = (values: PlayingTile[], pairCount: number, allowedRank
   return suit !== undefined && new Set(suited.map((tile) => tile.suit)).size === 1 && suited.every((tile) => allowedRanks.includes(tile.rank)) && [...tally.values()].every((count) => count % 2 === 0);
 };
 
+const areThreePairsFromOneHonorFamily = (values: PlayingTile[]) =>
+  values.length === 6 &&
+  (values.every((tile) => tile.family === 'wind') ||
+    values.every((tile) => tile.family === 'dragon')) &&
+  [...counts(values).values()].every((count) => count % 2 === 0);
+
 const suitedRankCounts = (values: PlayingTile[]) => {
   const tally = new Map<number, Map<string, number>>();
   for (const tile of values) {
@@ -166,6 +172,7 @@ const buriedVisibilityIsAllowed = (hand: MahjongHand) => {
  */
 export const canonicalSpecialHandPatterns: CanonicalSpecialHandPattern[] = [
   { id: 'wriggly-dragon', detect: (hand) => { if (!isCompleteLooseLayout(hand)) return false; const all = tiles(hand); return hasDragonSinglesAndPair(all.filter((tile) => tile.family === 'dragon')) && isSingleSuitRun(all.filter((tile) => tile.family === 'suit'), [1, 2, 3, 4, 5, 6, 7, 8, 9]); } },
+  { id: 'hachi-ban', detect: (hand) => { if (!isCompleteLooseLayout(hand)) return false; const all = tiles(hand), honours = all.filter((tile) => tile.family === 'wind' || tile.family === 'dragon'), suited = all.filter((tile) => tile.family === 'suit'); return areThreePairsFromOneHonorFamily(honours) && (isSingleSuitRun(suited, [1, 2, 3, 4, 5, 6, 7, 8]) || isSingleSuitRun(suited, [2, 3, 4, 5, 6, 7, 8, 9])); } },
   { id: 'dragonette', detect: (hand) => { if (!isCompleteLooseLayout(hand)) return false; const all = tiles(hand), winds = all.filter((tile) => tile.family === 'wind'), dragons = all.filter((tile) => tile.family === 'dragon'), suited = all.filter((tile) => tile.family === 'suit'); return winds.length === 4 && hasExactlyOneOfEachWind(winds) && hasDragonPairAndSingles(dragons) && arePairsInOneSuit(suited, 3, [2, 3, 4, 5, 6, 7, 8]); } },
   { id: 'windfall', detect: (hand) => { if (!isCompleteLooseLayout(hand)) return false; const all = tiles(hand), winds = all.filter((tile) => tile.family === 'wind'), suited = all.filter((tile) => tile.family === 'suit'); return winds.length === 4 && hasExactlyOneOfEachWind(winds) && arePairsInOneSuit(suited, 5); } },
   { id: 'all-pair-ruby-jade', detect: (hand) => { if (!isCompleteLooseLayout(hand)) return false; const all = tiles(hand), dragons = all.filter((tile) => tile.family === 'dragon'), bamboo = all.filter((tile): tile is Extract<PlayingTile, { family: 'suit' }> => tile.family === 'suit' && tile.suit === 'bamboo'); return dragons.length === 4 && counts(dragons).get('dragon-green') === 2 && counts(dragons).get('dragon-red') === 2 && bamboo.length === 10 && arePairsInOneSuit(bamboo, 5); } },
