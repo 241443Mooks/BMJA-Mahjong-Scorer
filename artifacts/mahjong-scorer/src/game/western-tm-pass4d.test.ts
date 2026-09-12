@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest';
+import { dragon, set, suited } from '../scoring';
+import type { MahjongHand } from '../scoring';
 import { bmjaSpecialHandBindings, canonicalSpecialHandPatterns, isFixedSpecialHandBinding } from '../scoring/special-hands';
 import { westernTmSpecialHandBindings } from './western-tm-catalogue';
 
@@ -13,7 +15,7 @@ const fixed = [
   ['four-chows-three-suits-one-two-one', 'Robin', 500, 200],
   ['parallel-suit-rank-melds-with-honours', 'Numbers in Parallel', 1500, 600, 'full'],
   ['green-dragon-pung-with-blue-circle-melds', 'Blue Mountains', 1000, 400, 'full'],
-  ['white-dragon-meld-with-blue-circle-melds', 'White Elephant', 1000, 400, 'full'],
+  ['white-dragon-meld-with-even-circle-melds', 'White Elephant', 1000, 400, 'full'],
   ['white-dragon-pung-with-odd-character-melds', 'Driven Snow', 1000, 400, 'full'],
   ['red-dragon-pung-with-even-character-melds', "Dragon's Scales", 1000, 400, 'full'],
   ['green-dragon-pung-with-bamboo-melds', 'Green Jade', 1000, 400, 'full'],
@@ -40,5 +42,26 @@ describe('western-tm@0.1 Companion Pass 4D bindings', () => {
   it('keeps the batch membership exclusive to the Western profile', () => {
     const western = new Set(westernTmSpecialHandBindings.map((binding) => binding.patternId));
     expect(fixed.every(([patternId]) => western.has(patternId))).toBe(true);
+  });
+
+  it('recognises White Elephant only with even Circle groups, including Circle 6', () => {
+    const detector = canonicalSpecialHandPatterns.find(
+      (pattern) => pattern.id === 'white-dragon-meld-with-even-circle-melds',
+    )!;
+    const hand = (rank: 2 | 3 | 4 | 5 | 6 | 8 | 9): MahjongHand => ({
+      sets: [
+        set('white', 'kong', dragon('white')),
+        set('circle-2', 'pung', suited('circles', 2)),
+        set('circle-6', 'pung', suited('circles', 6)),
+        set('circle-rank', 'pung', suited('circles', rank)),
+        set('pair', 'pair', suited('circles', 4)),
+      ],
+      bonusTiles: [],
+      isWinner: true,
+    });
+    expect(detector.detect(hand(8))).toBe(true);
+    expect(detector.detect(hand(3))).toBe(false);
+    expect(detector.detect(hand(5))).toBe(false);
+    expect(detector.detect(hand(9))).toBe(false);
   });
 });

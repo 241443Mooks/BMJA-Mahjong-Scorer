@@ -279,7 +279,7 @@ shown below. A Pung-only source term is retained as Pung-only in its detector.
 | Robin | p. 60 | `four-chows-three-suits-one-two-one` | 500 / 200 | none | four Chows and pair |
 | Numbers in Parallel | p. 43; 59 | `parallel-suit-rank-melds-with-honours` | 1,500 / 600 | two dots; exposed full | one logical meld per suit |
 | Blue Mountains | p. 60 | `green-dragon-pung-with-blue-circle-melds` | 1,000 / 400 | two dots; exposed full | Green Dragon group remains Pung-only |
-| White Elephant | p. 60 | `white-dragon-meld-with-blue-circle-melds` | 1,000 / 400 | two dots; exposed full | White Dragon permits Pung/Kong |
+| White Elephant | p. 60 | `white-dragon-meld-with-even-circle-melds` | 1,000 / 400 | two dots; exposed full | even Circle ranks 2,4,6,8; White Dragon permits Pung/Kong |
 | Driven Snow | p. 60 | `white-dragon-pung-with-odd-character-melds` | 1,000 / 400 | two dots; exposed full | White Dragon group remains Pung-only |
 | Dragon's Scales | p. 60 | `red-dragon-pung-with-even-character-melds` | 1,000 / 400 | two dots; exposed full | Red Dragon group remains Pung-only |
 | Green Jade | pp. 35, 53; 58, 60 | `green-dragon-pung-with-bamboo-melds` | 1,000 / 400 | two dots; exposed full | source's red-or-green Bamboo family does not add a distribution rule |

@@ -434,10 +434,10 @@ export const canonicalSpecialHandPatterns: CanonicalSpecialHandPattern[] = [
     },
   },
   {
-    id: 'white-dragon-meld-with-blue-circle-melds',
+    id: 'white-dragon-meld-with-even-circle-melds',
     detect: (hand) => {
-      const shape = groupedShape(hand, 4); const blue = [2,3,4,5,8,9];
-      return shape !== undefined && shape.melds.some((set) => set.tile.family === 'dragon' && set.tile.dragon === 'white') && shape.melds.filter((set) => isSuitRank(set.tile, 'circles', blue)).length === 3 && isSuitRank(shape.pairs[0].tile, 'circles', blue);
+      const shape = groupedShape(hand, 4); const even = [2,4,6,8];
+      return shape !== undefined && shape.melds.some((set) => set.tile.family === 'dragon' && set.tile.dragon === 'white') && shape.melds.filter((set) => isSuitRank(set.tile, 'circles', even)).length === 3 && isSuitRank(shape.pairs[0].tile, 'circles', even);
     },
   },
   {
