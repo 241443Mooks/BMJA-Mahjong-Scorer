@@ -217,10 +217,12 @@ Winds + **any tile paired**.
 
 The current canonical detector is narrower: it expects the duplicated suited tile to be the 1 of the chosen suit.
 
-Status: `needs-pattern-check / likely canonical split-or-fix`.
-
-Do not bind the existing detector to T&M: it differs from the verified detail
-rule and needs a later canonical decision.
+Status: implemented for `western-tm@0.1` as the distinct canonical structural pattern
+`wriggling-snake-any-pair`, bound locally as Wriggly Snake at 1,000 / 400.
+The Companion detail evidence verifies that any tile in the 13-tile base structure
+may be paired. This differs from the current BMJA `wriggling-snake` predicate, so
+the predicates remain separate for now. They may only be consolidated if future
+BMJA evidence shows that the current BMJA predicate itself is too narrow.
 
 ### Imperial Jade
 

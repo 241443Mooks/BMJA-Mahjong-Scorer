@@ -48,6 +48,7 @@ export type FishingSpecialId =
   | 'wriggling-snake'
   | 'thirteen-unique-wonders'
   | 'wriggly-dragon'
+  | 'wriggling-snake-any-pair'
   | 'hachi-ban'
   | 'dragonette'
   | 'windfall'
