@@ -9,6 +9,7 @@ import {
   bmjaSpecialHandBindings,
   detectSpecialHands,
   specialHandFishingValueFor,
+  isFixedSpecialHandBinding,
   type SpecialHandPatternBinding,
 } from './special-hands';
 import {
@@ -374,9 +375,14 @@ export const detectSpecialFishing = (
     const binding = bindingFor(id);
     // An explicit profile owns both catalogue membership and fishing metadata.
     // The legacy BMJA table is retained only for the no-profile API.
-    if (usesExplicitBindings && (!binding || binding.fishingValue === undefined))
+    if (
+      usesExplicitBindings &&
+      (!binding ||
+        !isFixedSpecialHandBinding(binding) ||
+        binding.fishingValue === undefined)
+    )
       return [];
-    const fishingValue = binding
+    const fishingValue = binding && isFixedSpecialHandBinding(binding)
       ? (specialHandFishingValueFor(hand, binding) ??
         (usesExplicitBindings ? undefined : fishingValues[id]))
       : fishingValues[id];

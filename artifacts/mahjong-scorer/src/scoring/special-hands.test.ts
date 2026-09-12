@@ -38,11 +38,11 @@ describe('independent special-hand detectors', () => {
   it('preserves the complete BMJA special-hand public metadata contract', () => {
     expect(
       detectSpecialHands(winning([])).map(
-        ({ id, name, description, value }) => ({
-          id,
-          name,
-          description,
-          value,
+        (result) => ({
+          id: result.id,
+          name: result.name,
+          description: result.description,
+          value: result.scoreModel === 'fixed' ? result.value : undefined,
         }),
       ),
     ).toEqual([

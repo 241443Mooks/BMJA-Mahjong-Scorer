@@ -274,7 +274,14 @@ Status: `shared-structure / needs-completion-rule-audit`.
 
 T&M lists Purity as `Calculate`, not a fixed 500/1000/1500/2000 catalogue value.
 
-Status: `requires-score-model`.
+Implemented for `western-tm@0.1` as canonical ID `purity` with score model
+`calculated`. It has no fixed winning or fishing value. Calculation is delegated
+to the active profile's ordinary scoring machinery; Western's current ordinary
+calculation remains `provisional-compatible`, not verified-identical.
+
+Western Purity fishing semantics remain unverified and are deliberately not
+promoted from the legacy BMJA treatment. Purity is the reference implementation
+for the first calculated profile-binding seam.
 
 Do not force it into `value: number`.
 

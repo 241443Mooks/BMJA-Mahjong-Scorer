@@ -11,6 +11,7 @@ import type {
   SpecialHandResult,
 } from './types';
 import type { RulesProfileRef } from '../game/types';
+import { isPurityHand } from './rules';
 
 export type CanonicalSpecialHandPattern = {
   id: string;
@@ -18,11 +19,16 @@ export type CanonicalSpecialHandPattern = {
   detect: (hand: MahjongHand, context?: GameContext) => boolean;
 };
 
-export type SpecialHandPatternBinding = {
+type CommonSpecialHandPatternBinding = {
   patternId: string;
   profile: RulesProfileRef;
   name: string;
   description: string;
+};
+
+export type FixedSpecialHandPatternBinding =
+  CommonSpecialHandPatternBinding & {
+    scoreModel?: { kind: 'fixed' };
   value: number;
   /** Fixed value while one tile away, when this profile has published one. */
   fishingValue?: number;
@@ -34,6 +40,20 @@ export type SpecialHandPatternBinding = {
   };
 };
 
+export type CalculatedSpecialHandPatternBinding =
+  CommonSpecialHandPatternBinding & {
+    scoreModel: { kind: 'calculated' };
+  };
+
+export type SpecialHandPatternBinding =
+  | FixedSpecialHandPatternBinding
+  | CalculatedSpecialHandPatternBinding;
+
+export const isFixedSpecialHandBinding = (
+  binding: SpecialHandPatternBinding,
+): binding is FixedSpecialHandPatternBinding =>
+  binding.scoreModel?.kind !== 'calculated';
+
 const hasRepresentedExposedMeld = (hand: MahjongHand) =>
   hand.sets.some(
     (set) =>
@@ -42,7 +62,7 @@ const hasRepresentedExposedMeld = (hand: MahjongHand) =>
 
 export const specialHandValueFor = (
   hand: MahjongHand,
-  binding: SpecialHandPatternBinding,
+  binding: FixedSpecialHandPatternBinding,
 ) =>
   binding.exposure?.allowed && hasRepresentedExposedMeld(hand)
     ? (binding.exposure.exposedValue ?? binding.value)
@@ -50,7 +70,7 @@ export const specialHandValueFor = (
 
 export const specialHandFishingValueFor = (
   hand: MahjongHand,
-  binding: SpecialHandPatternBinding,
+  binding: FixedSpecialHandPatternBinding,
 ) => {
   const fishingValue = binding.fishingValue;
   if (fishingValue === undefined) return undefined;
@@ -203,6 +223,10 @@ const buriedVisibilityIsAllowed = (hand: MahjongHand) => {
  * MahjongHand and returns a boolean. Adding one cannot alter another.
  */
 export const canonicalSpecialHandPatterns: CanonicalSpecialHandPattern[] = [
+  {
+    id: 'purity',
+    detect: isPurityHand,
+  },
   {
     id: 'golden-gates',
     detect: (hand) => {
@@ -804,7 +828,7 @@ export const specialHandDetectors = bmjaSpecialHandPatterns.map(
     id: pattern.id,
     name: binding.name,
     description: binding.description,
-    value: binding.value,
+    ...(isFixedSpecialHandBinding(binding) ? { value: binding.value } : {}),
     eventBased: pattern.eventBased,
     detect: pattern.detect,
   }),
@@ -818,13 +842,24 @@ export const detectSpecialHands = (
   resolveSpecialHandBindings(
     bindings[0]?.profile ?? BMJA_SPECIAL_HAND_PROFILE,
     bindings,
-  ).map(({ binding, pattern }) => ({
-    id: pattern.id,
-    name: binding.name,
-    description: binding.description,
-    value: specialHandValueFor(hand, binding),
-    matched: pattern.detect(hand, context),
-  }));
+  ).map(({ binding, pattern }) =>
+    isFixedSpecialHandBinding(binding)
+      ? {
+          id: pattern.id,
+          name: binding.name,
+          description: binding.description,
+          scoreModel: 'fixed' as const,
+          value: specialHandValueFor(hand, binding),
+          matched: pattern.detect(hand, context),
+        }
+      : {
+          id: pattern.id,
+          name: binding.name,
+          description: binding.description,
+          scoreModel: 'calculated' as const,
+          matched: pattern.detect(hand, context),
+        },
+  );
 
 export const matchesSupportedIrregularLayout = (
   hand: MahjongHand,

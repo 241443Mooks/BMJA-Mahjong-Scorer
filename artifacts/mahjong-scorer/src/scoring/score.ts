@@ -44,12 +44,15 @@ export const scoreHand = (
   const fishingMatches = canAnalyseWholeHand
     ? detectSpecialFishing(hand, specialHandBindings)
     : [];
-  const matchedSpecial = specialHands
-    .filter((result) => result.matched)
+  const matchedFixedSpecial = specialHands
+    .filter(
+      (result): result is Extract<typeof result, { scoreModel: 'fixed' }> =>
+        result.matched && result.scoreModel === 'fixed',
+    )
     .sort((a, b) => b.value - a.value)[0];
   const purity = canAnalyseWholeHand && isPurityHand(hand);
   const specialFinalDiscardDouble =
-    matchedSpecial && hand.winningMethod === 'final-discard'
+    matchedFixedSpecial && hand.winningMethod === 'final-discard'
       ? [
           {
             id: 'special-final-discard',
@@ -88,12 +91,12 @@ export const scoreHand = (
   const fishingOptions = selectedFishing?.options;
   const pointRules = fishingOptions
     ? fishingOptions.pointRules
-    : matchedSpecial
+    : matchedFixedSpecial
       ? scoreBonusTiles(hand)
       : applyPointRules(hand, context);
   const doubleRules = fishingOptions
     ? fishingOptions.doubleRules
-    : matchedSpecial
+    : matchedFixedSpecial
       ? [...scoreBonusDoubles(hand, context), ...specialFinalDiscardDouble]
       : applyDoubleRules(hand, context);
   const basePoints = pointRules.reduce((sum, rule) => sum + rule.amount, 0);
@@ -111,14 +114,14 @@ export const scoreHand = (
 
   if (specialFishing && fishingOptions) {
     calculationComponents = fishingOptions.components;
-  } else if (matchedSpecial) {
+  } else if (matchedFixedSpecial) {
     calculationComponents = [
       {
-        id: `special-${matchedSpecial.id}`,
-        label: matchedSpecial.name,
-        base: matchedSpecial.value,
+        id: `special-${matchedFixedSpecial.id}`,
+        label: matchedFixedSpecial.name,
+        base: matchedFixedSpecial.value,
         doubles: 0,
-        subtotal: matchedSpecial.value,
+        subtotal: matchedFixedSpecial.value,
       },
       ...(bonusPoints
         ? [
@@ -179,8 +182,8 @@ export const scoreHand = (
   );
   // A published fixed special value is not silently reduced by the ordinary
   // profile cap. Ordinary and fishing scores retain the profile limit.
-  const effectiveLimit = matchedSpecial
-    ? Math.max(context.limit, matchedSpecial.value)
+  const effectiveLimit = matchedFixedSpecial
+    ? Math.max(context.limit, matchedFixedSpecial.value)
     : context.limit;
   const finalScore = Math.min(uncappedScore, effectiveLimit);
 
@@ -207,7 +210,7 @@ export const scoreHand = (
     finalScore,
     limitApplied: finalScore < uncappedScore,
     scoringMode:
-      specialFishing || matchedSpecial || purity ? 'special' : 'standard',
+      specialFishing || matchedFixedSpecial || purity ? 'special' : 'standard',
     calculationComponents,
   };
 };

@@ -78,6 +78,13 @@ export const westernTmSpecialHandBindings: SpecialHandPatternBinding[] = [
     fishingValue: 400,
     exposure: { allowed: true, exposedValue: 500, exposedFishingValue: 200 },
   },
+  {
+    patternId: 'purity',
+    profile: WESTERN_TM_PROFILE_REF,
+    name: 'Purity',
+    description: 'Four pungs or kongs and a pair in one suit, with no honours or chows.',
+    scoreModel: { kind: 'calculated' },
+  },
 ];
 
 export const WESTERN_TM_RULESET: GameRuleset = Object.freeze({
