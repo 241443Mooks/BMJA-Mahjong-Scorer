@@ -69,6 +69,15 @@ export const westernTmSpecialHandBindings: SpecialHandPatternBinding[] = [
   { patternId: 'dragonette', profile: WESTERN_TM_PROFILE_REF, name: 'Dragonette', description: 'One of each Wind, a Dragon pair with the other Dragons single, and three non-terminal pairs in one suit.', value: 1000, fishingValue: 400 },
   { patternId: 'windfall', profile: WESTERN_TM_PROFILE_REF, name: 'Windfall', description: 'One of each Wind and five pairs in one suit.', value: 1000, fishingValue: 400 },
   { patternId: 'all-pair-ruby-jade', profile: WESTERN_TM_PROFILE_REF, name: 'All Pair Ruby Jade', description: 'Pairs of Green and Red Dragons plus five pairs of red or green Bamboo ranks.', value: 1000, fishingValue: 400 },
+  {
+    patternId: 'golden-gates',
+    profile: WESTERN_TM_PROFILE_REF,
+    name: 'Golden Gates',
+    description: 'Pairs of 2, 4, 6 and 8 in one suit, with its 1 or 9 and corresponding Dragon as Pungs or Kongs.',
+    value: 1000,
+    fishingValue: 400,
+    exposure: { allowed: true, exposedValue: 500, exposedFishingValue: 200 },
+  },
 ];
 
 export const WESTERN_TM_RULESET: GameRuleset = Object.freeze({

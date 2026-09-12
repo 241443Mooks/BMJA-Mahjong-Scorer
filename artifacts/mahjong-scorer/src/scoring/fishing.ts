@@ -8,6 +8,7 @@ import {
 import {
   bmjaSpecialHandBindings,
   detectSpecialHands,
+  specialHandFishingValueFor,
   type SpecialHandPatternBinding,
 } from './special-hands';
 import {
@@ -61,6 +62,7 @@ const names: Record<FishingSpecialId, string> = {
   dragonette: 'Dragonette',
   windfall: 'Windfall',
   'all-pair-ruby-jade': 'All Pair Ruby Jade',
+  'golden-gates': 'Golden Gates',
 };
 
 const fishingValues: Record<FishingSpecialId, number | 'three-doubles'> = {
@@ -84,6 +86,7 @@ const fishingValues: Record<FishingSpecialId, number | 'three-doubles'> = {
   dragonette: 400,
   windfall: 400,
   'all-pair-ruby-jade': 400,
+  'golden-gates': 400,
 };
 
 export const FISHING_SPECIALS = (Object.keys(names) as FishingSpecialId[]).map(
@@ -313,6 +316,22 @@ const completedHands = (
     }
   }
 
+  // Profile-local grouped specials may use a non-standard set count. Pair the
+  // final concealed tile so their canonical detector can decide membership.
+  if (remaining.length === 1 && tileKey(remaining[0]) === tileKey(completingTile)) {
+    completed.push(
+      finish([
+        ...hand.sets,
+        {
+          id: completionSetId(hand.sets, hand.sets.length),
+          kind: 'pair',
+          tile: completingTile,
+          visibility: 'concealed',
+        },
+      ]),
+    );
+  }
+
   return completed;
 };
 
@@ -357,7 +376,11 @@ export const detectSpecialFishing = (
     // The legacy BMJA table is retained only for the no-profile API.
     if (usesExplicitBindings && (!binding || binding.fishingValue === undefined))
       return [];
-    const fishingValue = binding?.fishingValue ?? fishingValues[id];
+    const fishingValue = binding
+      ? (specialHandFishingValueFor(hand, binding) ??
+        (usesExplicitBindings ? undefined : fishingValues[id]))
+      : fishingValues[id];
+    if (fishingValue === undefined) return [];
     const completingTiles = playingTiles.filter(
       (tile) =>
         (tally.get(tileKey(tile)) ?? 0) < 4 &&

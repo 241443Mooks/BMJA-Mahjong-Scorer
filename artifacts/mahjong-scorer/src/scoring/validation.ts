@@ -53,6 +53,10 @@ export const validateHand = (
       { ...hand, isWinner: true },
       specialHandBindings,
     );
+  const isSupportedSpecialGroupedShape =
+    hand.isWinner &&
+    hand.sets.length > 0 &&
+    matchesSupportedIrregularLayout(hand, specialHandBindings);
   const fishingMatches = detectSpecialFishing(hand, specialHandBindings);
   const structuralCount = structuralTileCount(hand);
   const physicalCount = playingTiles(hand).length;
@@ -60,7 +64,7 @@ export const validateHand = (
   const expectedStructuralCount = hand.isWinner ? 14 : 13;
   const expectedPhysicalCount = expectedStructuralCount + kongCount;
 
-  if (hand.isWinner && !hasCompleteWinningShape(hand)) {
+  if (hand.isWinner && !hasCompleteWinningShape(hand) && !isSupportedSpecialGroupedShape) {
     errors.push(
       'A winning hand must be a complete grouped hand or a 14-tile special layout.',
     );
@@ -71,7 +75,8 @@ export const validateHand = (
     hand.sets.length > 0 &&
     !isSevenPairsShape &&
     !isIrregularShape &&
-    (pairCount !== 1 || setCount !== 4)
+    (pairCount !== 1 || setCount !== 4) &&
+    !isSupportedSpecialGroupedShape
   ) {
     errors.push('A standard winning hand must contain four sets and one pair.');
   }

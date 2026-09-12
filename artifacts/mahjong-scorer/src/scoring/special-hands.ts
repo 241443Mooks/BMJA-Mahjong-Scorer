@@ -26,6 +26,37 @@ export type SpecialHandPatternBinding = {
   value: number;
   /** Fixed value while one tile away, when this profile has published one. */
   fishingValue?: number;
+  /** Profile-local treatment for represented exposed Pung/Kong groups. */
+  exposure?: {
+    allowed: true;
+    exposedValue?: number;
+    exposedFishingValue?: number;
+  };
+};
+
+const hasRepresentedExposedMeld = (hand: MahjongHand) =>
+  hand.sets.some(
+    (set) =>
+      set.visibility === 'exposed' && (set.kind === 'pung' || set.kind === 'kong'),
+  );
+
+export const specialHandValueFor = (
+  hand: MahjongHand,
+  binding: SpecialHandPatternBinding,
+) =>
+  binding.exposure?.allowed && hasRepresentedExposedMeld(hand)
+    ? (binding.exposure.exposedValue ?? binding.value)
+    : binding.value;
+
+export const specialHandFishingValueFor = (
+  hand: MahjongHand,
+  binding: SpecialHandPatternBinding,
+) => {
+  const fishingValue = binding.fishingValue;
+  if (fishingValue === undefined) return undefined;
+  return binding.exposure?.allowed && hasRepresentedExposedMeld(hand)
+    ? (binding.exposure.exposedFishingValue ?? fishingValue)
+    : fishingValue;
 };
 
 const tiles = (hand: MahjongHand) => [
@@ -172,6 +203,61 @@ const buriedVisibilityIsAllowed = (hand: MahjongHand) => {
  * MahjongHand and returns a boolean. Adding one cannot alter another.
  */
 export const canonicalSpecialHandPatterns: CanonicalSpecialHandPattern[] = [
+  {
+    id: 'golden-gates',
+    detect: (hand) => {
+      if (
+        !hand.isWinner ||
+        hand.sets.length !== 6 ||
+        (hand.looseTiles?.length ?? 0) > 0 ||
+        (hand.remainingTiles?.length ?? 0) > 0
+      ) {
+        return false;
+      }
+      const pairs = hand.sets.filter((set) => set.kind === 'pair');
+      const melds = hand.sets.filter(
+        (set) => set.kind === 'pung' || set.kind === 'kong',
+      );
+      if (pairs.length !== 4 || melds.length !== 2) {
+        return false;
+      }
+      const pairSuit =
+        pairs[0]?.tile.family === 'suit' ? pairs[0].tile.suit : undefined;
+      if (
+        !pairSuit ||
+        pairs.some(
+          (set) => set.tile.family !== 'suit' || set.tile.suit !== pairSuit,
+        )
+      ) {
+        return false;
+      }
+      if (
+        ![2, 4, 6, 8].every(
+          (rank) =>
+            pairs.filter(
+              (set) => set.tile.family === 'suit' && set.tile.rank === rank,
+            ).length === 1,
+        )
+      ) {
+        return false;
+      }
+      const terminal = melds.find((set) => set.tile.family === 'suit');
+      const dragonMeld = melds.find((set) => set.tile.family === 'dragon');
+      const requiredDragon = {
+        bamboo: 'green',
+        characters: 'red',
+        circles: 'white',
+      } as const;
+      return (
+        terminal?.tile.family === 'suit' &&
+        terminal.tile.suit === pairSuit &&
+        (terminal.tile.rank === 1 || terminal.tile.rank === 9) &&
+        dragonMeld?.tile.family === 'dragon' &&
+        dragonMeld.tile.dragon === requiredDragon[pairSuit] &&
+        hasAtMostFourCopies(tiles(hand))
+      );
+    },
+  },
   { id: 'wriggly-dragon', detect: (hand) => { if (!isCompleteLooseLayout(hand)) return false; const all = tiles(hand); return hasDragonSinglesAndPair(all.filter((tile) => tile.family === 'dragon')) && isSingleSuitRun(all.filter((tile) => tile.family === 'suit'), [1, 2, 3, 4, 5, 6, 7, 8, 9]); } },
   {
     id: 'wriggling-snake-any-pair',
@@ -736,7 +822,7 @@ export const detectSpecialHands = (
     id: pattern.id,
     name: binding.name,
     description: binding.description,
-    value: binding.value,
+    value: specialHandValueFor(hand, binding),
     matched: pattern.detect(hand, context),
   }));
 

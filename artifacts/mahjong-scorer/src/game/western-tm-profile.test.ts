@@ -195,7 +195,7 @@ describe('western-tm@0.1 provisional profile', () => {
   });
 
   it('binds the five evidenced Companion hands to existing canonical detectors', () => {
-    expect(westernTmSpecialHandBindings).toHaveLength(12);
+    expect(westernTmSpecialHandBindings).toHaveLength(13);
     for (const fixture of westernBatch) {
       expect(canonicalSpecialHandPatterns.filter(({ id }) => id === fixture.id)).toHaveLength(1);
       expect(WESTERN_TM_RULESET.scoreHand({ hand: fixture.hand, playerWind: 'east', prevailingWind: 'east' }).specialHands).toContainEqual(expect.objectContaining({ id: fixture.id, name: fixture.name, value: fixture.value, matched: true }));
