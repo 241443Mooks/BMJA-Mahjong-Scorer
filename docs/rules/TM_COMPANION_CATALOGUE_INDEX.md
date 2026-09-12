@@ -1,5 +1,16 @@
 # Thompson & Maloney Companion catalogue index — pass 1
 
+## Pass 4I implementation — calculated and half-exposure catalogue wave
+
+Four entries are now bound in `western-tm@0.1` (68 bindings total), sourced from the Full Synopsis pp. 58–59: **Sunrise** and **Sunset** (p. 42 / p. 59), **All Honour Hand** (p. 44 / p. 58), and **Ordinary Mah Jong** (p. 42 / p. 59).
+
+- Sunrise uses `east-wind-meld-white-dragon-pair-three-suit-nonterminal-melds`: East Wind Pung/Kong, White Dragon pair, and one non-terminal Pung/Kong in each suit. It is fixed 1,000 / 400 fishing; one red dot halves represented exposed Pungs/Kongs to 500 / 200.
+- Sunset uses `white-dragon-meld-red-dragon-pair-three-suit-nonterminal-melds`: White Dragon Pung/Kong, Red Dragon pair, and one non-terminal Pung/Kong in each suit. It has the same fixed one-dot 1,000 / 400 to 500 / 200 treatment.
+- All Honour Hand uses `honours-and-one-suit-terminals-pung-kong-hand`: four Pungs/Kongs and a pair of honours and, if present, 1s/9s in one suit. It is calculated, carries no invented fishing value, and its one dot halves the ordinary calculated score when a represented Pung/Kong is exposed.
+- Ordinary Mah Jong uses `one-suit-with-honours-mostly-pung-kong-hand`: one suited family plus optional Winds/Dragons, four Pungs/Kongs or three plus one Chow, and a pair. It is calculated with no invented fishing value. Its one-dot policy halves exposed represented Pungs/Kongs, but an exposed Chow is ineligible because the source marker does not permit it.
+
+Regression coverage preserves truthful overlap: fixed All Winds and Dragons remains selected over its overlapping calculated All Honour Hand; overlapping calculated patterns (including Purity and Ordinary Mah Jong) produce one ordinary calculation and at most one exposure adjustment. BMJA bindings and canonical BMJA detector behaviour remain unchanged.
+
 ## Pass 4H implementation — Knitting audits and Imperial Jade
 
 **Knitting** (p.20; synopsis pp.57, 59): seven pairs of the same number in two suits, worth 500 (200 fishing), with no exposure marker. The BMJA `knitting` predicate was not safe to reuse: it permits a broader multi-suit arrangement and does not require the complete pure loose layout. T&M therefore uses the neutral structural canonical pattern `two-suit-knitting`, which requires exactly two suits and seven cross-suit same-rank pair units; repeated rank-pairs remain permitted within physical-copy limits.
