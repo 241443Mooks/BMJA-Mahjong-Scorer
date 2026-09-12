@@ -217,6 +217,52 @@ const isCompleteHybrid = (hand: MahjongHand, setCount: number, looseCount: numbe
   tiles(hand).length === 14 + hand.sets.filter((set) => set.kind === 'kong').length &&
   hasAtMostFourCopies(tiles(hand));
 
+/** Three suited tiles, one per suit, whose ranks are one consecutive run. */
+const isMixedChow = (values: PlayingTile[]) => {
+  if (values.length !== 3 || values.some((tile) => tile.family !== 'suit')) return false;
+  const suited = values as Extract<PlayingTile, { family: 'suit' }>[];
+  const ranks: number[] = suited.map((tile) => tile.rank);
+  const start = Math.min(...ranks);
+  return new Set(suited.map((tile) => tile.suit)).size === 3 &&
+    start >= 1 && start <= 7 &&
+    new Set(ranks).size === 3 &&
+    [start, start + 1, start + 2].every((rank) => ranks.includes(rank));
+};
+
+/** Two suited tiles of one rank, drawn from different suits. */
+const isMixedPair = (values: PlayingTile[]) =>
+  values.length === 2 &&
+  values.every((tile) => tile.family === 'suit') &&
+  values[0]!.family === 'suit' && values[1]!.family === 'suit' &&
+  values[0].rank === values[1].rank && values[0].suit !== values[1].suit;
+
+/** Bounded structural partitioning for the small irregular mixed-Chow layouts. */
+const canPartitionIntoMixedChows = (values: PlayingTile[], count: number): boolean => {
+  if (values.length !== count * 3) return false;
+  if (count === 0) return values.length === 0;
+  const first = values[0]!;
+  for (let second = 1; second < values.length; second += 1) {
+    for (let third = second + 1; third < values.length; third += 1) {
+      if (!isMixedChow([first, values[second]!, values[third]!])) continue;
+      const rest = values.filter((_, index) => index !== 0 && index !== second && index !== third);
+      if (canPartitionIntoMixedChows(rest, count - 1)) return true;
+    }
+  }
+  return false;
+};
+
+const canPartitionMixedChowsAndPair = (values: PlayingTile[], chowCount: number) => {
+  if (values.length !== chowCount * 3 + 2) return false;
+  for (let first = 0; first < values.length; first += 1) {
+    for (let second = first + 1; second < values.length; second += 1) {
+      if (!isMixedPair([values[first]!, values[second]!])) continue;
+      const rest = values.filter((_, index) => index !== first && index !== second);
+      if (canPartitionIntoMixedChows(rest, chowCount)) return true;
+    }
+  }
+  return false;
+};
+
 const hasExactlyOneOfEachWind = (values: PlayingTile[]) =>
   ['east', 'south', 'west', 'north'].every(
     (value) => counts(values).get(`wind-${value}`) === 1,
@@ -827,6 +873,52 @@ export const canonicalSpecialHandPatterns: CanonicalSpecialHandPattern[] = [
     },
   },
   { id: 'three-suit-chows-with-suited-meld-and-pair', detect: (hand) => { if (!hand.isWinner || hand.sets.length !== 5 || (hand.looseTiles?.length ?? 0) !== 0 || (hand.remainingTiles?.length ?? 0) !== 0 || !hasAtMostFourCopies(tiles(hand))) return false; const chows = hand.sets.filter((set) => set.kind === 'chow'), melds = hand.sets.filter((set) => set.kind === 'pung' || set.kind === 'kong'), pairs = hand.sets.filter((set) => set.kind === 'pair'); return chows.length === 3 && melds.length === 1 && pairs.length === 1 && chows.every((set) => set.tile.family === 'suit' && set.tile.rank <= 7) && new Set(chows.map((set) => set.tile.family === 'suit' ? set.tile.suit : undefined)).size === 3 && melds[0]?.tile.family === 'suit' && pairs[0]?.tile.family === 'suit'; } },
+  {
+    id: 'three-suit-chows-with-mixed-chow-and-suited-pair',
+    detect: (hand) => {
+      if (!isCompleteHybrid(hand, 4, 3)) return false;
+      const chows = hand.sets.filter((set) => set.kind === 'chow');
+      const pairs = hand.sets.filter((set) => set.kind === 'pair');
+      return chows.length === 3 && pairs.length === 1 &&
+        chows.every((set) => set.tile.family === 'suit' && set.tile.rank <= 7) &&
+        new Set(chows.map((set) => set.tile.family === 'suit' ? set.tile.suit : undefined)).size === 3 &&
+        pairs[0]?.tile.family === 'suit' && isMixedChow(hand.looseTiles ?? []);
+    },
+  },
+  {
+    id: 'four-mixed-chows-with-mixed-pair',
+    detect: (hand) =>
+      isCompleteLooseLayout(hand) &&
+      canPartitionMixedChowsAndPair(tiles(hand), 4),
+  },
+  {
+    id: 'white-dragon-meld-green-dragon-pair-with-three-mixed-chows',
+    detect: (hand) => {
+      if (!isCompleteHybrid(hand, 2, 9)) return false;
+      const whiteMeld = hand.sets.find(
+        (set) => (set.kind === 'pung' || set.kind === 'kong') && set.tile.family === 'dragon' && set.tile.dragon === 'white',
+      );
+      const greenPair = hand.sets.find(
+        (set) => set.kind === 'pair' && set.tile.family === 'dragon' && set.tile.dragon === 'green',
+      );
+      return whiteMeld !== undefined && greenPair !== undefined &&
+        canPartitionIntoMixedChows(hand.looseTiles ?? [], 3);
+    },
+  },
+  {
+    id: 'three-mixed-chows-three-dragon-singles-own-wind-pair',
+    detect: (hand, context) => {
+      if (!context || !isCompleteLooseLayout(hand)) return false;
+      const all = tiles(hand);
+      const suited = all.filter((tile) => tile.family === 'suit');
+      const dragons = all.filter((tile) => tile.family === 'dragon');
+      const winds = all.filter((tile) => tile.family === 'wind');
+      return dragons.length === 3 && winds.length === 2 && suited.length === 9 &&
+        ['green', 'red', 'white'].every((colour) => counts(dragons).get(`dragon-${colour}`) === 1) &&
+        counts(winds).get(`wind-${context.playerWind}`) === 2 &&
+        canPartitionIntoMixedChows(suited, 3);
+    },
+  },
   { id: 'circle-chows-with-one-two-three-four-five-six-seven-eight-nine', detect: (hand) => { if (!hand.isWinner || hand.sets.length !== 5 || (hand.looseTiles?.length ?? 0) !== 0 || (hand.remainingTiles?.length ?? 0) !== 0 || !hasAtMostFourCopies(tiles(hand))) return false; const chows = hand.sets.filter((set) => set.kind === 'chow'); const pair = hand.sets.find((set) => set.kind === 'pair'); return chows.length === 4 && pair?.tile.family === 'suit' && pair.tile.suit === 'circles' && chows.every((set) => set.tile.family === 'suit' && set.tile.suit === 'circles' && set.tile.rank <= 7) && [1, 4, 7].every((rank) => chows.some((set) => set.tile.family === 'suit' && set.tile.rank === rank)); } },
   {
     id: 'wriggling-snake-any-pair',
