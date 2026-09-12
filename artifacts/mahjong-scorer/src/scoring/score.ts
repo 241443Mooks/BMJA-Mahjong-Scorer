@@ -7,6 +7,9 @@ import {
 } from './rules';
 import {
   detectSpecialHands,
+  calculatedSpecialHandExposureMultiplierFor,
+  isCalculatedSpecialHandBinding,
+  type CalculatedSpecialHandPatternBinding,
   type SpecialHandPatternBinding,
 } from './special-hands';
 import { detectSpecialFishing, fishingScoreOptions } from './fishing';
@@ -44,12 +47,28 @@ export const scoreHand = (
   const fishingMatches = canAnalyseWholeHand
     ? detectSpecialFishing(hand, specialHandBindings)
     : [];
-  const matchedSpecial = specialHands
-    .filter((result) => result.matched)
+  const matchedFixedSpecial = specialHands
+    .filter(
+      (result): result is Extract<typeof result, { scoreModel: 'fixed' }> =>
+        result.matched && result.scoreModel === 'fixed',
+    )
     .sort((a, b) => b.value - a.value)[0];
+  const calculatedBinding = specialHandBindings?.find(
+    (binding): binding is CalculatedSpecialHandPatternBinding =>
+      isCalculatedSpecialHandBinding(binding) &&
+      specialHands.some(
+        (result) =>
+          result.matched &&
+          result.scoreModel === 'calculated' &&
+          result.id === binding.patternId,
+      ),
+  );
+  const calculatedExposureMultiplier = !matchedFixedSpecial && calculatedBinding
+    ? calculatedSpecialHandExposureMultiplierFor(hand, calculatedBinding)
+    : 1;
   const purity = canAnalyseWholeHand && isPurityHand(hand);
   const specialFinalDiscardDouble =
-    matchedSpecial && hand.winningMethod === 'final-discard'
+    matchedFixedSpecial && hand.winningMethod === 'final-discard'
       ? [
           {
             id: 'special-final-discard',
@@ -88,12 +107,12 @@ export const scoreHand = (
   const fishingOptions = selectedFishing?.options;
   const pointRules = fishingOptions
     ? fishingOptions.pointRules
-    : matchedSpecial
+    : matchedFixedSpecial
       ? scoreBonusTiles(hand)
       : applyPointRules(hand, context);
   const doubleRules = fishingOptions
     ? fishingOptions.doubleRules
-    : matchedSpecial
+    : matchedFixedSpecial
       ? [...scoreBonusDoubles(hand, context), ...specialFinalDiscardDouble]
       : applyDoubleRules(hand, context);
   const basePoints = pointRules.reduce((sum, rule) => sum + rule.amount, 0);
@@ -111,14 +130,14 @@ export const scoreHand = (
 
   if (specialFishing && fishingOptions) {
     calculationComponents = fishingOptions.components;
-  } else if (matchedSpecial) {
+  } else if (matchedFixedSpecial) {
     calculationComponents = [
       {
-        id: `special-${matchedSpecial.id}`,
-        label: matchedSpecial.name,
-        base: matchedSpecial.value,
+        id: `special-${matchedFixedSpecial.id}`,
+        label: matchedFixedSpecial.name,
+        base: matchedFixedSpecial.value,
         doubles: 0,
-        subtotal: matchedSpecial.value,
+        subtotal: matchedFixedSpecial.value,
       },
       ...(bonusPoints
         ? [
@@ -173,14 +192,34 @@ export const scoreHand = (
     ];
   }
 
+  const ordinaryCalculatedScore = calculationComponents.reduce(
+    (sum, component) => sum + component.subtotal,
+    0,
+  );
+  // Calculated exposure policy applies after the profile's ordinary calculation
+  // and before its ordinary limit.
+  const exposureAdjustment =
+    ordinaryCalculatedScore * (calculatedExposureMultiplier - 1);
+  if (exposureAdjustment !== 0) {
+    calculationComponents = [
+      ...calculationComponents,
+      {
+        id: 'calculated-special-exposure-adjustment',
+        label: `${calculatedBinding!.name} exposed adjustment`,
+        base: exposureAdjustment,
+        doubles: 0,
+        subtotal: exposureAdjustment,
+      },
+    ];
+  }
   const uncappedScore = calculationComponents.reduce(
     (sum, component) => sum + component.subtotal,
     0,
   );
   // A published fixed special value is not silently reduced by the ordinary
   // profile cap. Ordinary and fishing scores retain the profile limit.
-  const effectiveLimit = matchedSpecial
-    ? Math.max(context.limit, matchedSpecial.value)
+  const effectiveLimit = matchedFixedSpecial
+    ? Math.max(context.limit, matchedFixedSpecial.value)
     : context.limit;
   const finalScore = Math.min(uncappedScore, effectiveLimit);
 
@@ -207,7 +246,9 @@ export const scoreHand = (
     finalScore,
     limitApplied: finalScore < uncappedScore,
     scoringMode:
-      specialFishing || matchedSpecial || purity ? 'special' : 'standard',
+      specialFishing || matchedFixedSpecial || calculatedBinding || purity
+        ? 'special'
+        : 'standard',
     calculationComponents,
   };
 };

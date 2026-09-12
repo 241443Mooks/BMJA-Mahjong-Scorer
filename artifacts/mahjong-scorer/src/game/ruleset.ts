@@ -70,6 +70,20 @@ export const westernTmSpecialHandBindings: SpecialHandPatternBinding[] = [
   { patternId: 'windfall', profile: WESTERN_TM_PROFILE_REF, name: 'Windfall', description: 'One of each Wind and five pairs in one suit.', value: 1000, fishingValue: 400 },
   { patternId: 'all-pair-ruby-jade', profile: WESTERN_TM_PROFILE_REF, name: 'All Pair Ruby Jade', description: 'Pairs of Green and Red Dragons plus five pairs of red or green Bamboo ranks.', value: 1000, fishingValue: 400 },
   {
+    patternId: 'purity-one-chow',
+    profile: WESTERN_TM_PROFILE_REF,
+    name: 'Purity',
+    description: 'One suit, four melds and a pair; one meld may be a chow.',
+    scoreModel: {
+      kind: 'calculated',
+      exposure: {
+        multiplier: 0.5,
+        triggerSetKinds: ['pung', 'kong'],
+        forbiddenSetKinds: ['chow'],
+      },
+    },
+  },
+  {
     patternId: 'golden-gates',
     profile: WESTERN_TM_PROFILE_REF,
     name: 'Golden Gates',

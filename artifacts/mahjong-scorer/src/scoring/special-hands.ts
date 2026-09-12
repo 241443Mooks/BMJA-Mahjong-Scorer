@@ -8,6 +8,7 @@ import type {
   GameContext,
   MahjongHand,
   PlayingTile,
+  SetKind,
   SpecialHandResult,
 } from './types';
 import type { RulesProfileRef } from '../game/types';
@@ -18,11 +19,16 @@ export type CanonicalSpecialHandPattern = {
   detect: (hand: MahjongHand, context?: GameContext) => boolean;
 };
 
-export type SpecialHandPatternBinding = {
+type CommonSpecialHandPatternBinding = {
   patternId: string;
   profile: RulesProfileRef;
   name: string;
   description: string;
+};
+
+export type FixedSpecialHandPatternBinding =
+  CommonSpecialHandPatternBinding & {
+    scoreModel?: { kind: 'fixed' };
   value: number;
   /** Fixed value while one tile away, when this profile has published one. */
   fishingValue?: number;
@@ -34,6 +40,57 @@ export type SpecialHandPatternBinding = {
   };
 };
 
+export type CalculatedSpecialHandPatternBinding =
+  CommonSpecialHandPatternBinding & {
+    scoreModel: {
+      kind: 'calculated';
+      /** Profile-local treatment for explicitly represented exposed set kinds. */
+      exposure?: {
+        multiplier: number;
+        triggerSetKinds: SetKind[];
+        forbiddenSetKinds?: SetKind[];
+      };
+    };
+  };
+
+export type SpecialHandPatternBinding =
+  | FixedSpecialHandPatternBinding
+  | CalculatedSpecialHandPatternBinding;
+
+export const isFixedSpecialHandBinding = (
+  binding: SpecialHandPatternBinding,
+): binding is FixedSpecialHandPatternBinding =>
+  binding.scoreModel?.kind !== 'calculated';
+
+export const isCalculatedSpecialHandBinding = (
+  binding: SpecialHandPatternBinding,
+): binding is CalculatedSpecialHandPatternBinding =>
+  binding.scoreModel?.kind === 'calculated';
+
+const hasUnsupportedCalculatedExposure = (
+  hand: MahjongHand,
+  binding: CalculatedSpecialHandPatternBinding,
+) =>
+  binding.scoreModel.exposure?.forbiddenSetKinds !== undefined &&
+  hand.sets.some(
+    (set) =>
+      set.visibility === 'exposed' &&
+      binding.scoreModel.exposure!.forbiddenSetKinds!.includes(set.kind),
+  );
+
+export const calculatedSpecialHandExposureMultiplierFor = (
+  hand: MahjongHand,
+  binding: CalculatedSpecialHandPatternBinding,
+) =>
+  binding.scoreModel.exposure !== undefined &&
+  hand.sets.some(
+    (set) =>
+      set.visibility === 'exposed' &&
+      binding.scoreModel.exposure!.triggerSetKinds.includes(set.kind),
+  )
+    ? binding.scoreModel.exposure.multiplier
+    : 1;
+
 const hasRepresentedExposedMeld = (hand: MahjongHand) =>
   hand.sets.some(
     (set) =>
@@ -42,7 +99,7 @@ const hasRepresentedExposedMeld = (hand: MahjongHand) =>
 
 export const specialHandValueFor = (
   hand: MahjongHand,
-  binding: SpecialHandPatternBinding,
+  binding: FixedSpecialHandPatternBinding,
 ) =>
   binding.exposure?.allowed && hasRepresentedExposedMeld(hand)
     ? (binding.exposure.exposedValue ?? binding.value)
@@ -50,7 +107,7 @@ export const specialHandValueFor = (
 
 export const specialHandFishingValueFor = (
   hand: MahjongHand,
-  binding: SpecialHandPatternBinding,
+  binding: FixedSpecialHandPatternBinding,
 ) => {
   const fishingValue = binding.fishingValue;
   if (fishingValue === undefined) return undefined;
@@ -203,6 +260,29 @@ const buriedVisibilityIsAllowed = (hand: MahjongHand) => {
  * MahjongHand and returns a boolean. Adding one cannot alter another.
  */
 export const canonicalSpecialHandPatterns: CanonicalSpecialHandPattern[] = [
+  {
+    id: 'purity-one-chow',
+    detect: (hand) => {
+      const tiles = hand.sets.flatMap(expandedTiles);
+      const melds = hand.sets.filter(
+        (set) => set.kind === 'pung' || set.kind === 'kong' || set.kind === 'chow',
+      );
+      return (
+        hand.isWinner &&
+        hand.sets.length === 5 &&
+        (hand.looseTiles?.length ?? 0) === 0 &&
+        (hand.remainingTiles?.length ?? 0) === 0 &&
+        hand.sets.filter((set) => set.kind === 'pair').length === 1 &&
+        melds.length === 4 &&
+        hand.sets.filter((set) => set.kind === 'chow').length <= 1 &&
+        tiles.length ===
+          14 + hand.sets.filter((set) => set.kind === 'kong').length &&
+        hasAtMostFourCopies(tiles) &&
+        tiles.every((tile) => tile.family === 'suit') &&
+        new Set(tiles.map((tile) => tile.suit)).size === 1
+      );
+    },
+  },
   {
     id: 'golden-gates',
     detect: (hand) => {
@@ -804,7 +884,7 @@ export const specialHandDetectors = bmjaSpecialHandPatterns.map(
     id: pattern.id,
     name: binding.name,
     description: binding.description,
-    value: binding.value,
+    ...(isFixedSpecialHandBinding(binding) ? { value: binding.value } : {}),
     eventBased: pattern.eventBased,
     detect: pattern.detect,
   }),
@@ -818,13 +898,26 @@ export const detectSpecialHands = (
   resolveSpecialHandBindings(
     bindings[0]?.profile ?? BMJA_SPECIAL_HAND_PROFILE,
     bindings,
-  ).map(({ binding, pattern }) => ({
-    id: pattern.id,
-    name: binding.name,
-    description: binding.description,
-    value: specialHandValueFor(hand, binding),
-    matched: pattern.detect(hand, context),
-  }));
+  ).map(({ binding, pattern }) =>
+    isFixedSpecialHandBinding(binding)
+      ? {
+          id: pattern.id,
+          name: binding.name,
+          description: binding.description,
+          scoreModel: 'fixed' as const,
+          value: specialHandValueFor(hand, binding),
+          matched: pattern.detect(hand, context),
+        }
+      : {
+          id: pattern.id,
+          name: binding.name,
+          description: binding.description,
+          scoreModel: 'calculated' as const,
+          matched:
+            pattern.detect(hand, context) &&
+            !hasUnsupportedCalculatedExposure(hand, binding),
+        },
+  );
 
 export const matchesSupportedIrregularLayout = (
   hand: MahjongHand,

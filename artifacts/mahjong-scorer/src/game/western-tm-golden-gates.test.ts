@@ -53,7 +53,7 @@ describe('western-tm@0.1 Companion Phase 3B: Golden Gates', () => {
   });
 
   it('binds Golden Gates only to Western with the explicit exposure policy', () => {
-    expect(westernTmSpecialHandBindings).toHaveLength(13);
+    expect(westernTmSpecialHandBindings).toHaveLength(14);
     expect(westernTmSpecialHandBindings.filter(({ patternId }) => patternId === 'golden-gates')).toEqual([
       expect.objectContaining({
         profile: { id: 'western-tm', version: '0.1' },

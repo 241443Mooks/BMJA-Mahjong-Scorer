@@ -127,13 +127,21 @@ export type RuleResult = {
   source?: string;
 };
 
-export type SpecialHandResult = {
+type SpecialHandResultCommon = {
   id: string;
   name: string;
   description: string;
   matched: boolean;
-  value: number;
 };
+
+export type SpecialHandResult =
+  | (SpecialHandResultCommon & {
+      scoreModel: 'fixed';
+      value: number;
+    })
+  | (SpecialHandResultCommon & {
+      scoreModel: 'calculated';
+    });
 
 export type SpecialFishingResult = {
   id: FishingSpecialId;

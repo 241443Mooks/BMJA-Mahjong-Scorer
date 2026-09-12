@@ -272,11 +272,16 @@ Status: `shared-structure / needs-completion-rule-audit`.
 
 ### Purity
 
-T&M lists Purity as `Calculate`, not a fixed 500/1000/1500/2000 catalogue value.
+The inspected p.48 detail establishes one suit; four Pungs/Kongs plus a pair;
+and that one Chow may replace one Pung/Kong. Its score is calculated, and the
+one-dot marker permits represented Pung/Kong exposure at half score.
 
-Status: `requires-score-model`.
-
-Do not force it into `value: number`.
+The current BMJA `isPurityHand` predicate is structurally narrower because it
+permits no Chow. Western therefore uses the distinct neutral `purity-one-chow`
+canonical pattern and a calculated profile binding with an explicit 0.5
+exposure multiplier. Western fishing remains unresolved and unimplemented;
+no fishing value is inferred. Its ordinary calculation remains
+`provisional-compatible`, not verified-identical.
 
 ## 6. Source-level anomalies and conflicts to preserve
 

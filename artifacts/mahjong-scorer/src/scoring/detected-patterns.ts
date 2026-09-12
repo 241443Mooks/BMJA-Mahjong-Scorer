@@ -39,7 +39,10 @@ export const detectedPatterns = (score: ScoreBreakdown): DetectedPattern[] => [
       id: `special-${special.id}`,
       name: special.name,
       type: "special" as const,
-      effect: `${special.value} points`,
+      effect:
+        special.scoreModel === 'calculated'
+          ? 'Calculated'
+          : `${special.value} points`,
       explanation: special.description,
     })),
   ...(score.specialFishingMatches ?? []).map((fishing) => {
