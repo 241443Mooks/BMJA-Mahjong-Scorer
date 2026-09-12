@@ -1,142 +1,34 @@
 import { scoreHand } from '../scoring';
-import type { SpecialHandPatternBinding } from '../scoring/special-hands';
 import { progressBmjaGame } from './progression';
 import { settleBmjaRound } from './settlement';
 import type { GameRuleset, RulesProfileRef } from './types';
+export { WESTERN_TM_PROFILE_REF, westernTmSpecialHandBindings } from './western-tm-catalogue';
+import { WESTERN_TM_PROFILE_REF, westernTmSpecialHandBindings } from './western-tm-catalogue';
 
 export const BMJA_RULESET: GameRuleset = Object.freeze({
-  id: 'bmja',
-  version: '1.0',
-  name: 'British Mahjong Association',
-  defaultLimit: 1000,
-  scoreHand: ({ hand, playerWind, prevailingWind, limit = 1000 }) =>
-    scoreHand(hand, { playerWind, prevailingWind, limit }),
-  settleRound: settleBmjaRound,
-  progressGame: progressBmjaGame,
+  id: 'bmja', version: '1.0', name: 'British Mahjong Association', defaultLimit: 1000,
+  scoreHand: ({ hand, playerWind, prevailingWind, limit = 1000 }) => scoreHand(hand, { playerWind, prevailingWind, limit }),
+  settleRound: settleBmjaRound, progressGame: progressBmjaGame,
 });
-
-export const BMJA_PROFILE_REF: RulesProfileRef = Object.freeze({
-  id: BMJA_RULESET.id,
-  version: BMJA_RULESET.version,
-});
-
-export const WESTERN_TM_PROFILE_REF: RulesProfileRef = Object.freeze({
-  id: 'western-tm',
-  version: '0.1',
-});
-
-export const westernTmSpecialHandBindings: SpecialHandPatternBinding[] = [
-  {
-    patternId: 'three-great-scholars',
-    profile: WESTERN_TM_PROFILE_REF,
-    name: 'Three Great Scholars',
-    description: 'A pung or kong of each of the three dragons.',
-    value: 1500,
-    fishingValue: 600,
-  },
-  {
-    patternId: 'thirteen-unique-wonders', profile: WESTERN_TM_PROFILE_REF,
-    name: 'Unique Wonder',
-    description: 'One of every terminal, wind and dragon, plus a pair of any one.',
-    value: 2000, fishingValue: 800,
-  },
-  {
-    patternId: 'all-pair-honours', profile: WESTERN_TM_PROFILE_REF,
-    name: 'All Pair Honours',
-    description: 'Seven pairs of major tiles: 1s, 9s, winds and dragons; repeated pairs are allowed.',
-    value: 1000, fishingValue: 400,
-  },
-  {
-    patternId: 'four-blessings', profile: WESTERN_TM_PROFILE_REF,
-    name: 'Four Blessings', description: 'A pung or kong of each wind, plus any pair.',
-    value: 1500, fishingValue: 600,
-  },
-  {
-    patternId: 'all-winds-and-dragons', profile: WESTERN_TM_PROFILE_REF,
-    name: 'All Winds and Dragons',
-    description: 'Four pungs/kongs and a pair, all made from winds and dragons.',
-    value: 1000, fishingValue: 400,
-  },
-  {
-    patternId: 'heads-and-tails', profile: WESTERN_TM_PROFILE_REF,
-    name: 'Heads and Tails',
-    description: 'Four pungs/kongs and a pair, all made from suited 1s and 9s.',
-    value: 1000, fishingValue: 400,
-  },
-  { patternId: 'wriggly-dragon', profile: WESTERN_TM_PROFILE_REF, name: 'Wriggly Dragon', description: 'Three Dragon singles plus a Dragon pair, and a suited run from 1 through 9.', value: 1000, fishingValue: 400 },
-  { patternId: 'wriggling-snake-any-pair', profile: WESTERN_TM_PROFILE_REF, name: 'Wriggly Snake', description: 'A suited run from 1 through 9, one of each Wind, and a pair of any one of those tiles.', value: 1000, fishingValue: 400 },
-  { patternId: 'hachi-ban', profile: WESTERN_TM_PROFILE_REF, name: 'Hachi Ban', description: 'A suited run from 1 through 8 or 2 through 9, plus three pairs of Winds or Dragons.', value: 1000, fishingValue: 400 },
-  { patternId: 'dragonette', profile: WESTERN_TM_PROFILE_REF, name: 'Dragonette', description: 'One of each Wind, a Dragon pair with the other Dragons single, and three non-terminal pairs in one suit.', value: 1000, fishingValue: 400 },
-  { patternId: 'windfall', profile: WESTERN_TM_PROFILE_REF, name: 'Windfall', description: 'One of each Wind and five pairs in one suit.', value: 1000, fishingValue: 400 },
-  { patternId: 'all-pair-ruby-jade', profile: WESTERN_TM_PROFILE_REF, name: 'All Pair Ruby Jade', description: 'Pairs of Green and Red Dragons plus five pairs of red or green Bamboo ranks.', value: 1000, fishingValue: 400 },
-  { patternId: 'run-two-to-eight-with-one-and-nine-pungs', profile: WESTERN_TM_PROFILE_REF, name: 'Confused Gates', description: 'A 2–8 run with one paired tile, plus 111 and 999 in the other two suits.', value: 1000, fishingValue: 400 },
-  { patternId: 'full-suit-run-with-five-distinct-honours', profile: WESTERN_TM_PROFILE_REF, name: 'Five Odd Honours', description: 'A 1–9 run in one suit and five distinct Winds or Dragons.', value: 500, fishingValue: 200 },
-  { patternId: 'suit-run-one-to-seven-with-all-honours', profile: WESTERN_TM_PROFILE_REF, name: "Greta's Garden", description: 'A 1–7 run in one suit, all four Winds and all three Dragons.', value: 1000, fishingValue: 400 },
-  { patternId: 'four-bamboo-one-and-five-green-bamboo-pairs', profile: WESTERN_TM_PROFILE_REF, name: "Sparrow's Sanctuary", description: 'All four Bamboo 1 tiles and pairs of Bamboo 2, 3, 4, 6 and 8.', value: 1500, fishingValue: 600 },
-  { patternId: 'seven-pairs-one-suit', profile: WESTERN_TM_PROFILE_REF, name: 'Heavenly Twins', description: 'Seven pairs, all in one suit.', value: 1000, fishingValue: 400 },
-  { patternId: 'seven-pairs-one-suit-with-honours', profile: WESTERN_TM_PROFILE_REF, name: 'All Pair', description: 'Seven pairs using at most one suit, with Winds and Dragons allowed.', value: 500, fishingValue: 200 },
-  { patternId: 'dragon-pair-with-five-suited-pairs', profile: WESTERN_TM_PROFILE_REF, name: "Dragon's Breath", description: 'A pair and singles of all three Dragons, plus five pairs in one suit.', value: 1000, fishingValue: 400 },
-  {
-    patternId: 'purity-one-chow',
-    profile: WESTERN_TM_PROFILE_REF,
-    name: 'Purity',
-    description: 'One suit, four melds and a pair; one meld may be a chow.',
-    scoreModel: {
-      kind: 'calculated',
-      exposure: {
-        multiplier: 0.5,
-        triggerSetKinds: ['pung', 'kong'],
-        forbiddenSetKinds: ['chow'],
-      },
-    },
-  },
-  {
-    patternId: 'golden-gates',
-    profile: WESTERN_TM_PROFILE_REF,
-    name: 'Golden Gates',
-    description: 'Pairs of 2, 4, 6 and 8 in one suit, with its 1 or 9 and corresponding Dragon as Pungs or Kongs.',
-    value: 1000,
-    fishingValue: 400,
-    exposure: { allowed: true, exposedValue: 500, exposedFishingValue: 200 },
-  },
-  { patternId: 'run-one-to-nine-with-same-suit-pung-and-pair', profile: WESTERN_TM_PROFILE_REF, name: 'Run, Pung & Pair', description: 'A 1–9 run as three chows, with a Pung/Kong and pair in the same suit.', value: 1000, fishingValue: 400, exposure: { allowed: false } },
-  { patternId: 'run-one-to-nine-with-wind-pung-and-pair', profile: WESTERN_TM_PROFILE_REF, name: 'Guardian Winds', description: 'A 1–9 run, plus a Wind Pung/Kong and Wind pair.', value: 1000, fishingValue: 400, exposure: { allowed: false } },
-  { patternId: 'run-one-to-nine-with-dragon-pung-and-pair', profile: WESTERN_TM_PROFILE_REF, name: 'Guardian Dragons', description: 'A 1–9 run, plus a Dragon Pung/Kong and Dragon pair.', value: 1000, fishingValue: 400, exposure: { allowed: false } },
-  { patternId: 'run-one-to-nine-with-honour-pung-and-any-pair', profile: WESTERN_TM_PROFILE_REF, name: 'Grand Sequence', description: 'A 1–9 run, an honour Pung/Kong, and any pair.', value: 1000, fishingValue: 400, exposure: { allowed: false } },
-];
-
+export const BMJA_PROFILE_REF: RulesProfileRef = Object.freeze({ id: BMJA_RULESET.id, version: BMJA_RULESET.version });
 export const WESTERN_TM_RULESET: GameRuleset = Object.freeze({
-  id: WESTERN_TM_PROFILE_REF.id,
-  version: WESTERN_TM_PROFILE_REF.version,
-  name: 'Western — Thompson & Maloney (provisional)',
-  defaultLimit: 1000,
-  scoreHand: ({ hand, playerWind, prevailingWind, limit = 1000 }) =>
-    scoreHand(
-      hand,
-      { playerWind, prevailingWind, limit },
-      westernTmSpecialHandBindings,
-    ),
-  settleRound: settleBmjaRound,
-  progressGame: progressBmjaGame,
+  id: WESTERN_TM_PROFILE_REF.id, version: WESTERN_TM_PROFILE_REF.version,
+  name: 'Western — Thompson & Maloney (provisional)', defaultLimit: 1000,
+  scoreHand: ({ hand, playerWind, prevailingWind, limit = 1000 }) => scoreHand(hand, { playerWind, prevailingWind, limit }, westernTmSpecialHandBindings),
+  settleRound: settleBmjaRound, progressGame: progressBmjaGame,
 });
-
 const profileKey = ({ id, version }: RulesProfileRef) => `${id}@${version}`;
-
 const RULES_PROFILE_REGISTRY = new Map<string, GameRuleset>([
   [profileKey(BMJA_PROFILE_REF), BMJA_RULESET],
   [profileKey(WESTERN_TM_PROFILE_REF), WESTERN_TM_RULESET],
 ]);
-
 export const resolveRulesProfile = (profile: RulesProfileRef): GameRuleset => {
   const ruleset = RULES_PROFILE_REGISTRY.get(profileKey(profile));
   if (!ruleset) {
-    throw new Error(
-      `Unknown rules profile "${profile.id}" version "${profile.version}".`,
-    );
+    throw new Error(`Unknown rules profile "${profile.id}" version "${profile.version}".`);
   }
   return ruleset;
 };
-
 // The product still exposes one active profile. Keep this alias for callers that
 // do not yet have game state; game orchestration resolves the persisted profile.
 export const CURRENT_RULESET = BMJA_RULESET;

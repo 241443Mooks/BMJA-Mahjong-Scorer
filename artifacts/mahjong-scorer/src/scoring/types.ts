@@ -32,7 +32,7 @@ export type HandSet = {
   visibility: Visibility;
 };
 
-export type FishingSpecialId =
+export type LegacyFishingSpecialId =
   | 'purity'
   | 'all-pair-honours'
   | 'knitting'
@@ -47,24 +47,7 @@ export type FishingSpecialId =
   | 'gates-of-heaven'
   | 'wriggling-snake'
   | 'thirteen-unique-wonders'
-  | 'wriggly-dragon'
-  | 'wriggling-snake-any-pair'
-  | 'hachi-ban'
-  | 'dragonette'
-  | 'windfall'
-  | 'all-pair-ruby-jade'
-  | 'golden-gates'
-  | 'run-two-to-eight-with-one-and-nine-pungs'
-  | 'full-suit-run-with-five-distinct-honours'
-  | 'suit-run-one-to-seven-with-all-honours'
-  | 'four-bamboo-one-and-five-green-bamboo-pairs'
-  | 'seven-pairs-one-suit'
-  | 'seven-pairs-one-suit-with-honours'
-  | 'dragon-pair-with-five-suited-pairs'
-  | 'run-one-to-nine-with-same-suit-pung-and-pair'
-  | 'run-one-to-nine-with-wind-pung-and-pair'
-  | 'run-one-to-nine-with-dragon-pung-and-pair'
-  | 'run-one-to-nine-with-honour-pung-and-any-pair';
+  ;
 
 export type WinningMethod =
   | 'initial-deal'
@@ -155,7 +138,7 @@ export type SpecialHandResult =
     });
 
 export type SpecialFishingResult = {
-  id: FishingSpecialId;
+  id: string;
   name: string;
   fishingValue: number | 'three-doubles';
   completingTiles: PlayingTile[];

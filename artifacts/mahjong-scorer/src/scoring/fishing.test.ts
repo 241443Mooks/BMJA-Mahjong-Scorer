@@ -9,14 +9,14 @@ import {
   wind,
 } from '.';
 import type {
-  FishingSpecialId,
+  LegacyFishingSpecialId,
   HandSet,
   MahjongHand,
   PlayingTile,
 } from '.';
 
 const fishing = (
-  _target: FishingSpecialId,
+  _target: LegacyFishingSpecialId,
   options: {
     sets?: HandSet[];
     looseTiles?: PlayingTile[];
@@ -32,7 +32,7 @@ const fishing = (
 });
 
 const irregular = (
-  target: FishingSpecialId,
+  target: LegacyFishingSpecialId,
   completeTiles: PlayingTile[],
   removeIndex = completeTiles.length - 1,
 ) =>
@@ -42,7 +42,7 @@ const irregular = (
 
 const cases: {
   name: string;
-  id: FishingSpecialId;
+  id: LegacyFishingSpecialId;
   value: number | 'three-doubles';
   hand: MahjongHand;
 }[] = [
