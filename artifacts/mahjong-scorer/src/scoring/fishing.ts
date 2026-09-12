@@ -268,7 +268,11 @@ const completedHands = (
 
   if (hand.looseTiles?.length) {
     const irregular = finish([], [...hand.looseTiles, completingTile]);
-    return hasCompleteWinningShape(irregular) ? [irregular] : [];
+    if (hand.sets.length === 0) return hasCompleteWinningShape(irregular) ? [irregular] : [];
+    if ((hand.remainingTiles?.length ?? 0) === 0) {
+      return [finish(hand.sets, [...hand.looseTiles, completingTile])];
+    }
+    return [];
   }
 
   const remaining = hand.remainingTiles ?? [];
@@ -347,7 +351,8 @@ export const detectSpecialFishing = (
     hand.isWinner ||
     structuralTileCount(hand) !== 13 ||
     ((hand.looseTiles?.length ?? 0) > 0 &&
-      (hand.sets.length > 0 || (hand.remainingTiles?.length ?? 0) > 0))
+      ((hand.remainingTiles?.length ?? 0) > 0 ||
+        (!usesExplicitBindings && hand.sets.length > 0)))
   ) {
     return [];
   }
