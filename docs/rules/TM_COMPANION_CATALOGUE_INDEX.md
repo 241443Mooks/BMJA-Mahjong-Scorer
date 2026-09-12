@@ -189,19 +189,30 @@ edition locators in the table remain the provenance for those bindings.
 
 ### Phase 2 implementation status
 
-The following five 1997 Companion structures are implemented as new, neutral
+The following four 1997 Companion structures are implemented as new, neutral
 canonical patterns and are bound only in `western-tm@0.1`, each at 1,000 / 400:
 
 | T&M hand | Synopsis/detail locator | Canonical pattern ID |
 |---|---|---|
 | Wriggly Dragon | p. 56; detail p. 11 / 31 | `wriggly-dragon` |
-| Hachi Ban | p. 56; detail pp. 10, 25, 30, 32 | `hachi-ban` |
 | Dragonette | p. 57; detail pp. 24, 39 | `dragonette` |
 | Windfall | p. 57; detail pp. 24, 27 | `windfall` |
 | All Pair Ruby Jade | p. 57; detail pp. 23, 32, 53 | `all-pair-ruby-jade` |
 
 These patterns are not BMJA members. The unresolved entries below remain
 unverified or unimplemented; Phase 2 does not alter their status.
+
+### Hachi Ban
+
+Hachi Ban is not implemented. This is a source-conflict / variant case: the
+synopsis records at least two materially different forms, 1,000 / 400 for a
+1–8 or 2–9 run in one suit plus three pairs of Winds or Dragons; and 2,000 /
+800 for the separate Hachi Ban structure on p. 30.
+
+Status: `needs-detail-pages / multi-form-resolution`.
+
+Do not bind a canonical detector or infer a shared representation until the
+detail pages resolve the forms.
 
 ## 5. Existing-detector candidates that must **not** be bound yet
 

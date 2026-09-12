@@ -25,17 +25,6 @@ const wrigglyDragon = looseWinner([
     suited('circles', (index + 1) as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9),
   ),
 ]);
-const hachiBan = looseWinner([
-  dragon('green'),
-  dragon('green'),
-  dragon('red'),
-  dragon('red'),
-  dragon('white'),
-  dragon('white'),
-  ...Array.from({ length: 8 }, (_, index) =>
-    suited('characters', (index + 1) as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9),
-  ),
-]);
 const dragonette = looseWinner([
   wind('east'),
   wind('south'),
@@ -96,15 +85,6 @@ const phaseTwo = [
     ]),
   },
   {
-    id: 'hachi-ban',
-    name: 'Hachi Ban',
-    hand: hachiBan,
-    nearMiss: looseWinner([
-      ...hachiBan.looseTiles!.slice(0, -1),
-      suited('characters', 9),
-    ]),
-  },
-  {
     id: 'dragonette',
     name: 'Dragonette',
     hand: dragonette,
@@ -153,7 +133,8 @@ describe('western-tm@0.1 Companion catalogue Phase 2', () => {
   });
 
   it('binds each new detector only to the Western catalogue at 1000/400', () => {
-    expect(westernTmSpecialHandBindings).toHaveLength(11);
+    expect(phaseTwo).toHaveLength(4);
+    expect(westernTmSpecialHandBindings).toHaveLength(10);
     for (const { id, name, hand } of phaseTwo) {
       expect(
         westernTmSpecialHandBindings.filter(
