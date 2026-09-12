@@ -703,6 +703,96 @@ export const canonicalSpecialHandPatterns: CanonicalSpecialHandPattern[] = [
     },
   },
   {
+    id: 'western-gates-of-heaven',
+    detect: (hand) => {
+      if (!isCompleteLooseLayout(hand)) return false;
+      const all = tiles(hand);
+      if (all.some((tile) => tile.family !== 'suit')) return false;
+      const suited = all as Extract<PlayingTile, { family: 'suit' }>[];
+      const suit = suited[0]?.suit;
+      const tally = counts(suited);
+      return suit !== undefined && suited.every((tile) => tile.suit === suit) &&
+        tally.get(`${suit}-1`) === 3 && tally.get(`${suit}-9`) === 3 &&
+        [2, 3, 4, 5, 6, 7, 8].every((rank) => [1, 2].includes(tally.get(`${suit}-${rank}`) ?? 0)) &&
+        [2, 3, 4, 5, 6, 7, 8].filter((rank) => tally.get(`${suit}-${rank}`) === 2).length === 1;
+    },
+  },
+  {
+    id: 'two-suit-runs-one-to-seven',
+    detect: (hand) => {
+      if (!isCompleteLooseLayout(hand)) return false;
+      const all = tiles(hand);
+      if (all.some((tile) => tile.family !== 'suit')) return false;
+      const tally = counts(all);
+      const suits = ['bamboo', 'characters', 'circles'] as const;
+      return suits.filter((suit) => [1, 2, 3, 4, 5, 6, 7].every((rank) => tally.get(`${suit}-${rank}`) === 1)).length === 2 && tally.size === 14;
+    },
+  },
+  {
+    id: 'green-dragon-pung-white-dragon-pair-three-circle-melds',
+    detect: (hand) => {
+      const shape = groupedShape(hand, 4);
+      return shape !== undefined && shape.pairs[0].tile.family === 'dragon' && shape.pairs[0].tile.dragon === 'white' &&
+        shape.melds.filter((set) => set.tile.family === 'dragon' && set.tile.dragon === 'green' && set.kind === 'pung').length === 1 &&
+        shape.melds.filter((set) => isSuitRank(set.tile, 'circles', [1,2,3,4,5,6,7,8,9])).length === 3;
+    },
+  },
+  {
+    id: 'two-ranks-doubled-across-two-suits-with-honour-pair',
+    detect: (hand) => {
+      const shape = groupedShape(hand, 4);
+      if (!shape || shape.pairs[0].tile.family === 'suit') return false;
+      const suited = shape.melds.filter((set) => set.tile.family === 'suit');
+      if (suited.length !== 4) return false;
+      const tiles = suited.map((set) => set.tile as Extract<PlayingTile, { family: 'suit' }>);
+      const suits = new Set(tiles.map((tile) => tile.suit));
+      const ranks = new Set(tiles.map((tile) => tile.rank));
+      return suits.size === 2 && ranks.size === 2 && [...ranks].every((rank) => rank >= 2 && rank <= 8) &&
+        [...suits].every((suit) => [...ranks].every((rank) => tiles.some((tile) => tile.suit === suit && tile.rank === rank)));
+    },
+  },
+  {
+    id: 'north-south-wind-melds-with-1861-and-1865-two-suit-layout',
+    detect: (hand) => {
+      if (!isCompleteHybrid(hand, 2, 8)) return false;
+      const melds = hand.sets.filter((set) => set.kind === 'pung' || set.kind === 'kong');
+      const loose = hand.looseTiles ?? [];
+      if (melds.length !== 2 || !['north', 'south'].every((wind) => melds.some((set) => set.tile.family === 'wind' && set.tile.wind === wind)) || loose.some((tile) => tile.family !== 'suit')) return false;
+      const suited = loose as Extract<PlayingTile, { family: 'suit' }>[];
+      const suits = [...new Set(suited.map((tile) => tile.suit))];
+      return suits.length === 2 && suits.some((suit) => {
+        const tally = counts(suited.filter((tile) => tile.suit === suit));
+        return tally.get(`${suit}-1`) === 2 && tally.get(`${suit}-6`) === 1 && tally.get(`${suit}-8`) === 1 && tally.size === 3;
+      }) && suits.some((suit) => {
+        const tally = counts(suited.filter((tile) => tile.suit === suit));
+        return [1, 5, 6, 8].every((rank) => tally.get(`${suit}-${rank}`) === 1) && tally.size === 4;
+      });
+    },
+  },
+  {
+    id: 'two-to-eight-run-pair-with-terminal-meld-and-corresponding-dragon-meld',
+    detect: (hand) => {
+      if (!isCompleteHybrid(hand, 2, 8)) return false;
+      const loose = hand.looseTiles ?? [];
+      const suit = isExactRunWithPair(loose, [2,3,4,5,6,7,8], ['bamboo', 'characters', 'circles']);
+      if (!suit) return false;
+      const requiredDragon = { bamboo: 'green', characters: 'red', circles: 'white' } as const;
+      const melds = hand.sets.filter((set) => set.kind === 'pung' || set.kind === 'kong');
+      return melds.length === 2 && melds.some((set) => set.tile.family === 'suit' && set.tile.suit === suit && (set.tile.rank === 1 || set.tile.rank === 9)) &&
+        melds.some((set) => set.tile.family === 'dragon' && set.tile.dragon === requiredDragon[suit]);
+    },
+  },
+  {
+    id: 'one-to-seven-run-pair-with-red-dragon-and-own-wind-melds',
+    detect: (hand, context) => {
+      if (!context || !isCompleteHybrid(hand, 2, 8)) return false;
+      if (!isExactRunWithPair(hand.looseTiles ?? [], [1,2,3,4,5,6,7], ['bamboo', 'characters', 'circles'])) return false;
+      const melds = hand.sets.filter((set) => set.kind === 'pung' || set.kind === 'kong');
+      return melds.length === 2 && melds.some((set) => set.tile.family === 'dragon' && set.tile.dragon === 'red') &&
+        melds.some((set) => set.tile.family === 'wind' && set.tile.wind === context.playerWind);
+    },
+  },
+  {
     id: 'red-white-dragon-pungs-with-seven-tile-character-or-circle-run-pair',
     detect: (hand) => {
       if (!isCompleteHybrid(hand, 2, 8)) return false;

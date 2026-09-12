@@ -2,7 +2,7 @@
 
 ## Pass 4I implementation — calculated and half-exposure catalogue wave
 
-Four entries are now bound in `western-tm@0.1` (68 bindings total), sourced from the Full Synopsis pp. 58–59: **Sunrise** and **Sunset** (p. 42 / p. 59), **All Honour Hand** (p. 44 / p. 58), and **Ordinary Mah Jong** (p. 42 / p. 59).
+Four entries were bound in the Pass 4I wave, sourced from the Full Synopsis pp. 58–59: **Sunrise** and **Sunset** (p. 42 / p. 59), **All Honour Hand** (p. 44 / p. 58), and **Ordinary Mah Jong** (p. 42 / p. 59).
 
 - Sunrise uses `east-wind-meld-white-dragon-pair-three-suit-nonterminal-melds`: East Wind Pung/Kong, White Dragon pair, and one non-terminal Pung/Kong in each suit. It is fixed 1,000 / 400 fishing; one red dot halves represented exposed Pungs/Kongs to 500 / 200.
 - Sunset uses `white-dragon-meld-red-dragon-pair-three-suit-nonterminal-melds`: White Dragon Pung/Kong, Red Dragon pair, and one non-terminal Pung/Kong in each suit. It has the same fixed one-dot 1,000 / 400 to 500 / 200 treatment.
@@ -25,8 +25,7 @@ Four evidence-backed entries are now bound in `western-tm@0.1` (61 bindings tota
 
 - Dragonfly — p.31 / synopsis p.58; hybrid: loose GRW singles, a represented Pung/Kong in each suit, and a represented suited pair; 1,000 / 400. One dot permits only the represented Pungs/Kongs and halves to 500 / 200 when one is exposed.
 - Dragon's Teeth — pp.12/33 / synopsis pp.56/58; hybrid: represented Red and White **Pungs** (not Kongs), plus loose Character or Circle 1–7 or 2–8 and one duplicated run tile; 1,000 / 400. Two dots retain full exposed value.
-- Dragon's Gates — **SOURCE CONFLICT — BLOCKED pending detail-page review.** Synopsis p.56 gives 1,000 / 400; synopsis p.58 gives 1,500 / 600. Both agree on the structure and one-dot exposure-half treatment. Inspect detail pp.12 and/or 34 before implementation; do not infer a score from recurrence, category, or neighbouring bands.
-- Little Brother — p.17 / synopsis p.56; grouped: exactly four Chows covering Bamboo, Characters and Circles, plus the player's own-Wind pair; 1,000 / 400. This uses `context.playerWind`, never prevailing wind, and has no Pung/Kong exposure rule.
+- Little Brother — p.17 / synopsis p.56; grouped: exactly four Chows covering Bamboo, Characters and Circles, plus the player's own-Wind pair. Pass 4J corrects its fixed value to 500 / 200. This uses `context.playerWind`, never prevailing wind, and has no Pung/Kong exposure rule.
 - Hovering Angel — pp.17/41 / synopsis pp.56/59; grouped: one Chow in each suit, the player's own-Wind Pung/Kong, and a Dragon pair; 1,000 / 400. It uses `context.playerWind`; neither synopsis occurrence has a red dot, so a represented exposed own-Wind Pung/Kong is ineligible. Exposed Chows do not affect this Pung/Kong-only rule.
 
 The existing explicit-profile fishing path now carries its existing `GameContext` through completed-candidate detection. This is necessary for truthful own-wind fishing and does not introduce a second context mechanism or alter BMJA bindings.
@@ -314,7 +313,7 @@ shown below. A Pung-only source term is retained as Pung-only in its detector.
 | Red Coral | pp. 35, 60; 58, 60 | `red-dragon-pung-with-character-melds` | 1,000 / 400 | two dots; exposed full | Red Dragon group remains Pung-only |
 | White Opal | pp. 35, 60; 58, 60 | `white-dragon-pung-with-circle-melds` | 1,000 / 400 | two dots; exposed full | White Dragon group remains Pung-only |
 | Chinese Odds | p. 49; 59 | `one-suit-odd-melds` | 500 / 200 | two dots; exposed full | grouped five-set shape |
-| Odds & Evens | p. 60 | `two-odd-suits-and-one-even-suit` | 1,000 / 400 | none | complete loose 5 + 5 + 4 layout |
+| Odds & Evens | p. 60 | `two-odd-suits-and-one-even-suit` | 1,500 / 600 | none | complete loose 5 + 5 + 4 layout |
 | Robin | p. 60 | `four-chows-three-suits-one-two-one` | 500 / 200 | none | four Chows and pair |
 | Numbers in Parallel | p. 43; 59 | `parallel-suit-rank-melds-with-honours` | 1,500 / 600 | two dots; exposed full | one logical meld per suit |
 | Blue Mountains | p. 60 | `green-dragon-pung-with-blue-circle-melds` | 1,000 / 400 | two dots; exposed full | Green Dragon group remains Pung-only |
@@ -344,8 +343,29 @@ that group exposed eligibility.
 | Little Robert | p. 16; p. 56 | `three-suit-chows-with-suited-meld-and-pair` | 500 / 200 | grouped five-set shape; suited Pung/Kong and pair need not share a suit; represented Pung/Kong concealed-only |
 | Moon at Bottom of Well | pp. 15, 47; pp. 56, 59 | `circle-chows-with-one-two-three-four-five-six-seven-eight-nine` | 1,000 / 400 | grouped Circle-only four-Chow shape containing 123, 456 and 789 |
 | Windy Chow | pp. 18, 26; pp. 56, 57 | `wind-pair-with-three-suit-chows` | 500 / 200 | complete loose Wind pair/singles plus a Chow in every suit; truthfully overlaps Chop Suey and Chow Mein |
-| Chop Suey | pp. 18, 26; pp. 56, 57 | `wind-pair-with-three-suit-one-two-three-chows` | 500 / 200 | complete loose 123-in-every-suit subset of Windy Chow; precedence prevents stacking |
-| Chow Mein | pp. 18, 26; pp. 56, 57 | `wind-pair-with-three-suit-seven-eight-nine-chows` | 500 / 200 | complete loose 789-in-every-suit subset of Windy Chow; precedence prevents stacking |
+| Chop Suey | pp. 18, 26; pp. 56, 57 | `wind-pair-with-three-suit-one-two-three-chows` | 1,000 / 400 | complete loose 123-in-every-suit subset of Windy Chow; precedence prevents stacking |
+| Chow Mein | pp. 18, 26; pp. 56, 57 | `wind-pair-with-three-suit-seven-eight-nine-chows` | 1,000 / 400 | complete loose 789-in-every-suit subset of Windy Chow; precedence prevents stacking |
+
+### Pass 4J source certification and resolved fixed wave
+
+Pass 4J corrects four previously bound values from the photographed detail and
+synopsis pages: Chop Suey **500 / 200 → 1,000 / 400**; Chow Mein **500 / 200
+→ 1,000 / 400**; Little Brother **1,000 / 400 → 500 / 200**; and Odds & Evens
+**1,000 / 400 → 1,500 / 600**. Their canonical predicates are unchanged.
+
+| T&M hand | Locator | Canonical pattern ID | Winning / fishing | Exposure | Representation |
+|---|---|---|---:|---|---|
+| Gates of Heaven | pp. 9, 47 | `western-gates-of-heaven` | 1,000 / 400 | concealed | complete loose one-suit 111, 999, 2–8 plus a paired 2–8. The BMJA `gates-of-heaven` detector has additional completion/provenance restrictions, so it was not reused. |
+| Gertie's Garter | p. 14 | `two-suit-runs-one-to-seven` | 1,000 / 400 | concealed | complete loose 1–7 in each of exactly two suits |
+| Lillypilly | pp. 36, 60 | `green-dragon-pung-white-dragon-pair-three-circle-melds` | 1,000 / 400 | one dot: exposed 500 / 200 | grouped: Green Dragon **Pung** only, White Dragon pair, three Circle Pungs/Kongs |
+| Numbers Doubled | pp. 43, 59 | `two-ranks-doubled-across-two-suits-with-honour-pair` | 1,500 / 600 | two dots: exposed full | grouped two-rank × two-suit rectangle plus honour pair |
+| Civil War | p. 30 | `north-south-wind-melds-with-1861-and-1865-two-suit-layout` | 1,500 / 600 | two dots: exposed full | hybrid North/South Pungs/Kongs with loose 1861 and 1865 in different suits |
+| Dragon's Gates | pp. 12, 34 | `two-to-eight-run-pair-with-terminal-meld-and-corresponding-dragon-meld` | 1,000 / 400 | one dot: exposed 500 / 200 | hybrid 2–8 run/pair, same-suit terminal Pung **or Kong**, corresponding Dragon Pung/Kong; the pp.12/34 detail resolves the earlier synopsis conflict |
+| Red Lantern | pp. 13, 40 | `one-to-seven-run-pair-with-red-dragon-and-own-wind-melds` | 2,000 / 800 | one dot: exposed 1,000 / 400 | hybrid 1–7 run/pair, Red Dragon and player-own-Wind Pungs/Kongs; pp.13/40 resolve the earlier synopsis ambiguity |
+
+The seven entries are Western-only bindings. The canonical detector registry is
+shared structurally; BMJA membership, values, and completion rules are
+unchanged. This brings `western-tm@0.1` to **75 bindings**.
 
 ## 5. Existing-detector candidates that must **not** be bound yet
 
@@ -412,20 +432,6 @@ no fishing value is inferred. Its ordinary calculation remains
 `provisional-compatible`, not verified-identical.
 
 ## 6. Source-level anomalies and conflicts to preserve
-
-### Gertie's Garter synopsis conflict
-
-The supplied synopsis photographs appear to give the same named/structured Gertie's Garter entry with different fixed values:
-
-- p. 56 run grouping (detail p. 14): appears as 2,000 / 800;
-- p. 57 pair grouping (detail p. 20): 1,000 / 400;
-- p. 59 two-suit grouping points to detail p. 50.
-
-The structure shown in the first two synopsis occurrences is materially the same (runs 1–7 in two suits).
-
-Status: `conflict-needs-detail-pages`.
-
-Do not choose a value by majority or convenience. Inspect pp. 14, 20 and 50 before implementation.
 
 ### `Calculate` hands
 
@@ -511,10 +517,8 @@ The current photographs are enough for this pass and for the first Codex batch.
 
 Targeted detail-page photographs are needed next only for ambiguity-resolution, especially:
 
-- pp. 14, 20 and 50 — Gertie's Garter conflict;
 - p. 36 / 52 — Imperial Jade Chow/exposure treatment;
 - p. 20 — Knitting / Triple Knitting exact predicates;
-- p. 9 / 47 — Gates of Heaven completion restrictions;
 - p. 48 — Purity calculated-score treatment.
 
 This keeps source capture demand-driven rather than requiring the whole book.
