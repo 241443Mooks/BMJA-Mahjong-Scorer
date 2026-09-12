@@ -1,4 +1,7 @@
-import { matchesSupportedIrregularLayout } from './special-hands';
+import {
+  matchesSupportedIrregularLayout,
+  type SpecialHandPatternBinding,
+} from './special-hands';
 import { detectSpecialFishing } from './fishing';
 import {
   hasCompleteWinningShape,
@@ -30,6 +33,7 @@ export const classifyEvidenceCompleteness = (
 export const validateHand = (
   hand: MahjongHand,
   context?: GameContext,
+  specialHandBindings?: SpecialHandPatternBinding[],
 ): string[] => {
   const errors: string[] = [];
   const pairCount = hand.sets.filter((set) => set.kind === 'pair').length;
@@ -45,8 +49,11 @@ export const validateHand = (
     hand.looseTiles?.length === 14;
   const isSupportedIrregularShape =
     isIrregularShape &&
-    matchesSupportedIrregularLayout({ ...hand, isWinner: true });
-  const fishingMatches = detectSpecialFishing(hand);
+    matchesSupportedIrregularLayout(
+      { ...hand, isWinner: true },
+      specialHandBindings,
+    );
+  const fishingMatches = detectSpecialFishing(hand, specialHandBindings);
   const structuralCount = structuralTileCount(hand);
   const physicalCount = playingTiles(hand).length;
   const kongCount = representedKongCount(hand);

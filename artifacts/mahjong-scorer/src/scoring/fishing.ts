@@ -55,6 +55,11 @@ const names: Record<FishingSpecialId, string> = {
   'gates-of-heaven': 'The Gates of Heaven',
   'wriggling-snake': 'The Wriggling Snake',
   'thirteen-unique-wonders': 'Thirteen unique wonders',
+  'wriggly-dragon': 'Wriggly Dragon',
+  'hachi-ban': 'Hachi Ban',
+  dragonette: 'Dragonette',
+  windfall: 'Windfall',
+  'all-pair-ruby-jade': 'All Pair Ruby Jade',
 };
 
 const fishingValues: Record<FishingSpecialId, number | 'three-doubles'> = {
@@ -72,6 +77,11 @@ const fishingValues: Record<FishingSpecialId, number | 'three-doubles'> = {
   'gates-of-heaven': 400,
   'wriggling-snake': 400,
   'thirteen-unique-wonders': 400,
+  'wriggly-dragon': 400,
+  'hachi-ban': 400,
+  dragonette: 400,
+  windfall: 400,
+  'all-pair-ruby-jade': 400,
 };
 
 export const FISHING_SPECIALS = (Object.keys(names) as FishingSpecialId[]).map(

@@ -30,7 +30,7 @@ export const scoreHand = (
   context: GameContext = DEFAULT_CONTEXT,
   specialHandBindings?: SpecialHandPatternBinding[],
 ): ScoreBreakdown => {
-  const validationErrors = validateHand(hand, context);
+  const validationErrors = validateHand(hand, context, specialHandBindings);
   const evidenceCompleteness = classifyEvidenceCompleteness(
     hand,
     validationErrors,

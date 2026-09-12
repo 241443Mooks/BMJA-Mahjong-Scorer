@@ -187,17 +187,40 @@ Implementation status: #87 binds Unique Wonder, All Pair Honours, Four Blessings
 All Winds and Dragons, and Heads and Tails in `western-tm@0.1`. The page and
 edition locators in the table remain the provenance for those bindings.
 
+### Phase 2 implementation status
+
+The following five 1997 Companion structures are implemented as new, neutral
+canonical patterns and are bound only in `western-tm@0.1`, each at 1,000 / 400:
+
+| T&M hand | Synopsis/detail locator | Canonical pattern ID |
+|---|---|---|
+| Wriggly Dragon | p. 56; detail p. 11 / 31 | `wriggly-dragon` |
+| Hachi Ban | pp. 10, 25, 30 and 32 | `hachi-ban` |
+| Dragonette | p. 57; detail pp. 24, 39 | `dragonette` |
+| Windfall | p. 57; detail pp. 24, 27 | `windfall` |
+| All Pair Ruby Jade | p. 57; detail pp. 23, 32, 53 | `all-pair-ruby-jade` |
+
+These patterns are not BMJA members. The unresolved entries below remain
+unverified or unimplemented; Phase 2 does not alter their status.
+
+The detail pages verify Hachi Ban as one concealed 1,000 / 400 hand: a 1–8 or
+2–9 run in one suit plus three distinct pairs of Winds or three distinct pairs
+of Dragons. The examples on pp. 10, 25, 30 and 32 are valid choices within that
+rule, not different scoring variants.
+
 ## 5. Existing-detector candidates that must **not** be bound yet
 
 ### Wriggly Snake
 
-T&M synopsis (pp. 56–57) defines a complete 1–9 run in one suit + all four Winds + **any tile paired**.
+T&M detail-page evidence confirms a complete 1–9 run in one suit + all four
+Winds + **any tile paired**.
 
 The current canonical detector is narrower: it expects the duplicated suited tile to be the 1 of the chosen suit.
 
 Status: `needs-pattern-check / likely canonical split-or-fix`.
 
-Do not bind the existing detector to T&M until the detailed page confirms whether “any tile paired” really means any of the thirteen base tiles.
+Do not bind the existing detector to T&M: it differs from the verified detail
+rule and needs a later canonical decision.
 
 ### Imperial Jade
 
@@ -342,7 +365,6 @@ The current photographs are enough for this pass and for the first Codex batch.
 Targeted detail-page photographs are needed next only for ambiguity-resolution, especially:
 
 - pp. 14, 20 and 50 — Gertie's Garter conflict;
-- p. 10 / 27 — Wriggly Snake exact pair freedom;
 - p. 36 / 52 — Imperial Jade Chow/exposure treatment;
 - p. 20 — Knitting / Triple Knitting exact predicates;
 - p. 9 / 47 — Gates of Heaven completion restrictions;
