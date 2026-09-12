@@ -399,8 +399,12 @@ export const canonicalSpecialHandPatterns: CanonicalSpecialHandPattern[] = [
           ).length === 1 &&
           (tally.get(`${runSuit}-1`) ?? 0) === 0 &&
           (tally.get(`${runSuit}-9`) ?? 0) === 0 &&
-          (tally.get(`${otherSuits[0]}-1`) ?? 0) === 3 &&
-          (tally.get(`${otherSuits[1]}-9`) ?? 0) === 3
+          (
+            ((tally.get(`${otherSuits[0]}-1`) ?? 0) === 3 &&
+              (tally.get(`${otherSuits[1]}-9`) ?? 0) === 3) ||
+            ((tally.get(`${otherSuits[0]}-9`) ?? 0) === 3 &&
+              (tally.get(`${otherSuits[1]}-1`) ?? 0) === 3)
+          )
         );
       });
     },

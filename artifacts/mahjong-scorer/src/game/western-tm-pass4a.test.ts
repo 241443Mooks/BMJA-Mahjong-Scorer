@@ -17,6 +17,11 @@ const confusedGates = looseWinner([
   suited('characters', 1), suited('characters', 1), suited('characters', 1),
   suited('circles', 9), suited('circles', 9), suited('circles', 9),
 ]);
+const confusedGatesReversedPungs = looseWinner([
+  ...run('bamboo', 2, 8), suited('bamboo', 4),
+  suited('characters', 9), suited('characters', 9), suited('characters', 9),
+  suited('circles', 1), suited('circles', 1), suited('circles', 1),
+]);
 const fiveOddHonours = looseWinner([
   ...run('characters', 1, 9), wind('east'), wind('south'), wind('west'), dragon('red'), dragon('green'),
 ]);
@@ -47,6 +52,14 @@ const fixtures = [
 const westernScore = (hand: MahjongHand) => WESTERN_TM_RULESET.scoreHand({ hand, playerWind: 'east', prevailingWind: 'east' });
 
 describe('western-tm@0.1 Companion catalogue Pass 4A', () => {
+  it('accepts both 1/9 Pung orientations outside the Confused Gates run suit', () => {
+    const pattern = canonicalSpecialHandPatterns.find(
+      ({ id }) => id === 'run-two-to-eight-with-one-and-nine-pungs',
+    )!;
+    expect(pattern.detect(confusedGates)).toBe(true);
+    expect(pattern.detect(confusedGatesReversedPungs)).toBe(true);
+  });
+
   it('binds the seven fixed hands only to Western, at their local values', () => {
     expect(westernTmSpecialHandBindings).toHaveLength(21);
     for (const fixture of fixtures) {
