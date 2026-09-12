@@ -41,8 +41,30 @@ describe('western-tm@0.1 Companion Pass 4E catalogue wave', () => {
     const windy = canonicalSpecialHandPatterns.find(({ id }) => id === 'wind-pair-with-three-suit-chows')!.detect;
     expect(windy(cases[6]!.hand)).toBe(true);
     expect(windy(cases[7]!.hand)).toBe(true);
-    expect(score(cases[6]!.hand).calculationComponents).toContainEqual(expect.objectContaining({ id: 'special-wind-pair-with-three-suit-chows', subtotal: 500 }));
-    expect(score(cases[7]!.hand).calculationComponents).toContainEqual(expect.objectContaining({ id: 'special-wind-pair-with-three-suit-chows', subtotal: 500 }));
+    for (const hand of [cases[6]!.hand, cases[7]!.hand]) {
+      const result = score(hand);
+      const specialComponents = result.calculationComponents.filter(({ id }) => id.startsWith('special-'));
+      expect(specialComponents).toEqual([expect.objectContaining({ id: 'special-wind-pair-with-three-suit-chows', subtotal: 500 })]);
+      expect(result.finalScore).toBe(500);
+    }
+  });
+
+  it('keeps Little Robert concealed for its represented Pung/Kong only', () => {
+    const concealed = score(cases[3]!.hand).specialHands.find(({ id }) => id === cases[3]!.id);
+    expect(concealed?.matched).toBe(true);
+    const exposedMeld = { ...cases[3]!.hand, sets: cases[3]!.hand.sets.map((handSet) => handSet.id === 'm' ? { ...handSet, visibility: 'exposed' as const } : handSet) };
+    expect(score(exposedMeld).specialHands.find(({ id }) => id === cases[3]!.id)?.matched).toBe(false);
+    const exposedChow = { ...cases[3]!.hand, sets: cases[3]!.hand.sets.map((handSet) => handSet.id === 'b' ? { ...handSet, visibility: 'exposed' as const } : handSet) };
+    expect(score(exposedChow).specialHands.find(({ id }) => id === cases[3]!.id)?.matched).toBe(true);
+  });
+
+  it('rejects manually represented Chow starts above seven', () => {
+    const littleRobert = canonicalSpecialHandPatterns.find(({ id }) => id === cases[3]!.id)!;
+    const invalidLittleRobert = { ...cases[3]!.hand, sets: cases[3]!.hand.sets.map((handSet) => handSet.id === 'b' ? set('b', 'chow', suited('bamboo', 8)) : handSet) };
+    expect(littleRobert.detect(invalidLittleRobert)).toBe(false);
+    const moon = canonicalSpecialHandPatterns.find(({ id }) => id === cases[4]!.id)!;
+    const invalidMoon = { ...cases[4]!.hand, sets: cases[4]!.hand.sets.map((handSet) => handSet.id === 'd' ? set('d', 'chow', suited('circles', 8)) : handSet) };
+    expect(moon.detect(invalidMoon)).toBe(false);
   });
 
   it('finds representative loose, grouped and Windy Chow-family fishing', () => {
@@ -50,5 +72,17 @@ describe('western-tm@0.1 Companion Pass 4E catalogue wave', () => {
     const groupedFishing = { ...cases[3]!.hand, isWinner: false, sets: cases[3]!.hand.sets.slice(0, -1), remainingTiles: [suited('bamboo', 9)] };
     expect(find(groupedFishing, cases[3]!.id)?.fishingValue).toBe(200);
     expect(find({ ...cases[6]!.hand, isWinner: false, looseTiles: cases[6]!.hand.looseTiles!.slice(0, -1) }, cases[6]!.id)?.fishingValue).toBe(200);
+  });
+
+  it("finds Dragon's Run fishing on East and scores its completed loose layout", () => {
+    const fishing: MahjongHand = {
+      sets: [], bonusTiles: [], isWinner: false,
+      looseTiles: [...run('characters', [1, 2, 3, 4, 5, 6, 7, 8, 9]), dragon('green'), dragon('red'), dragon('white'), wind('east')],
+    };
+    const match = detectSpecialFishing(fishing, westernTmSpecialHandBindings).find(({ id }) => id === cases[1]!.id);
+    expect(match).toMatchObject({ id: cases[1]!.id, name: "Dragon's Run", fishingValue: 600 });
+    expect(match?.completingTiles).toContainEqual(wind('east'));
+    expect(score(fishing).specialFishingMatches).toContainEqual(expect.objectContaining({ id: cases[1]!.id, name: "Dragon's Run", fishingValue: 600 }));
+    expect(score(cases[1]!.hand).calculationComponents).toContainEqual(expect.objectContaining({ id: `special-${cases[1]!.id}`, subtotal: 1500 }));
   });
 });
