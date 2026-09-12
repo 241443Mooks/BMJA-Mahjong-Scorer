@@ -236,6 +236,29 @@ ID and the existing profile-local fixed fishing binding path.
 | All Pair | p. 57; detail p. 22 | `seven-pairs-one-suit-with-honours` | 500 / 200 | seven pairs with at most one suited family; unlike `all-pair-honours`, honours are permitted but not required |
 | Dragon's Breath | p. 57; detail pp. 24, 31 | `dragon-pair-with-five-suited-pairs` | 1,000 / 400 | all Dragons represented with exactly one Dragon pair, plus five single-suit pairs |
 
+### Pass 4B implementation status
+
+The following p.56 synopsis rows are implemented only in `western-tm@0.1`.
+Each is 1,000 / 400 and has no red-dot exposure marker. Its binding therefore
+uses the explicit concealed-Pung/Kong policy `exposure: { allowed: false }`.
+The canonical detector remains visibility-neutral.
+
+| T&M hand | Canonical pattern ID | Structure |
+|---|---|---|
+| Run, Pung & Pair | `run-one-to-nine-with-same-suit-pung-and-pair` | 123 + 456 + 789, Pung/Kong and pair all in one suit |
+| Guardian Winds | `run-one-to-nine-with-wind-pung-and-pair` | 1–9 run, Wind Pung/Kong and Wind pair |
+| Guardian Dragons | `run-one-to-nine-with-dragon-pung-and-pair` | 1–9 run, Dragon Pung/Kong and Dragon pair |
+| Grand Sequence | `run-one-to-nine-with-honour-pung-and-any-pair` | 1–9 run, Wind/Dragon Pung/Kong and any pair |
+
+The source specifies P/K for Run, Pung & Pair, but under the standard
+four-copy tile constraint the Kong form has no physically legal realisation
+when the P/K is in the same suit as the complete 1–9 run. Runtime therefore
+accepts the Pung realisation only.
+
+Reusable rule earned: fixed profile bindings can explicitly forbid represented
+exposed Pung/Kong groups without putting profile visibility rules into the
+canonical detector.
+
 ## 5. Existing-detector candidates that must **not** be bound yet
 
 ### Wriggly Snake

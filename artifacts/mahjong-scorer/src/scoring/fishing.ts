@@ -74,6 +74,10 @@ const profileFishingNames: Partial<Record<FishingSpecialId, string>> = {
   'seven-pairs-one-suit': 'Heavenly Twins',
   'seven-pairs-one-suit-with-honours': 'All Pair',
   'dragon-pair-with-five-suited-pairs': "Dragon's Breath",
+  'run-one-to-nine-with-same-suit-pung-and-pair': 'Run, Pung & Pair',
+  'run-one-to-nine-with-wind-pung-and-pair': 'Guardian Winds',
+  'run-one-to-nine-with-dragon-pung-and-pair': 'Guardian Dragons',
+  'run-one-to-nine-with-honour-pung-and-any-pair': 'Grand Sequence',
 };
 
 const fishingValues: Partial<Record<FishingSpecialId, number | 'three-doubles'>> = {
@@ -167,9 +171,6 @@ const standardDecompositions = (
   const existingPairs = existingSets.filter(
     (handSet) => handSet.kind === 'pair',
   ).length;
-  const existingChows = existingSets.filter(
-    (handSet) => handSet.kind === 'chow',
-  ).length;
 
   const search = (
     tally: TileTally,
@@ -230,7 +231,7 @@ const standardDecompositions = (
         meldsNeeded - 1,
         chowsUsed,
       );
-      if (chowsUsed < 1 && tile.family === 'suit' && tile.rank <= 7) {
+      if (chowsUsed < 4 && tile.family === 'suit' && tile.rank <= 7) {
         const second = {
           ...tile,
           rank: (tile.rank + 1) as Extract<
@@ -256,7 +257,7 @@ const standardDecompositions = (
     }
   };
 
-  if (existingSets.length <= 5 && existingPairs <= 1 && existingChows <= 1) {
+  if (existingSets.length <= 5 && existingPairs <= 1) {
     const pairsNeeded = 1 - existingPairs;
     const meldsNeeded = 4 - (existingSets.length - existingPairs);
     search(
@@ -264,7 +265,7 @@ const standardDecompositions = (
       [],
       pairsNeeded,
       meldsNeeded,
-      existingChows,
+      existingSets.filter((handSet) => handSet.kind === 'chow').length,
     );
   }
 
