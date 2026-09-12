@@ -6,7 +6,7 @@ import {
 
 describe("western-tm@0.1 catalogue", () => {
   it("has the current authoritative binding count", () => {
-    expect(westernTmSpecialHandBindings).toHaveLength(57);
+    expect(westernTmSpecialHandBindings).toHaveLength(62);
   });
 
   it("has one internally consistent binding per profile and pattern", () => {

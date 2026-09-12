@@ -45,7 +45,7 @@ export const scoreHand = (
     ? detectSpecialHands(hand, context, specialHandBindings)
     : [];
   const fishingMatches = canAnalyseWholeHand
-    ? detectSpecialFishing(hand, specialHandBindings)
+    ? detectSpecialFishing(hand, specialHandBindings, context)
     : [];
   const matchedFixedSpecial = specialHands
     .filter(

@@ -332,11 +332,12 @@ const completesTarget = (
   target: string,
   tile: PlayingTile,
   bindings: SpecialHandPatternBinding[],
+  context?: GameContext,
 ) =>
   completedHands(hand, tile).some((completed) =>
     target === 'purity'
       ? isPurityHand(completed)
-      : detectSpecialHands(completed, undefined, bindings).some(
+      : detectSpecialHands(completed, context, bindings).some(
           (special) => special.id === target && special.matched,
         ),
   );
@@ -344,6 +345,7 @@ const completesTarget = (
 export const detectSpecialFishing = (
   hand: MahjongHand,
   bindings?: SpecialHandPatternBinding[],
+  context?: GameContext,
 ): SpecialFishingResult[] => {
   const usesExplicitBindings = bindings !== undefined;
   const effectiveBindings = bindings ?? bmjaSpecialHandBindings;
@@ -370,7 +372,7 @@ export const detectSpecialFishing = (
     const completingTiles = playingTiles.filter(
       (tile) =>
         (tally.get(tileKey(tile)) ?? 0) < 4 &&
-        completesTarget(hand, id, tile, effectiveBindings),
+        completesTarget(hand, id, tile, effectiveBindings, context),
     );
     return completingTiles.length
       ? [
