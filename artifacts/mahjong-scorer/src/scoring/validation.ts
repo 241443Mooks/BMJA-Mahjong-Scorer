@@ -52,12 +52,13 @@ export const validateHand = (
     matchesSupportedIrregularLayout(
       { ...hand, isWinner: true },
       specialHandBindings,
+      context,
     );
   const isSupportedSpecialGroupedShape =
     hand.isWinner &&
     hand.sets.length > 0 &&
-    matchesSupportedIrregularLayout(hand, specialHandBindings);
-  const fishingMatches = detectSpecialFishing(hand, specialHandBindings);
+    matchesSupportedIrregularLayout(hand, specialHandBindings, context);
+  const fishingMatches = detectSpecialFishing(hand, specialHandBindings, context);
   const structuralCount = structuralTileCount(hand);
   const physicalCount = playingTiles(hand).length;
   const kongCount = representedKongCount(hand);

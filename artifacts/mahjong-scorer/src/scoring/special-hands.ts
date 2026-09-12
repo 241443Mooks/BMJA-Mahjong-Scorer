@@ -193,6 +193,30 @@ const isSuitRank = (tile: PlayingTile, suit: Extract<PlayingTile, { family: 'sui
 
 const isPung = (kind: SetKind) => kind === 'pung';
 
+const isExactRunWithPair = (
+  values: PlayingTile[],
+  ranks: readonly number[],
+  allowedSuits: readonly Extract<PlayingTile, { family: 'suit' }>['suit'][],
+) => {
+  if (values.length !== ranks.length + 1 || values.some((tile) => tile.family !== 'suit')) return undefined;
+  const suited = values as Extract<PlayingTile, { family: 'suit' }>[];
+  const suit = suited[0]?.suit;
+  if (!suit || !allowedSuits.includes(suit) || suited.some((tile) => tile.suit !== suit)) return undefined;
+  const tally = counts(suited);
+  return ranks.every((rank) => (tally.get(`${suit}-${rank}`) ?? 0) >= 1) &&
+    [...tally.entries()].every(([key, count]) => ranks.includes(Number(key.split('-')[1])) && (count === 1 || count === 2)) &&
+    [...tally.values()].filter((count) => count === 2).length === 1
+    ? suit
+    : undefined;
+};
+
+const isCompleteHybrid = (hand: MahjongHand, setCount: number, looseCount: number) =>
+  hand.isWinner && hand.sets.length === setCount &&
+  (hand.looseTiles?.length ?? 0) === looseCount &&
+  (hand.remainingTiles?.length ?? 0) === 0 &&
+  tiles(hand).length === 14 + hand.sets.filter((set) => set.kind === 'kong').length &&
+  hasAtMostFourCopies(tiles(hand));
+
 const hasExactlyOneOfEachWind = (values: PlayingTile[]) =>
   ['east', 'south', 'west', 'north'].every(
     (value) => counts(values).get(`wind-${value}`) === 1,
@@ -615,6 +639,54 @@ export const canonicalSpecialHandPatterns: CanonicalSpecialHandPattern[] = [
   { id: 'wind-pair-with-one-meld-in-each-suit', detect: (hand) => windPairWithThreeSuitMelds(hand) },
   { id: 'wind-pair-with-three-suit-rank-three-melds', detect: (hand) => windPairWithThreeSuitMelds(hand, 3) },
   { id: 'wind-pair-with-three-suit-rank-seven-melds', detect: (hand) => windPairWithThreeSuitMelds(hand, 7) },
+  {
+    id: 'three-dragon-singles-with-one-meld-in-each-suit-and-suited-pair',
+    detect: (hand) => {
+      if (!isCompleteHybrid(hand, 4, 3)) return false;
+      const melds = hand.sets.filter((set) => set.kind === 'pung' || set.kind === 'kong');
+      const pair = hand.sets.find((set) => set.kind === 'pair');
+      const dragons = hand.looseTiles ?? [];
+      return melds.length === 3 && pair?.tile.family === 'suit' &&
+        melds.every((set) => set.tile.family === 'suit') &&
+        new Set(melds.map((set) => set.tile.family === 'suit' ? set.tile.suit : undefined)).size === 3 &&
+        dragons.every((tile) => tile.family === 'dragon') &&
+        ['green', 'red', 'white'].every((dragon) => counts(dragons).get(`dragon-${dragon}`) === 1);
+    },
+  },
+  {
+    id: 'red-white-dragon-pungs-with-seven-tile-character-or-circle-run-pair',
+    detect: (hand) => {
+      if (!isCompleteHybrid(hand, 2, 8)) return false;
+      const dragonPungs = hand.sets.filter((set) => set.kind === 'pung' && set.tile.family === 'dragon');
+      if (dragonPungs.length !== 2 || !['red', 'white'].every((dragon) => dragonPungs.some((set) => set.tile.family === 'dragon' && set.tile.dragon === dragon))) return false;
+      const loose = hand.looseTiles ?? [];
+      return isExactRunWithPair(loose, [1, 2, 3, 4, 5, 6, 7], ['characters', 'circles']) !== undefined ||
+        isExactRunWithPair(loose, [2, 3, 4, 5, 6, 7, 8], ['characters', 'circles']) !== undefined;
+    },
+  },
+  {
+    id: 'four-chows-three-suits-with-own-wind-pair',
+    detect: (hand, context) => {
+      if (!context || !hand.isWinner || hand.sets.length !== 5 || (hand.looseTiles?.length ?? 0) !== 0 || (hand.remainingTiles?.length ?? 0) !== 0 || !hasAtMostFourCopies(tiles(hand))) return false;
+      const chows = hand.sets.filter((set) => set.kind === 'chow');
+      const pair = hand.sets.find((set) => set.kind === 'pair');
+      return chows.length === 4 && pair?.tile.family === 'wind' && pair.tile.wind === context.playerWind &&
+        chows.every((set) => set.tile.family === 'suit' && set.tile.rank <= 7) &&
+        new Set(chows.map((set) => set.tile.family === 'suit' ? set.tile.suit : undefined)).size === 3;
+    },
+  },
+  {
+    id: 'own-wind-meld-with-dragon-pair-and-three-suit-chows',
+    detect: (hand, context) => {
+      if (!context || !hand.isWinner || hand.sets.length !== 5 || (hand.looseTiles?.length ?? 0) !== 0 || (hand.remainingTiles?.length ?? 0) !== 0 || !hasAtMostFourCopies(tiles(hand))) return false;
+      const chows = hand.sets.filter((set) => set.kind === 'chow');
+      const ownWind = hand.sets.find((set) => (set.kind === 'pung' || set.kind === 'kong') && set.tile.family === 'wind');
+      const pair = hand.sets.find((set) => set.kind === 'pair');
+      return chows.length === 3 && ownWind?.tile.family === 'wind' && ownWind.tile.wind === context.playerWind &&
+        pair?.tile.family === 'dragon' && chows.every((set) => set.tile.family === 'suit' && set.tile.rank <= 7) &&
+        new Set(chows.map((set) => set.tile.family === 'suit' ? set.tile.suit : undefined)).size === 3;
+    },
+  },
   { id: 'three-suit-chows-with-suited-meld-and-pair', detect: (hand) => { if (!hand.isWinner || hand.sets.length !== 5 || (hand.looseTiles?.length ?? 0) !== 0 || (hand.remainingTiles?.length ?? 0) !== 0 || !hasAtMostFourCopies(tiles(hand))) return false; const chows = hand.sets.filter((set) => set.kind === 'chow'), melds = hand.sets.filter((set) => set.kind === 'pung' || set.kind === 'kong'), pairs = hand.sets.filter((set) => set.kind === 'pair'); return chows.length === 3 && melds.length === 1 && pairs.length === 1 && chows.every((set) => set.tile.family === 'suit' && set.tile.rank <= 7) && new Set(chows.map((set) => set.tile.family === 'suit' ? set.tile.suit : undefined)).size === 3 && melds[0]?.tile.family === 'suit' && pairs[0]?.tile.family === 'suit'; } },
   { id: 'circle-chows-with-one-two-three-four-five-six-seven-eight-nine', detect: (hand) => { if (!hand.isWinner || hand.sets.length !== 5 || (hand.looseTiles?.length ?? 0) !== 0 || (hand.remainingTiles?.length ?? 0) !== 0 || !hasAtMostFourCopies(tiles(hand))) return false; const chows = hand.sets.filter((set) => set.kind === 'chow'); const pair = hand.sets.find((set) => set.kind === 'pair'); return chows.length === 4 && pair?.tile.family === 'suit' && pair.tile.suit === 'circles' && chows.every((set) => set.tile.family === 'suit' && set.tile.suit === 'circles' && set.tile.rank <= 7) && [1, 4, 7].every((rank) => chows.some((set) => set.tile.family === 'suit' && set.tile.rank === rank)); } },
   {
@@ -1287,10 +1359,11 @@ export const detectSpecialHands = (
 export const matchesSupportedIrregularLayout = (
   hand: MahjongHand,
   bindings = bmjaSpecialHandBindings,
+  context?: GameContext,
 ): boolean =>
   resolveSpecialHandBindings(
     bindings[0]?.profile ?? BMJA_SPECIAL_HAND_PROFILE,
     bindings,
   )
     .filter(({ pattern }) => pattern.eventBased !== true)
-    .some(({ pattern }) => pattern.detect(hand));
+    .some(({ pattern }) => pattern.detect(hand, context));

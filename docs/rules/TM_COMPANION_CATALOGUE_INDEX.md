@@ -1,5 +1,17 @@
 # Thompson & Maloney Companion catalogue index — pass 1
 
+## Pass 4G implementation — Dragon hybrids and own-wind context wave
+
+Four evidence-backed entries are now bound in `western-tm@0.1` (61 bindings total): Dragonfly (`three-dragon-singles-with-one-meld-in-each-suit-and-suited-pair`), Dragon's Teeth (`red-white-dragon-pungs-with-seven-tile-character-or-circle-run-pair`), Little Brother (`four-chows-three-suits-with-own-wind-pair`), and Hovering Angel (`own-wind-meld-with-dragon-pair-and-three-suit-chows`).
+
+- Dragonfly — p.31 / synopsis p.58; hybrid: loose GRW singles, a represented Pung/Kong in each suit, and a represented suited pair; 1,000 / 400. One dot permits only the represented Pungs/Kongs and halves to 500 / 200 when one is exposed.
+- Dragon's Teeth — pp.12/33 / synopsis pp.56/58; hybrid: represented Red and White **Pungs** (not Kongs), plus loose Character or Circle 1–7 or 2–8 and one duplicated run tile; 1,000 / 400. Two dots retain full exposed value.
+- Dragon's Gates — **SOURCE CONFLICT — BLOCKED pending detail-page review.** Synopsis p.56 gives 1,000 / 400; synopsis p.58 gives 1,500 / 600. Both agree on the structure and one-dot exposure-half treatment. Inspect detail pp.12 and/or 34 before implementation; do not infer a score from recurrence, category, or neighbouring bands.
+- Little Brother — p.17 / synopsis p.56; grouped: exactly four Chows covering Bamboo, Characters and Circles, plus the player's own-Wind pair; 1,000 / 400. This uses `context.playerWind`, never prevailing wind, and has no Pung/Kong exposure rule.
+- Hovering Angel — pp.17/41 / synopsis pp.56/59; grouped: one Chow in each suit, the player's own-Wind Pung/Kong, and a Dragon pair; 1,000 / 400. It uses `context.playerWind`; neither synopsis occurrence has a red dot, so a represented exposed own-Wind Pung/Kong is ineligible. Exposed Chows do not affect this Pung/Kong-only rule.
+
+The existing explicit-profile fishing path now carries its existing `GameContext` through completed-candidate detection. This is necessary for truthful own-wind fishing and does not introduce a second context mechanism or alter BMJA bindings.
+
 ## Pass 4F implementation — Wind-family hybrid catalogue wave
 
 Five p.57 entries are now bound in `western-tm@0.1`: Windy Ones (`wind-pair-with-three-suit-rank-one-melds`), Windy Nines (`wind-pair-with-three-suit-rank-nine-melds`), Windvane (`wind-pair-with-one-meld-in-each-suit`), Three Sisters (`wind-pair-with-three-suit-rank-three-melds`), and Seven Brothers (`wind-pair-with-three-suit-rank-seven-melds`). Each is 1,000 winning / 400 fishing; p.58 independently corroborates the Windy Ones and Windy Nines values.
