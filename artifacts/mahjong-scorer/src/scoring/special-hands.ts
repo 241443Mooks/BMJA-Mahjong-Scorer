@@ -832,6 +832,20 @@ export const canonicalSpecialHandPatterns: CanonicalSpecialHandPattern[] = [
     },
   },
   {
+    id: 'two-suit-knitting',
+    detect: (hand) => {
+      if (!isCompleteLooseLayout(hand)) return false;
+      const tally = suitedRankCounts(tiles(hand));
+      if (tally === null) return false;
+      const suits = new Set(tiles(hand).map((tile) => tile.family === 'suit' ? tile.suit : undefined));
+      if (suits.size !== 2 || suits.has(undefined)) return false;
+      return [...tally.values()].every((rankCounts) => {
+        const values = [...rankCounts.values()];
+        return rankCounts.size === 2 && values[0] === values[1];
+      }) && [...tally.values()].reduce((sum, rankCounts) => sum + [...rankCounts.values()].reduce((rankSum, count) => rankSum + count, 0) / 2, 0) === 7;
+    },
+  },
+  {
     id: 'triple-knitting',
     detect: (hand) => {
       const all = tiles(hand);
@@ -881,6 +895,31 @@ export const canonicalSpecialHandPatterns: CanonicalSpecialHandPattern[] = [
     },
   },
   {
+    id: 'three-suit-knitting-with-pair',
+    detect: (hand) => {
+      if (!isCompleteLooseLayout(hand)) return false;
+      const tally = suitedRankCounts(tiles(hand));
+      if (tally === null) return false;
+      const suits = ['bamboo', 'characters', 'circles'] as const;
+      return [...tally.entries()].some(([pairRank, rankCounts]) =>
+        suits.some((firstSuit, firstIndex) =>
+          suits.slice(firstIndex + 1).some((secondSuit) => {
+            if ((rankCounts.get(firstSuit) ?? 0) < 1 || (rankCounts.get(secondSuit) ?? 0) < 1) return false;
+            let triplets = 0;
+            for (const [rank, values] of tally) {
+              const adjusted = suits.map((suit) =>
+                (values.get(suit) ?? 0) - (rank === pairRank && (suit === firstSuit || suit === secondSuit) ? 1 : 0),
+              );
+              if (adjusted.some((value) => value < 0) || adjusted[0] !== adjusted[1] || adjusted[1] !== adjusted[2]) return false;
+              triplets += adjusted[0];
+            }
+            return triplets === 4;
+          }),
+        ),
+      );
+    },
+  },
+  {
     id: 'all-pair-honours',
     detect: (hand) =>
       hand.isWinner &&
@@ -906,6 +945,35 @@ export const canonicalSpecialHandPatterns: CanonicalSpecialHandPattern[] = [
         hasAtMostFourCopies(all) &&
         all.every(isGreenTile)
       );
+    },
+  },
+  {
+    id: 'green-dragon-meld-with-green-bamboo-melds-and-pair-one-chow',
+    detect: (hand) => {
+      const all = tiles(hand);
+      if (
+        !hand.isWinner ||
+        hand.sets.length !== 5 ||
+        (hand.looseTiles?.length ?? 0) !== 0 ||
+        (hand.remainingTiles?.length ?? 0) !== 0 ||
+        all.length !== 14 + hand.sets.filter((set) => set.kind === 'kong').length ||
+        !hasAtMostFourCopies(all)
+      ) return false;
+      const dragonMelds = hand.sets.filter((set) =>
+        (set.kind === 'pung' || set.kind === 'kong') && set.tile.family === 'dragon' && set.tile.dragon === 'green',
+      );
+      const bambooMelds = hand.sets.filter((set) => set.kind !== 'pair' && set.tile.family === 'suit' && set.tile.suit === 'bamboo');
+      const pairs = hand.sets.filter((set) => set.kind === 'pair');
+      return dragonMelds.length === 1 && bambooMelds.length === 3 && pairs.length === 1 &&
+        bambooMelds.filter((set) => set.kind === 'chow').length <= 1 &&
+        bambooMelds.every((set) =>
+          set.kind === 'chow'
+            ? isSuitRank(set.tile, 'bamboo', [2])
+            : set.kind === 'pung' || set.kind === 'kong'
+              ? isSuitRank(set.tile, 'bamboo', [2, 3, 4, 6, 8])
+              : false,
+        ) &&
+        isSuitRank(pairs[0]!.tile, 'bamboo', [2, 3, 4, 6, 8]);
     },
   },
   {

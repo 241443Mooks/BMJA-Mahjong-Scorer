@@ -1,5 +1,13 @@
 # Thompson & Maloney Companion catalogue index — pass 1
 
+## Pass 4H implementation — Knitting audits and Imperial Jade
+
+**Knitting** (p.20; synopsis pp.57, 59): seven pairs of the same number in two suits, worth 500 (200 fishing), with no exposure marker. The BMJA `knitting` predicate was not safe to reuse: it permits a broader multi-suit arrangement and does not require the complete pure loose layout. T&M therefore uses the neutral structural canonical pattern `two-suit-knitting`, which requires exactly two suits and seven cross-suit same-rank pair units; repeated rank-pairs remain permitted within physical-copy limits.
+
+**Triple Knitting** (p.20; synopsis p.57): four same-rank three-suit sets plus a Knitting pair, worth 500 (200 fishing), with no exposure marker. The existing BMJA `triple-knitting` predicate does not enforce the complete pure loose layout, so it was not safe to reuse exactly. T&M uses the neutral `three-suit-knitting-with-pair` pattern: four three-suit same-rank units plus a two-suit same-rank pair, with repeated triplet ranks and pair-rank overlap permitted where physical copies allow.
+
+**Imperial Jade** (p.36; synopsis p.58): T&M differs structurally from BMJA: BMJA `imperial-jade` requires four Pung/Kong groups, while T&M permits one Chow among the three Bamboo melds. T&M uses `green-dragon-meld-with-green-bamboo-melds-and-pair-one-chow`: a Green Dragon Pung/Kong, three Bamboo melds, and a Bamboo pair; all Bamboo ranks are green (2, 3, 4, 6, 8), with at most one Chow and that Chow necessarily Bamboo 234. It is 2000 / 800 fishing. Its two-dot treatment permits exposed Pungs/Kongs at full value; an exposed permitted Chow alone does not reduce the value.
+
 ## Pass 4G implementation — Dragon hybrids and own-wind context wave
 
 Four evidence-backed entries are now bound in `western-tm@0.1` (61 bindings total): Dragonfly (`three-dragon-singles-with-one-meld-in-each-suit-and-suited-pair`), Dragon's Teeth (`red-white-dragon-pungs-with-seven-tile-character-or-circle-run-pair`), Little Brother (`four-chows-three-suits-with-own-wind-pair`), and Hovering Angel (`own-wind-meld-with-dragon-pair-and-three-suit-chows`).
