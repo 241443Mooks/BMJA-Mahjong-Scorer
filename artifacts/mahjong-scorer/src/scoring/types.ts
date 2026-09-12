@@ -53,7 +53,14 @@ export type FishingSpecialId =
   | 'dragonette'
   | 'windfall'
   | 'all-pair-ruby-jade'
-  | 'golden-gates';
+  | 'golden-gates'
+  | 'run-two-to-eight-with-one-and-nine-pungs'
+  | 'full-suit-run-with-five-distinct-honours'
+  | 'suit-run-one-to-seven-with-all-honours'
+  | 'four-bamboo-one-and-five-green-bamboo-pairs'
+  | 'seven-pairs-one-suit'
+  | 'seven-pairs-one-suit-with-honours'
+  | 'dragon-pair-with-five-suited-pairs';
 
 export type WinningMethod =
   | 'initial-deal'

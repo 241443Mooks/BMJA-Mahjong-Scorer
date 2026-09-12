@@ -42,7 +42,7 @@ const playingTiles: PlayingTile[] = [
   ...DRAGONS.map((dragon): PlayingTile => ({ family: 'dragon', dragon })),
 ];
 
-const names: Record<FishingSpecialId, string> = {
+const names: Partial<Record<FishingSpecialId, string>> = {
   purity: 'Purity',
   'all-pair-honours': 'All pair honours',
   knitting: 'Knitting',
@@ -66,7 +66,17 @@ const names: Record<FishingSpecialId, string> = {
   'golden-gates': 'Golden Gates',
 };
 
-const fishingValues: Record<FishingSpecialId, number | 'three-doubles'> = {
+const profileFishingNames: Partial<Record<FishingSpecialId, string>> = {
+  'run-two-to-eight-with-one-and-nine-pungs': 'Confused Gates',
+  'full-suit-run-with-five-distinct-honours': 'Five Odd Honours',
+  'suit-run-one-to-seven-with-all-honours': "Greta's Garden",
+  'four-bamboo-one-and-five-green-bamboo-pairs': "Sparrow's Sanctuary",
+  'seven-pairs-one-suit': 'Heavenly Twins',
+  'seven-pairs-one-suit-with-honours': 'All Pair',
+  'dragon-pair-with-five-suited-pairs': "Dragon's Breath",
+};
+
+const fishingValues: Partial<Record<FishingSpecialId, number | 'three-doubles'>> = {
   purity: 'three-doubles',
   'all-pair-honours': 200,
   knitting: 200,
@@ -90,9 +100,18 @@ const fishingValues: Record<FishingSpecialId, number | 'three-doubles'> = {
   'golden-gates': 400,
 };
 
-export const FISHING_SPECIALS = (Object.keys(names) as FishingSpecialId[]).map(
-  (id) => ({ id, name: names[id], fishingValue: fishingValues[id] }),
-);
+export const FISHING_SPECIALS = [
+  ...(Object.keys(names) as FishingSpecialId[]).map((id) => ({
+    id,
+    name: names[id]!,
+    fishingValue: fishingValues[id],
+  })),
+  ...(Object.keys(profileFishingNames) as FishingSpecialId[]).map((id) => ({
+    id,
+    name: profileFishingNames[id]!,
+    fishingValue: undefined,
+  })),
+];
 
 const currentTiles = (hand: MahjongHand) => [...handPlayingTiles(hand)];
 

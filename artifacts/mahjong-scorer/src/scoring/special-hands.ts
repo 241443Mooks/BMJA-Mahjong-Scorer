@@ -380,6 +380,89 @@ export const canonicalSpecialHandPatterns: CanonicalSpecialHandPattern[] = [
   { id: 'windfall', detect: (hand) => { if (!isCompleteLooseLayout(hand)) return false; const all = tiles(hand), winds = all.filter((tile) => tile.family === 'wind'), suited = all.filter((tile) => tile.family === 'suit'); return winds.length === 4 && hasExactlyOneOfEachWind(winds) && arePairsInOneSuit(suited, 5); } },
   { id: 'all-pair-ruby-jade', detect: (hand) => { if (!isCompleteLooseLayout(hand)) return false; const all = tiles(hand), dragons = all.filter((tile) => tile.family === 'dragon'), bamboo = all.filter((tile): tile is Extract<PlayingTile, { family: 'suit' }> => tile.family === 'suit' && tile.suit === 'bamboo'); return dragons.length === 4 && counts(dragons).get('dragon-green') === 2 && counts(dragons).get('dragon-red') === 2 && bamboo.length === 10 && arePairsInOneSuit(bamboo, 5); } },
   {
+    id: 'run-two-to-eight-with-one-and-nine-pungs',
+    detect: (hand) => {
+      if (!isCompleteLooseLayout(hand)) return false;
+      const all = tiles(hand);
+      if (all.some((tile) => tile.family !== 'suit')) return false;
+      const suited = all as Extract<PlayingTile, { family: 'suit' }>[];
+      const suits = ['bamboo', 'characters', 'circles'] as const;
+      return suits.some((runSuit) => {
+        const otherSuits = suits.filter((suit) => suit !== runSuit);
+        const tally = counts(suited);
+        return (
+          [2, 3, 4, 5, 6, 7, 8].every(
+            (rank) => (tally.get(`${runSuit}-${rank}`) ?? 0) >= 1,
+          ) &&
+          [2, 3, 4, 5, 6, 7, 8].filter(
+            (rank) => tally.get(`${runSuit}-${rank}`) === 2,
+          ).length === 1 &&
+          (tally.get(`${runSuit}-1`) ?? 0) === 0 &&
+          (tally.get(`${runSuit}-9`) ?? 0) === 0 &&
+          (tally.get(`${otherSuits[0]}-1`) ?? 0) === 3 &&
+          (tally.get(`${otherSuits[1]}-9`) ?? 0) === 3
+        );
+      });
+    },
+  },
+  {
+    id: 'full-suit-run-with-five-distinct-honours',
+    detect: (hand) => {
+      if (!isCompleteLooseLayout(hand)) return false;
+      const all = tiles(hand);
+      const suited = all.filter((tile) => tile.family === 'suit');
+      const honours = all.filter((tile) => tile.family === 'wind' || tile.family === 'dragon');
+      return isSingleSuitRun(suited, [1, 2, 3, 4, 5, 6, 7, 8, 9]) && honours.length === 5 && counts(honours).size === 5;
+    },
+  },
+  {
+    id: 'suit-run-one-to-seven-with-all-honours',
+    detect: (hand) => {
+      if (!isCompleteLooseLayout(hand)) return false;
+      const all = tiles(hand);
+      const suited = all.filter((tile) => tile.family === 'suit');
+      const winds = all.filter((tile) => tile.family === 'wind');
+      const dragons = all.filter((tile) => tile.family === 'dragon');
+      return isSingleSuitRun(suited, [1, 2, 3, 4, 5, 6, 7]) && winds.length === 4 && hasExactlyOneOfEachWind(winds) && dragons.length === 3 && ['green', 'red', 'white'].every((value) => counts(dragons).get(`dragon-${value}`) === 1);
+    },
+  },
+  {
+    id: 'four-bamboo-one-and-five-green-bamboo-pairs',
+    detect: (hand) => {
+      if (!isCompleteLooseLayout(hand)) return false;
+      const all = tiles(hand);
+      const tally = counts(all);
+      return all.every((tile) => tile.family === 'suit' && tile.suit === 'bamboo') && tally.get('bamboo-1') === 4 && [2, 3, 4, 6, 8].every((rank) => tally.get(`bamboo-${rank}`) === 2) && tally.size === 6;
+    },
+  },
+  {
+    id: 'seven-pairs-one-suit',
+    detect: (hand) => {
+      if (!isCompleteLooseLayout(hand)) return false;
+      const all = tiles(hand);
+      return all.every((tile) => tile.family === 'suit') && new Set(all.map((tile) => tile.suit)).size === 1 && [...counts(all).values()].every((count) => count % 2 === 0);
+    },
+  },
+  {
+    id: 'seven-pairs-one-suit-with-honours',
+    detect: (hand) => {
+      if (!isCompleteLooseLayout(hand)) return false;
+      const all = tiles(hand);
+      const suited = all.filter((tile): tile is Extract<PlayingTile, { family: 'suit' }> => tile.family === 'suit');
+      return new Set(suited.map((tile) => tile.suit)).size <= 1 && [...counts(all).values()].every((count) => count % 2 === 0);
+    },
+  },
+  {
+    id: 'dragon-pair-with-five-suited-pairs',
+    detect: (hand) => {
+      if (!isCompleteLooseLayout(hand)) return false;
+      const all = tiles(hand);
+      const dragons = all.filter((tile) => tile.family === 'dragon');
+      const suited = all.filter((tile) => tile.family === 'suit');
+      return hasDragonPairAndSingles(dragons) && arePairsInOneSuit(suited, 5);
+    },
+  },
+  {
     id: 'knitting',
     detect: (hand) => {
       const all = tiles(hand);
