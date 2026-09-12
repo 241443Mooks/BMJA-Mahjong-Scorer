@@ -573,6 +573,55 @@ export const canonicalSpecialHandPatterns: CanonicalSpecialHandPattern[] = [
     },
   },
   {
+    id: 'east-wind-meld-white-dragon-pair-three-suit-nonterminal-melds',
+    detect: (hand) => {
+      const shape = groupedShape(hand, 4);
+      if (!shape || shape.pairs[0].tile.family !== 'dragon' || shape.pairs[0].tile.dragon !== 'white') return false;
+      const suited = shape.melds.filter((set) => set.tile.family === 'suit');
+      return shape.melds.some((set) => set.tile.family === 'wind' && set.tile.wind === 'east') &&
+        suited.length === 3 &&
+        new Set(suited.map((set) => set.tile.family === 'suit' ? set.tile.suit : undefined)).size === 3 &&
+        suited.every((set) => set.tile.family === 'suit' && set.tile.rank >= 2 && set.tile.rank <= 8);
+    },
+  },
+  {
+    id: 'white-dragon-meld-red-dragon-pair-three-suit-nonterminal-melds',
+    detect: (hand) => {
+      const shape = groupedShape(hand, 4);
+      if (!shape || shape.pairs[0].tile.family !== 'dragon' || shape.pairs[0].tile.dragon !== 'red') return false;
+      const suited = shape.melds.filter((set) => set.tile.family === 'suit');
+      return shape.melds.some((set) => set.tile.family === 'dragon' && set.tile.dragon === 'white') &&
+        suited.length === 3 &&
+        new Set(suited.map((set) => set.tile.family === 'suit' ? set.tile.suit : undefined)).size === 3 &&
+        suited.every((set) => set.tile.family === 'suit' && set.tile.rank >= 2 && set.tile.rank <= 8);
+    },
+  },
+  {
+    id: 'honours-and-one-suit-terminals-pung-kong-hand',
+    detect: (hand) => {
+      const shape = groupedShape(hand, 4);
+      if (!shape) return false;
+      const suited = shape.all.filter((tile): tile is Extract<PlayingTile, { family: 'suit' }> => tile.family === 'suit');
+      return shape.all.every((tile) => tile.family !== 'suit' || tile.rank === 1 || tile.rank === 9) &&
+        new Set(suited.map((tile) => tile.suit)).size <= 1;
+    },
+  },
+  {
+    id: 'one-suit-with-honours-mostly-pung-kong-hand',
+    detect: (hand) => {
+      if (!hand.isWinner || hand.sets.length !== 5 || (hand.looseTiles?.length ?? 0) !== 0 || (hand.remainingTiles?.length ?? 0) !== 0) return false;
+      const melds = hand.sets.filter((set) => set.kind === 'pung' || set.kind === 'kong' || set.kind === 'chow');
+      const pairs = hand.sets.filter((set) => set.kind === 'pair');
+      const chows = hand.sets.filter((set) => set.kind === 'chow');
+      const all = tiles(hand);
+      const suited = all.filter((tile): tile is Extract<PlayingTile, { family: 'suit' }> => tile.family === 'suit');
+      return melds.length === 4 && pairs.length === 1 && chows.length <= 1 &&
+        chows.every((set) => set.tile.family === 'suit' && set.tile.rank >= 1 && set.tile.rank <= 7) &&
+        all.length === 14 + hand.sets.filter((set) => set.kind === 'kong').length &&
+        hasAtMostFourCopies(all) && new Set(suited.map((tile) => tile.suit)).size <= 1;
+    },
+  },
+  {
     id: 'golden-gates',
     detect: (hand) => {
       if (
