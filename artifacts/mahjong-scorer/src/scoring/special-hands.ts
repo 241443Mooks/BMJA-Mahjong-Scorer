@@ -8,6 +8,7 @@ import type {
   GameContext,
   MahjongHand,
   PlayingTile,
+  SetKind,
   SpecialHandResult,
 } from './types';
 import type { RulesProfileRef } from '../game/types';
@@ -43,8 +44,12 @@ export type CalculatedSpecialHandPatternBinding =
   CommonSpecialHandPatternBinding & {
     scoreModel: {
       kind: 'calculated';
-      /** Profile-local exposed Pung/Kong treatment for a calculated hand. */
-      exposure?: { allowed: true; multiplier: number };
+      /** Profile-local treatment for explicitly represented exposed set kinds. */
+      exposure?: {
+        multiplier: number;
+        triggerSetKinds: SetKind[];
+        forbiddenSetKinds?: SetKind[];
+      };
     };
   };
 
@@ -66,16 +71,23 @@ const hasUnsupportedCalculatedExposure = (
   hand: MahjongHand,
   binding: CalculatedSpecialHandPatternBinding,
 ) =>
-  binding.scoreModel.exposure?.allowed === true &&
+  binding.scoreModel.exposure?.forbiddenSetKinds !== undefined &&
   hand.sets.some(
-    (set) => set.visibility === 'exposed' && set.kind === 'chow',
+    (set) =>
+      set.visibility === 'exposed' &&
+      binding.scoreModel.exposure!.forbiddenSetKinds!.includes(set.kind),
   );
 
 export const calculatedSpecialHandExposureMultiplierFor = (
   hand: MahjongHand,
   binding: CalculatedSpecialHandPatternBinding,
 ) =>
-  binding.scoreModel.exposure?.allowed === true && hasRepresentedExposedMeld(hand)
+  binding.scoreModel.exposure !== undefined &&
+  hand.sets.some(
+    (set) =>
+      set.visibility === 'exposed' &&
+      binding.scoreModel.exposure!.triggerSetKinds.includes(set.kind),
+  )
     ? binding.scoreModel.exposure.multiplier
     : 1;
 
@@ -258,11 +270,14 @@ export const canonicalSpecialHandPatterns: CanonicalSpecialHandPattern[] = [
       return (
         hand.isWinner &&
         hand.sets.length === 5 &&
+        (hand.looseTiles?.length ?? 0) === 0 &&
+        (hand.remainingTiles?.length ?? 0) === 0 &&
         hand.sets.filter((set) => set.kind === 'pair').length === 1 &&
         melds.length === 4 &&
         hand.sets.filter((set) => set.kind === 'chow').length <= 1 &&
         tiles.length ===
           14 + hand.sets.filter((set) => set.kind === 'kong').length &&
+        hasAtMostFourCopies(tiles) &&
         tiles.every((tile) => tile.family === 'suit') &&
         new Set(tiles.map((tile) => tile.suit)).size === 1
       );

@@ -198,7 +198,24 @@ export const scoreHand = (
   );
   // Calculated exposure policy applies after the profile's ordinary calculation
   // and before its ordinary limit.
-  const uncappedScore = ordinaryCalculatedScore * calculatedExposureMultiplier;
+  const exposureAdjustment =
+    ordinaryCalculatedScore * (calculatedExposureMultiplier - 1);
+  if (exposureAdjustment !== 0) {
+    calculationComponents = [
+      ...calculationComponents,
+      {
+        id: 'calculated-special-exposure-adjustment',
+        label: `${calculatedBinding!.name} exposed adjustment`,
+        base: exposureAdjustment,
+        doubles: 0,
+        subtotal: exposureAdjustment,
+      },
+    ];
+  }
+  const uncappedScore = calculationComponents.reduce(
+    (sum, component) => sum + component.subtotal,
+    0,
+  );
   // A published fixed special value is not silently reduced by the ordinary
   // profile cap. Ordinary and fishing scores retain the profile limit.
   const effectiveLimit = matchedFixedSpecial
@@ -229,7 +246,9 @@ export const scoreHand = (
     finalScore,
     limitApplied: finalScore < uncappedScore,
     scoringMode:
-      specialFishing || matchedFixedSpecial || purity ? 'special' : 'standard',
+      specialFishing || matchedFixedSpecial || calculatedBinding || purity
+        ? 'special'
+        : 'standard',
     calculationComponents,
   };
 };

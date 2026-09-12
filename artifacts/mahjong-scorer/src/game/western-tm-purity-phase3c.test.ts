@@ -27,7 +27,7 @@ describe('western-tm@0.1 Companion Phase 3C: calculated Purity', () => {
     const bindings = westernTmSpecialHandBindings.filter(({ patternId }) => patternId === 'purity-one-chow');
     expect(westernTmSpecialHandBindings).toHaveLength(14);
     expect(canonicalSpecialHandPatterns.filter(({ id }) => id === 'purity-one-chow')).toHaveLength(1);
-    expect(bindings).toEqual([expect.objectContaining({ name: 'Purity', scoreModel: { kind: 'calculated', exposure: { allowed: true, multiplier: 0.5 } } })]);
+    expect(bindings).toEqual([expect.objectContaining({ name: 'Purity', scoreModel: { kind: 'calculated', exposure: { multiplier: 0.5, triggerSetKinds: ['pung', 'kong'], forbiddenSetKinds: ['chow'] } } })]);
     expect(bindings[0]).not.toHaveProperty('value');
     expect(bindings[0]).not.toHaveProperty('fishingValue');
   });
@@ -48,6 +48,14 @@ describe('western-tm@0.1 Companion Phase 3C: calculated Purity', () => {
     expect(pattern.detect(honours)).toBe(false);
   });
 
+  it('rejects impossible copies and unexpected extra playing tiles', () => {
+    const pattern = canonicalSpecialHandPatterns.find(({ id }) => id === 'purity-one-chow')!;
+    const impossible = { ...fourPungPurity, sets: fourPungPurity.sets.map((group) => group.id === 'p3' ? set('p3', 'pung', suited('bamboo', 2)) : group) };
+    expect(pattern.detect(impossible)).toBe(false);
+    expect(pattern.detect({ ...fourPungPurity, looseTiles: [suited('bamboo', 7)] })).toBe(false);
+    expect(pattern.detect({ ...fourPungPurity, remainingTiles: [suited('bamboo', 7)] })).toBe(false);
+  });
+
   it('calculates concealed Purity and halves an equivalent represented exposed pung after ordinary calculation', () => {
     const concealed = scoreWestern(fourPungPurity);
     const exposedHand = { ...fourPungPurity, sets: fourPungPurity.sets.map((group) => group.id === 'p2' ? { ...group, visibility: 'exposed' as const } : group) };
@@ -56,7 +64,11 @@ describe('western-tm@0.1 Companion Phase 3C: calculated Purity', () => {
     expect(concealed.finalScore).toBe(320);
     // The ordinary exposed-pung calculation is 304; profile-local exposure halves it before the limit.
     expect(exposed).toMatchObject({ uncappedScore: 152, finalScore: 152, limitApplied: false });
-    expect(exposed.calculationComponents).toEqual(expect.arrayContaining([expect.objectContaining({ id: 'purity-playing-tiles' })]));
+    expect(exposed.calculationComponents).toEqual(expect.arrayContaining([
+      expect.objectContaining({ id: 'purity-playing-tiles', subtotal: 304 }),
+      expect.objectContaining({ id: 'calculated-special-exposure-adjustment', label: 'Purity exposed adjustment', subtotal: -152 }),
+    ]));
+    expect(exposed.calculationComponents.reduce((sum, component) => sum + component.subtotal, 0)).toBe(exposed.uncappedScore);
   });
 
   it('does not halve an exposed pair and does not silently accept an exposed chow', () => {
@@ -64,6 +76,10 @@ describe('western-tm@0.1 Companion Phase 3C: calculated Purity', () => {
     const exposedChow = { ...oneChowPurity, sets: oneChowPurity.sets.map((group) => group.id === 'chow' ? { ...group, visibility: 'exposed' as const } : group) };
     expect(scoreWestern(exposedPair).finalScore).toBe(320);
     expect(scoreWestern(exposedChow).specialHands).toContainEqual(expect.objectContaining({ id: 'purity-one-chow', matched: false }));
+  });
+
+  it('reports the matched one-chow calculated hand as special scoring mode', () => {
+    expect(scoreWestern(oneChowPurity).scoringMode).toBe('special');
   });
 
   it('retains the ordinary 1000-point limit and leaves Western Purity fishing unresolved', () => {

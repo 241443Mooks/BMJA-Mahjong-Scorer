@@ -82,4 +82,24 @@ describe('calculated special-hand binding model', () => {
       expect.objectContaining({ id: 'special-buried-treasure', subtotal: 777 }),
     ]);
   });
+
+  it('does not forbid exposed chows unless a calculated binding policy says so', () => {
+    const chowAllowed: SpecialHandPatternBinding = {
+      patternId: 'purity-one-chow',
+      profile: testProfile,
+      name: 'Chow-allowed calculated test binding',
+      description: 'Test-only calculated exposure policy.',
+      scoreModel: { kind: 'calculated', exposure: { multiplier: 0.5, triggerSetKinds: ['pung'] } },
+    };
+    const hand: MahjongHand = {
+      sets: [
+        set('p2', 'pung', suited('bamboo', 2)), set('p3', 'pung', suited('bamboo', 3)),
+        set('p9', 'pung', suited('bamboo', 9)), set('chow', 'chow', suited('bamboo', 4), 'exposed'),
+        set('pair', 'pair', suited('bamboo', 5)),
+      ], bonusTiles: [], isWinner: true,
+    };
+    expect(detectSpecialHands(hand, undefined, [chowAllowed])).toContainEqual(
+      expect.objectContaining({ id: 'purity-one-chow', matched: true }),
+    );
+  });
 });

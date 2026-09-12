@@ -74,7 +74,14 @@ export const westernTmSpecialHandBindings: SpecialHandPatternBinding[] = [
     profile: WESTERN_TM_PROFILE_REF,
     name: 'Purity',
     description: 'One suit, four melds and a pair; one meld may be a chow.',
-    scoreModel: { kind: 'calculated', exposure: { allowed: true, multiplier: 0.5 } },
+    scoreModel: {
+      kind: 'calculated',
+      exposure: {
+        multiplier: 0.5,
+        triggerSetKinds: ['pung', 'kong'],
+        forbiddenSetKinds: ['chow'],
+      },
+    },
   },
   {
     patternId: 'golden-gates',
