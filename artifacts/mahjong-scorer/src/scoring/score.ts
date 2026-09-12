@@ -7,6 +7,9 @@ import {
 } from './rules';
 import {
   detectSpecialHands,
+  calculatedSpecialHandExposureMultiplierFor,
+  isCalculatedSpecialHandBinding,
+  type CalculatedSpecialHandPatternBinding,
   type SpecialHandPatternBinding,
 } from './special-hands';
 import { detectSpecialFishing, fishingScoreOptions } from './fishing';
@@ -50,6 +53,19 @@ export const scoreHand = (
         result.matched && result.scoreModel === 'fixed',
     )
     .sort((a, b) => b.value - a.value)[0];
+  const calculatedBinding = specialHandBindings?.find(
+    (binding): binding is CalculatedSpecialHandPatternBinding =>
+      isCalculatedSpecialHandBinding(binding) &&
+      specialHands.some(
+        (result) =>
+          result.matched &&
+          result.scoreModel === 'calculated' &&
+          result.id === binding.patternId,
+      ),
+  );
+  const calculatedExposureMultiplier = !matchedFixedSpecial && calculatedBinding
+    ? calculatedSpecialHandExposureMultiplierFor(hand, calculatedBinding)
+    : 1;
   const purity = canAnalyseWholeHand && isPurityHand(hand);
   const specialFinalDiscardDouble =
     matchedFixedSpecial && hand.winningMethod === 'final-discard'
@@ -176,10 +192,13 @@ export const scoreHand = (
     ];
   }
 
-  const uncappedScore = calculationComponents.reduce(
+  const ordinaryCalculatedScore = calculationComponents.reduce(
     (sum, component) => sum + component.subtotal,
     0,
   );
+  // Calculated exposure policy applies after the profile's ordinary calculation
+  // and before its ordinary limit.
+  const uncappedScore = ordinaryCalculatedScore * calculatedExposureMultiplier;
   // A published fixed special value is not silently reduced by the ordinary
   // profile cap. Ordinary and fishing scores retain the profile limit.
   const effectiveLimit = matchedFixedSpecial
