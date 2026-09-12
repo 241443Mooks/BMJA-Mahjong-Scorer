@@ -187,7 +187,7 @@ describe('western-tm@0.1 Companion catalogue Phase 2', () => {
 
   it('binds each new detector only to the Western catalogue at 1000/400', () => {
     expect(phaseTwo).toHaveLength(5);
-    expect(westernTmSpecialHandBindings).toHaveLength(14);
+    expect(westernTmSpecialHandBindings).toHaveLength(13);
     for (const { id, name, hand } of phaseTwo) {
       expect(
         westernTmSpecialHandBindings.filter(

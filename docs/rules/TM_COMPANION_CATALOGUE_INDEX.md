@@ -272,18 +272,18 @@ Status: `shared-structure / needs-completion-rule-audit`.
 
 ### Purity
 
-T&M lists Purity as `Calculate`, not a fixed 500/1000/1500/2000 catalogue value.
+The p.48 detail establishes all one suit; four Pungs/Kongs plus a pair; and
+that one Chow may replace one Pung/Kong. Its score is `Calculate`, and its
+one-dot marker permits exposure at half score.
 
-Implemented for `western-tm@0.1` as canonical ID `purity` with score model
-`calculated`. It has no fixed winning or fishing value. Calculation is delegated
-to the active profile's ordinary scoring machinery; Western's current ordinary
-calculation remains `provisional-compatible`, not verified-identical.
+The current BMJA `isPurityHand` predicate is structurally narrower: it permits
+no Chow. Do not reuse it for T&M Purity. Production implementation is pending
+the next earned seam for calculated-score exposure reduction.
 
-Western Purity fishing semantics remain unverified and are deliberately not
-promoted from the legacy BMJA treatment. Purity is the reference implementation
-for the first calculated profile-binding seam.
-
-Do not force it into `value: number`.
+Phase 3C proves only the calculated binding/result architecture. The intended
+next production phase must add a distinct neutral canonical pattern, calculate
+through the active profile, halve the calculated score under the relevant
+exposure condition, and avoid inventing a fixed fishing value.
 
 ## 6. Source-level anomalies and conflicts to preserve
 

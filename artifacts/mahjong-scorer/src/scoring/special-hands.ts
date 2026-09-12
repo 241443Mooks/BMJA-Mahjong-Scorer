@@ -11,7 +11,6 @@ import type {
   SpecialHandResult,
 } from './types';
 import type { RulesProfileRef } from '../game/types';
-import { isPurityHand } from './rules';
 
 export type CanonicalSpecialHandPattern = {
   id: string;
@@ -223,10 +222,6 @@ const buriedVisibilityIsAllowed = (hand: MahjongHand) => {
  * MahjongHand and returns a boolean. Adding one cannot alter another.
  */
 export const canonicalSpecialHandPatterns: CanonicalSpecialHandPattern[] = [
-  {
-    id: 'purity',
-    detect: isPurityHand,
-  },
   {
     id: 'golden-gates',
     detect: (hand) => {
