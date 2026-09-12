@@ -193,12 +193,6 @@ const isSuitRank = (tile: PlayingTile, suit: Extract<PlayingTile, { family: 'sui
 
 const isPung = (kind: SetKind) => kind === 'pung';
 
-const requiredDragonForSuit = {
-  bamboo: 'green',
-  characters: 'red',
-  circles: 'white',
-} as const;
-
 const isExactRunWithPair = (
   values: PlayingTile[],
   ranks: readonly number[],
@@ -668,18 +662,6 @@ export const canonicalSpecialHandPatterns: CanonicalSpecialHandPattern[] = [
       const loose = hand.looseTiles ?? [];
       return isExactRunWithPair(loose, [1, 2, 3, 4, 5, 6, 7], ['characters', 'circles']) !== undefined ||
         isExactRunWithPair(loose, [2, 3, 4, 5, 6, 7, 8], ['characters', 'circles']) !== undefined;
-    },
-  },
-  {
-    id: 'two-to-eight-run-pair-with-terminal-pung-and-corresponding-dragon-meld',
-    detect: (hand) => {
-      if (!isCompleteHybrid(hand, 2, 8)) return false;
-      const terminal = hand.sets.find((set) => set.kind === 'pung' && set.tile.family === 'suit');
-      const dragonMeld = hand.sets.find((set) => (set.kind === 'pung' || set.kind === 'kong') && set.tile.family === 'dragon');
-      const suit = isExactRunWithPair(hand.looseTiles ?? [], [2, 3, 4, 5, 6, 7, 8], ['bamboo', 'characters', 'circles']);
-      return terminal?.tile.family === 'suit' && suit !== undefined && terminal.tile.suit === suit &&
-        (terminal.tile.rank === 1 || terminal.tile.rank === 9) && dragonMeld?.tile.family === 'dragon' &&
-        dragonMeld.tile.dragon === requiredDragonForSuit[suit];
     },
   },
   {

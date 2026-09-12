@@ -2,13 +2,13 @@
 
 ## Pass 4G implementation — Dragon hybrids and own-wind context wave
 
-Five evidence-backed entries are now bound in `western-tm@0.1` (62 bindings total): Dragonfly (`three-dragon-singles-with-one-meld-in-each-suit-and-suited-pair`), Dragon's Teeth (`red-white-dragon-pungs-with-seven-tile-character-or-circle-run-pair`), Dragon's Gates (`two-to-eight-run-pair-with-terminal-pung-and-corresponding-dragon-meld`), Little Brother (`four-chows-three-suits-with-own-wind-pair`), and Hovering Angel (`own-wind-meld-with-dragon-pair-and-three-suit-chows`).
+Four evidence-backed entries are now bound in `western-tm@0.1` (61 bindings total): Dragonfly (`three-dragon-singles-with-one-meld-in-each-suit-and-suited-pair`), Dragon's Teeth (`red-white-dragon-pungs-with-seven-tile-character-or-circle-run-pair`), Little Brother (`four-chows-three-suits-with-own-wind-pair`), and Hovering Angel (`own-wind-meld-with-dragon-pair-and-three-suit-chows`).
 
 - Dragonfly — p.31 / synopsis p.58; hybrid: loose GRW singles, a represented Pung/Kong in each suit, and a represented suited pair; 1,000 / 400. One dot permits only the represented Pungs/Kongs and halves to 500 / 200 when one is exposed.
 - Dragon's Teeth — pp.12/33 / synopsis pp.56/58; hybrid: represented Red and White **Pungs** (not Kongs), plus loose Character or Circle 1–7 or 2–8 and one duplicated run tile; 1,000 / 400. Two dots retain full exposed value.
-- Dragon's Gates — pp.12/34 / synopsis pp.56/58; hybrid: loose 2–8 plus a duplicated run tile, a represented same-suit terminal **Pung** (not Kong), and the corresponding Dragon Pung/Kong; 1,500 / 600. Correspondence is Bamboo→Green, Characters→Red, Circles→White. One dot halves represented-meld exposure to 750 / 300.
+- Dragon's Gates — **SOURCE CONFLICT — BLOCKED pending detail-page review.** Synopsis p.56 gives 1,000 / 400; synopsis p.58 gives 1,500 / 600. Both agree on the structure and one-dot exposure-half treatment. Inspect detail pp.12 and/or 34 before implementation; do not infer a score from recurrence, category, or neighbouring bands.
 - Little Brother — p.17 / synopsis p.56; grouped: exactly four Chows covering Bamboo, Characters and Circles, plus the player's own-Wind pair; 1,000 / 400. This uses `context.playerWind`, never prevailing wind, and has no Pung/Kong exposure rule.
-- Hovering Angel — pp.17/41 / synopsis pp.56/59; grouped: one Chow in each suit, the player's own-Wind Pung/Kong, and a Dragon pair; 1,000 / 400. It uses `context.playerWind`; one dot halves only an exposed own-Wind Pung/Kong to 500 / 200, never an exposed Chow.
+- Hovering Angel — pp.17/41 / synopsis pp.56/59; grouped: one Chow in each suit, the player's own-Wind Pung/Kong, and a Dragon pair; 1,000 / 400. It uses `context.playerWind`; neither synopsis occurrence has a red dot, so a represented exposed own-Wind Pung/Kong is ineligible. Exposed Chows do not affect this Pung/Kong-only rule.
 
 The existing explicit-profile fishing path now carries its existing `GameContext` through completed-candidate detection. This is necessary for truthful own-wind fishing and does not introduce a second context mechanism or alter BMJA bindings.
 
