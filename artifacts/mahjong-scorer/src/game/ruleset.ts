@@ -64,6 +64,7 @@ export const westernTmSpecialHandBindings: SpecialHandPatternBinding[] = [
     value: 1000, fishingValue: 400,
   },
   { patternId: 'wriggly-dragon', profile: WESTERN_TM_PROFILE_REF, name: 'Wriggly Dragon', description: 'Three Dragon singles plus a Dragon pair, and a suited run from 1 through 9.', value: 1000, fishingValue: 400 },
+  { patternId: 'wriggling-snake-any-pair', profile: WESTERN_TM_PROFILE_REF, name: 'Wriggly Snake', description: 'A suited run from 1 through 9, one of each Wind, and a pair of any one of those tiles.', value: 1000, fishingValue: 400 },
   { patternId: 'hachi-ban', profile: WESTERN_TM_PROFILE_REF, name: 'Hachi Ban', description: 'A suited run from 1 through 8 or 2 through 9, plus three pairs of Winds or Dragons.', value: 1000, fishingValue: 400 },
   { patternId: 'dragonette', profile: WESTERN_TM_PROFILE_REF, name: 'Dragonette', description: 'One of each Wind, a Dragon pair with the other Dragons single, and three non-terminal pairs in one suit.', value: 1000, fishingValue: 400 },
   { patternId: 'windfall', profile: WESTERN_TM_PROFILE_REF, name: 'Windfall', description: 'One of each Wind and five pairs in one suit.', value: 1000, fishingValue: 400 },

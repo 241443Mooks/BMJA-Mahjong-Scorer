@@ -173,6 +173,42 @@ const buriedVisibilityIsAllowed = (hand: MahjongHand) => {
  */
 export const canonicalSpecialHandPatterns: CanonicalSpecialHandPattern[] = [
   { id: 'wriggly-dragon', detect: (hand) => { if (!isCompleteLooseLayout(hand)) return false; const all = tiles(hand); return hasDragonSinglesAndPair(all.filter((tile) => tile.family === 'dragon')) && isSingleSuitRun(all.filter((tile) => tile.family === 'suit'), [1, 2, 3, 4, 5, 6, 7, 8, 9]); } },
+  {
+    id: 'wriggling-snake-any-pair',
+    detect: (hand) => {
+      if (!isCompleteLooseLayout(hand)) return false;
+      const all = tiles(hand);
+      const suited = all.filter(
+        (tile): tile is Extract<PlayingTile, { family: 'suit' }> =>
+          tile.family === 'suit',
+      );
+      const winds = all.filter(
+        (tile): tile is Extract<PlayingTile, { family: 'wind' }> =>
+          tile.family === 'wind',
+      );
+      if (
+        suited.length + winds.length !== 14 ||
+        new Set(suited.map((tile) => tile.suit)).size !== 1
+      ) {
+        return false;
+      }
+      const suit = suited[0]?.suit;
+      const tally = counts(all);
+      if (!suit) return false;
+      const baseCounts = [
+        ...[1, 2, 3, 4, 5, 6, 7, 8, 9].map(
+          (rank) => tally.get(`${suit}-${rank}`) ?? 0,
+        ),
+        ...['east', 'south', 'west', 'north'].map(
+          (value) => tally.get(`wind-${value}`) ?? 0,
+        ),
+      ];
+      return (
+        baseCounts.filter((count) => count === 1).length === 12 &&
+        baseCounts.filter((count) => count === 2).length === 1
+      );
+    },
+  },
   { id: 'hachi-ban', detect: (hand) => { if (!isCompleteLooseLayout(hand)) return false; const all = tiles(hand), honours = all.filter((tile) => tile.family === 'wind' || tile.family === 'dragon'), suited = all.filter((tile) => tile.family === 'suit'); return areThreePairsFromOneHonorFamily(honours) && (isSingleSuitRun(suited, [1, 2, 3, 4, 5, 6, 7, 8]) || isSingleSuitRun(suited, [2, 3, 4, 5, 6, 7, 8, 9])); } },
   { id: 'dragonette', detect: (hand) => { if (!isCompleteLooseLayout(hand)) return false; const all = tiles(hand), winds = all.filter((tile) => tile.family === 'wind'), dragons = all.filter((tile) => tile.family === 'dragon'), suited = all.filter((tile) => tile.family === 'suit'); return winds.length === 4 && hasExactlyOneOfEachWind(winds) && hasDragonPairAndSingles(dragons) && arePairsInOneSuit(suited, 3, [2, 3, 4, 5, 6, 7, 8]); } },
   { id: 'windfall', detect: (hand) => { if (!isCompleteLooseLayout(hand)) return false; const all = tiles(hand), winds = all.filter((tile) => tile.family === 'wind'), suited = all.filter((tile) => tile.family === 'suit'); return winds.length === 4 && hasExactlyOneOfEachWind(winds) && arePairsInOneSuit(suited, 5); } },
