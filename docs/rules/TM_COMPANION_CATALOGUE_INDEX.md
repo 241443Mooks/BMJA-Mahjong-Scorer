@@ -1,8 +1,29 @@
-# Thompson & Maloney Companion catalogue index — pass 1
+# THOMPSON & MALONEY COMPANION CATALOGUE
 
-## Final catalogue implementation — Pass 4L
+## Current status
 
-The 1997 Thompson & Maloney Companion catalogue is now implemented at **84 / 84 unique named hands** in the Western `western-tm@0.1` profile. It has **85 raw bindings**, intentionally: **Big Robert** has two mutually exclusive structural score variants rather than a conditional-value abstraction.
+Status:
+
+- **84 / 84 unique source hands implemented**;
+- **85 profile bindings**;
+- **Big Robert is the sole intentional duplicate source name**;
+- **no outstanding Companion hand-definition evidence request**;
+- all catalogue membership remains profile-local; and
+- BMJA remains isolated.
+
+### Important distinction: catalogue complete; whole profile still provisional
+
+The Companion special-hand catalogue is **COMPLETE / SOURCE-CERTIFIED FOR THE IMPLEMENTED COMPANION FACTS**. This does **not** promote the entire Thompson & Maloney Western profile to verified 1.0.
+
+`western-tm@0.1` remains provisional for ordinary-rules domains that reuse BMJA-compatible behaviour pending direct verification against the intended ordinary-play source, *The Game of Mah Jong Illustrated*.
+
+**Catalogue status:** complete and source-certified for implemented Companion facts.
+
+**Whole Western rules-profile status:** still provisional where ordinary base behaviour has not been directly verified.
+
+The 1997 Companion catalogue has 85 raw bindings intentionally: **Big Robert** has two mutually exclusive structural score variants rather than a conditional-value abstraction.
+
+## Historical implementation note — final Pass 4L wave
 
 - `three-four-tile-suit-runs-with-honour-pair` is normal Big Robert (detail p.14): one four-tile consecutive run in each suit and an identical Wind or Dragon pair, where the three run starts differ; **500 / 200 fishing**.
 - `three-matching-four-tile-suit-runs-with-honour-pair` is the same-number Big Robert form (detail p.14): matching four-tile runs in all three suits plus the honour pair; **1,000 / 400 fishing**.
@@ -13,9 +34,9 @@ The 1997 Thompson & Maloney Companion catalogue is now implemented at **84 / 84 
 
 Up You Go and Down You Go are intentionally complete loose 14-physical-tile layouts. Their four-of-a-kind is concealed by that representation; it is not converted to a declared Kong, which would invent a replacement tile and an extra physical-tile requirement. These bindings complete this Companion source only; they do not claim broader Western standardisation.
 
-## Pass 4K implementation — Mixed Chow family
+## Historical implementation note — Pass 4K Mixed Chow family
 
-The Western `western-tm@0.1` catalogue now has **79 bindings**. This wave adds four 1997 Companion entries from the Chows/Dragons synopsis: **Three Philosophers** (detail p.15 / Full Synopsis p.56), **Crazy Chows** (p.16 / p.56), **Apple Blossom** (p.19 / pp.56, 58), and **The Professors** (p.19 / p.56).
+At this historical point, the Western `western-tm@0.1` catalogue had **79 bindings**. This wave added four 1997 Companion entries from the Chows/Dragons synopsis: **Three Philosophers** (detail p.15 / Full Synopsis p.56), **Crazy Chows** (p.16 / p.56), **Apple Blossom** (p.19 / pp.56, 58), and **The Professors** (p.19 / p.56).
 
 A **Mixed Chow** is a structural loose group of exactly three suited tiles: one Bamboo, one Character and one Circle, with three consecutive ranks beginning from 1 through 7. It does not encode the suit-to-rank ordering depicted by any one diagram. A **Mixed Pair** is exactly two suited tiles of the same rank in different suits. Multi-Mixed-Chow patterns prove that their loose suited tiles can be partitioned into the required number of those structural groups, independent of input order.
 
@@ -26,7 +47,7 @@ A **Mixed Chow** is a structural loose group of exactly three suited tiles: one 
 
 These patterns and bindings are Western-only. They do not alter BMJA bindings, scoring, settlement, or progression.
 
-## Pass 4I implementation — calculated and half-exposure catalogue wave
+## Historical implementation note — Pass 4I calculated and half-exposure wave
 
 Four entries were bound in the Pass 4I wave, sourced from the Full Synopsis pp. 58–59: **Sunrise** and **Sunset** (p. 42 / p. 59), **All Honour Hand** (p. 44 / p. 58), and **Ordinary Mah Jong** (p. 42 / p. 59).
 
@@ -37,7 +58,7 @@ Four entries were bound in the Pass 4I wave, sourced from the Full Synopsis pp. 
 
 Regression coverage preserves truthful overlap: fixed All Winds and Dragons remains selected over its overlapping calculated All Honour Hand; overlapping calculated patterns (including Purity and Ordinary Mah Jong) produce one ordinary calculation and at most one exposure adjustment. BMJA bindings and canonical BMJA detector behaviour remain unchanged.
 
-## Pass 4H implementation — Knitting audits and Imperial Jade
+## Historical implementation note — Pass 4H Knitting audits and Imperial Jade
 
 **Knitting** (p.20; synopsis pp.57, 59): seven pairs of the same number in two suits, worth 500 (200 fishing), with no exposure marker. The BMJA `knitting` predicate was not safe to reuse: it permits a broader multi-suit arrangement and does not require the complete pure loose layout. T&M therefore uses the neutral structural canonical pattern `two-suit-knitting`, which requires exactly two suits and seven cross-suit same-rank pair units; repeated rank-pairs remain permitted within physical-copy limits.
 
@@ -45,7 +66,7 @@ Regression coverage preserves truthful overlap: fixed All Winds and Dragons rema
 
 **Imperial Jade** (p.36; synopsis p.58): T&M differs structurally from BMJA: BMJA `imperial-jade` requires four Pung/Kong groups, while T&M permits one Chow among the three Bamboo melds. T&M uses `green-dragon-meld-with-green-bamboo-melds-and-pair-one-chow`: a Green Dragon Pung/Kong, three Bamboo melds, and a Bamboo pair; all Bamboo ranks are green (2, 3, 4, 6, 8), with at most one Chow and that Chow necessarily Bamboo 234. It is 2000 / 800 fishing. Its two-dot treatment permits exposed Pungs/Kongs at full value; an exposed permitted Chow alone does not reduce the value.
 
-## Pass 4G implementation — Dragon hybrids and own-wind context wave
+## Historical implementation note — Pass 4G Dragon hybrids and own-wind context wave
 
 Four evidence-backed entries are now bound in `western-tm@0.1` (61 bindings total): Dragonfly (`three-dragon-singles-with-one-meld-in-each-suit-and-suited-pair`), Dragon's Teeth (`red-white-dragon-pungs-with-seven-tile-character-or-circle-run-pair`), Little Brother (`four-chows-three-suits-with-own-wind-pair`), and Hovering Angel (`own-wind-meld-with-dragon-pair-and-three-suit-chows`).
 
@@ -56,7 +77,7 @@ Four evidence-backed entries are now bound in `western-tm@0.1` (61 bindings tota
 
 The existing explicit-profile fishing path now carries its existing `GameContext` through completed-candidate detection. This is necessary for truthful own-wind fishing and does not introduce a second context mechanism or alter BMJA bindings.
 
-## Pass 4F implementation — Wind-family hybrid catalogue wave
+## Historical implementation note — Pass 4F Wind-family hybrid wave
 
 Five p.57 entries are now bound in `western-tm@0.1`: Windy Ones (`wind-pair-with-three-suit-rank-one-melds`), Windy Nines (`wind-pair-with-three-suit-rank-nine-melds`), Windvane (`wind-pair-with-one-meld-in-each-suit`), Three Sisters (`wind-pair-with-three-suit-rank-three-melds`), and Seven Brothers (`wind-pair-with-three-suit-rank-seven-melds`). Each is 1,000 winning / 400 fishing; p.58 independently corroborates the Windy Ones and Windy Nines values.
 
@@ -64,10 +85,10 @@ Their shared canonical hybrid representation is three represented suited Pungs/K
 
 The fixed-rank forms truthfully overlap Windvane; scoring selects one 1,000-point special rather than stacking both. The family earned a small profile-local hybrid fishing seam: with explicit bindings, a 13-tile hand may retain represented sets plus loose tiles (and no remaining tiles), then appends the completing tile to loose tiles for canonical detection. Legacy BMJA fishing retains its mixed-representation guard.
 
-Status: research/evidence artefact for issue #87.  
+Historical research/evidence record for issue #87.
 Source: Patricia A. Thompson & Betty Maloney, *The Mah Jong Player's Companion* (1997).
 
-This pass indexes the supplied photographs of the 1997 book, especially the **Full Synopsis of Special Hands** on pp. 56–60. It is deliberately an evidence/crosswalk layer, not executable catalogue data yet.
+This record indexes the supplied photographs of the 1997 book, especially the **Full Synopsis of Special Hands** on pp. 56–60. It began as an evidence/crosswalk layer and is retained for its provenance and discrepancy decisions.
 
 ## 1. Pinned edition
 
@@ -137,7 +158,7 @@ For implementation, preserve the source marker as evidence before normalising it
 
 The supplied Full Synopsis photographs on pp. 56–60 contain **84 unique named hands** after de-duplicating repeated appearances under multiple structural categories.
 
-This is a source inventory, not yet a claim that all 84 require distinct canonical detectors.
+This is a source inventory, not a claim that all 84 require distinct canonical detectors.
 
 ### Runs / Chows / early structural groups
 
@@ -166,7 +187,7 @@ This is a source inventory, not yet a claim that all 84 require distinct canonic
 - Little Robert — p. 16
 - Windy Chow — pp. 18, 26
 - Chop Suey — pp. 18, 26
-- Chow Mien — pp. 18, 26
+- Chow Mein — pp. 18, 26
 - Hovering Angel — pp. 17, 41
 - Little Brother — p. 17
 - Apple Blossom — pp. 19, 33
@@ -264,8 +285,8 @@ canonical patterns and are bound only in `western-tm@0.1`, each at 1,000 / 400:
 | Windfall | p. 57; detail pp. 24, 27 | `windfall` |
 | All Pair Ruby Jade | p. 57; detail pp. 23, 32, 53 | `all-pair-ruby-jade` |
 
-These patterns are not BMJA members. The unresolved entries below remain
-unverified or unimplemented; Phase 2 does not alter their status.
+These patterns are not BMJA members. This historical note records the Phase 2
+boundary; all Companion entries are now implemented.
 
 The detail pages verify Hachi Ban as one concealed 1,000 / 400 hand: a 1–8 or
 2–9 run in one suit plus three distinct pairs of Winds or three distinct pairs
@@ -283,7 +304,7 @@ at 500 and fishing 200. This is the reference implementation for the first
 profile-local exposure-value binding seam; the detector itself carries no
 profile or score data.
 
-### Pass 4A implementation status
+### Historical implementation note — Pass 4A
 
 The following fixed, concealed-only entries are implemented for
 `western-tm@0.1`. Their synopsis has no exposure marker, so this pass adds no
@@ -300,7 +321,7 @@ ID and the existing profile-local fixed fishing binding path.
 | All Pair | p. 57; detail p. 22 | `seven-pairs-one-suit-with-honours` | 500 / 200 | seven pairs with at most one suited family; unlike `all-pair-honours`, honours are permitted but not required |
 | Dragon's Breath | p. 57; detail pp. 24, 31 | `dragon-pair-with-five-suited-pairs` | 1,000 / 400 | all Dragons represented with exactly one Dragon pair, plus five single-suit pairs |
 
-### Pass 4B implementation status
+### Historical implementation note — Pass 4B
 
 The following p.56 synopsis rows are implemented only in `western-tm@0.1`.
 Each is 1,000 / 400 and has no red-dot exposure marker. Its binding therefore
@@ -323,7 +344,7 @@ Reusable rule earned: fixed profile bindings can explicitly forbid represented
 exposed Pung/Kong groups without putting profile visibility rules into the
 canonical detector.
 
-### Pass 4D implementation status
+### Historical implementation note — Pass 4D
 
 The following nineteen evidenced Companion entries are implemented only in
 `western-tm@0.1`. Canonical IDs state the tile structure; names, values,
@@ -353,7 +374,7 @@ shown below. A Pung-only source term is retained as Pung-only in its detector.
 | Red Lily | pp. 37, 54; 58, 60 | `red-and-white-dragon-melds-with-red-bamboo` | 2,000 / 800 | two dots; exposed full | red Bamboo ranks 1,5,7,9 |
 | Ruby Jade | pp. 37, 54; 58, 60 | `red-and-green-dragon-melds-with-bamboo` | 1,000 / 400 | two dots; exposed full | source does not state a stronger red/green distribution rule |
 
-### Pass 4E implementation status
+### Historical implementation note — Pass 4E
 
 The following eight evidence-complete Companion entries are implemented only in
 `western-tm@0.1`. Their canonical IDs describe structure; names, values and
@@ -372,7 +393,7 @@ that group exposed eligibility.
 | Chop Suey | pp. 18, 26; pp. 56, 57 | `wind-pair-with-three-suit-one-two-three-chows` | 1,000 / 400 | complete loose 123-in-every-suit subset of Windy Chow; precedence prevents stacking |
 | Chow Mein | pp. 18, 26; pp. 56, 57 | `wind-pair-with-three-suit-seven-eight-nine-chows` | 1,000 / 400 | complete loose 789-in-every-suit subset of Windy Chow; precedence prevents stacking |
 
-### Pass 4J source certification and resolved fixed wave
+### Historical implementation note — Pass 4J source certification and resolved fixed wave
 
 Pass 4J corrects four previously bound values from the photographed detail and
 synopsis pages: Chop Suey **500 / 200 → 1,000 / 400**; Chow Mein **500 / 200
@@ -393,7 +414,7 @@ The seven entries are Western-only bindings. The canonical detector registry is
 shared structurally; BMJA membership, values, and completion rules are
 unchanged. This brings `western-tm@0.1` to **75 bindings**.
 
-## 5. Existing-detector candidates that must **not** be bound yet
+## Historical research notes — detector candidates and resolutions
 
 ### Wriggly Snake
 
@@ -416,33 +437,29 @@ T&M synopsis (pp. 58/60) permits the Dragon set plus three melds **including a C
 
 The current BMJA canonical `imperial-jade` detector requires four Pung/Kong groups plus a pair and therefore excludes a Chow.
 
-Status: `verified-structural-difference`.
-
-Do not reuse the BMJA canonical predicate for the T&M binding without deciding whether:
-- the canonical identity should broaden and BMJA apply a local restriction; or
-- T&M and BMJA need separate canonical patterns.
+Resolution: T&M uses the separate neutral canonical pattern
+`green-dragon-meld-with-green-bamboo-melds-and-pair-one-chow`; BMJA remains
+on its narrower binding.
 
 ### Knitting
 
 T&M synopsis describes seven same-number cross-suit pairs using two suits.
 
-The current detector should be checked for whether it accidentally permits a broader multi-suit arrangement across the whole hand.
-
-Status: `needs-predicate-audit`.
+Resolution: the audited T&M pattern is `two-suit-knitting`; it is separate
+from the broader BMJA predicate.
 
 ### Triple Knitting
 
 T&M synopsis describes four same-number triplets across three suits plus one knitting pair.
 
-Current detector is plausibly shared but must be checked against the exact source definition.
-
-Status: `needs-predicate-audit`.
+Resolution: the audited T&M pattern is `three-suit-knitting-with-pair`.
 
 ### Gates of Heaven
 
 The tile skeleton appears to align strongly with the existing detector (111 + 999 + 2–8 with one middle tile duplicated, one suit), but the current detector also contains completion/provenance restrictions inherited from BMJA.
 
-Status: `shared-structure / needs-completion-rule-audit`.
+Resolution: the completed catalogue uses `western-gates-of-heaven` to retain
+the distinct T&M completion semantics.
 
 ### Purity
 
@@ -467,11 +484,14 @@ At least these synopsis entries use `Calculate` rather than a fixed value:
 - Ordinary Mah Jong;
 - Purity.
 
-There may be additional calculated cases in the full detail pages.
+The completed catalogue represents these evidenced calculated entries with the
+existing calculated score model; it does not infer additional calculated hands.
 
-Engineering consequence: #87 will eventually need a `scoreModel` that can distinguish fixed special values from ordinary/calculated scoring, but that seam should be added only when the first production hand requiring it is implemented.
+Historical engineering consequence: this evidence established the need for a
+score model that distinguishes fixed special values from ordinary/calculated
+scoring. That seam was subsequently implemented only for the evidenced hands.
 
-## 7. Emerging binding model — evidence, not implementation mandate
+## Historical architecture note — binding model evidence
 
 The photographs now justify these profile-local dimensions:
 
@@ -485,7 +505,7 @@ source edition/page
 evidence status
 ```
 
-An eventual shape may resemble:
+The early research proposed a shape like:
 
 ```ts
 type WesternPatternBinding = {
@@ -501,11 +521,12 @@ type WesternPatternBinding = {
 };
 ```
 
-This is a research conclusion, not a request to generalise the runtime model before an evidenced hand needs each field.
+This was a research conclusion, not a runtime implementation mandate; the
+implemented binding model remains deliberately narrower.
 
-## 8. First safe Codex implementation batch
+## Historical implementation note — first safe batch
 
-Recommended first production batch after this evidence PR:
+The initial proposed production batch was:
 
 1. **Unique Wonder** → existing `thirteen-unique-wonders` detector → T&M 2,000 / 800.
 2. **All Pair Honours** → existing `all-pair-honours` detector → T&M 1,000 / 400.
@@ -515,7 +536,7 @@ Recommended first production batch after this evidence PR:
 
 Three Great Scholars remains the already-implemented reference binding from #86.
 
-Why this batch:
+Historical rationale:
 
 - all five already have canonical detectors;
 - their synopsis structures align strongly with those detectors;
@@ -524,7 +545,7 @@ Why this batch:
 - the two-dot exposure cases are compatible with existing visibility-neutral detectors, so the batch can land without inventing a half-score exposure framework;
 - together they exercise 1,000 / 1,500 / 2,000 fixed-value tiers.
 
-### Required tests for that batch
+### Historical test expectations
 
 For every binding:
 
@@ -540,7 +561,7 @@ Triple Knitting, Gates of Heaven and Purity have now been resolved through subse
 detail-page review and implementation passes. No outstanding Companion
 hand-definition evidence requests remain.
 
-## 10. Pass-1 conclusion
+## Historical research conclusion — Pass 1
 
 The Full Synopsis is sufficient to establish a durable Western catalogue inventory and to start implementation safely.
 
@@ -552,4 +573,4 @@ The strongest architectural findings are:
 4. exposure is profile-local rule data, including a half-score exposed state;
 5. several familiar BMJA/T&M names are genuinely shared patterns;
 6. several other same/similar names are **not structurally identical** to the current BMJA detector;
-7. the next implementation work should therefore add evidence-backed bindings first and earn new scoring/exposure seams only from concrete catalogue cases.
+7. subsequent implementation added evidence-backed bindings and earned scoring/exposure seams only from concrete catalogue cases.
