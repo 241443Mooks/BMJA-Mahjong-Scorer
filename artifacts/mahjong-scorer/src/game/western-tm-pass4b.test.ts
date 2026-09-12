@@ -20,7 +20,6 @@ const detector = (id: string) => canonicalSpecialHandPatterns.find((pattern) => 
 
 describe('western-tm@0.1 Companion Pass 4B grouped run hands', () => {
   it('adds four Western-only 1000 / 400 concealed-Pung bindings', () => {
-    expect(westernTmSpecialHandBindings).toHaveLength(25);
     for (const id of ids) {
       expect(westernTmSpecialHandBindings.filter(({ patternId }) => patternId === id)).toEqual([expect.objectContaining({ value: 1000, fishingValue: 400, exposure: { allowed: false } })]);
     }

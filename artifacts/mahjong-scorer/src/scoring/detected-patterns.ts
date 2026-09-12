@@ -13,7 +13,7 @@ export type DetectedPattern = {
 const amountLabel = (amount: number, unit: "point" | "double") =>
   `${amount} ${unit}${amount === 1 ? "" : "s"}`;
 
-const fishingValueById = new Map(
+const fishingValueById = new Map<string, number | 'three-doubles'>(
   FISHING_SPECIALS.map(({ id, fishingValue }) => [id, fishingValue]),
 );
 

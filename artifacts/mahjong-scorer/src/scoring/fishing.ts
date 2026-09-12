@@ -22,7 +22,7 @@ import {
   DRAGONS,
   SUITS,
   WINDS,
-  type FishingSpecialId,
+  type LegacyFishingSpecialId,
   type GameContext,
   type HandSet,
   type MahjongHand,
@@ -42,7 +42,7 @@ const playingTiles: PlayingTile[] = [
   ...DRAGONS.map((dragon): PlayingTile => ({ family: 'dragon', dragon })),
 ];
 
-const names: Partial<Record<FishingSpecialId, string>> = {
+const names: Record<LegacyFishingSpecialId, string> = {
   purity: 'Purity',
   'all-pair-honours': 'All pair honours',
   knitting: 'Knitting',
@@ -57,30 +57,9 @@ const names: Partial<Record<FishingSpecialId, string>> = {
   'gates-of-heaven': 'The Gates of Heaven',
   'wriggling-snake': 'The Wriggling Snake',
   'thirteen-unique-wonders': 'Thirteen unique wonders',
-  'wriggly-dragon': 'Wriggly Dragon',
-  'wriggling-snake-any-pair': 'Wriggly Snake',
-  'hachi-ban': 'Hachi Ban',
-  dragonette: 'Dragonette',
-  windfall: 'Windfall',
-  'all-pair-ruby-jade': 'All Pair Ruby Jade',
-  'golden-gates': 'Golden Gates',
 };
 
-const profileFishingNames: Partial<Record<FishingSpecialId, string>> = {
-  'run-two-to-eight-with-one-and-nine-pungs': 'Confused Gates',
-  'full-suit-run-with-five-distinct-honours': 'Five Odd Honours',
-  'suit-run-one-to-seven-with-all-honours': "Greta's Garden",
-  'four-bamboo-one-and-five-green-bamboo-pairs': "Sparrow's Sanctuary",
-  'seven-pairs-one-suit': 'Heavenly Twins',
-  'seven-pairs-one-suit-with-honours': 'All Pair',
-  'dragon-pair-with-five-suited-pairs': "Dragon's Breath",
-  'run-one-to-nine-with-same-suit-pung-and-pair': 'Run, Pung & Pair',
-  'run-one-to-nine-with-wind-pung-and-pair': 'Guardian Winds',
-  'run-one-to-nine-with-dragon-pung-and-pair': 'Guardian Dragons',
-  'run-one-to-nine-with-honour-pung-and-any-pair': 'Grand Sequence',
-};
-
-const fishingValues: Partial<Record<FishingSpecialId, number | 'three-doubles'>> = {
+const fishingValues: Record<LegacyFishingSpecialId, number | 'three-doubles'> = {
   purity: 'three-doubles',
   'all-pair-honours': 200,
   knitting: 200,
@@ -95,25 +74,13 @@ const fishingValues: Partial<Record<FishingSpecialId, number | 'three-doubles'>>
   'gates-of-heaven': 400,
   'wriggling-snake': 400,
   'thirteen-unique-wonders': 400,
-  'wriggly-dragon': 400,
-  'wriggling-snake-any-pair': 400,
-  'hachi-ban': 400,
-  dragonette: 400,
-  windfall: 400,
-  'all-pair-ruby-jade': 400,
-  'golden-gates': 400,
 };
 
 export const FISHING_SPECIALS = [
-  ...(Object.keys(names) as FishingSpecialId[]).map((id) => ({
+  ...(Object.keys(names) as LegacyFishingSpecialId[]).map((id) => ({
     id,
     name: names[id]!,
     fishingValue: fishingValues[id],
-  })),
-  ...(Object.keys(profileFishingNames) as FishingSpecialId[]).map((id) => ({
-    id,
-    name: profileFishingNames[id]!,
-    fishingValue: undefined,
   })),
 ];
 
@@ -358,7 +325,7 @@ const completedHands = (
 
 const completesTarget = (
   hand: MahjongHand,
-  target: FishingSpecialId,
+  target: string,
   tile: PlayingTile,
   bindings: SpecialHandPatternBinding[],
 ) =>
@@ -389,23 +356,11 @@ export const detectSpecialFishing = (
     const key = tileKey(tile);
     tally.set(key, (tally.get(key) ?? 0) + 1);
   }
-  const bindingFor = (id: FishingSpecialId) =>
-    effectiveBindings.find((binding) => binding.patternId === id);
-  return FISHING_SPECIALS.flatMap(({ id, name }) => {
-    const binding = bindingFor(id);
-    // An explicit profile owns both catalogue membership and fishing metadata.
-    // The legacy BMJA table is retained only for the no-profile API.
-    if (
-      usesExplicitBindings &&
-      (!binding ||
-        !isFixedSpecialHandBinding(binding) ||
-        binding.fishingValue === undefined)
-    )
-      return [];
-    const fishingValue = binding && isFixedSpecialHandBinding(binding)
-      ? (specialHandFishingValueFor(hand, binding) ??
-        (usesExplicitBindings ? undefined : fishingValues[id]))
-      : fishingValues[id];
+  const candidates: Array<{ id: string; name: string; binding?: import('./special-hands').FixedSpecialHandPatternBinding }> = usesExplicitBindings
+    ? effectiveBindings.flatMap((binding) => isFixedSpecialHandBinding(binding) && binding.fishingValue !== undefined ? [{ id: binding.patternId, name: binding.name, binding }] : [])
+    : FISHING_SPECIALS.map(({ id, name }) => ({ id, name }));
+  return candidates.flatMap(({ id, name, binding }) => {
+    const fishingValue = binding ? specialHandFishingValueFor(hand, binding) : fishingValues[id as LegacyFishingSpecialId];
     if (fishingValue === undefined) return [];
     const completingTiles = playingTiles.filter(
       (tile) =>
@@ -416,7 +371,7 @@ export const detectSpecialFishing = (
       ? [
           {
             id,
-            name: binding?.name ?? name,
+            name,
             fishingValue,
             completingTiles,
             intrinsicApplied: false,
@@ -521,7 +476,7 @@ export const fishingScoreOptions = (
 
   const fixedValue = fishing.fishingValue as number;
   const specialSubtotal = fixedValue + bonusSubtotal;
-  const intrinsicEligible = new Set<FishingSpecialId>([
+  const intrinsicEligible = new Set<string>([
     'three-great-scholars',
     'all-winds-and-dragons',
     'four-blessings',

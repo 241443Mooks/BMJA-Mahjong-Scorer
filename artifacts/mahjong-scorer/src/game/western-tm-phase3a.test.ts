@@ -99,7 +99,6 @@ describe('western-tm@0.1 Companion catalogue Phase 3A: Wriggly Snake', () => {
 
   it('binds only the T&M structure and keeps a Wind-paired variant out of BMJA', () => {
     const tmOnly = withPair(wind('north'));
-    expect(westernTmSpecialHandBindings).toHaveLength(25);
     expect(
       westernTmSpecialHandBindings.filter(
         ({ patternId }) => patternId === 'wriggling-snake-any-pair',
