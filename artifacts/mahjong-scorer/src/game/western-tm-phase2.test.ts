@@ -39,6 +39,17 @@ const hachiBan = looseWinner([
 const hachiBanDragonPairs = looseWinner([
   dragon('green'),
   dragon('green'),
+  dragon('red'),
+  dragon('red'),
+  dragon('white'),
+  dragon('white'),
+  ...Array.from({ length: 8 }, (_, index) =>
+    suited('circles', (index + 2) as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9),
+  ),
+]);
+const hachiBanDuplicatePairs = looseWinner([
+  dragon('green'),
+  dragon('green'),
   dragon('green'),
   dragon('green'),
   dragon('red'),
@@ -203,12 +214,13 @@ describe('western-tm@0.1 Companion catalogue Phase 2', () => {
     }
   });
 
-  it('accepts either verified honour-pair form without mixing them', () => {
+  it('requires three distinct pairs from one verified honour family', () => {
     const hachiBanPattern = canonicalSpecialHandPatterns.find(
       (pattern) => pattern.id === 'hachi-ban',
     );
     expect(hachiBanPattern?.detect(hachiBanDragonPairs)).toBe(true);
     expect(hachiBanPattern?.detect(hachiBanMixedHonours)).toBe(false);
+    expect(hachiBanPattern?.detect(hachiBanDuplicatePairs)).toBe(false);
   });
 
   it('finds each new Western hand while fishing for its final ungrouped tile', () => {

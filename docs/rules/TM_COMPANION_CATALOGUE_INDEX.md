@@ -204,9 +204,9 @@ These patterns are not BMJA members. The unresolved entries below remain
 unverified or unimplemented; Phase 2 does not alter their status.
 
 The detail pages verify Hachi Ban as one concealed 1,000 / 400 hand: a 1–8 or
-2–9 run in one suit plus three pairs of Winds or three pairs of Dragons. The
-examples on pp. 10, 25, 30 and 32 are valid choices within that rule, not
-different scoring variants.
+2–9 run in one suit plus three distinct pairs of Winds or three distinct pairs
+of Dragons. The examples on pp. 10, 25, 30 and 32 are valid choices within that
+rule, not different scoring variants.
 
 ## 5. Existing-detector candidates that must **not** be bound yet
 

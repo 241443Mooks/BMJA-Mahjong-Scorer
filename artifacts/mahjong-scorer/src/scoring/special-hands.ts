@@ -93,7 +93,8 @@ const areThreePairsFromOneHonorFamily = (values: PlayingTile[]) =>
   values.length === 6 &&
   (values.every((tile) => tile.family === 'wind') ||
     values.every((tile) => tile.family === 'dragon')) &&
-  [...counts(values).values()].every((count) => count % 2 === 0);
+  counts(values).size === 3 &&
+  [...counts(values).values()].every((count) => count === 2);
 
 const suitedRankCounts = (values: PlayingTile[]) => {
   const tally = new Map<number, Map<string, number>>();
