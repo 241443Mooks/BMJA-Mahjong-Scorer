@@ -165,7 +165,17 @@ describe("western-tm@0.1 catalogue", () => {
         canonicalIds.has(patternId),
       ),
     ).toBe(true);
-    expect(westernIds).not.toEqual(bmjaIds);
+    const sharedPatternIds = [...westernIds]
+      .filter((id) => bmjaIds.has(id))
+      .sort();
+    expect(sharedPatternIds).toEqual([
+      "all-pair-honours",
+      "all-winds-and-dragons",
+      "four-blessings",
+      "heads-and-tails",
+      "thirteen-unique-wonders",
+      "three-great-scholars",
+    ]);
     expect(bmjaIds.has("three-four-tile-suit-runs-with-honour-pair")).toBe(
       false,
     );
