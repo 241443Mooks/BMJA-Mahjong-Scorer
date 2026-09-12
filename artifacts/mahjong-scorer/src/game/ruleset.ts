@@ -69,6 +69,13 @@ export const westernTmSpecialHandBindings: SpecialHandPatternBinding[] = [
   { patternId: 'dragonette', profile: WESTERN_TM_PROFILE_REF, name: 'Dragonette', description: 'One of each Wind, a Dragon pair with the other Dragons single, and three non-terminal pairs in one suit.', value: 1000, fishingValue: 400 },
   { patternId: 'windfall', profile: WESTERN_TM_PROFILE_REF, name: 'Windfall', description: 'One of each Wind and five pairs in one suit.', value: 1000, fishingValue: 400 },
   { patternId: 'all-pair-ruby-jade', profile: WESTERN_TM_PROFILE_REF, name: 'All Pair Ruby Jade', description: 'Pairs of Green and Red Dragons plus five pairs of red or green Bamboo ranks.', value: 1000, fishingValue: 400 },
+  { patternId: 'run-two-to-eight-with-one-and-nine-pungs', profile: WESTERN_TM_PROFILE_REF, name: 'Confused Gates', description: 'A 2–8 run with one paired tile, plus 111 and 999 in the other two suits.', value: 1000, fishingValue: 400 },
+  { patternId: 'full-suit-run-with-five-distinct-honours', profile: WESTERN_TM_PROFILE_REF, name: 'Five Odd Honours', description: 'A 1–9 run in one suit and five distinct Winds or Dragons.', value: 500, fishingValue: 200 },
+  { patternId: 'suit-run-one-to-seven-with-all-honours', profile: WESTERN_TM_PROFILE_REF, name: "Greta's Garden", description: 'A 1–7 run in one suit, all four Winds and all three Dragons.', value: 1000, fishingValue: 400 },
+  { patternId: 'four-bamboo-one-and-five-green-bamboo-pairs', profile: WESTERN_TM_PROFILE_REF, name: "Sparrow's Sanctuary", description: 'All four Bamboo 1 tiles and pairs of Bamboo 2, 3, 4, 6 and 8.', value: 1500, fishingValue: 600 },
+  { patternId: 'seven-pairs-one-suit', profile: WESTERN_TM_PROFILE_REF, name: 'Heavenly Twins', description: 'Seven pairs, all in one suit.', value: 1000, fishingValue: 400 },
+  { patternId: 'seven-pairs-one-suit-with-honours', profile: WESTERN_TM_PROFILE_REF, name: 'All Pair', description: 'Seven pairs using at most one suit, with Winds and Dragons allowed.', value: 500, fishingValue: 200 },
+  { patternId: 'dragon-pair-with-five-suited-pairs', profile: WESTERN_TM_PROFILE_REF, name: "Dragon's Breath", description: 'A pair and singles of all three Dragons, plus five pairs in one suit.', value: 1000, fishingValue: 400 },
   {
     patternId: 'purity-one-chow',
     profile: WESTERN_TM_PROFILE_REF,

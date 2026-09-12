@@ -219,6 +219,23 @@ at 500 and fishing 200. This is the reference implementation for the first
 profile-local exposure-value binding seam; the detector itself carries no
 profile or score data.
 
+### Pass 4A implementation status
+
+The following fixed, concealed-only entries are implemented for
+`western-tm@0.1`. Their synopsis has no exposure marker, so this pass adds no
+exposure policy or implied exposure permission. Each uses a neutral canonical
+ID and the existing profile-local fixed fishing binding path.
+
+| T&M hand | Synopsis/detail locator | Canonical pattern ID | Winning / fishing | Detector distinction |
+|---|---|---|---:|---|
+| Confused Gates | p. 56; detail pp. 9, 51 | `run-two-to-eight-with-one-and-nine-pungs` | 1,000 / 400 | 2–8 run has its pair inside the run; 111 and 999 are in the other distinct suits |
+| Five Odd Honours | p. 56; detail pp. 11, 38 | `full-suit-run-with-five-distinct-honours` | 500 / 200 | exactly one 1–9 suit run and five distinct honours |
+| Greta's Garden | p. 56; detail pp. 13, 38 | `suit-run-one-to-seven-with-all-honours` | 1,000 / 400 | 1–7 run plus every Wind and Dragon |
+| Sparrow's Sanctuary | p. 57; detail pp. 21, 48, 53 | `four-bamboo-one-and-five-green-bamboo-pairs` | 1,500 / 600 | four Bamboo 1 tiles, with only the specified five green Bamboo pairs |
+| Heavenly Twins | p. 57; detail pp. 21, 48 | `seven-pairs-one-suit` | 1,000 / 400 | seven pairs in exactly one suit; honours excluded |
+| All Pair | p. 57; detail p. 22 | `seven-pairs-one-suit-with-honours` | 500 / 200 | seven pairs with at most one suited family; unlike `all-pair-honours`, honours are permitted but not required |
+| Dragon's Breath | p. 57; detail pp. 24, 31 | `dragon-pair-with-five-suited-pairs` | 1,000 / 400 | all Dragons represented with exactly one Dragon pair, plus five single-suit pairs |
+
 ## 5. Existing-detector candidates that must **not** be bound yet
 
 ### Wriggly Snake
