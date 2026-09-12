@@ -28,6 +28,7 @@ import {
   type MahjongHand,
   type PlayingTile,
   type SpecialFishingResult,
+  type WinningMethod,
 } from './types';
 
 const playingTiles: PlayingTile[] = [
@@ -249,6 +250,7 @@ const standardDecompositions = (
 const completedHands = (
   hand: MahjongHand,
   completingTile: PlayingTile,
+  winningMethod?: WinningMethod,
 ): MahjongHand[] => {
   const completed: MahjongHand[] = [];
   const finish = (
@@ -260,7 +262,7 @@ const completedHands = (
     looseTiles,
     remainingTiles: undefined,
     isWinner: true,
-    winningMethod: undefined,
+    winningMethod,
     winningTileProvenance: undefined,
     winningEventEvidence: undefined,
     originalCall: false,
@@ -334,13 +336,20 @@ const completesTarget = (
   bindings: SpecialHandPatternBinding[],
   context?: GameContext,
 ) =>
-  completedHands(hand, tile).some((completed) =>
+  {
+    const targetBindings = bindings.filter((binding) => binding.patternId === target);
+    return completedHands(
+      hand,
+      tile,
+      targetBindings[0]?.winningMethods?.[0],
+    ).some((completed) =>
     target === 'purity'
       ? isPurityHand(completed)
-      : detectSpecialHands(completed, context, bindings).some(
+      : detectSpecialHands(completed, context, targetBindings).some(
           (special) => special.id === target && special.matched,
         ),
-  );
+    );
+  };
 
 export const detectSpecialFishing = (
   hand: MahjongHand,
