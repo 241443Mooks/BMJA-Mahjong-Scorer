@@ -1,5 +1,18 @@
 # Thompson & Maloney Companion catalogue index — pass 1
 
+## Pass 4K implementation — Mixed Chow family
+
+The Western `western-tm@0.1` catalogue now has **79 bindings**. This wave adds four 1997 Companion entries from the Chows/Dragons synopsis: **Three Philosophers** (detail p.15 / Full Synopsis p.56), **Crazy Chows** (p.16 / p.56), **Apple Blossom** (p.19 / pp.56, 58), and **The Professors** (p.19 / p.56).
+
+A **Mixed Chow** is a structural loose group of exactly three suited tiles: one Bamboo, one Character and one Circle, with three consecutive ranks beginning from 1 through 7. It does not encode the suit-to-rank ordering depicted by any one diagram. A **Mixed Pair** is exactly two suited tiles of the same rank in different suits. Multi-Mixed-Chow patterns prove that their loose suited tiles can be partitioned into the required number of those structural groups, independent of input order.
+
+- Three Philosophers uses `three-suit-chows-with-mixed-chow-and-suited-pair`: three represented ordinary Chows, one per suit, a represented suited pair, and one loose Mixed Chow; 1,000 / 400 fishing.
+- Crazy Chows uses `four-mixed-chows-with-mixed-pair`: the complete loose layout is four Mixed Chows plus a Mixed Pair; 1,000 / 400 fishing.
+- Apple Blossom uses `white-dragon-meld-green-dragon-pair-with-three-mixed-chows`: a represented White Dragon Pung/Kong, a Green Dragon pair, and three loose Mixed Chows; 1,000 / 400 fishing. The source shows no red exposure dot, so the represented White Pung/Kong is concealed-only; an exposed White group makes both winning and fishing ineligible.
+- The Professors uses `three-mixed-chows-three-dragon-singles-own-wind-pair`: three loose Mixed Chows, exactly one of each Dragon, and a loose pair of the player's own Wind; 500 / 200 fishing. The Wind test uses `context.playerWind`, never prevailing Wind.
+
+These patterns and bindings are Western-only. They do not alter BMJA bindings, scoring, settlement, or progression.
+
 ## Pass 4I implementation — calculated and half-exposure catalogue wave
 
 Four entries were bound in the Pass 4I wave, sourced from the Full Synopsis pp. 58–59: **Sunrise** and **Sunset** (p. 42 / p. 59), **All Honour Hand** (p. 44 / p. 58), and **Ordinary Mah Jong** (p. 42 / p. 59).
