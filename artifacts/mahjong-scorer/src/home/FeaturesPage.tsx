@@ -10,7 +10,6 @@ import {
   Printer,
   RefreshCcw,
   ShieldCheck,
-  Sparkles,
 } from 'lucide-react';
 import { SiteHeader } from '../components/SiteHeader';
 
@@ -32,67 +31,57 @@ function FeatureCard({ icon: Icon, title, text }: FeatureCardProps) {
   );
 }
 
-const gameFeatures: FeatureCardProps[] = [
+const wholeGameFeatures: FeatureCardProps[] = [
   {
     icon: Gamepad2,
-    title: 'Score the whole table',
-    text: 'Track four players, seat Winds, East, prevailing Wind, wins, draws, running balances and final standings in one game view.',
+    title: 'Start with the hand',
+    text: 'Enter a hand visually when you have the detail, or use an ordinary numeric score when that is what the table knows.',
   },
   {
     icon: Calculator,
-    title: 'Manual or calculated scores',
-    text: 'Use detailed tile scoring for the players who want it and ordinary numeric entry for everyone else. Both can coexist in the same hand.',
+    title: 'Settle what happened',
+    text: 'Turn confirmed scores into player-to-player settlement, including East effects where the selected profile applies them.',
   },
   {
     icon: Layers3,
-    title: 'Automatic settlement',
-    text: 'The scorer turns confirmed hand scores into player-to-player settlement, including East effects where applicable, instead of leaving the table to reconstruct the arithmetic.',
-  },
-  {
-    icon: History,
-    title: 'A ledger that grows with the game',
-    text: 'Every confirmed hand becomes part of the canonical history, including scores, changes, running totals and detailed evidence where it was actually captured.',
+    title: 'Carry the table forward',
+    text: 'See net changes and running totals, then advance East, the prevailing Wind and the next table state before the next hand.',
   },
 ];
 
-const handFeatures: FeatureCardProps[] = [
+const evidenceFeatures: FeatureCardProps[] = [
   {
     icon: ClipboardList,
-    title: 'Visual hand entry',
-    text: 'Build Pungs, Kongs, Chows and pairs with visual tiles, then add Flowers, Seasons, Remaining tiles or an irregular special layout when needed.',
-  },
-  {
-    icon: Sparkles,
-    title: 'Patterns surfaced when they matter',
-    text: 'The scorer shows relevant point, double and pattern explanations from the entered evidence instead of making you search a giant catalogue while playing.',
+    title: 'Evidence can be complete',
+    text: 'With a complete detailed hand, the scorer can show the recognised points, doubles and patterns behind a calculated result.',
   },
   {
     icon: CheckCircle2,
-    title: 'Partial losing hands are valid',
-    text: 'Enter only the scoring parts you know. The scorer calculates what those entries prove and waits for complete evidence before making whole-hand deductions.',
+    title: 'Evidence can be partial',
+    text: 'For a losing hand, enter only the scoring parts you know. The scorer uses what those entries prove without whole-hand deductions that need missing tiles.',
   },
   {
     icon: ShieldCheck,
-    title: 'Unknown stays unknown',
-    text: 'If you do not know the winning tile or a rare event fact, the scorer can remain conservative instead of forcing a guess or inventing a favourable interpretation.',
+    title: 'Evidence can stay unknown',
+    text: 'A manual numeric score remains manual, and an unknown winning tile or rare event fact stays unknown rather than being guessed.',
   },
 ];
 
 const recordFeatures: FeatureCardProps[] = [
   {
+    icon: History,
+    title: 'One connected history',
+    text: 'Confirmed hands, settlement transactions, net changes and running totals all come from the same game history used at the table.',
+  },
+  {
     icon: RefreshCcw,
-    title: 'Recover an in-progress game',
-    text: 'A compatible game can recover locally after an ordinary refresh, accidental tab closure or browser restart on the same browser and device.',
+    title: 'Correct and recover',
+    text: 'Undo a correction when needed, or recover a compatible in-progress game locally after an ordinary refresh, tab closure or browser restart on the same device.',
   },
   {
     icon: Printer,
-    title: 'Print or save the game record',
-    text: 'Choose a compact Game summary or a Full game record with detailed evidence where available, then use the browser print flow or Save as PDF.',
-  },
-  {
-    icon: BookOpen,
-    title: 'Learning sits beside scoring',
-    text: 'Gameplay basics, beginner scoring and the special-hand catalogue are separate from the live table flow but use the same rule model and visual language.',
+    title: 'Keep the final record',
+    text: 'Print a compact Game summary or Full game record with detailed evidence where available, or use the browser flow to Save as PDF.',
   },
 ];
 
@@ -109,12 +98,13 @@ export function FeaturesPage() {
               <span className="font-mono text-[10px] uppercase tracking-[.2em] text-[#ae6249]">Features</span>
             </div>
             <h1 className="max-w-[820px] font-serif text-[clamp(38px,6vw,62px)] leading-[.98] text-[#284d45]">
-              Free British Mahjong scoring calculator.
+              The whole game, not just the hand.
             </h1>
             <p className="mt-5 max-w-[760px] text-[15px] leading-7 text-[#596b65]">
-              <strong className="font-semibold text-[#284d45]">A free, dedicated, browser-based scoring calculator built specifically for British Mahjong.</strong> Enter a hand visually and Mahjong Reference automatically calculates supported points, doubles, special hands and fishing — or score and settle a complete four-player game.
+              <strong className="font-semibold text-[#284d45]">Mahjong Reference is a free, browser-based Table Companion for supported Mahjong rules profiles.</strong> It stays with the table from scoring a hand to seeing who pays whom, updating totals, advancing East and the Winds, and keeping the final record.
             </p>
-            <p className="mt-3 font-mono text-[10px] uppercase tracking-[.14em] text-[#66746e]">Dedicated to British rules. Automatic scoring. Full-game settlement.</p>
+            <p className="mt-3 font-mono text-[10px] uppercase tracking-[.14em] text-[#66746e]">Free · no account required</p>
+            <p className="mt-3 max-w-[760px] text-[12px] leading-6 text-[#66746e]">British / BMJA-style support is stable. Western — Thompson &amp; Maloney scoring is available provisionally; its ordinary play, scoring, settlement and progression are still under source review. Club rules use a configured local profile. <a href="/rules" className="font-semibold text-[#284d45] underline decoration-[#cfa58f] underline-offset-4">See supported rules</a>.</p>
             <div className="mt-7 flex flex-wrap gap-3">
               <a href="/game" className="inline-flex items-center gap-2 rounded-md bg-[#284d45] px-4 py-2.5 text-[11px] font-semibold text-[#f8f4e9] transition hover:bg-[#23443d] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249] focus-visible:ring-offset-2">
                 Score a game <ArrowRight size={14} />
@@ -127,65 +117,53 @@ export function FeaturesPage() {
 
           <section className="border-b border-[#ddd3bf] px-5 py-9 sm:px-8 sm:py-11 lg:px-12">
             <div className="max-w-[720px]">
-              <div className="font-mono text-[10px] uppercase tracking-[.18em] text-[#ae6249]">01 / score a complete game</div>
-              <h2 className="mt-2 font-serif text-[34px] leading-tight text-[#284d45]">From the first hand to the final standings</h2>
-              <p className="mt-3 text-[13px] leading-6 text-[#596b65]">The aim is to replace the awkward arithmetic and bookkeeping, not the table itself.</p>
+              <div className="font-mono text-[10px] uppercase tracking-[.18em] text-[#ae6249]">01 / the whole game, not just the hand</div>
+              <h2 className="mt-2 font-serif text-[34px] leading-tight text-[#284d45]">Stay with the table until the game is done</h2>
+              <p className="mt-3 text-[13px] leading-6 text-[#596b65]">After a hand, the question is not only what it was worth. It is who pays whom, what changed in the totals, who is East, what Wind comes next and what the table does now.</p>
             </div>
-            <div className="mt-7 grid gap-3 md:grid-cols-2">
-              {gameFeatures.map((feature) => <FeatureCard key={feature.title} {...feature} />)}
+            <ol className="mt-7 grid gap-2 text-center font-mono text-[10px] uppercase tracking-[.1em] text-[#477562] sm:grid-cols-3 lg:grid-cols-6">
+              {['Score the hand', 'Settle the hand', 'Update totals', 'Advance East / Wind', 'Repeat', 'Final record'].map((step, index) => (
+                <li key={step} className="rounded-lg border border-[#d8ceb8] bg-[#fdfbf5] px-3 py-3"><span className="mr-2 text-[#ae6249]">0{index + 1}</span>{step}</li>
+              ))}
+            </ol>
+            <div className="mt-5 grid gap-3 md:grid-cols-3">
+              {wholeGameFeatures.map((feature) => <FeatureCard key={feature.title} {...feature} />)}
             </div>
           </section>
 
           <section className="border-b border-[#ddd3bf] px-5 py-9 sm:px-8 sm:py-11 lg:px-12">
             <div className="max-w-[760px]">
-              <div className="font-mono text-[10px] uppercase tracking-[.18em] text-[#ae6249]">02 / score the hand you actually have</div>
-              <h2 className="mt-2 font-serif text-[34px] leading-tight text-[#284d45]">Complete, unfinished or only partly known</h2>
-              <p className="mt-3 text-[13px] leading-6 text-[#596b65]">A player should not have to reconstruct irrelevant tiles or know a special-hand name before the scorer can help.</p>
+              <div className="font-mono text-[10px] uppercase tracking-[.18em] text-[#ae6249]">02 / the rules stay attached to the game</div>
+              <h2 className="mt-2 font-serif text-[34px] leading-tight text-[#284d45]">Choose the rules context once, then keep it with the table</h2>
+              <p className="mt-3 text-[13px] leading-6 text-[#596b65]">A supported rules context is chosen for a new game. Its exact profile and version stay with scoring, settlement, progression, recovery and the record, so a recovered game does not silently change its rules underneath the table.</p>
             </div>
-            <div className="mt-7 grid gap-3 md:grid-cols-2">
-              {handFeatures.map((feature) => <FeatureCard key={feature.title} {...feature} />)}
-            </div>
-
             <div className="mt-6 rounded-xl bg-[#284d45] p-5 text-[#f8f4e9] sm:p-6">
-              <div className="font-mono text-[9px] uppercase tracking-[.18em] text-[#d7a287]">Product rule</div>
-              <p className="mt-2 font-serif text-[24px] leading-snug">Enter what you know. The scorer works out what it safely can.</p>
-              <p className="mt-3 max-w-[760px] text-[12px] leading-6 text-[#c8d5d0]">Complete evidence unlocks deeper whole-hand and fishing analysis. Partial evidence remains useful. Missing facts are not silently invented.</p>
+              <p className="font-serif text-[24px] leading-snug">The rules are part of the game, not a calculator switch.</p>
+              <p className="mt-3 max-w-[760px] text-[12px] leading-6 text-[#c8d5d0]">British is stable. Western — Thompson &amp; Maloney is provisional while ordinary play, scoring, settlement and progression remain under source review. Club is a configured generic profile. Detailed provenance belongs in <a href="/rules" className="font-semibold underline decoration-[#d7a287] underline-offset-4">the rules reference</a>.</p>
             </div>
           </section>
 
           <section className="border-b border-[#ddd3bf] px-5 py-9 sm:px-8 sm:py-11 lg:px-12">
             <div className="max-w-[740px]">
-              <div className="font-mono text-[10px] uppercase tracking-[.18em] text-[#ae6249]">03 / keep the record</div>
-              <h2 className="mt-2 font-serif text-[34px] leading-tight text-[#284d45]">The history you use during play becomes the record you keep</h2>
-              <p className="mt-3 text-[13px] leading-6 text-[#596b65]">There is no second report engine inventing the game afterwards. Confirmed history, stored settlement and captured hand evidence remain tied together.</p>
+              <div className="font-mono text-[10px] uppercase tracking-[.18em] text-[#ae6249]">03 / explain what can be proved; do not guess</div>
+              <h2 className="mt-2 font-serif text-[34px] leading-tight text-[#284d45]">Useful at the table, honest about the evidence</h2>
+              <p className="mt-3 text-[13px] leading-6 text-[#596b65]">The scorer explains what it recognised from the entered evidence. It does not pretend that a partial hand is complete, or that a number entered by the table was calculated from tiles.</p>
             </div>
             <div className="mt-7 grid gap-3 md:grid-cols-3">
-              {recordFeatures.map((feature) => <FeatureCard key={feature.title} {...feature} />)}
+              {evidenceFeatures.map((feature) => <FeatureCard key={feature.title} {...feature} />)}
             </div>
           </section>
 
           <section className="border-b border-[#ddd3bf] px-5 py-9 sm:px-8 sm:py-11 lg:px-12">
-            <div className="grid gap-6 lg:grid-cols-[1fr_1fr] lg:gap-10">
-              <div>
-                <div className="font-mono text-[10px] uppercase tracking-[.18em] text-[#ae6249]">Built for the table</div>
-                <h2 className="mt-2 font-serif text-[30px] leading-tight text-[#284d45]">Beginner-first without removing the depth</h2>
-                <p className="mt-3 text-[13px] leading-6 text-[#596b65]">The live scorer tries to surface the useful rule at the moment it matters. Deeper explanations stay available in the learning and Help material rather than crowding the scoring flow.</p>
-              </div>
-              <ul className="space-y-3 rounded-xl border border-[#d8ceb8] bg-[#fdfbf5] p-5 sm:p-6">
-                {[
-                  'Built specifically around the British rules used by this project.',
-                  'No account required for ordinary scoring and learning.',
-                  'Manual and detailed scoring can coexist at the same table.',
-                  'Supported special patterns are detected from evidence where possible.',
-                  'The scorer explains relevant reasoning instead of returning only a number.',
-                ].map((item) => (
-                  <li key={item} className="flex gap-3 text-[12px] leading-6 text-[#596b65]">
-                    <CheckCircle2 size={15} className="mt-1 shrink-0 text-[#477562]" />
-                    <span>{item}</span>
-                  </li>
-                ))}
-              </ul>
+            <div className="max-w-[740px]">
+              <div className="font-mono text-[10px] uppercase tracking-[.18em] text-[#ae6249]">04 / the record is the game that was actually played</div>
+              <h2 className="mt-2 font-serif text-[34px] leading-tight text-[#284d45]">Keep one story from first hand to final standings</h2>
+              <p className="mt-3 text-[13px] leading-6 text-[#596b65]">If somebody asks why a total changed by 96, the underlying hand and settlement history are retained with it. The printable record is not reconstructed afterwards from a mysterious final balance.</p>
             </div>
+            <div className="mt-7 grid gap-3 md:grid-cols-3">
+              {recordFeatures.map((feature) => <FeatureCard key={feature.title} {...feature} />)}
+            </div>
+            <p className="mt-6 text-[12px] leading-6 text-[#596b65]"><BookOpen size={15} className="mr-2 inline align-text-bottom text-[#477562]" />British gameplay basics, scoring and the special-hand catalogue sit alongside the table companion as explicitly British-specific learning material.</p>
           </section>
 
           <section className="px-5 py-9 sm:px-8 sm:py-11 lg:px-12">

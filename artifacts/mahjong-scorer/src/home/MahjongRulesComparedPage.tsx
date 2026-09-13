@@ -93,7 +93,7 @@ export function MahjongRulesComparedPage() {
               Same family of tiles. Five very different ways to play. This guide compares the structural differences that actually change what counts as a legal hand, how scoring works and what a player needs to know at the table.
             </p>
             <p className="mt-4 max-w-[820px] text-[15px] leading-7 text-[#596b65]">
-              Looking for the profiles Mahjong Reference can score? Read about <a className="font-semibold text-[#284d45] underline decoration-[#ae6249] underline-offset-4" href="/rules/british">British / BMJA-style</a> or <a className="font-semibold text-[#284d45] underline decoration-[#ae6249] underline-offset-4" href="/rules/western">Western — Thompson &amp; Maloney</a> rules.
+              Looking for the profiles Mahjong Reference can score? The <a className="font-semibold text-[#284d45] underline decoration-[#ae6249] underline-offset-4" href="/rules">supported rules hub</a> covers British / BMJA-style (stable), Western — Thompson &amp; Maloney (provisional), and configured local Club rules. This comparison does not promise scoring support for Hong Kong, Riichi, MCR or American Mahjong.
             </p>
             <div className="mt-7 rounded-xl bg-[#284d45] p-5 text-[#f8f4e9] sm:p-6">
               <div className="font-mono text-[9px] uppercase tracking-[.18em] text-[#d7a287]">Useful mental model</div>
@@ -179,7 +179,7 @@ export function MahjongRulesComparedPage() {
                   </ul>
                   {index === 0 && (
                     <div className="mt-5 flex flex-wrap gap-2">
-                      <a href="/game" className="inline-flex items-center gap-2 rounded-md bg-[#284d45] px-4 py-2.5 text-[11px] font-semibold text-[#f8f4e9] transition hover:bg-[#23443d]">Score a British game <ArrowRight size={14} /></a>
+                      <a href="/game/british" className="inline-flex items-center gap-2 rounded-md bg-[#284d45] px-4 py-2.5 text-[11px] font-semibold text-[#f8f4e9] transition hover:bg-[#23443d]">Score a British game <ArrowRight size={14} /></a>
                       <a href="/guide" className="inline-flex items-center gap-2 rounded-md border border-[#b8c8c1] bg-white px-4 py-2.5 text-[11px] font-semibold text-[#284d45]">British scoring guide <ArrowRight size={14} /></a>
                     </div>
                   )}
@@ -196,8 +196,8 @@ export function MahjongRulesComparedPage() {
                 <p className="mt-3 text-[13px] leading-6 text-[#596b65]">A tutorial or scorer can look familiar while still teaching the wrong game. The biggest traps are assuming that every complete four-sets-and-a-pair hand can win, that multiple Chows are always legal, that Flowers always work the same way, or that every Mahjong table scores only the winner.</p>
               </div>
               <div className="rounded-xl border border-[#d8ceb8] bg-[#fdfbf5] p-5 sm:p-6">
-                <div className="flex items-center gap-3"><CircleHelp size={18} className="text-[#ae6249]" /><h3 className="font-serif text-[22px] text-[#284d45]">Why this scorer is British-specific</h3></div>
-                <p className="mt-3 text-[12px] leading-6 text-[#596b65]">The differences are too structural to hide behind a single “rules dropdown”. British settlement, losing-hand scoring, one-Chow ordinary hands, Flowers/Seasons and the named special-hand catalogue all shape the scoring engine itself.</p>
+                <div className="flex items-center gap-3"><CircleHelp size={18} className="text-[#ae6249]" /><h3 className="font-serif text-[22px] text-[#284d45]">Why rules profiles matter</h3></div>
+                <p className="mt-3 text-[12px] leading-6 text-[#596b65]">Structural differences are why Mahjong Reference keeps profile-specific scoring and settlement behaviour rather than flattening everything into one universal rules engine. British / BMJA-style is stable; Western — Thompson &amp; Maloney is provisional; Club rules are configured locally. See the <a href="/rules" className="font-semibold text-[#284d45] underline decoration-[#cfa58f] underline-offset-4">supported rules hub</a> for the current boundaries.</p>
               </div>
             </div>
           </section>
@@ -206,8 +206,8 @@ export function MahjongRulesComparedPage() {
             <div className="rounded-xl border border-[#cfbfa4] bg-[#f5eadb] p-5 sm:flex sm:items-center sm:justify-between sm:gap-8 sm:p-6">
               <div className="max-w-[700px]">
                 <div className="font-mono text-[9px] uppercase tracking-[.18em] text-[#ae6249]">Using British rules?</div>
-                <h2 className="mt-2 font-serif text-[28px] text-[#284d45]">This site is built specifically for them.</h2>
-                <p className="mt-2 text-[12px] leading-6 text-[#596b65]">Score one hand, run a complete four-player game, or learn the British scoring rules without translating from another Mahjong tradition.</p>
+                <h2 className="mt-2 font-serif text-[28px] text-[#284d45]">British support is stable.</h2>
+                <p className="mt-2 text-[12px] leading-6 text-[#596b65]">Score one hand, run a complete four-player game, or learn the British scoring rules without translating from another Mahjong tradition. The learning library is explicitly British-specific.</p>
               </div>
               <a href="/hand" className="mt-4 inline-flex shrink-0 items-center gap-2 rounded-md bg-[#284d45] px-4 py-2.5 text-[11px] font-semibold text-[#f8f4e9] transition hover:bg-[#23443d] sm:mt-0">Score a hand <ArrowRight size={14} /></a>
             </div>
