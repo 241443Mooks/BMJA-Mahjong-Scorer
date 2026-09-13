@@ -512,6 +512,15 @@ export const canonicalSpecialHandPatterns: CanonicalSpecialHandPattern[] = [
     },
   },
   {
+    id: 'run-one-to-nine-with-honour-pung-and-suited-pair',
+    detect: (hand) => {
+      const shape = groupedRunShape(hand);
+      return shape !== undefined &&
+        shape.pungOrKong.tile.family !== 'suit' &&
+        shape.pair.tile.family === 'suit';
+    },
+  },
+  {
     id: 'full-suit-run-with-honour-pung-and-opposite-honour-pair',
     detect: (hand) => {
       const shape = groupedRunShape(hand);
