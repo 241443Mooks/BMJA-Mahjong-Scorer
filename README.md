@@ -1,153 +1,149 @@
 # Mahjong Reference
 
-**Mahjong Reference** is a free, browser-based **British Mahjong scoring calculator** for scoring complete four-player games and individual hands, learning the rules, and understanding **why** a score applies. The current scoring profile is **British / BMJA-style**.
+**Mahjong Reference** is a free, browser-based **Mahjong table companion** for scoring one hand, tracking a complete four-player game, understanding settlement and using the supported rules your table actually plays.
 
 **Live:** https://mahjong.smooks.co.uk
 
-Mahjong Reference is designed for use at the table. Players can enter scores directly or build hands visually with real Mahjong tile artwork. Where the entered tiles and game context provide enough evidence, the British / BMJA-style scorer calculates supported points, doubles, special hands and fishing automatically, then explains the result in plain English.
+No signup is required. An in-progress game is recovered locally in the same browser rather than through an account or cloud-sync service.
 
-The product is deliberately **beginner-first, evidence-first, browser-first and local-first**.
+> **Your Mahjong table companion.**
+> Score a hand, track the whole game, understand settlement and use the rules your table actually plays.
+
+The project is deliberately **table-first, evidence-first, browser-first and transparent about rules confidence**.
 
 > **Explain the game. Do not make the player learn the scoring engine.**
 
 > **Never invent missing evidence. Calculate what can be supported, ask only when necessary, and treat unknown facts conservatively.**
 
-![British Mahjong hand calculator with visual tile entry](artifacts/mahjong-scorer/public/help/screenshots/hand-builder-ordinary-desktop.png)
+![Mahjong Reference visual hand scorer](artifacts/mahjong-scorer/public/help/screenshots/hand-builder-ordinary-desktop.png)
+
+## Rules currently supported
+
+Mahjong is not one universal ruleset. Mahjong Reference keeps the selected rules profile explicit and persists the exact profile/version once a game begins.
+
+| Rules context | Public status | Current support boundary |
+| --- | --- | --- |
+| **British / BMJA-style** | **Stable** | Established hand scoring, special hands, fishing, settlement and game progression. |
+| **Western — Thompson & Maloney** | **Provisional scorer** | Companion special-hand catalogue is source-verified. Ordinary play, scoring, settlement and progression remain under source review. |
+| **Club rules** | **Configured profile** | A configured local club profile with its own specials, Goulash behaviour and incident/liability handling. Public naming stays generic. |
+
+British / BMJA-style is the stable baseline. Western is deliberately available before every ordinary-rule domain is fully verified, but the product says so rather than presenting provisional behaviour as settled authority.
+
+Mahjong Reference is independent. It is **not an official British Mah-Jong Association product and does not claim BMJA endorsement**.
 
 ## What is shipped
 
-### Score a complete four-player game
+### Track a complete four-player game
 
-The full game scorer manages the table hand by hand rather than acting as a simple total calculator.
+`/game` is the primary whole-game workspace. It manages the table hand by hand rather than acting as a simple total calculator.
 
-- four-player British Mahjong game setup
-- player Winds, East and prevailing-Wind progression
-- winner and draw handling
-- manual numeric scores and detailed calculated hand scores in the same game
-- automatic settlement between players
-- East doubling where applicable
-- running balances
-- canonical hand-by-hand ledger
-- undo/correction support
-- local recovery of an in-progress game after refresh or browser restart
-- detailed historical hand evidence where it was actually recorded
-- completed-game standings and final balances
-- **Full game record** or **Game summary** through the browser Print / Save as PDF flow
+- choose a supported rules context before starting a new game;
+- four-player setup with starting Winds;
+- East/dealer and prevailing-Wind progression;
+- winner and draw handling;
+- manual numeric scores and detailed calculated hand scores in the same game;
+- rules-aware settlement from the selected profile;
+- live **Who pays whom** transaction explanations;
+- net changes and running balances;
+- zero-sum settlement confirmation where supplied by the rules engine;
+- hand-by-hand ledger/history;
+- undo/correction support;
+- local recovery after refresh, tab closure or browser restart;
+- final standings;
+- **Game summary** and **Full game record** through the browser Print / Save as PDF flow;
+- printed rules profile/version provenance and a generated date.
 
-The game ledger is the source of truth for both the live history and printable records. The project does not maintain a second report model that can drift away from the game itself.
+The confirmed game ledger is the source of truth for both the live history and printable record. The product does not build a second report model that can drift away from the game itself.
+
+Rules-specific entry routes use the same game engine:
+
+- `/game/british`
+- `/game/western`
+- `/game/club`
+
+These routes may preselect rules for a **new** game. They never silently mutate a recovered game, and the exact rules profile/version is locked once play begins.
 
 ### Score an individual hand
 
-The same detailed scoring model can be used as a standalone calculator or opened for a player during a full game.
+`/hand` uses the same profile-aware scoring architecture without requiring a full game.
 
-- visual tile entry using locally pinned Mahjong artwork
-- Pungs, Kongs, Chows and pairs
-- exposed and concealed state
-- Remaining tiles for unfinished losing hands
-- **partial-evidence scoring** without forcing a losing player to reconstruct every irrelevant tile
-- complete-hand validation and whole-hand inference when enough evidence is present
-- Flowers and Seasons, including own-Wind relationships
-- irregular/special layouts when a hand does not fit ordinary sets
-- winner/non-winner context before hand entry on mobile
-- winning method and winning-tile provenance where a rule genuinely depends on them
-- automatic supported points and doubles
-- supported special-hand detection
-- supported special-hand fishing detection
-- event-sensitive special-hand questions only when required
-- contextual explanations for patterns that actually apply
-- conservative handling of `I'm not sure` / unknown evidence
-- safe prefilled example hands opened from the learning/reference pages
+- select British / BMJA-style, Western — Thompson & Maloney or Club rules;
+- visual tile entry using locally pinned Mahjong artwork;
+- Pungs, Kongs, Chows and pairs;
+- exposed and concealed state;
+- Flowers and Seasons;
+- Remaining tiles for unfinished losing hands;
+- **partial-evidence scoring** without forcing a losing player to reconstruct irrelevant tiles;
+- complete-hand validation and whole-hand inference where enough evidence exists;
+- irregular/special layouts where the active profile supports them;
+- winner/non-winner context and winning method;
+- winning-tile provenance where a rule genuinely depends on it;
+- supported points, doubles, special hands and fishing;
+- event-sensitive questions only where required;
+- conservative handling of `I'm not sure` / unknown evidence;
+- clear score breakdowns and detected-pattern explanations.
 
-A partial losing hand can still receive the score that is directly supported by the entered sets and bonus tiles. Whole-hand properties, special hands and fishing are withheld until the evidence is complete enough to support them.
+When a hand scorer is opened from a running game, it inherits that game's rules and cannot switch profiles independently.
 
-### Explain the score rather than only output a number
+British scorer results can link to the established British learning references. Western and Club results keep their scorer explanations but do **not** route users into British rule pages as though those pages were authoritative for another profile.
 
-The scorer reuses structured scoring output to explain what it has recognised.
+### Understand settlement
 
-- point-rule breakdowns
-- double-rule breakdowns
-- detected-pattern callouts
-- special-hand results
-- fishing results and possible completing tiles where supported
-- component-aware special/fishing calculations, keeping fixed values separate from bonus-tile doubles
-- settlement explanations based on the actual stored transactions
-- clear distinction between calculated evidence and manually entered scores
+`/mahjong-settlement` explains the difference between:
 
-Unmatched special hands are not dumped into the working scorer. The full catalogue lives in the learning/reference section instead.
+```text
+Hand scores
+    ↓
+Rules-aware settlement transactions
+    ↓
+Net change for each player
+    ↓
+Running game totals
+```
+
+The page uses an engine-backed British/BMJA-style example and makes the rules boundary explicit. It does not present one settlement model as universal Mahjong law.
+
+### Understand the rules context
+
+The public rules layer separates **which rules are being described** from **whether Mahjong Reference can score them**.
+
+- `/rules` — supported rules hub;
+- `/rules/british` — stable British / BMJA-style reference;
+- `/rules/western` — Thompson & Maloney profile, including its provisional ordinary-rule boundary;
+- `/mahjong-rules-compared` — broad comparison across major Mahjong traditions.
+
+The configured Club profile is selectable in the tools without exposing a specific club name publicly.
 
 ### Learn British Mahjong alongside the scorer
 
-The live site includes a connected set of learner and reference pages:
+The current learner/reference library is still intentionally **British-specific**. It has not been relabelled as generic Mahjong merely because the scoring tools now support more than one profile.
 
 | Route | Purpose |
 | --- | --- |
-| `/` | Action-led homepage and calculator entry point |
-| `/game` | Four-player game scorer and canonical ledger |
-| `/hand` | Standalone British Mahjong hand calculator |
-| `/scoring-examples` | Tested worked hands with prefilled scorer links and build-it-yourself practice |
-| `/gameplay-basics` | How British Mahjong is played |
-| `/guide` | Beginner scoring guide |
-| `/special-hands` | Visual catalogue of supported special hands |
-| `/features` | What the current scorer can do |
-| `/how-it-works` | Evidence → score → explanation → settlement → record |
-| `/help` | Searchable practical help and how-tos |
-| `/mahjong-rules-compared` | British vs Hong Kong vs Riichi vs MCR vs American rules comparison |
-| `/about` | Project purpose, rules, trust, privacy and attribution |
+| `/gameplay-basics` | British Mahjong gameplay basics |
+| `/guide` | British scoring guide |
+| `/special-hands` | British special-hand catalogue |
+| `/scoring-examples` | Test-backed British worked examples and practice |
+| `/help` | Practical product help and how-tos |
+| `/how-it-works` | Product flow from evidence to score, settlement and record |
+| `/about` | Project purpose, trust, sources, privacy and attribution |
 
 Legacy learner aliases redirect to the canonical pages:
 
 - `/beginner-guide` → `/guide`
 - `/special-hand-catalogue` → `/special-hands`
 
-### Worked examples and build-it-yourself practice
-
-The worked-example system uses the real scoring engine rather than a separate teaching calculator.
-
-The `/scoring-examples` hub currently contains six test-backed examples covering ordinary scoring, exposed/concealed sets, Winds and Dragons, bonus tiles, partial losing hands, fishing and special-hand component scoring.
-
-Each suitable example can:
-
-- open as a safe prefilled standalone scorer state;
-- open as a **Build it yourself** practice state with the learner's tiles and bonus selections empty;
-- preserve the material target context such as player Wind, prevailing Wind, winner/non-winner state, winning method and table limit;
-- show grouped set kind/visibility where that affects reconstruction;
-- reveal the worked answer without replacing the learner's entered state; and
-- return to the exact worked example or special-hand reference that launched it.
-
-Example/practice states are kept separate from the saved four-player game. If a recoverable game exists, learner/reference pages and example modes can surface **Return to game** without overwriting or mutating that saved game.
-
-### Responsive visual help
-
-Help is not only prose. The repository contains a repeatable **responsive instructional screenshot system** built from the real product UI.
-
-Phase 1 currently covers eight tasks:
-
-1. start a game
-2. enter scores during a game
-3. build an ordinary hand
-4. score a partial losing hand
-5. identify the tile that completed Mah Jong
-6. understand the score and reasoning
-7. read settlement and game history
-8. print or save the game record
-
-Each task has Mobile, Tablet and Desktop captures: **24 real product screenshots** in total.
-
-The Help page automatically selects the appropriate viewport image and also lets the visitor switch between Mobile, Tablet and Desktop. The same screenshot system is reused in the **How it works** page through compact `See it in the scorer` disclosures.
-
-Screenshots are generated from deterministic product states rather than being manually mocked or cropped. The capture command checks that required product images have loaded correctly before writing the files.
-
 ## Product and trust model
 
 ### Evidence over assumption
 
-A rule is applied only when the entered tiles, game context or explicit user answer provide enough evidence.
+A rule is applied only when the entered tiles, game context or explicit answer provide enough evidence.
 
 When evidence is missing, the scorer should:
 
-- calculate only what can be proved;
+- calculate only what can be supported;
 - ask a short question if the missing fact genuinely matters; or
-- omit the uncertain pattern/bonus.
+- omit the uncertain pattern or bonus.
 
 It should not manufacture the most favourable interpretation.
 
@@ -156,71 +152,61 @@ It should not manufacture the most favourable interpretation.
 For losing hands, entering fewer than the full structural tile count is not automatically an error.
 
 - **Partial evidence** can score directly evidenced sets, pairs and bonus tiles.
-- **Complete evidence** can additionally unlock whole-hand and fishing inference.
+- **Complete evidence** can unlock whole-hand and fishing inference where supported by the active profile.
 - **Invalid evidence** remains blocked where the entered hand is structurally impossible or contradictory.
 
 ### Manual scores remain manual
 
-A numeric score entered by a player is valid game input, but the application never pretends that it verified a hand that was not entered.
+A numeric score entered by a player is valid game input, but the application never pretends that it verified a hand that was not entered in detail.
 
-Printed/history records therefore distinguish between:
+Printed/history records distinguish between calculated detailed hands, partial detailed evidence and manually entered scores.
 
-- calculated detailed hands;
-- partial detailed evidence; and
-- manually entered scores with no fabricated tile detail.
+### Rules identity is durable
 
-### Canonical data is reused
+Public UI uses readable names such as **British / BMJA-style**, **Western — Thompson & Maloney** and **Club rules**. Internally, the game persists an exact rules profile/version so recovery, settlement, history and printing continue under the same executable rules.
 
-The same underlying game/scoring information drives:
+### Local-first recovery
 
-- live scoring
-- settlement
-- running balances
-- game history
-- explanations
-- recovery
-- printable Full/Summary records
-- worked scoring examples and expected-result tests
-- safe prefilled/practice scorer states
+The current game is stored in browser `localStorage` and replay-validated when recovered.
 
-This is intentional: there should be one scoring/game truth, not several parallel interpretations of it.
+There is currently:
 
-## Rules and accuracy
+- no user account requirement;
+- no cloud game database;
+- no cross-device game sync;
+- no server-side scoring engine.
 
-The project implements the British Mahjong rules used by this scorer, based primarily on the published material at:
+This keeps ordinary table use low-friction while making the recovery boundary clear.
 
-**https://mahjongbritishrules.wordpress.com/**
+## Rules evidence and provenance
 
-The engineering rules source of truth is [`BMJA_RULES_REFERENCE.md`](BMJA_RULES_REFERENCE.md). It records implemented rules, project interpretations, ambiguities, source links and test/fixture coverage.
+Rules evidence is intentionally kept separate from marketing/product copy.
 
-Scoring implementation and audit notes are also maintained in [`artifacts/mahjong-scorer/SCORING_AUDIT.md`](artifacts/mahjong-scorer/SCORING_AUDIT.md).
+Start with the documentation map:
 
-This project is **independent and is not an official British Mah-Jong Association publication**. Public-facing explanations are project-owned paraphrases rather than reproductions of source material.
+- [`docs/README.md`](docs/README.md) — documentation authority map;
+- [`docs/product/TABLE_COMPANION_TRANSFORMATION.md`](docs/product/TABLE_COMPANION_TRANSFORMATION.md) — current Table Companion product direction;
+- [`docs/rules/`](docs/rules/) — rules evidence, provenance, crosswalks and future-ruleset architecture;
+- [`BMJA_RULES_REFERENCE.md`](BMJA_RULES_REFERENCE.md) — British/BMJA engineering rules reference;
+- [`artifacts/mahjong-scorer/SCORING_AUDIT.md`](artifacts/mahjong-scorer/SCORING_AUDIT.md) — scoring implementation/audit record.
 
-The rules engine is intentionally British-Mahjong-specific. Other rulesets are described for comparison at `/mahjong-rules-compared`, but are not silently treated as equivalent scoring systems.
+The repository deliberately preserves uncertainty and source status where evidence is incomplete. Product copy must not silently upgrade provisional rules into verified authority.
 
 ## Architecture
 
 The user-facing application is built with:
 
-- React
-- TypeScript
-- Vite
-- Tailwind CSS
-- Vitest
-- pnpm workspaces
-- browser `localStorage` for local in-progress game recovery
+- React;
+- TypeScript;
+- Vite;
+- Tailwind CSS;
+- Vitest;
+- pnpm workspaces;
+- browser `localStorage` for local in-progress game recovery.
 
 Production is a static web application deployed on **Cloudflare Pages**.
 
-There is currently:
-
-- no user account requirement
-- no cloud game database
-- no server-side scoring engine
-- no cross-device game sync
-
-The current game is kept locally in the browser. This keeps table use low-friction and means the core scoring flow does not depend on an account or conventional application backend.
+The rules architecture uses versioned profiles and profile-local scoring/catalogue behaviour rather than forcing materially different Mahjong traditions into one universal set of switches.
 
 ## Search, metadata and public routing
 
@@ -228,21 +214,17 @@ Public-route SEO configuration is centralised in:
 
 [`artifacts/mahjong-scorer/src/site-seo.json`](artifacts/mahjong-scorer/src/site-seo.json)
 
-That shared configuration supplies the canonical site URL, social image, route paths, titles, descriptions, indexability, aliases and homepage `WebApplication` structured data.
+The production build reuses that configuration to generate:
 
-The production build reuses it to generate:
+- route-specific crawler-visible HTML metadata;
+- canonical URLs;
+- Open Graph and Twitter metadata;
+- structured data;
+- `sitemap.xml`;
+- `robots.txt`;
+- Cloudflare Pages alias redirects.
 
-- route-specific crawler-visible HTML metadata
-- canonical URLs
-- Open Graph and Twitter metadata
-- structured data
-- `sitemap.xml`
-- `robots.txt`
-- Cloudflare Pages alias redirects
-
-This avoids maintaining separate hard-coded route lists in the runtime app, prerender step and sitemap.
-
-Shareable query-string example/practice states remain application states rather than separate indexable documents. Canonical public content lives on routes such as `/hand`, `/special-hands` and `/scoring-examples`.
+`/game` remains the canonical full-game tracker destination. `/mahjong-settlement` owns the substantive settlement explainer. Rules-specific game entry routes are functional entry states into the same game tool rather than duplicate content products.
 
 ## Run locally
 
@@ -257,12 +239,13 @@ Then open the local Vite URL shown in the terminal.
 
 ## Test and verify
 
-Core scorer checks:
+From the repository root:
 
 ```sh
-pnpm --filter @workspace/mahjong-scorer test
+pnpm install --frozen-lockfile
+pnpm test
 pnpm run typecheck
-PORT=5173 BASE_PATH=/ pnpm --filter @workspace/mahjong-scorer build
+PORT=5173 BASE_PATH=/ pnpm run build
 ```
 
 The production build output is written to:
@@ -271,7 +254,7 @@ The production build output is written to:
 artifacts/mahjong-scorer/dist/public
 ```
 
-Recent merged product work has been validated against the full Vitest suite, typechecking and production build. The latest merged worked-example/practice implementation reported **206 passing tests**, with typecheck, production build and Cloudflare Pages deployment checks passing.
+The current merged product is covered by the full Vitest suite plus TypeScript and production/prerender build checks. Keep the commands above as the source of truth rather than freezing a test count into this README.
 
 ### Regenerate the instructional screenshot library
 
@@ -279,43 +262,24 @@ Recent merged product work has been validated against the full Vitest suite, typ
 pnpm --filter @workspace/mahjong-scorer screenshots:help
 ```
 
-The command initialises the pinned tile-artwork git submodule, starts the real app in deterministic demo states, captures the Mobile/Tablet/Desktop library and fails if required product images are unresolved.
+The command starts the real app in deterministic demo states, captures Mobile/Tablet/Desktop instructional screenshots and fails if required product images are unresolved.
 
 Do not manually edit or crop the committed Help screenshots. See [`artifacts/mahjong-scorer/public/help/screenshots/README.md`](artifacts/mahjong-scorer/public/help/screenshots/README.md).
 
-## Repository guides
+## Current direction
 
-The repository contains more than implementation code. Important project documents include:
+The core Table Companion transformation is shipped. The immediate work is consolidation and evidence, not feature proliferation.
 
-- [`docs/PRODUCT_HANDBOOK.md`](docs/PRODUCT_HANDBOOK.md) — detailed product behaviour and trust model baseline
-- [`docs/PRODUCT_CONTENT_PLAN.md`](docs/PRODUCT_CONTENT_PLAN.md) — content/product architecture and publishing direction
-- [`docs/FEATURES_CONTENT.md`](docs/FEATURES_CONTENT.md) — canonical source copy for shipped feature descriptions
-- [`docs/HOW_IT_WORKS_CONTENT.md`](docs/HOW_IT_WORKS_CONTENT.md) — evidence-first product explanation
-- [`docs/HELP_CONTENT.md`](docs/HELP_CONTENT.md) — practical help and edge-case source content
-- [`docs/INSTRUCTIONAL_SCREENSHOT_PLAN.md`](docs/INSTRUCTIONAL_SCREENSHOT_PLAN.md) — responsive visual-manual design and capture rules
-- [`docs/MAHJONG_RULES_COMPARED_CONTENT.md`](docs/MAHJONG_RULES_COMPARED_CONTENT.md) — sourced comparison of major Mahjong ruleset families
-- [`docs/MARKETING_COPY_BANK.md`](docs/MARKETING_COPY_BANK.md) — reusable product wording anchored to shipped behaviour
-- [`docs/BEGINNER_GUIDE_CONTENT.md`](docs/BEGINNER_GUIDE_CONTENT.md) — learner scoring guide source
-- [`docs/SPECIAL_HAND_CATALOGUE_CONTENT.md`](docs/SPECIAL_HAND_CATALOGUE_CONTENT.md) — supported special-hand catalogue source
-- [`docs/GAMEPLAY_BASICS_CONTENT.md`](docs/GAMEPLAY_BASICS_CONTENT.md) — gameplay-basics source
-- [`docs/ABOUT_THIS_PROJECT_CONTENT.md`](docs/ABOUT_THIS_PROJECT_CONTENT.md) — project/about source
-- [`docs/video-series/README.md`](docs/video-series/README.md) — canonical five-video teaching-series plan and shared example hand
-- [`docs/MOBILE_HAND_SCORER_UX_V2.md`](docs/MOBILE_HAND_SCORER_UX_V2.md) — mobile hand-entry UX direction
-- [`docs/TILE_ASSET_DECISION.md`](docs/TILE_ASSET_DECISION.md) — tile artwork source and attribution decision
-- [`BMJA_RULES_REFERENCE.md`](BMJA_RULES_REFERENCE.md) — engineering rules source of truth
+Current near-term priorities are:
 
-## Current roadmap
+- align remaining shared user-facing explanatory pages with the rules-aware Table Companion product truth;
+- run a dedicated SEO/crawl/internal-linking pass after that copy is coherent;
+- use Google Search Console/indexing data as evidence for subsequent content decisions;
+- complete Thompson & Maloney ordinary-rule verification through #121 without overstating Western certainty in the meantime;
+- use real-table validation, including #89, to decide whether paused ideas such as the rules diagnostic or exact profile-aware rule deep links deserve renewed priority;
+- consider PWA/offline hardening later through #48.
 
-The core scorer, full-game flow, learner pages, Help system, local recovery, printable canonical game records, responsive visual manual, public discovery/SEO foundation, reciprocal scorer/learning navigation, safe special-hand examples and tested worked-example/practice flow are already shipped.
-
-The most relevant open directions now are:
-
-- separate global product branding from the active British/BMJA-style rules profile before wider expansion — [#76](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/76)
-- finish the bounded Western/Australian Mahjong discoverability research and decide the public `/western-mahjong` implementation — [#72](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/72), with draft research PR [#73](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/pull/73)
-- record and publish the five-part worked-hand/settlement teaching series — [#66–#70](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/66)
-- make the scorer installable/offline as a Progressive Web App — [#48](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/48)
-
-Other discovery and product experiments remain tracked in GitHub issues rather than being duplicated exhaustively here. The issue tracker contains the current acceptance criteria and implementation boundaries.
+The umbrella transformation tracker is [#105](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/105).
 
 ## Artwork
 
