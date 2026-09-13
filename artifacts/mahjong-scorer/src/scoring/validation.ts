@@ -39,6 +39,21 @@ export const validateHand = (
   const pairCount = hand.sets.filter((set) => set.kind === 'pair').length;
   const setCount = hand.sets.filter((set) => set.kind !== 'pair').length;
   const chowCount = hand.sets.filter((set) => set.kind === 'chow').length;
+  const groupedBlanks = hand.sets.flatMap((set) => set.blankTileIds ?? []);
+  const ungroupedBlankTiles = hand.ungroupedBlankTiles ?? [];
+  const blanks = [...groupedBlanks, ...ungroupedBlankTiles.map((blank) => blank.id)];
+  const validUngroupedBlanks = ungroupedBlankTiles.filter((blank) => {
+    const tiles = blank.location === 'loose' ? hand.looseTiles : hand.remainingTiles;
+    return tiles?.[blank.tileIndex] !== undefined;
+  });
+  const uniquePositionUngroupedBlanks = validUngroupedBlanks.filter(
+    (blank, index, entries) =>
+      entries.findIndex(
+        (candidate) =>
+          candidate.location === blank.location &&
+          candidate.tileIndex === blank.tileIndex,
+      ) === index,
+  );
 
   const isSevenPairsShape =
     hand.sets.length === 7 &&
@@ -84,6 +99,41 @@ export const validateHand = (
 
   if (chowCount > 1) {
     errors.push('A normal BMJA hand may contain at most one chow.');
+  }
+
+  if (context?.handMode === 'goulash') {
+    if (chowCount > 0) errors.push('A Goulash hand cannot contain Chows.');
+    if (blanks.length > 4) errors.push('A Goulash hand cannot use more than four blank tiles.');
+    if (new Set(blanks).size !== blanks.length) {
+      errors.push('Each physical blank tile must be used only once.');
+    }
+    if (
+      new Set(
+        ungroupedBlankTiles.map(
+          (blank) => `${blank.location}:${blank.tileIndex}`,
+        ),
+      ).size !== ungroupedBlankTiles.length
+    ) {
+      errors.push('Each ungrouped tile position can represent at most one physical blank.');
+    }
+    if (validUngroupedBlanks.length !== ungroupedBlankTiles.length) {
+      errors.push('Each ungrouped blank must identify an existing represented tile.');
+    }
+    for (const handSet of hand.sets) {
+      const blankCount = handSet.blankTileIds?.length ?? 0;
+      if (blankCount === 0) continue;
+      if (handSet.kind === 'chow') {
+        errors.push(`Only Pungs and Kongs may contain Goulash blanks (${handSet.id}).`);
+      } else if (handSet.kind === 'pair' && blankCount > 2) {
+        errors.push(`A Goulash Pair can contain at most two blanks (${handSet.id}).`);
+      } else if (handSet.kind === 'pung' && (blankCount > 1 || 3 - blankCount < 2)) {
+        errors.push(`A Goulash Pung needs two genuine tiles and at most one blank (${handSet.id}).`);
+      } else if (handSet.kind === 'kong' && (blankCount > 2 || 4 - blankCount < 2)) {
+        errors.push(`A Goulash Kong needs two genuine tiles and at most two blanks (${handSet.id}).`);
+      }
+    }
+  } else if (blanks.length > 0) {
+    errors.push('Blank tiles are valid only in Goulash mode.');
   }
 
   if (
@@ -209,6 +259,23 @@ export const validateHand = (
     },
     new Map(),
   );
+  if (context?.handMode === 'goulash') {
+    for (const handSet of hand.sets) {
+      const blankCount = handSet.blankTileIds?.length ?? 0;
+      if (blankCount > 0) {
+        const key = tileKey(handSet.tile);
+        playingTileCounts.set(key, (playingTileCounts.get(key) ?? 0) - blankCount);
+      }
+    }
+    for (const blank of uniquePositionUngroupedBlanks) {
+      const tiles = blank.location === 'loose' ? hand.looseTiles : hand.remainingTiles;
+      const tile = tiles?.[blank.tileIndex];
+      if (tile) {
+        const key = tileKey(tile);
+        playingTileCounts.set(key, (playingTileCounts.get(key) ?? 0) - 1);
+      }
+    }
+  }
   if ([...playingTileCounts.values()].some((count) => count > 4)) {
     errors.push('A playing tile cannot appear more than four times.');
   }

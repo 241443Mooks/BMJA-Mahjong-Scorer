@@ -91,7 +91,9 @@ OTB says each loser pays the winner the winner's Mah Jong score; East pays/recei
 | Goulash | winner | Normal |
 | Goulash | draw | Goulash |
 
-On draw: no score, no settlement and East does not move. In Goulash, four blanks may represent ordinary playing tiles but never Flowers/Seasons; no Chows; a Pung has at most one blank, a Kong at most two, and each needs at least two genuine identical tiles. These are OTB-only evidence. The later mechanism may be reusable, but it must not be attributed to T&M until #121 proves it. Wall construction, dealing, dice and Charleston execution are non-scorer gameplay mechanics and out of scope.
+On draw: no score, no settlement and East does not move. In Goulash, four blanks may represent ordinary playing tiles but never Flowers/Seasons; no Chows; a Pung has at most one blank, a Kong at most two, and each needs at least two genuine identical tiles; a pair may contain zero, one or two blanks with no additional genuine-tile minimum. These are OTB-only evidence. The later mechanism may be reusable, but it must not be attributed to T&M until #121 proves it. Wall construction, dealing, dice and Charleston execution are non-scorer gameplay mechanics and out of scope.
+
+88D implements persisted `HandMode`: only `outside-the-box@0.1` can activate Goulash, while BMJA and provisional T&M force normal validation even if a caller supplies a Goulash mode. A grouped blank is recorded by its physical ID on the set; an ungrouped blank uses compact `{ id, location, tileIndex }` metadata pointing to its declared effective tile in `looseTiles` or `remainingTiles`. Canonical detection and scoring continue to see the effective tile; physical copy validation subtracts declared blanks, so a blank representing an already-four-times-present tile is not a fifth genuine copy. Blank IDs remain unique across grouped and ungrouped layouts, are capped at four, and clone/replay/persistence retain their identity without shared arrays.
 
 ## 7. Penalties / liability
 
@@ -114,7 +116,7 @@ The current hand contract can truthfully prove a winning tile completed a specif
 |---|---|---|
 | 88B | 33 exact OTB names represented by 33 fixed bindings (Big Robert has two mutually-exclusive bindings); Purity calculated reuse; four stated T&M overrides; British value divergences | implemented as `outside-the-box@0.1`; only new canonical ID is `run-one-to-nine-with-honour-pung-and-suited-pair`; predicate fixture audit remains required |
 | 88C | ordinary base scoring reuse; OTB Dragon/Wind stacking; three-concealed P/K; fixed-special Flower/Season side score; provenance pair completion | only-possible-tile winner bonus and first-wall-draw limit event remain evidence-model follow-up |
-| 88D | Normal/Goulash transitions, draw effects and blank legality | none in scorer-relevant evidence |
+| 88D | Normal/Goulash transitions, draw effects, OTB-only activation, grouped and ungrouped declared blanks, physical-copy separation, replay and persistence | implemented; no wildcard solver or non-OTB activation |
 | 88E | incident triggers, consequences, and manual-selection boundary | no unresolved rule required to model manual incidents; automatic cannon/no-choice remains intentionally out of scope |
 
 88B canonical work: `run-one-to-nine-with-honour-pung-and-suited-pair` for the resolved Grand Sequence restriction. No Ruby Jade detector is needed: T&M red/green Bamboo ranks jointly cover ranks 1–9.

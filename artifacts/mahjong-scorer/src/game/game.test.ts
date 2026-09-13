@@ -206,7 +206,7 @@ describe('BMJA game-level golden fixtures', () => {
     });
   });
 
-  it('deep-clones remaining tiles stored in detailed hand records', () => {
+  it('discards stale score records and scores when a round is confirmed as a draw', () => {
     const remainingTile = suited('characters', 4);
     const record: DetailedHandRecord = {
       ...rodDetailedScore,
@@ -223,13 +223,37 @@ describe('BMJA game-level golden fixtures', () => {
       scoreRecords: { rod: record },
     });
 
-    remainingTile.rank = 7;
+    expect(confirmed.handHistory[0]).toMatchObject({
+      outcome: { type: 'draw' },
+      scores: zeroScores,
+      scoreRecords: {},
+      settlement: { transactions: [], changes: zeroScores, zeroSum: true },
+    });
+  });
 
+  it('deep-clones remaining tiles and blank metadata stored in detailed hand records', () => {
+    const remainingTile = suited('characters', 4);
+    const blankTileIds = ['blank-east'];
+    const ungroupedBlankTiles = [{ id: 'blank-loose', location: 'remaining' as const, tileIndex: 0 }];
+    const record: DetailedHandRecord = {
+      ...rodDetailedScore,
+      hand: {
+        sets: [{ id: 'east', kind: 'pung', tile: suited('bamboo', 2), visibility: 'concealed', blankTileIds }],
+        remainingTiles: [remainingTile], ungroupedBlankTiles,
+        bonusTiles: [], isWinner: true,
+      },
+    };
+    const confirmed = confirmHand(createBmjaGame(players, seats), {
+      outcome: { type: 'win', winnerId: 'rod' },
+      scores: { bill: 0, rod: 200, ben: 0, jack: 0 },
+      scoreRecords: { rod: record },
+    });
+    remainingTile.rank = 7;
+    blankTileIds[0] = 'mutated';
+    ungroupedBlankTiles[0].id = 'mutated-loose';
     const stored = confirmed.handHistory[0].scoreRecords.rod;
-    expect(
-      stored?.source === 'detailed-scorer'
-        ? stored.hand.remainingTiles?.[0]
-        : undefined,
-    ).toEqual(suited('characters', 4));
+    expect(stored?.source === 'detailed-scorer' ? stored.hand.remainingTiles?.[0] : undefined).toEqual(suited('characters', 4));
+    expect(stored?.source === 'detailed-scorer' ? stored.hand.sets[0].blankTileIds : undefined).toEqual(['blank-east']);
+    expect(stored?.source === 'detailed-scorer' ? stored.hand.ungroupedBlankTiles : undefined).toEqual([{ id: 'blank-loose', location: 'remaining', tileIndex: 0 }]);
   });
 });

@@ -92,6 +92,7 @@ describe('game hand-scorer handoff', () => {
       prevailingWind: 'east',
       isWinner: true,
       limit: 1000,
+      handMode: 'normal',
     });
   });
 

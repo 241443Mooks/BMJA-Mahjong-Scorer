@@ -1,7 +1,7 @@
 import { scoreHand } from '../scoring';
 import { progressBmjaGame } from './progression';
 import { settleBmjaRound } from './settlement';
-import type { GameRuleset, RulesProfileRef } from './types';
+import type { GameRuleset, HandMode, RulesProfileRef } from './types';
 export { WESTERN_TM_PROFILE_REF, westernTmSpecialHandBindings } from './western-tm-catalogue';
 import { WESTERN_TM_PROFILE_REF, westernTmSpecialHandBindings } from './western-tm-catalogue';
 export { OUTSIDE_THE_BOX_PROFILE_REF, outsideTheBoxSpecialHandBindings } from './outside-the-box-catalogue';
@@ -10,21 +10,24 @@ import { OUTSIDE_THE_BOX_SCORING_POLICY } from './outside-the-box-scoring';
 
 export const BMJA_RULESET: GameRuleset = Object.freeze({
   id: 'bmja', version: '1.0', name: 'British Mahjong Association', defaultLimit: 1000,
-  scoreHand: ({ hand, playerWind, prevailingWind, limit = 1000 }) => scoreHand(hand, { playerWind, prevailingWind, limit }),
+  scoreHand: ({ hand, playerWind, prevailingWind, limit = 1000 }) => scoreHand(hand, { playerWind, prevailingWind, limit, handMode: 'normal' }),
   settleRound: settleBmjaRound, progressGame: progressBmjaGame,
+  nextHandMode: (): HandMode => 'normal',
 });
 export const BMJA_PROFILE_REF: RulesProfileRef = Object.freeze({ id: BMJA_RULESET.id, version: BMJA_RULESET.version });
 export const WESTERN_TM_RULESET: GameRuleset = Object.freeze({
   id: WESTERN_TM_PROFILE_REF.id, version: WESTERN_TM_PROFILE_REF.version,
   name: 'Western — Thompson & Maloney (provisional)', defaultLimit: 1000,
-  scoreHand: ({ hand, playerWind, prevailingWind, limit = 1000 }) => scoreHand(hand, { playerWind, prevailingWind, limit }, westernTmSpecialHandBindings),
+  scoreHand: ({ hand, playerWind, prevailingWind, limit = 1000 }) => scoreHand(hand, { playerWind, prevailingWind, limit, handMode: 'normal' }, westernTmSpecialHandBindings),
   settleRound: settleBmjaRound, progressGame: progressBmjaGame,
+  nextHandMode: (): HandMode => 'normal',
 });
 export const OUTSIDE_THE_BOX_RULESET: GameRuleset = Object.freeze({
   id: OUTSIDE_THE_BOX_PROFILE_REF.id, version: OUTSIDE_THE_BOX_PROFILE_REF.version,
   name: 'Outside the Box', defaultLimit: 1000,
-  scoreHand: ({ hand, playerWind, prevailingWind, limit = 1000 }) => scoreHand(hand, { playerWind, prevailingWind, limit }, outsideTheBoxSpecialHandBindings, OUTSIDE_THE_BOX_SCORING_POLICY),
+  scoreHand: ({ hand, playerWind, prevailingWind, limit = 1000, handMode = 'normal' }) => scoreHand(hand, { playerWind, prevailingWind, limit, handMode }, outsideTheBoxSpecialHandBindings, OUTSIDE_THE_BOX_SCORING_POLICY),
   settleRound: settleBmjaRound, progressGame: progressBmjaGame,
+  nextHandMode: (_current, outcome): HandMode => outcome.type === 'draw' ? 'goulash' : 'normal',
 });
 const profileKey = ({ id, version }: RulesProfileRef) => `${id}@${version}`;
 const RULES_PROFILE_REGISTRY = new Map<string, GameRuleset>([

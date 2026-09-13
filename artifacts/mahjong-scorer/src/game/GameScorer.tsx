@@ -54,6 +54,13 @@ const windLabel = (wind: Wind) =>
 const formatChange = (value: number) =>
   `${value > 0 ? '+' : value < 0 ? '−' : ''}${Math.abs(value)}`;
 
+const activeRulesCopy = (profileId: string) =>
+  profileId === 'western-tm'
+    ? 'Western — Thompson & Maloney (provisional)'
+    : profileId === 'outside-the-box'
+      ? 'Outside the Box'
+      : 'British / BMJA-style';
+
 export const handCountLabel = (count: number) =>
   `${count} ${count === 1 ? 'hand' : 'hands'} played`;
 
@@ -277,16 +284,16 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
       setError('Choose a winner and enter a score for every player.');
       return;
     }
-    const isScoresComplete = game.players.every(p => scores[p.id] !== undefined);
+    const isScoresComplete = outcome.type === 'draw' || game.players.every(p => scores[p.id] !== undefined);
     if (!isScoresComplete) {
       setError('Enter a score for every player (use 0 if none).');
       return;
     }
-    const fullScores = Object.fromEntries(game.players.map(p => [p.id, scores[p.id] ?? 0])) as PlayerAmounts;
+    const fullScores = Object.fromEntries(game.players.map(p => [p.id, outcome.type === 'draw' ? 0 : scores[p.id] ?? 0])) as PlayerAmounts;
     const next = confirmHand(game, {
       outcome,
       scores: fullScores,
-      scoreRecords,
+      scoreRecords: outcome.type === 'draw' ? {} : scoreRecords,
     });
     setGame(next);
     resetRoundEntry(next);
@@ -393,7 +400,10 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
               {game.players.find((player) => player.id === currentEastId)?.name}{' '}
               is East · {windLabel(game.prevailingWind)} prevailing
             </div>
-            <p className="mt-1 text-[12px] leading-5 text-[#66746e]"><strong className="text-[#284d45]">Rules: British / BMJA-style.</strong> British scoring and settlement are active for this game.</p>
+            {game.currentHandMode === 'goulash' && (
+              <p className="mt-1 text-[12px] font-semibold text-[#ae6249]">Goulash hand — blanks available · Chows not allowed</p>
+            )}
+            <p className="mt-1 text-[12px] leading-5 text-[#66746e]"><strong className="text-[#284d45]">Rules: {activeRulesCopy(game.setup.rulesProfile.id)}.</strong> This profile's scoring and settlement are active for this game.</p>
             {recovered && (
               <p className="mt-1 text-[11px] font-semibold text-[#477562]">
                 Your saved game has been recovered.
@@ -544,7 +554,9 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
                   </label>
                 )}
 
-                <div className="grid gap-4 sm:grid-cols-2">
+                {outcomeType === 'draw' ? (
+                  <p className="rounded-md bg-[#f7f1e3] px-3 py-3 text-[11px] leading-5 text-[#66746e]">A draw records no scores and no payments. East and the prevailing wind remain unchanged.</p>
+                ) : <div className="grid gap-4 sm:grid-cols-2">
                   {game.players.map((player) => (
                     <label key={player.id} className="block">
                       <span className="mb-1.5 block text-[11px] font-semibold text-[#284d45]">
@@ -603,7 +615,7 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
                       </div>
                     </label>
                   ))}
-                </div>
+                </div>}
               </>
             )}
           </section>
@@ -752,7 +764,7 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
                         : `${game.players.find((player) => player.id === (hand.outcome.type === 'win' ? hand.outcome.winnerId : ''))?.name} won`}
                     </div>
                     <div className="mt-1 text-[11px] font-normal text-[#7a7769]">
-                      {game.players.find((player) => player.id === hand.eastPlayerId)?.name} was East · {windLabel(hand.prevailingWind)} prevailing
+                      {game.players.find((player) => player.id === hand.eastPlayerId)?.name} was East · {windLabel(hand.prevailingWind)} prevailing · {hand.handMode === 'goulash' ? 'Goulash' : 'Normal'} → {hand.nextHandMode === 'goulash' ? 'Goulash' : 'Normal'}
                     </div>
                   </summary>
                   <div className="mt-3 grid gap-2 sm:grid-cols-2">

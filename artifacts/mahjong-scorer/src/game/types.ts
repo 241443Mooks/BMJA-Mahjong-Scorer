@@ -26,6 +26,8 @@ export type HandOutcome =
   | { type: 'win'; winnerId: PlayerId }
   | { type: 'draw' };
 
+export type HandMode = 'normal' | 'goulash';
+
 export type RoundInput = {
   outcome: HandOutcome;
   scores: PlayerAmounts;
@@ -61,6 +63,8 @@ export type ProgressionResult = ProgressionState & {
 export type ConfirmedHand = {
   handNumber: number;
   outcome: HandOutcome;
+  handMode: HandMode;
+  nextHandMode: HandMode;
   scores: PlayerAmounts;
   scoreRecords: PlayerScoreRecords;
   eastPlayerId: PlayerId;
@@ -92,6 +96,7 @@ export type GameState = {
   eastCycleStartPlayerId: PlayerId;
   balances: PlayerAmounts;
   handHistory: ConfirmedHand[];
+  currentHandMode: HandMode;
   isComplete: boolean;
 };
 
@@ -100,6 +105,7 @@ export type HandScoreInput = {
   playerWind: Wind;
   prevailingWind: Wind;
   limit?: number;
+  handMode?: HandMode;
 };
 
 export type GameRuleset = {
@@ -118,6 +124,7 @@ export type GameRuleset = {
     current: ProgressionState,
     outcome: HandOutcome,
   ) => ProgressionResult;
+  nextHandMode: (current: HandMode, outcome: HandOutcome) => HandMode;
 };
 
 export type HandScorerContext = {
@@ -128,6 +135,7 @@ export type HandScorerContext = {
   prevailingWind: Wind;
   isWinner: boolean;
   limit: number;
+  handMode: HandMode;
   detailedHand?: DetailedHandRecord;
   requiresRecalculation?: boolean;
 };
@@ -174,4 +182,5 @@ export type HandScorerLocalContext = {
   prevailingWind: Wind;
   limit: number;
   isWinner: boolean;
+  handMode: HandMode;
 };

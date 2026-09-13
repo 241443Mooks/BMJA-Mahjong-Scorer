@@ -30,6 +30,15 @@ export type HandSet = {
   kind: SetKind;
   tile: PlayingTile;
   visibility: Visibility;
+  /** Physical blank tiles in this represented group, identified for audit/replay. */
+  blankTileIds?: string[];
+};
+
+/** A declared physical blank in an ungrouped layout, retaining its effective tile by index. */
+export type UngroupedBlankTile = {
+  id: string;
+  location: 'loose' | 'remaining';
+  tileIndex: number;
 };
 
 export type LegacyFishingSpecialId =
@@ -96,6 +105,8 @@ export type MahjongHand = {
   looseTiles?: PlayingTile[];
   /** Actual ungrouped tiles left over after completed sets in an ordinary non-winning hand. */
   remainingTiles?: PlayingTile[];
+  /** Physical blanks declared against an effective ungrouped tile. */
+  ungroupedBlankTiles?: UngroupedBlankTile[];
   bonusTiles: BonusTile[];
   isWinner: boolean;
   winningMethod?: WinningMethod;
@@ -110,6 +121,7 @@ export type GameContext = {
   playerWind: Wind;
   prevailingWind: Wind;
   limit: number;
+  handMode?: 'normal' | 'goulash';
 };
 
 export type RuleResult = {

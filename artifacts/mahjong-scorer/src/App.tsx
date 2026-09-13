@@ -13,6 +13,7 @@ import { ReturnToGame } from './components/ReturnToGame';
 import { handScorerLocalContext } from './game';
 import { BMJA_PROFILE_REF, resolveRulesProfile } from './game/ruleset';
 import { handScorerInitialBaseline, hasHandScorerUnsavedWork } from './game/hand-scorer-dirty-state';
+import { applicableUngroupedBlanks, hasUngroupedBlankAt, reindexUngroupedBlanksAfterRemoval, toggleUngroupedBlankAt } from './game/ungrouped-blank-state';
 import type {
   HandScorerContext,
   HandScorerResult,
@@ -38,6 +39,7 @@ import type {
   Visibility,
   WinningTileProvenance,
   WinningEventEvidence,
+  UngroupedBlankTile,
 } from './scoring';
 import {
   detectedPatterns,
@@ -208,6 +210,9 @@ function HandScorer({ context, onClose, standaloneHand, example, practice }: { c
   const [remainingTiles, setRemainingTiles] = useState<PlayingTile[]>(() =>
     initialHand?.remainingTiles?.map((tile) => ({ ...tile })) ?? [],
   );
+  const [ungroupedBlankTiles, setUngroupedBlankTiles] = useState<UngroupedBlankTile[]>(() =>
+    initialHand?.ungroupedBlankTiles?.map((blank) => ({ ...blank })) ?? [],
+  );
   const [flowers, setFlowers] = useState<number[]>(() =>
     initialHand?.bonusTiles
       .filter((tile) => tile.family === 'flower')
@@ -281,7 +286,7 @@ function HandScorer({ context, onClose, standaloneHand, example, practice }: { c
     isWinner: initialContext.isWinner, winningMethod: initialHand?.winningMethod ?? (practice ? practiceContext.winningMethod : 'wall'),
     originalCall: initialContext.isWinner ? initialHand?.originalCall ?? (practice ? practiceContext.originalCall : false) : false,
   }), [context, example, practice]);
-  const hasUnsavedWork = !hasContext && hasHandScorerUnsavedWork({ sets, layoutMode, looseTiles, remainingTiles, flowers, seasons, playerWind, prevailingWind, limit, isWinner, winningMethod, originalCall, winningTileProvenance, winningEventEvidence }, initialBaseline);
+  const hasUnsavedWork = !hasContext && hasHandScorerUnsavedWork({ sets, layoutMode, looseTiles, remainingTiles, ungroupedBlankTiles, flowers, seasons, playerWind, prevailingWind, limit, isWinner, winningMethod, originalCall, winningTileProvenance, winningEventEvidence }, initialBaseline);
   const leaveHand = () => {
     if (hasUnsavedWork && !window.confirm('Leave this hand? The hand details you entered will be discarded.')) return;
     if (example) { window.location.assign(example.returnHref); return; }
@@ -329,6 +334,9 @@ function HandScorer({ context, onClose, standaloneHand, example, practice }: { c
     setLooseTiles(savedHand?.looseTiles?.map((tile) => ({ ...tile })) ?? []);
     setRemainingTiles(
       savedHand?.remainingTiles?.map((tile) => ({ ...tile })) ?? [],
+    );
+    setUngroupedBlankTiles(
+      savedHand?.ungroupedBlankTiles?.map((blank) => ({ ...blank })) ?? [],
     );
     setFlowers(
       savedHand?.bonusTiles
@@ -381,6 +389,10 @@ function HandScorer({ context, onClose, standaloneHand, example, practice }: { c
       looseTiles: layoutMode === 'special' ? looseTiles : undefined,
       remainingTiles:
         !isWinner && layoutMode === 'sets' ? remainingTiles : undefined,
+      ungroupedBlankTiles:
+        ungroupedBlankTiles.length > 0
+          ? applicableUngroupedBlanks(ungroupedBlankTiles, layoutMode, isWinner)
+          : undefined,
       bonusTiles: [
         ...flowers.map(n => bonus('flower', n as BonusTile['number'])),
         ...seasons.map(n => bonus('season', n as BonusTile['number']))
@@ -391,7 +403,7 @@ function HandScorer({ context, onClose, standaloneHand, example, practice }: { c
       winningEventEvidence: effectiveWinningEventEvidence,
       originalCall: isWinner ? originalCall : false,
     };
-  }, [sets, looseTiles, remainingTiles, layoutMode, flowers, seasons, isWinner, winningMethod, originalCall, winningTileProvenance, effectiveWinningEventEvidence]);
+  }, [sets, looseTiles, remainingTiles, ungroupedBlankTiles, layoutMode, flowers, seasons, isWinner, winningMethod, originalCall, winningTileProvenance, effectiveWinningEventEvidence]);
 
   useEffect(() => {
     if (winningTileProvenance) {
@@ -450,6 +462,11 @@ function HandScorer({ context, onClose, standaloneHand, example, practice }: { c
     }
   }, [isWinner, winningMethod, numberOfKongs]);
 
+  const gameContext = useMemo<GameContext>(
+    () => ({ playerWind, prevailingWind, limit, handMode: initialContext.handMode }),
+    [initialContext.handMode, limit, playerWind, prevailingWind],
+  );
+
   const isStructureComplete = useMemo(() => {
     if (!isWinner) return false;
     const tempHand: MahjongHand = {
@@ -457,13 +474,8 @@ function HandScorer({ context, onClose, standaloneHand, example, practice }: { c
       winningMethod: 'wall',
       winningTileProvenance: undefined,
     };
-    return validateHand(tempHand).length === 0;
-  }, [hand, isWinner]);
-
-  const gameContext = useMemo<GameContext>(
-    () => ({ playerWind, prevailingWind, limit }),
-    [limit, playerWind, prevailingWind],
-  );
+    return validateHand(tempHand, gameContext).length === 0;
+  }, [hand, isWinner, gameContext]);
 
   const scoringProfile = useMemo(
     () =>
@@ -519,13 +531,41 @@ function HandScorer({ context, onClose, standaloneHand, example, practice }: { c
       return newSets;
     });
   }
+  function toggleUngroupedBlank(location: UngroupedBlankTile['location'], tileIndex: number) {
+    setUngroupedBlankTiles((current) => {
+      return toggleUngroupedBlankAt(
+        current,
+        location,
+        tileIndex,
+        `blank-${location}-${tileIndex}-${Date.now()}`,
+      );
+    });
+  }
+  function removeUngroupedTile(location: UngroupedBlankTile['location'], tileIndex: number) {
+    setWinningTileProvenance(undefined);
+    if (location === 'loose') {
+      setLooseTiles((current) => current.filter((_, index) => index !== tileIndex));
+    } else {
+      setRemainingTiles((current) => current.filter((_, index) => index !== tileIndex));
+    }
+    setUngroupedBlankTiles((current) =>
+      reindexUngroupedBlanksAfterRemoval(current, location, tileIndex),
+    );
+  }
+  function isUngroupedBlank(location: UngroupedBlankTile['location'], tileIndex: number) {
+    return hasUngroupedBlankAt(ungroupedBlankTiles, location, tileIndex);
+  }
   function addTile(tile: PlayingTile) {
     if (layoutMode === 'special') {
       const matchingCopies = looseTiles.filter(
         (candidate) => tileKey(candidate) === tileKey(tile),
       ).length;
       const specialTileLimit = isWinner ? 14 : 13;
-      if (looseTiles.length < specialTileLimit && matchingCopies < 4) {
+      const possibleBlankSlots = 4 - ungroupedBlankTiles.length;
+      const maximumEffectiveCopies = initialContext.handMode === 'goulash'
+        ? 4 + possibleBlankSlots
+        : 4;
+      if (looseTiles.length < specialTileLimit && matchingCopies < maximumEffectiveCopies) {
         setWinningTileProvenance(undefined);
         setLooseTiles((current) => [...current, tile]);
       }
@@ -593,6 +633,7 @@ function HandScorer({ context, onClose, standaloneHand, example, practice }: { c
     setSeasons([]);
     setLooseTiles([]);
     setRemainingTiles([]);
+    setUngroupedBlankTiles([]);
     setWinningTileProvenance(undefined);
     setWinningEventEvidence(undefined);
     setDiscardAnswer(null);
@@ -620,6 +661,7 @@ function HandScorer({ context, onClose, standaloneHand, example, practice }: { c
         ? []
         : [suited('bamboo', 9)],
     );
+    setUngroupedBlankTiles([]);
     setFlowers([1, 4]);
     setSeasons([]);
     setIsWinner(exampleIsWinner);
@@ -657,6 +699,7 @@ function HandScorer({ context, onClose, standaloneHand, example, practice }: { c
           bonusTiles: hand.bonusTiles.map((tile) => ({ ...tile })),
           looseTiles: hand.looseTiles?.map((tile) => ({ ...tile })),
           remainingTiles: hand.remainingTiles?.map((tile) => ({ ...tile })),
+          ungroupedBlankTiles: hand.ungroupedBlankTiles?.map((blank) => ({ ...blank })),
           winningTileProvenance: hand.winningTileProvenance
             ? {
                 tile: { ...hand.winningTileProvenance.tile },
@@ -694,7 +737,10 @@ function HandScorer({ context, onClose, standaloneHand, example, practice }: { c
   const tileIsDisabled = (tile: PlayingTile) =>
     (layoutMode === 'special' &&
       (looseTiles.length >= (isWinner ? 14 : 13) ||
-        looseTiles.filter((candidate) => tileKey(candidate) === tileKey(tile)).length >= 4)) ||
+        looseTiles.filter((candidate) => tileKey(candidate) === tileKey(tile)).length >=
+          (initialContext.handMode === 'goulash'
+            ? 4 + (4 - ungroupedBlankTiles.length)
+            : 4))) ||
     (layoutMode === 'sets' && !canAddStandardTile(tile));
 
   const mobileDestinationLabel = (destination: string) => (
@@ -853,20 +899,31 @@ function HandScorer({ context, onClose, standaloneHand, example, practice }: { c
                       Tap an entered tile to remove it.
                     </p>
                     <div className="flex min-h-[92px] flex-wrap items-center gap-2 rounded-lg border border-[#e2d9c7] bg-[#fdfbf5] p-3">
-                      {looseTiles.map((tile, index) => (
-                        <TileFace
-                          key={`${tileKey(tile)}-${index}`}
-                          tile={tile}
-                          actionLabel={`Remove ${tileName(tile)} from the irregular hand`}
-                          actionTestId={`button-remove-loose-tile-${index}`}
-                          onActivate={() => {
-                            setWinningTileProvenance(undefined);
-                            setLooseTiles((current) =>
-                              current.filter((_, tileIndex) => tileIndex !== index),
-                            );
-                          }}
-                        />
-                      ))}
+                      {looseTiles.map((tile, index) => {
+                        const isBlank = isUngroupedBlank('loose', index);
+                        return (
+                          <div key={`${tileKey(tile)}-${index}`} className="flex flex-col items-center gap-1">
+                            <TileFace
+                              tile={tile}
+                              actionLabel={`Remove ${tileName(tile)} from the irregular hand`}
+                              actionTestId={`button-remove-loose-tile-${index}`}
+                              onActivate={() => removeUngroupedTile('loose', index)}
+                            />
+                            {initialContext.handMode === 'goulash' && (
+                              <button
+                                type="button"
+                                data-testid={`button-toggle-loose-blank-${index}`}
+                                aria-pressed={isBlank}
+                                onClick={() => toggleUngroupedBlank('loose', index)}
+                                className={`rounded px-1.5 py-0.5 text-[9px] font-semibold ${isBlank ? 'bg-[#ae6249] text-white' : 'border border-[#cfc3aa] text-[#66746e]'}`}
+                              >
+                                {isBlank ? 'Blank' : 'Mark blank'}
+                              </button>
+                            )}
+                            {isBlank && <span className="text-[9px] text-[#ae6249]">Blank representing {tileName(tile)}</span>}
+                          </div>
+                        );
+                      })}
                       {looseTiles.length === 0 && (
                         <div className="w-full text-center text-[11px] text-[#9b988d]">
                           Add the {isWinner ? 14 : 13} tiles in the {isWinner ? 'completed' : 'one-tile-away'} special-hand layout.
@@ -888,9 +945,23 @@ function HandScorer({ context, onClose, standaloneHand, example, practice }: { c
                       <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
                         <div className="flex items-center gap-2">
                           <span className="font-mono text-[10px] text-[#ae6249]">SET {String(index + 1).padStart(2, '0')}</span>
-                           <select aria-label={`Set ${index + 1} type`} data-testid={`select-set-type-${index + 1}`} value={s.kind} onChange={(e) => updateSet(s.id, { kind: e.target.value as SetKind, tile: null })} className="cursor-pointer border-0 bg-transparent font-mono text-[10px] uppercase tracking-[.12em] text-[#284d45] outline-none">
-                             <option value="pung">Pung</option><option value="chow" disabled={sets.some((other) => other.id !== s.id && other.kind === 'chow')}>Chow</option><option value="kong">Kong</option><option value="pair">Pair</option>
+                           <select aria-label={`Set ${index + 1} type`} data-testid={`select-set-type-${index + 1}`} value={s.kind} onChange={(e) => { const kind = e.target.value as SetKind; const maximumBlanks = kind === 'pung' ? 1 : kind === 'kong' || kind === 'pair' ? 2 : 0; const blankTileIds = (s.blankTileIds ?? []).slice(0, maximumBlanks); updateSet(s.id, { kind, tile: null, blankTileIds: blankTileIds.length > 0 ? blankTileIds : undefined }); }} className="cursor-pointer border-0 bg-transparent font-mono text-[10px] uppercase tracking-[.12em] text-[#284d45] outline-none">
+                             <option value="pung">Pung</option><option value="chow" disabled={initialContext.handMode === 'goulash' || sets.some((other) => other.id !== s.id && other.kind === 'chow')}>Chow</option><option value="kong">Kong</option><option value="pair">Pair</option>
                           </select>
+                          {initialContext.handMode === 'goulash' && (s.kind === 'pung' || s.kind === 'kong' || s.kind === 'pair') && (
+                            <select
+                              aria-label={`Set ${index + 1} blank tiles`}
+                              data-testid={`select-set-blanks-${index + 1}`}
+                              value={s.blankTileIds?.length ?? 0}
+                              onChange={(e) => {
+                                const count = Number(e.target.value);
+                                updateSet(s.id, { blankTileIds: Array.from({ length: count }, (_, blankIndex) => `blank-${s.id}-${blankIndex + 1}`) });
+                              }}
+                              className="cursor-pointer border-0 bg-transparent font-mono text-[10px] uppercase tracking-[.12em] text-[#284d45] outline-none"
+                            >
+                              {Array.from({ length: s.kind === 'pung' ? 2 : 3 }, (_, count) => <option key={count} value={count}>{count} blank{count === 1 ? '' : 's'}</option>)}
+                            </select>
+                          )}
                           <select aria-label={`Set ${index + 1} visibility`} data-testid={`select-set-visibility-${index + 1}`} value={s.visibility} onChange={(e) => updateSet(s.id, { visibility: e.target.value as Visibility })} className="cursor-pointer border-0 bg-transparent font-mono text-[10px] uppercase tracking-[.12em] text-[#284d45] outline-none">
                             <option value="concealed">Concealed</option><option value="exposed">Exposed</option>
                           </select>
@@ -943,19 +1014,31 @@ function HandScorer({ context, onClose, standaloneHand, example, practice }: { c
                         Tap an entered tile to remove it.
                       </p>
                       <div className="flex min-h-[76px] flex-wrap items-center gap-2 rounded-md border border-dashed border-[#d7cbb5] bg-[#fdfbf5] p-2">
-                        {remainingTiles.map((tile, index) => (
-                          <TileFace
-                            key={`${tileKey(tile)}-${index}`}
-                            tile={tile}
-                            actionLabel={`Remove ${tileName(tile)} from the remaining tiles`}
-                            actionTestId={`button-remove-remaining-tile-${index}`}
-                            onActivate={() =>
-                              setRemainingTiles((current) =>
-                                current.filter((_, tileIndex) => tileIndex !== index),
-                              )
-                            }
-                          />
-                        ))}
+                        {remainingTiles.map((tile, index) => {
+                          const isBlank = isUngroupedBlank('remaining', index);
+                          return (
+                            <div key={`${tileKey(tile)}-${index}`} className="flex flex-col items-center gap-1">
+                              <TileFace
+                                tile={tile}
+                                actionLabel={`Remove ${tileName(tile)} from the remaining tiles`}
+                                actionTestId={`button-remove-remaining-tile-${index}`}
+                                onActivate={() => removeUngroupedTile('remaining', index)}
+                              />
+                              {initialContext.handMode === 'goulash' && (
+                                <button
+                                  type="button"
+                                  data-testid={`button-toggle-remaining-blank-${index}`}
+                                  aria-pressed={isBlank}
+                                  onClick={() => toggleUngroupedBlank('remaining', index)}
+                                  className={`rounded px-1.5 py-0.5 text-[9px] font-semibold ${isBlank ? 'bg-[#ae6249] text-white' : 'border border-[#cfc3aa] text-[#66746e]'}`}
+                                >
+                                  {isBlank ? 'Blank' : 'Mark blank'}
+                                </button>
+                              )}
+                              {isBlank && <span className="text-[9px] text-[#ae6249]">Blank representing {tileName(tile)}</span>}
+                            </div>
+                          );
+                        })}
                         {remainingTiles.length === 0 && (
                           <div className="w-full text-center text-[11px] leading-5 text-[#9b988d]">
                             Select this area, then choose leftover tiles from the tile bank.

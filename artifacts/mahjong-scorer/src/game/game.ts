@@ -31,9 +31,11 @@ const cloneDetailedHandRecord = (
     sets: record.hand.sets.map((handSet) => ({
       ...handSet,
       tile: { ...handSet.tile },
+      blankTileIds: handSet.blankTileIds ? [...handSet.blankTileIds] : undefined,
     })),
     looseTiles: record.hand.looseTiles?.map((tile) => ({ ...tile })),
     remainingTiles: record.hand.remainingTiles?.map((tile) => ({ ...tile })),
+    ungroupedBlankTiles: record.hand.ungroupedBlankTiles?.map((blank) => ({ ...blank })),
     bonusTiles: record.hand.bonusTiles.map((tile) => ({ ...tile })),
     winningTileProvenance: record.hand.winningTileProvenance
       ? {
@@ -148,6 +150,7 @@ export const createBmjaGame = (
     eastCycleStartPlayerId: eastPlayerId(startingSeats),
     balances: cloneAmounts(balances),
     handHistory: [],
+    currentHandMode: 'normal',
     isComplete: false,
   };
 };
@@ -157,13 +160,20 @@ const applyRound = (state: GameState, round: RoundInput): GameState => {
     throw new Error('Game is already complete.');
   }
 
+  const appliedRound: RoundInput = round.outcome.type === 'draw'
+    ? {
+        outcome: round.outcome,
+        scores: Object.fromEntries(state.players.map((player) => [player.id, 0])),
+        scoreRecords: {},
+      }
+    : round;
   const ruleset = resolveRulesProfile(state.setup.rulesProfile);
   const settlement = ruleset.settleRound(
     state.players,
     state.seats,
-    round,
+    appliedRound,
   );
-  const scoreRecords = normaliseScoreRecords(state, round);
+  const scoreRecords = normaliseScoreRecords(state, appliedRound);
   const runningTotals = Object.fromEntries(
     state.players.map((player) => [
       player.id,
@@ -177,8 +187,9 @@ const applyRound = (state: GameState, round: RoundInput): GameState => {
       prevailingWind: state.prevailingWind,
       eastCycleStartPlayerId: state.eastCycleStartPlayerId,
     },
-    round.outcome,
+    appliedRound.outcome,
   );
+  const nextHandMode = ruleset.nextHandMode(state.currentHandMode, appliedRound.outcome);
 
   let isComplete = false;
   if (progression.prevailingWindAdvanced) {
@@ -191,8 +202,10 @@ const applyRound = (state: GameState, round: RoundInput): GameState => {
 
   const confirmed: ConfirmedHand = {
     handNumber: state.handHistory.length + 1,
-    outcome: round.outcome,
-    scores: cloneAmounts(round.scores),
+    outcome: appliedRound.outcome,
+    handMode: state.currentHandMode,
+    nextHandMode,
+    scores: cloneAmounts(appliedRound.scores),
     scoreRecords,
     eastPlayerId: eastPlayerId(state.seats),
     prevailingWind: state.prevailingWind,
@@ -213,6 +226,7 @@ const applyRound = (state: GameState, round: RoundInput): GameState => {
     eastCycleStartPlayerId: progression.eastCycleStartPlayerId,
     balances: runningTotals,
     handHistory: [...state.handHistory, confirmed],
+    currentHandMode: nextHandMode,
     isComplete,
   };
 };
