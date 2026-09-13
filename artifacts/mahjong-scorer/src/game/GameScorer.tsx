@@ -63,6 +63,9 @@ const activeRulesCopy = (profileId: string) =>
       ? 'Outside the Box'
       : 'British / BMJA-style';
 
+export const gameRecordRulesLabel = (profile: GameState['setup']['rulesProfile']) =>
+  `${activeRulesCopy(profile.id)} · Profile version: ${profile.version}`;
+
 export const handCountLabel = (count: number) =>
   `${count} ${count === 1 ? 'hand' : 'hands'} played`;
 
@@ -470,8 +473,9 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
 
       <main className="mx-auto grid max-w-[1440px] gap-6 px-5 py-7 lg:grid-cols-[minmax(0,1fr)_390px] lg:px-8">
         <div className="print-only game-print-heading">
-          <h1>Mahjong Reference — British Mahjong game record</h1>
+          <h1>Mahjong Reference — {activeRulesCopy(game.setup.rulesProfile.id)} game record</h1>
           <p>{game.isComplete ? 'Game complete' : 'Game in progress'} · {handCountLabel(game.handHistory.length)}</p>
+          <p>Rules: {gameRecordRulesLabel(game.setup.rulesProfile)}</p>
         </div>
         <section className="min-w-0 space-y-5">
           <div>

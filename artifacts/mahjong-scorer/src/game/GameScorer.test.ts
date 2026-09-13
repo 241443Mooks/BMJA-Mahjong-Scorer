@@ -1,9 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import { confirmHand, createBmjaGame } from './game';
-import { getRoundSettlementPreview, previewRoundSettlement } from './GameScorer';
-import { BMJA_PROFILE_REF, OUTSIDE_THE_BOX_PROFILE_REF, resolveRulesProfile } from './ruleset';
+import { gameRecordRulesLabel, getRoundSettlementPreview, previewRoundSettlement } from './GameScorer';
+import { BMJA_PROFILE_REF, OUTSIDE_THE_BOX_PROFILE_REF, resolveRulesProfile, WESTERN_TM_PROFILE_REF } from './ruleset';
 
 describe('game settlement preview', () => {
+  it('uses a truthful human-facing rules label and exact version in printable records', () => {
+    expect(gameRecordRulesLabel(OUTSIDE_THE_BOX_PROFILE_REF)).toBe('Outside the Box · Profile version: 0.1');
+    expect(gameRecordRulesLabel(BMJA_PROFILE_REF)).toBe('British / BMJA-style · Profile version: 1.0');
+    expect(gameRecordRulesLabel(WESTERN_TM_PROFILE_REF)).toBe('Western — Thompson & Maloney (provisional) · Profile version: 0.1');
+  });
+
   it('uses the persisted resolved profile and matches confirmation', () => {
     const game = createBmjaGame(
       [
