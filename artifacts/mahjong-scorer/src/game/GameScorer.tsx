@@ -522,8 +522,10 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
           <p>Rules: {gameRecordRulesLabel(game.setup.rulesProfile)}</p>
         </div>
         <section className="min-w-0">
-          {!game.isComplete && <details ref={tableScoresRef} data-testid="section-table-scores" open={workspaceStage === 'entry' || editingHand} className="screen-only scroll-mt-4 rounded-xl border border-[#d8ceb8] bg-[#fbf8ed] p-5 sm:p-6">
-            {workspaceStage === 'settlement' && <summary onClick={() => setEditingHand(true)} className="mb-5 cursor-pointer font-mono text-[10px] uppercase tracking-[.16em] text-[#ae6249]">Edit current hand</summary>}
+          {!game.isComplete && <details ref={tableScoresRef} data-testid="section-table-scores" open={workspaceStage === 'entry' || editingHand} onToggle={(event) => {
+            if (workspaceStage === 'settlement') setEditingHand(event.currentTarget.open);
+          }} className="screen-only scroll-mt-4 rounded-xl border border-[#d8ceb8] bg-[#fbf8ed] p-5 sm:p-6">
+            {workspaceStage === 'settlement' && <summary className="mb-5 cursor-pointer font-mono text-[10px] uppercase tracking-[.16em] text-[#ae6249]">Edit current hand</summary>}
             <div className="mb-5">
               <div className="font-mono text-[10px] uppercase tracking-[.2em] text-[#ae6249]">
                 Current hand
@@ -822,12 +824,10 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
           </section>
 
         <details id="game-ledger" data-testid="details-game-ledger" className="rounded-xl border border-[#d8ceb8] bg-[#fbf8ed] p-5 sm:p-6">
-          <div className="mb-4 flex items-center gap-2">
+          <summary className="mb-4 flex cursor-pointer list-none items-center gap-2 font-serif text-[23px] text-[#284d45]">
             <History size={16} className="text-[#ae6249]" />
-            <summary className="cursor-pointer list-none font-serif text-[23px] text-[#284d45]">
-              Game ledger
-            </summary>
-          </div>
+            Game ledger
+          </summary>
           <p className="mb-4 font-mono text-[10px] uppercase tracking-[.14em] text-[#7a7769]">{handCountLabel(game.handHistory.length)}</p>
           {game.handHistory.length === 0 ? (
             <p className="text-[12px] text-[#8c8a7f]">
