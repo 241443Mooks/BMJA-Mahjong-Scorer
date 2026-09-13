@@ -1,0 +1,58 @@
+name: Validate repository hygiene
+
+on:
+  push:
+    branches:
+      - chore/105a5-scaffold-cleanup
+
+permissions:
+  contents: write
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.15.1
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies and regenerate lockfile
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Run scorer tests
+        run: pnpm test
+
+      - name: Typecheck scorer
+        run: pnpm run typecheck
+
+      - name: Build production scorer
+        run: pnpm run build
+        env:
+          PORT: '5173'
+          BASE_PATH: '/'
+
+      - name: Commit regenerated lockfile
+        shell: bash
+        run: |
+          if git diff --quiet -- pnpm-lock.yaml; then
+            echo "Lockfile already current."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add pnpm-lock.yaml
+          git commit -m "chore: regenerate lockfile after scaffold cleanup"
+          git push origin HEAD:chore/105a5-scaffold-cleanup
