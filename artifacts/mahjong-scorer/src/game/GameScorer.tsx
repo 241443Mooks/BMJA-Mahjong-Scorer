@@ -432,8 +432,8 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
       <div className="screen-only border-b border-[#d8ceb8] bg-[#f5f1e6]/70">
         <div className="mx-auto flex max-w-[1440px] flex-wrap items-center justify-between gap-4 px-5 py-4 lg:px-8">
           <div>
-            <div className="font-mono text-[9px] uppercase tracking-[.24em] text-[#ae6249]">
-              Hand {game.handHistory.length + 1} / {activeRulesCopy(game.setup.rulesProfile)}
+            <div className="font-mono text-[11px] uppercase tracking-[.18em] text-[#ae6249]">
+              {game.isComplete ? 'Game complete' : `Entering hand ${game.handHistory.length + 1}`} · {activeRulesCopy(game.setup.rulesProfile)}
             </div>
             <div className="font-serif text-[21px] font-bold text-[#284d45]">
               {game.players.find((player) => player.id === currentEastId)?.name}{' '}
@@ -488,7 +488,7 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
         </div>
         <section className="min-w-0 space-y-5">
           <div>
-            <div className="mb-2 font-mono text-[9px] font-medium uppercase tracking-[.18em] text-[#7a7769]">
+            <div className="mb-2 font-mono text-[11px] font-medium uppercase tracking-[.16em] text-[#7a7769]">
               Running game totals
             </div>
             <div className="grid grid-cols-2 gap-2 sm:gap-3 xl:grid-cols-4">
@@ -533,8 +533,8 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
                   The final hand has been recorded. Undo the last hand to continue playing, or refresh to start a new game.
                 </p>
               ) : (
-                <p className="mt-2 text-[12px] text-[#7a7769]">
-                  Enter each player’s hand score, not the payment amount.
+                <p className="mt-2 max-w-[680px] text-[15px] leading-6 text-[#66746e]">
+                  <strong>Hand score</strong> is what each player’s hand is worth. <strong>Settlement</strong> works out who pays whom under these rules; it is not the score you enter.
                 </p>
               )}
             </div>
@@ -704,13 +704,16 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
                 {game.isComplete ? 'Final Standings' : 'Round settlement'}
               </div>
               <div className="mt-2 font-serif text-[27px]">
-                {game.isComplete ? 'Game Complete' : outcomeType === 'draw' ? 'No payments' : 'Preview changes'}
+                {game.isComplete ? 'Game Complete' : outcomeType === 'draw' ? 'No payments this hand' : 'Who pays whom'}
               </div>
             </div>
 
             {!game.isComplete ? (
               <div className="p-5">
-                <div className="space-y-3">
+                {outcomeType === 'draw' ? <p className="rounded-md bg-[#355e54] px-3 py-3 text-[15px] leading-6 text-[#c8d8d1]">This draw has no payments. East and the prevailing Wind remain unchanged.</p> : <div className="space-y-2 rounded-md bg-[#355e54] p-3 text-[14px] leading-6 text-[#e5eee9]">
+                  {preview.settlement?.transactions.length ? preview.settlement.transactions.map((transaction, index) => <p key={`${transaction.fromPlayerId}-${transaction.toPlayerId}-${index}`}>{settlementDescription(transaction, game.players, currentEastId ?? '')}</p>) : <p>Enter complete hand scores to see the settlement transactions.</p>}
+                </div>}
+                <div className="mt-5"><div className="mb-2 font-mono text-[10px] uppercase tracking-[.16em] text-[#d7a287]">Net change</div><div className="space-y-3">
                   {game.players.map((player) => {
                     const change = preview.settlement?.changes[player.id] ?? 0;
                     return (
@@ -740,7 +743,7 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
                       </div>
                     );
                   })}
-                </div>
+                </div></div>
                 <div className="mt-5 flex items-center gap-2 rounded-md bg-[#355e54] px-3 py-2 text-[10px] text-[#c8d8d1]">
                   <Check size={13} />
                   Changes total {preview.settlement?.zeroSum ? 'zero' : '—'}
@@ -753,7 +756,6 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
                 {incidents.length > 0 && (
                   <div className="mt-3 rounded-md bg-[#355e54] px-3 py-2 text-[10px] leading-5 text-[#c8d8d1]">
                     {incidents.map((incident, index) => <div key={index}>{incidentDescription(incident, game.players)}</div>)}
-                    {preview.settlement?.transactions.filter((transaction) => !['winner-payment', 'score-difference'].includes(transaction.reason)).map((transaction, index) => <div key={`payment-${index}`}>{settlementDescription(transaction, game.players, currentEastId ?? '')}</div>)}
                   </div>
                 )}
                 {error && (
@@ -767,8 +769,9 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
                   onClick={confirmRound}
                   className="mt-4 flex w-full items-center justify-center gap-2 rounded-md bg-[#f3e8d4] px-4 py-3 text-[12px] font-bold text-[#284d45]"
                 >
-                  Confirm and advance <ArrowRight size={15} />
+                  Record hand and advance <ArrowRight size={15} />
                 </button>
+                <p className="mt-2 text-center text-[13px] leading-5 text-[#c8d8d1]">Records this settlement, updates totals, and advances East, Wind and hand state when the active rules require it.</p>
               </div>
             ) : (
               <div className="p-5">

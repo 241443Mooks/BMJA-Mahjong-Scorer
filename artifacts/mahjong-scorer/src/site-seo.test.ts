@@ -9,6 +9,7 @@ describe('public SEO configuration', () => {
     expect(siteSeo.routes.every((route) => route.indexable)).toBe(true);
     expect(siteSeo.routes.find((route) => route.path === '/')?.title).toContain('Mahjong Table Companion');
     expect(siteSeo.routes.find((route) => route.path === '/hand')?.title).toContain('Mahjong Hand Calculator');
+    expect(siteSeo.routes.find((route) => route.path === '/mahjong-settlement')?.title).toContain('Mahjong Settlement Explained');
     expect(siteSeo.routes.find((route) => route.path === '/mahjong-rules-compared')?.title).toContain('British vs Riichi vs Hong Kong vs American Mahjong Rules');
     expect(siteSeo.routes.every((route) => route.title.includes('Mahjong Reference'))).toBe(true);
     expect(siteSeo.webSite.name).toBe('Mahjong Reference');

@@ -5,7 +5,7 @@ describe('site navigation', () => {
   it('organises current user jobs as Play, Rules and Learn', () => {
     expect(navigationGroups.map((group) => group.label)).toEqual(['Play', 'Rules', 'Learn']);
     expect(navigationGroups).toEqual([
-      { label: 'Play', destinations: [['Track a game', '/game'], ['Score a hand', '/hand']] },
+      { label: 'Play', destinations: [['Track a game', '/game'], ['Score a hand', '/hand'], ['Understand settlement', '/mahjong-settlement']] },
       {
         label: 'Rules',
         destinations: [
