@@ -43,7 +43,7 @@ const steps: HowItWorksStep[] = [
   },
   {
     number: '03', title: 'It calculates what the evidence supports',
-    text: 'The scoring engine applies the supported British Mahjong rules to the information you entered. Missing evidence stays missing rather than being guessed.',
+    text: 'The selected supported rules profile controls the scoring and settlement behaviour applied to the information you entered. Missing evidence stays missing rather than being guessed.',
     Icon: Calculator, screenshot: phaseOneHelpInstructions.disagreement,
   },
   {
@@ -86,7 +86,7 @@ export function HowItWorksPage() {
           <section className="border-b border-[#ddd3bf] px-5 py-9 sm:px-8 sm:py-12 lg:px-12 lg:py-14">
             <div className="mb-4 flex items-center gap-3"><div className="fine-rule w-10" /><span className="font-mono text-[10px] uppercase tracking-[.2em] text-[#ae6249]">How it works</span></div>
             <h1 className="max-w-[820px] font-serif text-[clamp(38px,6vw,62px)] leading-[.98] text-[#284d45]">Tell the scorer what you know. It works out what it safely can.</h1>
-            <p className="mt-5 max-w-[760px] text-[15px] leading-7 text-[#596b65]">Mahjong Reference is designed around evidence rather than guesswork. You give its British / BMJA-style scorer the hand and game context you actually have; it calculates the supported score, explains the reasoning, and carries confirmed results into settlement and the game record.</p>
+            <p className="mt-5 max-w-[760px] text-[15px] leading-7 text-[#596b65]">Mahjong Reference is designed around evidence rather than guesswork. You give the selected supported rules profile the hand and game context you actually have; it calculates the supported score, explains the reasoning, and carries confirmed results into settlement and the game record. <a href="/rules" className="font-semibold text-[#284d45] underline decoration-[#cfa58f] underline-offset-4">See supported rules</a>.</p>
             <div className="mt-7 flex flex-col gap-3 sm:flex-row">
               <a href="/game" className="inline-flex items-center justify-center gap-2 rounded-md bg-[#284d45] px-4 py-2.5 text-[11px] font-semibold text-[#f8f4e9] transition hover:bg-[#23443d] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249] focus-visible:ring-offset-2">Score a game <ArrowRight size={14} /></a>
               <a href="/hand" className="inline-flex items-center justify-center gap-2 rounded-md border border-[#c9b99d] bg-[#fdfbf5] px-4 py-2.5 text-[11px] font-semibold text-[#284d45] transition hover:bg-[#fffaf0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249] focus-visible:ring-offset-2">Score a hand <ArrowRight size={14} /></a>
@@ -97,7 +97,7 @@ export function HowItWorksPage() {
             <div className="mb-7 max-w-[720px]">
               <div className="font-mono text-[9px] uppercase tracking-[.18em] text-[#ae6249]">The flow</div>
               <h2 className="mt-2 font-serif text-[32px] leading-tight text-[#284d45]">Context → Evidence → Score → Explain → Settle → Record</h2>
-              <p className="mt-3 text-[13px] leading-6 text-[#66746e]">The product follows one connected path rather than treating the hand scorer, settlement and game history as separate systems.</p>
+              <p className="mt-3 text-[13px] leading-6 text-[#66746e]">The product follows one connected path rather than treating the hand scorer, settlement and game history as separate systems. Current instructional screenshots show the British / BMJA-style flow.</p>
             </div>
             <ol className="grid gap-3 md:grid-cols-2">
               {steps.map(({ number, title, text, Icon, screenshot }) => (
@@ -129,7 +129,7 @@ export function HowItWorksPage() {
 
           <section className="border-b border-[#ddd3bf] bg-[#284d45] px-5 py-9 text-[#f8f4e9] sm:px-8 sm:py-11 lg:px-12">
             <div className="grid gap-8 lg:grid-cols-[1fr_1.1fr] lg:gap-12">
-              <div><div className="font-mono text-[9px] uppercase tracking-[.18em] text-[#d7a287]">Trust principle</div><h2 className="mt-2 font-serif text-[32px] leading-tight">Unknown means unknown.</h2><p className="mt-3 text-[13px] leading-6 text-[#c8d4cf]">Some British Mahjong rules depend on details that are easy to forget — such as which tile completed Mah Jong or whether a rare event actually happened. If the evidence is not known, the scorer does not manufacture it.</p></div>
+              <div><div className="font-mono text-[9px] uppercase tracking-[.18em] text-[#d7a287]">Trust principle</div><h2 className="mt-2 font-serif text-[32px] leading-tight">Unknown means unknown.</h2><p className="mt-3 text-[13px] leading-6 text-[#c8d4cf]">Some supported rules depend on details that are easy to forget — such as which tile completed Mah Jong or whether a rare event actually happened. If the evidence is not known, the scorer does not manufacture it.</p></div>
               <ul className="space-y-3">{trustPoints.map((point) => <li key={point} className="flex gap-3 rounded-lg border border-[#55756c] bg-[#31594f] px-4 py-3 text-[12px] leading-6 text-[#e8eee9]"><ShieldCheck size={16} className="mt-1 shrink-0 text-[#d7a287]" /><span>{point}</span></li>)}</ul>
             </div>
           </section>
@@ -143,8 +143,8 @@ export function HowItWorksPage() {
 
           <section className="px-5 py-9 sm:px-8 sm:py-11 lg:px-12">
             <div className="grid gap-4 md:grid-cols-3">
-              <a href="/guide" className="rounded-xl border border-[#d8ceb8] bg-[#fdfbf5] p-5 transition hover:-translate-y-0.5 hover:bg-[#fffaf0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]"><BookOpen size={18} className="text-[#477562]" /><h3 className="mt-4 font-serif text-[22px] text-[#284d45]">Learn the scoring</h3><p className="mt-2 text-[11px] leading-5 text-[#66746e]">Use the beginner guide if you want the rules explained progressively.</p></a>
-              <a href="/special-hands" className="rounded-xl border border-[#d8ceb8] bg-[#fdfbf5] p-5 transition hover:-translate-y-0.5 hover:bg-[#fffaf0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]"><Sparkles size={18} className="text-[#ae6249]" /><h3 className="mt-4 font-serif text-[22px] text-[#284d45]">Browse special hands</h3><p className="mt-2 text-[11px] leading-5 text-[#66746e]">See the supported special-hand catalogue and visual examples.</p></a>
+              <a href="/guide" className="rounded-xl border border-[#d8ceb8] bg-[#fdfbf5] p-5 transition hover:-translate-y-0.5 hover:bg-[#fffaf0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]"><BookOpen size={18} className="text-[#477562]" /><h3 className="mt-4 font-serif text-[22px] text-[#284d45]">British scoring guide</h3><p className="mt-2 text-[11px] leading-5 text-[#66746e]">Use the British beginner guide if you want those rules explained progressively.</p></a>
+              <a href="/special-hands" className="rounded-xl border border-[#d8ceb8] bg-[#fdfbf5] p-5 transition hover:-translate-y-0.5 hover:bg-[#fffaf0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]"><Sparkles size={18} className="text-[#ae6249]" /><h3 className="mt-4 font-serif text-[22px] text-[#284d45]">British special hands</h3><p className="mt-2 text-[11px] leading-5 text-[#66746e]">See the British special-hand catalogue and visual examples.</p></a>
               <a href="/about" className="rounded-xl border border-[#d8ceb8] bg-[#fdfbf5] p-5 transition hover:-translate-y-0.5 hover:bg-[#fffaf0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]"><HelpCircle size={18} className="text-[#477562]" /><h3 className="mt-4 font-serif text-[22px] text-[#284d45]">Rules and trust</h3><p className="mt-2 text-[11px] leading-5 text-[#66746e]">Read about the project, rule sources, independence and local-data approach.</p></a>
             </div>
           </section>

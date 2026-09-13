@@ -62,7 +62,7 @@ const groups: HelpGroup[] = [
         id: 'settlement',
         question: 'How does settlement work?',
         answer: 'The game calculates player-to-player payments from the confirmed hand scores and game context.',
-        detail: 'Where East affects a payment, the scorer applies the relevant doubling. The ledger retains the actual transactions so you can see who paid whom rather than only a net change.',
+        detail: 'Where the selected rules require East or dealer effects, the scorer applies the relevant adjustment. The ledger retains the actual transactions so you can see who paid whom rather than only a net change.',
       },
       {
         id: 'correct-hand',
@@ -136,7 +136,7 @@ const groups: HelpGroup[] = [
         id: 'special-name',
         question: 'Do I need to know the name of the special hand first?',
         answer: 'Usually, no.',
-        detail: 'Where the entered evidence is sufficient, the scorer detects supported special-hand patterns from the tiles and context. The Special hands page remains available as a separate reference catalogue.',
+        detail: 'Where the entered evidence is sufficient, the scorer detects supported special-hand patterns from the tiles and context. The British Special hands page remains available as a separate reference catalogue.',
       },
       {
         id: 'special-fishing',
@@ -203,8 +203,8 @@ const groups: HelpGroup[] = [
       {
         id: 'ruleset',
         question: 'Does this support every form of Mahjong?',
-        answer: 'No. It is built around the British rules implemented by this project.',
-        detail: 'It is not intended to be a universal Mahjong rules engine or to cover every house rule. If you are unsure which family of rules you play, use the Mahjong rules comparison below.',
+        answer: 'No. It supports selected rules profiles, not every form of Mahjong.',
+        detail: 'British / BMJA-style support is stable. Western — Thompson & Maloney scoring is available provisionally while ordinary play, scoring, settlement and progression remain under source review. Club rules use a configured local profile. It is not a universal Mahjong rules engine and does not cover every Mahjong family or house rule; see the supported rules hub if you are unsure which profile applies.',
       },
       {
         id: 'account',
@@ -345,7 +345,7 @@ export function HelpPage() {
                 <AlertTriangle size={21} className="mx-auto text-[#ae6249]" />
                 <h2 className="mt-3 font-serif text-[24px] text-[#284d45]">No matching help answer yet</h2>
                 <p className="mx-auto mt-2 max-w-[560px] text-[12px] leading-6 text-[#66746e]">
-                  Try a shorter phrase such as “partial”, “Kong”, “settlement” or “save”. You can also use the scoring guide and special-hand catalogue below.
+                  Try a shorter phrase such as “partial”, “Kong”, “settlement” or “save”. You can also use the British scoring guide and British special-hand catalogue below.
                 </p>
               </div>
             )}
@@ -355,9 +355,9 @@ export function HelpPage() {
             <h2 className="font-serif text-[28px] text-[#284d45]">Need the rules rather than the app help?</h2>
             <div className="mt-5 grid gap-3 md:grid-cols-2 lg:grid-cols-4">
               {[
-                ['/guide', BookOpen, 'Scoring guide', 'Learn points, doubles and scoring progressively.'],
-                ['/special-hands', Sparkles, 'Special hands', 'Browse the supported visual special-hand catalogue.'],
-                ['/mahjong-rules-compared', CircleHelp, 'Which Mahjong rules?', 'Compare British, Hong Kong, Riichi, MCR and American Mahjong.'],
+                ['/guide', BookOpen, 'British scoring guide', 'Learn British points, doubles and scoring progressively.'],
+                ['/special-hands', Sparkles, 'British special hands', 'Browse the British visual special-hand catalogue.'],
+                ['/rules', CircleHelp, 'Supported rules', 'See British stable, Western provisional and Club configured support.'],
                 ['/how-it-works', CircleHelp, 'How it works', 'See how evidence, scoring, settlement and the ledger fit together.'],
               ].map(([href, Icon, title, description]) => {
                 const LinkIcon = Icon as typeof BookOpen;

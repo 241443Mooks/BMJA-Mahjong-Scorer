@@ -35,8 +35,8 @@ const projectActions: ActionLink[] = [
     icon: Calculator,
   },
   {
-    title: 'Learn as you go',
-    description: 'Use the gameplay, scoring and special-hand guides alongside the table.',
+    title: 'Learn British Mahjong',
+    description: 'Use the British gameplay, scoring and special-hand guides alongside the table.',
     href: '/guide',
     icon: BookOpen,
   },
@@ -95,11 +95,11 @@ export function AboutPage() {
               <span className="font-mono text-[10px] uppercase tracking-[.2em] text-[#ae6249]">Independent project</span>
             </div>
             <h1 className="max-w-[780px] font-serif text-[clamp(38px,6vw,62px)] leading-[.98] text-[#284d45]">
-              British Mahjong is easier to enjoy when the rules are easier to see.
+              A clearer view of the rules makes Mahjong easier to enjoy.
             </h1>
             <p className="mt-5 max-w-[760px] text-[15px] leading-7 text-[#596b65]">
-              Mahjong Reference is a small independent project built to make British Mahjong easier to
-              <strong className="text-[#284d45]"> score, understand and learn while you play</strong>.
+              Mahjong Reference began with British / BMJA-style scoring and is now a rules-aware
+              <strong className="text-[#284d45]"> Table Companion for scoring, settlement and game records</strong>.
             </p>
             <p className="mt-4 max-w-[760px] text-[14px] leading-7 text-[#596b65]">
               The aim is not to turn the game into a screen, or to make players memorise a scoring engine. It is to take care of the awkward bookkeeping and surface the useful rule at the moment it matters.
@@ -122,7 +122,7 @@ export function AboutPage() {
                   <h2 className="font-serif text-[30px] leading-tight text-[#284d45]">Why this exists</h2>
                 </div>
                 <p className="text-[14px] leading-7 text-[#596b65]">
-                  British Mahjong contains lots of individually manageable rules — Pungs and Kongs, concealed and exposed sets, Winds, Flowers, Seasons, doubles, special hands, fishing and settlement. The difficult part is remembering how they interact while four people are trying to play.
+                  A Mahjong table has lots of individually manageable facts — hand evidence, table context, rules-specific scoring and settlement. The difficult part is remembering how they interact while four people are trying to play. British / BMJA-style scoring was the project’s starting point; the Companion now keeps those differences explicit instead of pretending every game works alike.
                 </p>
               </div>
 
@@ -147,7 +147,7 @@ export function AboutPage() {
           <section className="border-b border-[#ddd3bf] px-5 py-9 sm:px-8 sm:py-11 lg:px-12">
             <h2 className="font-serif text-[30px] leading-tight text-[#284d45]">What you can do here</h2>
             <p className="mt-3 max-w-[720px] text-[13px] leading-6 text-[#66746e]">
-              The scorer and the learning pages use the same underlying rules, so the explanation should match what happens at the table.
+              The rules-aware tools support British / BMJA-style scoring (stable), Western — Thompson &amp; Maloney scoring (provisional), and a configured local Club profile. The learning library currently explains British Mahjong specifically, so its guidance stays clear about that scope.
             </p>
             <div className="mt-6 grid gap-3 md:grid-cols-3">
               {projectActions.map((action) => (
@@ -164,7 +164,7 @@ export function AboutPage() {
                   <h2 className="font-serif text-[30px] leading-tight text-[#284d45]">Rules and sources</h2>
                 </div>
                 <p className="text-[13px] leading-6 text-[#596b65]">
-                  The project uses British Mahjong / BMJA-style rules. The main public rules reference used during development is <ExternalTextLink href="https://mahjongbritishrules.wordpress.com/">Mah-Jong British Rules</ExternalTextLink>.
+                  See the <a href="/rules" className="font-semibold text-[#284d45] underline decoration-[#cfa58f] underline-offset-4 transition hover:text-[#ae6249]">supported rules hub</a> for the current profile boundaries: British / BMJA-style is stable; Western — Thompson &amp; Maloney is provisional while ordinary play, scoring, settlement and progression remain under source review; Club rules are configured locally. The main public British reference used during development is <ExternalTextLink href="https://mahjongbritishrules.wordpress.com/">Mah-Jong British Rules</ExternalTextLink>.
                 </p>
                 <p className="mt-3 text-[13px] leading-6 text-[#596b65]">
                   Implementation decisions and known ambiguities are also recorded in the project’s engineering rules reference rather than hidden inside the code.
@@ -270,7 +270,7 @@ export function AboutPage() {
             </div>
 
             <p className="mt-6 text-[10px] leading-5 text-[#8c8a7f]">
-              Mahjong Reference is the site identity. Its current scorer supports British / BMJA-style rules; that does not imply ownership of British Mahjong, association with a governing body, or compatibility with every Mahjong ruleset.
+              Mahjong Reference is the site identity. It does not imply ownership of British Mahjong, association with a governing body, or compatibility with every Mahjong ruleset.
             </p>
           </section>
         </article>
