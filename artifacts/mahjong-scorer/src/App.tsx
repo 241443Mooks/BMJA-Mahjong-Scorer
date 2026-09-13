@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { Toaster } from '@/components/ui/toaster';
@@ -13,6 +13,7 @@ import { ReturnToGame } from './components/ReturnToGame';
 import { handScorerLocalContext } from './game';
 import { BMJA_PROFILE_REF, resolveRulesProfile } from './game/ruleset';
 import { ActiveRules, RulesProfilePicker } from './game/RulesProfilePicker';
+import { isConfiguredClubProfile, normaliseStandaloneHandMode } from './game/rules-presentation';
 import { handScorerInitialBaseline, hasHandScorerUnsavedWork } from './game/hand-scorer-dirty-state';
 import { applicableUngroupedBlanks, hasUngroupedBlankAt, reindexUngroupedBlanksAfterRemoval, toggleUngroupedBlankAt } from './game/ungrouped-blank-state';
 import type {
@@ -231,6 +232,7 @@ function HandScorer({ context, onClose, standaloneHand, standaloneRulesProfile, 
   );
   const [limit, setLimit] = useState<number>(initialContext.limit);
   const [handMode, setHandMode] = useState(initialContext.handMode);
+  const standaloneProfileRef = useRef(standaloneRulesProfile);
 
   const [isWinner, setIsWinner] = useState<boolean>(initialContext.isWinner);
   const [winningMethod, setWinningMethod] = useState<WinningMethod>(
@@ -325,7 +327,7 @@ function HandScorer({ context, onClose, standaloneHand, standaloneRulesProfile, 
 
   useEffect(() => {
     const nextPracticeContext = practiceScorerContext(example);
-    const nextContext = practice ? nextPracticeContext : handScorerLocalContext(context);
+    const nextContext = practice ? nextPracticeContext : handScorerLocalContext(context, standaloneRulesProfile);
     const savedHand = handForScorerMode(context, example, !!practice);
     const nextSets = savedHand
       ? savedHand.sets.map((handSet) => ({ ...handSet }))
@@ -353,6 +355,7 @@ function HandScorer({ context, onClose, standaloneHand, standaloneRulesProfile, 
     setPlayerWind(nextContext.playerWind);
     setPrevailingWind(nextContext.prevailingWind);
     setLimit(nextContext.limit);
+    setHandMode(nextContext.handMode);
     setIsWinner(nextContext.isWinner);
     setWinningMethod(savedHand?.winningMethod ?? (practice ? nextPracticeContext.winningMethod : 'wall'));
     setOriginalCall(
@@ -383,6 +386,20 @@ function HandScorer({ context, onClose, standaloneHand, standaloneRulesProfile, 
     setExpandedRule(null);
     setCopied(false);
   }, [context, example, practice]);
+
+  useEffect(() => {
+    if (hasContext || practice) return;
+    const profileChanged = standaloneProfileRef.current.id !== standaloneRulesProfile.id
+      || standaloneProfileRef.current.version !== standaloneRulesProfile.version;
+    standaloneProfileRef.current = standaloneRulesProfile;
+    if (!profileChanged) return;
+
+    // Goulash is a Club-only explicit standalone choice. Keep ordinary tile
+    // entry when rules change, but remove metadata that has no meaning outside it.
+    setHandMode((current) => normaliseStandaloneHandMode(standaloneRulesProfile, current));
+    setUngroupedBlankTiles([]);
+    setSets((current) => current.map(({ blankTileIds: _blankTileIds, ...set }) => set));
+  }, [hasContext, practice, standaloneRulesProfile]);
 
   const hand = useMemo<MahjongHand>(() => {
     const validSets = sets.filter((s): s is HandSet => s.tile !== null);
@@ -832,7 +849,7 @@ function HandScorer({ context, onClose, standaloneHand, standaloneRulesProfile, 
           </div>
 
           {standaloneHand && !hasContext && !example && !practice && <div className="max-w-[900px]"><RulesProfilePicker prompt="Which rules are you scoring?" selectedProfile={standaloneRulesProfile} onSelect={onStandaloneRulesProfileChange} />
-            {standaloneRulesProfile.id === 'outside-the-box' && <label className="mb-6 block rounded-lg border border-[#d8ceb8] bg-[#fbf8ed] p-4 text-[12px] text-[#284d45]"><span className="mb-2 block font-semibold">Hand mode</span><select data-testid="select-standalone-hand-mode" value={handMode} onChange={(event) => setHandMode(event.target.value as 'normal' | 'goulash')} className="w-full rounded-md border border-[#cfc3aa] bg-[#fdfbf5] px-3 py-2"><option value="normal">Normal hand</option><option value="goulash">Goulash hand (blank tiles; no chows)</option></select></label>}</div>}
+            {isConfiguredClubProfile(standaloneRulesProfile) && <label className="mb-6 block rounded-lg border border-[#d8ceb8] bg-[#fbf8ed] p-4 text-[12px] text-[#284d45]"><span className="mb-2 block font-semibold">Hand mode</span><select data-testid="select-standalone-hand-mode" value={handMode} onChange={(event) => setHandMode(event.target.value as 'normal' | 'goulash')} className="w-full rounded-md border border-[#cfc3aa] bg-[#fdfbf5] px-3 py-2"><option value="normal">Normal hand</option><option value="goulash">Goulash hand (blank tiles; no chows)</option></select></label>}</div>}
 
           <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-5 xl:grid-cols-[minmax(0,1.18fr)_minmax(280px,.82fr)]">
             <div className="min-w-0 space-y-5">

@@ -109,6 +109,16 @@ describe('game hand-scorer handoff', () => {
     expect(createHandScorerContext(clubGame, 'bill', billWins).rulesProfile).toEqual(OUTSIDE_THE_BOX_PROFILE_REF);
   });
 
+  it('inherits the next Club game hand mode after a draw changes it to Goulash', () => {
+    const clubGame = createBmjaGame(game.players, game.seats, undefined, 'full-game', OUTSIDE_THE_BOX_PROFILE_REF);
+    const afterDraw = confirmHand(clubGame, {
+      outcome: { type: 'draw' },
+      scores: { jenn: 0, bill: 0, ben: 0, jack: 0 },
+    });
+    expect(afterDraw.currentHandMode).toBe('goulash');
+    expect(createHandScorerContext(afterDraw, 'bill', { type: 'win', winnerId: 'bill' }).handMode).toBe('goulash');
+  });
+
   it('resets winner state when a winner is opened before a non-winner', () => {
     const outcome = { type: 'win' as const, winnerId: 'bill' };
     const winner = handScorerLocalContext(

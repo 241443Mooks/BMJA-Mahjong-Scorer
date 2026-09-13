@@ -3,6 +3,7 @@ import { OUTSIDE_THE_BOX_PROFILE_REF, outsideTheBoxSpecialHandBindings } from '.
 import { BMJA_PROFILE_REF } from './ruleset';
 import { WESTERN_TM_PROFILE_REF, westernTmSpecialHandBindings } from './western-tm-catalogue';
 import type { RulesProfileRef } from './types';
+import type { HandMode } from './types';
 
 export type PublicRulesSlug = 'british' | 'western' | 'club';
 
@@ -72,6 +73,12 @@ export const descriptorForRulesProfile = (profile: RulesProfileRef): RulesDescri
 
 export const descriptorForSlug = (slug: PublicRulesSlug): RulesDescriptor =>
   PUBLIC_RULES_DESCRIPTORS.find((descriptor) => descriptor.slug === slug)!;
+
+export const isConfiguredClubProfile = (profile: RulesProfileRef) =>
+  descriptorForRulesProfile(profile).configuredClubProfile;
+
+export const normaliseStandaloneHandMode = (profile: RulesProfileRef, handMode: HandMode): HandMode =>
+  isConfiguredClubProfile(profile) ? handMode : 'normal';
 
 export const publicRulesSlugFromGamePath = (path: string): PublicRulesSlug =>
   path === '/game/western' ? 'western' : path === '/game/club' ? 'club' : 'british';

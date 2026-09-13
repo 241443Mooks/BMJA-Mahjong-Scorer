@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { bmjaSpecialHandBindings } from '../scoring';
 import { outsideTheBoxSpecialHandBindings } from './outside-the-box-catalogue';
-import { descriptorForRulesProfile, descriptorForSlug, PUBLIC_RULES_DESCRIPTORS, publicRulesSlugFromGamePath } from './rules-presentation';
+import { descriptorForRulesProfile, descriptorForSlug, normaliseStandaloneHandMode, PUBLIC_RULES_DESCRIPTORS, publicRulesSlugFromGamePath } from './rules-presentation';
 import { BMJA_PROFILE_REF, OUTSIDE_THE_BOX_PROFILE_REF, WESTERN_TM_PROFILE_REF } from './ruleset';
 import { westernTmSpecialHandBindings } from './western-tm-catalogue';
 
@@ -25,5 +25,11 @@ describe('public rules presentation', () => {
     expect(descriptorForSlug('british').atAGlance[0]).toContain(String(bmjaSpecialHandBindings.length));
     expect(descriptorForSlug('western').atAGlance[0]).toContain(String(westernTmSpecialHandBindings.length));
     expect(descriptorForSlug('club').atAGlance[0]).toContain(String(outsideTheBoxSpecialHandBindings.length));
+  });
+
+  it('allows standalone Goulash only under the configured Club profile', () => {
+    expect(normaliseStandaloneHandMode(OUTSIDE_THE_BOX_PROFILE_REF, 'goulash')).toBe('goulash');
+    expect(normaliseStandaloneHandMode(BMJA_PROFILE_REF, 'goulash')).toBe('normal');
+    expect(normaliseStandaloneHandMode(WESTERN_TM_PROFILE_REF, 'goulash')).toBe('normal');
   });
 });
