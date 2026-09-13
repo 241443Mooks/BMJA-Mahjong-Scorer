@@ -36,7 +36,7 @@ Relationship terms follow `PROVENANCE_MODEL.md`.
 | Rule ID | BMJA | Western / T&M | Outside the Box | Relationship / note |
 |---|---|---|---|---|
 | `play.ordinary.structure` | ordinary Mahjong uses four sets plus a pair, subject to BMJA restrictions — `verified` | expected classical structure plus special hands — `needs-primary-source` | British-style ordinary structure — `verified-club` | likely common classical core |
-| `play.ordinary.max-chows` | maximum one Chow in ordinary play — `verified` | **unknown until primary source checked** | guide appears British-style; exact general maximum should be confirmed from full guide — `verified-club`/follow-up | this is a key hypothesis test for whether BMJA narrows a broader Western rule |
+| `play.ordinary.max-chows` | maximum one Chow in ordinary play — `verified` | **unknown until primary source checked** | not resolved by the supplied OTB evidence except that Goulash permits no Chows — `needs-club-confirmation` | do not infer ordinary-play Chow cap from the Goulash rule |
 | `play.call.pung` | discard may be claimed for Pung under BMJA procedure — `verified` | `needs-primary-source` | used — `verified-club` | likely common core |
 | `play.call.kong` | discard/conversion Kong rules exist — `verified` | `needs-primary-source` | used — `verified-club` | details need exact cross-check |
 | `play.call.chow` | BMJA calling restrictions apply; one-Chow cap in ordinary hand — `verified` | `needs-primary-source` | British-style ordinary play indicated — `verified-club` | potential profile difference |
@@ -80,7 +80,7 @@ The unresolved question is whether Thompson & Maloney Western uses the same comp
 | `score.double.prevailing-wind` | double for qualifying prevailing-wind set — `verified` | `needs-primary-source` | present — `verified-club` | likely common |
 | `score.double.dragons` | dragon-set doubles — `verified` | `needs-primary-source` | present — `verified-club` | likely common |
 | `score.double.flower-season.complete-set` | BMJA complete Flower/Season-set bonuses — `verified` | `needs-primary-source` | guide includes Flower/Season doubling conventions — `verified-club` | exact profile parity still to map |
-| `score.double.little-big-dragon-wind` | BMJA-specific catalogue/rule treatment to map exactly — `verified` at source level | `needs-primary-source` | guide includes Little/Big Dragon and Little/Big Wind bonuses — `needs-club-confirmation` for stacking | OTB stacking semantics unresolved |
+| `score.double.little-big-dragon-wind` | BMJA-specific catalogue/rule treatment to map exactly — `verified` at source level | `needs-primary-source` | Little = 1 and Big = 2 doubles for Dragons and Winds — `verified-club`; stacking with component sets is unresolved | OTB arithmetic cannot be completed until stacking is confirmed |
 
 ### Open OTB question
 
@@ -122,9 +122,9 @@ See `SPECIAL_HANDS_PROVENANCE.md`.
 
 | Rule ID | BMJA | Western / T&M | Outside the Box | Relationship / note |
 |---|---|---|---|---|
-| `settlement.winner-v-losers` | winner settles with each loser — `verified` | `needs-primary-source` | British-style settlement described — `verified-club` | likely common, Western unverified |
-| `settlement.loser-to-loser` | losers also settle pairwise — `verified` | **priority Western verification item** | included — `verified-club` | important distinguishing feature from many other Mahjong families |
-| `settlement.east-double` | East pays and receives double — `verified` | `needs-primary-source` | included — `verified-club` | BMJA ↔ OTB identical in principle |
+| `settlement.winner-v-losers` | winner settles with each loser — `verified` | `needs-primary-source` | each loser pays winner's Mah Jong score — `verified-club` | verified-identical-to-BMJA |
+| `settlement.loser-to-loser` | losers also settle pairwise — `verified` | **priority Western verification item** | included — `verified-club` | verified-identical-to-BMJA |
+| `settlement.east-double` | East pays and receives double — `verified` | `needs-primary-source` | East doubles winner and loser-to-loser transfers — `verified-club` | verified-identical-to-BMJA |
 | `liability.cannon` | BMJA treatment must be mapped from source/Q&A if present in current implementation context | `needs-primary-source` | explicit cannon rule — `verified-club` | OTB has named local liability behaviour |
 | `liability.cannon.no-choice-fishing` | no current BMJA binding established in this crosswalk | `unknown` | explicit “No choice!” exception when fishing — `verified-club` | currently treat as OTB-specific unless independent Western evidence appears |
 
@@ -149,11 +149,11 @@ Pass 3 or a dedicated source-indexing pass should replace these broad source-fam
 
 | Rule ID | BMJA | Western / T&M | Outside the Box | Relationship / note |
 |---|---|---|---|---|
-| `goulash.trigger.draw` | Goulash follows a drawn hand — `verified` | `needs-primary-source` | draw can trigger Goulash — `verified-club` | likely related tradition |
-| `goulash.blank-wilds.count` | BMJA Goulash rules use their own defined mechanism — `verified`; exact representation should be indexed | `needs-primary-source` | four blank wild tiles — `verified-club` | may be OTB/Western-derived variation |
-| `goulash.charleston.exchange` | BMJA exchange procedure to map exactly | `needs-primary-source` | three Charleston-style exchanges — `verified-club` | OTB guide explicitly uses exchange stage |
-| `goulash.chows` | BMJA Goulash Chow rule to map exactly | `needs-primary-source` | no Chows — `verified-club` | direct comparison pending |
-| `goulash.blank-use` | BMJA rule to map | `needs-primary-source` | guide restricts blank usage — `verified-club` | profile-specific until proven otherwise |
+| `goulash.trigger.draw` | Goulash follows a drawn hand — `verified` | `needs-primary-source` | Normal draw → Goulash; Goulash draw → Goulash; a winner returns Normal — `verified-club` | OTB state machine is now explicit; do not generalise to T&M |
+| `goulash.blank-wilds.count` | BMJA Goulash rules use their own defined mechanism — `verified`; exact representation should be indexed | `needs-primary-source` | four blanks, never Flowers/Seasons — `verified-club` | OTB-only binding until independently verified |
+| `goulash.charleston.exchange` | BMJA exchange procedure to map exactly | `needs-primary-source` | non-scorer gameplay mechanics deliberately excluded from OTB scorer evidence | no implementation inference |
+| `goulash.chows` | BMJA Goulash Chow rule to map exactly | `needs-primary-source` | no Chows — `verified-club` | OTB-only binding until independently verified |
+| `goulash.blank-use` | BMJA rule to map | `needs-primary-source` | Pung max 1 blank, Kong max 2, each requires two genuine identical tiles — `verified-club` | OTB-only scorer legality |
 
 Goulash is sufficiently rule-dense that it should become its own reusable component, not a single boolean.
 
