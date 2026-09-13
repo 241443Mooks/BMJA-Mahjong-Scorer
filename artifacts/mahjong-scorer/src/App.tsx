@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { Toaster } from '@/components/ui/toaster';
@@ -12,6 +12,8 @@ import { TileStrip } from './guide/MahjongTileGallery';
 import { ReturnToGame } from './components/ReturnToGame';
 import { handScorerLocalContext } from './game';
 import { BMJA_PROFILE_REF, resolveRulesProfile } from './game/ruleset';
+import { ActiveRules, RulesProfilePicker } from './game/RulesProfilePicker';
+import { isConfiguredClubProfile, normaliseStandaloneHandMode } from './game/rules-presentation';
 import { handScorerInitialBaseline, hasHandScorerUnsavedWork } from './game/hand-scorer-dirty-state';
 import { applicableUngroupedBlanks, hasUngroupedBlankAt, reindexUngroupedBlanksAfterRemoval, toggleUngroupedBlankAt } from './game/ungrouped-blank-state';
 import type {
@@ -190,11 +192,11 @@ function SectionLabel({ eyebrow, title, count }: { eyebrow: string; title: strin
   );
 }
 
-function HandScorer({ context, onClose, standaloneHand, example, practice }: { context: HandScorerContext | null; onClose: (result?: HandScorerResult) => void; standaloneHand: boolean; example?: ResolvedScorerExample; practice?: boolean }) {
+function HandScorer({ context, onClose, standaloneHand, standaloneRulesProfile, onStandaloneRulesProfileChange, example, practice }: { context: HandScorerContext | null; onClose: (result?: HandScorerResult) => void; standaloneHand: boolean; standaloneRulesProfile: import('./game').RulesProfileRef; onStandaloneRulesProfileChange: (profile: import('./game').RulesProfileRef) => void; example?: ResolvedScorerExample; practice?: boolean }) {
   // An example borrows the hand contract only; it must never acquire the game callback.
   const hasContext = !!context && !example;
   const practiceContext = practiceScorerContext(example);
-  const initialContext = practice ? practiceContext : handScorerLocalContext(context);
+  const initialContext = practice ? practiceContext : handScorerLocalContext(context, standaloneRulesProfile);
   const initialHand = handForScorerMode(context, example, !!practice);
   const [sets, setSets] = useState<UIHandSet[]>(() =>
     initialHand
@@ -229,6 +231,8 @@ function HandScorer({ context, onClose, standaloneHand, example, practice }: { c
     initialContext.prevailingWind,
   );
   const [limit, setLimit] = useState<number>(initialContext.limit);
+  const [handMode, setHandMode] = useState(initialContext.handMode);
+  const standaloneProfileRef = useRef(standaloneRulesProfile);
 
   const [isWinner, setIsWinner] = useState<boolean>(initialContext.isWinner);
   const [winningMethod, setWinningMethod] = useState<WinningMethod>(
@@ -323,7 +327,7 @@ function HandScorer({ context, onClose, standaloneHand, example, practice }: { c
 
   useEffect(() => {
     const nextPracticeContext = practiceScorerContext(example);
-    const nextContext = practice ? nextPracticeContext : handScorerLocalContext(context);
+    const nextContext = practice ? nextPracticeContext : handScorerLocalContext(context, standaloneRulesProfile);
     const savedHand = handForScorerMode(context, example, !!practice);
     const nextSets = savedHand
       ? savedHand.sets.map((handSet) => ({ ...handSet }))
@@ -351,6 +355,7 @@ function HandScorer({ context, onClose, standaloneHand, example, practice }: { c
     setPlayerWind(nextContext.playerWind);
     setPrevailingWind(nextContext.prevailingWind);
     setLimit(nextContext.limit);
+    setHandMode(nextContext.handMode);
     setIsWinner(nextContext.isWinner);
     setWinningMethod(savedHand?.winningMethod ?? (practice ? nextPracticeContext.winningMethod : 'wall'));
     setOriginalCall(
@@ -381,6 +386,20 @@ function HandScorer({ context, onClose, standaloneHand, example, practice }: { c
     setExpandedRule(null);
     setCopied(false);
   }, [context, example, practice]);
+
+  useEffect(() => {
+    if (hasContext || practice) return;
+    const profileChanged = standaloneProfileRef.current.id !== standaloneRulesProfile.id
+      || standaloneProfileRef.current.version !== standaloneRulesProfile.version;
+    standaloneProfileRef.current = standaloneRulesProfile;
+    if (!profileChanged) return;
+
+    // Goulash is a Club-only explicit standalone choice. Keep ordinary tile
+    // entry when rules change, but remove metadata that has no meaning outside it.
+    setHandMode((current) => normaliseStandaloneHandMode(standaloneRulesProfile, current));
+    setUngroupedBlankTiles([]);
+    setSets((current) => current.map(({ blankTileIds: _blankTileIds, ...set }) => set));
+  }, [hasContext, practice, standaloneRulesProfile]);
 
   const hand = useMemo<MahjongHand>(() => {
     const validSets = sets.filter((s): s is HandSet => s.tile !== null);
@@ -463,8 +482,8 @@ function HandScorer({ context, onClose, standaloneHand, example, practice }: { c
   }, [isWinner, winningMethod, numberOfKongs]);
 
   const gameContext = useMemo<GameContext>(
-    () => ({ playerWind, prevailingWind, limit, handMode: initialContext.handMode }),
-    [initialContext.handMode, limit, playerWind, prevailingWind],
+    () => ({ playerWind, prevailingWind, limit, handMode }),
+    [handMode, limit, playerWind, prevailingWind],
   );
 
   const isStructureComplete = useMemo(() => {
@@ -479,10 +498,8 @@ function HandScorer({ context, onClose, standaloneHand, example, practice }: { c
 
   const scoringProfile = useMemo(
     () =>
-      context
-        ? resolveRulesProfile(context.rulesProfile)
-        : resolveRulesProfile(BMJA_PROFILE_REF),
-    [context],
+      resolveRulesProfile(context?.rulesProfile ?? standaloneRulesProfile),
+    [context, standaloneRulesProfile],
   );
 
   const score = useMemo(
@@ -562,7 +579,7 @@ function HandScorer({ context, onClose, standaloneHand, example, practice }: { c
       ).length;
       const specialTileLimit = isWinner ? 14 : 13;
       const possibleBlankSlots = 4 - ungroupedBlankTiles.length;
-      const maximumEffectiveCopies = initialContext.handMode === 'goulash'
+      const maximumEffectiveCopies = handMode === 'goulash'
         ? 4 + possibleBlankSlots
         : 4;
       if (looseTiles.length < specialTileLimit && matchingCopies < maximumEffectiveCopies) {
@@ -738,7 +755,7 @@ function HandScorer({ context, onClose, standaloneHand, example, practice }: { c
     (layoutMode === 'special' &&
       (looseTiles.length >= (isWinner ? 14 : 13) ||
         looseTiles.filter((candidate) => tileKey(candidate) === tileKey(tile)).length >=
-          (initialContext.handMode === 'goulash'
+          (handMode === 'goulash'
             ? 4 + (4 - ungroupedBlankTiles.length)
             : 4))) ||
     (layoutMode === 'sets' && !canAddStandardTile(tile));
@@ -801,7 +818,7 @@ function HandScorer({ context, onClose, standaloneHand, example, practice }: { c
             <div className="mb-3 flex items-center gap-3"><div className="fine-rule w-10" /><span className="font-mono text-[10px] uppercase tracking-[.2em] text-[#ae6249]">New hand · ready to enter</span></div>
             <div className="flex flex-wrap items-end justify-between gap-4">
               <div>
-                <h1 className="font-serif text-[clamp(36px,5vw,62px)] leading-[.97] tracking-[-.03em] text-[#284d45]">{standaloneHand ? <>British Mahjong<br /><span className="text-[#ae6249]">hand calculator.</span></> : <>Score a hand<br /><span className="text-[#ae6249]">with confidence.</span></>}</h1>
+                <h1 className="font-serif text-[clamp(36px,5vw,62px)] leading-[.97] tracking-[-.03em] text-[#284d45]">{standaloneHand ? <>Mahjong<br /><span className="text-[#ae6249]">hand calculator.</span></> : <>Score a hand<br /><span className="text-[#ae6249]">with confidence.</span></>}</h1>
                 <p className="mt-4 max-w-[560px] text-[14px] leading-6 text-[#66746e]">
                   {example
                     ? `Example: ${example.name}. This uses the normal scorer; change it to explore.`
@@ -811,7 +828,7 @@ function HandScorer({ context, onClose, standaloneHand, example, practice }: { c
                       ? 'Enter your tiles visually as they sit on the table. The calculator shows supported points, doubles, special hands and fishing in a clear score breakdown.'
                       : 'Enter each set as it sits on the table. The score builds beside you, with every point and double accounted for.'}
                 </p>
-                <p className="mt-3 max-w-[560px] text-[13px] leading-6 text-[#284d45]"><strong>Rules: British / BMJA-style.</strong> This calculator currently scores the British rules profile only.</p>
+                {hasContext ? <ActiveRules profile={context.rulesProfile} inherited /> : <ActiveRules profile={standaloneRulesProfile} />}
                 {context?.requiresRecalculation && (
                   <div
                     data-testid="notice-recalculation-required"
@@ -830,6 +847,9 @@ function HandScorer({ context, onClose, standaloneHand, example, practice }: { c
               </div>
             </div>
           </div>
+
+          {standaloneHand && !hasContext && !example && !practice && <div className="max-w-[900px]"><RulesProfilePicker prompt="Which rules are you scoring?" selectedProfile={standaloneRulesProfile} onSelect={onStandaloneRulesProfileChange} />
+            {isConfiguredClubProfile(standaloneRulesProfile) && <label className="mb-6 block rounded-lg border border-[#d8ceb8] bg-[#fbf8ed] p-4 text-[12px] text-[#284d45]"><span className="mb-2 block font-semibold">Hand mode</span><select data-testid="select-standalone-hand-mode" value={handMode} onChange={(event) => setHandMode(event.target.value as 'normal' | 'goulash')} className="w-full rounded-md border border-[#cfc3aa] bg-[#fdfbf5] px-3 py-2"><option value="normal">Normal hand</option><option value="goulash">Goulash hand (blank tiles; no chows)</option></select></label>}</div>}
 
           <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-5 xl:grid-cols-[minmax(0,1.18fr)_minmax(280px,.82fr)]">
             <div className="min-w-0 space-y-5">
@@ -909,7 +929,7 @@ function HandScorer({ context, onClose, standaloneHand, example, practice }: { c
                               actionTestId={`button-remove-loose-tile-${index}`}
                               onActivate={() => removeUngroupedTile('loose', index)}
                             />
-                            {initialContext.handMode === 'goulash' && (
+                            {handMode === 'goulash' && (
                               <button
                                 type="button"
                                 data-testid={`button-toggle-loose-blank-${index}`}
@@ -946,9 +966,9 @@ function HandScorer({ context, onClose, standaloneHand, example, practice }: { c
                         <div className="flex items-center gap-2">
                           <span className="font-mono text-[10px] text-[#ae6249]">SET {String(index + 1).padStart(2, '0')}</span>
                            <select aria-label={`Set ${index + 1} type`} data-testid={`select-set-type-${index + 1}`} value={s.kind} onChange={(e) => { const kind = e.target.value as SetKind; const maximumBlanks = kind === 'pung' ? 1 : kind === 'kong' || kind === 'pair' ? 2 : 0; const blankTileIds = (s.blankTileIds ?? []).slice(0, maximumBlanks); updateSet(s.id, { kind, tile: null, blankTileIds: blankTileIds.length > 0 ? blankTileIds : undefined }); }} className="cursor-pointer border-0 bg-transparent font-mono text-[10px] uppercase tracking-[.12em] text-[#284d45] outline-none">
-                             <option value="pung">Pung</option><option value="chow" disabled={initialContext.handMode === 'goulash' || sets.some((other) => other.id !== s.id && other.kind === 'chow')}>Chow</option><option value="kong">Kong</option><option value="pair">Pair</option>
+                             <option value="pung">Pung</option><option value="chow" disabled={handMode === 'goulash' || sets.some((other) => other.id !== s.id && other.kind === 'chow')}>Chow</option><option value="kong">Kong</option><option value="pair">Pair</option>
                           </select>
-                          {initialContext.handMode === 'goulash' && (s.kind === 'pung' || s.kind === 'kong' || s.kind === 'pair') && (
+                          {handMode === 'goulash' && (s.kind === 'pung' || s.kind === 'kong' || s.kind === 'pair') && (
                             <select
                               aria-label={`Set ${index + 1} blank tiles`}
                               data-testid={`select-set-blanks-${index + 1}`}
@@ -1024,7 +1044,7 @@ function HandScorer({ context, onClose, standaloneHand, example, practice }: { c
                                 actionTestId={`button-remove-remaining-tile-${index}`}
                                 onActivate={() => removeUngroupedTile('remaining', index)}
                               />
-                              {initialContext.handMode === 'goulash' && (
+                              {handMode === 'goulash' && (
                                 <button
                                   type="button"
                                   data-testid={`button-toggle-remaining-blank-${index}`}
@@ -1545,7 +1565,7 @@ function HandScorer({ context, onClose, standaloneHand, example, practice }: { c
   );
 }
 
-export default function App({ initialView = 'game', standaloneHand = false }: { initialView?: 'game' | 'hand'; standaloneHand?: boolean }) {
+export default function App({ initialView = 'game', standaloneHand = false, initialRulesProfile = BMJA_PROFILE_REF }: { initialView?: 'game' | 'hand'; standaloneHand?: boolean; initialRulesProfile?: import('./game').RulesProfileRef }) {
   const search = standaloneHand && typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : undefined;
   const practice = !!search?.get('practice');
   const example = search ? resolveScorerExample(search.get('example') ?? search.get('practice')) : undefined;
@@ -1555,6 +1575,7 @@ export default function App({ initialView = 'game', standaloneHand = false }: { 
     HandScorerResult | null | undefined
   >(undefined);
   const [scorerSession, setScorerSession] = useState(0);
+  const [standaloneRulesProfile, setStandaloneRulesProfile] = useState(initialRulesProfile);
 
   const handleOpenHandScorer = (ctx?: HandScorerContext) => {
     setScorerContext(ctx ?? null);
@@ -1580,6 +1601,7 @@ export default function App({ initialView = 'game', standaloneHand = false }: { 
               onOpenHandScorer={handleOpenHandScorer}
               returnedScore={returnedScore}
               onClearReturnedScore={() => setReturnedScore(undefined)}
+              initialRulesProfile={initialRulesProfile}
             />
           </div>
           <div className={view === 'hand' ? 'block' : 'hidden'}>
@@ -1588,6 +1610,8 @@ export default function App({ initialView = 'game', standaloneHand = false }: { 
               context={scorerContext}
               onClose={handleCloseHandScorer}
               standaloneHand={standaloneHand}
+              standaloneRulesProfile={standaloneRulesProfile}
+              onStandaloneRulesProfileChange={setStandaloneRulesProfile}
               example={example}
               practice={practice && !!example}
             />

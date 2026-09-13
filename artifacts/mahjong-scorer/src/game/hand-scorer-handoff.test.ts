@@ -9,7 +9,7 @@ import {
   handScorerLocalContext,
   reconcileDetailedHandsForOutcome,
 } from './hand-scorer-handoff';
-import { BMJA_PROFILE_REF, resolveRulesProfile } from './ruleset';
+import { BMJA_PROFILE_REF, OUTSIDE_THE_BOX_PROFILE_REF, resolveRulesProfile, WESTERN_TM_PROFILE_REF } from './ruleset';
 import type {
   HandScorerResult,
   RoundScoringDraft,
@@ -100,6 +100,23 @@ describe('game hand-scorer handoff', () => {
     expect(handScorerLocalContext(null).limit).toBe(
       resolveRulesProfile(BMJA_PROFILE_REF).defaultLimit,
     );
+  });
+
+  it('uses the selected standalone profile for the local score context and preserves game profile inheritance', () => {
+    expect(handScorerLocalContext(null, WESTERN_TM_PROFILE_REF).limit).toBe(resolveRulesProfile(WESTERN_TM_PROFILE_REF).defaultLimit);
+    expect(handScorerLocalContext(null, OUTSIDE_THE_BOX_PROFILE_REF).handMode).toBe('normal');
+    const clubGame = createBmjaGame(game.players, game.seats, undefined, 'full-game', OUTSIDE_THE_BOX_PROFILE_REF);
+    expect(createHandScorerContext(clubGame, 'bill', billWins).rulesProfile).toEqual(OUTSIDE_THE_BOX_PROFILE_REF);
+  });
+
+  it('inherits the next Club game hand mode after a draw changes it to Goulash', () => {
+    const clubGame = createBmjaGame(game.players, game.seats, undefined, 'full-game', OUTSIDE_THE_BOX_PROFILE_REF);
+    const afterDraw = confirmHand(clubGame, {
+      outcome: { type: 'draw' },
+      scores: { jenn: 0, bill: 0, ben: 0, jack: 0 },
+    });
+    expect(afterDraw.currentHandMode).toBe('goulash');
+    expect(createHandScorerContext(afterDraw, 'bill', { type: 'win', winnerId: 'bill' }).handMode).toBe('goulash');
   });
 
   it('resets winner state when a winner is opened before a non-winner', () => {

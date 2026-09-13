@@ -28,6 +28,8 @@ import {
   loadInProgressGameRecovery,
   saveGameRecovery,
 } from '.';
+import { ActiveRules, RulesProfilePicker } from './RulesProfilePicker';
+import { descriptorForRulesProfile } from './rules-presentation';
 import type {
   GameLength,
   GamePlayer,
@@ -40,6 +42,7 @@ import type {
   RoundScoreDraft,
   RoundScoringDraft,
   RoundIncident,
+  RulesProfileRef,
   SeatAssignments,
 } from '.';
 import type { Wind } from '../scoring';
@@ -48,6 +51,7 @@ type GameScorerProps = {
   onOpenHandScorer: (context?: HandScorerContext) => void;
   returnedScore?: HandScorerResult | null;
   onClearReturnedScore: () => void;
+  initialRulesProfile: RulesProfileRef;
 };
 
 const windLabel = (wind: Wind) =>
@@ -56,15 +60,10 @@ const windLabel = (wind: Wind) =>
 const formatChange = (value: number) =>
   `${value > 0 ? '+' : value < 0 ? '−' : ''}${Math.abs(value)}`;
 
-const activeRulesCopy = (profileId: string) =>
-  profileId === 'western-tm'
-    ? 'Western — Thompson & Maloney (provisional)'
-    : profileId === 'outside-the-box'
-      ? 'Outside the Box'
-      : 'British / BMJA-style';
+const activeRulesCopy = (profile: RulesProfileRef) => descriptorForRulesProfile(profile).title;
 
 export const gameRecordRulesLabel = (profile: GameState['setup']['rulesProfile']) =>
-  `${activeRulesCopy(profile.id)} · Profile version: ${profile.version}`;
+  `${activeRulesCopy(profile)} · Profile version: ${profile.version}`;
 
 export const handCountLabel = (count: number) =>
   `${count} ${count === 1 ? 'hand' : 'hands'} played`;
@@ -73,6 +72,9 @@ export const printStandings = (game: GameState) =>
   game.isComplete
     ? [...game.players].sort((a, b) => game.balances[b.id] - game.balances[a.id])
     : game.players;
+
+export const recoveredGameConflictsWithRoute = (game: GameState, routeProfile: RulesProfileRef) =>
+  game.setup.rulesProfile.id !== routeProfile.id || game.setup.rulesProfile.version !== routeProfile.version;
 
 export const previewRoundSettlement = (
   game: GameState,
@@ -107,7 +109,7 @@ export const getRoundSettlementPreview = (
   }
 };
 
-export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedScore }: GameScorerProps) {
+export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedScore, initialRulesProfile }: GameScorerProps) {
   const [recovered, setRecovered] = useState(() =>
     typeof window === 'undefined'
       ? null
@@ -116,6 +118,7 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
   const [names, setNames] = useState(['', '', '', '']);
   const [gameLength, setGameLength] = useState<GameLength>(recovered?.game.setup.gameLength ?? 'one-round');
   const [game, setGame] = useState<GameState | null>(recovered?.game ?? null);
+  const [selectedRulesProfile, setSelectedRulesProfile] = useState<RulesProfileRef>(() => recovered?.game.setup.rulesProfile ?? initialRulesProfile);
   const [outcomeType, setOutcomeType] = useState<'win' | 'draw'>(recovered?.outcomeType ?? 'win');
   const [winnerId, setWinnerId] = useState(recovered?.winnerId ?? '');
   const [scores, setScores] = useState<RoundScoreDraft>(recovered?.draft.scores ?? {});
@@ -133,6 +136,7 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
   const activeRulesProfile = game
     ? resolveRulesProfile(game.setup.rulesProfile)
     : null;
+  const recoveredProfileConflictsWithRoute = !!recovered && recoveredGameConflictsWithRoute(recovered.game, initialRulesProfile);
 
   const outcome = useMemo<HandOutcome | null>(
     () =>
@@ -270,7 +274,7 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
     ) as SeatAssignments;
     if (typeof window !== 'undefined') clearGameRecovery(window.localStorage);
     setRecovered(null);
-    const started = createBmjaGame(players, seats, undefined, gameLength);
+    const started = createBmjaGame(players, seats, undefined, gameLength, selectedRulesProfile);
     setGame(started);
     setScores({});
     setScoreRecords({});
@@ -283,6 +287,7 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
     if (typeof window !== 'undefined') clearGameRecovery(window.localStorage);
     setRecovered(null);
     setGame(null);
+    setSelectedRulesProfile(initialRulesProfile);
     setScores({});
     setScoreRecords({});
     setIncidents([]);
@@ -359,10 +364,11 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
               Enter players in their starting seats. Your game stays in this
               browser so you can continue after a refresh.
             </p>
-            <p className="mt-3 max-w-[620px] text-[13px] leading-6 text-[#284d45]"><strong>Rules: British / BMJA-style.</strong> This game scorer calculates the British rules profile and settlement only.</p>
+            {recovered && <div data-testid="recovered-game-conflict" className="mt-4 max-w-[620px] rounded-md border border-[#b8cdbf] bg-[#edf3ed] p-3 text-[12px] leading-5 text-[#284d45]"><strong>Saved game: {activeRulesCopy(recovered.game.setup.rulesProfile)}.</strong> Continue it safely; rules from this route do not change a saved game. Starting a new game below replaces this local recovery.</div>}
           </div>
 
           <section className="rounded-xl border border-[#d8ceb8] bg-[#fbf8ed] p-5 shadow-[var(--shadow-sm)] sm:p-7">
+            <RulesProfilePicker prompt="Which rules are you playing?" selectedProfile={selectedRulesProfile} onSelect={setSelectedRulesProfile} />
             <div className="mb-6 grid gap-4 sm:grid-cols-2">
               <label className="block sm:col-span-2">
                 <span className="mb-1.5 block font-mono text-[10px] uppercase tracking-[.15em] text-[#7a7769]">
@@ -411,7 +417,7 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
               onClick={startGame}
               className="mt-6 flex w-full items-center justify-center gap-2 rounded-md bg-[#284d45] px-4 py-3 text-[12px] font-semibold text-[#f8f4e9]"
             >
-              Start game <ArrowRight size={15} />
+              {recovered ? `Start a new ${descriptorForRulesProfile(selectedRulesProfile).compactLabel} game` : 'Start game'} <ArrowRight size={15} />
             </button>
           </section>
         </main>
@@ -426,7 +432,7 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
         <div className="mx-auto flex max-w-[1440px] flex-wrap items-center justify-between gap-4 px-5 py-4 lg:px-8">
           <div>
             <div className="font-mono text-[9px] uppercase tracking-[.24em] text-[#ae6249]">
-              Hand {game.handHistory.length + 1} / {activeRulesProfile?.name}
+              Hand {game.handHistory.length + 1} / {activeRulesCopy(game.setup.rulesProfile)}
             </div>
             <div className="font-serif text-[21px] font-bold text-[#284d45]">
               {game.players.find((player) => player.id === currentEastId)?.name}{' '}
@@ -435,10 +441,12 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
             {game.currentHandMode === 'goulash' && (
               <p className="mt-1 text-[12px] font-semibold text-[#ae6249]">Goulash hand — blanks available · Chows not allowed</p>
             )}
-            <p className="mt-1 text-[12px] leading-5 text-[#66746e]"><strong className="text-[#284d45]">Rules: {activeRulesCopy(game.setup.rulesProfile.id)}.</strong> This profile's scoring and settlement are active for this game.</p>
+            <ActiveRules profile={game.setup.rulesProfile} locked />
             {recovered && (
               <p className="mt-1 text-[11px] font-semibold text-[#477562]">
-                Your saved game has been recovered.
+                {recoveredProfileConflictsWithRoute
+                  ? `Your saved ${activeRulesCopy(game.setup.rulesProfile)} game is active; this route does not change its rules.`
+                  : 'Your saved game has been recovered.'}
               </p>
             )}
           </div>
@@ -458,7 +466,7 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
               onClick={startOver}
               className="flex items-center gap-2 rounded-md border border-[#cfc3aa] bg-[#fbf8ed] px-3 py-2 text-[11px] font-semibold text-[#66746e]"
             >
-              <RotateCcw size={14} /> Start over
+              <RotateCcw size={14} /> {recoveredProfileConflictsWithRoute ? `Start a new ${descriptorForRulesProfile(initialRulesProfile).compactLabel} game` : 'Start over'}
             </button>
             <button
               type="button"
@@ -473,7 +481,7 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
 
       <main className="mx-auto grid max-w-[1440px] gap-6 px-5 py-7 lg:grid-cols-[minmax(0,1fr)_390px] lg:px-8">
         <div className="print-only game-print-heading">
-          <h1>Mahjong Reference — {activeRulesCopy(game.setup.rulesProfile.id)} game record</h1>
+          <h1>Mahjong Reference — {activeRulesCopy(game.setup.rulesProfile)} game record</h1>
           <p>{game.isComplete ? 'Game complete' : 'Game in progress'} · {handCountLabel(game.handHistory.length)}</p>
           <p>Rules: {gameRecordRulesLabel(game.setup.rulesProfile)}</p>
         </div>

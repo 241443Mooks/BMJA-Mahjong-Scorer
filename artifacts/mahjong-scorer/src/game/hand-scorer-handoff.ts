@@ -195,11 +195,12 @@ export const applyManualScore = (
 
 export const handScorerLocalContext = (
   context: HandScorerContext | null,
+  rulesProfile = BMJA_PROFILE_REF,
 ): HandScorerLocalContext => ({
   playerWind: context?.playerWind ?? 'east',
   prevailingWind: context?.prevailingWind ?? 'east',
   limit:
-    context?.limit ?? resolveRulesProfile(BMJA_PROFILE_REF).defaultLimit,
+    context?.limit ?? resolveRulesProfile(rulesProfile).defaultLimit,
   isWinner: context?.isWinner ?? false,
   handMode: context?.handMode ?? 'normal',
 });
