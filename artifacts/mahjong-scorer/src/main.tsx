@@ -91,7 +91,31 @@ function applyRouteMetadata() {
   applyStructuredData(canonicalPath, metadata.description);
 }
 
+function updatePrintGeneratedDate() {
+  const heading = document.querySelector<HTMLElement>('.game-print-heading');
+  if (!heading) return;
+
+  const formattedDate = new Intl.DateTimeFormat('en-GB', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  }).format(new Date());
+
+  let generatedLine = heading.querySelector<HTMLParagraphElement>('[data-print-generated-date]');
+  if (!generatedLine) {
+    generatedLine = document.createElement('p');
+    generatedLine.dataset.printGeneratedDate = 'true';
+    const rulesLine = Array.from(heading.querySelectorAll('p')).find((paragraph) =>
+      paragraph.textContent?.startsWith('Rules:'),
+    );
+    if (rulesLine) heading.insertBefore(generatedLine, rulesLine);
+    else heading.append(generatedLine);
+  }
+  generatedLine.textContent = `Generated ${formattedDate}`;
+}
+
 applyRouteMetadata();
+window.addEventListener('beforeprint', updatePrintGeneratedDate);
 
 function RouteContent() {
   if (path === '/') return <HomePage />;
