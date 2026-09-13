@@ -360,25 +360,26 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
             <h1 className="font-serif text-[clamp(38px,6vw,62px)] leading-none text-[#284d45]">
               Seat the table.
             </h1>
-            <p className="mt-4 max-w-[620px] text-[14px] leading-6 text-[#66746e]">
+            <p className="mt-4 max-w-[620px] text-[16px] leading-7 text-[#66746e]">
               Enter players in their starting seats. Your game stays in this
               browser so you can continue after a refresh.
             </p>
-            {recovered && <div data-testid="recovered-game-conflict" className="mt-4 max-w-[620px] rounded-md border border-[#b8cdbf] bg-[#edf3ed] p-3 text-[12px] leading-5 text-[#284d45]"><strong>Saved game: {activeRulesCopy(recovered.game.setup.rulesProfile)}.</strong> Continue it safely; rules from this route do not change a saved game. Starting a new game below replaces this local recovery.</div>}
+            {recovered && <div data-testid="recovered-game-conflict" className="mt-4 max-w-[620px] rounded-md border border-[#b8cdbf] bg-[#edf3ed] p-3 text-[14px] leading-6 text-[#284d45]"><strong>Saved game: {activeRulesCopy(recovered.game.setup.rulesProfile)}.</strong> Continue it safely; rules from this route do not change a saved game. Starting a new game below replaces this local recovery.</div>}
           </div>
 
           <section className="rounded-xl border border-[#d8ceb8] bg-[#fbf8ed] p-5 shadow-[var(--shadow-sm)] sm:p-7">
             <RulesProfilePicker prompt="Which rules are you playing?" selectedProfile={selectedRulesProfile} onSelect={setSelectedRulesProfile} />
+            <p className="mb-6 rounded-md bg-[#edf3ed] px-3 py-2 text-[14px] leading-6 text-[#284d45]">New to table setup? <a href="/gameplay-basics#wind-rotation" className="font-semibold underline decoration-[#ae6249] underline-offset-4">Starting Winds</a> set the first seats; <a href="/gameplay-basics#prevailing-wind" className="font-semibold underline decoration-[#ae6249] underline-offset-4">prevailing rounds</a> describe the game’s longer progress.</p>
             <div className="mb-6 grid gap-4 sm:grid-cols-2">
               <label className="block sm:col-span-2">
                 <span className="mb-1.5 block font-mono text-[10px] uppercase tracking-[.15em] text-[#7a7769]">
-                  Game Length
+                  Game length
                 </span>
                 <select
                   data-testid="select-game-length"
                   value={gameLength}
                   onChange={(e) => setGameLength(e.target.value as GameLength)}
-                  className="w-full rounded-md border border-[#cfc3aa] bg-[#fdfbf5] px-3 py-3 text-[13px] font-semibold text-[#284d45] focus:ring-2 focus:ring-[#ae6249]"
+                  className="w-full rounded-md border border-[#cfc3aa] bg-[#fdfbf5] px-3 py-3 text-[15px] font-semibold text-[#284d45] focus:ring-2 focus:ring-[#ae6249]"
                 >
                   <option value="one-round">One Prevailing Round (East only)</option>
                   <option value="full-game">Full Game (East, South, West, North)</option>
@@ -401,7 +402,7 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
                       )
                     }
                     placeholder={`${windLabel(wind)} player`}
-                    className="w-full rounded-md border border-[#cfc3aa] bg-[#fdfbf5] px-3 py-3 text-[13px] text-[#284d45] outline-none focus:ring-2 focus:ring-[#ae6249]"
+                    className="w-full rounded-md border border-[#cfc3aa] bg-[#fdfbf5] px-3 py-3 text-[15px] text-[#284d45] outline-none focus:ring-2 focus:ring-[#ae6249]"
                   />
                 </label>
               ))}

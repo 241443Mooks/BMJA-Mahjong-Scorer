@@ -70,7 +70,7 @@ function PrimaryAction({
       </div>
       <div className="mt-8">
         <h2 className="font-serif text-[30px] leading-tight">{title}</h2>
-        <p className={`mt-2 max-w-[470px] text-[13px] leading-6 ${dark ? 'text-[#c8d8d1]' : 'text-[#66746e]'}`}>
+        <p className={`mt-2 max-w-[470px] text-[15px] leading-6 ${dark ? 'text-[#c8d8d1]' : 'text-[#66746e]'}`}>
           {description}
         </p>
       </div>
@@ -92,7 +92,7 @@ function LearningAction({ title, description, href, icon: Icon }: HomeLink) {
           <h3 className="font-serif text-[21px] leading-tight text-[#284d45]">{title}</h3>
           <ArrowRight size={15} className="shrink-0 text-[#ae6249] transition-transform group-hover:translate-x-1" />
         </div>
-        <p className="mt-1.5 text-[11px] leading-5 text-[#6d746f]">{description}</p>
+        <p className="mt-1.5 text-[14px] leading-6 text-[#6d746f]">{description}</p>
       </div>
     </a>
   );
@@ -116,13 +116,15 @@ export function HomePage() {
 
       <main className="mx-auto max-w-[1100px] px-5 py-9 lg:px-8 lg:py-14">
         <section className="max-w-[760px]">
-          <p className="mb-3 font-mono text-[10px] uppercase tracking-[.2em] text-[#ae6249]">Rules, scoring and play — made clear.</p>
+          <p className="mb-3 font-mono text-[12px] uppercase tracking-[.14em] text-[#ae6249]">Rules, scoring and play — made clear.</p>
           <h1 className="font-serif text-[clamp(38px,6vw,58px)] leading-[1.02] text-[#284d45]">
-            British Mahjong scoring calculator, made easier to use and learn
+            Your Mahjong table companion.
           </h1>
           <p className="mt-4 max-w-[620px] text-[15px] leading-7 text-[#66746e]">
-            A free browser-based tool: enter tiles visually to score an individual hand or a complete four-player game, then learn British Mahjong as you play.
+            Score a hand, track the whole game, understand settlement and use the rules your table actually plays.
           </p>
+          <p className="mt-4 inline-flex rounded-full border border-[#cfc3aa] bg-[#fbf8ed] px-4 py-2 text-[14px] font-semibold text-[#284d45]">Free · No signup required · Works in your browser</p>
+          <p className="mt-3 max-w-[620px] text-[14px] leading-6 text-[#66746e]">Games can be recovered in this browser after a refresh. Recovery is local to this browser, not an account or cloud sync service.</p>
         </section>
 
         <section className="mt-8 grid gap-4 md:grid-cols-2" aria-label="Scoring actions">
@@ -133,28 +135,28 @@ export function HomePage() {
               </div>
               <div className="mt-8">
                 <h2 className="font-serif text-[30px] leading-tight">Continue game</h2>
-                <p className="mt-2 text-[13px] leading-6 text-[#c8d8d1]">
+                <p className="mt-2 text-[15px] leading-6 text-[#c8d8d1]">
                   {gameProgressSummary(recovered.game)} · {recovered.game.players.length} players
                 </p>
               </div>
               <a
                 href="/game"
-                className="mt-6 flex items-center justify-center gap-2 rounded-md bg-[#f3e8d4] px-4 py-3 text-[12px] font-bold text-[#284d45]"
+                className="mt-6 flex items-center justify-center gap-2 rounded-md bg-[#f3e8d4] px-4 py-3 text-[15px] font-bold text-[#284d45]"
               >
                 Continue game <ArrowRight size={15} />
               </a>
               <button
                 type="button"
                 onClick={startNewGame}
-                className="mt-3 w-full rounded-md px-4 py-2 text-[11px] font-semibold text-[#c8d8d1] underline decoration-[#55756c] underline-offset-4 hover:text-[#f8f4e9]"
+                className="mt-3 w-full rounded-md px-4 py-2 text-[14px] font-semibold text-[#c8d8d1] underline decoration-[#55756c] underline-offset-4 hover:text-[#f8f4e9]"
               >
                 Start a new game
               </button>
             </div>
           ) : (
             <PrimaryAction
-              title="Score a game"
-              description="Start a four-player game, score each hand, settle payments and keep running totals."
+              title="Track a game"
+              description="Score each hand, follow Winds and game progression, calculate settlement and keep running totals."
               href="/game"
               icon={Gamepad2}
               dark
@@ -167,6 +169,8 @@ export function HomePage() {
             icon={Calculator}
           />
         </section>
+
+        <a href="/gameplay-basics" className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-md px-1 text-[15px] font-semibold text-[#284d45] underline decoration-[#ae6249] decoration-2 underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">New to Mahjong? Start here <ArrowRight size={16} /></a>
 
         <section className="mt-11">
           <div className="mb-4 flex items-center gap-3">
@@ -193,7 +197,7 @@ export function HomePage() {
                 <h2 className="font-serif text-[19px] text-[#284d45]">About this project</h2>
                 <ArrowRight size={14} className="shrink-0 text-[#ae6249] transition-transform group-hover:translate-x-1" />
               </div>
-              <p className="mt-1 text-[11px] leading-5 text-[#7a7769]">
+              <p className="mt-1 text-[14px] leading-6 text-[#7a7769]">
                 How the scorer was built, which rules sources it uses, and how to support the project.
               </p>
             </div>
@@ -207,7 +211,7 @@ export function HomePage() {
                 <Coffee size={18} className="text-[#ae6249]" />
                 <h2 className="font-serif text-[25px] text-[#284d45]">Support the project</h2>
               </div>
-              <p className="mt-2 text-[12px] leading-6 text-[#596b65]">
+              <p className="mt-2 text-[14px] leading-6 text-[#596b65]">
                 If the scorer has made a game easier to score, helped explain a rule or saved an argument over the table, you can support its continued development. There is no requirement to contribute.
               </p>
             </div>
@@ -215,7 +219,7 @@ export function HomePage() {
               href="https://buymeacoffee.com/sharronmo"
               target="_blank"
               rel="noreferrer"
-              className="mt-4 inline-flex shrink-0 items-center gap-2 rounded-md bg-[#284d45] px-4 py-2.5 text-[11px] font-semibold text-[#f8f4e9] transition hover:bg-[#23443d] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249] focus-visible:ring-offset-2 sm:mt-0"
+              className="mt-4 inline-flex shrink-0 items-center gap-2 rounded-md bg-[#284d45] px-4 py-2.5 text-[14px] font-semibold text-[#f8f4e9] transition hover:bg-[#23443d] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249] focus-visible:ring-offset-2 sm:mt-0"
             >
               <Coffee size={15} /> Buy me a coffee
             </a>
@@ -224,8 +228,8 @@ export function HomePage() {
       </main>
 
       <footer className="mx-auto flex max-w-[1100px] flex-wrap items-center justify-between gap-3 border-t border-[#d8ceb8] px-5 py-5 lg:px-8">
-        <p className="text-[10px] leading-5 text-[#8c8a7f]">Independent project · not an official BMJA publication.</p>
-        <div className="flex items-center gap-2 text-[10px] text-[#8c8a7f]">
+        <p className="text-[13px] leading-5 text-[#8c8a7f]">Independent project · not an official BMJA publication.</p>
+        <div className="flex items-center gap-2 text-[13px] text-[#8c8a7f]">
           <CircleHelp size={13} />
           <span>Scoring stays one tap away.</span>
         </div>
