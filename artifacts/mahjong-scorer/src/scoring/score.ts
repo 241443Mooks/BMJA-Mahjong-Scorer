@@ -14,6 +14,7 @@ import {
 } from './special-hands';
 import { detectSpecialFishing, fishingScoreOptions } from './fishing';
 import type { GameContext, MahjongHand, ScoreBreakdown } from './types';
+import type { ScoringPolicy } from './scoring-policy';
 import { classifyEvidenceCompleteness, validateHand } from './validation';
 
 export const DEFAULT_CONTEXT: GameContext = {
@@ -32,6 +33,7 @@ export const scoreHand = (
   hand: MahjongHand,
   context: GameContext = DEFAULT_CONTEXT,
   specialHandBindings?: SpecialHandPatternBinding[],
+  scoringPolicy?: ScoringPolicy,
 ): ScoreBreakdown => {
   const validationErrors = validateHand(hand, context, specialHandBindings);
   const evidenceCompleteness = classifyEvidenceCompleteness(
@@ -109,12 +111,20 @@ export const scoreHand = (
     ? fishingOptions.pointRules
     : matchedFixedSpecial
       ? scoreBonusTiles(hand)
-      : applyPointRules(hand, context);
+      : [
+          ...applyPointRules(hand, context),
+          ...(scoringPolicy?.additionalPointRules?.(hand, context) ?? []),
+        ];
   const doubleRules = fishingOptions
     ? fishingOptions.doubleRules
     : matchedFixedSpecial
       ? [...scoreBonusDoubles(hand, context), ...specialFinalDiscardDouble]
-      : applyDoubleRules(hand, context);
+      : [
+          ...(scoringPolicy?.transformStandardDoubleRules?.(
+            applyDoubleRules(hand, context), hand, context,
+          ) ?? applyDoubleRules(hand, context)),
+          ...(scoringPolicy?.additionalDoubleRules?.(hand, context) ?? []),
+        ];
   const basePoints = pointRules.reduce((sum, rule) => sum + rule.amount, 0);
   const doubles = doubleRules.reduce((sum, rule) => sum + rule.amount, 0);
   const bonusPoints = scoreBonusTiles(hand).reduce(
@@ -152,10 +162,11 @@ export const scoreHand = (
         : []),
     ];
   } else if (purity) {
-    const playingPointRules = applyPointRules(
-      { ...hand, bonusTiles: [] },
-      context,
-    );
+    const playingHand = { ...hand, bonusTiles: [] };
+    const playingPointRules = [
+      ...applyPointRules(playingHand, context),
+      ...(scoringPolicy?.additionalPointRules?.(playingHand, context) ?? []),
+    ];
     const playingBase = playingPointRules.reduce(
       (sum, rule) => sum + rule.amount,
       0,
@@ -218,7 +229,9 @@ export const scoreHand = (
   );
   // A published fixed special value is not silently reduced by the ordinary
   // profile cap. Ordinary and fishing scores retain the profile limit.
-  const effectiveLimit = matchedFixedSpecial
+  const effectiveLimit = matchedFixedSpecial && scoringPolicy?.fixedSpecialBonusSubtotalAboveLimit
+    ? Number.POSITIVE_INFINITY
+    : matchedFixedSpecial
     ? Math.max(context.limit, matchedFixedSpecial.value)
     : context.limit;
   const finalScore = Math.min(uncappedScore, effectiveLimit);
