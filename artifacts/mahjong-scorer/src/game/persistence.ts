@@ -7,6 +7,7 @@ import type {
   HandOutcome,
   RoundInput,
   RoundScoringDraft,
+  RoundIncident,
   RulesProfileRef,
 } from "./types";
 
@@ -77,6 +78,16 @@ const isValidScoreRecord = (value: unknown): boolean => {
     Number.isFinite(value.breakdown.finalScore)
   );
 };
+const isValidIncident = (value: unknown, playerIds: Set<string>): value is RoundIncident => {
+  if (!isRecord(value) || typeof value.type !== 'string') return false;
+  const has = (key: string) => typeof value[key] === 'string' && playerIds.has(value[key] as string);
+  if (value.type === 'incorrect-hand') return has('playerId') && (value.condition === 'too-few' || value.condition === 'too-many');
+  if (value.type === 'false-discard-name') return has('discarderId') && has('claimantId') && (value.result === 'claimed' || value.result === 'mah-jong');
+  if (value.type === 'false-mah-jong') return has('declarerId') && typeof value.anyHandExposed === 'boolean';
+  if (value.type === 'wrong-tile-claim') return has('playerId') && typeof value.correctedBeforeNextDraw === 'boolean';
+  return value.type === 'cannon' && has('liablePlayerId') && typeof value.noChoiceAccepted === 'boolean' &&
+    (value.danger === undefined || ['third-dragon', 'fourth-wind', 'honours', 'majors', 'one-suit'].includes(value.danger as string));
+};
 
 const isValidSnapshotShape = (
   value: unknown,
@@ -113,6 +124,7 @@ const isValidSnapshotShape = (
   ) {
     return false;
   }
+  if (!value.game.rounds.every((round) => isRecord(round) && (!round.incidents || Array.isArray(round.incidents) && round.incidents.every((incident) => isValidIncident(incident, playerIds))))) return false;
   return (
     (value.currentRound.outcomeType === "win" ||
       value.currentRound.outcomeType === "draw") &&
@@ -122,7 +134,8 @@ const isValidSnapshotShape = (
     Object.entries(value.currentRound.draft.scoreRecords).every(
       ([playerId, record]) =>
         playerIds.has(playerId) && isValidScoreRecord(record),
-    )
+    ) &&
+    (value.currentRound.draft.incidents === undefined || (Array.isArray(value.currentRound.draft.incidents) && value.currentRound.draft.incidents.every((incident) => isValidIncident(incident, playerIds))))
   );
 };
 
@@ -132,10 +145,11 @@ const normalisePersistedSetup = (setup: PersistedGameSetup): GameSetup => ({
 });
 
 const roundsFrom = (game: GameState): RoundInput[] =>
-  game.handHistory.map(({ outcome, scores, scoreRecords }) => ({
+  game.handHistory.map(({ outcome, scores, scoreRecords, incidents }) => ({
     outcome,
     scores,
     scoreRecords,
+    incidents,
   }));
 
 export const saveGameRecovery = (

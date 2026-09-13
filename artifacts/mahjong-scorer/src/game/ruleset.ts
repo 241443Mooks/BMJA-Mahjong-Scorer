@@ -7,6 +7,7 @@ import { WESTERN_TM_PROFILE_REF, westernTmSpecialHandBindings } from './western-
 export { OUTSIDE_THE_BOX_PROFILE_REF, outsideTheBoxSpecialHandBindings } from './outside-the-box-catalogue';
 import { OUTSIDE_THE_BOX_PROFILE_REF, outsideTheBoxSpecialHandBindings } from './outside-the-box-catalogue';
 import { OUTSIDE_THE_BOX_SCORING_POLICY } from './outside-the-box-scoring';
+import { prepareOutsideTheBoxRound, settleOutsideTheBoxRound } from './outside-the-box-incidents';
 
 export const BMJA_RULESET: GameRuleset = Object.freeze({
   id: 'bmja', version: '1.0', name: 'British Mahjong Association', defaultLimit: 1000,
@@ -26,7 +27,8 @@ export const OUTSIDE_THE_BOX_RULESET: GameRuleset = Object.freeze({
   id: OUTSIDE_THE_BOX_PROFILE_REF.id, version: OUTSIDE_THE_BOX_PROFILE_REF.version,
   name: 'Outside the Box', defaultLimit: 1000,
   scoreHand: ({ hand, playerWind, prevailingWind, limit = 1000, handMode = 'normal' }) => scoreHand(hand, { playerWind, prevailingWind, limit, handMode }, outsideTheBoxSpecialHandBindings, OUTSIDE_THE_BOX_SCORING_POLICY),
-  settleRound: settleBmjaRound, progressGame: progressBmjaGame,
+  prepareRound: prepareOutsideTheBoxRound,
+  settleRound: (players, seats, round) => settleOutsideTheBoxRound(players, seats, round, 1000), progressGame: progressBmjaGame,
   nextHandMode: (_current, outcome): HandMode => outcome.type === 'draw' ? 'goulash' : 'normal',
 });
 const profileKey = ({ id, version }: RulesProfileRef) => `${id}@${version}`;

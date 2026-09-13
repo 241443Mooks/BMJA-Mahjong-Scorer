@@ -9,7 +9,7 @@ import {
   recoverableGameForReturn,
   saveGameRecovery,
 } from "./persistence";
-import { BMJA_PROFILE_REF } from "./ruleset";
+import { BMJA_PROFILE_REF, OUTSIDE_THE_BOX_PROFILE_REF } from "./ruleset";
 
 const memoryStorage = () => {
   const values = new Map<string, string>();
@@ -34,6 +34,17 @@ const newGame = () =>
   );
 
 describe("game recovery persistence", () => {
+  it("validates Cannon danger while preserving valid incident evidence", () => {
+    const storage = memoryStorage();
+    const otb = createBmjaGame(newGame().players, newGame().seats, undefined, 'full-game', OUTSIDE_THE_BOX_PROFILE_REF);
+    const confirmed = confirmHand(otb, { outcome: { type: 'win', winnerId: 'east' }, scores: { east: 100, south: 0, west: 0, north: 0 }, incidents: [{ type: 'cannon', liablePlayerId: 'south', danger: 'one-suit', noChoiceAccepted: true }] });
+    saveGameRecovery(storage, confirmed, 'win', 'east', { scores: {}, scoreRecords: {}, incidents: [{ type: 'cannon', liablePlayerId: 'south', noChoiceAccepted: true }] });
+    expect(loadGameRecovery(storage)?.game.handHistory[0].incidents[0]).toMatchObject({ danger: 'one-suit' });
+    const malformed = JSON.parse(storage.getItem(GAME_SNAPSHOT_STORAGE_KEY)!);
+    malformed.currentRound.draft.incidents[0].danger = 'invented-danger';
+    storage.setItem(GAME_SNAPSHOT_STORAGE_KEY, JSON.stringify(malformed));
+    expect(loadGameRecovery(storage)).toBeNull();
+  });
   it("saves and restores the replayed game plus the active round draft", () => {
     const storage = memoryStorage();
     const game = confirmHand(newGame(), {

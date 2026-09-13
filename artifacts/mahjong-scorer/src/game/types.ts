@@ -28,10 +28,18 @@ export type HandOutcome =
 
 export type HandMode = 'normal' | 'goulash';
 
+export type RoundIncident =
+  | { type: 'incorrect-hand'; playerId: PlayerId; condition: 'too-few' | 'too-many' }
+  | { type: 'false-discard-name'; discarderId: PlayerId; claimantId: PlayerId; result: 'claimed' | 'mah-jong' }
+  | { type: 'false-mah-jong'; declarerId: PlayerId; anyHandExposed: boolean }
+  | { type: 'wrong-tile-claim'; playerId: PlayerId; correctedBeforeNextDraw: boolean }
+  | { type: 'cannon'; liablePlayerId: PlayerId; danger?: 'third-dragon' | 'fourth-wind' | 'honours' | 'majors' | 'one-suit'; noChoiceAccepted: boolean };
+
 export type RoundInput = {
   outcome: HandOutcome;
   scores: PlayerAmounts;
   scoreRecords?: PlayerScoreRecords;
+  incidents?: RoundIncident[];
 };
 
 export type SettlementTransaction = {
@@ -40,7 +48,7 @@ export type SettlementTransaction = {
   amount: number;
   baseAmount: number;
   eastMultiplier: 1 | 2;
-  reason: 'winner-payment' | 'score-difference';
+  reason: 'winner-payment' | 'score-difference' | 'false-discard-name-penalty' | 'false-mah-jong-penalty' | 'false-name-mah-jong-liability' | 'cannon-liability';
 };
 
 export type SettlementResult = {
@@ -67,6 +75,7 @@ export type ConfirmedHand = {
   nextHandMode: HandMode;
   scores: PlayerAmounts;
   scoreRecords: PlayerScoreRecords;
+  incidents: RoundIncident[];
   eastPlayerId: PlayerId;
   prevailingWind: Wind;
   seats: SeatAssignments;
@@ -119,6 +128,11 @@ export type GameRuleset = {
     seats: SeatAssignments,
     round: RoundInput,
   ) => SettlementResult;
+  prepareRound?: (
+    players: GamePlayer[],
+    seats: SeatAssignments,
+    round: RoundInput,
+  ) => RoundInput;
   progressGame: (
     players: GamePlayer[],
     current: ProgressionState,
@@ -175,6 +189,7 @@ export type PlayerScoreRecords = Partial<Record<PlayerId, PlayerScoreRecord>>;
 export type RoundScoringDraft = {
   scores: RoundScoreDraft;
   scoreRecords: PlayerScoreRecords;
+  incidents?: RoundIncident[];
 };
 
 export type HandScorerLocalContext = {

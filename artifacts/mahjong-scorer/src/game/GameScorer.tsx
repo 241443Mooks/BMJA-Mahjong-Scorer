@@ -11,6 +11,7 @@ import {
   Printer,
 } from 'lucide-react';
 import { HandRecord, settlementDescription } from './HandRecord';
+import { incidentDescription } from './outside-the-box-incidents';
 import { SiteHeader } from '../components/SiteHeader';
 import {
   applyManualScore,
@@ -38,6 +39,7 @@ import type {
   PlayerScoreRecords,
   RoundScoreDraft,
   RoundScoringDraft,
+  RoundIncident,
   SeatAssignments,
 } from '.';
 import type { Wind } from '../scoring';
@@ -73,15 +75,33 @@ export const previewRoundSettlement = (
   game: GameState,
   outcome: HandOutcome,
   scores: RoundScoreDraft,
+  incidents: RoundIncident[] = [],
 ) => {
   const fullScores = Object.fromEntries(
     game.players.map((player) => [player.id, scores[player.id] ?? 0]),
   ) as PlayerAmounts;
-  return resolveRulesProfile(game.setup.rulesProfile).settleRound(
+  const ruleset = resolveRulesProfile(game.setup.rulesProfile);
+  if (!ruleset.prepareRound && incidents.length > 0) throw new Error(`${ruleset.name} does not support round incidents.`);
+  const round = { outcome, scores: fullScores, incidents };
+  const prepared = ruleset.prepareRound ? ruleset.prepareRound(game.players, game.seats, round) : round;
+  return ruleset.settleRound(
     game.players,
     game.seats,
-    { outcome, scores: fullScores },
+    prepared,
   );
+};
+
+export const getRoundSettlementPreview = (
+  game: GameState,
+  outcome: HandOutcome,
+  scores: RoundScoreDraft,
+  incidents: RoundIncident[] = [],
+): { settlement: ReturnType<typeof previewRoundSettlement> | null; error: string | null } => {
+  try {
+    return { settlement: previewRoundSettlement(game, outcome, scores, incidents), error: null };
+  } catch (caught) {
+    return { settlement: null, error: caught instanceof Error ? caught.message : 'This round cannot be settled.' };
+  }
 };
 
 export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedScore }: GameScorerProps) {
@@ -97,6 +117,7 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
   const [winnerId, setWinnerId] = useState(recovered?.winnerId ?? '');
   const [scores, setScores] = useState<RoundScoreDraft>(recovered?.draft.scores ?? {});
   const [scoreRecords, setScoreRecords] = useState<PlayerScoreRecords>(recovered?.draft.scoreRecords ?? {});
+  const [incidents, setIncidents] = useState<RoundIncident[]>(recovered?.draft.incidents ?? []);
   const [error, setError] = useState('');
   const [printMode, setPrintMode] = useState<'summary' | 'full' | null>(null);
   const tableScoresRef = useRef<HTMLElement>(null);
@@ -133,9 +154,9 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
       game,
       outcomeType,
       winnerId,
-      { scores, scoreRecords },
+      { scores, scoreRecords, incidents },
     );
-  }, [game, outcomeType, scoreRecords, scores, winnerId]);
+  }, [game, outcomeType, scoreRecords, scores, incidents, winnerId]);
 
   useEffect(() => {
     if (!printMode || typeof window === 'undefined') return;
@@ -223,13 +244,9 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
   };
 
   const preview = useMemo(() => {
-    if (!game || !outcome) return null;
-    try {
-      return previewRoundSettlement(game, outcome, scores);
-    } catch {
-      return null;
-    }
-  }, [game, outcome, scores]);
+    if (!game || !outcome) return { settlement: null, error: null };
+    return getRoundSettlementPreview(game, outcome, scores, incidents);
+  }, [game, outcome, scores, incidents]);
 
   const startGame = () => {
     const trimmed = names.map((name) => name.trim());
@@ -254,6 +271,7 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
     setGame(started);
     setScores({});
     setScoreRecords({});
+    setIncidents([]);
     setWinnerId(players[0].id);
     setError('');
   };
@@ -264,6 +282,7 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
     setGame(null);
     setScores({});
     setScoreRecords({});
+    setIncidents([]);
     setWinnerId('');
     setOutcomeType('win');
     setError('');
@@ -272,6 +291,7 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
   const resetRoundEntry = (nextGame: GameState) => {
     setScores({});
     setScoreRecords({});
+    setIncidents([]);
     const east = Object.entries(nextGame.seats).find(
       ([, seat]) => seat === 'east',
     )?.[0];
@@ -280,8 +300,12 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
   };
 
   const confirmRound = () => {
-    if (!game || !outcome || !preview) {
+    if (!game || !outcome) {
       setError('Choose a winner and enter a score for every player.');
+      return;
+    }
+    if (preview.error) {
+      setError(preview.error);
       return;
     }
     const isScoresComplete = outcome.type === 'draw' || game.players.every(p => scores[p.id] !== undefined);
@@ -290,14 +314,19 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
       return;
     }
     const fullScores = Object.fromEntries(game.players.map(p => [p.id, outcome.type === 'draw' ? 0 : scores[p.id] ?? 0])) as PlayerAmounts;
-    const next = confirmHand(game, {
-      outcome,
-      scores: fullScores,
-      scoreRecords: outcome.type === 'draw' ? {} : scoreRecords,
-    });
-    setGame(next);
-    resetRoundEntry(next);
-    setError('');
+    try {
+      const next = confirmHand(game, {
+        outcome,
+        scores: fullScores,
+        scoreRecords: outcome.type === 'draw' ? {} : scoreRecords,
+        incidents,
+      });
+      setGame(next);
+      resetRoundEntry(next);
+      setError('');
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : 'This round cannot be confirmed.');
+    }
   };
 
   const undo = () => {
@@ -616,6 +645,39 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
                     </label>
                   ))}
                 </div>}
+                {game.setup.rulesProfile.id === 'outside-the-box' && (
+                  <section data-testid="section-round-incidents" className="mt-5 border-t border-[#d8ceb8] pt-5">
+                    <div className="font-mono text-[10px] uppercase tracking-[.15em] text-[#ae6249]">Round incidents / penalties</div>
+                    <p className="mt-1 text-[11px] text-[#7a7769]">No incidents unless the table records one. These are manual end-of-round evidence, not simulated play.</p>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {(['incorrect-hand', 'false-discard-name', 'false-mah-jong', 'wrong-tile-claim', 'cannon'] as const).map((type) => (
+                        <button key={type} type="button" className="rounded border border-[#cfc3aa] px-2 py-1 text-[10px] text-[#284d45]" onClick={() => {
+                          const first = game.players[0].id;
+                          const second = game.players[1].id;
+                          const incident: RoundIncident = type === 'incorrect-hand' ? { type, playerId: first, condition: 'too-few' }
+                            : type === 'false-discard-name' ? { type, discarderId: first, claimantId: second, result: 'mah-jong' }
+                            : type === 'false-mah-jong' ? { type, declarerId: first, anyHandExposed: false }
+                            : type === 'wrong-tile-claim' ? { type, playerId: first, correctedBeforeNextDraw: true }
+                            : { type, liablePlayerId: first, noChoiceAccepted: false };
+                          setIncidents((current) => [...current, incident]);
+                        }}>{type === 'false-discard-name' ? 'False discard name — caused Mah Jong' : type.replaceAll('-', ' ')}</button>
+                      ))}
+                    </div>
+                    <p className="mt-2 text-[10px] text-[#7a7769]">Ordinary pickup penalty: 50 documented; recipient still awaiting source confirmation.</p>
+                    {incidents.length > 0 && <div className="mt-3 space-y-2">
+                      {incidents.map((incident, index) => <div key={index} className="flex flex-wrap items-center gap-2 rounded bg-[#f7f1e3] p-2 text-[10px] text-[#284d45]">
+                        <span className="font-semibold">{incident.type.replaceAll('-', ' ')}</span>
+                        <select value={'playerId' in incident ? incident.playerId : 'declarerId' in incident ? incident.declarerId : 'liablePlayerId' in incident ? incident.liablePlayerId : incident.discarderId} onChange={(event) => setIncidents((current) => current.map((item, itemIndex) => itemIndex !== index ? item : 'playerId' in item ? { ...item, playerId: event.target.value } : 'declarerId' in item ? { ...item, declarerId: event.target.value } : 'liablePlayerId' in item ? { ...item, liablePlayerId: event.target.value } : { ...item, discarderId: event.target.value }))}>{game.players.map((player) => <option key={player.id} value={player.id}>{player.name}</option>)}</select>
+                        {incident.type === 'incorrect-hand' && <select value={incident.condition} onChange={(event) => setIncidents((current) => current.map((item, itemIndex) => itemIndex === index && item.type === 'incorrect-hand' ? { ...item, condition: event.target.value as 'too-few' | 'too-many' } : item))}><option value="too-few">too few</option><option value="too-many">too many</option></select>}
+                        {incident.type === 'false-discard-name' && <><select value={incident.claimantId} onChange={(event) => setIncidents((current) => current.map((item, itemIndex) => itemIndex === index && item.type === 'false-discard-name' ? { ...item, claimantId: event.target.value } : item))}>{game.players.map((player) => <option key={player.id} value={player.id}>{player.name}</option>)}</select><span>caused Mah Jong</span></>}
+                        {incident.type === 'false-mah-jong' && <label><input type="checkbox" checked={incident.anyHandExposed} onChange={(event) => setIncidents((current) => current.map((item, itemIndex) => itemIndex === index && item.type === 'false-mah-jong' ? { ...item, anyHandExposed: event.target.checked } : item))} /> hand exposed</label>}
+                        {incident.type === 'wrong-tile-claim' && <label><input type="checkbox" checked={incident.correctedBeforeNextDraw} onChange={(event) => setIncidents((current) => current.map((item, itemIndex) => itemIndex === index && item.type === 'wrong-tile-claim' ? { ...item, correctedBeforeNextDraw: event.target.checked } : item))} /> corrected in time</label>}
+                        {incident.type === 'cannon' && <label><input type="checkbox" checked={incident.noChoiceAccepted} onChange={(event) => setIncidents((current) => current.map((item, itemIndex) => itemIndex === index && item.type === 'cannon' ? { ...item, noChoiceAccepted: event.target.checked } : item))} /> No choice! accepted</label>}
+                        <button type="button" onClick={() => setIncidents((current) => current.filter((_, itemIndex) => itemIndex !== index))}>Remove</button>
+                      </div>)}
+                    </div>}
+                  </section>
+                )}
               </>
             )}
           </section>
@@ -637,7 +699,7 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
               <div className="p-5">
                 <div className="space-y-3">
                   {game.players.map((player) => {
-                    const change = preview?.changes[player.id] ?? 0;
+                    const change = preview.settlement?.changes[player.id] ?? 0;
                     return (
                       <div
                         key={player.id}
@@ -668,8 +730,19 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
                 </div>
                 <div className="mt-5 flex items-center gap-2 rounded-md bg-[#355e54] px-3 py-2 text-[10px] text-[#c8d8d1]">
                   <Check size={13} />
-                  Changes total {preview?.zeroSum ? 'zero' : '—'}
+                  Changes total {preview.settlement?.zeroSum ? 'zero' : '—'}
                 </div>
+                {preview.error && (
+                  <p data-testid="preview-domain-error" className="mt-3 rounded-md bg-[#6b3a36] px-3 py-2 text-[11px] font-semibold leading-5 text-[#ffe5db]">
+                    {preview.error}
+                  </p>
+                )}
+                {incidents.length > 0 && (
+                  <div className="mt-3 rounded-md bg-[#355e54] px-3 py-2 text-[10px] leading-5 text-[#c8d8d1]">
+                    {incidents.map((incident, index) => <div key={index}>{incidentDescription(incident, game.players)}</div>)}
+                    {preview.settlement?.transactions.filter((transaction) => !['winner-payment', 'score-difference'].includes(transaction.reason)).map((transaction, index) => <div key={`payment-${index}`}>{settlementDescription(transaction, game.players, currentEastId ?? '')}</div>)}
+                  </div>
+                )}
                 {error && (
                   <p className="mt-3 text-[11px] font-semibold text-[#e6a48d]">
                     {error}
@@ -795,6 +868,11 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
                           </div>
                         ),
                       )}
+                    </div>
+                  )}
+                  {hand.incidents.length > 0 && (
+                    <div className="mt-3 border-t border-[#e2d9c7] pt-3 text-[10px] leading-5 text-[#7a7769]">
+                      {hand.incidents.map((incident, index) => <div key={index}>{incidentDescription(incident, game.players)}</div>)}
                     </div>
                   )}
                   <div className="mt-3 grid gap-3 sm:grid-cols-2">

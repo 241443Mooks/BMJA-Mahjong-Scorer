@@ -11,6 +11,7 @@ import type {
   PlayerScoreRecords,
   PlayerScoreRecord,
   RoundInput,
+  RoundIncident,
   RulesProfileRef,
   SeatAssignments,
 } from './types';
@@ -21,6 +22,8 @@ const cloneRulesProfile = (profile: RulesProfileRef): RulesProfileRef => ({
   id: profile.id,
   version: profile.version,
 });
+const cloneIncidents = (incidents: RoundIncident[] | undefined): RoundIncident[] =>
+  incidents ? incidents.map((incident) => ({ ...incident })) : [];
 
 const cloneDetailedHandRecord = (
   record: DetailedHandRecord,
@@ -160,14 +163,21 @@ const applyRound = (state: GameState, round: RoundInput): GameState => {
     throw new Error('Game is already complete.');
   }
 
-  const appliedRound: RoundInput = round.outcome.type === 'draw'
+  const submittedRound: RoundInput = round.outcome.type === 'draw'
     ? {
         outcome: round.outcome,
         scores: Object.fromEntries(state.players.map((player) => [player.id, 0])),
         scoreRecords: {},
+        incidents: cloneIncidents(round.incidents),
       }
-    : round;
+    : { ...round, incidents: cloneIncidents(round.incidents) };
   const ruleset = resolveRulesProfile(state.setup.rulesProfile);
+  if (!ruleset.prepareRound && submittedRound.incidents && submittedRound.incidents.length > 0) {
+    throw new Error(`${ruleset.name} does not support round incidents.`);
+  }
+  const appliedRound = ruleset.prepareRound
+    ? ruleset.prepareRound(state.players, state.seats, submittedRound)
+    : submittedRound;
   const settlement = ruleset.settleRound(
     state.players,
     state.seats,
@@ -207,6 +217,7 @@ const applyRound = (state: GameState, round: RoundInput): GameState => {
     nextHandMode,
     scores: cloneAmounts(appliedRound.scores),
     scoreRecords,
+    incidents: cloneIncidents(appliedRound.incidents),
     eastPlayerId: eastPlayerId(state.seats),
     prevailingWind: state.prevailingWind,
     seats: cloneSeats(state.seats),
@@ -252,9 +263,10 @@ export const replayGame = (
 export const undoLastHand = (state: GameState): GameState =>
   replayGame(
     state.setup,
-    state.handHistory.slice(0, -1).map(({ outcome, scores, scoreRecords }) => ({
+    state.handHistory.slice(0, -1).map(({ outcome, scores, scoreRecords, incidents }) => ({
       outcome,
       scores,
       scoreRecords,
+      incidents,
     })),
   );
