@@ -29,7 +29,7 @@ import {
   saveGameRecovery,
 } from '.';
 import { ActiveRules, RulesProfilePicker } from './RulesProfilePicker';
-import { descriptorForRulesProfile } from './rules-presentation';
+import { descriptorForRulesProfile, isBritishRulesProfile } from './rules-presentation';
 import type {
   GameLength,
   GamePlayer,
@@ -75,6 +75,9 @@ export const printStandings = (game: GameState) =>
 
 export const recoveredGameConflictsWithRoute = (game: GameState, routeProfile: RulesProfileRef) =>
   game.setup.rulesProfile.id !== routeProfile.id || game.setup.rulesProfile.version !== routeProfile.version;
+
+export const shouldShowBritishSetupHelper = (profile: RulesProfileRef) =>
+  isBritishRulesProfile(profile);
 
 export const previewRoundSettlement = (
   game: GameState,
@@ -383,7 +386,7 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
 
           <section className="rounded-xl border border-[#d8ceb8] bg-[#fbf8ed] p-5 shadow-[var(--shadow-sm)] sm:p-7">
             <RulesProfilePicker prompt="Which rules are you playing?" selectedProfile={selectedRulesProfile} onSelect={setSelectedRulesProfile} />
-            <p className="mb-6 rounded-md bg-[#edf3ed] px-3 py-2 text-[14px] leading-6 text-[#284d45]">New to table setup? <a href="/gameplay-basics#wind-rotation" className="font-semibold underline decoration-[#ae6249] underline-offset-4">Starting Winds</a> set the first seats; <a href="/gameplay-basics#prevailing-wind" className="font-semibold underline decoration-[#ae6249] underline-offset-4">prevailing rounds</a> describe the game’s longer progress.</p>
+            {shouldShowBritishSetupHelper(selectedRulesProfile) ? <p className="mb-6 rounded-md bg-[#edf3ed] px-3 py-2 text-[14px] leading-6 text-[#284d45]">New to table setup? <a href="/gameplay-basics#wind-rotation" className="font-semibold underline decoration-[#ae6249] underline-offset-4">Starting Winds</a> set the first seats; <a href="/gameplay-basics#prevailing-wind" className="font-semibold underline decoration-[#ae6249] underline-offset-4">prevailing rounds</a> describe the game’s longer progress.</p> : null}
             <div className="mb-6 grid gap-4 sm:grid-cols-2">
               <label className="block sm:col-span-2">
                 <span className="mb-1.5 block font-mono text-[10px] uppercase tracking-[.15em] text-[#7a7769]">

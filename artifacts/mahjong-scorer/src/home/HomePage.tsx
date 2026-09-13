@@ -22,6 +22,8 @@ type HomeLink = {
   icon: typeof Calculator;
 };
 
+export const britishBeginnerLinkLabel = 'New to British Mahjong? Start here';
+
 const learningLinks: HomeLink[] = [
   {
     title: 'Gameplay basics',
@@ -170,7 +172,7 @@ export function HomePage() {
           />
         </section>
 
-        <a href="/gameplay-basics" className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-md px-1 text-[15px] font-semibold text-[#284d45] underline decoration-[#ae6249] decoration-2 underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">New to Mahjong? Start here <ArrowRight size={16} /></a>
+        <a href="/gameplay-basics" className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-md px-1 text-[15px] font-semibold text-[#284d45] underline decoration-[#ae6249] decoration-2 underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">{britishBeginnerLinkLabel} <ArrowRight size={16} /></a>
 
         <section className="mt-11">
           <div className="mb-4 flex items-center gap-3">

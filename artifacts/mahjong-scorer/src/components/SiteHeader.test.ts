@@ -18,10 +18,10 @@ describe('site navigation', () => {
       {
         label: 'Learn',
         destinations: [
-          ['Gameplay basics', '/gameplay-basics'],
+          ['British gameplay basics', '/gameplay-basics'],
           ['British scoring guide', '/guide#ordinary-scoring'],
-          ['Special hands', '/special-hands'],
-          ['Scoring examples', '/scoring-examples'],
+          ['British special hands', '/special-hands'],
+          ['British scoring examples', '/scoring-examples'],
         ],
       },
     ]);

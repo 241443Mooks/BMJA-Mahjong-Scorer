@@ -3,6 +3,13 @@ import type { RulesProfileRef } from './types';
 
 const sameProfile = (left: RulesProfileRef, right: RulesProfileRef) => left.id === right.id && left.version === right.version;
 
+export const rulesCardStatus = (descriptor: ReturnType<typeof descriptorForRulesProfile>) =>
+  descriptor.support.implementation === 'Stable'
+    ? 'Stable scorer'
+    : descriptor.support.implementation === 'Provisional'
+      ? 'Provisional scorer'
+      : 'Configured profile';
+
 export function ActiveRules({ profile, inherited = false, locked = false }: { profile: RulesProfileRef; inherited?: boolean; locked?: boolean }) {
   const descriptor = descriptorForRulesProfile(profile);
   return <p data-testid="active-rules" className="mt-3 text-[13px] leading-6 text-[#284d45]"><strong>Rules: {descriptor.title}.</strong>{inherited ? ' Inherited from this game.' : locked ? ' Fixed for this game.' : ''}</p>;
@@ -17,7 +24,7 @@ export function RulesProfilePicker({ prompt, selectedProfile, onSelect }: { prom
         const isSelected = sameProfile(descriptor.profile, selectedProfile);
         return <button key={descriptor.slug} type="button" data-testid={`rules-card-${descriptor.slug}`} aria-pressed={isSelected} onClick={() => onSelect(descriptor.profile)} className={`min-h-24 rounded-lg border p-3 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249] ${isSelected ? 'border-[#ae6249] bg-[#fff4e8] ring-1 ring-[#ae6249]/30' : 'border-[#d8ceb8] bg-[#fdfbf5] hover:border-[#ae6249]/60'}`}>
           <span className="block text-[13px] font-bold text-[#284d45]">{descriptor.title}</span>
-          <span className="mt-1 block text-[11px] leading-4 text-[#66746e]">{descriptor.status === 'Stable' ? 'Stable scorer' : descriptor.status === 'Configured club profile' ? 'Configured profile' : 'Scorer available'}</span>
+          <span className="mt-1 block text-[11px] leading-4 text-[#66746e]">{rulesCardStatus(descriptor)}</span>
         </button>;
       })}
     </div>

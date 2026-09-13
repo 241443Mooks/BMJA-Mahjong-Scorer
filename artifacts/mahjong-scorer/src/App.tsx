@@ -13,7 +13,7 @@ import { ReturnToGame } from './components/ReturnToGame';
 import { handScorerLocalContext } from './game';
 import { BMJA_PROFILE_REF, resolveRulesProfile } from './game/ruleset';
 import { ActiveRules, RulesProfilePicker } from './game/RulesProfilePicker';
-import { isConfiguredClubProfile, normaliseStandaloneHandMode } from './game/rules-presentation';
+import { isBritishRulesProfile, isConfiguredClubProfile, normaliseStandaloneHandMode } from './game/rules-presentation';
 import { handScorerInitialBaseline, hasHandScorerUnsavedWork } from './game/hand-scorer-dirty-state';
 import { applicableUngroupedBlanks, hasUngroupedBlankAt, reindexUngroupedBlanksAfterRemoval, toggleUngroupedBlankAt } from './game/ungrouped-blank-state';
 import type {
@@ -73,7 +73,8 @@ const allWindTiles: PlayingTile[] = WINDS.map(wind);
 const allDragonTiles: PlayingTile[] = DRAGONS.map(dragon);
 
 const allPlayingTiles = [...allSuitTiles, ...allWindTiles, ...allDragonTiles];
-const patternReferenceHref = (pattern: { id: string; type: string }) => {
+export const patternReferenceHref = (pattern: { id: string; type: string }, rulesProfile: import('./game').RulesProfileRef) => {
+  if (!isBritishRulesProfile(rulesProfile)) return undefined;
   if (pattern.type === 'points') return '/guide#ordinary-scoring';
   if (pattern.type === 'doubles') return '/guide#doubles';
   if (pattern.type === 'special') return specialHandReferenceHref(pattern.id.replace('special-', ''));
@@ -1548,7 +1549,7 @@ function HandScorer({ context, onClose, standaloneHand, standaloneRulesProfile, 
                   <div className="mb-4 flex items-center justify-between"><div><div className="font-mono text-[10px] uppercase tracking-[.2em] text-[#ae6249]">Detected patterns</div><h2 className="mt-1 font-serif text-[22px] text-[#284d45]">Why this hand scores</h2></div><Sparkles size={18} className="text-[#ae6249]" /></div>
                   <div className="space-y-2">
                     {patterns.map((pattern) => {
-                      const referenceHref = patternReferenceHref(pattern);
+                      const referenceHref = patternReferenceHref(pattern, context?.rulesProfile ?? standaloneRulesProfile);
                       return <div key={pattern.id} data-testid={`pattern-${pattern.id}`} className={`rounded-md border p-3 ${pattern.selected ? 'border-[#ae6249]/60 bg-[#fff4e8]' : 'border-[#b8cdbf] bg-[#edf3ed]'}`}>
                         <div className="flex flex-wrap items-center gap-2 text-[12px] font-semibold text-[#284d45]"><Check size={14} className="text-[#477562]" />{referenceHref ? <a href={referenceHref} className="underline decoration-[#ae6249] underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">{pattern.name}</a> : pattern.name}<span className="ml-auto font-mono text-[9px] uppercase tracking-wider text-[#477562]">{pattern.effect}{pattern.selected ? ' · used' : ''}</span></div>
                         <p className="mt-1 pl-5 text-[10px] leading-4 text-[#7a7769]">{pattern.explanation}</p>

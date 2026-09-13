@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { bmjaSpecialHandBindings } from '../scoring';
 import { outsideTheBoxSpecialHandBindings } from './outside-the-box-catalogue';
-import { descriptorForRulesProfile, descriptorForSlug, normaliseStandaloneHandMode, PUBLIC_RULES_DESCRIPTORS, publicRulesSlugFromGamePath } from './rules-presentation';
+import { descriptorForRulesProfile, descriptorForSlug, isBritishRulesProfile, normaliseStandaloneHandMode, PUBLIC_RULES_DESCRIPTORS, publicRulesSlugFromGamePath } from './rules-presentation';
+import { rulesCardStatus } from './RulesProfilePicker';
 import { BMJA_PROFILE_REF, OUTSIDE_THE_BOX_PROFILE_REF, WESTERN_TM_PROFILE_REF } from './ruleset';
 import { westernTmSpecialHandBindings } from './western-tm-catalogue';
 
@@ -31,5 +32,18 @@ describe('public rules presentation', () => {
     expect(normaliseStandaloneHandMode(OUTSIDE_THE_BOX_PROFILE_REF, 'goulash')).toBe('goulash');
     expect(normaliseStandaloneHandMode(BMJA_PROFILE_REF, 'goulash')).toBe('normal');
     expect(normaliseStandaloneHandMode(WESTERN_TM_PROFILE_REF, 'goulash')).toBe('normal');
+  });
+
+  it('keeps British stable, Western provisional and Club configured at first glance', () => {
+    expect(rulesCardStatus(descriptorForSlug('british'))).toBe('Stable scorer');
+    expect(rulesCardStatus(descriptorForSlug('western'))).toBe('Provisional scorer');
+    expect(rulesCardStatus(descriptorForSlug('club'))).toBe('Configured profile');
+    expect(descriptorForSlug('western').atAGlance).toContain('Ordinary play and settlement remain provisional while source review continues');
+  });
+
+  it('identifies British by its exact active profile rather than its display text', () => {
+    expect(isBritishRulesProfile(BMJA_PROFILE_REF)).toBe(true);
+    expect(isBritishRulesProfile(WESTERN_TM_PROFILE_REF)).toBe(false);
+    expect(isBritishRulesProfile(OUTSIDE_THE_BOX_PROFILE_REF)).toBe(false);
   });
 });

@@ -1,9 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import { confirmHand, createBmjaGame } from './game';
-import { gameRecordRulesLabel, getRoundSettlementPreview, previewRoundSettlement, recoveredGameConflictsWithRoute, settlementPreviewPresentation } from './GameScorer';
+import { gameRecordRulesLabel, getRoundSettlementPreview, previewRoundSettlement, recoveredGameConflictsWithRoute, settlementPreviewPresentation, shouldShowBritishSetupHelper } from './GameScorer';
 import { BMJA_PROFILE_REF, OUTSIDE_THE_BOX_PROFILE_REF, resolveRulesProfile, WESTERN_TM_PROFILE_REF } from './ruleset';
 
 describe('game settlement preview', () => {
+  it('only presents the British setup helper for the British profile', () => {
+    expect(shouldShowBritishSetupHelper(BMJA_PROFILE_REF)).toBe(true);
+    expect(shouldShowBritishSetupHelper(WESTERN_TM_PROFILE_REF)).toBe(false);
+    expect(shouldShowBritishSetupHelper(OUTSIDE_THE_BOX_PROFILE_REF)).toBe(false);
+  });
+
   it('uses a truthful human-facing rules label and exact version in printable records', () => {
     expect(gameRecordRulesLabel(OUTSIDE_THE_BOX_PROFILE_REF)).toBe('Club rules · Profile version: 0.1');
     expect(gameRecordRulesLabel(BMJA_PROFILE_REF)).toBe('British / BMJA-style · Profile version: 1.0');
