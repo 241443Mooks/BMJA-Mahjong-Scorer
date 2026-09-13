@@ -6,7 +6,15 @@ describe('site navigation', () => {
     expect(navigationGroups.map((group) => group.label)).toEqual(['Play', 'Rules', 'Learn']);
     expect(navigationGroups).toEqual([
       { label: 'Play', destinations: [['Track a game', '/game'], ['Score a hand', '/hand']] },
-      { label: 'Rules', destinations: [['Compare Mahjong rules', '/mahjong-rules-compared']] },
+      {
+        label: 'Rules',
+        destinations: [
+          ['Rules hub', '/rules'],
+          ['British / BMJA-style', '/rules/british'],
+          ['Western — Thompson & Maloney', '/rules/western'],
+          ['Compare Mahjong rules', '/mahjong-rules-compared'],
+        ],
+      },
       {
         label: 'Learn',
         destinations: [
