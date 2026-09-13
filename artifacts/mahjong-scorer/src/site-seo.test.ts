@@ -17,6 +17,9 @@ describe('public SEO configuration', () => {
     expect(siteSeo.webApplication.featureList).toContain('Supported rules profiles for British, Western and club Mahjong contexts');
     expect(siteSeo.routes.find((route) => route.path === '/guide')?.title).toContain('British Mahjong Scoring Guide');
     expect(siteSeo.routes.find((route) => route.path === '/gameplay-basics')?.title).toContain('British Mahjong Gameplay Basics');
+    expect(siteSeo.routes.find((route) => route.path === '/rules')?.title).toContain('Mahjong Rules We Support');
+    expect(siteSeo.routes.find((route) => route.path === '/rules/british')?.title).toContain('British Mahjong Rules');
+    expect(siteSeo.routes.find((route) => route.path === '/rules/western')?.description).toContain('provisional ordinary-rule boundary');
   });
 
   it('maps aliases to canonical public routes', () => {

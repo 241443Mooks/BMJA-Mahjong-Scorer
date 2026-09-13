@@ -12,6 +12,7 @@ import { HelpPage } from './home/HelpPage';
 import { HomePage } from './home/HomePage';
 import { HowItWorksPage } from './home/HowItWorksPage';
 import { MahjongRulesComparedPage } from './home/MahjongRulesComparedPage';
+import { RulesHubPage, RulesProfilePage } from './rules/RulesReference';
 import NotFound from './pages/not-found';
 import siteSeo from './site-seo.json';
 import { descriptorForSlug, publicRulesSlugFromGamePath } from './game/rules-presentation';
@@ -110,6 +111,9 @@ function RouteContent() {
   if (path === '/help') return <HelpPage />;
   if (path === '/how-it-works') return <HowItWorksPage />;
   if (path === '/mahjong-rules-compared') return <MahjongRulesComparedPage />;
+  if (path === '/rules') return <RulesHubPage />;
+  if (path === '/rules/british') return <RulesProfilePage slug="british" />;
+  if (path === '/rules/western') return <RulesProfilePage slug="western" />;
   if (path === '/about') return <AboutPage />;
 
   return <NotFound />;

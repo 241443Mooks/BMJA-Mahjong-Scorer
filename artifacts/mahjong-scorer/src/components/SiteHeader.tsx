@@ -12,6 +12,9 @@ export const navigationGroups = [
   {
     label: 'Rules',
     destinations: [
+      ['Rules hub', '/rules'],
+      ['British / BMJA-style', '/rules/british'],
+      ['Western — Thompson & Maloney', '/rules/western'],
       ['Compare Mahjong rules', '/mahjong-rules-compared'],
     ],
   },

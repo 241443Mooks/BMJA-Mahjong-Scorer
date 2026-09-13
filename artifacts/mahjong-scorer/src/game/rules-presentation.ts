@@ -18,6 +18,12 @@ export type RulesDescriptor = {
   configuredClubProfile: boolean;
   referenceKeys: readonly string[];
   atAGlance: readonly string[];
+  support: {
+    scorer: string;
+    source: string;
+    implementation: string;
+    authority: string;
+  };
 };
 
 const sameProfile = (left: RulesProfileRef, right: RulesProfileRef) =>
@@ -38,6 +44,12 @@ export const PUBLIC_RULES_DESCRIPTORS: readonly RulesDescriptor[] = Object.freez
     configuredClubProfile: false,
     referenceKeys: ['british-scoring', 'british-settlement'],
     atAGlance: [catalogueCount(bmjaSpecialHandBindings), 'British settlement and game progression', 'Normal hand play'],
+    support: {
+      scorer: 'Available',
+      source: 'Verified for the British / BMJA-style scorer baseline',
+      implementation: 'Stable',
+      authority: 'BMJA-approved British rules reference',
+    },
   },
   {
     profile: WESTERN_TM_PROFILE_REF,
@@ -50,6 +62,12 @@ export const PUBLIC_RULES_DESCRIPTORS: readonly RulesDescriptor[] = Object.freez
     configuredClubProfile: false,
     referenceKeys: ['western-special-hands', 'western-ordinary-play-status'],
     atAGlance: [catalogueCount(westernTmSpecialHandBindings), 'British settlement and game progression while ordinary play is under review', 'Normal hand play'],
+    support: {
+      scorer: 'Available',
+      source: 'Companion special-hand catalogue source-verified; ordinary rules under source review',
+      implementation: 'Provisional',
+      authority: 'Thompson & Maloney Western references',
+    },
   },
   {
     profile: OUTSIDE_THE_BOX_PROFILE_REF,
@@ -62,6 +80,12 @@ export const PUBLIC_RULES_DESCRIPTORS: readonly RulesDescriptor[] = Object.freez
     configuredClubProfile: true,
     referenceKeys: ['club-special-hands', 'club-goulash', 'club-incidents'],
     atAGlance: [catalogueCount(outsideTheBoxSpecialHandBindings), 'Draws lead to a Goulash hand with physical blank tiles', 'Club incidents and liability are recorded at the table'],
+    support: {
+      scorer: 'Available',
+      source: 'Configured local profile',
+      implementation: 'Configured',
+      authority: 'A local club rules profile',
+    },
   },
 ]);
 

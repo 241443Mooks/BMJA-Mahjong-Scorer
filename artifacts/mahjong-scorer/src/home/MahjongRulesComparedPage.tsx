@@ -92,6 +92,9 @@ export function MahjongRulesComparedPage() {
             <p className="mt-5 max-w-[820px] text-[15px] leading-7 text-[#596b65]">
               Same family of tiles. Five very different ways to play. This guide compares the structural differences that actually change what counts as a legal hand, how scoring works and what a player needs to know at the table.
             </p>
+            <p className="mt-4 max-w-[820px] text-[15px] leading-7 text-[#596b65]">
+              Looking for the profiles Mahjong Reference can score? Read about <a className="font-semibold text-[#284d45] underline decoration-[#ae6249] underline-offset-4" href="/rules/british">British / BMJA-style</a> or <a className="font-semibold text-[#284d45] underline decoration-[#ae6249] underline-offset-4" href="/rules/western">Western — Thompson &amp; Maloney</a> rules.
+            </p>
             <div className="mt-7 rounded-xl bg-[#284d45] p-5 text-[#f8f4e9] sm:p-6">
               <div className="font-mono text-[9px] uppercase tracking-[.18em] text-[#d7a287]">Useful mental model</div>
               <p className="mt-2 font-serif text-[26px] leading-snug">Mahjong is a family of related rulesets, not one universal rulebook with a few house rules.</p>
