@@ -61,4 +61,3 @@ The executable `outside-the-box@0.1` profile is ready to close #88 once this cer
 | Saved and printed rules identity | persistence tests; `gameRecordRulesLabel` test | PASS |
 | Unprovable wait/event/50-recipient rules | evidence table above | DEFERRED — SOURCE/EVIDENCE GAP |
 | Public chooser, redesign and rules hub | #105/#91 | OUT OF SCOPE |
-
