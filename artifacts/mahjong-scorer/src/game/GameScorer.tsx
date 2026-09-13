@@ -109,6 +109,17 @@ export const getRoundSettlementPreview = (
   }
 };
 
+export const settlementPreviewPresentation = (
+  game: GameState,
+  outcome: HandOutcome | null,
+  scores: RoundScoreDraft,
+) => {
+  if (outcome?.type === 'draw') return 'no-payments' as const;
+  return outcome?.type === 'win' && game.players.every((player) => scores[player.id] !== undefined)
+    ? 'transactions' as const
+    : 'awaiting-scores' as const;
+};
+
 export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedScore, initialRulesProfile }: GameScorerProps) {
   const [recovered, setRecovered] = useState(() =>
     typeof window === 'undefined'
@@ -254,6 +265,9 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
     if (!game || !outcome) return { settlement: null, error: null };
     return getRoundSettlementPreview(game, outcome, scores, incidents);
   }, [game, outcome, scores, incidents]);
+  const previewPresentation = game
+    ? settlementPreviewPresentation(game, outcome, scores)
+    : 'awaiting-scores';
 
   const startGame = () => {
     const trimmed = names.map((name) => name.trim());
@@ -710,8 +724,8 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
 
             {!game.isComplete ? (
               <div className="p-5">
-                {outcomeType === 'draw' ? <p className="rounded-md bg-[#355e54] px-3 py-3 text-[15px] leading-6 text-[#c8d8d1]">This draw has no payments. East and the prevailing Wind remain unchanged.</p> : <div className="space-y-2 rounded-md bg-[#355e54] p-3 text-[14px] leading-6 text-[#e5eee9]">
-                  {preview.settlement?.transactions.length ? preview.settlement.transactions.map((transaction, index) => <p key={`${transaction.fromPlayerId}-${transaction.toPlayerId}-${index}`}>{settlementDescription(transaction, game.players, currentEastId ?? '')}</p>) : <p>Enter complete hand scores to see the settlement transactions.</p>}
+                {previewPresentation === 'no-payments' ? <p className="rounded-md bg-[#355e54] px-3 py-3 text-[15px] leading-6 text-[#c8d8d1]">This draw has no payments. East and the prevailing Wind remain unchanged.</p> : <div className="space-y-2 rounded-md bg-[#355e54] p-3 text-[14px] leading-6 text-[#e5eee9]">
+                  {previewPresentation === 'transactions' ? preview.settlement?.transactions.map((transaction, index) => <p key={`${transaction.fromPlayerId}-${transaction.toPlayerId}-${index}`}>{settlementDescription(transaction, game.players, currentEastId ?? '')}</p>) : <p>Enter complete hand scores to see who pays whom.</p>}
                 </div>}
                 <div className="mt-5"><div className="mb-2 font-mono text-[10px] uppercase tracking-[.16em] text-[#d7a287]">Net change</div><div className="space-y-3">
                   {game.players.map((player) => {
