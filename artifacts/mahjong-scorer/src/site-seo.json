@@ -14,25 +14,25 @@
   "webApplication": {
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    "name": "British Mahjong Scoring Calculator",
-    "alternateName": ["British Mahjong Calculator", "British Mahjong Scoring Calculator"],
+    "name": "Mahjong Reference Table Companion",
+    "alternateName": ["Mahjong Reference", "British Mahjong Calculator", "British Mahjong Scoring Calculator"],
     "applicationCategory": "UtilitiesApplication",
     "operatingSystem": "Any",
     "inLanguage": "en-GB",
     "isAccessibleForFree": true,
     "offers": { "@type": "Offer", "price": "0", "priceCurrency": "GBP" },
     "featureList": [
-      "Visual tile entry for individual British Mahjong hands",
-      "Points, doubles, special hands and fishing calculations",
-      "Four-player game scoring, settlement and running balances"
+      "Rules-aware visual tile entry for individual Mahjong hands",
+      "Supported rules profiles for British, Western and club Mahjong contexts",
+      "Four-player game tracking, settlement and running balances"
     ],
     "creator": { "@type": "Person", "name": "SMooks" },
     "isPartOf": { "@id": "https://mahjong.smooks.co.uk/#website" }
   },
   "routes": [
-    { "path": "/", "title": "British Mahjong Scoring Calculator | Mahjong Reference", "description": "Free British Mahjong scoring calculator. Enter tiles to score a hand, calculate points and doubles, check supported special hands, or score a full four-player game.", "indexable": true },
-    { "path": "/game", "title": "Score a British Mahjong Game | Mahjong Reference", "description": "Track four players hand by hand, calculate settlement, keep running balances and save the finished British Mahjong game record.", "indexable": true },
-    { "path": "/hand", "title": "British Mahjong Hand Calculator | Mahjong Reference", "description": "Enter a British Mahjong hand visually and calculate supported points, doubles, special hands and fishing, with a clear score breakdown.", "indexable": true },
+    { "path": "/", "title": "Your Mahjong Table Companion | Mahjong Reference", "description": "A free, browser-based Mahjong table companion. Score a hand, track a whole game, calculate settlement and choose supported rules for your table.", "indexable": true },
+    { "path": "/game", "title": "Track a Mahjong Game | Mahjong Reference", "description": "Track four players hand by hand, calculate settlement, keep running balances and save the finished game record using supported rules for your table.", "indexable": true },
+    { "path": "/hand", "title": "Mahjong Hand Calculator | Mahjong Reference", "description": "Enter a Mahjong hand visually and calculate supported points, doubles, special hands and fishing, with a clear score breakdown for the selected rules.", "indexable": true },
     { "path": "/scoring-examples", "title": "British Mahjong Scoring Examples | Mahjong Reference", "description": "Learn British Mahjong scoring from worked, test-backed hands covering points, doubles, Winds, bonus tiles, partial hands, fishing and special hands.", "indexable": true },
     { "path": "/gameplay-basics", "title": "British Mahjong Gameplay Basics | Mahjong Reference", "description": "Learn the basic flow of British Mahjong, including tiles, turns, calls, winning and the table structure.", "indexable": true },
     { "path": "/guide", "title": "British Mahjong Scoring Guide | Mahjong Reference", "description": "Learn British Mahjong scoring in plain English, with points, doubles, winning hands and practical examples.", "indexable": true },
