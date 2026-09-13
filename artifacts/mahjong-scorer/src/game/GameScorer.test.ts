@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { confirmHand, createBmjaGame } from './game';
-import { gameRecordRulesLabel, getRoundSettlementPreview, previewRoundSettlement, recoveredGameConflictsWithRoute, settlementPreviewPresentation, shouldShowBritishSetupHelper } from './GameScorer';
+import { gameRecordRulesLabel, gameWorkspaceStage, getRoundSettlementPreview, previewRoundSettlement, recoveredGameConflictsWithRoute, settlementPreviewPresentation, shouldShowBritishSetupHelper } from './GameScorer';
 import { BMJA_PROFILE_REF, OUTSIDE_THE_BOX_PROFILE_REF, resolveRulesProfile, WESTERN_TM_PROFILE_REF } from './ruleset';
 
 describe('game settlement preview', () => {
@@ -91,5 +91,17 @@ describe('game settlement preview', () => {
     expect(settlementPreviewPresentation(game, winning, { east: 56, south: 60 })).toBe('awaiting-scores');
     expect(settlementPreviewPresentation(game, winning, { east: 56, south: 60, west: 40, north: 44 })).toBe('transactions');
     expect(settlementPreviewPresentation(game, { type: 'draw' }, {})).toBe('no-payments');
+  });
+
+  it('uses one main workspace stage instead of showing settlement before it is useful', () => {
+    const game = createBmjaGame(
+      ['east', 'south', 'west', 'north'].map((id) => ({ id, name: id })),
+      { east: 'east', south: 'south', west: 'west', north: 'north' },
+    );
+    expect(gameWorkspaceStage(game, 'awaiting-scores')).toBe('entry');
+    expect(gameWorkspaceStage(game, 'transactions')).toBe('settlement');
+    expect(gameWorkspaceStage(game, 'no-payments')).toBe('settlement');
+
+    expect(gameWorkspaceStage({ ...game, isComplete: true }, 'awaiting-scores')).toBe('complete');
   });
 });
