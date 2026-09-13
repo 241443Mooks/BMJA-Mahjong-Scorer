@@ -8,7 +8,6 @@ import {
   Sparkles,
   Trophy,
   Undo2,
-  Printer,
 } from 'lucide-react';
 import { HandRecord, settlementDescription } from './HandRecord';
 import { incidentDescription } from './outside-the-box-incidents';
@@ -28,7 +27,7 @@ import {
   loadInProgressGameRecovery,
   saveGameRecovery,
 } from '.';
-import { ActiveRules, RulesProfilePicker } from './RulesProfilePicker';
+import { RulesProfilePicker } from './RulesProfilePicker';
 import { descriptorForRulesProfile, isBritishRulesProfile } from './rules-presentation';
 import type {
   GameLength,
@@ -123,6 +122,14 @@ export const settlementPreviewPresentation = (
     : 'awaiting-scores' as const;
 };
 
+export const gameWorkspaceStage = (
+  game: GameState,
+  presentation: ReturnType<typeof settlementPreviewPresentation>,
+) => {
+  if (game.isComplete) return 'complete' as const;
+  return presentation === 'awaiting-scores' ? 'entry' as const : 'settlement' as const;
+};
+
 export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedScore, initialRulesProfile }: GameScorerProps) {
   const [recovered, setRecovered] = useState(() =>
     typeof window === 'undefined'
@@ -140,16 +147,14 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
   const [incidents, setIncidents] = useState<RoundIncident[]>(recovered?.draft.incidents ?? []);
   const [error, setError] = useState('');
   const [printMode, setPrintMode] = useState<'summary' | 'full' | null>(null);
-  const tableScoresRef = useRef<HTMLElement>(null);
+  const [editingHand, setEditingHand] = useState(false);
+  const tableScoresRef = useRef<HTMLDetailsElement>(null);
   const ledgerDetailsRefs = useRef(new Map<number, HTMLDetailsElement>());
   const printOpenStatesRef = useRef<Map<number, boolean> | null>(null);
 
   const currentEastId = game
     ? Object.entries(game.seats).find(([, seat]) => seat === 'east')?.[0]
     : undefined;
-  const activeRulesProfile = game
-    ? resolveRulesProfile(game.setup.rulesProfile)
-    : null;
   const recoveredProfileConflictsWithRoute = !!recovered && recoveredGameConflictsWithRoute(recovered.game, initialRulesProfile);
 
   const outcome = useMemo<HandOutcome | null>(
@@ -271,6 +276,11 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
   const previewPresentation = game
     ? settlementPreviewPresentation(game, outcome, scores)
     : 'awaiting-scores';
+  const workspaceStage = game ? gameWorkspaceStage(game, previewPresentation) : 'entry';
+
+  useEffect(() => {
+    if (workspaceStage !== 'entry') setEditingHand(false);
+  }, [workspaceStage]);
 
   const startGame = () => {
     const trimmed = names.map((name) => name.trim());
@@ -296,6 +306,7 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
     setScores({});
     setScoreRecords({});
     setIncidents([]);
+    setEditingHand(false);
     setWinnerId(players[0].id);
     setError('');
   };
@@ -310,6 +321,7 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
     setIncidents([]);
     setWinnerId('');
     setOutcomeType('win');
+    setEditingHand(false);
     setError('');
   };
 
@@ -445,36 +457,30 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
 
   return (
     <div className={`mahjong-shell ${printMode === 'summary' ? 'print-summary' : ''}`}>
-      <div className="screen-only"><SiteHeader /></div>
-      <div className="screen-only border-b border-[#d8ceb8] bg-[#f5f1e6]/70">
-        <div className="mx-auto flex max-w-[1440px] flex-wrap items-center justify-between gap-4 px-5 py-4 lg:px-8">
-          <div>
-            <div className="font-mono text-[11px] uppercase tracking-[.18em] text-[#ae6249]">
-              {game.isComplete ? 'Game complete' : `Entering hand ${game.handHistory.length + 1}`} · {activeRulesCopy(game.setup.rulesProfile)}
+      <div className="screen-only sticky top-0 z-20 border-b border-[#d8ceb8] bg-[#f5f1e6]/95 backdrop-blur">
+        <div className="mx-auto max-w-[1120px] px-4 py-3 sm:px-5 lg:px-8">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <div className="font-mono text-[10px] uppercase tracking-[.16em] text-[#ae6249]">
+                {game.isComplete ? 'Game complete' : `Hand ${game.handHistory.length + 1}`} · {windLabel(game.prevailingWind)} prevailing · {descriptorForRulesProfile(game.setup.rulesProfile).compactLabel}
+              </div>
+              <div className="font-serif text-[18px] font-bold text-[#284d45]">
+                {game.players.find((player) => player.id === currentEastId)?.name} is East
+                {game.currentHandMode === 'goulash' ? ' · Goulash hand' : ''}
+              </div>
+              {recovered && <p data-testid="recovered-game-conflict" className="mt-1 text-[11px] font-semibold text-[#477562]">
+                {recoveredProfileConflictsWithRoute ? `Saved ${activeRulesCopy(game.setup.rulesProfile)} game; this route does not change its rules.` : 'Saved game recovered.'}
+              </p>}
             </div>
-            <div className="font-serif text-[21px] font-bold text-[#284d45]">
-              {game.players.find((player) => player.id === currentEastId)?.name}{' '}
-              is East · {windLabel(game.prevailingWind)} prevailing
-            </div>
-            {game.currentHandMode === 'goulash' && (
-              <p className="mt-1 text-[12px] font-semibold text-[#ae6249]">Goulash hand — blanks available · Chows not allowed</p>
-            )}
-            <ActiveRules profile={game.setup.rulesProfile} locked />
-            {recovered && (
-              <p className="mt-1 text-[11px] font-semibold text-[#477562]">
-                {recoveredProfileConflictsWithRoute
-                  ? `Your saved ${activeRulesCopy(game.setup.rulesProfile)} game is active; this route does not change its rules.`
-                  : 'Your saved game has been recovered.'}
-              </p>
-            )}
-          </div>
-          <div className="flex gap-2">
+            <details className="relative">
+              <summary className="flex cursor-pointer list-none items-center gap-2 rounded-md border border-[#cfc3aa] bg-[#fbf8ed] px-3 py-2 text-[11px] font-semibold text-[#284d45]">Table tools</summary>
+              <div className="absolute right-0 z-30 mt-2 flex w-64 flex-col gap-1 rounded-lg border border-[#d8ceb8] bg-[#fbf8ed] p-2 shadow-[var(--shadow-md)]">
             <button
               type="button"
               data-testid="button-undo-hand"
               disabled={game.handHistory.length === 0}
               onClick={undo}
-              className="flex items-center gap-2 rounded-md border border-[#cfc3aa] bg-[#fbf8ed] px-3 py-2 text-[11px] font-semibold text-[#66746e] disabled:opacity-40"
+              className="flex items-center gap-2 rounded-md px-3 py-2 text-left text-[11px] font-semibold text-[#284d45] hover:bg-[#efe8da] disabled:opacity-40"
             >
               <Undo2 size={14} /> Undo last hand
             </button>
@@ -482,62 +488,42 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
               type="button"
               data-testid="button-start-over"
               onClick={startOver}
-              className="flex items-center gap-2 rounded-md border border-[#cfc3aa] bg-[#fbf8ed] px-3 py-2 text-[11px] font-semibold text-[#66746e]"
+              className="flex items-center gap-2 rounded-md px-3 py-2 text-left text-[11px] font-semibold text-[#284d45] hover:bg-[#efe8da]"
             >
               <RotateCcw size={14} /> {recoveredProfileConflictsWithRoute ? `Start a new ${descriptorForRulesProfile(initialRulesProfile).compactLabel} game` : 'Start over'}
             </button>
             <button
               type="button"
               onClick={() => onOpenHandScorer()}
-              className="flex items-center gap-2 rounded-md bg-[#284d45] px-3 py-2 text-[11px] font-semibold text-[#f8f4e9]"
+              className="flex items-center gap-2 rounded-md px-3 py-2 text-left text-[11px] font-semibold text-[#284d45] hover:bg-[#efe8da]"
             >
               <Sparkles size={14} /> Detailed hand scorer
             </button>
+                <a href="/rules" className="rounded-md px-3 py-2 text-[11px] font-semibold text-[#284d45] hover:bg-[#efe8da]">Rules reference</a>
+                <a href="#game-ledger" className="rounded-md px-3 py-2 text-[11px] font-semibold text-[#284d45] hover:bg-[#efe8da]">History / confirmed ledger</a>
+                <button type="button" data-testid="button-print-full" onClick={() => printGame('full')} className="rounded-md px-3 py-2 text-left text-[11px] font-semibold text-[#284d45] hover:bg-[#efe8da]">Print / Save full game record</button>
+                <button type="button" data-testid="button-print-summary" onClick={() => printGame('summary')} className="rounded-md px-3 py-2 text-left text-[11px] font-semibold text-[#284d45] hover:bg-[#efe8da]">Print / Save game summary</button>
+              </div>
+            </details>
+          </div>
+          <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+            {game.players.map((player) => <div key={player.id} className={`rounded-md border px-3 py-2 ${game.seats[player.id] === 'east' ? 'border-[#ae6249] bg-[#f5eadb]' : 'border-[#d8ceb8] bg-[#fbf8ed]'}`}>
+              <div className="font-mono text-[8px] uppercase tracking-[.12em] text-[#ae6249]">{windLabel(game.seats[player.id])}{game.seats[player.id] === 'east' ? ' · Dealer' : ''}</div>
+              <div className="flex items-baseline justify-between gap-2"><span className="truncate font-serif text-[16px] text-[#284d45]">{player.name}</span><span className="font-mono text-[14px] font-bold text-[#284d45]">{formatChange(game.balances[player.id])}</span></div>
+            </div>)}
           </div>
         </div>
       </div>
 
-      <main className="mx-auto grid max-w-[1440px] gap-6 px-5 py-7 lg:grid-cols-[minmax(0,1fr)_390px] lg:px-8">
+      <main className="mx-auto max-w-[1120px] space-y-5 px-4 py-5 sm:px-5 lg:px-8">
         <div className="print-only game-print-heading">
           <h1>Mahjong Reference — {activeRulesCopy(game.setup.rulesProfile)} game record</h1>
           <p>{game.isComplete ? 'Game complete' : 'Game in progress'} · {handCountLabel(game.handHistory.length)}</p>
           <p>Rules: {gameRecordRulesLabel(game.setup.rulesProfile)}</p>
         </div>
-        <section className="min-w-0 space-y-5">
-          <div>
-            <div className="mb-2 font-mono text-[11px] font-medium uppercase tracking-[.16em] text-[#7a7769]">
-              Running game totals
-            </div>
-            <div className="grid grid-cols-2 gap-2 sm:gap-3 xl:grid-cols-4">
-              {game.players.map((player) => (
-                <div
-                  key={player.id}
-                  className={`rounded-lg border p-3 sm:rounded-xl sm:p-4 ${
-                    game.seats[player.id] === 'east'
-                      ? 'border-[#ae6249] bg-[#f5eadb]'
-                      : 'border-[#d8ceb8] bg-[#fbf8ed]'
-                    }`}
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0">
-                      <div className="font-mono text-[8px] uppercase tracking-[.12em] text-[#ae6249] sm:text-[9px] sm:tracking-[.16em]">
-                        {windLabel(game.seats[player.id])}
-                        {game.seats[player.id] === 'east' ? ' · Dealer' : ''}
-                      </div>
-                      <div className="mt-0.5 truncate font-serif text-[16px] leading-tight text-[#284d45] sm:mt-1 sm:text-[20px]">
-                        {player.name}
-                      </div>
-                    </div>
-                    <div className="shrink-0 text-right font-mono text-[15px] font-bold leading-tight text-[#284d45] sm:text-[18px]">
-                      {formatChange(game.balances[player.id])}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <section ref={tableScoresRef} data-testid="section-table-scores" className="screen-only scroll-mt-4 rounded-xl border border-[#d8ceb8] bg-[#fbf8ed] p-5 sm:p-6">
+        <section className="min-w-0">
+          {!game.isComplete && <details ref={tableScoresRef} data-testid="section-table-scores" open={workspaceStage === 'entry' || editingHand} className="screen-only scroll-mt-4 rounded-xl border border-[#d8ceb8] bg-[#fbf8ed] p-5 sm:p-6">
+            {workspaceStage === 'settlement' && <summary onClick={() => setEditingHand(true)} className="mb-5 cursor-pointer font-mono text-[10px] uppercase tracking-[.16em] text-[#ae6249]">Edit current hand</summary>}
             <div className="mb-5">
               <div className="font-mono text-[10px] uppercase tracking-[.2em] text-[#ae6249]">
                 Current hand
@@ -710,12 +696,11 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
                 )}
               </>
             )}
-          </section>
+          </details>}
 
         </section>
 
-        <aside className="lg:col-start-2 lg:row-span-2 lg:row-start-1">
-          <section className="screen-only sticky top-5 overflow-hidden rounded-xl bg-[#284d45] text-[#f8f4e9] shadow-[var(--shadow-lg)]">
+        {workspaceStage !== 'entry' && <section data-testid="section-settlement-stage" className="screen-only overflow-hidden rounded-xl bg-[#284d45] text-[#f8f4e9] shadow-[var(--shadow-lg)]">
             <div className="border-b border-[#55756c] p-5">
               <div className="font-mono text-[10px] uppercase tracking-[.2em] text-[#d7a287]">
                 {game.isComplete ? 'Final Standings' : 'Round settlement'}
@@ -816,11 +801,15 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
                           {formatChange(game.balances[player.id])}
                         </div>
                       </div>
-                  ))}
+                    ))}
+                </div>
+                <div className="mt-6 grid gap-2 sm:grid-cols-2">
+                  <button type="button" onClick={() => printGame('summary')} className="rounded-md border border-[#b4c4bd] px-3 py-3 text-[11px] font-bold text-[#f8f4e9] hover:bg-[#355e54]">Print / Save summary</button>
+                  <button type="button" onClick={() => printGame('full')} className="rounded-md bg-[#f3e8d4] px-3 py-3 text-[11px] font-bold text-[#284d45]">Print / Save full record</button>
                 </div>
               </div>
             )}
-          </section>
+          </section>}
           <section className="print-only game-print-standings">
             <div className="font-mono text-[10px] uppercase tracking-[.2em]">{game.isComplete ? 'Final standings' : 'Confirmed standings'}</div>
             <div className="mt-2 grid grid-cols-2 gap-x-5 gap-y-2 sm:grid-cols-4">
@@ -831,21 +820,13 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
               ))}
             </div>
           </section>
-        </aside>
 
-        <section className="rounded-xl border border-[#d8ceb8] bg-[#fbf8ed] p-5 sm:p-6 lg:col-start-1">
+        <details id="game-ledger" data-testid="details-game-ledger" className="rounded-xl border border-[#d8ceb8] bg-[#fbf8ed] p-5 sm:p-6">
           <div className="mb-4 flex items-center gap-2">
             <History size={16} className="text-[#ae6249]" />
-            <h2 className="font-serif text-[23px] text-[#284d45]">
+            <summary className="cursor-pointer list-none font-serif text-[23px] text-[#284d45]">
               Game ledger
-            </h2>
-            <details className="screen-only ml-auto relative">
-              <summary className="flex cursor-pointer list-none items-center gap-2 rounded-md border border-[#cfc3aa] bg-[#fdfbf5] px-3 py-2 text-[11px] font-semibold text-[#284d45]"><Printer size={14} /> Print / Save game</summary>
-              <div className="absolute right-0 z-10 mt-2 w-64 rounded-lg border border-[#d8ceb8] bg-[#fbf8ed] p-2 shadow-[var(--shadow-md)]">
-                <button type="button" data-testid="button-print-full" onClick={() => printGame('full')} className="block w-full rounded-md px-3 py-2 text-left text-[11px] font-semibold text-[#284d45] hover:bg-[#efe8da]">Full game record<span className="mt-0.5 block font-normal text-[#7a7769]">Tiles, scoring evidence and full hand details</span></button>
-                <button type="button" data-testid="button-print-summary" onClick={() => printGame('summary')} className="mt-1 block w-full rounded-md px-3 py-2 text-left text-[11px] font-semibold text-[#284d45] hover:bg-[#efe8da]">Game summary<span className="mt-0.5 block font-normal text-[#7a7769]">Standings and hand-by-hand results</span></button>
-              </div>
-            </details>
+            </summary>
           </div>
           <p className="mb-4 font-mono text-[10px] uppercase tracking-[.14em] text-[#7a7769]">{handCountLabel(game.handHistory.length)}</p>
           {game.handHistory.length === 0 ? (
@@ -920,8 +901,8 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
               ))}
             </div>
           )}
-        </section>
-        <footer className="game-record-footer lg:col-span-2"><span>mahjong.smooks.co.uk</span><span>Mahjong tile artwork from xhokir/riichi-mahjong-tiles, based on FluffyStuff/riichi-mahjong-tiles, used under CC BY 4.0.</span><a href="https://buymeacoffee.com/sharronmo">Buy me a coffee</a></footer>
+        </details>
+        <footer className="game-record-footer"><span>mahjong.smooks.co.uk</span><span>Mahjong tile artwork from xhokir/riichi-mahjong-tiles, based on FluffyStuff/riichi-mahjong-tiles, used under CC BY 4.0.</span><a href="https://buymeacoffee.com/sharronmo">Buy me a coffee</a></footer>
       </main>
     </div>
   );
