@@ -14,6 +14,7 @@ import { HowItWorksPage } from './home/HowItWorksPage';
 import { MahjongRulesComparedPage } from './home/MahjongRulesComparedPage';
 import NotFound from './pages/not-found';
 import siteSeo from './site-seo.json';
+import { descriptorForSlug, publicRulesSlugFromGamePath } from './game/rules-presentation';
 
 import './index.css';
 
@@ -27,6 +28,7 @@ function setMeta(selector: string, attribute: string, value: string) {
 }
 
 function canonicalPathFor(currentPath: string) {
+  if (currentPath === '/game/british' || currentPath === '/game/western' || currentPath === '/game/club') return '/game';
   return aliases.find((alias) => alias.path === currentPath)?.target ?? currentPath;
 }
 
@@ -91,7 +93,7 @@ applyRouteMetadata();
 
 function RouteContent() {
   if (path === '/') return <HomePage />;
-  if (path === '/game') return <App />;
+  if (path === '/game' || path === '/game/british' || path === '/game/western' || path === '/game/club') return <App initialRulesProfile={descriptorForSlug(publicRulesSlugFromGamePath(path)).profile} />;
   if (path === '/hand') return <App initialView="hand" standaloneHand />;
   if (path === '/scoring-examples') return <ScoringExamplesPage />;
 
