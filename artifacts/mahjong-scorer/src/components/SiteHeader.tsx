@@ -7,6 +7,7 @@ export const navigationGroups = [
     destinations: [
       ['Track a game', '/game'],
       ['Score a hand', '/hand'],
+      ['Understand settlement', '/mahjong-settlement'],
     ],
   },
   {

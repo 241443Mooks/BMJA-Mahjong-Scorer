@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { confirmHand, createBmjaGame } from './game';
-import { gameRecordRulesLabel, getRoundSettlementPreview, previewRoundSettlement, recoveredGameConflictsWithRoute } from './GameScorer';
+import { gameRecordRulesLabel, getRoundSettlementPreview, previewRoundSettlement, recoveredGameConflictsWithRoute, settlementPreviewPresentation } from './GameScorer';
 import { BMJA_PROFILE_REF, OUTSIDE_THE_BOX_PROFILE_REF, resolveRulesProfile, WESTERN_TM_PROFILE_REF } from './ruleset';
 
 describe('game settlement preview', () => {
@@ -73,5 +73,17 @@ describe('game settlement preview', () => {
     const corrected = getRoundSettlementPreview(game, outcome, scores, []);
     expect(corrected.error).toBeNull();
     expect(corrected.settlement).not.toBeNull();
+  });
+
+  it('only presents payment transactions when a winning hand has all four scores', () => {
+    const game = createBmjaGame(
+      ['east', 'south', 'west', 'north'].map((id) => ({ id, name: id })),
+      { east: 'east', south: 'south', west: 'west', north: 'north' },
+    );
+    const winning = { type: 'win' as const, winnerId: 'south' };
+
+    expect(settlementPreviewPresentation(game, winning, { east: 56, south: 60 })).toBe('awaiting-scores');
+    expect(settlementPreviewPresentation(game, winning, { east: 56, south: 60, west: 40, north: 44 })).toBe('transactions');
+    expect(settlementPreviewPresentation(game, { type: 'draw' }, {})).toBe('no-payments');
   });
 });

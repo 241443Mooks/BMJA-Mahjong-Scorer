@@ -824,11 +824,12 @@ function HandScorer({ context, onClose, standaloneHand, standaloneRulesProfile, 
                     ? `Example: ${example.name}. This uses the normal scorer; change it to explore.`
                     : hasContext
                     ? `Calculating ${context.playerName}’s ${context.playerWind} hand during the ${context.prevailingWind} prevailing round.`
-                    : standaloneHand
-                      ? 'Enter your tiles visually as they sit on the table. The calculator shows supported points, doubles, special hands and fishing in a clear score breakdown.'
+                  : standaloneHand
+                      ? 'Enter your tiles visually as they sit on the table. The calculator shows supported points, doubles, special hands and fishing in a clear score breakdown. Playing a whole game? Use the full-game tracker for settlement and running totals.'
                       : 'Enter each set as it sits on the table. The score builds beside you, with every point and double accounted for.'}
                 </p>
                 {hasContext ? <ActiveRules profile={context.rulesProfile} inherited /> : <ActiveRules profile={standaloneRulesProfile} />}
+                {standaloneHand && !hasContext && <p className="mt-3 text-[15px] leading-6 text-[#66746e]">Need to see who pays whom after scoring? <a className="font-semibold underline decoration-[#ae6249] underline-offset-4" href="/mahjong-settlement">Understand settlement</a> or <a className="font-semibold underline decoration-[#ae6249] underline-offset-4" href="/game">track a full game</a>.</p>}
                 {context?.requiresRecalculation && (
                   <div
                     data-testid="notice-recalculation-required"
