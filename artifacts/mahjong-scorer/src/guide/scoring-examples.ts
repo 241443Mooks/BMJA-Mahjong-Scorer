@@ -72,7 +72,7 @@ export const scoringExamples: WorkedScoringExample[] = [
 export const scoringExampleById = (id: string | null | undefined) => scoringExamples.find((example) => example.id === id);
 export const completedExampleHref = (id: string) => `/hand?example=${encodeURIComponent(id)}`;
 export const practiceExampleHref = (id: string) => `/hand?practice=${encodeURIComponent(id)}`;
-export const scoringExampleContext = (example: WorkedScoringExample): HandScorerExampleContext => ({ playerId: 'worked-example', playerName: example.title, playerWind: example.context.playerWind, prevailingWind: example.context.prevailingWind, isWinner: example.hand.isWinner, limit: example.context.limit, detailedHand: { source: 'detailed-scorer', hand: example.hand, context: example.context, breakdown: { valid: false, evidenceCompleteness: 'invalid', validationErrors: [], pointRules: [], doubleRules: [], specialHands: [], basePoints: 0, doubles: 0, uncappedScore: 0, finalScore: 0, limitApplied: false, scoringMode: 'standard', calculationComponents: [] }, finalScore: 0 } });
+export const scoringExampleContext = (example: WorkedScoringExample): HandScorerExampleContext => ({ playerId: 'worked-example', playerName: example.title, playerWind: example.context.playerWind, prevailingWind: example.context.prevailingWind, isWinner: example.hand.isWinner, limit: example.context.limit, handMode: 'normal', detailedHand: { source: 'detailed-scorer', hand: example.hand, context: example.context, breakdown: { valid: false, evidenceCompleteness: 'invalid', validationErrors: [], pointRules: [], doubleRules: [], specialHands: [], basePoints: 0, doubles: 0, uncappedScore: 0, finalScore: 0, limitApplied: false, scoringMode: 'standard', calculationComponents: [] }, finalScore: 0 } });
 export const scoringExampleTiles = (example: WorkedScoringExample): TileDefinition[] => exampleVisualTiles({ hand: example.hand });
 export const scoringExampleBonusTiles = (example: WorkedScoringExample): TileDefinition[] => example.hand.bonusTiles.map((tile) => bonusTileDefinition(tile.family, tile.number));
 
@@ -97,6 +97,7 @@ export const practiceScorerContext = (example: ResolvedScorerExample | undefined
   prevailingWind: example?.context.prevailingWind ?? 'east',
   limit: example?.context.limit ?? 1000,
   isWinner: example?.context.isWinner ?? false,
+  handMode: example?.context.handMode ?? 'normal',
   winningMethod: example?.hand.winningMethod ?? 'wall',
   originalCall: example?.hand.originalCall ?? false,
 });

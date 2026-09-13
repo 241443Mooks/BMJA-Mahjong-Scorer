@@ -30,6 +30,7 @@ export const createHandScorerContext = (
     prevailingWind: game.prevailingWind,
     isWinner: outcome?.type === 'win' && outcome.winnerId === playerId,
     limit: resolveRulesProfile(game.setup.rulesProfile).defaultLimit,
+    handMode: game.currentHandMode,
     ...(scoreRecord?.source === 'detailed-scorer'
       ? {
           detailedHand: scoreRecord,
@@ -200,4 +201,5 @@ export const handScorerLocalContext = (
   limit:
     context?.limit ?? resolveRulesProfile(BMJA_PROFILE_REF).defaultLimit,
   isWinner: context?.isWinner ?? false,
+  handMode: context?.handMode ?? 'normal',
 });
