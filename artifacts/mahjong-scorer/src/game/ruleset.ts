@@ -4,6 +4,8 @@ import { settleBmjaRound } from './settlement';
 import type { GameRuleset, RulesProfileRef } from './types';
 export { WESTERN_TM_PROFILE_REF, westernTmSpecialHandBindings } from './western-tm-catalogue';
 import { WESTERN_TM_PROFILE_REF, westernTmSpecialHandBindings } from './western-tm-catalogue';
+export { OUTSIDE_THE_BOX_PROFILE_REF, outsideTheBoxSpecialHandBindings } from './outside-the-box-catalogue';
+import { OUTSIDE_THE_BOX_PROFILE_REF, outsideTheBoxSpecialHandBindings } from './outside-the-box-catalogue';
 
 export const BMJA_RULESET: GameRuleset = Object.freeze({
   id: 'bmja', version: '1.0', name: 'British Mahjong Association', defaultLimit: 1000,
@@ -17,10 +19,17 @@ export const WESTERN_TM_RULESET: GameRuleset = Object.freeze({
   scoreHand: ({ hand, playerWind, prevailingWind, limit = 1000 }) => scoreHand(hand, { playerWind, prevailingWind, limit }, westernTmSpecialHandBindings),
   settleRound: settleBmjaRound, progressGame: progressBmjaGame,
 });
+export const OUTSIDE_THE_BOX_RULESET: GameRuleset = Object.freeze({
+  id: OUTSIDE_THE_BOX_PROFILE_REF.id, version: OUTSIDE_THE_BOX_PROFILE_REF.version,
+  name: 'Outside the Box', defaultLimit: 1000,
+  scoreHand: ({ hand, playerWind, prevailingWind, limit = 1000 }) => scoreHand(hand, { playerWind, prevailingWind, limit }, outsideTheBoxSpecialHandBindings),
+  settleRound: settleBmjaRound, progressGame: progressBmjaGame,
+});
 const profileKey = ({ id, version }: RulesProfileRef) => `${id}@${version}`;
 const RULES_PROFILE_REGISTRY = new Map<string, GameRuleset>([
   [profileKey(BMJA_PROFILE_REF), BMJA_RULESET],
   [profileKey(WESTERN_TM_PROFILE_REF), WESTERN_TM_RULESET],
+  [profileKey(OUTSIDE_THE_BOX_PROFILE_REF), OUTSIDE_THE_BOX_RULESET],
 ]);
 export const resolveRulesProfile = (profile: RulesProfileRef): GameRuleset => {
   const ruleset = RULES_PROFILE_REGISTRY.get(profileKey(profile));

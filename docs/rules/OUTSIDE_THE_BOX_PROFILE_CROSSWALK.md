@@ -20,7 +20,7 @@ The transcription has 35 table rows but **33 unique OTB hands**: Hachi Ban and A
 | OTB hand | `*` | Structure | OTB | Exposure | Canonical pattern ID | Family / relationship | Status and implementation note |
 |---|---:|---|---:|---|---|---|---|
 | Buried Treasure | yes | concealed one-suit P/K, optional honours, pair; wall-only; no Kongs | 1000/400 | X | `buried-treasure` | BMJA / reuse-identical | verified-club; retain BMJA provenance/wall rule |
-| Purity | yes | one suit, P/K and pair; no honours/Chows | unclear | unclear (`3x basic` row alignment) | none — BMJA `isPurityHand` ordinary predicate | BMJA / needs-clarification | do not infer value/exposure; OTB wording matches BMJA no-Chow form, not Western `purity-one-chow` |
+| Purity | yes | one suit, P/K and pair; no honours/Chows | 3 × basic | BMJA calculated treatment | none — BMJA `isPurityHand` ordinary predicate | BMJA / calculated reuse | resolved for 88B: reuse the British calculated-Purity predicate and arithmetic; it is not a fixed special |
 | Imperial Jade | yes | Green Dragon plus green Bamboo 2,3,4,6,8 P/K and pair | 1000/400 | half | `imperial-jade` | BMJA / reuse-identical | verified-club; distinct from Western one-Chow, 2000/800 form |
 | Heads & Tails | yes | 1/9 P/K and pair only; no honours | 1000/400 | half | `heads-and-tails` | BMJA / reuse-identical | verified-club; same pattern also Western at 1000/400, but OTB exposure is local/British |
 | All Winds & Dragons | yes | honour P/K and pair only | 1000/400 | full | `all-winds-and-dragons` | BMJA / reuse-identical | verified-club; same Western pattern/value |
@@ -34,7 +34,7 @@ The transcription has 35 table rows but **33 unique OTB hands**: Hachi Ban and A
 | Wriggling Snake | yes | ESWN + 2–9 run + same-suit 1 pair | 1000/400 | X | `wriggling-snake` | BMJA / reuse-identical | distinct from unstarred Wriggly Snake |
 | All Pair | no | seven pairs, one suit; honours allowed | 500/200 | X | `seven-pairs-one-suit-with-honours` | western-tm / reuse-identical | verified-club |
 | Heavenly Twins | no | seven pairs in one suit, no honours | 1000/400 | X | `seven-pairs-one-suit` | western-tm / reuse-identical | verified-club |
-| All Pair Ruby Jade | no | GG, RR plus five Bamboo pairs | 1000/400 | X | `all-pair-ruby-jade` | OTB-local / needs-clarification | guide does not prove T&M’s red-or-green Bamboo rank restriction; needs club confirmation |
+| All Pair Ruby Jade | no | GG, RR plus five Bamboo pairs of any ranks | 1000/400 | X | `all-pair-ruby-jade` | western-tm / reuse-identical | resolved for 88B: T&M red and green Bamboo classes together cover ranks 1–9, so the canonical detector is identical |
 | Sparrow's Sanctuary | no | four Bamboo 1s plus pairs of Bamboo 2,3,4,6,8 | 1000/400 | X | `four-bamboo-one-and-five-green-bamboo-pairs` | western-tm / reuse-pattern-override-binding | OTB override: T&M 1500/600 |
 | Hovering Angel | no | own-Wind P/K, Dragon pair, Chow in each suit | 1000/400 | X | `own-wind-meld-with-dragon-pair-and-three-suit-chows` | western-tm / reuse-identical | verified-club; uses player Wind |
 | Big Robert | no | four-tile run in each suit, honour pair | 500/200; matching starts 1000/400 | X | `three-four-tile-suit-runs-with-honour-pair`; `three-matching-four-tile-suit-runs-with-honour-pair` | western-tm / reuse-identical | two mutually exclusive IDs truthfully express base and double form; no conditional-value engine |
@@ -51,7 +51,7 @@ The transcription has 35 table rows but **33 unique OTB hands**: Hachi Ban and A
 | Red Coral | no | Red Dragon Pung + three Character P/K + Character pair | 1000/400 | half | `red-dragon-pung-with-character-melds` | western-tm / reuse-pattern-override-binding | OTB override: T&M exposed full; both are Pung-only Dragon |
 | White Opal | no | White Dragon Pung + three Circle P/K + Circle pair | 1000/400 | half | `white-dragon-pung-with-circle-melds` | western-tm / reuse-pattern-override-binding | OTB override: T&M exposed full; both are Pung-only Dragon |
 | Run, Pung & Pair | no | 1–9 run, same-suit P/K and pair | 1000/400 | X | `run-one-to-nine-with-same-suit-pung-and-pair` | western-tm / reuse-identical | physical four-copy limit means the same-suit group is a Pung, not a Kong |
-| Grand Sequence | no | 1–9 run, **suited** pair, honour P/K | 1000/400 | X | `run-one-to-nine-with-honour-pung-and-any-pair` | OTB-local / structurally-distinct | Western detector permits an honour pair; OTB text requires suited pair. Likely new canonical restriction for 88B unless Rachel permits honour pairs. |
+| Grand Sequence | no | 1–9 run, **suited** pair, honour P/K | 1000/400 | X | `run-one-to-nine-with-honour-pung-and-suited-pair` | OTB-local / structurally-distinct | resolved for 88B: neutral suited-pair restriction; Western’s any-pair canonical pattern remains unchanged |
 
 ### Confirmed OTB binding overrides
 
@@ -107,17 +107,15 @@ On draw: no score, no settlement and East does not move. In Goulash, four blanks
 ## 8. Rachel / 10 October questions
 
 1. Do Little/Big Dragon and Little/Big Wind doubles stack with component Dragon/Wind set doubles? This changes ordinary component arithmetic.
-2. Does Grand Sequence’s “two suited tiles paired” exclude honour pairs as written? This decides whether a new restricted canonical pattern is needed.
-3. In All Pair Ruby Jade, may the five Bamboo pairs be any ranks, or only the T&M red/green ranks? This decides detector reuse.
-4. What are Purity’s exact winning, fishing and exposed fields? The photograph transcription cannot safely align them; this decides whether the British calculated binding is reusable.
+2. The remaining Dragon/Wind stacking question belongs to 88C; Purity, All Pair Ruby Jade and Grand Sequence are resolved for 88B.
 
 ## 9. Implementation readiness
 
 | Pass | Ready evidence | Blocked / clarification |
 |---|---|---|
-| 88B | 29 exact memberships/canonical IDs; Big Robert two-ID composition; four stated T&M overrides; British value divergences | Purity, All Pair Ruby Jade and Grand Sequence; any BMJA-vs-OTB predicate fixture audit noted above |
+| 88B | 33 exact OTB names represented by 33 fixed bindings (Big Robert has two mutually-exclusive bindings); Purity calculated reuse; four stated T&M overrides; British value divergences | implemented as `outside-the-box@0.1`; only new canonical ID is `run-one-to-nine-with-honour-pung-and-suited-pair`; predicate fixture audit remains required |
 | 88C | listed BMJA-identical ordinary domains; fixed-special Flower/Season side-score policy | Dragon/Wind combination stacking |
 | 88D | Normal/Goulash transitions, draw effects and blank legality | none in scorer-relevant evidence |
 | 88E | incident triggers, consequences, and manual-selection boundary | no unresolved rule required to model manual incidents; automatic cannon/no-choice remains intentionally out of scope |
 
-Likely new canonical work in 88B: only a suited-pair-restricted Grand Sequence **if Rachel confirms the transcription's restriction**. No other new detector is evidenced by this pass.
+88B canonical work: `run-one-to-nine-with-honour-pung-and-suited-pair` for the resolved Grand Sequence restriction. No Ruby Jade detector is needed: T&M red/green Bamboo ranks jointly cover ranks 1–9.
