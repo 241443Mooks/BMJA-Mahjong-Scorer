@@ -66,17 +66,17 @@ The transcription has 35 table rows but **33 unique OTB hands**: Hachi Ban and A
 
 | Domain | OTB evidence | BMJA relationship |
 |---|---|---|
-| Winner bonuses | Mah Jong 20; wall 2; pair completion 2 minor/4 major; only possible tile 2 | verified-identical-to-BMJA |
+| Winner bonuses | Mah Jong 20 and live-wall 2 reuse unchanged; provenance-identified pair completion is 2 minor/4 major | OTB-local pair-completion policy; the existing runtime has no independent BMJA implementation for it |
 | Pung/Kong and Dragon/Wind pair basics | 2/4, 4/8, 8/16, 16/32; qualifying pair 2 | verified-identical-to-BMJA |
 | Flowers/Seasons | basic 4 each; own Flower/Season double; all Flowers or all Seasons double | verified-identical-to-BMJA |
-| Ordinary winner doubles | no Chows; concealed wall win; clean; Kong/Flower box; last wall; final discard; robbing Kong | verified-identical-to-BMJA from listed domains |
-| Limit events | Heavenly Hand, Earthly Hand, first wall draw | verified-identical-to-BMJA from listed events |
-| Set doubles | own/prevailing Wind and any Dragon P/K each double; three concealed P/K double (exposed Kong counts concealed Pung) | verified-identical-to-BMJA |
-| Little/Big Three Dragons and Four Joys | Little 1, Big 2 doubles in each family | needs-clarification: guide does not state whether component Dragon/Wind doubles stack with combination doubles |
+| Ordinary winner doubles | no Chows, clean, Kong/Flower box, last wall, final discard and robbing Kong reuse unchanged; concealed winner is wall-only | OTB policy removes the generic concealed-hand double unless `winningMethod` is `wall`; no shared BMJA correction was asserted |
+| Limit events | Heavenly Hand, Earthly Hand, first wall draw | existing Heavenly/Earthly canonical event predicates were audited but not bound: the first-wall-draw event is not representable by current evidence, so the three-event OTB set must remain together as follow-up rather than selectively inferred |
+| Set doubles | own/prevailing Wind and any Dragon P/K each double; three concealed P/K double (exposed Kong counts concealed Pung) | shared component doubles reuse unchanged; OTB adds `otb-three-concealed-pung-kong` once at three or more qualifying groups |
+| Little/Big Three Dragons and Four Joys | Little 1, Big 2 doubles in each family, additional to component doubles | implemented as OTB-local `otb-little-three-dragons`, `otb-big-three-dragons`, `otb-little-four-joys`, `otb-big-four-joys`; Little and Big are mutually exclusive |
 
 ## 4. Fixed special plus Flower/Season side score
 
-OTB explicitly gives Buried Treasure 1,000 plus own Flower basic 4 and own-Flower double = **1,008**. A fixed special therefore does not necessarily suppress independent Flower/Season scoring. This is an OTB scoring-policy requirement for Pass 88C, not an implementation in 88A.
+OTB explicitly gives Buried Treasure 1,000 plus own Flower basic 4 and own-Flower double = **1,008**. The OTB scoring policy now preserves that independently calculated Flower/Season subtotal above the ordinary cap for fixed specials. Ordinary hands remain capped at the configured limit; BMJA and T&M retain their existing fixed-special cap treatment.
 
 ## 5. Settlement crosswalk
 
@@ -104,17 +104,16 @@ On draw: no score, no settlement and East does not move. In Goulash, four blanks
 | Cannon | discard, visible dangerous structure, winner/special result, alleged cannoner | cannoner pays all three loser shares to winner; no other settlement | automatic proof needs history/visibility; manual incident |
 | `No choice!` | cannoner was fishing and had no alternative discard, revealed hand | cancels cannon liability | automatic proof needs complete hand/history; manual incident with evidence |
 
-## 8. Rachel / 10 October questions
+## 8. Remaining scoring evidence follow-up
 
-1. Do Little/Big Dragon and Little/Big Wind doubles stack with component Dragon/Wind set doubles? This changes ordinary component arithmetic.
-2. The remaining Dragon/Wind stacking question belongs to 88C; Purity, All Pair Ruby Jade and Grand Sequence are resolved for 88B.
+The current hand contract can truthfully prove a winning tile completed a specific pair, but it does not encode the guide's “only possible tile”/single-position wait fact. That 2-point bonus remains unimplemented rather than inferred from the completed layout. Likewise, it has no first-wall-draw fact, so the OTB first-wall-draw limit event is not bound. No turn simulator or parallel event model is introduced for either gap.
 
 ## 9. Implementation readiness
 
 | Pass | Ready evidence | Blocked / clarification |
 |---|---|---|
 | 88B | 33 exact OTB names represented by 33 fixed bindings (Big Robert has two mutually-exclusive bindings); Purity calculated reuse; four stated T&M overrides; British value divergences | implemented as `outside-the-box@0.1`; only new canonical ID is `run-one-to-nine-with-honour-pung-and-suited-pair`; predicate fixture audit remains required |
-| 88C | listed BMJA-identical ordinary domains; fixed-special Flower/Season side-score policy | Dragon/Wind combination stacking |
+| 88C | ordinary base scoring reuse; OTB Dragon/Wind stacking; three-concealed P/K; fixed-special Flower/Season side score; provenance pair completion | only-possible-tile winner bonus and first-wall-draw limit event remain evidence-model follow-up |
 | 88D | Normal/Goulash transitions, draw effects and blank legality | none in scorer-relevant evidence |
 | 88E | incident triggers, consequences, and manual-selection boundary | no unresolved rule required to model manual incidents; automatic cannon/no-choice remains intentionally out of scope |
 

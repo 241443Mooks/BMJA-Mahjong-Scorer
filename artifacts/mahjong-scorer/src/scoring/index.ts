@@ -7,3 +7,4 @@ export * from './fishing';
 export * from './score';
 export * from './detected-patterns';
 export * from './event-evidence';
+export * from './scoring-policy';
