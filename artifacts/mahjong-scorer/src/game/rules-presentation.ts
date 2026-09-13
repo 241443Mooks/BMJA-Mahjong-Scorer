@@ -61,7 +61,7 @@ export const PUBLIC_RULES_DESCRIPTORS: readonly RulesDescriptor[] = Object.freez
     publiclySelectable: true,
     configuredClubProfile: false,
     referenceKeys: ['western-special-hands', 'western-ordinary-play-status'],
-    atAGlance: [catalogueCount(westernTmSpecialHandBindings), 'British settlement and game progression while ordinary play is under review', 'Normal hand play'],
+    atAGlance: [catalogueCount(westernTmSpecialHandBindings), 'Ordinary play and settlement remain provisional while source review continues', 'Normal hand play'],
     support: {
       scorer: 'Available',
       source: 'Companion special-hand catalogue source-verified; ordinary rules under source review',
@@ -100,6 +100,9 @@ export const descriptorForSlug = (slug: PublicRulesSlug): RulesDescriptor =>
 
 export const isConfiguredClubProfile = (profile: RulesProfileRef) =>
   descriptorForRulesProfile(profile).configuredClubProfile;
+
+export const isBritishRulesProfile = (profile: RulesProfileRef) =>
+  sameProfile(profile, BMJA_PROFILE_REF);
 
 export const normaliseStandaloneHandMode = (profile: RulesProfileRef, handMode: HandMode): HandMode =>
   isConfiguredClubProfile(profile) ? handMode : 'normal';
