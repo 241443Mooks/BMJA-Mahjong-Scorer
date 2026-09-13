@@ -8,6 +8,7 @@ import {
   Sparkles,
   Trophy,
   Undo2,
+  X,
 } from 'lucide-react';
 import { HandRecord, settlementDescription } from './HandRecord';
 import { incidentDescription } from './outside-the-box-incidents';
@@ -29,7 +30,7 @@ import {
 } from '.';
 import { RulesProfilePicker } from './RulesProfilePicker';
 import { descriptorForRulesProfile, isBritishRulesProfile } from './rules-presentation';
-import { prepareFullPrintDisclosures } from './print-disclosures';
+import { prepareFullPrintDisclosures, watchPrintLifecycle } from './print-disclosures';
 import type {
   GameLength,
   GamePlayer,
@@ -150,6 +151,7 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
   const [printMode, setPrintMode] = useState<'summary' | 'full' | null>(null);
   const [editingHand, setEditingHand] = useState(false);
   const tableScoresRef = useRef<HTMLDetailsElement>(null);
+  const tableToolsRef = useRef<HTMLDetailsElement>(null);
   const gameLedgerRef = useRef<HTMLDetailsElement>(null);
   const ledgerDetailsRefs = useRef(new Map<number, HTMLDetailsElement>());
 
@@ -198,13 +200,12 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
       setPrintMode(null);
       window.removeEventListener('afterprint', restore);
     };
-    window.addEventListener('afterprint', restore);
-    const fallbackRestore = window.setTimeout(restore, 1000);
+    const stopWatchingPrint = watchPrintLifecycle(window, document, restore);
     window.requestAnimationFrame(() => {
       window.print();
     });
     return () => {
-      window.clearTimeout(fallbackRestore);
+      stopWatchingPrint();
       restore();
     };
   }, [printMode]);
@@ -469,9 +470,25 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
                 {recoveredProfileConflictsWithRoute ? `Saved ${activeRulesCopy(game.setup.rulesProfile)} game; this route does not change its rules.` : 'Saved game recovered.'}
               </p>}
             </div>
-            <details className="table-tools relative">
+            <details ref={tableToolsRef} className="table-tools relative">
               <summary className="flex cursor-pointer list-none items-center gap-2 rounded-md border border-[#cfc3aa] bg-[#fbf8ed] px-2.5 py-1.5 text-[11px] font-semibold text-[#284d45] sm:px-3 sm:py-2">Table tools</summary>
               <div className="table-tools-panel fixed inset-x-3 top-3 z-30 flex max-h-[calc(100dvh-1.5rem)] flex-col gap-1 overflow-y-auto overscroll-contain rounded-lg border border-[#d8ceb8] bg-[#fbf8ed] p-2 shadow-[var(--shadow-md)] sm:absolute sm:inset-x-auto sm:right-0 sm:top-auto sm:mt-2 sm:max-h-[min(32rem,calc(100dvh-5rem))] sm:w-64">
+                <div className="flex items-center justify-between border-b border-[#d8ceb8] px-1 pb-2 lg:hidden">
+                  <span className="font-mono text-[10px] uppercase tracking-[.16em] text-[#ae6249]">Table tools</span>
+                  <button
+                    type="button"
+                    data-testid="button-close-table-tools"
+                    aria-label="Close table tools"
+                    onClick={() => {
+                      if (!tableToolsRef.current) return;
+                      tableToolsRef.current.open = false;
+                      tableToolsRef.current.querySelector('summary')?.focus();
+                    }}
+                    className="flex items-center gap-1 rounded-md px-2 py-1.5 text-[11px] font-semibold text-[#284d45] hover:bg-[#efe8da] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#284d45]"
+                  >
+                    <X size={15} aria-hidden="true" /> Close
+                  </button>
+                </div>
             <button
               type="button"
               data-testid="button-undo-hand"
