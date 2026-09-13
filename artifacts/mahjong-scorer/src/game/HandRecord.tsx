@@ -28,7 +28,16 @@ export const settlementDescription = (
     transaction.eastMultiplier === 2
       ? ` — doubled because ${playerName(eastPlayerId)} was East`
       : "";
-  return `${playerName(transaction.fromPlayerId)} paid ${playerName(transaction.toPlayerId)} ${transaction.amount}${doubled}`;
+  const label = transaction.reason === 'cannon-liability'
+    ? 'Cannon liability: '
+    : transaction.reason === 'false-name-mah-jong-liability'
+      ? 'False-name Mah Jong liability: '
+      : transaction.reason === 'false-mah-jong-penalty'
+        ? 'False Mah Jong penalty: '
+        : transaction.reason === 'false-discard-name-penalty'
+          ? 'False discard-name penalty: '
+          : '';
+  return `${label}${playerName(transaction.fromPlayerId)} paid ${playerName(transaction.toPlayerId)} ${transaction.amount}${doubled}`;
 };
 
 export const detailedHandStatus = (record: DetailedHandRecord) =>
