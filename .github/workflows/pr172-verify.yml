@@ -10,6 +10,8 @@ on:
 jobs:
   verify:
     runs-on: ubuntu-latest
+    env:
+      PORT: 5173
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
