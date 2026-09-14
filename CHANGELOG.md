@@ -10,6 +10,7 @@ This file records meaningful changes to **Mahjong Reference** at product-milesto
 
 ### Changed
 
+- Rebuilt **How It Works** as an eight-stage visual table journey from choosing rules through scoring, settlement, continued play, game history and saving a record, using the canonical deterministic product screenshot library. [#163](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/163)
 - Promoted **User Guide & Help** into a product-wide Table Companion support surface, with first-class navigation and a clear hand-off from How It Works while keeping British learning and rules content distinct. [#179](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/179)
 - Aligned the homepage around **Play → Rules → Learn → Trust**, with plain-language supported-rules status, a quieter Features entry point and lower-prominence About/Support links. [#172](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/pull/172)
 
