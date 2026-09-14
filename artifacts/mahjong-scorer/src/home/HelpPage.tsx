@@ -268,19 +268,22 @@ export function HelpPage() {
           <div className="border-b border-[#ddd3bf] px-5 py-9 sm:px-8 sm:py-12 lg:px-12 lg:py-14">
             <div className="mb-4 flex items-center gap-3">
               <div className="fine-rule w-10" />
-              <span className="font-mono text-[10px] uppercase tracking-[.2em] text-[#ae6249]">Help</span>
+              <span className="font-mono text-[10px] uppercase tracking-[.2em] text-[#ae6249]">User Guide &amp; Help</span>
             </div>
             <h1 className="max-w-[800px] font-serif text-[clamp(38px,6vw,62px)] leading-[.98] text-[#284d45]">
-              Find the thing you need without reading a manual.
+              Use Mahjong Reference at the table without hunting for instructions.
             </h1>
             <p className="mt-5 max-w-[760px] text-[15px] leading-7 text-[#596b65]">
-              Search a question or browse by task. The answers start with what you can do now, then explain the evidence boundary only where it matters.
+              Search a question or browse by task. This guide covers game tracking, hand scoring, settlement, recovery and saving across the supported Table Companion workflows; rules-specific learning stays in the Rules and Learn areas.
             </p>
-            <a href="/hand" className="mt-5 inline-flex min-h-10 items-center gap-2 rounded-md border border-[#c9b99d] bg-[#fdfbf5] px-4 text-[12px] font-semibold text-[#284d45] transition hover:bg-[#fffaf0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">Open the hand scorer <ArrowRight size={14} aria-hidden="true" /></a>
+            <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+              <a href="/game" className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md bg-[#284d45] px-4 text-[12px] font-semibold text-[#f8f4e9] transition hover:bg-[#23443d] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249] focus-visible:ring-offset-2">Track a game <ArrowRight size={14} aria-hidden="true" /></a>
+              <a href="/hand" className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-[#c9b99d] bg-[#fdfbf5] px-4 text-[12px] font-semibold text-[#284d45] transition hover:bg-[#fffaf0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">Score a hand <ArrowRight size={14} aria-hidden="true" /></a>
+            </div>
 
             <label className="mt-7 flex max-w-[680px] items-center gap-3 rounded-xl border border-[#cfc3aa] bg-[#fdfbf5] px-4 py-3 shadow-sm focus-within:ring-2 focus-within:ring-[#ae6249]">
               <Search size={18} className="shrink-0 text-[#ae6249]" />
-              <span className="sr-only">Search help</span>
+              <span className="sr-only">Search User Guide and Help</span>
               <input
                 type="search"
                 value={query}
@@ -345,20 +348,20 @@ export function HelpPage() {
                 <AlertTriangle size={21} className="mx-auto text-[#ae6249]" />
                 <h2 className="mt-3 font-serif text-[24px] text-[#284d45]">No matching help answer yet</h2>
                 <p className="mx-auto mt-2 max-w-[560px] text-[12px] leading-6 text-[#66746e]">
-                  Try a shorter phrase such as “partial”, “Kong”, “settlement” or “save”. You can also use the British scoring guide and British special-hand catalogue below.
+                  Try a shorter phrase such as “partial”, “Kong”, “settlement” or “save”. You can also use the supported rules hub or the explicitly British learning material below.
                 </p>
               </div>
             )}
           </div>
 
           <div className="border-t border-[#ddd3bf] px-5 py-9 sm:px-8 sm:py-11 lg:px-12">
-            <h2 className="font-serif text-[28px] text-[#284d45]">Need the rules rather than the app help?</h2>
+            <h2 className="font-serif text-[28px] text-[#284d45]">Need rules or learning rather than product help?</h2>
             <div className="mt-5 grid gap-3 md:grid-cols-2 lg:grid-cols-4">
               {[
                 ['/guide', BookOpen, 'British scoring guide', 'Learn British points, doubles and scoring progressively.'],
                 ['/special-hands', Sparkles, 'British special hands', 'Browse the British visual special-hand catalogue.'],
                 ['/rules', CircleHelp, 'Supported rules', 'See British stable, Western provisional and Club configured support.'],
-                ['/how-it-works', CircleHelp, 'How it works', 'See how evidence, scoring, settlement and the ledger fit together.'],
+                ['/how-it-works', CircleHelp, 'How the Table Companion works', 'See the product model from context and evidence through score, settlement and record.'],
               ].map(([href, Icon, title, description]) => {
                 const LinkIcon = Icon as typeof BookOpen;
                 return (

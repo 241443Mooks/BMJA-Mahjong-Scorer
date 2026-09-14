@@ -90,6 +90,7 @@ export function HowItWorksPage() {
             <div className="mt-7 flex flex-col gap-3 sm:flex-row">
               <a href="/game" className="inline-flex items-center justify-center gap-2 rounded-md bg-[#284d45] px-4 py-2.5 text-[11px] font-semibold text-[#f8f4e9] transition hover:bg-[#23443d] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249] focus-visible:ring-offset-2">Score a game <ArrowRight size={14} /></a>
               <a href="/hand" className="inline-flex items-center justify-center gap-2 rounded-md border border-[#c9b99d] bg-[#fdfbf5] px-4 py-2.5 text-[11px] font-semibold text-[#284d45] transition hover:bg-[#fffaf0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249] focus-visible:ring-offset-2">Score a hand <ArrowRight size={14} /></a>
+              <a href="/help" className="inline-flex items-center justify-center gap-2 rounded-md border border-[#c9b99d] bg-[#fdfbf5] px-4 py-2.5 text-[11px] font-semibold text-[#284d45] transition hover:bg-[#fffaf0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249] focus-visible:ring-offset-2">Open User Guide <ArrowRight size={14} /></a>
             </div>
           </section>
 
