@@ -102,15 +102,18 @@
 .fine-rule { background: linear-gradient(90deg, hsl(var(--accent)), transparent); height: 2px; }
 .print-only { display: none; }
 
-/* WCAG 2.2 AA: strengthen only the compact light-surface text combinations that failed 1.4.3. */
+/* WCAG 2.2 AA: strengthen only compact light-surface text combinations that failed 1.4.3. */
 .screen-only.sticky [class~="text-[#ae6249]"],
 [data-testid="section-table-scores"] [class~="text-[#ae6249]"],
-#game-ledger [class~="text-[#ae6249]"] {
+#game-ledger [class~="text-[#ae6249]"],
+.recorded-hand [class~="text-[#ae6249]"] {
   color: #9a4d3a;
 }
 
 [data-testid="section-table-scores"] [class~="text-[#7a7769]"],
 #game-ledger [class~="text-[#7a7769]"],
+.recorded-hand [class~="text-[#7a7769]"],
+[data-testid="rules-profile-picker"] [class~="text-[#66746e]"],
 [data-testid^="button-flower-"] [class~="text-[#66746e]"],
 [data-testid^="button-flower-"] [class~="text-[#7a7769]"],
 [data-testid^="button-season-"] [class~="text-[#66746e]"],
@@ -144,5 +147,5 @@
   img { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
   a { color: #172c27; text-decoration: underline; }
 }
-.game-record-footer { margin-top: 2rem; border-top: 1px solid #d8ceb8; padding-top: .75rem; display: flex; flex-wrap: wrap; gap: .35rem 1rem; font-size: 10px; color: #7a7769; }
+.game-record-footer { margin-top: 2rem; border-top: 1px solid #d8ceb8; padding-top: .75rem; display: flex; flex-wrap: wrap; gap: .35rem 1rem; font-size: 10px; color: #596b65; }
 .game-record-footer a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
