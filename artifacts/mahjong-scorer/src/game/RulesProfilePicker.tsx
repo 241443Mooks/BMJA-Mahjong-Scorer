@@ -29,7 +29,10 @@ export function RulesProfilePicker({ prompt, selectedProfile, onSelect }: { prom
       })}
     </div>
     <div data-testid="rules-at-a-glance" className="mt-4 rounded-lg border border-[#b8cdbf] bg-[#edf3ed] p-4">
-      <div className="font-mono text-[10px] uppercase tracking-[.16em] text-[#477562]">Rules at a glance</div>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="font-mono text-[10px] uppercase tracking-[.16em] text-[#477562]">Rules at a glance</div>
+        <a href="/rules" className="text-[11px] font-semibold text-[#284d45] underline decoration-[#ae6249] underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">Rules reference</a>
+      </div>
       <h3 className="mt-1 font-serif text-[20px] text-[#284d45]">{selected.title}</h3>
       <p className="mt-1 text-[12px] leading-5 text-[#66746e]">{selected.status}</p>
       <ul className="mt-3 space-y-1 text-[12px] leading-5 text-[#284d45]">{selected.atAGlance.map((fact) => <li key={fact}>• {fact}</li>)}</ul>

@@ -269,7 +269,7 @@ export function BeginnerGuide({ onClose }: { onClose: () => void }) {
                 <li>The three losing players also settle the differences between their own scores.</li>
                 <li><strong className="text-[#284d45]">Payments involving East are doubled.</strong></li>
               </ul>
-              <Callout>You do not need to calculate the transfers yourself. Enter the four hand scores and the game scorer applies the settlement rules for you.</Callout>
+              <Callout>You do not need to calculate the transfers yourself. Enter the four hand scores in the <a href="/game" className="font-semibold text-[#284d45] underline decoration-[#ae6249] underline-offset-4">game tracker</a> and it applies the settlement rules for you. The <a href="/mahjong-settlement" className="font-semibold text-[#284d45] underline decoration-[#ae6249] underline-offset-4">settlement explainer</a> shows how the hand scores become who-pays-whom transfers.</Callout>
               <p>For a draw / wash-out, East remains East. The current project implementation makes no settlement transfers for that hand; this remains documented as a project interpretation while the rules reference is refined.</p>
             </GuideSection>
 
@@ -288,7 +288,7 @@ export function BeginnerGuide({ onClose }: { onClose: () => void }) {
               <div className="rounded-xl bg-[#284d45] p-6 text-[#f8f4e9] sm:p-7">
                 <div className="font-mono text-[9px] uppercase tracking-[.2em] text-[#d7a287]">The main idea</div>
                 <h2 className="mt-2 font-serif text-[28px]">You do not need to learn the scoring engine to use it.</h2>
-                <p className="mt-3 max-w-[650px] text-[12px] leading-6 text-[#c8d8d1]">Use the scorer as the working tool and this guide as the explanation layer. When a score result teaches you something useful, that is the right moment to learn it.</p>
+                <p className="mt-3 max-w-[650px] text-[12px] leading-6 text-[#c8d8d1]">Use the <a href="/hand" className="font-semibold text-[#f8f4e9] underline decoration-[#d7a287] underline-offset-4">hand scorer</a> as the working tool and this guide as the explanation layer. When you want to practise the connection, the <a href="/scoring-examples" className="font-semibold text-[#f8f4e9] underline decoration-[#d7a287] underline-offset-4">worked scoring examples</a> use the real scorer.</p>
               </div>
             </section>
           </article>
