@@ -1,0 +1,64 @@
+name: Temporary
+on:
+  push:
+    branches: [feat/163-visual-how-it-works]
+permissions:
+  contents: write
+jobs:
+  review-how-it-works:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Pin pnpm and install dependencies
+        run: |
+          corepack enable
+          corepack prepare pnpm@10.26.2 --activate
+          pnpm install --frozen-lockfile
+      - name: Install isolated Playwright
+        env:
+          PLAYWRIGHT_TOOL_DIR: ${{ runner.temp }}/playwright-1.55.0
+        run: |
+          mkdir -p "$PLAYWRIGHT_TOOL_DIR"
+          printf '{"private":true}\n' > "$PLAYWRIGHT_TOOL_DIR/package.json"
+          npm install --prefix "$PLAYWRIGHT_TOOL_DIR" --no-save --no-package-lock playwright@1.55.0
+          node "$PLAYWRIGHT_TOOL_DIR/node_modules/playwright/cli.js" install --with-deps chromium
+      - name: Run source and rendered acceptance
+        env:
+          PLAYWRIGHT_TOOL_DIR: ${{ runner.temp }}/playwright-1.55.0
+          REVIEW_DIR: ${{ runner.temp }}/how-it-works-review
+        run: node .github/scripts/tmp-163-how-it-works-review.mjs
+      - name: Upload rendered review captures
+        uses: actions/upload-artifact@v4
+        with:
+          name: how-it-works-rendered-review
+          path: ${{ runner.temp }}/how-it-works-review
+          if-no-files-found: error
+      - name: Remove temporary review files and constrain diff
+        shell: bash
+        run: |
+          git rm .github/scripts/tmp-163-how-it-works-review.mjs .github/workflows/tmp-163-how-it-works.yml
+          allowed='CHANGELOG.md|artifacts/mahjong-scorer/src/home/HowItWorksPage.tsx|.github/scripts/tmp-163-how-it-works-review.mjs|.github/workflows/tmp-163-how-it-works.yml'
+          unexpected=$(git status --short | sed -E 's/^.. //' | grep -Ev "^(${allowed})$" || true)
+          if [ -n "$unexpected" ]; then
+            echo "Unexpected changed paths:"
+            echo "$unexpected"
+            exit 1
+          fi
+      - name: Verify product
+        run: |
+          pnpm test
+          pnpm run typecheck
+          PORT=5173 BASE_PATH=/ pnpm run build
+      - name: Commit verified visual journey
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'Verify visual How It Works journey'
+          git push
