@@ -1,0 +1,42 @@
+name: Temporary #161 changelog
+
+on:
+  push:
+    branches:
+      - chore/161-product-screenshot-library
+
+permissions:
+  contents: write
+
+jobs:
+  changelog:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Add product screenshot library changelog entry
+        shell: bash
+        run: |
+          python <<'PY'
+          from pathlib import Path
+          path = Path('CHANGELOG.md')
+          text = path.read_text()
+          marker = '### Added\n\n'
+          entry = '- Promoted deterministic product screenshots into a reusable **10-state Table Companion library**, including distinct score-result and pre-confirmation **Who pays whom** captures for Help, How It Works and User Guide reuse. [#161](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/161)\n\n'
+          if text.count(marker) != 5:
+              raise SystemExit(f'expected five Added headings in changelog, found {text.count(marker)}')
+          first = text.index(marker) + len(marker)
+          if entry.strip() not in text:
+              text = text[:first] + entry + text[first:]
+          path.write_text(text)
+          PY
+          rm .github/workflows/tmp-161-changelog.yml
+          git diff --check
+      - name: Commit changelog
+        shell: bash
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add -A
+          git diff --cached --check
+          git commit -m "Record reusable screenshot library"
+          git push origin HEAD:chore/161-product-screenshot-library
