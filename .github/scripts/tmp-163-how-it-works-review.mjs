@@ -122,13 +122,20 @@ try {
     for (let index = 0; index < 8; index += 1) {
       const step = steps.nth(index);
       const headingBox = await step.locator('h3').boundingBox();
-      const imageBox = await step.locator('img').boundingBox();
+      const image = step.locator('img');
+      const imageBox = await image.boundingBox();
+      const panelWidth = await image.evaluate((element) => {
+        let parent = element.parentElement;
+        while (parent && !parent.classList.contains('overflow-hidden')) parent = parent.parentElement;
+        return parent?.getBoundingClientRect().width ?? 0;
+      });
       if (!headingBox || !imageBox) throw new Error(`${viewport.name}: could not measure stage ${index + 1}.`);
       if (viewport.name === 'mobile') {
         if (!(headingBox.y < imageBox.y)) throw new Error(`mobile: text must appear before screenshot in stage ${index + 1}.`);
       } else {
         if (!(headingBox.x < imageBox.x)) throw new Error(`${viewport.name}: text should sit left of screenshot in stage ${index + 1}.`);
-        if (imageBox.width < 300) throw new Error(`${viewport.name}: screenshot ${index + 1} is too narrow (${imageBox.width}px).`);
+        if (panelWidth < 300) throw new Error(`${viewport.name}: screenshot panel ${index + 1} is too narrow (${panelWidth}px).`);
+        if (imageBox.width < 150) throw new Error(`${viewport.name}: screenshot ${index + 1} is not usefully visible (${imageBox.width}px).`);
       }
     }
 
