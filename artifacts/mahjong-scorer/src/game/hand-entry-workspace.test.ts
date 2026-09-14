@@ -9,6 +9,12 @@ describe('hand entry workspace recovery', () => {
     expect(recoverWorkingDraft<Set>([{ id: 'one', tile: '1b' }, draft()], draft).draftId).toBe('draft');
   });
 
+  it('keeps normal-group recovery independent of the remaining-tiles disclosure', () => {
+    const recovered = recoverWorkingDraft<Set>([{ id: 'one', tile: '1b' }, { id: 'two', tile: '2b' }], draft);
+    expect(recovered.draftId).toBe('draft');
+    expect(recovered.sets.map((set) => set.id)).toEqual(['one', 'two', 'draft']);
+  });
+
   it('creates a fresh draft when the currently edited group is removed', () => {
     const recovered = recoverWorkingDraft<Set>([{ id: 'later', tile: '2b' }], draft);
     expect(recovered.draftId).toBe('draft');
