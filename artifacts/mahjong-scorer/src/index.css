@@ -102,6 +102,20 @@
 .fine-rule { background: linear-gradient(90deg, hsl(var(--accent)), transparent); height: 2px; }
 .print-only { display: none; }
 
+/* WCAG 2.2 AA: shared public text palette measured against the site's light surfaces. */
+[class~="text-[#ae6249]"] { color: #9a4d3a; }
+[class~="text-[#7a7769]"],
+[class~="text-[#66746e]"],
+[class~="text-[#8c8a7f]"],
+[class~="text-[#77796f]"] { color: #55655f; }
+[class~="text-[#8c776d]"] { color: #76594f; }
+[class~="text-[#d7a287]"] { color: #e4ad93; }
+[class~="placeholder:text-[#8a8779]"]::placeholder { color: #55655f; }
+
+/* Gameplay Basics dims concealed tile artwork, not the explanatory label. */
+#visibility .opacity-75 { opacity: 1; }
+#visibility .opacity-75 img { opacity: .75; }
+
 /* WCAG 2.2 AA: strengthen only text combinations confirmed by the scorer/readability audit. */
 .screen-only.sticky [class~="text-[#ae6249]"],
 [data-testid="section-table-scores"] [class~="text-[#ae6249]"],

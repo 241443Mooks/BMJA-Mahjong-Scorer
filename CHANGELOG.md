@@ -12,6 +12,7 @@ This file records meaningful changes to **Mahjong Reference** at product-milesto
 
 ### Fixed
 
+- Aligned public Rules, Help, Learn and reference-page text colours with WCAG 2.2 AA contrast requirements. [#177](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/177)
 - Fixed audited WCAG 2.2 AA zoom and contrast failures in game setup, hand scoring, settlement and retained game information, without changing scoring or table behaviour. [#174](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/pull/174)
 
 ## 2026-09-14 — Table Companion interaction refinement
