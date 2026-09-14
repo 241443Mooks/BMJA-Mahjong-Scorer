@@ -38,80 +38,85 @@ jobs:
           const base = 'https://fix-170-wcag-aa-readability.bmja-mahjong-scorer.pages.dev';
           const routes = ['/', '/game', '/hand', '/rules', '/rules/british', '/rules/western', '/features', '/how-it-works', '/help', '/about', '/mahjong-settlement', '/gameplay-basics', '/guide', '/special-hands', '/scoring-examples', '/mahjong-rules-compared'];
 
-          const browser = await chromium.launch({ headless: true });
-          let axeFailures = 0;
+          (async () => {
+            const browser = await chromium.launch({ headless: true });
+            let axeFailures = 0;
 
-          async function axe(page, label) {
-            const result = await new AxeBuilder({ page })
-              .withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa'])
-              .analyze();
-            if (result.violations.length) {
-              axeFailures += result.violations.length;
-              console.log(`\nAXE VIOLATIONS — ${label}`);
-              for (const violation of result.violations) {
-                console.log(`${violation.id} | ${violation.impact} | ${violation.help} | nodes=${violation.nodes.length}`);
-                for (const node of violation.nodes.slice(0, 6)) console.log(`  ${node.target.join(' ')}`);
+            async function axe(page, label) {
+              const result = await new AxeBuilder({ page })
+                .withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa'])
+                .analyze();
+              if (result.violations.length) {
+                axeFailures += result.violations.length;
+                console.log(`\nAXE VIOLATIONS — ${label}`);
+                for (const violation of result.violations) {
+                  console.log(`${violation.id} | ${violation.impact} | ${violation.help} | nodes=${violation.nodes.length}`);
+                  for (const node of violation.nodes.slice(0, 6)) console.log(`  ${node.target.join(' ')}`);
+                }
+              } else {
+                console.log(`AXE PASS — ${label}`);
               }
-            } else {
-              console.log(`AXE PASS — ${label}`);
             }
-          }
 
-          async function diagnostics(page, label) {
-            await page.setViewportSize({ width: 320, height: 900 });
-            const reflow = await page.evaluate(() => {
-              const shell = document.querySelector('.mahjong-shell') ?? document.documentElement;
-              return { shellScrollWidth: shell.scrollWidth, shellClientWidth: shell.clientWidth, docScrollWidth: document.documentElement.scrollWidth, docClientWidth: document.documentElement.clientWidth };
-            });
-            console.log(`REFLOW — ${label}: ${JSON.stringify(reflow)}`);
+            async function diagnostics(page, label) {
+              await page.setViewportSize({ width: 320, height: 900 });
+              const reflow = await page.evaluate(() => {
+                const shell = document.querySelector('.mahjong-shell') ?? document.documentElement;
+                return { shellScrollWidth: shell.scrollWidth, shellClientWidth: shell.clientWidth, docScrollWidth: document.documentElement.scrollWidth, docClientWidth: document.documentElement.clientWidth };
+              });
+              console.log(`REFLOW — ${label}: ${JSON.stringify(reflow)}`);
 
-            await page.addStyleTag({ content: `*{line-height:1.5em!important;letter-spacing:.12em!important;word-spacing:.16em!important} p{margin-bottom:2em!important}` });
-            const clipped = await page.evaluate(() => [...document.querySelectorAll('*')].filter((el) => {
-              const s = getComputedStyle(el);
-              if (!el.textContent?.trim()) return false;
-              if (!['hidden','clip'].includes(s.overflow) && !['hidden','clip'].includes(s.overflowX) && !['hidden','clip'].includes(s.overflowY)) return false;
-              return el.scrollWidth > el.clientWidth + 1 || el.scrollHeight > el.clientHeight + 1;
-            }).slice(0, 30).map((el) => ({ tag: el.tagName, text: el.textContent.trim().slice(0, 80), className: typeof el.className === 'string' ? el.className : '' })));
-            console.log(`TEXT-SPACING CLIP CANDIDATES — ${label}: ${JSON.stringify(clipped)}`);
+              await page.addStyleTag({ content: `*{line-height:1.5em!important;letter-spacing:.12em!important;word-spacing:.16em!important} p{margin-bottom:2em!important}` });
+              const clipped = await page.evaluate(() => [...document.querySelectorAll('*')].filter((el) => {
+                const s = getComputedStyle(el);
+                if (!el.textContent?.trim()) return false;
+                if (!['hidden','clip'].includes(s.overflow) && !['hidden','clip'].includes(s.overflowX) && !['hidden','clip'].includes(s.overflowY)) return false;
+                return el.scrollWidth > el.clientWidth + 1 || el.scrollHeight > el.clientHeight + 1;
+              }).slice(0, 30).map((el) => ({ tag: el.tagName, text: el.textContent.trim().slice(0, 80), className: typeof el.className === 'string' ? el.className : '' })));
+              console.log(`TEXT-SPACING CLIP CANDIDATES — ${label}: ${JSON.stringify(clipped)}`);
 
-            const smallTargets = await page.evaluate(() => [...document.querySelectorAll('button,a[href],input,select,summary,[role="button"]')].filter((el) => {
-              const r = el.getBoundingClientRect();
-              const s = getComputedStyle(el);
-              return s.display !== 'none' && s.visibility !== 'hidden' && r.width > 0 && r.height > 0 && (r.width < 24 || r.height < 24);
-            }).slice(0, 60).map((el) => {
-              const r = el.getBoundingClientRect();
-              return { tag: el.tagName, text: (el.getAttribute('aria-label') || el.textContent || '').trim().slice(0, 60), width: Math.round(r.width * 10) / 10, height: Math.round(r.height * 10) / 10 };
-            }));
-            console.log(`UNDERSIZED TARGET CANDIDATES — ${label}: ${JSON.stringify(smallTargets)}`);
-          }
+              const smallTargets = await page.evaluate(() => [...document.querySelectorAll('button,a[href],input,select,summary,[role="button"]')].filter((el) => {
+                const r = el.getBoundingClientRect();
+                const s = getComputedStyle(el);
+                return s.display !== 'none' && s.visibility !== 'hidden' && r.width > 0 && r.height > 0 && (r.width < 24 || r.height < 24);
+              }).slice(0, 60).map((el) => {
+                const r = el.getBoundingClientRect();
+                return { tag: el.tagName, text: (el.getAttribute('aria-label') || el.textContent || '').trim().slice(0, 60), width: Math.round(r.width * 10) / 10, height: Math.round(r.height * 10) / 10 };
+              }));
+              console.log(`UNDERSIZED TARGET CANDIDATES — ${label}: ${JSON.stringify(smallTargets)}`);
+            }
 
-          for (const route of routes) {
-            const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
-            await page.goto(base + route, { waitUntil: 'networkidle' });
-            await axe(page, route);
-            if (['/', '/game', '/hand'].includes(route)) await diagnostics(page, route);
-            await page.close();
-          }
+            for (const route of routes) {
+              const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+              await page.goto(base + route, { waitUntil: 'networkidle' });
+              await axe(page, route);
+              if (['/', '/game', '/hand'].includes(route)) await diagnostics(page, route);
+              await page.close();
+            }
 
-          const game = await browser.newPage({ viewport: { width: 390, height: 844 } });
-          await game.goto(base + '/game', { waitUntil: 'networkidle' });
-          await game.getByTestId('input-player-east').fill('Alex');
-          await game.getByTestId('input-player-south').fill('Beth');
-          await game.getByTestId('input-player-west').fill('Chris');
-          await game.getByTestId('input-player-north').fill('Dee');
-          await game.getByTestId('button-start-game').click();
-          await axe(game, 'active game — score entry');
-          for (const [id, score] of [['player-1','80'],['player-2','200'],['player-3','40'],['player-4','60']]) await game.getByTestId(`input-score-${id}`).fill(score);
-          await axe(game, 'active game — settlement preview');
-          await diagnostics(game, 'active game — settlement preview');
-          await game.getByTestId('button-confirm-hand').click();
-          await game.locator('#game-ledger').evaluate((el) => { el.open = true; });
-          await axe(game, 'active game — confirmed history');
-          await game.close();
+            const game = await browser.newPage({ viewport: { width: 390, height: 844 } });
+            await game.goto(base + '/game', { waitUntil: 'networkidle' });
+            await game.getByTestId('input-player-east').fill('Alex');
+            await game.getByTestId('input-player-south').fill('Beth');
+            await game.getByTestId('input-player-west').fill('Chris');
+            await game.getByTestId('input-player-north').fill('Dee');
+            await game.getByTestId('button-start-game').click();
+            await axe(game, 'active game — score entry');
+            for (const [id, score] of [['player-1','80'],['player-2','200'],['player-3','40'],['player-4','60']]) await game.getByTestId(`input-score-${id}`).fill(score);
+            await axe(game, 'active game — settlement preview');
+            await diagnostics(game, 'active game — settlement preview');
+            await game.getByTestId('button-confirm-hand').click();
+            await game.locator('#game-ledger').evaluate((el) => { el.open = true; });
+            await axe(game, 'active game — confirmed history');
+            await game.close();
 
-          await browser.close();
-          if (axeFailures) {
-            console.error(`Automated axe audit found ${axeFailures} rule violations. See output above.`);
-            process.exit(2);
-          }
+            await browser.close();
+            if (axeFailures) {
+              console.error(`Automated axe audit found ${axeFailures} rule violations. See output above.`);
+              process.exit(2);
+            }
+          })().catch((error) => {
+            console.error(error);
+            process.exit(1);
+          });
           NODE
