@@ -87,14 +87,16 @@ jobs:
             }
 
             for (const route of routes) {
-              const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+              const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
+              const page = await context.newPage();
               await page.goto(base + route, { waitUntil: 'networkidle' });
               await axe(page, route);
               if (['/', '/game', '/hand'].includes(route)) await diagnostics(page, route);
-              await page.close();
+              await context.close();
             }
 
-            const game = await browser.newPage({ viewport: { width: 390, height: 844 } });
+            const gameContext = await browser.newContext({ viewport: { width: 390, height: 844 } });
+            const game = await gameContext.newPage();
             await game.goto(base + '/game', { waitUntil: 'networkidle' });
             await game.getByTestId('input-player-east').fill('Alex');
             await game.getByTestId('input-player-south').fill('Beth');
@@ -108,7 +110,7 @@ jobs:
             await game.getByTestId('button-confirm-hand').click();
             await game.locator('#game-ledger').evaluate((el) => { el.open = true; });
             await axe(game, 'active game — confirmed history');
-            await game.close();
+            await gameContext.close();
 
             await browser.close();
             if (axeFailures) {
