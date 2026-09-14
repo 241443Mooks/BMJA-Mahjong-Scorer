@@ -389,7 +389,7 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
             </h1>
             <p className="mt-4 max-w-[620px] text-[16px] leading-7 text-[#66746e]">
               Enter players in their starting seats. Your game stays in this
-              browser so you can continue after a refresh.
+              browser so you can continue after a refresh. <a href="/help#refresh-game" className="font-semibold text-[#284d45] underline decoration-[#cfa58f] underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">How recovery works</a>
             </p>
             {recovered && <div data-testid="recovered-game-conflict" className="mt-4 max-w-[620px] rounded-md border border-[#b8cdbf] bg-[#edf3ed] p-3 text-[14px] leading-6 text-[#284d45]"><strong>Saved game: {activeRulesCopy(recovered.game.setup.rulesProfile)}.</strong> Continue it safely; rules from this route do not change a saved game. Starting a new game below replaces this local recovery.</div>}
           </div>
@@ -498,6 +498,7 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
             >
               <Undo2 size={14} /> Undo last hand
             </button>
+            <a href="/help#correct-hand" className="rounded-md px-3 py-2 text-[11px] font-semibold text-[#477562] underline decoration-[#cfc3aa] underline-offset-4 hover:bg-[#efe8da] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">Help correcting a hand</a>
             <button
               type="button"
               data-testid="button-start-over"
@@ -517,6 +518,7 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
                 <a href="#game-ledger" className="rounded-md px-3 py-2 text-[11px] font-semibold text-[#284d45] hover:bg-[#efe8da]">History / confirmed ledger</a>
                 <button type="button" data-testid="button-print-full" onClick={() => printGame('full')} className="rounded-md px-3 py-2 text-left text-[11px] font-semibold text-[#284d45] hover:bg-[#efe8da]">Print / Save full game record</button>
                 <button type="button" data-testid="button-print-summary" onClick={() => printGame('summary')} className="rounded-md px-3 py-2 text-left text-[11px] font-semibold text-[#284d45] hover:bg-[#efe8da]">Print / Save game summary</button>
+                <a href="/help#save-game" className="rounded-md px-3 py-2 text-[11px] font-semibold text-[#477562] underline decoration-[#cfc3aa] underline-offset-4 hover:bg-[#efe8da] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">Saving / printing help</a>
               </div>
             </details>
           </div>
@@ -725,6 +727,7 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
               <div className="mt-2 font-serif text-[27px]">
                 {game.isComplete ? 'Game Complete' : outcomeType === 'draw' ? 'No payments this hand' : 'Who pays whom'}
               </div>
+              {!game.isComplete && <a href="/help#settlement" className="mt-2 inline-flex text-[11px] font-semibold text-[#e8eee9] underline decoration-[#d7a287] underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d7a287]">How settlement works</a>}
             </div>
 
             {!game.isComplete ? (
