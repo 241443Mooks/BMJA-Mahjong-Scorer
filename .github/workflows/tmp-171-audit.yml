@@ -18,4 +18,4 @@ jobs:
           corepack prepare pnpm@10.26.2 --activate
           pnpm install --frozen-lockfile
       - name: Probe SSR compatibility for every canonical route
-        run: node artifacts/mahjong-scorer/scripts/tmp-171-ssr-probe.mjs
+        run: PORT=4173 BASE_PATH=/ node artifacts/mahjong-scorer/scripts/tmp-171-ssr-probe.mjs
