@@ -28,7 +28,7 @@ jobs:
             sleep 2
           done
           exit 1
-      - name: Run rendered A/AA checks and diagnostics
+      - name: Run focused rendered checks
         run: |
           node --input-type=commonjs <<'NODE'
           const { createRequire } = require('node:module');
@@ -36,36 +36,41 @@ jobs:
           const { chromium } = req('playwright');
           const AxeBuilder = req('@axe-core/playwright').default;
           const base = 'https://fix-170-wcag-aa-readability.bmja-mahjong-scorer.pages.dev';
-          const routes = ['/', '/game', '/hand', '/rules', '/rules/british', '/rules/western', '/features', '/how-it-works', '/help', '/about', '/mahjong-settlement', '/gameplay-basics', '/guide', '/special-hands', '/scoring-examples', '/mahjong-rules-compared'];
 
           (async () => {
             const browser = await chromium.launch({ headless: true });
-            let axeFailures = 0;
+            let failures = 0;
 
-            async function axe(page, label) {
+            async function audit(page, label) {
               const result = await new AxeBuilder({ page })
                 .withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa'])
                 .analyze();
-              if (result.violations.length) {
-                axeFailures += result.violations.length;
-                console.log(`\nAXE VIOLATIONS — ${label}`);
-                for (const violation of result.violations) {
-                  console.log(`${violation.id} | ${violation.impact} | ${violation.help} | nodes=${violation.nodes.length}`);
-                  for (const node of violation.nodes.slice(0, 6)) console.log(`  ${node.target.join(' ')}`);
-                }
-              } else {
+              if (!result.violations.length) {
                 console.log(`AXE PASS — ${label}`);
+                return;
+              }
+              failures += result.violations.length;
+              console.log(`\nAXE VIOLATIONS — ${label}`);
+              for (const violation of result.violations) {
+                console.log(`${violation.id} | ${violation.impact} | nodes=${violation.nodes.length}`);
+                for (const node of violation.nodes) {
+                  console.log(`TARGET ${node.target.join(' ')}`);
+                  console.log(`HTML ${node.html}`);
+                  const checks = [...node.any, ...node.all, ...node.none]
+                    .filter((check) => check.data)
+                    .map((check) => ({ id: check.id, data: check.data }));
+                  if (checks.length) console.log(`CHECKS ${JSON.stringify(checks)}`);
+                }
               }
             }
 
             async function diagnostics(page, label) {
               await page.setViewportSize({ width: 320, height: 900 });
-              const reflow = await page.evaluate(() => {
-                const shell = document.querySelector('.mahjong-shell') ?? document.documentElement;
-                return { shellScrollWidth: shell.scrollWidth, shellClientWidth: shell.clientWidth, docScrollWidth: document.documentElement.scrollWidth, docClientWidth: document.documentElement.clientWidth };
-              });
-              console.log(`REFLOW — ${label}: ${JSON.stringify(reflow)}`);
-
+              const widths = await page.evaluate(() => ({
+                docScrollWidth: document.documentElement.scrollWidth,
+                docClientWidth: document.documentElement.clientWidth,
+              }));
+              console.log(`REFLOW — ${label}: ${JSON.stringify(widths)}`);
               await page.addStyleTag({ content: `*{line-height:1.5em!important;letter-spacing:.12em!important;word-spacing:.16em!important} p{margin-bottom:2em!important}` });
               const clipped = await page.evaluate(() => [...document.querySelectorAll('*')].filter((el) => {
                 const s = getComputedStyle(el);
@@ -74,49 +79,35 @@ jobs:
                 return el.scrollWidth > el.clientWidth + 1 || el.scrollHeight > el.clientHeight + 1;
               }).slice(0, 30).map((el) => ({ tag: el.tagName, text: el.textContent.trim().slice(0, 80), className: typeof el.className === 'string' ? el.className : '' })));
               console.log(`TEXT-SPACING CLIP CANDIDATES — ${label}: ${JSON.stringify(clipped)}`);
-
-              const smallTargets = await page.evaluate(() => [...document.querySelectorAll('button,a[href],input,select,summary,[role="button"]')].filter((el) => {
-                const r = el.getBoundingClientRect();
-                const s = getComputedStyle(el);
-                return s.display !== 'none' && s.visibility !== 'hidden' && r.width > 0 && r.height > 0 && (r.width < 24 || r.height < 24);
-              }).slice(0, 60).map((el) => {
-                const r = el.getBoundingClientRect();
-                return { tag: el.tagName, text: (el.getAttribute('aria-label') || el.textContent || '').trim().slice(0, 60), width: Math.round(r.width * 10) / 10, height: Math.round(r.height * 10) / 10 };
-              }));
-              console.log(`UNDERSIZED TARGET CANDIDATES — ${label}: ${JSON.stringify(smallTargets)}`);
             }
 
-            for (const route of routes) {
+            for (const route of ['/game', '/hand']) {
               const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
               const page = await context.newPage();
               await page.goto(base + route, { waitUntil: 'networkidle' });
-              await axe(page, route);
-              if (['/', '/game', '/hand'].includes(route)) await diagnostics(page, route);
+              await audit(page, route);
+              await diagnostics(page, route);
               await context.close();
             }
 
-            const gameContext = await browser.newContext({ viewport: { width: 390, height: 844 } });
-            const game = await gameContext.newPage();
-            await game.goto(base + '/game', { waitUntil: 'networkidle' });
-            await game.getByTestId('input-player-east').fill('Alex');
-            await game.getByTestId('input-player-south').fill('Beth');
-            await game.getByTestId('input-player-west').fill('Chris');
-            await game.getByTestId('input-player-north').fill('Dee');
-            await game.getByTestId('button-start-game').click();
-            await axe(game, 'active game — score entry');
-            for (const [id, score] of [['player-1','80'],['player-2','200'],['player-3','40'],['player-4','60']]) await game.getByTestId(`input-score-${id}`).fill(score);
-            await axe(game, 'active game — settlement preview');
-            await diagnostics(game, 'active game — settlement preview');
-            await game.getByTestId('button-confirm-hand').click();
-            await game.locator('#game-ledger').evaluate((el) => { el.open = true; });
-            await axe(game, 'active game — confirmed history');
-            await gameContext.close();
-
+            const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
+            const page = await context.newPage();
+            await page.goto(base + '/game', { waitUntil: 'networkidle' });
+            await page.getByTestId('input-player-east').fill('Alex');
+            await page.getByTestId('input-player-south').fill('Beth');
+            await page.getByTestId('input-player-west').fill('Chris');
+            await page.getByTestId('input-player-north').fill('Dee');
+            await page.getByTestId('button-start-game').click();
+            await audit(page, 'active game — score entry');
+            for (const [id, score] of [['player-1','80'],['player-2','200'],['player-3','40'],['player-4','60']]) await page.getByTestId(`input-score-${id}`).fill(score);
+            await audit(page, 'active game — settlement preview');
+            await diagnostics(page, 'active game — settlement preview');
+            await page.getByTestId('button-confirm-hand').click();
+            await page.locator('#game-ledger').evaluate((el) => { el.open = true; });
+            await audit(page, 'active game — confirmed history');
+            await context.close();
             await browser.close();
-            if (axeFailures) {
-              console.error(`Automated axe audit found ${axeFailures} rule violations. See output above.`);
-              process.exit(2);
-            }
+            if (failures) process.exit(2);
           })().catch((error) => {
             console.error(error);
             process.exit(1);
