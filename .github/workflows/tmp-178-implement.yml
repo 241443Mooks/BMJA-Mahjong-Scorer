@@ -1,0 +1,226 @@
+name: Temporary #178 implementation
+
+on:
+  push:
+    branches:
+      - fix/178-keyboard-scroll-regions
+
+permissions:
+  contents: write
+
+jobs:
+  implement-and-verify:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Apply bounded #178 accessibility patch
+        shell: bash
+        run: |
+          python <<'PY'
+          from pathlib import Path
+
+          root = Path('artifacts/mahjong-scorer/src')
+
+          component = r'''import { useEffect, useRef, useState, type ReactNode } from 'react';
+
+export function isHorizontallyScrollable(scrollWidth: number, clientWidth: number) {
+  return scrollWidth > clientWidth;
+}
+
+export function HorizontalScrollRegion({
+  label,
+  className = '',
+  children,
+}: {
+  label: string;
+  className?: string;
+  children: ReactNode;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [isScrollable, setIsScrollable] = useState(false);
+
+  useEffect(() => {
+    const element = ref.current;
+    if (!element) return;
+
+    const update = () => {
+      setIsScrollable(
+        isHorizontallyScrollable(element.scrollWidth, element.clientWidth),
+      );
+    };
+
+    update();
+    window.addEventListener('resize', update);
+
+    const observer =
+      typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(update);
+    observer?.observe(element);
+    if (element.firstElementChild) observer?.observe(element.firstElementChild);
+
+    return () => {
+      window.removeEventListener('resize', update);
+      observer?.disconnect();
+    };
+  }, []);
+
+  return (
+    <div
+      ref={ref}
+      className={`overflow-x-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249] focus-visible:ring-offset-2 ${className}`.trim()}
+      tabIndex={isScrollable ? 0 : undefined}
+      role={isScrollable ? 'group' : undefined}
+      aria-label={isScrollable ? `${label}. Horizontally scrollable.` : undefined}
+    >
+      {children}
+    </div>
+  );
+}
+'''
+          (root / 'components/HorizontalScrollRegion.tsx').write_text(component)
+
+          test = r'''import { describe, expect, it } from 'vitest';
+import { isHorizontallyScrollable } from './HorizontalScrollRegion';
+
+describe('isHorizontallyScrollable', () => {
+  it('is false when content fits exactly', () => {
+    expect(isHorizontallyScrollable(420, 420)).toBe(false);
+  });
+
+  it('is false when content is narrower than its viewport', () => {
+    expect(isHorizontallyScrollable(320, 420)).toBe(false);
+  });
+
+  it('is true when content is wider than its viewport', () => {
+    expect(isHorizontallyScrollable(421, 420)).toBe(true);
+  });
+});
+'''
+          (root / 'components/horizontal-scroll-region.test.ts').write_text(test)
+
+          def replace_once(path: Path, old: str, new: str):
+            text = path.read_text()
+            count = text.count(old)
+            if count != 1:
+              raise RuntimeError(f'{path}: expected 1 occurrence, found {count}: {old[:80]!r}')
+            path.write_text(text.replace(old, new, 1))
+
+          gallery = root / 'guide/MahjongTileGallery.tsx'
+          replace_once(
+            gallery,
+            "} from '../tiles/MahjongTileArtwork';\n\nexport type",
+            "} from '../tiles/MahjongTileArtwork';\nimport { HorizontalScrollRegion } from '../components/HorizontalScrollRegion';\n\nexport type",
+          )
+          replace_once(
+            gallery,
+            '    <div className="overflow-x-auto pb-2">\n      <div className="flex min-w-max gap-1.5" role="img" aria-label={description}>',
+            '    <HorizontalScrollRegion label={description} className="pb-2">\n      <div className="flex min-w-max gap-1.5" role="img" aria-label={description}>',
+          )
+          replace_once(
+            gallery,
+            '      </div>\n    </div>\n  );\n}\n\nfunction TileGroup',
+            '      </div>\n    </HorizontalScrollRegion>\n  );\n}\n\nfunction TileGroup',
+          )
+          replace_once(
+            gallery,
+            '      <div className="overflow-x-auto pb-2">\n        <div className="flex min-w-max gap-2.5">',
+            '      <HorizontalScrollRegion label={`${title} tiles`} className="pb-2">\n        <div className="flex min-w-max gap-2.5">',
+          )
+          replace_once(
+            gallery,
+            '        </div>\n      </div>\n    </section>\n  );\n}\n\nfunction Example',
+            '        </div>\n      </HorizontalScrollRegion>\n    </section>\n  );\n}\n\nfunction Example',
+          )
+
+          guide = root / 'guide/BeginnerGuide.tsx'
+          replace_once(
+            guide,
+            "import { SiteHeader } from '../components/SiteHeader';\n",
+            "import { SiteHeader } from '../components/SiteHeader';\nimport { HorizontalScrollRegion } from '../components/HorizontalScrollRegion';\n",
+          )
+          replace_once(
+            guide,
+            '              <div className="overflow-x-auto rounded-lg border border-[#dfd5c2] bg-[#fdfbf5]">',
+            '              <HorizontalScrollRegion label="British tile scoring classes" className="rounded-lg border border-[#dfd5c2] bg-[#fdfbf5]">',
+          )
+          replace_once(
+            guide,
+            '                </table>\n              </div>\n              <p>Flowers and Seasons are bonus tiles.',
+            '                </table>\n              </HorizontalScrollRegion>\n              <p>Flowers and Seasons are bonus tiles.',
+          )
+          replace_once(
+            guide,
+            '                  <div className="overflow-x-auto">\n                    <table className="w-full min-w-[430px] text-left">',
+            '                  <HorizontalScrollRegion label="Basic British set values">\n                    <table className="w-full min-w-[430px] text-left">',
+          )
+          replace_once(
+            guide,
+            '                    </table>\n                  </div>\n                </div>\n              </details>',
+            '                    </table>\n                  </HorizontalScrollRegion>\n                </div>\n              </details>',
+          )
+
+          basics = root / 'guide/GameplayBasics.tsx'
+          replace_once(
+            basics,
+            "import { SiteHeader } from '../components/SiteHeader';\n",
+            "import { SiteHeader } from '../components/SiteHeader';\nimport { HorizontalScrollRegion } from '../components/HorizontalScrollRegion';\n",
+          )
+          replace_once(
+            basics,
+            '              <div className="overflow-x-auto rounded-xl border border-[#dfd5c2] bg-[#fdfbf5] p-4">\n                <div className="flex min-w-[620px] gap-5">',
+            '              <HorizontalScrollRegion label="Flowers and Seasons matched to Winds" className="rounded-xl border border-[#dfd5c2] bg-[#fdfbf5] p-4">\n                <div className="flex min-w-[620px] gap-5">',
+          )
+          replace_once(
+            basics,
+            '                </div>\n              </div>\n              <a href="/guide#tiles"',
+            '                </div>\n              </HorizontalScrollRegion>\n              <a href="/guide#tiles"',
+          )
+
+          compared = root / 'home/MahjongRulesComparedPage.tsx'
+          replace_once(
+            compared,
+            "import { SiteHeader } from '../components/SiteHeader';\n",
+            "import { SiteHeader } from '../components/SiteHeader';\nimport { HorizontalScrollRegion } from '../components/HorizontalScrollRegion';\n",
+          )
+          replace_once(
+            compared,
+            '            <div className="mt-7 overflow-x-auto rounded-xl border border-[#d8ceb8] bg-[#fdfbf5]">\n              <table className="min-w-[1050px] border-collapse text-left">',
+            '            <HorizontalScrollRegion label="Mahjong rules comparison table" className="mt-7 rounded-xl border border-[#d8ceb8] bg-[#fdfbf5]">\n              <table className="min-w-[1050px] border-collapse text-left">',
+          )
+          replace_once(
+            compared,
+            '              </table>\n            </div>\n            <p className="mt-4 text-[11px] leading-5 text-[#7a7769]">',
+            '              </table>\n            </HorizontalScrollRegion>\n            <p className="mt-4 text-[11px] leading-5 text-[#7a7769]">',
+          )
+
+          changelog = Path('CHANGELOG.md')
+          replace_once(
+            changelog,
+            '### Fixed\n\n',
+            '### Fixed\n\n- Made horizontally scrollable reference and tile regions keyboard-accessible only when they actually overflow, with visible focus treatment. [#178](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/178)\n',
+          )
+
+          Path('.github/workflows/tmp-178-implement.yml').unlink()
+          PY
+      - name: Install pnpm
+        run: npm install --global pnpm@10.15.1
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Test
+        run: pnpm test
+      - name: Typecheck
+        run: pnpm typecheck
+      - name: Production build
+        run: PORT=5173 BASE_PATH=/ pnpm run build
+      - name: Commit verified implementation
+        shell: bash
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add -A
+          git diff --cached --check
+          git commit -m "Make horizontal reference regions keyboard accessible"
+          git push origin HEAD:fix/178-keyboard-scroll-regions
