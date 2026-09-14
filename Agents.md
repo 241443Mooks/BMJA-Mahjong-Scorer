@@ -1,53 +1,44 @@
-# Mahjong Reference — repository instructions
+# Mahjong Reference — agent instructions
+
+## Start here
+- Work from the issue or PR named in the task. Treat that as the execution authority.
+- Inspect the current code and existing work before changing anything.
+- Do not read historical planning by default. Open extra authority docs only when the task needs them:
+  - product direction: `docs/product/TABLE_COMPANION_TRANSFORMATION.md` and issue #105;
+  - documentation authority: `docs/README.md`;
+  - rules/scoring changes: `BMJA_RULES_REFERENCE.md`, `artifacts/mahjong-scorer/SCORING_AUDIT.md` and relevant `docs/rules/` evidence.
 
 ## Repository
 - GitHub is the source of truth.
 - Production: https://mahjong.smooks.co.uk
+- Frontend package: `artifacts/mahjong-scorer` in a pnpm monorepo.
 - Do not use Replit for development or hosting.
-- Frontend package: `artifacts/mahjong-scorer`.
-- pnpm monorepo.
-- Keep the product browser-local and simple unless an issue explicitly requires infrastructure.
+- Keep the product browser-local and simple unless the task explicitly requires infrastructure.
 
-## Current product authority
-Before substantial product/frontend work, read:
-- `docs/README.md` — documentation authority map;
-- `docs/product/TABLE_COMPANION_TRANSFORMATION.md` — current Table Companion direction;
-- GitHub issue #105 — implementation slices and dependencies.
+## Product guardrails
+- Build for the **quiet fifth person at the table**: show what the player needs next; do not make them manage the page.
+- Beginner first. Use plain player-facing language.
+- Explain rather than guess. Unknown evidence stays unknown and scores conservatively.
+- Mahjong Reference is the brand; **Your Mahjong table companion** is the proposition.
+- Public UI says `Rules`; internal versioned profile IDs are implementation/provenance detail.
+- Keep British-only learning explicitly British.
+- Never silently change the rules/profile of an active or recovered game.
+- Do not invent or silently change a Mahjong rule. Update tests and rules evidence when rule behaviour changes.
 
-Do not let older British-only product/content planning override the current #105 direction.
+## Development
+- Keep each change bounded to the named task. Do not perform unrelated refactors.
+- Preserve manual numeric scoring compatibility and exact rules/profile version identity in saved games and records.
+- Prefer existing canonical tile/hand models and shared learner copy over parallel implementations.
+- Do not merge to `main` automatically unless explicitly asked.
 
 ## Verification
-Run:
+Use targeted tests while developing. Before a PR is ready to merge, run:
 - `pnpm --filter @workspace/mahjong-scorer test`
 - `pnpm run typecheck`
 - `pnpm run build`
 
-Prefer targeted tests while developing; run the full verification before a PR is ready to merge.
-
-## Product principles
-- Beginner first.
-- Explain the game; do not make the player learn the scoring engine.
-- Infer rules/patterns where the entered tiles provide enough evidence.
-- Ask only for facts the scorer cannot infer.
-- Unknown evidence scores conservatively.
-- Mobile usability matters.
-- Mahjong Reference is the brand; Table Companion is the proposition.
-- Public UI should say `Rules`; internal versioned profile IDs remain implementation/provenance detail.
-- Never silently change the rules/profile of a recovered or active game.
-
-## Rules
-- `BMJA_RULES_REFERENCE.md` is the engineering rules source of truth for BMJA behaviour.
-- `artifacts/mahjong-scorer/SCORING_AUDIT.md` records scoring coverage/interpretation.
-- `docs/rules/` contains durable multi-profile evidence and provenance.
-- Do not invent or silently change a Mahjong rule.
-- Update tests and rules documentation when rule behaviour changes.
-- Keep canonical pattern identity separate from profile-local catalogue membership, names, values and provenance.
-
-## Development
-- Work from the issue/PR named in the task.
-- Do not perform unrelated refactors.
-- Inspect existing work before implementing anything.
-- Preserve manual numeric scoring compatibility.
-- Prefer shared canonical tile/hand models and shared learner copy.
-- Preserve exact profile/version identity in saved games and records.
-- Do not merge to `main` automatically unless explicitly asked.
+## History
+- `CHANGELOG.md` records meaningful product and maintenance changes, not every commit.
+- When a merged PR materially changes the product or future maintenance, add one concise entry under **Unreleased**.
+- Do not add changelog entries for typo fixes, test-only churn, routine refactors or other implementation noise.
+- Working branches are temporary; durable history belongs in `main`, merged PRs/issues, the changelog and canonical docs.
