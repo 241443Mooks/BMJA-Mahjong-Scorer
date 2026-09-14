@@ -14,6 +14,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      - name: Tighten implementation guard
+        run: python3 .github/scripts/tmp-171-fix-implement.py
       - name: Apply bounded #171 implementation
         run: python3 .github/scripts/tmp-171-implement.py
       - name: Pin pnpm and install
@@ -31,6 +33,7 @@ jobs:
       - name: Remove temporary audit and implementation files
         run: |
           rm -f .github/scripts/tmp-171-audit.mjs
+          rm -f .github/scripts/tmp-171-fix-implement.py
           rm -f .github/scripts/tmp-171-implement.py
           rm -f .github/scripts/tmp-171-verify.mjs
           rm -f .github/workflows/tmp-171-audit.yml
