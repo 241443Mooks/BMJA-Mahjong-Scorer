@@ -102,6 +102,22 @@
 .fine-rule { background: linear-gradient(90deg, hsl(var(--accent)), transparent); height: 2px; }
 .print-only { display: none; }
 
+/* WCAG 2.2 AA: strengthen only the compact light-surface text combinations that failed 1.4.3. */
+.screen-only.sticky [class~="text-[#ae6249]"],
+[data-testid="section-table-scores"] [class~="text-[#ae6249]"],
+#game-ledger [class~="text-[#ae6249]"] {
+  color: #9a4d3a;
+}
+
+[data-testid="section-table-scores"] [class~="text-[#7a7769]"],
+#game-ledger [class~="text-[#7a7769]"],
+[data-testid^="button-flower-"] [class~="text-[#66746e]"],
+[data-testid^="button-flower-"] [class~="text-[#7a7769]"],
+[data-testid^="button-season-"] [class~="text-[#66746e]"],
+[data-testid^="button-season-"] [class~="text-[#7a7769]"] {
+  color: #596b65;
+}
+
 @media print {
   @page { size: auto; margin: 12mm; }
   body { background: white !important; color: #172c27 !important; font-size: 10pt; }
