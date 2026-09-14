@@ -12,31 +12,21 @@ jobs:
   audit:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-      - run: corepack enable
-      - run: pnpm install --frozen-lockfile --allow-build=esbuild
-      - run: pnpm test
-      - run: pnpm typecheck
-      - run: PORT=4173 BASE_PATH=/ pnpm --filter @workspace/mahjong-scorer build
       - name: Install temporary browser audit tools
         run: |
           mkdir -p /tmp/a11y
           printf '{"private":true}' > /tmp/a11y/package.json
           npm install --prefix /tmp/a11y --no-save --no-package-lock playwright@1.55.0 @axe-core/playwright@4.10.2
           node /tmp/a11y/node_modules/playwright/cli.js install --with-deps chromium
-      - name: Start app
+      - name: Wait for branch preview
         run: |
-          cd artifacts/mahjong-scorer
-          PORT=4173 BASE_PATH=/ pnpm exec vite --config vite.config.ts --host 127.0.0.1 --port 4173 --strictPort > /tmp/vite.log 2>&1 &
-          echo $! > /tmp/vite.pid
-          for i in $(seq 1 60); do
-            if curl -fsS http://127.0.0.1:4173/ >/dev/null; then exit 0; fi
-            sleep 1
+          for i in $(seq 1 90); do
+            if curl -fsS https://fix-170-wcag-aa-readability.bmja-mahjong-scorer.pages.dev/ >/dev/null; then exit 0; fi
+            sleep 2
           done
-          cat /tmp/vite.log
           exit 1
       - name: Run rendered A/AA checks and diagnostics
         run: |
@@ -45,7 +35,7 @@ jobs:
           const req = createRequire('/tmp/a11y/package.json');
           const { chromium } = req('playwright');
           const AxeBuilder = req('@axe-core/playwright').default;
-          const base = 'http://127.0.0.1:4173';
+          const base = 'https://fix-170-wcag-aa-readability.bmja-mahjong-scorer.pages.dev';
           const routes = ['/', '/game', '/hand', '/rules', '/rules/british', '/rules/western', '/features', '/how-it-works', '/help', '/about', '/mahjong-settlement', '/gameplay-basics', '/guide', '/special-hands', '/scoring-examples', '/mahjong-rules-compared'];
 
           const browser = await chromium.launch({ headless: true });
@@ -60,7 +50,7 @@ jobs:
               console.log(`\nAXE VIOLATIONS — ${label}`);
               for (const violation of result.violations) {
                 console.log(`${violation.id} | ${violation.impact} | ${violation.help} | nodes=${violation.nodes.length}`);
-                for (const node of violation.nodes.slice(0, 4)) console.log(`  ${node.target.join(' ')}`);
+                for (const node of violation.nodes.slice(0, 6)) console.log(`  ${node.target.join(' ')}`);
               }
             } else {
               console.log(`AXE PASS — ${label}`);
@@ -81,14 +71,14 @@ jobs:
               if (!el.textContent?.trim()) return false;
               if (!['hidden','clip'].includes(s.overflow) && !['hidden','clip'].includes(s.overflowX) && !['hidden','clip'].includes(s.overflowY)) return false;
               return el.scrollWidth > el.clientWidth + 1 || el.scrollHeight > el.clientHeight + 1;
-            }).slice(0, 20).map((el) => ({ tag: el.tagName, text: el.textContent.trim().slice(0, 80), className: typeof el.className === 'string' ? el.className : '' })));
+            }).slice(0, 30).map((el) => ({ tag: el.tagName, text: el.textContent.trim().slice(0, 80), className: typeof el.className === 'string' ? el.className : '' })));
             console.log(`TEXT-SPACING CLIP CANDIDATES — ${label}: ${JSON.stringify(clipped)}`);
 
             const smallTargets = await page.evaluate(() => [...document.querySelectorAll('button,a[href],input,select,summary,[role="button"]')].filter((el) => {
               const r = el.getBoundingClientRect();
               const s = getComputedStyle(el);
               return s.display !== 'none' && s.visibility !== 'hidden' && r.width > 0 && r.height > 0 && (r.width < 24 || r.height < 24);
-            }).slice(0, 40).map((el) => {
+            }).slice(0, 60).map((el) => {
               const r = el.getBoundingClientRect();
               return { tag: el.tagName, text: (el.getAttribute('aria-label') || el.textContent || '').trim().slice(0, 60), width: Math.round(r.width * 10) / 10, height: Math.round(r.height * 10) / 10 };
             }));
