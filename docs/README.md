@@ -19,6 +19,7 @@ Rules/provenance documents may intentionally preserve uncertainty, source status
 
 - `../Agents.md` — repository operating guardrails for implementation work.
 - `../README.md` — repository front door and shipped-product overview. It should be kept aligned with the current public product as #105 lands.
+- `product/SCREENSHOT_LIBRARY.md` — canonical catalogue and operating rules for deterministic reusable product screenshots used by Help, How It Works and future product guidance.
 
 ## Shipped-product/content records
 
