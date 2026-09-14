@@ -12,6 +12,7 @@ This file records meaningful changes to **Mahjong Reference** at product-milesto
 
 ### Fixed
 
+- Made horizontally scrollable reference and tile regions keyboard-accessible only when they actually overflow, with visible focus treatment. [#178](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/178)
 - Aligned public Rules, Help, Learn and reference-page text colours with WCAG 2.2 AA contrast requirements. [#177](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/177)
 - Fixed audited WCAG 2.2 AA zoom and contrast failures in game setup, hand scoring, settlement and retained game information, without changing scoring or table behaviour. [#174](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/pull/174)
 

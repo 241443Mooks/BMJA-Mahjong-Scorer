@@ -7,6 +7,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { SiteHeader } from '../components/SiteHeader';
+import { HorizontalScrollRegion } from '../components/HorizontalScrollRegion';
 import { ReturnToGame } from '../components/ReturnToGame';
 import { tileAssetUrl, type TileAssetKey } from '../tiles/MahjongTileArtwork';
 
@@ -105,11 +106,13 @@ function Tile({ asset, label, compact = false }: VisualTile & { compact?: boolea
 function TileGroup({ name, tiles }: { name: string; tiles: VisualTile[] }) {
   return (
     <div className="rounded-lg border border-[#dfd5c2] bg-[#fdfbf5] p-3">
-      <div className="flex gap-1.5 overflow-x-auto pb-1">
-        {tiles.map((tile, index) => (
-          <Tile key={`${name}-${tile.asset}-${index}`} {...tile} compact />
-        ))}
-      </div>
+      <HorizontalScrollRegion label={`${name} tile example`} className="pb-1">
+        <div className="flex min-w-max gap-1.5">
+          {tiles.map((tile, index) => (
+            <Tile key={`${name}-${tile.asset}-${index}`} {...tile} compact />
+          ))}
+        </div>
+      </HorizontalScrollRegion>
       <div className="mt-2 font-mono text-[9px] uppercase tracking-[.14em] text-[#ae6249]">{name}</div>
     </div>
   );
@@ -361,7 +364,7 @@ export function GameplayBasics() {
                   </div>
                 </div>
               </div>
-              <div className="overflow-x-auto rounded-xl border border-[#dfd5c2] bg-[#fdfbf5] p-4">
+              <HorizontalScrollRegion label="Flowers and Seasons matched to Winds" className="rounded-xl border border-[#dfd5c2] bg-[#fdfbf5] p-4">
                 <div className="flex min-w-[620px] gap-5">
                   {flowerNames.map((item) => (
                     <div key={item.number} className="flex min-w-[135px] items-center gap-2">
@@ -372,7 +375,7 @@ export function GameplayBasics() {
                     </div>
                   ))}
                 </div>
-              </div>
+              </HorizontalScrollRegion>
               <a href="/guide#tiles" className="inline-flex items-center gap-2 text-[12px] font-semibold text-[#284d45] underline decoration-[#cfa58f] underline-offset-4 hover:text-[#ae6249] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">
                 Why do Flowers and Seasons match Winds? <ArrowRight size={13} />
               </a>

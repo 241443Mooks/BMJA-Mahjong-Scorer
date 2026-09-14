@@ -1,5 +1,6 @@
 import { ArrowRight, CheckCircle2, CircleHelp, Compass, Flower2, Gamepad2, ShieldCheck, Sparkles } from 'lucide-react';
 import { SiteHeader } from '../components/SiteHeader';
+import { HorizontalScrollRegion } from '../components/HorizontalScrollRegion';
 
 const variants = [
   {
@@ -128,7 +129,7 @@ export function MahjongRulesComparedPage() {
               <h2 className="mt-2 font-serif text-[34px] leading-tight text-[#284d45]">The big structural differences</h2>
               <p className="mt-3 text-[13px] leading-6 text-[#596b65]">This table deliberately compares the rules that change the experience of play, rather than trying to compress five complete rulebooks into one page.</p>
             </div>
-            <div className="mt-7 overflow-x-auto rounded-xl border border-[#d8ceb8] bg-[#fdfbf5]">
+            <HorizontalScrollRegion label="Mahjong rules comparison table" className="mt-7 rounded-xl border border-[#d8ceb8] bg-[#fdfbf5]">
               <table className="min-w-[1050px] border-collapse text-left">
                 <thead>
                   <tr className="bg-[#efe8da] text-[#284d45]">
@@ -147,7 +148,7 @@ export function MahjongRulesComparedPage() {
                   ))}
                 </tbody>
               </table>
-            </div>
+            </HorizontalScrollRegion>
             <p className="mt-4 text-[11px] leading-5 text-[#7a7769]">
               Hong Kong conventions can vary by table, especially minimum faan, Flowers and payment tables. American play here means NMJL-style American Mah Jongg rather than every American local variant.
             </p>

@@ -4,6 +4,7 @@ import {
   type TileAssetKey,
   type TileDefinition,
 } from '../tiles/MahjongTileArtwork';
+import { HorizontalScrollRegion } from '../components/HorizontalScrollRegion';
 
 export type { TileAssetKey, TileDefinition } from '../tiles/MahjongTileArtwork';
 
@@ -57,7 +58,7 @@ export function TileStrip({
 }) {
   const description = ariaLabel ?? tiles.map((tile) => tile.label).join(', ');
   return (
-    <div className="overflow-x-auto pb-2">
+    <HorizontalScrollRegion label={description} className="pb-2">
       <div className="flex min-w-max gap-1.5" role="img" aria-label={description}>
         {tiles.map((tile, index) => (
           <img
@@ -69,7 +70,7 @@ export function TileStrip({
           />
         ))}
       </div>
-    </div>
+    </HorizontalScrollRegion>
   );
 }
 
@@ -77,11 +78,11 @@ function TileGroup({ title, tiles }: { title: string; tiles: TileDefinition[] })
   return (
     <section className="rounded-xl border border-[#dfd5c2] bg-[#fdfbf5] p-4">
       <h3 className="mb-3 font-mono text-[9px] font-semibold uppercase tracking-[.15em] text-[#8c8a7f]">{title}</h3>
-      <div className="overflow-x-auto pb-2">
+      <HorizontalScrollRegion label={`${title} tiles`} className="pb-2">
         <div className="flex min-w-max gap-2.5">
           {tiles.map((tile) => <TileArt key={tile.asset} tile={tile} />)}
         </div>
-      </div>
+      </HorizontalScrollRegion>
     </section>
   );
 }

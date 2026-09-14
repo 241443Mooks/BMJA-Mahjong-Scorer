@@ -1,5 +1,6 @@
 import { BookOpen, ChevronRight, CircleHelp, Sparkles } from 'lucide-react';
 import { SiteHeader } from '../components/SiteHeader';
+import { HorizontalScrollRegion } from '../components/HorizontalScrollRegion';
 import { ReturnToGame } from '../components/ReturnToGame';
 import { SetExamples, TileGallery } from './MahjongTileGallery';
 import { BONUS_TILE_DEFINITIONS, tileAssetUrl } from '../tiles/MahjongTileArtwork';
@@ -133,7 +134,7 @@ export function BeginnerGuide({ onClose }: { onClose: () => void }) {
               <p>There are three numbered suits: <strong className="text-[#284d45]">Bamboos, Characters and Circles</strong>. Each runs from 1 to 9.</p>
               <p>There are also four Winds — East, South, West and North — and three Dragons — Red, Green and White. Winds and Dragons together are called <strong className="text-[#284d45]">honours</strong>.</p>
               <TileGallery />
-              <div className="overflow-x-auto rounded-lg border border-[#dfd5c2] bg-[#fdfbf5]">
+              <HorizontalScrollRegion label="British tile scoring classes" className="rounded-lg border border-[#dfd5c2] bg-[#fdfbf5]">
                 <table className="w-full min-w-[420px] text-left text-[12px]">
                   <thead className="border-b border-[#dfd5c2] font-mono text-[9px] uppercase tracking-[.14em] text-[#8c8a7f]">
                     <tr><th className="px-4 py-3">Tile</th><th className="px-4 py-3">British scoring class</th></tr>
@@ -144,7 +145,7 @@ export function BeginnerGuide({ onClose }: { onClose: () => void }) {
                     <tr><td className="px-4 py-3">Winds and Dragons</td><td className="px-4 py-3">Major · honours</td></tr>
                   </tbody>
                 </table>
-              </div>
+              </HorizontalScrollRegion>
               <p>Flowers and Seasons are bonus tiles. They are put aside when drawn and replaced, so they do not form part of the normal playing-hand count.</p>
               <Callout>You do not need to decide whether a tile is major, minor or an honour. The scorer does that automatically.</Callout>
             </GuideSection>
@@ -205,7 +206,7 @@ export function BeginnerGuide({ onClose }: { onClose: () => void }) {
               <details className="rounded-lg border border-[#dfd5c2] bg-[#fdfbf5] p-4">
                 <summary className="cursor-pointer text-[12px] font-semibold text-[#284d45]">Show basic set values</summary>
                 <div className="mt-4 space-y-4 text-[12px]">
-                  <div className="overflow-x-auto">
+                  <HorizontalScrollRegion label="Basic British set values">
                     <table className="w-full min-w-[430px] text-left">
                       <thead className="font-mono text-[9px] uppercase tracking-[.12em] text-[#8c8a7f]"><tr><th className="pb-2">Set</th><th className="pb-2">Tile</th><th className="pb-2">Exposed</th><th className="pb-2">Concealed</th></tr></thead>
                       <tbody className="divide-y divide-[#e8e0d1]">
@@ -215,7 +216,7 @@ export function BeginnerGuide({ onClose }: { onClose: () => void }) {
                         <tr><td className="py-2">Kong</td><td>Major</td><td>16</td><td>32</td></tr>
                       </tbody>
                     </table>
-                  </div>
+                  </HorizontalScrollRegion>
                   <ul className="list-disc space-y-1 pl-5">
                     <li>Chow: 0 points</li>
                     <li>Dragon pair: 2 points</li>
