@@ -1,0 +1,132 @@
+name: Temporary #178 local rendered audit
+
+on:
+  push:
+    branches:
+      - fix/178-keyboard-scroll-regions
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install pnpm and repository dependencies
+        run: |
+          npm install --global pnpm@10.15.1
+          pnpm install --frozen-lockfile
+      - name: Install temporary browser audit tools
+        run: |
+          mkdir -p /tmp/a11y
+          printf '{"private":true}' > /tmp/a11y/package.json
+          npm install --prefix /tmp/a11y --no-save --no-package-lock playwright@1.55.0 @axe-core/playwright@4.10.2
+          node /tmp/a11y/node_modules/playwright/cli.js install --with-deps chromium
+      - name: Start branch app locally
+        run: |
+          PORT=4173 BASE_PATH=/ pnpm --filter @workspace/mahjong-scorer dev > /tmp/mahjong-vite.log 2>&1 &
+          echo $! > /tmp/mahjong-vite.pid
+          for i in $(seq 1 80); do
+            if curl -fsS http://127.0.0.1:4173/ >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/mahjong-vite.log
+          exit 1
+      - name: Audit rendered scroll regions and keyboard behaviour
+        run: |
+          node --input-type=commonjs <<'NODE'
+          const { createRequire } = require('node:module');
+          const req = createRequire('/tmp/a11y/package.json');
+          const { chromium } = req('playwright');
+          const AxeBuilder = req('@axe-core/playwright').default;
+          const base = 'http://127.0.0.1:4173';
+          const expectedMobile = new Map([
+            ['/gameplay-basics', 1],
+            ['/guide', 4],
+            ['/special-hands', 14],
+            ['/scoring-examples', 6],
+            ['/mahjong-rules-compared', 1],
+          ]);
+          const viewports = [
+            { label: 'mobile', width: 390, height: 844 },
+            { label: 'desktop', width: 1280, height: 900 },
+          ];
+          const selector = '[aria-label$="Horizontally scrollable."]';
+
+          (async () => {
+            const browser = await chromium.launch({ headless: true });
+            let failures = 0;
+            for (const viewport of viewports) {
+              for (const [route, expected] of expectedMobile) {
+                const context = await browser.newContext({ viewport: { width: viewport.width, height: viewport.height } });
+                const page = await context.newPage();
+                await page.goto(base + route, { waitUntil: 'networkidle' });
+                await page.waitForTimeout(250);
+
+                const result = await new AxeBuilder({ page }).withRules(['scrollable-region-focusable']).analyze();
+                const violation = result.violations.find(v => v.id === 'scrollable-region-focusable');
+                if (violation) {
+                  failures += violation.nodes.length;
+                  console.log(`AXE FAIL — ${viewport.label} — ${route} — nodes=${violation.nodes.length}`);
+                  for (const node of violation.nodes) console.log(`TARGET ${node.target.join(' ')} | ${node.html}`);
+                } else {
+                  console.log(`AXE PASS — ${viewport.label} — ${route}`);
+                }
+
+                if (viewport.label === 'mobile') {
+                  const renderedCount = await page.locator(selector).count();
+                  if (renderedCount !== expected) {
+                    failures += 1;
+                    console.log(`COUNT FAIL — ${route} — expected=${expected} actual=${renderedCount}`);
+                  } else {
+                    console.log(`COUNT PASS — ${route} — ${renderedCount}`);
+                  }
+
+                  const seen = new Set();
+                  for (let press = 0; press < 500 && seen.size < expected; press++) {
+                    await page.keyboard.press('Tab');
+                    const active = await page.evaluate(() => {
+                      const el = document.activeElement;
+                      if (!(el instanceof HTMLElement)) return null;
+                      return {
+                        label: el.getAttribute('aria-label'),
+                        scrollLeft: el.scrollLeft,
+                        scrollWidth: el.scrollWidth,
+                        clientWidth: el.clientWidth,
+                      };
+                    });
+                    if (!active?.label?.endsWith('Horizontally scrollable.') || seen.has(active.label)) continue;
+                    seen.add(active.label);
+                    if (!(active.scrollWidth > active.clientWidth)) {
+                      failures += 1;
+                      console.log(`FOCUS FAIL — ${route} — non-overflow region was tabbable: ${active.label}`);
+                      continue;
+                    }
+                    const before = active.scrollLeft;
+                    await page.keyboard.press('ArrowRight');
+                    await page.waitForTimeout(150);
+                    const after = await page.evaluate(() => document.activeElement instanceof HTMLElement ? document.activeElement.scrollLeft : 0);
+                    if (!(after > before)) {
+                      failures += 1;
+                      console.log(`SCROLL FAIL — ${route} — ${active.label} — before=${before} after=${after}`);
+                    } else {
+                      console.log(`KEYBOARD PASS — ${route} — ${active.label}`);
+                    }
+                  }
+                  if (seen.size !== expected) {
+                    failures += 1;
+                    console.log(`TAB FAIL — ${route} — expected=${expected} reached=${seen.size}`);
+                  }
+                }
+                await context.close();
+              }
+            }
+            await browser.close();
+            console.log(`TOTAL FAILURES: ${failures}`);
+            if (failures) process.exit(2);
+          })().catch(error => { console.error(error); process.exit(1); });
+          NODE
