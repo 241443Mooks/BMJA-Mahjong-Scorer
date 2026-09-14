@@ -8,6 +8,7 @@ import {
   Sparkles,
   Trophy,
   Undo2,
+  X,
 } from 'lucide-react';
 import { HandRecord, settlementDescription } from './HandRecord';
 import { incidentDescription } from './outside-the-box-incidents';
@@ -29,6 +30,7 @@ import {
 } from '.';
 import { RulesProfilePicker } from './RulesProfilePicker';
 import { descriptorForRulesProfile, isBritishRulesProfile } from './rules-presentation';
+import { prepareFullPrintDisclosures, watchPrintLifecycle } from './print-disclosures';
 import type {
   GameLength,
   GamePlayer,
@@ -149,8 +151,9 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
   const [printMode, setPrintMode] = useState<'summary' | 'full' | null>(null);
   const [editingHand, setEditingHand] = useState(false);
   const tableScoresRef = useRef<HTMLDetailsElement>(null);
+  const tableToolsRef = useRef<HTMLDetailsElement>(null);
+  const gameLedgerRef = useRef<HTMLDetailsElement>(null);
   const ledgerDetailsRefs = useRef(new Map<number, HTMLDetailsElement>());
-  const printOpenStatesRef = useRef<Map<number, boolean> | null>(null);
 
   const currentEastId = game
     ? Object.entries(game.seats).find(([, seat]) => seat === 'east')?.[0]
@@ -186,30 +189,25 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
 
   useEffect(() => {
     if (!printMode || typeof window === 'undefined') return;
-    if (printMode === 'full') {
-      printOpenStatesRef.current = new Map(
-        [...ledgerDetailsRefs.current].map(([handNumber, element]) => [handNumber, element.open]),
-      );
-      ledgerDetailsRefs.current.forEach((element) => { element.open = true; });
-    }
+    const restoreDisclosures = printMode === 'full'
+      ? prepareFullPrintDisclosures([gameLedgerRef.current, ...ledgerDetailsRefs.current.values()])
+      : null;
     let restored = false;
     const restore = () => {
       if (restored) return;
       restored = true;
-      printOpenStatesRef.current?.forEach((open, handNumber) => {
-        const element = ledgerDetailsRefs.current.get(handNumber);
-        if (element) element.open = open;
-      });
-      printOpenStatesRef.current = null;
+      restoreDisclosures?.();
       setPrintMode(null);
       window.removeEventListener('afterprint', restore);
     };
-    window.addEventListener('afterprint', restore);
+    const stopWatchingPrint = watchPrintLifecycle(window, document, restore);
     window.requestAnimationFrame(() => {
       window.print();
-      restore();
     });
-    return () => window.removeEventListener('afterprint', restore);
+    return () => {
+      stopWatchingPrint();
+      restore();
+    };
   }, [printMode]);
 
   useEffect(() => {
@@ -458,23 +456,39 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
   return (
     <div className={`mahjong-shell ${printMode === 'summary' ? 'print-summary' : ''}`}>
       <div className="screen-only sticky top-0 z-20 border-b border-[#d8ceb8] bg-[#f5f1e6]/95 backdrop-blur">
-        <div className="mx-auto max-w-[1120px] px-4 py-3 sm:px-5 lg:px-8">
-          <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="mx-auto max-w-[1120px] px-4 py-2 sm:px-5 sm:py-3 lg:px-8">
+          <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-3">
             <div>
-              <div className="font-mono text-[10px] uppercase tracking-[.16em] text-[#ae6249]">
+              <div className="font-mono text-[9px] uppercase tracking-[.12em] text-[#ae6249] sm:text-[10px] sm:tracking-[.16em]">
                 {game.isComplete ? 'Game complete' : `Hand ${game.handHistory.length + 1}`} · {windLabel(game.prevailingWind)} prevailing · {descriptorForRulesProfile(game.setup.rulesProfile).compactLabel}
               </div>
-              <div className="font-serif text-[18px] font-bold text-[#284d45]">
+              <div className="font-serif text-[16px] font-bold leading-tight text-[#284d45] sm:text-[18px]">
                 {game.players.find((player) => player.id === currentEastId)?.name} is East
                 {game.currentHandMode === 'goulash' ? ' · Goulash hand' : ''}
               </div>
-              {recovered && <p data-testid="recovered-game-conflict" className="mt-1 text-[11px] font-semibold text-[#477562]">
+              {recovered && <p data-testid="recovered-game-conflict" className={`mt-0.5 text-[10px] font-semibold leading-4 sm:mt-1 sm:text-[11px] ${recoveredProfileConflictsWithRoute ? 'text-[#9a4d3a]' : 'text-[#477562]'}`}>
                 {recoveredProfileConflictsWithRoute ? `Saved ${activeRulesCopy(game.setup.rulesProfile)} game; this route does not change its rules.` : 'Saved game recovered.'}
               </p>}
             </div>
-            <details className="relative">
-              <summary className="flex cursor-pointer list-none items-center gap-2 rounded-md border border-[#cfc3aa] bg-[#fbf8ed] px-3 py-2 text-[11px] font-semibold text-[#284d45]">Table tools</summary>
-              <div className="absolute right-0 z-30 mt-2 flex w-64 flex-col gap-1 rounded-lg border border-[#d8ceb8] bg-[#fbf8ed] p-2 shadow-[var(--shadow-md)]">
+            <details ref={tableToolsRef} className="table-tools relative">
+              <summary className="flex cursor-pointer list-none items-center gap-2 rounded-md border border-[#cfc3aa] bg-[#fbf8ed] px-2.5 py-1.5 text-[11px] font-semibold text-[#284d45] sm:px-3 sm:py-2">Table tools</summary>
+              <div className="table-tools-panel fixed inset-x-3 top-3 z-30 flex max-h-[calc(100dvh-1.5rem)] flex-col gap-1 overflow-y-auto overscroll-contain rounded-lg border border-[#d8ceb8] bg-[#fbf8ed] p-2 shadow-[var(--shadow-md)] sm:absolute sm:inset-x-auto sm:right-0 sm:top-auto sm:mt-2 sm:max-h-[min(32rem,calc(100dvh-5rem))] sm:w-64">
+                <div className="flex items-center justify-between border-b border-[#d8ceb8] px-1 pb-2 lg:hidden">
+                  <span className="font-mono text-[10px] uppercase tracking-[.16em] text-[#ae6249]">Table tools</span>
+                  <button
+                    type="button"
+                    data-testid="button-close-table-tools"
+                    aria-label="Close table tools"
+                    onClick={() => {
+                      if (!tableToolsRef.current) return;
+                      tableToolsRef.current.open = false;
+                      tableToolsRef.current.querySelector('summary')?.focus();
+                    }}
+                    className="flex items-center gap-1 rounded-md px-2 py-1.5 text-[11px] font-semibold text-[#284d45] hover:bg-[#efe8da] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#284d45]"
+                  >
+                    <X size={15} aria-hidden="true" /> Close
+                  </button>
+                </div>
             <button
               type="button"
               data-testid="button-undo-hand"
@@ -506,10 +520,10 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
               </div>
             </details>
           </div>
-          <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
-            {game.players.map((player) => <div key={player.id} className={`rounded-md border px-3 py-2 ${game.seats[player.id] === 'east' ? 'border-[#ae6249] bg-[#f5eadb]' : 'border-[#d8ceb8] bg-[#fbf8ed]'}`}>
-              <div className="font-mono text-[8px] uppercase tracking-[.12em] text-[#ae6249]">{windLabel(game.seats[player.id])}{game.seats[player.id] === 'east' ? ' · Dealer' : ''}</div>
-              <div className="flex items-baseline justify-between gap-2"><span className="truncate font-serif text-[16px] text-[#284d45]">{player.name}</span><span className="font-mono text-[14px] font-bold text-[#284d45]">{formatChange(game.balances[player.id])}</span></div>
+          <div className="mt-2 grid grid-cols-2 gap-1 sm:mt-3 sm:gap-2 sm:grid-cols-4">
+            {game.players.map((player) => <div key={player.id} className={`rounded-md border px-2 py-1 sm:px-3 sm:py-2 ${game.seats[player.id] === 'east' ? 'border-[#ae6249] bg-[#f5eadb]' : 'border-[#d8ceb8] bg-[#fbf8ed]'}`}>
+              <div className="font-mono text-[7px] uppercase tracking-[.08em] text-[#ae6249] sm:text-[8px] sm:tracking-[.12em]">{windLabel(game.seats[player.id])}{game.seats[player.id] === 'east' ? ' · Dealer' : ''}</div>
+              <div className="flex items-baseline justify-between gap-1 sm:gap-2"><span className="truncate font-serif text-[13px] leading-tight text-[#284d45] sm:text-[16px]">{player.name}</span><span className="font-mono text-[12px] font-bold text-[#284d45] sm:text-[14px]">{formatChange(game.balances[player.id])}</span></div>
             </div>)}
           </div>
         </div>
@@ -520,6 +534,7 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
           <h1>Mahjong Reference — {activeRulesCopy(game.setup.rulesProfile)} game record</h1>
           <p>{game.isComplete ? 'Game complete' : 'Game in progress'} · {handCountLabel(game.handHistory.length)}</p>
           <p>Rules: {gameRecordRulesLabel(game.setup.rulesProfile)}</p>
+          <p>Generated {new Date().toLocaleDateString('en-GB')}</p>
         </div>
         <section className="min-w-0">
           {!game.isComplete && <details ref={tableScoresRef} data-testid="section-table-scores" open={workspaceStage === 'entry' || editingHand} onToggle={(event) => {
@@ -823,7 +838,7 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
             </div>
           </section>
 
-        <details id="game-ledger" data-testid="details-game-ledger" className="rounded-xl border border-[#d8ceb8] bg-[#fbf8ed] p-5 sm:p-6">
+        <details ref={gameLedgerRef} id="game-ledger" data-testid="details-game-ledger" className="rounded-xl border border-[#d8ceb8] bg-[#fbf8ed] p-5 sm:p-6">
           <summary className="mb-4 flex cursor-pointer list-none items-center gap-2 font-serif text-[23px] text-[#284d45]">
             <History size={16} className="text-[#ae6249]" />
             Game ledger
