@@ -40,7 +40,7 @@ export const homeRulesStatusLabel = (slug: PublicRulesSlug) => {
 const homeRulesSummary: Record<PublicRulesSlug, string> = {
   british: 'The established British / BMJA-style scoring and game rules.',
   western: 'Western scoring with Thompson & Maloney special hands. Some ordinary rules are still being checked.',
-  club: 'A set of rules configured for one club, including its own special hands and Goulash.',
+  club: 'Rules set up for one club, including its own special hands and Goulash.',
 };
 
 const homeRulesHref = (slug: PublicRulesSlug) =>
@@ -151,7 +151,7 @@ export function HomePage() {
             Your Mahjong table companion.
           </h1>
           <p className="mt-4 max-w-[620px] text-[15px] leading-7 text-[#66746e]">
-            Score a hand, track the whole game, understand settlement and use the rules your table actually plays.
+            Score a hand, track the whole game, see who pays whom and use the rules your table actually plays.
           </p>
           <p className="mt-4 inline-flex rounded-full border border-[#cfc3aa] bg-[#fbf8ed] px-4 py-2 text-[14px] font-semibold text-[#284d45]">Free · No signup required · Works in your browser</p>
           <p className="mt-3 max-w-[620px] text-[14px] leading-6 text-[#66746e]">
@@ -188,7 +188,7 @@ export function HomePage() {
           ) : (
             <PrimaryAction
               title="Track a game"
-              description="Score each hand, follow Winds and game progression, calculate settlement and keep running totals."
+              description="Score each hand, follow East and the Winds, see who pays whom and keep running totals."
               href="/game"
               icon={Gamepad2}
               dark
@@ -276,7 +276,7 @@ export function HomePage() {
             <div>
               <h3 className="font-serif text-[22px] leading-tight text-[#284d45]">If Mahjong Reference does not know something, it will not guess.</h3>
               <p className="mt-3 text-[14px] leading-6 text-[#66746e]">
-                Enter what you know. When information is missing, the scorer keeps that uncertainty visible instead of quietly making something up.
+                Enter what you know. If something is missing, Mahjong Reference shows that instead of quietly making an answer up.
               </p>
             </div>
           </div>
