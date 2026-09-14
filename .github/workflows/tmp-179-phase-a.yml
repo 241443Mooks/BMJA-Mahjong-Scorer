@@ -19,7 +19,7 @@ jobs:
         run: python .github/scripts/tmp-179-phase-a.py
       - name: Install dependencies
         run: |
-          corepack enable
+          npm install --global pnpm@10.20.0
           pnpm install --frozen-lockfile
       - name: Remove temporary files and constrain diff
         run: |
