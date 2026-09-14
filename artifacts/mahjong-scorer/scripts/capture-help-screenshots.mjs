@@ -20,13 +20,15 @@ const viewports = [
   { name: 'desktop', width: 1440, height: 1000 },
 ];
 
-const phaseOneScreenshotBases = [
+const coreScreenshotBases = [
   'game-setup',
   'game-table-score-entry',
   'hand-builder-ordinary',
   'partial-losing-hand',
   'hand-winning-tile',
+  'hand-score-result',
   'hand-score-breakdown',
+  'game-settlement-preview',
   'game-ledger-settlement',
   'print-save',
 ];
@@ -364,10 +366,6 @@ async function captureGameScoreEntry(browser, viewport) {
 async function captureOrdinaryHand(browser, viewport) {
   const { context, page } = await openExampleHand(browser, viewport);
 
-  await page.getByTestId('select-set-type-3').selectOption('kong');
-  await page.getByTestId('card-set-3').click();
-  await clickFirstEnabledTile(page, viewport);
-
   const arrangeSection = page
     .getByRole('heading', { name: 'Arrange the tiles' })
     .locator('xpath=ancestor::section[1]');
@@ -394,12 +392,12 @@ async function capturePartialLosingHand(browser, viewport) {
     if (await mobileWinner.isChecked()) await mobileWinner.uncheck();
   }
 
-  await clickFirstEnabledTile(page, viewport);
-  await page.getByTestId('button-add-set').click();
-  await clickFirstEnabledTile(page, viewport);
+  if (viewport.name === 'mobile') {
+    await page.getByTestId('button-add-working-group').click();
+  } else {
+    await clickFirstEnabledTile(page, viewport);
+  }
   await page.getByTestId('button-select-remaining-tiles').click();
-  await clickFirstEnabledTile(page, viewport);
-  await clickFirstEnabledTile(page, viewport);
 
   const flowerOne = page.getByTestId('button-flower-1');
   if (await flowerOne.isVisible().catch(() => false)) await flowerOne.click();
@@ -430,6 +428,17 @@ async function captureWinningTile(browser, viewport) {
   await context.close();
 }
 
+async function captureScoreResult(browser, viewport) {
+  const { context, page } = await openExampleHand(browser, viewport);
+  const scoreCard = page.getByText('Current score', { exact: true }).locator('xpath=ancestor::section[1]');
+  await captureElement(
+    page,
+    scoreCard,
+    `hand-score-result-${viewport.name}.png`,
+    `${viewport.name} hand score result`,
+  );
+  await context.close();
+}
 async function captureScoreBreakdown(browser, viewport) {
   const { context, page } = await openExampleHand(browser, viewport);
   const scoreCard = page.getByText('Current score', { exact: true }).locator('xpath=ancestor::section[1]');
@@ -445,10 +454,26 @@ async function captureScoreBreakdown(browser, viewport) {
   await context.close();
 }
 
+async function captureSettlementPreview(browser, viewport) {
+  const { context, page } = await openDemoGame(browser, viewport);
+  await page.getByTestId('input-score-alex').fill('80');
+  await page.getByTestId('input-score-beth').fill('96');
+  await page.getByTestId('input-score-chris').fill('300');
+  await page.getByTestId('input-score-dee').fill('32');
+  const settlement = page.getByTestId('section-settlement-stage');
+  await settlement.waitFor({ state: 'visible' });
+  await captureElement(
+    page,
+    settlement,
+    `game-settlement-preview-${viewport.name}.png`,
+    `${viewport.name} settlement preview before confirmation`,
+  );
+  await context.close();
+}
 async function captureLedgerSettlement(browser, viewport) {
   const { context, page } = await openDemoGame(browser, viewport);
-  const ledgerHeading = page.getByRole('heading', { name: 'Game ledger' });
-  const ledgerSection = ledgerHeading.locator('xpath=ancestor::section[1]');
+  const ledgerSection = page.getByTestId('details-game-ledger');
+  await ledgerSection.locator('summary').first().click();
   await ledgerSection.locator('.game-ledger-summary').first().click();
   await captureElement(
     page,
@@ -461,50 +486,27 @@ async function captureLedgerSettlement(browser, viewport) {
 
 async function capturePrintSave(browser, viewport) {
   const { context, page } = await openDemoGame(browser, viewport);
-  const ledgerHeading = page.getByRole('heading', { name: 'Game ledger' });
-  await ledgerHeading.waitFor({ state: 'visible' });
-  await ledgerHeading.scrollIntoViewIfNeeded();
-
-  const printSummary = page.locator('summary').filter({ hasText: 'Print / Save game' });
-  await printSummary.click();
+  const tableTools = page.locator('details.table-tools');
+  await tableTools.locator('summary').first().click();
   const menu = page.getByTestId('button-print-full').locator('xpath=..');
-  await menu.waitFor({ state: 'visible' });
-
-  const ledgerHeader = ledgerHeading.locator('xpath=..');
-  await waitForVisuals(page, ledgerHeader, `${viewport.name} print/save ledger header`);
-  await waitForVisuals(page, menu, `${viewport.name} print/save menu`);
-
-  const headerBox = await ledgerHeader.boundingBox();
-  const menuBox = await menu.boundingBox();
-  if (!headerBox || !menuBox) throw new Error('Could not measure the Print / Save capture area.');
-
-  const padding = 12;
-  const x = Math.max(0, Math.min(headerBox.x, menuBox.x) - padding);
-  const y = Math.max(0, Math.min(headerBox.y, menuBox.y) - padding);
-  const right = Math.min(
-    viewport.width,
-    Math.max(headerBox.x + headerBox.width, menuBox.x + menuBox.width) + padding,
+  await captureElement(
+    page,
+    menu,
+    `print-save-${viewport.name}.png`,
+    `${viewport.name} print/save choices`,
   );
-  const bottom = Math.max(headerBox.y + headerBox.height, menuBox.y + menuBox.height) + padding;
-
-  await page.screenshot({
-    path: path.join(OUTPUT_DIR, `print-save-${viewport.name}.png`),
-    clip: { x, y, width: right - x, height: bottom - y },
-    animations: 'disabled',
-  });
   await context.close();
 }
-
-async function verifyPhaseOneFiles() {
+async function verifyCoreScreenshotFiles() {
   const filenames = new Set(await readdir(OUTPUT_DIR));
-  const expected = phaseOneScreenshotBases.flatMap((base) =>
+  const expected = coreScreenshotBases.flatMap((base) =>
     viewports.map((viewport) => `${base}-${viewport.name}.png`),
   );
   const missing = expected.filter((filename) => !filenames.has(filename));
   if (missing.length > 0) {
-    throw new Error(`Missing Phase 1 screenshots: ${missing.join(', ')}`);
+    throw new Error(`Missing core product screenshots: ${missing.join(', ')}`);
   }
-  console.log(`Verified all ${expected.length} Phase 1 screenshot files.`);
+  console.log(`Verified all ${expected.length} core product screenshot files.`);
 }
 
 async function smokeTestHelp(browser) {
@@ -574,11 +576,13 @@ async function main() {
         await captureOrdinaryHand(browser, viewport);
         await capturePartialLosingHand(browser, viewport);
         await captureWinningTile(browser, viewport);
+        await captureScoreResult(browser, viewport);
         await captureScoreBreakdown(browser, viewport);
+        await captureSettlementPreview(browser, viewport);
         await captureLedgerSettlement(browser, viewport);
         await capturePrintSave(browser, viewport);
       }
-      await verifyPhaseOneFiles();
+      await verifyCoreScreenshotFiles();
       console.log('Checking responsive Help screenshot behaviour…');
       await smokeTestHelp(browser);
     } finally {
