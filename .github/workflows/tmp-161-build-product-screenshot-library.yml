@@ -1,0 +1,220 @@
+name: Temporary #161 product screenshot library
+
+on:
+  push:
+    branches:
+      - chore/161-product-screenshot-library
+
+permissions:
+  contents: write
+
+jobs:
+  build-library:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Apply bounded screenshot-library generator update
+        shell: bash
+        run: |
+          python <<'PY'
+          from pathlib import Path
+
+          path = Path('artifacts/mahjong-scorer/scripts/capture-help-screenshots.mjs')
+          text = path.read_text()
+
+          old_bases = """const phaseOneScreenshotBases = [
+            'game-setup',
+            'game-table-score-entry',
+            'hand-builder-ordinary',
+            'partial-losing-hand',
+            'hand-winning-tile',
+            'hand-score-breakdown',
+            'game-ledger-settlement',
+            'print-save',
+          ];"""
+          old_bases = '\n'.join(line.strip() if index == 0 or index == 10 else line[10:] for index, line in enumerate(old_bases.splitlines()))
+          new_bases = """const coreScreenshotBases = [
+            'game-setup',
+            'game-table-score-entry',
+            'hand-builder-ordinary',
+            'partial-losing-hand',
+            'hand-winning-tile',
+            'hand-score-result',
+            'hand-score-breakdown',
+            'game-settlement-preview',
+            'game-ledger-settlement',
+            'print-save',
+          ];"""
+          new_bases = '\n'.join(line.strip() if index == 0 or index == 12 else line[10:] for index, line in enumerate(new_bases.splitlines()))
+          if text.count(old_bases) != 1:
+              raise SystemExit(f'expected one original screenshot-base list, found {text.count(old_bases)}')
+          text = text.replace(old_bases, new_bases, 1)
+
+          ordinary_old = "  await page.getByTestId('select-set-type-3').selectOption('kong');\n  await page.getByTestId('card-set-3').click();\n  await clickFirstEnabledTile(page, viewport);\n\n"
+          if text.count(ordinary_old) != 1:
+              raise SystemExit(f'expected one stale ordinary-hand interaction block, found {text.count(ordinary_old)}')
+          text = text.replace(ordinary_old, '', 1)
+
+          partial_old = "  await clickFirstEnabledTile(page, viewport);\n  await page.getByTestId('button-add-set').click();\n  await clickFirstEnabledTile(page, viewport);\n  await page.getByTestId('button-select-remaining-tiles').click();\n  await clickFirstEnabledTile(page, viewport);\n  await clickFirstEnabledTile(page, viewport);"
+          partial_new = "  if (viewport.name === 'mobile') {\n    await page.getByTestId('button-add-working-group').click();\n  } else {\n    await clickFirstEnabledTile(page, viewport);\n  }\n  await page.getByTestId('button-select-remaining-tiles').click();"
+          if text.count(partial_old) != 1:
+              raise SystemExit(f'expected one stale partial-hand interaction block, found {text.count(partial_old)}')
+          text = text.replace(partial_old, partial_new, 1)
+
+          breakdown_marker = 'async function captureScoreBreakdown(browser, viewport) {'
+          if text.count(breakdown_marker) != 1:
+              raise SystemExit('unexpected score-breakdown function count')
+          score_result_lines = [
+              'async function captureScoreResult(browser, viewport) {',
+              '  const { context, page } = await openExampleHand(browser, viewport);',
+              "  const scoreCard = page.getByText('Current score', { exact: true }).locator('xpath=ancestor::section[1]');",
+              '  await captureElement(',
+              '    page,',
+              '    scoreCard,',
+              '    `hand-score-result-${viewport.name}.png`,',
+              '    `${viewport.name} hand score result`,',
+              '  );',
+              '  await context.close();',
+              '}',
+              '',
+          ]
+          text = text.replace(breakdown_marker, '\n'.join(score_result_lines) + breakdown_marker, 1)
+
+          ledger_old = "  const ledgerHeading = page.getByRole('heading', { name: 'Game ledger' });\n  const ledgerSection = ledgerHeading.locator('xpath=ancestor::section[1]');\n  await ledgerSection.locator('.game-ledger-summary').first().click();"
+          ledger_new = "  const ledgerSection = page.getByTestId('details-game-ledger');\n  await ledgerSection.locator('summary').first().click();\n  await ledgerSection.locator('.game-ledger-summary').first().click();"
+          if text.count(ledger_old) != 1:
+              raise SystemExit(f'expected one stale ledger locator block, found {text.count(ledger_old)}')
+          text = text.replace(ledger_old, ledger_new, 1)
+
+          ledger_marker = 'async function captureLedgerSettlement(browser, viewport) {'
+          settlement_lines = [
+              'async function captureSettlementPreview(browser, viewport) {',
+              '  const { context, page } = await openDemoGame(browser, viewport);',
+              "  await page.getByTestId('input-score-alex').fill('80');",
+              "  await page.getByTestId('input-score-beth').fill('96');",
+              "  await page.getByTestId('input-score-chris').fill('300');",
+              "  await page.getByTestId('input-score-dee').fill('32');",
+              "  const settlement = page.getByTestId('section-settlement-stage');",
+              "  await settlement.waitFor({ state: 'visible' });",
+              '  await captureElement(',
+              '    page,',
+              '    settlement,',
+              '    `game-settlement-preview-${viewport.name}.png`,',
+              '    `${viewport.name} settlement preview before confirmation`,',
+              '  );',
+              '  await context.close();',
+              '}',
+              '',
+          ]
+          if text.count(ledger_marker) != 1:
+              raise SystemExit('unexpected ledger function count')
+          text = text.replace(ledger_marker, '\n'.join(settlement_lines) + ledger_marker, 1)
+
+          print_start = text.index('async function capturePrintSave(browser, viewport) {')
+          print_end = text.index('\nasync function verifyPhaseOneFiles()', print_start)
+          old_print = text[print_start:print_end]
+          if "Print / Save game" not in old_print or "getByRole('heading', { name: 'Game ledger' })" not in old_print:
+              raise SystemExit('unexpected current capturePrintSave implementation')
+          print_lines = [
+              'async function capturePrintSave(browser, viewport) {',
+              '  const { context, page } = await openDemoGame(browser, viewport);',
+              "  const tableTools = page.locator('details.table-tools');",
+              "  await tableTools.locator('summary').first().click();",
+              "  const menu = page.getByTestId('button-print-full').locator('xpath=..');",
+              '  await captureElement(',
+              '    page,',
+              '    menu,',
+              '    `print-save-${viewport.name}.png`,',
+              '    `${viewport.name} print/save choices`,',
+              '  );',
+              '  await context.close();',
+              '}',
+          ]
+          text = text[:print_start] + '\n'.join(print_lines) + text[print_end:]
+
+          text = text.replace('async function verifyPhaseOneFiles() {', 'async function verifyCoreScreenshotFiles() {', 1)
+          text = text.replace('const expected = phaseOneScreenshotBases.flatMap((base) =>', 'const expected = coreScreenshotBases.flatMap((base) =>', 1)
+          text = text.replace('Missing Phase 1 screenshots:', 'Missing core product screenshots:', 1)
+          text = text.replace('Verified all ${expected.length} Phase 1 screenshot files.', 'Verified all ${expected.length} core product screenshot files.', 1)
+
+          loop_old = "        await captureWinningTile(browser, viewport);\n        await captureScoreBreakdown(browser, viewport);\n        await captureLedgerSettlement(browser, viewport);"
+          loop_new = "        await captureWinningTile(browser, viewport);\n        await captureScoreResult(browser, viewport);\n        await captureScoreBreakdown(browser, viewport);\n        await captureSettlementPreview(browser, viewport);\n        await captureLedgerSettlement(browser, viewport);"
+          if text.count(loop_old) != 1:
+              raise SystemExit(f'expected one capture loop block, found {text.count(loop_old)}')
+          text = text.replace(loop_old, loop_new, 1)
+          text = text.replace('await verifyPhaseOneFiles();', 'await verifyCoreScreenshotFiles();', 1)
+
+          path.write_text(text)
+          PY
+
+          python <<'PY'
+          from pathlib import Path
+          path = Path('artifacts/mahjong-scorer/public/help/screenshots/README.md')
+          text = path.read_text()
+          old = 'These are real product captures used by the responsive Help how-to library. Phase 1 contains eight instructional topics with Mobile, Tablet and Desktop captures (24 PNG files in total).'
+          new = 'These are deterministic real-product captures used as the shared Mahjong Reference product screenshot library. The current core catalogue contains ten journey states with Mobile, Tablet and Desktop captures (30 PNG files in total); Help uses a subset and other product surfaces may reuse the same states.'
+          if text.count(old) != 1:
+              raise SystemExit(f'expected screenshot README summary once, found {text.count(old)}')
+          path.write_text(text.replace(old, new, 1))
+          PY
+
+          git diff --check
+          git diff -- artifacts/mahjong-scorer/scripts/capture-help-screenshots.mjs artifacts/mahjong-scorer/public/help/screenshots/README.md
+
+      - name: Install pnpm and repository dependencies
+        run: |
+          npm install --global pnpm@10.15.1
+          pnpm install --frozen-lockfile
+
+      - name: Regenerate deterministic product screenshot library
+        run: pnpm --filter @workspace/mahjong-scorer screenshots:help
+
+      - name: Remove temporary workflow and constrain diff
+        shell: bash
+        run: |
+          rm .github/workflows/tmp-161-build-product-screenshot-library.yml
+          python <<'PY'
+          import subprocess
+          allowed_exact = {
+              'artifacts/mahjong-scorer/scripts/capture-help-screenshots.mjs',
+              'artifacts/mahjong-scorer/public/help/screenshots/README.md',
+              '.github/workflows/tmp-161-build-product-screenshot-library.yml',
+          }
+          allowed_prefix = 'artifacts/mahjong-scorer/public/help/screenshots/'
+          changed = subprocess.check_output(['git', 'status', '--porcelain'], text=True).splitlines()
+          unexpected = []
+          for line in changed:
+              path = line[3:]
+              if ' -> ' in path:
+                  path = path.split(' -> ', 1)[1]
+              if path not in allowed_exact and not path.startswith(allowed_prefix):
+                  unexpected.append(path)
+          if unexpected:
+              raise SystemExit('Unexpected #161 changes: ' + ', '.join(unexpected))
+          print('\n'.join(changed) or 'No generated changes')
+          PY
+          git diff --check
+
+      - name: Verify product
+        run: |
+          pnpm test
+          pnpm run typecheck
+          PORT=5173 BASE_PATH=/ pnpm run build
+
+      - name: Commit verified screenshot library
+        shell: bash
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add -A
+          git diff --cached --check
+          if git diff --cached --quiet; then
+            echo 'No #161 changes to commit.'
+            exit 0
+          fi
+          git commit -m "Expand deterministic product screenshot library"
+          git push origin HEAD:chore/161-product-screenshot-library
