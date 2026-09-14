@@ -1,21 +1,52 @@
-name: Temporary 171 SSR probe
+name: Temporary 171 implement and verify
 on:
   push:
     branches: [chore/171-seo-crawl-alignment]
 permissions:
-  contents: read
+  contents: write
 jobs:
-  probe:
+  implement:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      - name: Apply bounded #171 implementation
+        run: python3 .github/scripts/tmp-171-implement.py
       - name: Pin pnpm and install
         run: |
           corepack enable
           corepack prepare pnpm@10.26.2 --activate
           pnpm install --frozen-lockfile
-      - name: Probe SSR compatibility for every canonical route
-        run: PORT=4173 BASE_PATH=/ node artifacts/mahjong-scorer/scripts/tmp-171-ssr-probe.mjs
+      - name: Verify tests, types and canonical build
+        run: |
+          pnpm test
+          pnpm run typecheck
+          PORT=5173 BASE_PATH=/ pnpm run build
+      - name: Audit final built output
+        run: node .github/scripts/tmp-171-verify.mjs
+      - name: Remove temporary audit and implementation files
+        run: |
+          rm -f .github/scripts/tmp-171-audit.mjs
+          rm -f .github/scripts/tmp-171-implement.py
+          rm -f .github/scripts/tmp-171-verify.mjs
+          rm -f .github/workflows/tmp-171-audit.yml
+          rm -f artifacts/mahjong-scorer/src/tmp-171-prerender-probe.tsx
+          rm -f artifacts/mahjong-scorer/scripts/tmp-171-ssr-probe.mjs
+      - name: Commit verified product changes
+        run: |
+          git config user.name "241443Mooks"
+          git config user.email "132487762+241443Mooks@users.noreply.github.com"
+          git add -A
+          git commit -m "Align final SEO crawl and internal links (#171)"
+          final_files="$(git diff --name-only origin/main...HEAD)"
+          printf '%s\n' "$final_files"
+          allowed='^(CHANGELOG.md|artifacts/mahjong-scorer/scripts/prerender-seo.mjs|artifacts/mahjong-scorer/src/(App.tsx|RouteContent.tsx|main.tsx|prerender.tsx|prerender.test.tsx|site-seo.json|site-seo.test.ts|game/RulesProfilePicker.tsx|guide/BeginnerGuide.tsx|home/MahjongRulesComparedPage.tsx))$'
+          if printf '%s\n' "$final_files" | grep -Ev "$allowed" | grep -q .; then
+            echo "Unexpected final diff" >&2
+            exit 1
+          fi
+          git push origin HEAD:chore/171-seo-crawl-alignment
