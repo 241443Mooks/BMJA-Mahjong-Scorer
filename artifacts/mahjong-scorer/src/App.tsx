@@ -1504,7 +1504,7 @@ function HandScorer({ context, onClose, standaloneHand, standaloneRulesProfile, 
   );
 }
 
-export default function App({ initialView = 'game', standaloneHand = false, initialRulesProfile = BMJA_PROFILE_REF }: { initialView?: 'game' | 'hand'; standaloneHand?: boolean; initialRulesProfile?: import('./game').RulesProfileRef }) {
+export default function App({ initialView = 'game', standaloneHand = false, initialRulesProfile = BMJA_PROFILE_REF, prerenderOnly = false }: { initialView?: 'game' | 'hand'; standaloneHand?: boolean; initialRulesProfile?: import('./game').RulesProfileRef; prerenderOnly?: boolean }) {
   const search = standaloneHand && typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : undefined;
   const practice = !!search?.get('practice');
   const example = search ? resolveScorerExample(search.get('example') ?? search.get('practice')) : undefined;
@@ -1535,26 +1535,30 @@ export default function App({ initialView = 'game', standaloneHand = false, init
     <QueryClientProvider client={queryClient}>
       <ErrorBoundary>
         <TooltipProvider>
-          <div className={view === 'game' ? 'block' : 'hidden'}>
-            <GameScorer
-              onOpenHandScorer={handleOpenHandScorer}
-              returnedScore={returnedScore}
-              onClearReturnedScore={() => setReturnedScore(undefined)}
-              initialRulesProfile={initialRulesProfile}
-            />
-          </div>
-          <div className={view === 'hand' ? 'block' : 'hidden'}>
-            <HandScorer
-              key={scorerSession}
-              context={scorerContext}
-              onClose={handleCloseHandScorer}
-              standaloneHand={standaloneHand}
-              standaloneRulesProfile={standaloneRulesProfile}
-              onStandaloneRulesProfileChange={setStandaloneRulesProfile}
-              example={example}
-              practice={practice && !!example}
-            />
-          </div>
+          {(!prerenderOnly || view === 'game') && (
+            <div className={view === 'game' ? 'block' : 'hidden'}>
+              <GameScorer
+                onOpenHandScorer={handleOpenHandScorer}
+                returnedScore={returnedScore}
+                onClearReturnedScore={() => setReturnedScore(undefined)}
+                initialRulesProfile={initialRulesProfile}
+              />
+            </div>
+          )}
+          {(!prerenderOnly || view === 'hand') && (
+            <div className={view === 'hand' ? 'block' : 'hidden'}>
+              <HandScorer
+                key={scorerSession}
+                context={scorerContext}
+                onClose={handleCloseHandScorer}
+                standaloneHand={standaloneHand}
+                standaloneRulesProfile={standaloneRulesProfile}
+                onStandaloneRulesProfileChange={setStandaloneRulesProfile}
+                example={example}
+                practice={practice && !!example}
+              />
+            </div>
+          )}
           <Toaster />
         </TooltipProvider>
       </ErrorBoundary>

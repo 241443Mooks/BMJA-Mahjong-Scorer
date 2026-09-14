@@ -1,10 +1,12 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createServer } from 'vite';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const output = path.join(root, 'dist/public');
 const marker = /<!-- seo:metadata:start -->[\s\S]*?<!-- seo:metadata:end -->/;
+const rootMarker = '<div id="root"></div>';
 const seo = JSON.parse(await readFile(path.join(root, 'src/site-seo.json'), 'utf8'));
 const socialImage = `${seo.siteUrl}${seo.socialImagePath}`;
 
@@ -46,11 +48,40 @@ function metadata({ path: route, title, description, indexable }) {
     <!-- seo:metadata:end -->`;
 }
 
+function assertRenderedBody(route, body) {
+  const h1Count = (body.match(/<h1\b/g) ?? []).length;
+  const anchorCount = (body.match(/<a\b/g) ?? []).length;
+  if (body.length < 100 || h1Count !== 1 || anchorCount < 1) {
+    throw new Error(`${route}: prerendered body is incomplete (${body.length} bytes, ${h1Count} h1, ${anchorCount} anchors).`);
+  }
+}
+
 const shell = await readFile(path.join(output, 'index.html'), 'utf8');
 if (!marker.test(shell)) throw new Error('SEO metadata markers were not found in the Vite output.');
+if (!shell.includes(rootMarker)) throw new Error('Empty root marker was not found in the Vite output.');
+
+const vite = await createServer({
+  root,
+  server: { middlewareMode: true },
+  appType: 'custom',
+  logLevel: 'error',
+});
+const renderedRoutes = new Map();
+try {
+  const { renderRoute } = await vite.ssrLoadModule('/src/prerender.tsx');
+  for (const route of seo.routes) {
+    const body = renderRoute(route.path);
+    assertRenderedBody(route.path, body);
+    renderedRoutes.set(route.path, body);
+  }
+} finally {
+  await vite.close();
+}
 
 for (const route of seo.routes) {
-  const html = shell.replace(marker, metadata(route));
+  const html = shell
+    .replace(marker, metadata(route))
+    .replace(rootMarker, `<div id="root">${renderedRoutes.get(route.path)}</div>`);
   const destination = route.path === '/' ? path.join(output, 'index.html') : path.join(output, `${route.path}.html`);
   await mkdir(path.dirname(destination), { recursive: true });
   await writeFile(destination, html);
