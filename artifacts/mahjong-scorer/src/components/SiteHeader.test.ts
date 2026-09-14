@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { navigationGroups } from './SiteHeader';
+import { navigationGroups, secondaryDestinations } from './SiteHeader';
 
 describe('site navigation', () => {
   it('organises current user jobs as Play, Rules and Learn', () => {
@@ -24,6 +24,15 @@ describe('site navigation', () => {
           ['British scoring examples', '/scoring-examples'],
         ],
       },
+    ]);
+  });
+
+  it('keeps Features in the secondary More menu', () => {
+    expect(secondaryDestinations).toEqual([
+      ['Features', '/features'],
+      ['Help', '/help'],
+      ['How it works', '/how-it-works'],
+      ['About', '/about'],
     ]);
   });
 });

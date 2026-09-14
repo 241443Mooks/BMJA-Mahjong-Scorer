@@ -8,6 +8,8 @@ This file records meaningful changes to **Mahjong Reference** at product-milesto
 
 ### Changed
 
+- Aligned the homepage around **Play → Rules → Learn → Trust**, with plain-language supported-rules status, a quieter Features entry point and lower-prominence About/Support links. [#172](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/pull/172)
+
 ### Fixed
 
 ## 2026-09-14 — Table Companion interaction refinement
