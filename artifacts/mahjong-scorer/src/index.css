@@ -122,7 +122,7 @@
 }
 
 /* New-game setup: the 10px seat/game labels sit on #fbf8ed. */
-.mahjong-shell:has([data-testid="button-start-game"]) main [class~="text-[#7a7769]"] {
+main:has([data-testid="button-start-game"]) [class~="text-[#7a7769]"] {
   color: #55655f;
 }
 
