@@ -29,16 +29,16 @@ jobs:
       - name: Start branch app locally
         run: |
           PORT=4173 BASE_PATH=/ pnpm --filter @workspace/mahjong-scorer dev > /tmp/mahjong-vite.log 2>&1 &
-          echo $! > /tmp/mahjong-vite.pid
           for i in $(seq 1 80); do
             if curl -fsS http://127.0.0.1:4173/ >/dev/null; then exit 0; fi
             sleep 1
           done
           cat /tmp/mahjong-vite.log
           exit 1
-      - name: Audit rendered scroll regions and keyboard behaviour
+      - name: Run rendered audit and capture diagnostics
+        shell: bash
         run: |
-          node --input-type=commonjs <<'NODE'
+          cat > /tmp/audit.cjs <<'NODE'
           const { createRequire } = require('node:module');
           const req = createRequire('/tmp/a11y/package.json');
           const { chromium } = req('playwright');
@@ -103,7 +103,7 @@ jobs:
                     seen.add(active.label);
                     if (!(active.scrollWidth > active.clientWidth)) {
                       failures += 1;
-                      console.log(`FOCUS FAIL — ${route} — non-overflow region was tabbable: ${active.label}`);
+                      console.log(`FOCUS FAIL — ${route} — non-overflow region tabbable: ${active.label}`);
                       continue;
                     }
                     const before = active.scrollLeft;
@@ -127,6 +127,22 @@ jobs:
             }
             await browser.close();
             console.log(`TOTAL FAILURES: ${failures}`);
-            if (failures) process.exit(2);
+            process.exit(failures ? 2 : 0);
           })().catch(error => { console.error(error); process.exit(1); });
           NODE
+          set +e
+          node /tmp/audit.cjs 2>&1 | tee audit-output.txt
+          status=${PIPESTATUS[0]}
+          echo "$status" > audit-exit.txt
+          exit 0
+      - name: Upload rendered audit diagnostics
+        uses: actions/upload-artifact@v4
+        with:
+          name: issue-178-rendered-audit
+          path: |
+            audit-output.txt
+            audit-exit.txt
+          if-no-files-found: error
+      - name: Preserve audit result
+        shell: bash
+        run: exit "$(cat audit-exit.txt)"
