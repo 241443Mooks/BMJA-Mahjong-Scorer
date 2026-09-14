@@ -102,6 +102,48 @@
 .fine-rule { background: linear-gradient(90deg, hsl(var(--accent)), transparent); height: 2px; }
 .print-only { display: none; }
 
+/* WCAG 2.2 AA: strengthen only text combinations confirmed by the scorer/readability audit. */
+.screen-only.sticky [class~="text-[#ae6249]"],
+[data-testid="section-table-scores"] [class~="text-[#ae6249]"],
+#game-ledger [class~="text-[#ae6249]"],
+.recorded-hand [class~="text-[#ae6249]"] {
+  color: #9a4d3a;
+}
+
+[data-testid="section-table-scores"] [class~="text-[#7a7769]"],
+#game-ledger [class~="text-[#7a7769]"],
+.recorded-hand [class~="text-[#7a7769]"],
+[data-testid="rules-profile-picker"] [class~="text-[#66746e]"],
+[data-testid^="button-flower-"] [class~="text-[#66746e]"],
+[data-testid^="button-flower-"] [class~="text-[#7a7769]"],
+[data-testid^="button-season-"] [class~="text-[#66746e]"],
+[data-testid^="button-season-"] [class~="text-[#7a7769]"] {
+  color: #596b65;
+}
+
+/* New-game setup: the 10px seat/game labels sit on #fbf8ed. */
+main:has([data-testid="button-start-game"]) [class~="text-[#7a7769]"] {
+  color: #55655f;
+}
+
+/* Hand scorer: include the darker #e8e1d1 context panels as well as cream cards. */
+.mahjong-shell:has([data-testid="mobile-hand-context"]) main [class~="text-[#66746e]"],
+.mahjong-shell:has([data-testid="mobile-hand-context"]) main [class~="text-[#7a7769]"] {
+  color: #55655f;
+}
+
+.mahjong-shell:has([data-testid="mobile-hand-context"]) main [class~="text-[#ae6249]"] {
+  color: #9a4d3a;
+}
+
+/* Dark score/settlement panels need a lighter coral, not the darkened light-surface accent. */
+.mahjong-shell:has([data-testid="mobile-hand-context"]) main [class~="text-[#d7a287]"],
+.mahjong-shell:has([data-testid="mobile-hand-context"]) main [class~="text-[#e6a48d]"],
+[data-testid="section-settlement-stage"] [class~="text-[#d7a287]"],
+[data-testid="section-settlement-stage"] [class~="text-[#e6a48d]"] {
+  color: #e4ad93;
+}
+
 @media print {
   @page { size: auto; margin: 12mm; }
   body { background: white !important; color: #172c27 !important; font-size: 10pt; }
@@ -128,5 +170,5 @@
   img { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
   a { color: #172c27; text-decoration: underline; }
 }
-.game-record-footer { margin-top: 2rem; border-top: 1px solid #d8ceb8; padding-top: .75rem; display: flex; flex-wrap: wrap; gap: .35rem 1rem; font-size: 10px; color: #7a7769; }
+.game-record-footer { margin-top: 2rem; border-top: 1px solid #d8ceb8; padding-top: .75rem; display: flex; flex-wrap: wrap; gap: .35rem 1rem; font-size: 10px; color: #596b65; }
 .game-record-footer a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
