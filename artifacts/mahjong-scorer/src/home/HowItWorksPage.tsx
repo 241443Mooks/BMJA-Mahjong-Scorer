@@ -1,19 +1,4 @@
-import {
-  ArrowRight,
-  BookOpen,
-  Calculator,
-  CheckCircle2,
-  ChevronDown,
-  FileText,
-  Gamepad2,
-  HelpCircle,
-  History,
-  Layers3,
-  Scale,
-  ShieldCheck,
-  Sparkles,
-  type LucideIcon,
-} from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import {
   ResponsiveScreenshot,
   type ResponsiveScreenshotProps,
@@ -26,55 +11,81 @@ type HowItWorksStep = {
   number: string;
   title: string;
   text: string;
-  Icon: LucideIcon;
+  note?: string;
   screenshot: ResponsiveScreenshotProps;
+};
+
+const scoreResultScreenshot: ResponsiveScreenshotProps = {
+  images: {
+    mobile: '/help/screenshots/hand-score-result-mobile.png',
+    tablet: '/help/screenshots/hand-score-result-tablet.png',
+    desktop: '/help/screenshots/hand-score-result-desktop.png',
+  },
+  alt: 'Calculated hand result showing the final score together with its points and doubles.',
+};
+
+const settlementPreviewScreenshot: ResponsiveScreenshotProps = {
+  images: {
+    mobile: '/help/screenshots/game-settlement-preview-mobile.png',
+    tablet: '/help/screenshots/game-settlement-preview-tablet.png',
+    desktop: '/help/screenshots/game-settlement-preview-desktop.png',
+  },
+  alt: 'Round settlement preview showing who pays whom and each player’s net change before the hand is recorded.',
 };
 
 const steps: HowItWorksStep[] = [
   {
-    number: '01', title: 'Give the scorer the context',
-    text: 'Tell it what matters for this hand or game: who is East, the player Wind, the prevailing Wind, whether the hand won and any winning circumstance the rules actually need.',
-    Icon: Gamepad2, screenshot: phaseOneHelpInstructions['start-game'],
+    number: '01',
+    title: 'Choose the rules your table uses',
+    text: 'Start the game with the rules, game length and four starting seats. Mahjong Reference keeps those choices with the table as you play.',
+    screenshot: phaseOneHelpInstructions['start-game'],
   },
   {
-    number: '02', title: 'Enter what you know',
-    text: 'Build a complete hand, enter only the scoring evidence from an unfinished losing hand, or simply type a numeric score if you already know it.',
-    Icon: Layers3, screenshot: phaseOneHelpInstructions['ordinary-hand'],
+    number: '02',
+    title: 'Enter the hand',
+    text: 'Use the hand scorer when you want Mahjong Reference to work the score out from the tiles. Add the groups you know and watch Hand so far build as you go.',
+    note: 'You do not need every tile. For a losing hand, enter the scoring parts you know. If you already know the score, type it in.',
+    screenshot: phaseOneHelpInstructions['ordinary-hand'],
   },
   {
-    number: '03', title: 'It calculates what the evidence supports',
-    text: 'The selected supported rules profile controls the scoring and settlement behaviour applied to the information you entered. Missing evidence stays missing rather than being guessed.',
-    Icon: Calculator, screenshot: phaseOneHelpInstructions.disagreement,
+    number: '03',
+    title: 'See the score',
+    text: 'When the hand is ready, the result shows the score together with the points and doubles that produced it.',
+    screenshot: scoreResultScreenshot,
   },
   {
-    number: '04', title: 'It shows the reasoning',
-    text: 'Points, doubles, detected patterns, special hands and fishing are surfaced where the evidence supports them, so the total is not just a black-box number.',
-    Icon: Sparkles, screenshot: phaseOneHelpInstructions.disagreement,
+    number: '04',
+    title: 'See why',
+    text: 'Open the breakdown to see what scored and why. Rule-sensitive patterns are shown alongside the parts of the score they support.',
+    note: 'Not sure about something? That’s OK. If Mahjong Reference does not know something, it will not guess.',
+    screenshot: phaseOneHelpInstructions.disagreement,
   },
   {
-    number: '05', title: 'The game settles the table',
-    text: 'In a full game, confirmed scores become player-to-player settlement transactions, including East doubling where applicable, and update the running balances.',
-    Icon: Scale, screenshot: phaseOneHelpInstructions.settlement,
+    number: '05',
+    title: 'See who pays whom',
+    text: 'For a game, the four hand scores become the payments for that hand before you record it. Check who pays whom and each player’s net change first.',
+    screenshot: settlementPreviewScreenshot,
   },
   {
-    number: '06', title: 'The same history becomes the record',
-    text: 'Confirmed hands build one canonical ledger as you play. At any point, that same ledger can be printed or saved as either a compact summary or a full detailed record.',
-    Icon: FileText, screenshot: phaseOneHelpInstructions['save-game'],
+    number: '06',
+    title: 'Carry on to the next hand',
+    text: 'Record the hand and the table moves on with updated totals, East and prevailing Wind. The next score entry is ready without rebuilding the game.',
+    note: 'Your game stays on this device. You can usually pick it up again on the same device after a refresh or closed browser. No account is needed.',
+    screenshot: phaseOneHelpInstructions['mix-score-entry'],
+  },
+  {
+    number: '07',
+    title: 'Look back at the game',
+    text: 'Open the game history whenever you need to check a previous hand, the running totals or the settlement that was recorded.',
+    screenshot: phaseOneHelpInstructions.settlement,
+  },
+  {
+    number: '08',
+    title: 'Keep a copy',
+    text: 'Print or save either a compact game summary or the full record. Both come from the game you actually recorded at the table.',
+    screenshot: phaseOneHelpInstructions['save-game'],
   },
 ];
-
-const evidenceModes = [
-  ['Complete', 'Enter the whole hand when you want the scorer to check whole-hand patterns, special hands and fishing where supported.'],
-  ['Partial', 'For a losing hand, enter only the scoring sets, pairs and bonus tiles you know. The scorer calculates those without pretending the unseen tiles are known.'],
-  ['Manual', 'Already know the number? Type it directly. It can still be used in the game, while remaining clearly distinct from a scorer-built hand.'],
-] as const;
-
-const trustPoints = [
-  'Unknown facts stay unknown. The scorer withholds unsupported bonuses instead of guessing.',
-  'A partial hand is treated as partial evidence, not a complete reconstruction.',
-  'Manual scores remain valid without being presented as scorer-verified tile evidence.',
-  'The same structured game history drives settlement, the ledger and the printable record.',
-] as const;
 
 export function HowItWorksPage() {
   return (
@@ -84,69 +95,81 @@ export function HowItWorksPage() {
         <ReturnToGame />
         <article className="overflow-hidden rounded-2xl border border-[#d8ceb8] bg-[#fbf8ed] shadow-[var(--shadow-sm)]">
           <section className="border-b border-[#ddd3bf] px-5 py-9 sm:px-8 sm:py-12 lg:px-12 lg:py-14">
-            <div className="mb-4 flex items-center gap-3"><div className="fine-rule w-10" /><span className="font-mono text-[10px] uppercase tracking-[.2em] text-[#ae6249]">How it works</span></div>
-            <h1 className="max-w-[820px] font-serif text-[clamp(38px,6vw,62px)] leading-[.98] text-[#284d45]">Tell the scorer what you know. It works out what it safely can.</h1>
-            <p className="mt-5 max-w-[760px] text-[15px] leading-7 text-[#596b65]">Mahjong Reference is designed around evidence rather than guesswork. You give the selected supported rules profile the hand and game context you actually have; it calculates the supported score, explains the reasoning, and carries confirmed results into settlement and the game record. <a href="/rules" className="font-semibold text-[#284d45] underline decoration-[#cfa58f] underline-offset-4">See supported rules</a>.</p>
-            <div className="mt-7 flex flex-col gap-3 sm:flex-row">
-              <a href="/game" className="inline-flex items-center justify-center gap-2 rounded-md bg-[#284d45] px-4 py-2.5 text-[11px] font-semibold text-[#f8f4e9] transition hover:bg-[#23443d] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249] focus-visible:ring-offset-2">Score a game <ArrowRight size={14} /></a>
-              <a href="/hand" className="inline-flex items-center justify-center gap-2 rounded-md border border-[#c9b99d] bg-[#fdfbf5] px-4 py-2.5 text-[11px] font-semibold text-[#284d45] transition hover:bg-[#fffaf0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249] focus-visible:ring-offset-2">Score a hand <ArrowRight size={14} /></a>
-              <a href="/help" className="inline-flex items-center justify-center gap-2 rounded-md border border-[#c9b99d] bg-[#fdfbf5] px-4 py-2.5 text-[11px] font-semibold text-[#284d45] transition hover:bg-[#fffaf0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249] focus-visible:ring-offset-2">Open User Guide <ArrowRight size={14} /></a>
+            <div className="mb-4 flex items-center gap-3">
+              <div className="fine-rule w-10" />
+              <span className="font-mono text-[10px] uppercase tracking-[.2em] text-[#ae6249]">How it works</span>
             </div>
+            <h1 className="max-w-[820px] font-serif text-[clamp(38px,6vw,62px)] leading-[.98] text-[#284d45]">
+              From one hand to the whole game.
+            </h1>
+            <p className="mt-5 max-w-[760px] text-[16px] leading-7 text-[#596b65]">
+              Tell Mahjong Reference what happened. It works out the score, shows who pays whom and keeps the game moving. Score one hand on its own, or follow the whole table from the opening seats to a saved game record.
+            </p>
+            <div className="mt-7 flex flex-col gap-3 sm:flex-row">
+              <a href="/game" className="inline-flex items-center justify-center gap-2 rounded-md bg-[#284d45] px-4 py-2.5 text-[11px] font-semibold text-[#f8f4e9] transition hover:bg-[#23443d] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249] focus-visible:ring-offset-2">
+                Track a game <ArrowRight size={14} aria-hidden="true" />
+              </a>
+              <a href="/hand" className="inline-flex items-center justify-center gap-2 rounded-md border border-[#c9b99d] bg-[#fdfbf5] px-4 py-2.5 text-[11px] font-semibold text-[#284d45] transition hover:bg-[#fffaf0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249] focus-visible:ring-offset-2">
+                Score a hand <ArrowRight size={14} aria-hidden="true" />
+              </a>
+              <a href="/help" className="inline-flex items-center justify-center gap-2 rounded-md border border-[#c9b99d] bg-[#fdfbf5] px-4 py-2.5 text-[11px] font-semibold text-[#284d45] transition hover:bg-[#fffaf0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249] focus-visible:ring-offset-2">
+                Open User Guide <ArrowRight size={14} aria-hidden="true" />
+              </a>
+            </div>
+            <p className="mt-5 max-w-[760px] text-[11px] leading-5 text-[#7a7769]">
+              The walkthrough below uses the British / BMJA-style example where rule-specific details are visible. The same Table Companion journey is used with the other supported rules.
+            </p>
           </section>
 
           <section className="border-b border-[#ddd3bf] px-5 py-9 sm:px-8 sm:py-11 lg:px-12">
             <div className="mb-7 max-w-[720px]">
-              <div className="font-mono text-[9px] uppercase tracking-[.18em] text-[#ae6249]">The flow</div>
-              <h2 className="mt-2 font-serif text-[32px] leading-tight text-[#284d45]">Context → Evidence → Score → Explain → Settle → Record</h2>
-              <p className="mt-3 text-[13px] leading-6 text-[#66746e]">The product follows one connected path rather than treating the hand scorer, settlement and game history as separate systems. Current instructional screenshots show the British / BMJA-style flow.</p>
+              <div className="font-mono text-[9px] uppercase tracking-[.18em] text-[#ae6249]">The table journey</div>
+              <h2 className="mt-2 font-serif text-[32px] leading-tight text-[#284d45]">Eight steps, from choosing the rules to keeping the record.</h2>
+              <p className="mt-3 text-[13px] leading-6 text-[#66746e]">
+                Each picture below is a real generated product screen. Nothing is hidden behind a walkthrough or recreated for this page.
+              </p>
             </div>
-            <ol className="grid gap-3 md:grid-cols-2">
-              {steps.map(({ number, title, text, Icon, screenshot }) => (
-                <li key={number} className="rounded-xl border border-[#d8ceb8] bg-[#fdfbf5] p-5 sm:p-6">
-                  <div className="flex items-start gap-4">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#efe8da] text-[#477562]"><Icon size={18} strokeWidth={1.8} /></div>
-                    <div><div className="font-mono text-[9px] uppercase tracking-[.18em] text-[#ae6249]">{number}</div><h3 className="mt-1 font-serif text-[23px] leading-tight text-[#284d45]">{title}</h3><p className="mt-2 text-[12px] leading-6 text-[#66746e]">{text}</p></div>
-                  </div>
-                  <details className="group mt-4 border-t border-[#e2d9c7] pt-3">
-                    <summary className="flex cursor-pointer list-none items-center justify-between gap-3 rounded-md px-1 py-1 text-[11px] font-semibold text-[#477562] transition hover:text-[#284d45] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249] focus-visible:ring-offset-2">
-                      <span>See it in the scorer</span>
-                      <ChevronDown size={16} className="shrink-0 transition-transform group-open:rotate-180" aria-hidden="true" />
-                    </summary>
-                    <div className="mt-3 overflow-hidden rounded-lg border border-[#d8ceb8] bg-[#eee8dc] p-2">
+
+            <ol className="space-y-5 sm:space-y-6">
+              {steps.map(({ number, title, text, note, screenshot }) => (
+                <li key={number} className="rounded-xl border border-[#d8ceb8] bg-[#fdfbf5] p-4 sm:p-6">
+                  <div className="grid gap-5 md:grid-cols-[minmax(0,.72fr)_minmax(0,1.28fr)] md:items-center md:gap-7 lg:gap-9">
+                    <div>
+                      <div className="font-mono text-[10px] font-semibold uppercase tracking-[.18em] text-[#ae6249]">{number}</div>
+                      <h3 className="mt-2 font-serif text-[27px] leading-tight text-[#284d45]">{title}</h3>
+                      <p className="mt-3 text-[13px] leading-6 text-[#596b65]">{text}</p>
+                      {note && (
+                        <p className="mt-4 rounded-lg bg-[#f5eadb] px-4 py-3 text-[11px] leading-5 text-[#596b65]">
+                          {note}
+                        </p>
+                      )}
+                    </div>
+                    <div className="overflow-hidden rounded-xl border border-[#d8ceb8] bg-[#eee8dc] p-2 sm:p-3">
                       <ResponsiveScreenshot {...screenshot} />
                     </div>
-                  </details>
+                  </div>
                 </li>
               ))}
             </ol>
           </section>
 
-          <section className="border-b border-[#ddd3bf] px-5 py-9 sm:px-8 sm:py-11 lg:px-12">
-            <div className="grid gap-8 lg:grid-cols-[.9fr_1.1fr] lg:gap-12">
-              <div><div className="flex items-center gap-3"><CheckCircle2 size={18} className="text-[#477562]" /><h2 className="font-serif text-[30px] leading-tight text-[#284d45]">Complete, partial or manual — all are valid</h2></div><p className="mt-3 text-[13px] leading-6 text-[#596b65]">A real table does not always have four perfectly reconstructed hands. The scorer is designed around that reality rather than forcing everybody through the same amount of data entry.</p></div>
-              <div className="space-y-3">{evidenceModes.map(([title, text]) => <div key={title} className="rounded-xl border border-[#d8ceb8] bg-[#fdfbf5] p-5"><div className="font-serif text-[22px] text-[#284d45]">{title}</div><p className="mt-1.5 text-[12px] leading-6 text-[#66746e]">{text}</p></div>)}</div>
-            </div>
-          </section>
-
-          <section className="border-b border-[#ddd3bf] bg-[#284d45] px-5 py-9 text-[#f8f4e9] sm:px-8 sm:py-11 lg:px-12">
-            <div className="grid gap-8 lg:grid-cols-[1fr_1.1fr] lg:gap-12">
-              <div><div className="font-mono text-[9px] uppercase tracking-[.18em] text-[#d7a287]">Trust principle</div><h2 className="mt-2 font-serif text-[32px] leading-tight">Unknown means unknown.</h2><p className="mt-3 text-[13px] leading-6 text-[#c8d4cf]">Some supported rules depend on details that are easy to forget — such as which tile completed Mah Jong or whether a rare event actually happened. If the evidence is not known, the scorer does not manufacture it.</p></div>
-              <ul className="space-y-3">{trustPoints.map((point) => <li key={point} className="flex gap-3 rounded-lg border border-[#55756c] bg-[#31594f] px-4 py-3 text-[12px] leading-6 text-[#e8eee9]"><ShieldCheck size={16} className="mt-1 shrink-0 text-[#d7a287]" /><span>{point}</span></li>)}</ul>
-            </div>
-          </section>
-
-          <section className="border-b border-[#ddd3bf] px-5 py-9 sm:px-8 sm:py-11 lg:px-12">
-            <div className="grid gap-8 lg:grid-cols-2 lg:gap-10">
-              <div className="rounded-xl border border-[#d8ceb8] bg-[#f5eadb] p-5 sm:p-6"><div className="flex items-center gap-3"><History size={18} className="text-[#ae6249]" /><h2 className="font-serif text-[25px] text-[#284d45]">The game survives ordinary browser accidents</h2></div><p className="mt-3 text-[12px] leading-6 text-[#596b65]">An in-progress game is saved locally in the same browser so a refresh, closed tab or browser restart does not casually wipe the table. This is local recovery, not an account or cloud-sync system.</p></div>
-              <div className="rounded-xl border border-[#d8ceb8] bg-[#fdfbf5] p-5 sm:p-6"><div className="flex items-center gap-3"><FileText size={18} className="text-[#477562]" /><h2 className="font-serif text-[25px] text-[#284d45]">The ledger is the record</h2></div><p className="mt-3 text-[12px] leading-6 text-[#66746e]">The app does not build a second version of the game afterwards. The confirmed ledger used during play becomes the printable record: choose a compact Game summary or a Full game record with the detailed evidence that was actually captured.</p></div>
-            </div>
-          </section>
-
           <section className="px-5 py-9 sm:px-8 sm:py-11 lg:px-12">
-            <div className="grid gap-4 md:grid-cols-3">
-              <a href="/guide" className="rounded-xl border border-[#d8ceb8] bg-[#fdfbf5] p-5 transition hover:-translate-y-0.5 hover:bg-[#fffaf0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]"><BookOpen size={18} className="text-[#477562]" /><h3 className="mt-4 font-serif text-[22px] text-[#284d45]">British scoring guide</h3><p className="mt-2 text-[11px] leading-5 text-[#66746e]">Use the British beginner guide if you want those rules explained progressively.</p></a>
-              <a href="/special-hands" className="rounded-xl border border-[#d8ceb8] bg-[#fdfbf5] p-5 transition hover:-translate-y-0.5 hover:bg-[#fffaf0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]"><Sparkles size={18} className="text-[#ae6249]" /><h3 className="mt-4 font-serif text-[22px] text-[#284d45]">British special hands</h3><p className="mt-2 text-[11px] leading-5 text-[#66746e]">See the British special-hand catalogue and visual examples.</p></a>
-              <a href="/about" className="rounded-xl border border-[#d8ceb8] bg-[#fdfbf5] p-5 transition hover:-translate-y-0.5 hover:bg-[#fffaf0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]"><HelpCircle size={18} className="text-[#477562]" /><h3 className="mt-4 font-serif text-[22px] text-[#284d45]">Rules and trust</h3><p className="mt-2 text-[11px] leading-5 text-[#66746e]">Read about the project, rule sources, independence and local-data approach.</p></a>
+            <div className="rounded-xl border border-[#d8ceb8] bg-[#f5eadb] p-5 sm:flex sm:items-center sm:justify-between sm:gap-8 sm:p-6">
+              <div className="max-w-[650px]">
+                <div className="font-mono text-[9px] uppercase tracking-[.18em] text-[#ae6249]">Need more detail?</div>
+                <h2 className="mt-2 font-serif text-[28px] leading-tight text-[#284d45]">The User Guide picks up where this walkthrough stops.</h2>
+                <p className="mt-2 text-[12px] leading-6 text-[#596b65]">
+                  Find step-by-step help for partial hands, the winning tile, recovery, correcting a hand, settlement and saving a game.
+                </p>
+              </div>
+              <div className="mt-5 flex shrink-0 flex-col gap-2 sm:mt-0">
+                <a href="/help" className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md bg-[#284d45] px-4 text-[11px] font-semibold text-[#f8f4e9] transition hover:bg-[#23443d] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249] focus-visible:ring-offset-2">
+                  Open User Guide <ArrowRight size={14} aria-hidden="true" />
+                </a>
+                <a href="/rules" className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-[#c9b99d] bg-[#fdfbf5] px-4 text-[11px] font-semibold text-[#284d45] transition hover:bg-[#fffaf0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249] focus-visible:ring-offset-2">
+                  See supported rules <ArrowRight size={14} aria-hidden="true" />
+                </a>
+              </div>
             </div>
           </section>
         </article>
