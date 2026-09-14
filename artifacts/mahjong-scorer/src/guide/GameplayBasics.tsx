@@ -106,11 +106,13 @@ function Tile({ asset, label, compact = false }: VisualTile & { compact?: boolea
 function TileGroup({ name, tiles }: { name: string; tiles: VisualTile[] }) {
   return (
     <div className="rounded-lg border border-[#dfd5c2] bg-[#fdfbf5] p-3">
-      <div className="flex gap-1.5 overflow-x-auto pb-1">
-        {tiles.map((tile, index) => (
-          <Tile key={`${name}-${tile.asset}-${index}`} {...tile} compact />
-        ))}
-      </div>
+      <HorizontalScrollRegion label={`${name} tile example`} className="pb-1">
+        <div className="flex min-w-max gap-1.5">
+          {tiles.map((tile, index) => (
+            <Tile key={`${name}-${tile.asset}-${index}`} {...tile} compact />
+          ))}
+        </div>
+      </HorizontalScrollRegion>
       <div className="mt-2 font-mono text-[9px] uppercase tracking-[.14em] text-[#ae6249]">{name}</div>
     </div>
   );
