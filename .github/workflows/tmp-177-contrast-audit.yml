@@ -21,14 +21,21 @@ jobs:
           printf '{"private":true}' > /tmp/a11y/package.json
           npm install --prefix /tmp/a11y --no-save --no-package-lock playwright@1.55.0 @axe-core/playwright@4.10.2
           node /tmp/a11y/node_modules/playwright/cli.js install --with-deps chromium
-      - name: Audit production contrast
+      - name: Wait for branch preview
+        run: |
+          for i in $(seq 1 90); do
+            if curl -fsS https://fix-177-public-page-contrast.bmja-mahjong-scorer.pages.dev/ >/dev/null; then exit 0; fi
+            sleep 2
+          done
+          exit 1
+      - name: Audit branch-preview contrast
         run: |
           node --input-type=commonjs <<'NODE'
           const { createRequire } = require('node:module');
           const req = createRequire('/tmp/a11y/package.json');
           const { chromium } = req('playwright');
           const AxeBuilder = req('@axe-core/playwright').default;
-          const base = 'https://mahjong.smooks.co.uk';
+          const base = 'https://fix-177-public-page-contrast.bmja-mahjong-scorer.pages.dev';
           const routes = [
             '/rules', '/rules/british', '/rules/western', '/features', '/how-it-works',
             '/help', '/about', '/mahjong-settlement', '/gameplay-basics', '/guide',
