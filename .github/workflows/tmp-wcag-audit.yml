@@ -17,7 +17,7 @@ jobs:
         with:
           node-version: 20
       - run: corepack enable
-      - run: pnpm install --frozen-lockfile
+      - run: pnpm install --frozen-lockfile --allow-build=esbuild
       - run: pnpm test
       - run: pnpm typecheck
       - run: PORT=4173 BASE_PATH=/ pnpm --filter @workspace/mahjong-scorer build
