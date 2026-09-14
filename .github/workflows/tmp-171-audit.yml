@@ -1,11 +1,11 @@
-name: Temporary 171 audit
+name: Temporary 171 SSR probe
 on:
   push:
     branches: [chore/171-seo-crawl-alignment]
 permissions:
   contents: read
 jobs:
-  audit:
+  probe:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -17,17 +17,5 @@ jobs:
           corepack enable
           corepack prepare pnpm@10.26.2 --activate
           pnpm install --frozen-lockfile
-      - name: Build current output
-        run: PORT=5173 BASE_PATH=/ pnpm run build
-      - name: Install isolated Playwright
-        env:
-          PLAYWRIGHT_TOOL_DIR: ${{ runner.temp }}/playwright-1.55.0
-        run: |
-          mkdir -p "$PLAYWRIGHT_TOOL_DIR"
-          printf '{"private":true}\n' > "$PLAYWRIGHT_TOOL_DIR/package.json"
-          npm install --prefix "$PLAYWRIGHT_TOOL_DIR" --no-save --no-package-lock playwright@1.55.0
-          node "$PLAYWRIGHT_TOOL_DIR/node_modules/playwright/cli.js" install --with-deps chromium
-      - name: Audit built and rendered routes
-        env:
-          PLAYWRIGHT_TOOL_DIR: ${{ runner.temp }}/playwright-1.55.0
-        run: node .github/scripts/tmp-171-audit.mjs
+      - name: Probe SSR compatibility for every canonical route
+        run: node .github/scripts/tmp-171-ssr-probe.mjs
