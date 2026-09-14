@@ -41,31 +41,37 @@ jobs:
             '/help', '/about', '/mahjong-settlement', '/gameplay-basics', '/guide',
             '/special-hands', '/scoring-examples', '/mahjong-rules-compared'
           ];
+          const viewports = [
+            { label: 'mobile', width: 390, height: 844 },
+            { label: 'desktop', width: 1280, height: 900 },
+          ];
 
           (async () => {
             const browser = await chromium.launch({ headless: true });
             let failures = 0;
-            for (const route of routes) {
-              const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
-              const page = await context.newPage();
-              await page.goto(base + route, { waitUntil: 'networkidle' });
-              const result = await new AxeBuilder({ page }).withRules(['color-contrast']).analyze();
-              const violation = result.violations.find(v => v.id === 'color-contrast');
-              if (!violation) {
-                console.log(`CONTRAST PASS — ${route}`);
-              } else {
-                failures += violation.nodes.length;
-                console.log(`\nCONTRAST FAIL — ${route} — nodes=${violation.nodes.length}`);
-                for (const node of violation.nodes) {
-                  const checks = [...node.any, ...node.all, ...node.none]
-                    .filter(check => check.id === 'color-contrast' && check.data)
-                    .map(check => check.data);
-                  console.log(`TARGET ${node.target.join(' ')}`);
-                  console.log(`HTML ${node.html}`);
-                  console.log(`DATA ${JSON.stringify(checks)}`);
+            for (const viewport of viewports) {
+              for (const route of routes) {
+                const context = await browser.newContext({ viewport: { width: viewport.width, height: viewport.height } });
+                const page = await context.newPage();
+                await page.goto(base + route, { waitUntil: 'networkidle' });
+                const result = await new AxeBuilder({ page }).withRules(['color-contrast']).analyze();
+                const violation = result.violations.find(v => v.id === 'color-contrast');
+                if (!violation) {
+                  console.log(`CONTRAST PASS — ${viewport.label} — ${route}`);
+                } else {
+                  failures += violation.nodes.length;
+                  console.log(`\nCONTRAST FAIL — ${viewport.label} — ${route} — nodes=${violation.nodes.length}`);
+                  for (const node of violation.nodes) {
+                    const checks = [...node.any, ...node.all, ...node.none]
+                      .filter(check => check.id === 'color-contrast' && check.data)
+                      .map(check => check.data);
+                    console.log(`TARGET ${node.target.join(' ')}`);
+                    console.log(`HTML ${node.html}`);
+                    console.log(`DATA ${JSON.stringify(checks)}`);
+                  }
                 }
+                await context.close();
               }
-              await context.close();
             }
             await browser.close();
             console.log(`\nTOTAL CONTRAST FAILING NODES: ${failures}`);
