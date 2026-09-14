@@ -26,30 +26,32 @@ jobs:
           path = Path('artifacts/mahjong-scorer/scripts/capture-help-screenshots.mjs')
           text = path.read_text()
 
-          old_bases = """const phaseOneScreenshotBases = [
-            'game-setup',
-            'game-table-score-entry',
-            'hand-builder-ordinary',
-            'partial-losing-hand',
-            'hand-winning-tile',
-            'hand-score-breakdown',
-            'game-ledger-settlement',
-            'print-save',
-          ];"""
-          old_bases = '\n'.join(line.strip() if index == 0 or index == 10 else line[10:] for index, line in enumerate(old_bases.splitlines()))
-          new_bases = """const coreScreenshotBases = [
-            'game-setup',
-            'game-table-score-entry',
-            'hand-builder-ordinary',
-            'partial-losing-hand',
-            'hand-winning-tile',
-            'hand-score-result',
-            'hand-score-breakdown',
-            'game-settlement-preview',
-            'game-ledger-settlement',
-            'print-save',
-          ];"""
-          new_bases = '\n'.join(line.strip() if index == 0 or index == 12 else line[10:] for index, line in enumerate(new_bases.splitlines()))
+          old_bases = '\n'.join([
+              'const phaseOneScreenshotBases = [',
+              "  'game-setup',",
+              "  'game-table-score-entry',",
+              "  'hand-builder-ordinary',",
+              "  'partial-losing-hand',",
+              "  'hand-winning-tile',",
+              "  'hand-score-breakdown',",
+              "  'game-ledger-settlement',",
+              "  'print-save',",
+              '];',
+          ])
+          new_bases = '\n'.join([
+              'const coreScreenshotBases = [',
+              "  'game-setup',",
+              "  'game-table-score-entry',",
+              "  'hand-builder-ordinary',",
+              "  'partial-losing-hand',",
+              "  'hand-winning-tile',",
+              "  'hand-score-result',",
+              "  'hand-score-breakdown',",
+              "  'game-settlement-preview',",
+              "  'game-ledger-settlement',",
+              "  'print-save',",
+              '];',
+          ])
           if text.count(old_bases) != 1:
               raise SystemExit(f'expected one original screenshot-base list, found {text.count(old_bases)}')
           text = text.replace(old_bases, new_bases, 1)
