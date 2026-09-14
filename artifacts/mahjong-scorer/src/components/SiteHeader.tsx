@@ -30,7 +30,8 @@ export const navigationGroups = [
   },
 ] as const;
 
-const secondaryDestinations = [
+export const secondaryDestinations = [
+  ['Features', '/features'],
   ['Help', '/help'],
   ['How it works', '/how-it-works'],
   ['About', '/about'],
