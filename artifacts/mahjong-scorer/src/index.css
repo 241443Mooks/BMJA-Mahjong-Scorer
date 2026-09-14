@@ -102,7 +102,7 @@
 .fine-rule { background: linear-gradient(90deg, hsl(var(--accent)), transparent); height: 2px; }
 .print-only { display: none; }
 
-/* WCAG 2.2 AA: strengthen only compact light-surface text combinations that failed 1.4.3. */
+/* WCAG 2.2 AA: strengthen only text combinations confirmed by the scorer/readability audit. */
 .screen-only.sticky [class~="text-[#ae6249]"],
 [data-testid="section-table-scores"] [class~="text-[#ae6249]"],
 #game-ledger [class~="text-[#ae6249]"],
@@ -119,6 +119,29 @@
 [data-testid^="button-season-"] [class~="text-[#66746e]"],
 [data-testid^="button-season-"] [class~="text-[#7a7769]"] {
   color: #596b65;
+}
+
+/* New-game setup: the 10px seat/game labels sit on #fbf8ed. */
+.mahjong-shell:has([data-testid="button-start-game"]) main [class~="text-[#7a7769]"] {
+  color: #55655f;
+}
+
+/* Hand scorer: include the darker #e8e1d1 context panels as well as cream cards. */
+.mahjong-shell:has([data-testid="mobile-hand-context"]) main [class~="text-[#66746e]"],
+.mahjong-shell:has([data-testid="mobile-hand-context"]) main [class~="text-[#7a7769]"] {
+  color: #55655f;
+}
+
+.mahjong-shell:has([data-testid="mobile-hand-context"]) main [class~="text-[#ae6249]"] {
+  color: #9a4d3a;
+}
+
+/* Dark score/settlement panels need a lighter coral, not the darkened light-surface accent. */
+.mahjong-shell:has([data-testid="mobile-hand-context"]) main [class~="text-[#d7a287]"],
+.mahjong-shell:has([data-testid="mobile-hand-context"]) main [class~="text-[#e6a48d]"],
+[data-testid="section-settlement-stage"] [class~="text-[#d7a287]"],
+[data-testid="section-settlement-stage"] [class~="text-[#e6a48d]"] {
+  color: #e4ad93;
 }
 
 @media print {
