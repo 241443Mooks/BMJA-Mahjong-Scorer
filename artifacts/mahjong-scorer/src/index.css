@@ -112,6 +112,10 @@
 [class~="text-[#d7a287]"] { color: #e4ad93; }
 [class~="placeholder:text-[#8a8779]"]::placeholder { color: #55655f; }
 
+/* Gameplay Basics dims concealed tile artwork, not the explanatory label. */
+#visibility .opacity-75 { opacity: 1; }
+#visibility .opacity-75 img { opacity: .75; }
+
 /* WCAG 2.2 AA: strengthen only text combinations confirmed by the scorer/readability audit. */
 .screen-only.sticky [class~="text-[#ae6249]"],
 [data-testid="section-table-scores"] [class~="text-[#ae6249]"],
