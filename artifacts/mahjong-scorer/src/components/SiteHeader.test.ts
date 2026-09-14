@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { navigationGroups, secondaryDestinations } from './SiteHeader';
+import { navigationGroups, secondaryDestinations, supportDestination } from './SiteHeader';
 
 describe('site navigation', () => {
   it('organises current user jobs as Play, Rules and Learn', () => {
@@ -27,10 +27,10 @@ describe('site navigation', () => {
     ]);
   });
 
-  it('keeps Features in the secondary More menu', () => {
+  it('promotes the User Guide while keeping lower-priority pages in More', () => {
+    expect(supportDestination).toEqual(['User Guide', '/help']);
     expect(secondaryDestinations).toEqual([
       ['Features', '/features'],
-      ['Help', '/help'],
       ['How it works', '/how-it-works'],
       ['About', '/about'],
     ]);
