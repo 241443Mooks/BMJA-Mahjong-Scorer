@@ -430,10 +430,10 @@ async function captureWinningTile(browser, viewport) {
 
 async function captureScoreResult(browser, viewport) {
   const { context, page } = await openExampleHand(browser, viewport);
-  const scoreCard = page.getByText('Current score', { exact: true }).locator('xpath=ancestor::section[1]');
+  const scoreHeader = page.getByText('Current score', { exact: true }).locator('xpath=ancestor::section[1]/div[1]');
   await captureElement(
     page,
-    scoreCard,
+    scoreHeader,
     `hand-score-result-${viewport.name}.png`,
     `${viewport.name} hand score result`,
   );
@@ -462,6 +462,11 @@ async function captureSettlementPreview(browser, viewport) {
   await page.getByTestId('input-score-dee').fill('32');
   const settlement = page.getByTestId('section-settlement-stage');
   await settlement.waitFor({ state: 'visible' });
+  if (viewport.name === 'mobile') {
+    await page.locator('.screen-only.sticky').first().evaluate((element) => {
+      element.style.setProperty('display', 'none', 'important');
+    });
+  }
   await captureElement(
     page,
     settlement,
