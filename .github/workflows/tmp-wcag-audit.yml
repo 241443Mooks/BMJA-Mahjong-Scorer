@@ -30,7 +30,7 @@ jobs:
           exit 1
       - name: Run rendered A/AA checks and diagnostics
         run: |
-          node <<'NODE'
+          node --input-type=commonjs <<'NODE'
           const { createRequire } = require('node:module');
           const req = createRequire('/tmp/a11y/package.json');
           const { chromium } = req('playwright');
