@@ -1,0 +1,85 @@
+name: Temporary issue 191 stable entry
+
+on:
+  push:
+    branches:
+      - fix/191-stable-manual-score-entry
+
+permissions:
+  contents: write
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Pin pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@10.26.2 --activate
+
+      - name: Apply bounded issue 191 patch
+        run: python .github/scripts/tmp-191-patch.py
+
+      - name: Install repository dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Test
+        run: pnpm test
+
+      - name: Typecheck
+        run: pnpm run typecheck
+
+      - name: Canonical production build
+        run: PORT=5173 BASE_PATH=/ pnpm run build
+
+      - name: Install temporary browser dependency
+        run: |
+          mkdir -p /tmp/issue191
+          cp .github/scripts/tmp-191-accept.mjs /tmp/issue191/accept.mjs
+          cd /tmp/issue191
+          npm init -y >/dev/null 2>&1
+          npm install playwright@1.55.0 >/dev/null
+          npx playwright install --with-deps chromium
+
+      - name: Run rendered acceptance
+        shell: bash
+        run: |
+          set -euo pipefail
+          (
+            cd artifacts/mahjong-scorer
+            PORT=4173 BASE_PATH=/ pnpm exec vite --host 127.0.0.1 --port 4173 > /tmp/issue191-vite.log 2>&1
+          ) &
+          server_pid=$!
+          trap 'kill $server_pid 2>/dev/null || true' EXIT
+          for i in {1..60}; do
+            if curl -fsS http://127.0.0.1:4173/ >/dev/null; then break; fi
+            sleep 1
+          done
+          curl -fsS http://127.0.0.1:4173/ >/dev/null
+          cd /tmp/issue191
+          BASE_URL=http://127.0.0.1:4173 node accept.mjs
+
+      - name: Diff guard
+        run: |
+          git diff --check
+          git status --short
+
+      - name: Commit durable issue 191 fix and remove temporary harness
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git rm .github/scripts/tmp-191-patch.py .github/scripts/tmp-191-accept.mjs .github/workflows/tmp-191-stable-entry.yml
+          git add CHANGELOG.md artifacts/mahjong-scorer/src/game/GameScorer.tsx artifacts/mahjong-scorer/src/game/GameScorer.test.ts
+          git commit -m 'fix: keep manual score entry stable while typing'
+          git push origin HEAD:fix/191-stable-manual-score-entry
