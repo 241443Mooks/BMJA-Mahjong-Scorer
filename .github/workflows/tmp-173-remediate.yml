@@ -26,6 +26,19 @@ jobs:
           corepack enable
           corepack prepare pnpm@10.26.2 --activate
 
+      - name: Tighten temporary patch selector
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('.github/scripts/tmp-173-remediate.py')
+          text = p.read_text()
+          old = '''    "                    className={`rounded-md px-4 py-2 text-[11px] font-semibold ${",\n    "                    className={`inline-flex items-center gap-1.5 rounded-md px-4 py-2 text-[11px] font-semibold ${",'''
+          new = '''    "                    className={`rounded-md px-4 py-2 text-[11px] font-semibold ${\\n                      outcomeType === 'win'",\n    "                    className={`inline-flex items-center gap-1.5 rounded-md px-4 py-2 text-[11px] font-semibold ${\\n                      outcomeType === 'win'",'''
+          if text.count(old) != 1:
+              raise SystemExit(f'expected one generic win-class replacement, found {text.count(old)}')
+          p.write_text(text.replace(old, new, 1))
+          PY
+
       - name: Apply bounded remediation patch
         run: python .github/scripts/tmp-173-remediate.py
 
