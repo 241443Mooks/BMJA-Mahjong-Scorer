@@ -18,17 +18,20 @@ Do not jump directly from an interesting comment to a feature.
 
 ## Structure
 
-- `pain-mining/evidence.csv` — one row per useful evidence observation.
-- `pain-mining/collection-log.md` — record of deliberate research passes, including searches that produce weak or contrary evidence.
-- `jobs/` — Jobs-to-be-Done clusters built from multiple evidence records.
-- `opportunities/` — candidate product responses to validated jobs. A solution can address several jobs; several solutions can compete for the same job.
-- `synthesis/pain-map.md` — comparative view of validated jobs and their current priority.
+- `pain-mining/evidence.csv` — canonical, source-verified evidence rows only.
+- `pain-mining/collection-log.md` — record of deliberate research passes, including weak and contrary findings.
+- `pain-mining/source-index-2026-09-15.csv` — 50 original URLs retained from the first Deep Research pass.
+- `pain-mining/recovery-note-2026-09-15.md` — provenance and recovery caveat for that pass.
+- `jobs/` — Jobs-to-be-Done clusters built from multiple observations.
+- `opportunities/` — candidate product responses to validated jobs.
+- `synthesis/pain-map.md` — comparative view of jobs and current priority.
+- `synthesis/` also contains coverage, hypothesis verdicts, new opportunities, gaps and dated research reports.
 
 ## Evidence principles
 
 1. **One row is one observation, not one thread.** A source may contain several distinct pains or jobs.
 2. **Preserve provenance.** Keep the original source URL and date where available.
-3. **Paraphrase by default.** Store only a short quote when the exact wording is unusually revealing. Do not archive whole posts/comments.
+3. **Paraphrase by default.** Store only a short quote when exact wording is unusually revealing. Do not archive whole posts/comments.
 4. **Separate problem from solution.** `Get a physical hand into the scorer without interrupting play` is a job. Voice, photography and manual tile entry are candidate solutions.
 5. **Unknown stays unknown.** Do not infer a ruleset, persona, severity or willingness to pay where the source does not support it.
 6. **Contrary evidence counts.** Log evidence that weakens a hypothesis as carefully as evidence that supports it.
@@ -39,7 +42,7 @@ Do not jump directly from an interesting comment to a feature.
 
 Use sequential IDs:
 
-- `E-0001`, `E-0002`, ... for evidence observations.
+- `E-0001`, `E-0002`, ... for canonical evidence observations.
 - `JTBD-001`, `JTBD-002`, ... for job clusters.
 - `OPP-001`, `OPP-002`, ... for opportunity hypotheses.
 
@@ -57,32 +60,30 @@ Use a 1-5 synthesis score only after clustering several observations:
 
 ## Opportunity assessment
 
-When comparing opportunities, consider:
-
-- pain severity;
-- frequency of the job;
-- number/range of affected users;
-- inadequacy of existing workarounds;
-- fit with the Table Companion concept;
-- differentiation from existing products;
-- credible willingness-to-pay signal;
-- implementation cost, safety and rules risk.
+When comparing opportunities, consider pain severity, frequency, breadth of affected users, inadequacy of current workarounds, Table Companion fit, differentiation, credible willingness-to-pay signals, implementation cost and rules/safety risk.
 
 A high-scoring opportunity still requires a product decision. It is not automatically a roadmap commitment.
+
+## Current evidence status — 2026-09-15
+
+The first Deep Research pass screened a broad set of public player-generated material and retained a synthesis representing **101 observations from 50 unique source URLs**, producing nine JTBD clusters and seven opportunity hypotheses.
+
+The original generated archive was not persisted. A later recovery package reconstructed its row-level CSV from preserved source metadata, snippets and the final report. Because those rows are reconstructed rather than byte-for-byte original source extraction, they have **not** been promoted into canonical `pain-mining/evidence.csv`.
+
+The durable repository therefore preserves:
+
+- the 50 original source URLs;
+- recovery provenance;
+- coverage counts;
+- the JTBD and opportunity synthesis;
+- contrary findings and research gaps.
+
+Before a high-impact decision relies on a specific observation, reopen the original URL and promote a source-checked observation into `evidence.csv`. The source is authoritative; synthesis remains revisable.
 
 ## Current discovery objective
 
 Before defining the smallest compelling Free and Plus products, understand the jobs people hire — or would hire — a Mahjong table companion to do.
 
-Current themes to investigate include, but are not limited to:
+Current research suggests the strongest territory is recurring interruption around a physical table: scoring, settlement, contextual explanation and shared state. My Table remains strategically interesting when it lets those jobs reuse the correct rules, but persistence and willingness to pay are not yet validated.
 
-- scoring without stopping play;
-- identifying what rules a family or table actually uses;
-- preserving and reusing house rules;
-- teaching and onboarding new players;
-- table/game administration and settlement;
-- remembering players, settings and previous games;
-- getting physical table state into software with minimum friction;
-- finding the right rule or explanation at the moment it is needed.
-
-These are research themes, not pre-approved features.
+Current themes remain research themes, not pre-approved features.

@@ -1,0 +1,20 @@
+dimension,value,count
+platform,Reddit,67
+platform,Google Play,15
+platform,forum,6
+platform,BoardGameGeek,5
+platform,App Store,3
+platform,Facebook,2
+platform,community website,2
+platform,web application documentation,1
+direction,supporting,72
+direction,contrary,17
+direction,neutral,12
+total,evidence_observations,101
+total,unique_source_urls,50
+total,jtbd_clusters,9
+total,opportunity_hypotheses,7
+reported_ruleset_cluster,Riichi,23
+reported_ruleset_cluster,American Mah Jongg,13
+reported_ruleset_cluster,British/BMJA-style,9
+reported_ruleset_cluster,unknown,21
