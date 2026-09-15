@@ -1,0 +1,95 @@
+name: Temporary issue 173 final evidence
+
+on:
+  push:
+    branches:
+      - audit/173-final-evidence
+
+permissions:
+  contents: write
+
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Pin pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@10.26.2 --activate
+
+      - name: Install repository dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Repository tests
+        run: pnpm test
+
+      - name: Typecheck
+        run: pnpm run typecheck
+
+      - name: Canonical production build
+        run: PORT=5173 BASE_PATH=/ pnpm run build
+
+      - name: Install temporary browser audit dependencies
+        run: |
+          mkdir -p /tmp/issue173
+          cp .github/scripts/tmp-173-final-audit.mjs /tmp/issue173/audit.mjs
+          cd /tmp/issue173
+          npm init -y >/dev/null 2>&1
+          npm install playwright@1.55.0 axe-core@4.10.3 >/dev/null
+          npx playwright install --with-deps chromium
+          sudo apt-get update -y >/dev/null
+          sudo apt-get install -y xdotool >/dev/null
+
+      - name: Start audit server
+        run: |
+          set -euo pipefail
+          (
+            cd artifacts/mahjong-scorer
+            PORT=4173 BASE_PATH=/ pnpm exec vite --host 127.0.0.1 --port 4173 > /tmp/issue173-vite.log 2>&1
+          ) &
+          echo $! > /tmp/issue173-vite.pid
+          for i in {1..60}; do
+            if curl -fsS http://127.0.0.1:4173/ >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/issue173-vite.log
+          exit 1
+
+      - name: Post-fix rendered regression
+        run: |
+          cd /tmp/issue173
+          BASE_URL=http://127.0.0.1:4173 node audit.mjs regression
+
+      - name: Literal Chromium 200 percent browser zoom spot-check
+        run: |
+          cd /tmp/issue173
+          xvfb-run -a env BASE_URL=http://127.0.0.1:4173 node audit.mjs zoom
+
+      - name: Diff guard
+        run: git diff --check
+
+      - name: Remove temporary audit harness
+        if: success()
+        run: |
+          rm -f .github/scripts/tmp-173-final-audit.mjs .github/workflows/tmp-173-final-audit.yml
+          git config user.name "241443Mooks"
+          git config user.email "132487762+241443Mooks@users.noreply.github.com"
+          git add -A
+          if ! git diff --cached --quiet; then
+            git commit -m "chore: remove temporary issue 173 audit harness"
+            git push origin HEAD:audit/173-final-evidence
+          fi
+
+      - name: Stop audit server
+        if: always()
+        run: |
+          if [ -f /tmp/issue173-vite.pid ]; then kill "$(cat /tmp/issue173-vite.pid)" 2>/dev/null || true; fi
