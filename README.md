@@ -124,8 +124,8 @@ The current learner/reference library is still intentionally **British-specific*
 | `/guide` | British scoring guide |
 | `/special-hands` | British special-hand catalogue |
 | `/scoring-examples` | Test-backed British worked examples and practice |
-| `/help` | Practical product help and how-tos |
-| `/how-it-works` | Product flow from evidence to score, settlement and record |
+| `/help` | First-class Table Companion User Guide & Help |
+| `/how-it-works` | Eight-stage visual journey from choosing rules to keeping a game record |
 | `/about` | Project purpose, trust, sources, privacy and attribution |
 
 Legacy learner aliases redirect to the canonical pages:
@@ -217,6 +217,7 @@ Public-route SEO configuration is centralised in:
 The production build reuses that configuration to generate:
 
 - route-specific crawler-visible HTML metadata;
+- real crawler-visible route body content rendered from the same React route components used by the browser;
 - canonical URLs;
 - Open Graph and Twitter metadata;
 - structured data;
@@ -224,7 +225,9 @@ The production build reuses that configuration to generate:
 - `robots.txt`;
 - Cloudflare Pages alias redirects.
 
-`/game` remains the canonical full-game tracker destination. `/mahjong-settlement` owns the substantive settlement explainer. Rules-specific game entry routes are functional entry states into the same game tool rather than duplicate content products.
+The build verifies that every canonical public route produces real prerendered content with one H1 and crawlable links. `/game` remains the canonical full-game tracker destination. `/mahjong-settlement` owns the substantive settlement explainer. Rules-specific game entry routes are functional entry states into the same game tool rather than duplicate content products.
+
+Further search work should be evidence-led from Google Search Console/indexing data rather than speculative keyword-page expansion.
 
 ## Run locally
 
@@ -268,18 +271,20 @@ Do not manually edit or crop the committed Help screenshots. See [`artifacts/mah
 
 ## Current direction
 
-The core Table Companion transformation is shipped. The immediate work is consolidation and evidence, not feature proliferation.
+The core Table Companion transformation and its public consolidation are shipped. Homepage structure, accessibility fixes discovered by automation, deterministic screenshots, first-class User Guide, visual How It Works journey and the final SEO/crawl/internal-link pass are all on `main`.
 
-Current near-term priorities are:
+The current priorities are evidence and validation rather than another broad product rewrite:
 
-- align remaining shared user-facing explanatory pages with the rules-aware Table Companion product truth;
-- run a dedicated SEO/crawl/internal-linking pass after that copy is coherent;
-- use Google Search Console/indexing data as evidence for subsequent content decisions;
-- complete Thompson & Maloney ordinary-rule verification through #121 without overstating Western certainty in the meantime;
-- use real-table validation, including #89, to decide whether paused ideas such as the rules diagnostic or exact profile-aware rule deep links deserve renewed priority;
-- consider PWA/offline hardening later through #48.
+- finish the remaining **manual / criterion-specific WCAG 2.2 AA evidence** under [#173](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/173); the project does not claim whole-product conformance yet;
+- use Google Search Console/indexing evidence to judge subsequent search/content work rather than creating speculative acquisition pages;
+- treat the five-part British scoring/settlement video series in [#164](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/164) as production-ready now that the visible product is stable;
+- explore voice hand entry through the bounded Phase 0/1 proof in [#147](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/147), keeping natural-language interpretation separate from deterministic scoring and postponing payment/account work until usefulness is proven;
+- keep Thompson & Maloney ordinary-rule verification [#121](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/121) evidence-blocked until the exact source edition is available;
+- prepare for real-table validation on 10 October through [#89](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/89);
+- retain Buzzard 2000 [#175](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/175) and MCR [#176](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/176) as future source/provenance work, not current playable-profile implementation;
+- keep non-active ideas in the single parking-lot index [#167](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/167).
 
-The umbrella transformation tracker is [#105](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/105).
+The umbrella programme map is [#105](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/105).
 
 ## Artwork
 
