@@ -14,15 +14,6 @@ const assert = (condition, message) => {
 const activeTestId = (page) => page.evaluate(() => document.activeElement?.getAttribute('data-testid'));
 const activeLabel = (page) => page.evaluate(() => document.activeElement?.getAttribute('aria-label') ?? document.activeElement?.textContent?.trim());
 
-async function startGame(page, names = ['Alex', 'Beth', 'Chris', 'Dana']) {
-  await page.goto(`${base}/game`, { waitUntil: 'networkidle' });
-  for (const [wind, name] of [['east', names[0]], ['south', names[1]], ['west', names[2]], ['north', names[3]]]) {
-    await page.getByTestId(`input-player-${wind}`).fill(name);
-  }
-  await page.getByTestId('button-start-game').click();
-  await page.getByRole('heading', { name: 'Enter the table scores' }).waitFor();
-}
-
 async function enterCompleteScores(page, values = ['30', '40', '50', '120']) {
   for (let i = 0; i < values.length; i += 1) {
     await page.getByTestId(`input-score-player-${i + 1}`).fill(values[i]);
@@ -40,7 +31,6 @@ async function runAxeRule(page, selector, rule, label) {
 async function regressionAudit() {
   const browser = await chromium.launch({ headless: true });
 
-  // #194 — mobile Escape returns focus to the menu trigger.
   {
     const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
     const page = await context.newPage();
@@ -57,7 +47,6 @@ async function regressionAudit() {
     await context.close();
   }
 
-  // #194 — desktop group Escape returns focus to the owning trigger.
   {
     const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
     const page = await context.newPage();
@@ -74,7 +63,6 @@ async function regressionAudit() {
     await context.close();
   }
 
-  // #197, #198, #199, #201 and recovered-status contrast in the actual game flow.
   {
     const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
     const page = await context.newPage();
@@ -104,10 +92,10 @@ async function regressionAudit() {
     assert((await draw.getAttribute('aria-pressed')) === 'true', 'Draw outcome did not become aria-pressed=true');
     assert((await win.getAttribute('aria-pressed')) === 'false', 'Mah Jong outcome did not become aria-pressed=false');
     assert((await draw.locator('svg').count()) >= 1, 'selected Draw outcome lacks visible non-colour check marker');
+    await page.locator('summary').filter({ hasText: 'Edit current hand' }).click();
     await win.click();
     console.log('PASS #198 outcome selection exposes state and non-colour marker');
 
-    // #201 / WCAG 3.2.2 — the last score can be typed digit-by-digit without context change.
     await page.getByTestId('input-score-player-1').fill('30');
     await page.getByTestId('input-score-player-2').fill('40');
     await page.getByTestId('input-score-player-3').fill('50');
@@ -148,7 +136,6 @@ async function regressionAudit() {
     assert(await page.getByTestId('button-confirm-hand').isVisible(), 'Record hand and advance is missing after deliberate settlement review');
     console.log('PASS #201 / 3.2.2 manual score entry stays stable until deliberate review');
 
-    // #199 — destructive Start over is protected by confirmation.
     const toolsSummary = page.locator('summary').filter({ hasText: 'Table tools' }).first();
     await toolsSummary.click();
     const startOver = page.getByTestId('button-start-over');
@@ -174,7 +161,6 @@ async function regressionAudit() {
     assert(acceptSeen, 'accepted Start over did not use confirmation dialog');
     console.log('PASS #199 Start over confirmation preserves/cancels and discards/accepts correctly');
 
-    // #195 — start a recoverable game, reload it, and re-check recovered-status contrast at two scroll states.
     for (const [wind, name] of [['east', 'Alex'], ['south', 'Beth'], ['west', 'Chris'], ['north', 'Dana']]) {
       await page.getByTestId(`input-player-${wind}`).fill(name);
     }
@@ -211,7 +197,6 @@ function findChromiumWindow() {
       const id = shell(command);
       if (id) return id;
     } catch {
-      // Try the next window query.
     }
   }
   throw new Error('Could not locate the visible Chromium window for literal browser zoom');
