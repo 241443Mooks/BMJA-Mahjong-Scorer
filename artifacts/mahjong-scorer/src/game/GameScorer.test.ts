@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { confirmHand, createBmjaGame } from './game';
-import { gameRecordRulesLabel, gameWorkspaceStage, getRoundSettlementPreview, previewRoundSettlement, recoveredGameConflictsWithRoute, settlementPreviewPresentation, shouldShowBritishSetupHelper } from './GameScorer';
+import { gameRecordRulesLabel, gameWorkspaceStage, getRoundSettlementPreview, previewRoundSettlement, recoveredGameConflictsWithRoute, settlementPreviewPresentation, shouldKeepScoreEntryOpen, shouldShowBritishSetupHelper, shouldShowEditCurrentHandSummary } from './GameScorer';
 import { BMJA_PROFILE_REF, OUTSIDE_THE_BOX_PROFILE_REF, resolveRulesProfile, WESTERN_TM_PROFILE_REF } from './ruleset';
 
 describe('game settlement preview', () => {
@@ -93,15 +93,24 @@ describe('game settlement preview', () => {
     expect(settlementPreviewPresentation(game, { type: 'draw' }, {})).toBe('no-payments');
   });
 
-  it('uses one main workspace stage instead of showing settlement before it is useful', () => {
+  it('keeps manual score entry structurally stable until settlement is deliberately reviewed', () => {
+    expect(shouldKeepScoreEntryOpen('entry', false)).toBe(true);
+    expect(shouldKeepScoreEntryOpen('settlement', true)).toBe(true);
+    expect(shouldKeepScoreEntryOpen('settlement', false)).toBe(false);
+    expect(shouldShowEditCurrentHandSummary('settlement', true)).toBe(false);
+    expect(shouldShowEditCurrentHandSummary('settlement', false)).toBe(true);
+  });
+
+  it('uses a deliberate settlement-review boundary instead of changing context on score input', () => {
     const game = createBmjaGame(
       ['east', 'south', 'west', 'north'].map((id) => ({ id, name: id })),
       { east: 'east', south: 'south', west: 'west', north: 'north' },
     );
-    expect(gameWorkspaceStage(game, 'awaiting-scores')).toBe('entry');
-    expect(gameWorkspaceStage(game, 'transactions')).toBe('settlement');
-    expect(gameWorkspaceStage(game, 'no-payments')).toBe('settlement');
+    expect(gameWorkspaceStage(game, 'awaiting-scores', false)).toBe('entry');
+    expect(gameWorkspaceStage(game, 'transactions', false)).toBe('entry');
+    expect(gameWorkspaceStage(game, 'transactions', true)).toBe('settlement');
+    expect(gameWorkspaceStage(game, 'no-payments', true)).toBe('settlement');
 
-    expect(gameWorkspaceStage({ ...game, isComplete: true }, 'awaiting-scores')).toBe('complete');
+    expect(gameWorkspaceStage({ ...game, isComplete: true }, 'awaiting-scores', false)).toBe('complete');
   });
 });
