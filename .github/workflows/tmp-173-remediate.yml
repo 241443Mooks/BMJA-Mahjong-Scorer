@@ -92,7 +92,7 @@ jobs:
           set -euo pipefail
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git rm .github/scripts/tmp-173-remediate.py .github/scripts/tmp-173-remediation-accept.mjs .github/workflows/tmp-173-remediate.yml
+          git rm -f .github/scripts/tmp-173-remediate.py .github/scripts/tmp-173-remediation-accept.mjs .github/workflows/tmp-173-remediate.yml
           git add CHANGELOG.md artifacts/mahjong-scorer/src/components/SiteHeader.tsx artifacts/mahjong-scorer/src/game/GameScorer.tsx artifacts/mahjong-scorer/src/game/HandRecord.tsx artifacts/mahjong-scorer/src/game/HandRecord.test.ts
           git commit -m 'fix: resolve manual WCAG audit findings'
           git push origin HEAD:fix/173-manual-a11y-findings
