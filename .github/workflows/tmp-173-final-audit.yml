@@ -41,7 +41,7 @@ jobs:
       - name: Install temporary browser audit dependencies
         run: |
           mkdir -p /tmp/issue173
-          cp .github/scripts/tmp-173-final-audit.mjs /tmp/issue173/audit.mjs
+          sed "s/page.locator('h1').first()/page.locator('h1:visible').first()/" .github/scripts/tmp-173-final-audit.mjs > /tmp/issue173/audit.mjs
           cd /tmp/issue173
           npm init -y >/dev/null 2>&1
           npm install playwright@1.55.0 axe-core@4.10.3 >/dev/null
