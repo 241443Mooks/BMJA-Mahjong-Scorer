@@ -4,6 +4,10 @@ This file records meaningful changes to **Mahjong Reference** at product-milesto
 
 ## Unreleased
 
+_No unreleased product changes._
+
+## 2026-09-14 — Accessible, guided and crawlable Table Companion
+
 ### Added
 
 - Promoted deterministic product screenshots into a reusable **10-state Table Companion library**, including distinct score-result and pre-confirmation **Who pays whom** captures for Help, How It Works and User Guide reuse. [#161](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/161)
