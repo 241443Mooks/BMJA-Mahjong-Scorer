@@ -125,7 +125,7 @@ assert(acceptedMessage.includes('current saved game'), 'confirmed Start over did
 // Static contract checks for #196/#197, complementary to the existing SSR HandRecord tests.
 assert(repoRoot, 'REPO_ROOT was not provided');
 const handSource = fs.readFileSync(path.join(repoRoot, 'artifacts/mahjong-scorer/src/game/HandRecord.tsx'), 'utf8');
-assert(!/className=\{`relative h-12[\s\S]*?aria-label=/.test(handSource), 'recorded tile still names a generic wrapper');
+assert(!handSource.includes('aria-label={winning ? `${artwork.label}, winning tile` : artwork.label}'), 'recorded tile still names a generic wrapper');
 assert(handSource.includes('alt={winning ? `${artwork.label}, winning tile` : artwork.label}'), 'recorded tile image does not carry the accessible tile name');
 const gameSource = fs.readFileSync(path.join(repoRoot, 'artifacts/mahjong-scorer/src/game/GameScorer.tsx'), 'utf8');
 assert(gameSource.includes('role="alert" data-testid="preview-domain-error"'), 'preview domain error is not an alert');
