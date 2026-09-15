@@ -38,7 +38,7 @@ async function enterStableManualScores(page, label) {
     assert(await page.evaluate(() => document.activeElement?.getAttribute('data-testid')) === 'input-score-player-4', `${label}: final score lost focus while typing ${expected}`);
     const rect = await score4.boundingBox();
     const viewport = await page.viewportSize();
-    if (!(rect && viewport && rect.bottom > 0 && rect.top < viewport.height)) {
+    if (!(rect && viewport && rect.y + rect.height > 0 && rect.y < viewport.height)) {
       const diagnostics = await page.evaluate(() => ({
         scrollY: window.scrollY,
         active: document.activeElement?.getAttribute('data-testid'),
@@ -47,7 +47,7 @@ async function enterStableManualScores(page, label) {
       }));
       throw new Error(`${label}: final score left viewport while typing ${expected}; rect=${JSON.stringify(rect)} diagnostics=${JSON.stringify(diagnostics)}`);
     }
-    assert(Math.abs(rect.top - beforeRect.top) < 8, `${label}: final score moved ${Math.abs(rect.top - beforeRect.top)}px while typing ${expected}`);
+    assert(Math.abs(rect.y - beforeRect.y) < 8, `${label}: final score moved ${Math.abs(rect.y - beforeRect.y)}px while typing ${expected}`);
   }
 
   const afterScroll = await page.evaluate(() => window.scrollY);
@@ -73,7 +73,7 @@ async function enterStableManualScores(page, label) {
   await page.waitForTimeout(60);
   assert(await score2.inputValue() === '75', `${label}: edited multi-digit score was not completed`);
   const editAfter = await score2.boundingBox();
-  assert(editBefore && editAfter && Math.abs(editAfter.top - editBefore.top) < 8, `${label}: edited score moved while typing`);
+  assert(editBefore && editAfter && Math.abs(editAfter.y - editBefore.y) < 8, `${label}: edited score moved while typing`);
   assert(!(await page.getByTestId('section-settlement-stage').isVisible().catch(() => false)), `${label}: editing a score triggered settlement without review`);
 
   // Detailed scorer affordance remains present for each player.
