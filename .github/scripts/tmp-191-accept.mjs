@@ -37,16 +37,29 @@ async function enterStableManualScores(page, label) {
     assert(await details.getAttribute('open') !== null, `${label}: score-entry details collapsed while typing ${expected}`);
     assert(await page.evaluate(() => document.activeElement?.getAttribute('data-testid')) === 'input-score-player-4', `${label}: final score lost focus while typing ${expected}`);
     const rect = await score4.boundingBox();
-    assert(rect && rect.bottom > 0 && rect.top < (await page.viewportSize()).height, `${label}: final score left the viewport while typing ${expected}`);
+    const viewport = await page.viewportSize();
+    if (!(rect && viewport && rect.bottom > 0 && rect.top < viewport.height)) {
+      const diagnostics = await page.evaluate(() => ({
+        scrollY: window.scrollY,
+        active: document.activeElement?.getAttribute('data-testid'),
+        innerHeight: window.innerHeight,
+        visualViewportHeight: window.visualViewport?.height ?? null,
+      }));
+      throw new Error(`${label}: final score left viewport while typing ${expected}; rect=${JSON.stringify(rect)} diagnostics=${JSON.stringify(diagnostics)}`);
+    }
     assert(Math.abs(rect.top - beforeRect.top) < 8, `${label}: final score moved ${Math.abs(rect.top - beforeRect.top)}px while typing ${expected}`);
   }
 
   const afterScroll = await page.evaluate(() => window.scrollY);
   const scrollDelta = Math.abs(afterScroll - beforeScroll);
   assert(scrollDelta < 20, `${label}: viewport jumped ${scrollDelta}px while entering final score`);
-  assert(await page.getByTestId('section-settlement-stage').isVisible(), `${label}: settlement preview did not appear after scores became complete`);
 
-  // Editing an existing score must stay equally calm.
+  // Completing the fourth score must not itself change context.
+  assert(!(await page.getByTestId('section-settlement-stage').isVisible().catch(() => false)), `${label}: settlement appeared before deliberate review`);
+  const review = page.getByTestId('button-review-settlement');
+  assert(await review.isVisible(), `${label}: Review settlement action did not appear after scores became complete`);
+
+  // Editing an existing score before review must stay equally calm.
   await score2.scrollIntoViewIfNeeded();
   await score2.focus();
   const editBefore = await score2.boundingBox();
@@ -61,11 +74,18 @@ async function enterStableManualScores(page, label) {
   assert(await score2.inputValue() === '75', `${label}: edited multi-digit score was not completed`);
   const editAfter = await score2.boundingBox();
   assert(editBefore && editAfter && Math.abs(editAfter.top - editBefore.top) < 8, `${label}: edited score moved while typing`);
+  assert(!(await page.getByTestId('section-settlement-stage').isVisible().catch(() => false)), `${label}: editing a score triggered settlement without review`);
 
   // Detailed scorer affordance remains present for each player.
   assert(await page.getByTestId('button-calculate-player-2').isVisible(), `${label}: detailed Calculate action disappeared`);
 
-  // Progression remains explicit.
+  // Settlement is shown only at a deliberate boundary.
+  await review.scrollIntoViewIfNeeded();
+  await review.click();
+  await page.waitForTimeout(100);
+  assert(await page.getByTestId('section-settlement-stage').isVisible(), `${label}: settlement did not appear after Review settlement`);
+
+  // Progression remains a second explicit action.
   const confirm = page.getByTestId('button-confirm-hand');
   await confirm.scrollIntoViewIfNeeded();
   await confirm.click();
