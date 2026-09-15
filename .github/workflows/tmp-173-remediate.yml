@@ -1,0 +1,85 @@
+name: Temporary WCAG 173 remediation
+
+on:
+  push:
+    branches:
+      - fix/173-manual-a11y-findings
+
+permissions:
+  contents: write
+
+jobs:
+  remediate:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Pin pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@10.26.2 --activate
+
+      - name: Apply bounded remediation patch
+        run: python .github/scripts/tmp-173-remediate.py
+
+      - name: Install repository dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Test
+        run: pnpm test
+
+      - name: Typecheck
+        run: pnpm run typecheck
+
+      - name: Canonical production build
+        run: PORT=5173 BASE_PATH=/ pnpm run build
+
+      - name: Install temporary browser audit dependencies
+        run: |
+          mkdir -p /tmp/wcag173
+          cp .github/scripts/tmp-173-remediation-accept.mjs /tmp/wcag173/accept.mjs
+          cd /tmp/wcag173
+          npm init -y >/dev/null 2>&1
+          npm install playwright@1.55.0 axe-core@4.10.3 >/dev/null
+          npx playwright install --with-deps chromium
+
+      - name: Run rendered acceptance
+        shell: bash
+        run: |
+          set -euo pipefail
+          (
+            cd artifacts/mahjong-scorer
+            PORT=4173 BASE_PATH=/ pnpm exec vite --host 127.0.0.1 --port 4173 > /tmp/wcag173-vite.log 2>&1
+          ) &
+          server_pid=$!
+          trap 'kill $server_pid 2>/dev/null || true' EXIT
+          for i in {1..60}; do
+            if curl -fsS http://127.0.0.1:4173/ >/dev/null; then break; fi
+            sleep 1
+          done
+          curl -fsS http://127.0.0.1:4173/ >/dev/null
+          cd /tmp/wcag173
+          REPO_ROOT="$GITHUB_WORKSPACE" BASE_URL=http://127.0.0.1:4173 node accept.mjs
+
+      - name: Diff guard
+        run: |
+          git diff --check
+          git status --short
+
+      - name: Commit durable remediation and remove temporary harness
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git rm .github/scripts/tmp-173-remediate.py .github/scripts/tmp-173-remediation-accept.mjs .github/workflows/tmp-173-remediate.yml
+          git add CHANGELOG.md artifacts/mahjong-scorer/src/components/SiteHeader.tsx artifacts/mahjong-scorer/src/game/GameScorer.tsx artifacts/mahjong-scorer/src/game/HandRecord.tsx artifacts/mahjong-scorer/src/game/HandRecord.test.ts
+          git commit -m 'fix: resolve manual WCAG audit findings'
+          git push origin HEAD:fix/173-manual-a11y-findings
