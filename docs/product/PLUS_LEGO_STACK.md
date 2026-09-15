@@ -4,7 +4,9 @@ Status: **module-fit recommendation before implementation**
 Parent: #206  
 Architecture: `MAHJONG_REFERENCE_PLUS_ARCHITECTURE.md`  
 Backlog: `PLUS_IMPLEMENTATION_BACKLOG.md`  
-Reuse constraints: `PLUS_REUSE_MAP.md`
+Reuse constraints: `PLUS_REUSE_MAP.md`  
+Cross-profile cloud contract: `CROSS_PROFILE_CLOUD_GAME_CONTRACT.md`  
+Internationalisation: `I18N_FOUNDATION.md`
 
 ## Decision rule
 
@@ -31,7 +33,22 @@ Why this is preferable to custom routing:
 - optional Hono RPC client typing if useful later;
 - no need to replace React/Vite.
 
-### 2. D1 + Drizzle remains the product-data layer
+### 2. Add i18n as shared frontend infrastructure before multiplying new UI
+
+Use **i18next + react-i18next** for application strings and native `Intl` for locale-aware formatting.
+
+This is shared platform Lego for free/product/account/rules UI, not a Plus dependency.
+
+Important constraints:
+
+- existing English URLs stay unchanged;
+- translated indexable public pages use explicit locale-prefixed URLs;
+- rules/profile IDs remain stable language-independent domain IDs;
+- long specialist rules content is reviewed/localized deliberately rather than blindly translated at runtime.
+
+`preferredLocale` is also the best first harmless account-backed value for proving the #207 auth/database vertical slice.
+
+### 3. D1 + Drizzle remains the product-data layer
 
 Use Cloudflare D1 for Plus relational data and Drizzle for Mahjong product tables and checked-in migrations.
 
@@ -41,7 +58,7 @@ Reason: native D1 is viable, but the application already needs Drizzle for produ
 
 This is an operational-simplicity choice, not a belief that native D1 is unsupported.
 
-### 3. Better Auth owns identity/account lifecycle
+### 4. Better Auth owns identity/account lifecycle
 
 Use Better Auth instead of custom authentication code.
 
@@ -68,7 +85,7 @@ Do not build:
 
 A transactional email provider only implements Better Auth's `sendVerificationOTP` callback.
 
-### 4. Resend is the default OTP mail transport
+### 5. Resend is the default OTP mail transport
 
 Use Resend (or another provider with the same tiny adapter contract) to deliver OTP/account lifecycle mail.
 
@@ -76,7 +93,7 @@ Mahjong Reference owns message copy and a tiny mail adapter, not SMTP infrastruc
 
 Provider choice must remain swappable.
 
-### 5. Better Auth's official Stripe plugin owns recurring billing plumbing
+### 6. Better Auth's official Stripe plugin owns recurring billing plumbing
 
 Use `@better-auth/stripe` for the Plus subscription wherever its model satisfies the product contract.
 
@@ -106,7 +123,7 @@ Do **not** build a generic `entitlement_grant` system in v1 unless a real requir
 
 If manual/promotional access later becomes necessary, add the smallest explicit override mechanism then.
 
-### 6. Use Stripe-hosted surfaces for money UI
+### 7. Use Stripe-hosted surfaces for money UI
 
 Use Stripe Checkout and Customer Portal.
 
@@ -114,7 +131,7 @@ Do not build custom card forms, invoice screens, payment-method management or ca
 
 At launch, use Stripe Checkout's supported tax/location options and Stripe Tax where the actual tax decision requires them rather than encoding UK/international tax arithmetic in Mahjong Reference.
 
-### 7. Keep one small custom credit ledger for voice
+### 8. Keep one small custom credit ledger for voice
 
 Do **not** replace the proposed `credit_entry` ledger with Stripe Billing Credits for v1.
 
@@ -133,7 +150,7 @@ Use Stripe only to collect money for top-ups. Create one-time Checkout Sessions 
 
 Prefer routing relevant one-time-payment events through the **same Better Auth Stripe webhook endpoint / `onEvent` hook** rather than creating a second Stripe webhook-verification subsystem.
 
-### 8. Do not buy a general sync engine for cloud games
+### 9. Do not buy a general sync engine for cloud games
 
 Replicache/RxDB-style local-first sync engines exist, but they solve a broader collaborative/offline replication problem than Mahjong Reference currently has.
 
@@ -150,9 +167,13 @@ The smaller implementation is:
 
 `existing local game persistence + Hono API + D1/Drizzle + Zod + TanStack Query + integer revision`
 
+The durable cloud format is a neutral versioned envelope plus a profile-owned validated replay payload. Do not persist the current BMJA-shaped `GameState` wholesale as the universal cloud schema.
+
+This lets BMJA, Buzzard 2000, MCR and EMA Riichi 2025 coexist without redesigning the D1 table for each scoring grammar.
+
 Do not add CRDTs, realtime subscriptions, push infrastructure or a second client database until a demonstrated use case requires them.
 
-### 9. Reuse existing frontend Lego
+### 10. Reuse existing frontend Lego
 
 Do not add another frontend architecture for Plus.
 
@@ -165,7 +186,7 @@ Use what the repo already has:
 - current responsive/accessibility patterns;
 - existing game persistence/model as the canonical local truth.
 
-### 10. Use Cloudflare and Better Auth security primitives
+### 11. Use Cloudflare and Better Auth security primitives
 
 For auth endpoints:
 
@@ -179,7 +200,7 @@ For non-auth premium endpoints such as voice:
 
 Do not build a distributed rate limiter.
 
-### 11. Use maintained testing Lego
+### 12. Use maintained testing Lego
 
 Use:
 
@@ -200,11 +221,12 @@ After the module-fit pass, the main bespoke Plus code should be limited to these
 3. **Optimistic revision rule** — reject stale writes instead of silent overwrite.
 4. **Local-to-cloud adoption UX** — signing in never replaces the table's current game.
 5. **Sync coordinator/conflict UX** — local play keeps working; user deliberately resolves divergence.
-6. **Small preferences model** — only reusable Mahjong/table defaults.
+6. **Small preferences model** — only reusable Mahjong/table defaults, beginning with `preferredLocale`.
 7. **`hasPlus` application policy** — adapt subscription status to product access/lapse rules.
 8. **Voice credit ledger** — immediate auditable service-unit balance.
 9. **Voice gateway/evidence adapter** — only after #147; AI populates evidence, deterministic scorer remains authority.
 10. **Product/privacy/export cleanup hooks** — domain data belonging to an account.
+11. **Rules-engine seams** — profile-discriminated scoring/outcome/progression where Buzzard/MCR/Riichi genuinely differ.
 
 Everything else should be provider configuration, plugin wiring, schema generation or tests around maintained components.
 
@@ -214,6 +236,7 @@ The 44 backlog rows remain useful as acceptance checks, but they should **not** 
 
 Expected consolidation after this Lego pass:
 
+- i18n foundation: roughly **2–3 PRs** for English plumbing, pilot locale and localized prerender/SEO;
 - Phase 1 auth/backend: roughly **3–4 PRs**, not 8 bespoke systems;
 - Phase 2 cloud game product work: roughly **5–6 PRs**;
 - Phase 3 subscriptions: roughly **2–3 PRs** if the Better Auth Stripe plugin fit is confirmed in code;
@@ -221,24 +244,39 @@ Expected consolidation after this Lego pass:
 - Phase 5 voice integration: roughly **3–4 PRs** after #147;
 - Phase 6 launch/ops: roughly **3–5 PRs**, much of it configuration/review rather than application code.
 
-Working expectation: around **18–25 reviewable PRs** for the full Plus programme, with only a minority representing substantial new custom subsystems.
+Working expectation: around **20–28 reviewable PRs** for i18n + full Plus, with only a minority representing substantial new custom subsystems. Ruleset-engine work remains a parallel programme rather than being hidden inside the Plus estimate.
 
 This is a planning estimate, not a commitment; adjacent small configuration concerns should share a PR when they form one coherent integration.
 
 ## First implementation wave after Codex reset
 
-Do not start with 44 tickets.
+Build upward and inspect each layer rather than designing the whole service in one pass.
 
 Recommended first wave:
 
-1. **Cloudflare/Hono backend shell + D1/Drizzle migration pipeline**.
-2. **Better Auth integration using Drizzle + Email OTP + test utilities**.
-3. **Resend OTP transport + Better Auth rate limits/Turnstile protection + account shell**.
-4. **Cloud-game codec + source-linked round-trip fixtures**.
+1. **English-only i18next/react-i18next foundation** — zero visible English change; one bounded shared surface extracted.
+2. **Language selector + local `preferredLocale`** — still no account dependency.
+3. **Cloudflare/Hono backend shell + D1/Drizzle migration pipeline**.
+4. **Better Auth + Email OTP + test utilities + Resend adapter**.
+5. **Sync `preferredLocale` for the signed-in account** and prove it follows the user to another browser/session.
+6. **Stop and review the actual stack before cloud-game work.**
+7. Then implement the **neutral cloud-game envelope + current-profile codec/round-trip fixtures**.
 
-After those are reviewed, promote the next dependency-ready cloud/save jobs.
+That first vertical slice proves UI localisation, local preference, API routing, database, migrations, authentication, account scoping and cross-device persistence using harmless data.
 
-Do not touch subscription billing until the Better Auth Stripe plugin has been exercised against the actual worker/D1 stack in a bounded spike; do not touch voice metering until #147 passes its product gate.
+Do not touch subscription billing until the Better Auth Stripe plugin has been exercised against the actual Worker/D1 stack in a bounded spike; do not touch voice metering until #147 passes its product gate.
+
+## Parallel rules work
+
+The platform foundation should be designed against the known rules expansion sequence:
+
+- **Buzzard 2000** — classical-family reuse test;
+- **MCR / WMO 2006** — separate additive-fan scoring-grammar test;
+- **EMA Riichi 2025** — high-complexity scoring + game-state test.
+
+Use these profiles to test abstractions, not to invent a universal framework in advance.
+
+The cloud contract and i18n design already keep profile identity/version separate from display language and profile-specific replay payloads.
 
 ## Principle
 
