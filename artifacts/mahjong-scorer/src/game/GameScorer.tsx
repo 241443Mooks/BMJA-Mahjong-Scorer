@@ -127,10 +127,20 @@ export const settlementPreviewPresentation = (
 export const gameWorkspaceStage = (
   game: GameState,
   presentation: ReturnType<typeof settlementPreviewPresentation>,
+  settlementReviewRequested = true,
 ) => {
   if (game.isComplete) return 'complete' as const;
-  return presentation === 'awaiting-scores' ? 'entry' as const : 'settlement' as const;
+  if (presentation === 'awaiting-scores') return 'entry' as const;
+  return settlementReviewRequested ? 'settlement' as const : 'entry' as const;
 };
+
+type GameWorkspaceStage = ReturnType<typeof gameWorkspaceStage>;
+
+export const shouldKeepScoreEntryOpen = (stage: GameWorkspaceStage, editingHand: boolean) =>
+  stage === 'entry' || editingHand;
+
+export const shouldShowEditCurrentHandSummary = (stage: GameWorkspaceStage, editingHand: boolean) =>
+  stage === 'settlement' && !editingHand;
 
 export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedScore, initialRulesProfile }: GameScorerProps) {
   const [recovered, setRecovered] = useState(() =>
@@ -150,6 +160,7 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
   const [error, setError] = useState('');
   const [printMode, setPrintMode] = useState<'summary' | 'full' | null>(null);
   const [editingHand, setEditingHand] = useState(false);
+  const [settlementReviewRequested, setSettlementReviewRequested] = useState(false);
   const tableScoresRef = useRef<HTMLDetailsElement>(null);
   const tableToolsRef = useRef<HTMLDetailsElement>(null);
   const gameLedgerRef = useRef<HTMLDetailsElement>(null);
@@ -222,6 +233,8 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
       );
       setScores(returned.draft.scores);
       setScoreRecords(returned.draft.scoreRecords);
+      setEditingHand(true);
+      setSettlementReviewRequested(false);
       setError('');
       returnAppliedScoreToTable(returnedScore, tableScoresRef.current);
     } catch (caught) {
@@ -260,6 +273,7 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
     setScoreRecords(reconciled.scoreRecords);
     setOutcomeType(nextOutcome.type);
     if (nextOutcome.type === 'win') setWinnerId(nextOutcome.winnerId);
+    setSettlementReviewRequested(nextOutcome.type === 'draw');
     setError(
       invalidated
         ? 'Winner changed. Recalculate the affected detailed hands before confirming.'
@@ -274,11 +288,14 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
   const previewPresentation = game
     ? settlementPreviewPresentation(game, outcome, scores)
     : 'awaiting-scores';
-  const workspaceStage = game ? gameWorkspaceStage(game, previewPresentation) : 'entry';
-
-  useEffect(() => {
-    if (workspaceStage !== 'entry') setEditingHand(false);
-  }, [workspaceStage]);
+  const settlementReadyForReview = previewPresentation !== 'awaiting-scores';
+  const workspaceStage = game
+    ? gameWorkspaceStage(
+        game,
+        previewPresentation,
+        settlementReviewRequested || outcomeType === 'draw',
+      )
+    : 'entry';
 
   const startGame = () => {
     const trimmed = names.map((name) => name.trim());
@@ -305,6 +322,7 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
     setScoreRecords({});
     setIncidents([]);
     setEditingHand(false);
+    setSettlementReviewRequested(false);
     setWinnerId(players[0].id);
     setError('');
   };
@@ -321,6 +339,7 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
     setWinnerId('');
     setOutcomeType('win');
     setEditingHand(false);
+    setSettlementReviewRequested(false);
     setError('');
   };
 
@@ -328,6 +347,8 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
     setScores({});
     setScoreRecords({});
     setIncidents([]);
+    setEditingHand(false);
+    setSettlementReviewRequested(false);
     const east = Object.entries(nextGame.seats).find(
       ([, seat]) => seat === 'east',
     )?.[0];
@@ -540,10 +561,10 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
           <p>Generated {new Date().toLocaleDateString('en-GB')}</p>
         </div>
         <section className="min-w-0">
-          {!game.isComplete && <details ref={tableScoresRef} data-testid="section-table-scores" open={workspaceStage === 'entry' || editingHand} onToggle={(event) => {
+          {!game.isComplete && <details ref={tableScoresRef} data-testid="section-table-scores" open={shouldKeepScoreEntryOpen(workspaceStage, editingHand)} onToggle={(event) => {
             if (workspaceStage === 'settlement') setEditingHand(event.currentTarget.open);
           }} className="screen-only scroll-mt-4 rounded-xl border border-[#d8ceb8] bg-[#fbf8ed] p-5 sm:p-6">
-            {workspaceStage === 'settlement' && <summary className="mb-5 cursor-pointer font-mono text-[10px] uppercase tracking-[.16em] text-[#ae6249]">Edit current hand</summary>}
+            {shouldShowEditCurrentHandSummary(workspaceStage, editingHand) && <summary className="mb-5 cursor-pointer font-mono text-[10px] uppercase tracking-[.16em] text-[#ae6249]">Edit current hand</summary>}
             <div className="mb-5">
               <div className="font-mono text-[10px] uppercase tracking-[.2em] text-[#ae6249]">
                 Current hand
@@ -649,6 +670,7 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
                            placeholder="Enter score"
                           data-testid={`input-score-${player.id}`}
                           value={scores[player.id] === undefined ? '' : scores[player.id]}
+                          onFocus={() => setEditingHand(true)}
                            onChange={(event) => {
                              const value = event.target.value;
                              const next: RoundScoringDraft = applyManualScore(
@@ -659,6 +681,7 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
                              );
                              setScores(next.scores);
                              setScoreRecords(next.scoreRecords);
+                             setSettlementReviewRequested(false);
                            }}
                           className="w-full min-w-0 rounded-md border border-[#cfc3aa] bg-[#fdfbf5] px-3 py-3 font-mono text-[16px] text-[#284d45] outline-none focus:ring-2 focus:ring-[#ae6249]"
                         />
@@ -717,6 +740,18 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
                       </div>)}
                     </div>}
                   </section>
+                )}
+                {outcomeType === 'win' && settlementReadyForReview && workspaceStage === 'entry' && (
+                  <div className="mt-5 flex justify-end">
+                    <button
+                      type="button"
+                      data-testid="button-review-settlement"
+                      onClick={() => setSettlementReviewRequested(true)}
+                      className="inline-flex min-h-11 items-center gap-2 rounded-md bg-[#284d45] px-4 py-2 text-[12px] font-semibold text-[#f8f4e9] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249] focus-visible:ring-offset-2"
+                    >
+                      Review settlement <ArrowRight size={15} aria-hidden="true" />
+                    </button>
+                  </div>
                 )}
               </>
             )}

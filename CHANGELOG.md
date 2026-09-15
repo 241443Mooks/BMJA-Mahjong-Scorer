@@ -6,6 +6,7 @@ This file records meaningful changes to **Mahjong Reference** at product-milesto
 
 ### Fixed
 
+- Kept manual table-score entry calm while typing or editing multi-digit values by requiring an explicit **Review settlement** action before the settlement workspace appears; progression still requires **Record hand and advance**. [#191](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/191)
 - Closed the manual WCAG audit findings around Escape focus restoration, recovered-game status contrast, recorded-tile semantics, live error announcements, outcome selected state and confirmation before discarding a recoverable game. [#194](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/194) [#195](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/195) [#196](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/196) [#197](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/197) [#198](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/198) [#199](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/199)
 
 ## 2026-09-14 — Accessible, guided and crawlable Table Companion
