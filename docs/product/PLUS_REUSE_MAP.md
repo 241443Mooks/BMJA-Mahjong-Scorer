@@ -3,13 +3,14 @@
 Status: **implementation-preparation constraint**  
 Parent: #206  
 Architecture: `MAHJONG_REFERENCE_PLUS_ARCHITECTURE.md`  
-Bounded backlog: `PLUS_IMPLEMENTATION_BACKLOG.md`
+Bounded backlog: `PLUS_IMPLEMENTATION_BACKLOG.md`  
+Concrete stack decision: `PLUS_LEGO_STACK.md`
 
 ## Principle
 
 > **Do not custom-build commodity SaaS plumbing. Integrate maintained platform/library capability, then write only the Mahjong-specific seams and product behaviour.**
 
-The 44 backlog rows are acceptance concerns, **not 44 bespoke subsystems**. Several may share one implementation session/PR when an established module already owns most of the behaviour.
+The 44 backlog rows are acceptance concerns, **not 44 bespoke subsystems**. Several should share one implementation session/PR when an established module already owns most of the behaviour.
 
 Before implementing any P1–P6 job, the implementation brief must contain a short **reuse check**:
 
@@ -22,7 +23,9 @@ Prefer official/provider-maintained integrations over community glue where both 
 
 ## Use existing platform/library capability
 
-### Cloudflare
+### Cloudflare + Hono
+
+Keep the existing React/Vite frontend and Cloudflare deployment.
 
 Use Cloudflare's existing primitives rather than constructing equivalents:
 
@@ -30,13 +33,19 @@ Use Cloudflare's existing primitives rather than constructing equivalents:
 - D1 binding for relational persistence;
 - Secrets / environment bindings for server-only credentials;
 - Wrangler/local bindings for development and migration/deployment tooling;
-- Workers Rate Limiting binding where route/user service throttling is required.
+- Workers Rate Limiting binding where non-auth premium route/user throttling is required.
 
-Do not build a home-grown API server, secret store or distributed rate limiter.
+Use **Hono** as the small API routing/middleware layer rather than hand-rolling a router. Hono has first-class Cloudflare support and Better Auth mounts directly into it with standard Web `Request`/`Response` APIs.
 
-### Drizzle
+Use Hono's Zod/Standard Schema validator integration and optional RPC typing where useful.
 
-Use Drizzle's maintained Cloudflare D1 support and Drizzle Kit migration generation.
+Do not build a home-grown API server, secret store, route framework or distributed rate limiter.
+
+### D1 + Drizzle
+
+Use D1 for Plus product data and Drizzle for Mahjong schema/queries and checked-in SQL migrations.
+
+Better Auth now supports D1 directly, but for this product prefer the **official Better Auth Drizzle adapter** because the application already needs Drizzle. Better Auth can generate the required Drizzle schema, allowing one migration toolchain rather than a separate Better Auth/Kysely migration path plus Drizzle application migrations.
 
 Own only:
 
@@ -50,56 +59,67 @@ Do not write a query builder, schema diff system or migration framework.
 
 Better Auth should own commodity identity/session/account behaviour.
 
-Use existing capabilities where suitable:
+Use existing maintained capabilities:
 
 - user/session/verification model;
-- session cookie handling;
-- Email OTP plugin;
-- auth route/client helpers;
-- built-in auth rate limiting where appropriate;
-- schema generation/migration support;
-- account deletion/fresh-session/verification primitives;
-- official Stripe plugin if its data/lifecycle model satisfies the Plus contract.
+- secure session cookie handling;
+- React auth client/session helpers;
+- **Email OTP plugin**;
+- built-in rate limiting, configured around Cloudflare's trusted client IP header;
+- **Captcha plugin + Cloudflare Turnstile** where OTP abuse protection requires a challenge;
+- account deletion/fresh-session/email-verification primitives with before/after-delete hooks;
+- **Test Utils plugin** in a test-only auth instance for user/session factories and OTP capture;
+- CLI schema generation;
+- official **Stripe plugin** for recurring billing.
 
-Do **not** hand-roll OTP generation/expiry, session tokens, cookie auth, account deletion verification or basic subscription lifecycle handling.
-
-#### D1 adapter decision
-
-At P1 implementation time, compare Better Auth's first-class native D1 path with its Drizzle adapter against the already-selected Drizzle application schema.
-
-Choose the path that gives the simplest single migration/deployment story. The product decision is **Better Auth**, not “we must custom-build its tables through Drizzle”.
+Do **not** hand-roll OTP generation/expiry, session tokens, cookie auth, account deletion verification, auth test factories or basic subscription lifecycle handling.
 
 ### Email delivery
 
-Use a transactional provider SDK behind a tiny adapter. Resend is the initial candidate and provides a Cloudflare Worker integration.
+Use a transactional provider SDK behind a tiny adapter. Resend is the initial candidate and provides a Cloudflare-compatible API/SDK.
 
-Mahjong Reference owns the message content and provider boundary, not an SMTP/delivery system.
+Mahjong Reference owns the message content and provider boundary, not SMTP/delivery infrastructure.
 
 ### Stripe / Better Auth Stripe plugin
 
-Before implementing custom P3 billing plumbing, perform a plugin-fit spike against the official Better Auth Stripe plugin.
+Use the official Better Auth Stripe plugin for recurring Plus subscriptions wherever its model satisfies the Phase 0 contract.
 
-The current plugin already covers commodity work including:
+The plugin already covers:
 
 - Stripe Customer creation/linking;
-- Checkout/subscription plan actions;
-- subscription lifecycle persistence;
-- secure Stripe webhook processing;
-- cancellation/update events;
+- plan definitions including monthly/annual pricing;
+- Checkout Session creation;
+- subscription state persistence;
+- secure Stripe webhook verification and common subscription-event handling;
+- checkout/webhook race reconciliation;
+- cancellation/update/restore flows;
 - Customer Portal session creation;
-- client subscription helpers;
-- checkout/webhook reconciliation behaviour.
+- lifecycle hooks;
+- client subscription helpers.
 
-If it satisfies the Phase 0 invariants, **use it** and collapse/re-scope P3.1–P3.7 around configuration, entitlement adaptation and tests rather than recreating those mechanisms.
+#### Billing data correction
 
-Custom code should remain only where Mahjong Reference deliberately differs, especially:
+Do **not** create separate Mahjong-owned `billing_customer` and `billing_subscription` tables merely to duplicate plugin-managed state.
 
-- the product's `plus` entitlement boundary if the plugin's subscription state is not sufficient;
-- humane read-only/lapse behaviour for cloud games;
-- complimentary/promotional grants if retained;
-- one-time voice-credit purchase fulfilment and the separate immutable credit ledger.
+For v1, application policy should derive `hasPlus(user)` from the plugin's authoritative subscription state. Do not build the generic `entitlement_grant` model until a demonstrated manual/promotional-access requirement actually needs it.
 
-Never duplicate Stripe subscription state merely for architectural neatness when the plugin already provides a trustworthy model.
+Stripe Billing Entitlements exists, but a second entitlement authority adds moving parts when the launch product currently has one `plus` subscription feature boundary. Revisit only if product packaging genuinely becomes feature-granular.
+
+Custom billing code should remain limited to product policy and anything the plugin does not own.
+
+### Stripe one-time credit purchases
+
+The Better Auth Stripe plugin is strongest for recurring subscriptions. For voice-credit top-ups, use the Stripe SDK to create a server-side one-time Checkout Session associated with the existing Stripe Customer.
+
+Reuse the **same Better Auth Stripe webhook endpoint and `onEvent` lifecycle hook** for fulfilment where compatible, rather than implementing a second Stripe webhook verification subsystem.
+
+Keep durable credit fulfilment idempotent in Mahjong-owned application data.
+
+### Stripe Billing Credits — deliberately not used for v1 voice wallet
+
+Stripe Billing Credits are a real maintained product, but the public flow applies credits through usage-based subscription metering/invoice finalisation. That does not directly satisfy the real-time product requirement “does this user have another voice minute available right now?” without pulling voice charging into invoice-based billing.
+
+Therefore retain the small Mahjong-owned append-only credit ledger for v1.
 
 ### Existing frontend dependencies
 
@@ -113,9 +133,21 @@ Reuse the application's existing UI/data libraries before adding new ones:
 
 Do not introduce another state/query/form/component framework just because Plus has a backend.
 
+### Testing
+
+Use maintained testing primitives rather than custom fixture machinery:
+
+- existing Vitest suite;
+- Better Auth Test Utils for users, sessions and OTP capture;
+- Cloudflare's current `@cloudflare/vitest-plugin` to run Worker/D1 tests inside `workerd`;
+- Hono's request/app testing surface;
+- outbound request mocks for Resend/Stripe/provider calls where needed.
+
+Do not maintain hand-rolled fake auth/session implementations.
+
 ## Product-specific code we probably do own
 
-These are not good candidates for generic SaaS replacement because they encode Mahjong Reference's actual product contract.
+These encode Mahjong Reference's actual product contract and are not good candidates for generic SaaS replacement.
 
 ### Canonical cloud-game serialization
 
@@ -135,7 +167,7 @@ Do **not** add CRDT/general collaborative-sync machinery unless real requirement
 
 We own the rule that cloud failure cannot stop a physical hand/game. Generic query/retry libraries may implement transport mechanics, but the table behaviour is ours.
 
-### Plus entitlement semantics
+### Plus access/lapse semantics
 
 We own what Plus permits and the cancellation/read-only policy, even if Better Auth/Stripe provide the underlying subscription state.
 
@@ -151,27 +183,27 @@ Providers may supply transcription/structured output. Mahjong Reference owns the
 
 ### #207 / P1 — auth/backend
 
-Expected composition: **Cloudflare + D1 + Better Auth + Email OTP plugin + mail provider**.
+Expected composition: **Cloudflare + Hono + D1/Drizzle + Better Auth + Email OTP + Better Auth rate limiting/Turnstile + Resend + test utilities**.
 
 Most work should be integration/configuration/testing, not auth implementation.
 
 ### #208 / P2 — cloud games
 
-Expected composition: **existing game persistence model + D1/Drizzle + React Query/Zod + small revision API**.
+Expected composition: **existing game persistence model + Hono + D1/Drizzle + React Query/Zod + small revision API**.
 
-Do not import a heavyweight offline-sync/collaboration platform unless the simple optimistic-revision model fails a demonstrated requirement.
+Local-first frameworks such as Replicache/RxDB solve a broader replication problem. Do not import them unless the simple owner/snapshot/revision model fails a demonstrated requirement.
 
 ### #209 / P3 — subscriptions
 
-Expected composition: **Better Auth Stripe plugin + Stripe-hosted Checkout/Portal** wherever compatible.
+Expected composition: **Better Auth Stripe plugin + Stripe-hosted Checkout/Portal**.
 
-This epic should be aggressively re-estimated after the plugin-fit spike. Several current backlog rows may collapse into one or two configuration/integration PRs plus Plus-specific entitlement/lapse tests.
+The current backlog should collapse materially: customer mapping, subscription persistence, webhook signature handling, checkout lifecycle and Portal are plugin responsibilities. Custom code should mainly adapt plugin subscription state to Mahjong's Plus/lapse policy and test it.
 
 ### #210 / P4 — credits
 
-Expected composition: **Stripe Checkout for purchase + D1/Drizzle append-only ledger + database uniqueness/idempotency constraints**.
+Expected composition: **Stripe one-time Checkout + existing Stripe webhook/plugin lifecycle + D1/Drizzle append-only ledger + uniqueness/idempotency constraints**.
 
-Do not buy/build a general accounting platform for a small service-credit balance.
+Do not buy/build a general accounting platform for a small immediate service-credit balance, and do not force v1 voice metering through Stripe's invoice-time Billing Credits flow.
 
 ### #211 / P5 — voice
 
@@ -181,7 +213,7 @@ Do not build speech recognition, general agent infrastructure or scoring AI.
 
 ### #212 / P6 — launch
 
-Expected composition: provider dashboards/configuration and existing product UI. Better Auth's account deletion facilities and Stripe's Portal/Tax capabilities should be used where they meet the actual policy.
+Expected composition: provider dashboards/configuration and existing product UI. Better Auth account deletion, Stripe Portal/Tax and Cloudflare security/testing primitives should be used where they meet the actual policy.
 
 Do not recreate billing management or identity lifecycle screens already safely hosted/provided elsewhere.
 
@@ -208,4 +240,6 @@ Before promoting a backlog row into a GitHub implementation issue, classify it a
 
 Codex briefs should explicitly name the library/platform capability to reuse and state what **not** to rebuild.
 
-The goal is not to complete 44 custom builds. The goal is to satisfy 44 bounded acceptance concerns with the **least bespoke code we can responsibly own**.
+The current fit assessment suggests the 44 acceptance concerns should consolidate to roughly **18–25 reviewable PRs** across the full Plus programme, not 44 bespoke implementations.
+
+The goal is to satisfy every acceptance concern with the **least bespoke code we can responsibly own**.
