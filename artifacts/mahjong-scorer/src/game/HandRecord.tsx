@@ -56,11 +56,10 @@ function RecordedTile({
   return (
     <div
       className={`relative h-12 w-9 shrink-0 rounded-[5px] sm:h-[60px] sm:w-[45px] ${winning ? "ring-2 ring-[#ae6249] ring-offset-1" : ""}`}
-      aria-label={winning ? `${artwork.label}, winning tile` : artwork.label}
     >
       <img
         src={tileAssetUrl(artwork.asset)}
-        alt=""
+        alt={winning ? `${artwork.label}, winning tile` : artwork.label}
         className="h-full w-full rounded-[5px] bg-[#fffdf7] object-contain tile-shadow"
       />
       {winning && (

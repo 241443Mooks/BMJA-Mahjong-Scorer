@@ -93,6 +93,9 @@ describe("game-record presentation", () => {
     expect(complete).toContain("concealed chow");
     expect(complete).toContain("exposed pung");
     expect(complete).toContain("Flowers and Seasons");
+    expect(complete).toMatch(/<img[^>]+alt=\"[^\"]+\"/);
+    expect(complete).toContain("winning tile");
+    expect(complete).not.toMatch(/<div[^>]+aria-label=/);
     expect(partial).toContain("Bob · Partial recorded hand");
     expect(partial).toContain("Remaining tiles recorded");
   });
