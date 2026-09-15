@@ -3,19 +3,23 @@
 Status: **development-readiness plan**  
 Parent programme: #206  
 Architecture: `docs/product/MAHJONG_REFERENCE_PLUS_ARCHITECTURE.md`  
-Delivery epics: #207–#212
+Delivery epics: #207–#212  
+Reuse/build map: `docs/product/PLUS_REUSE_MAP.md`  
+Concrete minimal-code stack: `docs/product/PLUS_LEGO_STACK.md`
 
-This document decomposes the six Plus delivery epics into **bounded implementation jobs**. The jobs are intentionally smaller than the epics and are intended to be suitable for focused Codex sessions and independently reviewable changes where practical.
+This document decomposes the six Plus delivery epics into **bounded acceptance concerns**. They are intentionally smaller than the epics and suitable for focused implementation/review, but they are **not** a commitment to one bespoke PR per row.
 
-Do **not** create every row as an open GitHub issue immediately. Keep this as the stable plan and promote the next dependency-ready jobs into issues just before implementation. This preserves a readable issue tracker while making the true workload visible.
+Before implementation, each row must be classified using the reuse map as **CONFIGURE / INTEGRATE / ADAPT / BUILD**. Maintained platform/library capability should satisfy as many rows as possible in one coherent PR where that is safer and simpler than custom code.
+
+Do **not** create every row as an open GitHub issue immediately. Keep this as the stable plan and promote only the next dependency-ready jobs into issues just before implementation.
 
 ## Sizing convention
 
-- **S** — narrow infrastructure/UI/test slice; usually one focused implementation session.
+- **S** — narrow acceptance concern; often config/thin adaptation or one focused code/test change.
 - **M** — several connected files/behaviours with meaningful integration testing.
-- **L** — substantial bounded integration; still one product decision, but likely more than one implementation/review pass.
+- **L** — substantial bounded product-specific integration; likely more than one implementation/review pass if no maintained module owns most of it.
 
-Size is relative engineering scope, not elapsed calendar time.
+Size is relative engineering scope **before reuse collapse**; a mature official plugin may reduce several S/M rows to one integration PR.
 
 ## Global invariants
 
@@ -27,20 +31,23 @@ Every job must preserve these programme rules:
 4. Exact rules profile/version travels with cloud game truth.
 5. Cloud writes never silently overwrite divergent state.
 6. Stripe/webhook state, not the browser redirect, grants durable paid value.
-7. Entitlement and usage credits remain separate.
+7. Subscription state and immediate usage credits remain distinct.
 8. Payment card data stays with Stripe.
 9. Cancellation is not account deletion.
 10. Voice remains optional and gated by #147.
+11. Commodity SaaS behaviour must be integrated from maintained modules where suitable rather than reimplemented.
 
 ---
 
 # Phase 1 — backend/auth foundation (#207)
 
-## P1.1 — Cloudflare Functions + D1 development boundary
+Expected Lego: Cloudflare Pages/Workers runtime, Hono, D1/Drizzle, Better Auth Drizzle adapter, Email OTP plugin, built-in Better Auth rate limiting, Better Auth Captcha + Cloudflare Turnstile where needed, Resend, Better Auth Test Utils, Cloudflare Vitest plugin.
+
+## P1.1 — Cloudflare/Hono API + D1 development boundary
 **Size:** M  
 **Depends on:** Phase 0
 
-Add the smallest server runtime alongside the existing Vite/Pages application: `/api/*` Functions/Workers routing, D1 binding configuration, local development wiring and a harmless health endpoint.
+Add the smallest server runtime alongside the existing Vite/Pages application: Hono `/api/*` routing, D1 binding configuration, local development wiring and a harmless health endpoint.
 
 **Done when:** local and deployed-style development can call one server endpoint and D1 binding exists; static/prerendered free routes still build and behave unchanged.
 
@@ -48,7 +55,7 @@ Add the smallest server runtime alongside the existing Vite/Pages application: `
 **Size:** M  
 **Depends on:** P1.1
 
-Introduce Drizzle for D1, checked-in SQL migrations, migration commands/documentation and the initial application/auth schema boundary.
+Introduce Drizzle for D1, checked-in SQL migrations, migration commands/documentation and the initial application/auth schema boundary. Use Better Auth's schema generator for Drizzle rather than hand-authoring auth tables.
 
 **Done when:** a blank local D1 can be brought deterministically to current schema and repeated migration runs are safe.
 
@@ -56,31 +63,31 @@ Introduce Drizzle for D1, checked-in SQL migrations, migration commands/document
 **Size:** M  
 **Depends on:** P1.1, P1.2
 
-Integrate Better Auth with D1/Drizzle, secure cookie/session configuration and client session discovery. No email delivery yet.
+Mount Better Auth directly into Hono, using the official Drizzle adapter, secure cookie/session configuration and React client session discovery.
 
 **Done when:** auth routes/session plumbing run in the Cloudflare runtime and authenticated server code can resolve the internal account ID without trusting a browser-supplied user ID.
 
-## P1.4 — Transactional mail adapter + email OTP
+## P1.4 — Email OTP + transactional mail transport
 **Size:** M  
 **Depends on:** P1.3
 
-Add a provider-isolated auth mail interface and implement passwordless email OTP request/verification. Initial provider may be Resend, but auth/domain code must not depend on provider-specific objects.
+Configure Better Auth's Email OTP plugin and a provider-isolated send callback. Initial provider may be Resend.
 
-**Done when:** a user can request a bounded-lifetime OTP, receive it in the configured provider/test harness and establish a session.
+**Done when:** a user can request a bounded-lifetime OTP, receive it through provider/test harness and establish a session without any custom OTP algorithm/lifecycle code.
 
-## P1.5 — OTP abuse/rate-limit and failure handling
+## P1.5 — Auth abuse protection and failure handling
 **Size:** S  
 **Depends on:** P1.4
 
-Add request throttling/abuse protection, neutral account-enumeration-safe responses, retry behaviour and understandable mail-delivery failure states.
+Configure Better Auth's built-in rate limits with the trusted Cloudflare client-IP header, add Turnstile via Better Auth's Captcha plugin where appropriate, and provide understandable mail-delivery failure/retry states.
 
-**Done when:** rapid/repeated OTP requests are bounded server-side and provider failure cannot affect free play.
+**Done when:** repeated OTP requests are bounded server-side, bot-challenge policy is explicit, and provider failure cannot affect free play.
 
 ## P1.6 — Account shell and navigation state
 **Size:** M  
 **Depends on:** P1.3, P1.4
 
-Create `/account`, signed-in/out states, sign-out, quiet global account affordance and responsive/accessibility behaviour.
+Create `/account`, signed-in/out states, sign-out, quiet global account affordance and responsive/accessibility behaviour using existing UI primitives.
 
 **Done when:** account UI works on phone/tablet/desktop without intruding on active game UX; signed-out game/scorer behaviour is unchanged.
 
@@ -88,9 +95,9 @@ Create `/account`, signed-in/out states, sign-out, quiet global account affordan
 **Size:** M  
 **Depends on:** P1.3
 
-Create reusable server authorization helpers and integration tests for authenticated versus unauthenticated API calls, cookie/session handling and user scoping.
+Use Better Auth session middleware/helpers with Hono. Add integration tests using Better Auth Test Utils and Cloudflare's Workers Vitest integration.
 
-**Done when:** later APIs can use one tested primitive for current-user identity and cannot accept another user's ID as authority.
+**Done when:** later APIs can use one tested primitive for current-user identity and cannot accept another user's ID as authority; OTP/session fixtures are supplied by maintained test tooling rather than hand-rolled fakes.
 
 ## P1.8 — Secrets/deployment runbook for account foundation
 **Size:** S  
@@ -100,11 +107,13 @@ Document required Cloudflare bindings/secrets, local/test values and deployment/
 
 **Done when:** a clean environment can be configured from documented steps without committing secrets.
 
-**Phase 1 total:** 8 jobs.
+**Phase 1 acceptance concerns:** 8. Expected implementation consolidation: roughly 3–4 PRs.
 
 ---
 
 # Phase 2 — cloud games, sync and preferences (#208)
+
+Expected Lego: existing game persistence model, Hono, D1/Drizzle, Zod, TanStack React Query. Deliberately no CRDT/general sync engine unless the simple model fails a demonstrated requirement.
 
 ## P2.1 — Canonical cloud-game serialization contract
 **Size:** M  
@@ -118,7 +127,7 @@ Define/version the cloud payload around the existing canonical setup + confirmed
 **Size:** M  
 **Depends on:** P1.7, P2.1
 
-Add `cloud_game`, stable IDs, owner scoping, revision/timestamps/status and authenticated create/list/get/archive endpoints.
+Add `cloud_game`, stable IDs, owner scoping, revision/timestamps/status and authenticated create/list/get/archive endpoints using Hono/Drizzle/Zod.
 
 **Done when:** one user cannot address another user's game and all returned games retain exact rules/version truth.
 
@@ -138,11 +147,11 @@ When a signed-in browser has a recoverable local game, offer deliberate save/imp
 
 **Done when:** sign-in never overwrites local state and a user can intentionally make the current local game cloud-backed.
 
-## P2.5 — Background sync state machine
+## P2.5 — Background sync coordinator
 **Size:** L  
 **Depends on:** P2.3, P2.4
 
-Add local-first background synchronization for cloud-backed games, including clean/saving/pending/failed/conflict states and retry after network recovery.
+Use the existing local game as immediate truth and React Query for background transport/retry/status. Keep clean/saving/pending/failed/conflict states explicit.
 
 **Done when:** confirmed game progress remains immediate locally; API failure never blocks hand progression; pending state survives/retries without silent loss.
 
@@ -178,67 +187,69 @@ Provide an authenticated export of the user's cloud games and explicit preferenc
 
 **Done when:** exported data covers the user-owned product data currently stored by Plus and cannot expose another account's data.
 
-**Phase 2 total:** 9 jobs.
+**Phase 2 acceptance concerns:** 9. Expected implementation consolidation: roughly 5–6 PRs.
 
 ---
 
-# Phase 3 — Stripe subscription and entitlement (#209)
+# Phase 3 — Stripe subscription and Plus policy (#209)
 
-## P3.1 — Billing schema + Stripe customer mapping
+Expected Lego: official Better Auth Stripe plugin + Stripe-hosted Checkout and Customer Portal. Do not duplicate plugin-managed Stripe customer/subscription/webhook state.
+
+## P3.1 — Better Auth Stripe plugin + plan/customer configuration
 **Size:** M  
 **Depends on:** P1.2, P1.7
 
-Add billing customer/subscription/event/entitlement persistence and a server-only get-or-create Stripe Customer mapping for the authenticated internal user.
+Install/configure `@better-auth/stripe`, link Stripe Customers to Better Auth users, and define configurable Plus monthly/annual plan identities.
 
-**Done when:** one account maps to one Stripe customer and no browser-provided customer ID is authoritative.
+**Done when:** one authenticated account maps to one plugin-managed Stripe customer and subscription configuration exists without separate Mahjong billing-customer/subscription tables.
 
-## P3.2 — Plus Checkout Session endpoint
+## P3.2 — Plus subscription Checkout integration
 **Size:** M  
 **Depends on:** P3.1
 
-Create authenticated server-side Stripe Checkout Sessions for configured Plus monthly/annual prices using the existing customer.
+Use the plugin's subscription upgrade/Checkout flow for configured Plus monthly/annual prices.
 
-**Done when:** test-mode checkout starts from a signed-in account without hard-coding business prices into entitlement logic.
+**Done when:** test-mode checkout starts from a signed-in account without custom Checkout lifecycle machinery or hard-coded business prices in access logic.
 
-## P3.3 — Stripe webhook verification + event idempotency
+## P3.3 — Plugin webhook/lifecycle verification
 **Size:** M  
 **Depends on:** P3.1
 
-Add raw-body signature verification, processed-event storage and safe duplicate/retry handling.
+Configure the official plugin webhook endpoint and prove its signature verification, duplicate/retry safety and common subscription lifecycle handling against Stripe test events.
 
-**Done when:** forged events are rejected and replaying the same valid event cannot apply state twice.
+**Done when:** forged events are rejected and plugin state converges correctly under duplicate/retried subscription events without a second custom webhook subsystem.
 
-## P3.4 — Subscription snapshot reconciliation
-**Size:** L  
+## P3.4 — Subscription-state reconciliation tests
+**Size:** M  
 **Depends on:** P3.3
 
-Translate relevant verified Stripe subscription/customer events into the local operational subscription snapshot, including delayed/out-of-order/retried webhook behaviour.
+Exercise activation, update, cancellation/lapse and delayed/out-of-order webhook cases against plugin-managed subscription state.
 
-**Done when:** local billing state converges safely on Stripe authority for activation, update and cancellation/lapse scenarios.
+**Done when:** application-visible state safely reflects Stripe authority for launch-relevant scenarios.
 
-## P3.5 — Effective Plus entitlement evaluator
-**Size:** M  
+## P3.5 — `hasPlus` product-policy adapter
+**Size:** S  
 **Depends on:** P3.4
 
-Implement server-side `plus` entitlement grants/evaluation independently of the raw subscription row, leaving room for manual/promotional grants.
+Implement one small server-side application helper that maps plugin subscription state to Mahjong Reference Plus access. Do not build a generic entitlement-grant subsystem unless a real manual/promo access requirement appears.
 
-**Done when:** paid APIs can ask one authoritative server primitive whether the user currently has Plus.
+**Done when:** paid APIs/UI can ask one authoritative application primitive whether the user currently has Plus.
 
 ## P3.6 — Checkout return/reconciliation UX
 **Size:** S  
 **Depends on:** P3.2, P3.5
 
-Handle return from hosted Checkout without treating the redirect as payment proof. Show a bounded processing/retry state until server truth confirms entitlement.
+Use the plugin's built-in Checkout/webhook race handling and add only the Mahjong-facing processing/success state needed by the account UI.
 
 **Done when:** delayed webhook delivery cannot create false Plus state or trap the user in an ambiguous page.
 
 ## P3.7 — Customer Portal + billing account UI
-**Size:** M  
+**Size:** S/M  
 **Depends on:** P3.1, P3.5
 
-Create authenticated Customer Portal session endpoint and account UI for current Plus/billing status and managing billing through Stripe-hosted surfaces.
+Use the plugin's Customer Portal action and show compact Plus/billing status in `/account`.
 
-**Done when:** the correct signed-in customer can manage payment method/invoices/cancellation without custom card UI.
+**Done when:** the correct signed-in customer can manage payment methods/invoices/cancellation through Stripe-hosted Portal without custom card UI.
 
 ## P3.8 — Cancellation/lapse/read-only enforcement
 **Size:** M  
@@ -246,13 +257,17 @@ Create authenticated Customer Portal session endpoint and account UI for current
 
 Apply the humane lapse policy: free product remains usable, sign-in remains, existing cloud records stay readable/exportable, paid mutations/services are disabled as defined.
 
-**Done when:** cancellation never deletes games/account data and all paid write paths use server entitlement rather than client flags.
+**Done when:** cancellation never deletes games/account data and all paid write paths use server Plus policy rather than client flags.
 
-**Phase 3 total:** 8 jobs.
+**Phase 3 acceptance concerns:** 8. Expected implementation consolidation: roughly 2–3 PRs if plugin fit remains sound.
 
 ---
 
 # Phase 4 — immutable credits and top-ups (#210)
+
+Expected Lego: Stripe SDK one-time Checkout using the existing customer; Better Auth Stripe webhook endpoint/`onEvent` hook for verified event delivery where compatible; tiny D1/Drizzle application ledger.
+
+Stripe Billing Credits are deliberately not the v1 wallet because their ordinary public flow is tied to usage-based subscription invoicing rather than immediate application-unit depletion.
 
 ## P4.1 — Credit ledger schema and derived balance
 **Size:** M  
@@ -270,11 +285,11 @@ Implement server operations that prevent duplicate grants/charges, insufficient-
 
 **Done when:** duplicate idempotency keys cannot double-apply and refund is a compensating entry rather than history mutation.
 
-## P4.3 — One-time credit Checkout + fulfilment
+## P4.3 — One-time credit Checkout + verified fulfilment
 **Size:** M  
 **Depends on:** P3.1, P3.3, P4.2
 
-Create configured top-up Checkout Sessions and grant purchase credits only from verified fulfilment/webhook truth.
+Create configured one-time top-up Checkout Sessions with the existing Stripe Customer and fulfil purchase credits from verified Stripe events, preferably through the existing Better Auth Stripe webhook lifecycle.
 
 **Done when:** one test purchase results in exactly one ledger grant even under duplicate webhook delivery.
 
@@ -294,7 +309,7 @@ Support auditable subscription allowances and controlled manual/promotional adju
 
 **Done when:** allowance/adjustment sources are distinct ledger events and cannot require a schema change later.
 
-**Phase 4 total:** 5 jobs.
+**Phase 4 acceptance concerns:** 5. Expected implementation consolidation: roughly 2–3 PRs.
 
 ---
 
@@ -302,11 +317,13 @@ Support auditable subscription allowances and controlled manual/promotional adju
 
 **Hard gate:** #147 must first prove voice interpretation utility and define provider/cost/charging semantics.
 
+Expected Lego: provider SDK/API selected by #147 + Hono route + Cloudflare rate limiting + existing strict evidence schema/domain scorer + credit primitives from Phase 4.
+
 ## P5.1 — Authenticated voice gateway contract
 **Size:** M  
 **Depends on:** #147 gate, P1.7
 
-Add bounded server upload/request handling, authentication, validation, provider-secret isolation and rate limiting. No scoring logic server-side.
+Add bounded server upload/request handling, authentication, validation, provider-secret isolation and Cloudflare route/user rate limiting. No scoring logic server-side.
 
 ## P5.2 — Proven transcription/interpretation provider integration
 **Size:** L  
@@ -332,11 +349,13 @@ Connect `What I heard` / structured interpretation to the existing hand evidence
 
 Implement the chosen raw-audio/transcript retention policy and minimal product metrics for acceptance/correction/failure/latency/cost, with no unnecessary gameplay collection.
 
-**Phase 5 total:** 5 jobs.
+**Phase 5 acceptance concerns:** 5. Expected implementation consolidation: roughly 3–4 PRs.
 
 ---
 
 # Phase 6 — paid launch readiness (#212)
+
+Expected Lego: Better Auth account-deletion lifecycle, Stripe Portal/Tax/live-mode tooling, Cloudflare security/testing primitives, existing product UI/accessibility patterns.
 
 ## P6.1 — Plus offer/pricing surface
 **Size:** M  
@@ -351,16 +370,18 @@ Create `/plus` with truthful Free/Plus comparison, monthly/annual packaging and 
 Document actual account/cloud/billing/mail/voice data flows, subprocessors and retention. Only describe systems that really exist.
 
 ## P6.3 — Explicit account deletion and complete data lifecycle
-**Size:** L  
+**Size:** M/L  
 **Depends on:** P2.9, P3.8
 
-Implement authenticated destructive deletion with appropriate re-verification, server-side data removal/anonymisation plan and clear separation from subscription cancellation.
+Use Better Auth's built-in account deletion/fresh-session/verification flow and its before/after-delete hooks; custom code owns only cleanup/export policy for Mahjong product data and any billing constraints.
+
+**Done when:** deletion is deliberate/authenticated, product data cleanup is verified, and cancellation remains a separate action.
 
 ## P6.4 — Tax/VAT and international-sales configuration gate
 **Size:** M  
 **Depends on:** launch geography/pricing, P3.2
 
-Confirm the real UK/international tax position, configure Stripe tax/location facilities as required and keep tax assumptions out of application entitlement logic.
+Confirm the real UK/international tax position and configure Stripe Checkout/Tax/customer-location options as required. Keep tax assumptions out of application entitlement logic.
 
 **Done when:** launch has an explicit documented decision; this is not a substitute for professional tax advice where needed.
 
@@ -374,7 +395,7 @@ Configure live products/prices/webhooks/portal/secrets, exercise purchase/cancel
 **Size:** M  
 **Depends on:** implemented backend surface
 
-Review auth cookies/origin/CSRF assumptions, ownership checks, OTP/premium rate limits, secret exposure, webhook verification, idempotency and destructive actions.
+Review Better Auth security configuration, ownership checks, Turnstile/rate limits, secret exposure, webhook/plugin configuration, credit idempotency and destructive actions.
 
 ## P6.7 — Failure-mode exercise
 **Size:** M  
@@ -388,60 +409,41 @@ Deliberately exercise D1/API unavailable, auth email delayed, webhook delayed/du
 **Size:** S  
 **Depends on:** commercial policy decisions, P3/P4 implementation
 
-Document operational handling for payment, login, sync/conflict, credit/refund and deletion problems with clear escalation/records.
+Document operational handling for payment, login, sync/conflict, voice-credit refund and deletion problems using provider dashboards/hosted tools where appropriate.
 
-## P6.9 — Final accessibility/responsive/free-regression pass
+## P6.9 — Paid-product accessibility/responsive/final regression
 **Size:** M  
-**Depends on:** all launch UI
+**Depends on:** launch UI complete
 
-Run WCAG-regression evidence plus phone/tablet/desktop flows, signed-out/free baseline and account/Plus purchase/manage/cancel journeys.
+Run the established accessibility/responsive/product regression discipline across account/Plus/Checkout-return/cloud-library/credit surfaces and verify free scorer/table behaviour remains unchanged.
 
-**Phase 6 total:** 9 jobs.
+**Phase 6 acceptance concerns:** 9. Expected implementation consolidation: roughly 3–5 PRs.
 
 ---
 
-# Programme size
+# Likely critical path without voice
 
-| Phase | Epic | Bounded jobs |
-|---|---|---:|
-| 1 | #207 backend/auth | 8 |
-| 2 | #208 cloud games/preferences | 9 |
-| 3 | #209 Stripe/entitlement | 8 |
-| 4 | #210 credit ledger | 5 |
-| 5 | #211 voice integration | 5 |
-| 6 | #212 launch readiness | 9 |
-| **Total** |  | **44** |
+A usable paid cloud-save product does **not** depend on #147 or the credit ledger.
 
-The earlier 24–38 estimate was deliberately rough. Once failure modes, security, account lifecycle and deployability are separated rather than hidden inside the six epics, the honest current plan is **44 bounded jobs**. Some adjacent S jobs may later be sensibly combined in one PR/Codex session, but they should remain separate acceptance concerns.
+Likely path:
 
-# Critical path without voice
+`P1.1 → P1.2 → P1.3 → P1.4/P1.7 → P2.1 → P2.2 → P2.3/P2.4 → P2.5 → P2.7 → P3.1 → P3.2/P3.3 → P3.5 → P3.8 → P6 launch gates`
 
-The shortest route to a genuinely usable paid cloud product is approximately:
+Parallel work can include P1.6, P2.8/P2.9 and later launch documentation.
 
-`P1.1 → P1.2 → P1.3 → P1.4/P1.7 → P2.1 → P2.2 → P2.3/P2.4 → P2.5 → P2.7 → P3.1 → P3.2/P3.3 → P3.4 → P3.5 → P3.8 → launch gates`
+# Current programme estimate after Lego fit
 
-Voice and credits can remain off this initial path. This means **Plus can launch as cloud memory/cross-device convenience even if #147 is not yet ready**.
+- 44 bounded acceptance concerns remain useful as completeness checks.
+- Expected full-programme delivery is closer to **18–25 reviewable PRs** if maintained modules fit as expected.
+- The genuinely bespoke/high-risk concentration is Phase 2 sync/conflict, Phase 4 credit semantics and Phase 5 voice boundary — not auth, subscription plumbing or generic payment UI.
 
-# Suggested first fresh-Codex wave
+# First fresh-Codex wave
 
-Do not start with Stripe or voice. The first allowance should prove the new application boundary with the least irreversible complexity:
+When the allowance resets, promote only the first coherent implementation wave:
 
-1. **P1.1** — Cloudflare Functions + D1 boundary.
-2. **P1.2** — Drizzle migration pipeline.
-3. **P1.3** — Better Auth session foundation.
-4. **P1.7** — reusable authenticated API harness.
-5. **P1.4** — email OTP once auth/session primitives are stable.
+1. Cloudflare/Hono + D1/Drizzle foundation (`P1.1` + `P1.2` if reviewably coherent).
+2. Better Auth Drizzle/session + test foundation (`P1.3` + `P1.7`).
+3. Email OTP/Resend + abuse protection/account shell (`P1.4` + `P1.5` + `P1.6` as one bounded auth UX integration if practical).
+4. Cloud-game codec (`P2.1`) independently.
 
-After that checkpoint, review architecture fit and only then continue into account UI/cloud games.
-
-# Issue-promotion rule
-
-When implementation begins:
-
-1. take only the next dependency-ready job(s) from this file;
-2. create a GitHub issue containing that job's scope, dependencies, non-goals and concrete acceptance checks;
-3. give Codex that issue, not an entire epic;
-4. merge/review it before promoting work whose architecture depends on it;
-5. update this document only when the plan itself changes materially.
-
-This keeps GitHub's open issue list as an active work queue rather than duplicating the entire programme plan.
+Do not ask Codex to implement Plus as a whole. Each prompt must name the provider/module Lego it is expected to reuse and explicitly prohibit rebuilding that capability.
