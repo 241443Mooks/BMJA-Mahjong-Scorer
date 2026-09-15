@@ -7,6 +7,12 @@ This directory contains a mixture of current product direction, rules evidence, 
 - `product/TABLE_COMPANION_TRANSFORMATION.md` — canonical public-product direction and #105 delivery plan. **Start here for current product/route decisions.**
 - GitHub issue #105 — umbrella implementation tracker for the Table Companion transformation.
 
+## Product research and discovery
+
+- `research/` — evidence-led product discovery, pain mining, Jobs-to-be-Done clusters and opportunity hypotheses.
+- Research is an input to product decisions, not a source of scoring/rules truth and not an implementation authority by itself.
+- Use the chain `user evidence -> job/pain cluster -> opportunity hypothesis -> product decision -> GitHub issue -> implementation` rather than promoting isolated comments directly into features.
+
 ## Rules and provenance
 
 - `rules/` — durable evidence, provenance, crosswalks and future-ruleset architecture.
@@ -37,6 +43,7 @@ When documents disagree, use this order:
 2. current rules/provenance evidence for rule truth and confidence;
 3. `product/TABLE_COMPANION_TRANSFORMATION.md` + #105 for current public-product direction;
 4. `Agents.md` for implementation discipline;
-5. older planning/content documents for historical context only.
+5. `research/` for evidence and hypotheses that inform future product decisions;
+6. older planning/content documents for historical context only.
 
-If a proposed change would alter scoring/rules behaviour, do not infer the answer from product copy. Resolve it through the relevant rules evidence and tests.
+If a proposed change would alter scoring/rules behaviour, do not infer the answer from product copy or product research. Resolve it through the relevant rules evidence and tests.
