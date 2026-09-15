@@ -310,6 +310,7 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
   };
 
   const startOver = () => {
+    if (typeof window !== 'undefined' && !window.confirm('Start over? Your current saved game will be discarded.')) return;
     if (typeof window !== 'undefined') clearGameRecovery(window.localStorage);
     setRecovered(null);
     setGame(null);
@@ -435,7 +436,7 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
               ))}
             </div>
             {error && (
-              <p className="mt-4 text-[12px] font-semibold text-[#9a4d3a]">
+              <p role="alert" className="mt-4 text-[12px] font-semibold text-[#9a4d3a]">
                 {error}
               </p>
             )}
@@ -466,7 +467,7 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
                 {game.players.find((player) => player.id === currentEastId)?.name} is East
                 {game.currentHandMode === 'goulash' ? ' · Goulash hand' : ''}
               </div>
-              {recovered && <p data-testid="recovered-game-conflict" className={`mt-0.5 text-[10px] font-semibold leading-4 sm:mt-1 sm:text-[11px] ${recoveredProfileConflictsWithRoute ? 'text-[#9a4d3a]' : 'text-[#477562]'}`}>
+              {recovered && <p data-testid="recovered-game-conflict" className={`mt-0.5 text-[10px] font-semibold leading-4 sm:mt-1 sm:text-[11px] ${recoveredProfileConflictsWithRoute ? 'text-[#9a4d3a]' : 'text-[#3f6556]'}`}>
                 {recoveredProfileConflictsWithRoute ? `Saved ${activeRulesCopy(game.setup.rulesProfile)} game; this route does not change its rules.` : 'Saved game recovered.'}
               </p>}
             </div>
@@ -567,28 +568,32 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
                   <button
                     type="button"
                     data-testid="button-outcome-win"
+                    aria-pressed={outcomeType === 'win'}
                     onClick={() =>
                       winnerId &&
                       changeRoundOutcome({ type: 'win', winnerId })
                     }
-                    className={`rounded-md px-4 py-2 text-[11px] font-semibold ${
+                    className={`inline-flex items-center gap-1.5 rounded-md px-4 py-2 text-[11px] font-semibold ${
                       outcomeType === 'win'
                         ? 'bg-[#284d45] text-[#f8f4e9]'
                         : 'border border-[#d8ceb8] text-[#66746e]'
                     }`}
                   >
+                    {outcomeType === 'win' && <Check size={13} aria-hidden="true" />}
                     Mah Jong
                   </button>
                   <button
                     type="button"
                     data-testid="button-outcome-draw"
+                    aria-pressed={outcomeType === 'draw'}
                     onClick={() => changeRoundOutcome({ type: 'draw' })}
-                    className={`rounded-md px-4 py-2 text-[11px] font-semibold ${
+                    className={`inline-flex items-center gap-1.5 rounded-md px-4 py-2 text-[11px] font-semibold ${
                       outcomeType === 'draw'
                         ? 'bg-[#284d45] text-[#f8f4e9]'
                         : 'border border-[#d8ceb8] text-[#66746e]'
                     }`}
                   >
+                    {outcomeType === 'draw' && <Check size={13} aria-hidden="true" />}
                     Draw / wash-out
                   </button>
                 </div>
@@ -771,7 +776,7 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
                   Changes total {preview.settlement?.zeroSum ? 'zero' : '—'}
                 </div>
                 {preview.error && (
-                  <p data-testid="preview-domain-error" className="mt-3 rounded-md bg-[#6b3a36] px-3 py-2 text-[11px] font-semibold leading-5 text-[#ffe5db]">
+                  <p role="alert" data-testid="preview-domain-error" className="mt-3 rounded-md bg-[#6b3a36] px-3 py-2 text-[11px] font-semibold leading-5 text-[#ffe5db]">
                     {preview.error}
                   </p>
                 )}
@@ -781,7 +786,7 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
                   </div>
                 )}
                 {error && (
-                  <p className="mt-3 text-[11px] font-semibold text-[#e6a48d]">
+                  <p role="alert" className="mt-3 text-[11px] font-semibold text-[#e6a48d]">
                     {error}
                   </p>
                 )}
