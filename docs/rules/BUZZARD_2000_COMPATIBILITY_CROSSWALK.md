@@ -1,219 +1,170 @@
 # Buzzard 2000 British/Western Classical — compatibility crosswalk
 
-Status: **implementation-preparation / source-backed crosswalk**  
+Status: **implementation-ready architecture crosswalk**  
 Issue: #175  
+Implementation child: #217  
 Source profile: Jonathan Buzzard, *Mah-Jongg: the Game and How To Play It*, last modified 30 March 2000  
 Working source ID: `buzzard-2000-classical`
 
 ## Conclusion
 
-Buzzard 2000 is a **good adjacent-profile candidate**, but it is not merely another catalogue file.
+Buzzard is substantially closer to the current platform than the first architecture pass suggested.
 
-The current platform already provides much of the right low-level shape:
+The key scope correction is:
 
-- four players and wind seats;
-- versioned `RulesProfileRef`;
-- classical Chow/Pung/Kong/pair tile representation;
+> **Mahjong Reference scores the physical game and runs the table. It does not play Mahjong for the players.**
+
+That means we do not need a Buzzard wall simulator, draw/discard engine, real-time claim arbiter or Standing-Hand legality state machine to support the rules profile.
+
+For the product we actually have, Buzzard is mostly:
+
+> **existing classical/BMJA profile primitives + a Buzzard menu of additions/amendments/removals + a small amount of settlement evidence.**
+
+It is not a new scoring-engine family and should not fork the application.
+
+## Existing platform fit
+
+The current platform already has the pieces Buzzard needs:
+
+- four players and seat winds;
+- prevailing wind and East progression;
+- versioned `RulesProfileRef` persisted/replayed with the game;
+- Chow/Pung/Kong/pair representation;
 - exposed/concealed sets;
 - Flowers/Seasons;
-- win-source evidence including discard, wall, loose/replacement tile, last wall/discard and robbing Kong;
-- classical points/doubles/special-hand machinery;
-- non-winner scores;
+- ordinary points + doubles calculation;
+- special-hand predicates/profile bindings;
+- final win-source evidence such as wall, loose tile, last wall and robbing Kong;
+- scores for winners and losers;
 - transaction-based settlement;
-- dealer/East + prevailing-wind progression as a strategy.
+- pairwise loser settlement and East doubling;
+- incident/liability infrastructure from Outside the Box.
 
-However, a faithful Buzzard profile requires several **game-state/procedure extensions** that must remain profile-local: Standing Hand, a 14-tile dead-wall/Loose Tile lifecycle, source-specific claim priority, dangerous-discard liability, incomplete limit achievements, and penalty semantics.
-
-Therefore:
-
-> **Buzzard should reuse the classical scoring platform, but receive its own profile scoring policy, progression/procedure strategy and liability/settlement policy. Do not fork the application or duplicate the whole scorer.**
-
-## Current-code baseline inspected
-
-The current implementation already separates useful concerns:
-
-- `RulesProfileRef { id, version }` is persisted in `GameSetup`;
-- `GameRuleset` supplies `scoreHand`, `settleRound`, `progressGame` and optional `prepareRound`;
-- `MahjongHand` separates structural sets/tiles from contextual scoring;
-- settlement emits explicit payer→payee transactions;
-- local persistence reconstructs a game by replaying stored setup + round inputs.
-
-Current limitations relevant to Buzzard:
-
-- `HandOutcome` currently supports only one winner or draw;
-- `HandMode` is currently `normal | goulash` and is not a generic declaration/state system;
-- incidents are a fixed union primarily shaped by BMJA/Outside-the-Box;
-- settlement transaction reasons and `eastMultiplier` are currently classical/BMJA-specific;
-- current hand evidence has `originalCall`, but not a locked Standing Hand declaration/lifecycle;
-- current game state does not model wall/dead-wall/replacement-tile inventory.
+The recovered Buzzard PDF now source-binds the exact scoring, settlement, progression and penalty rules needed by the companion. See `BUZZARD_2000_RULE_EVIDENCE.md`.
 
 ## Compatibility matrix
 
-| Buzzard domain | Current platform fit | Decision |
+| Buzzard concern | Current fit | Build decision |
 |---|---|---|
-| 4 players / seat winds | Direct | Reuse |
-| Prevailing wind | Direct primitive | Reuse, but verify Buzzard progression strategy independently |
-| 13/14-tile ordinary hand structure | High | Reuse structural primitives |
-| Chow/Pung/Kong/pair | High | Reuse |
-| exposed/concealed set state | High | Reuse |
-| Flowers/Seasons | High | Reuse basic tile metadata; value/event policy is profile-specific |
-| classical intrinsic points | High grammar fit | Reuse scorer primitives through Buzzard bindings/policy after transcription |
-| additive bonuses then doubles then limit | High grammar fit | Reuse/extend classical calculation pipeline, source-bind exact order/tests |
-| special hands | High registry fit | Reuse canonical predicates where structurally verified; profile-local names/values/eligibility |
-| last-wall/replacement/rob-Kong win evidence | Existing evidence categories exist | Reuse event primitives after exact semantic verification |
-| loser hand scores | Current round input already stores all players' scores | Reuse |
-| pairwise loser-to-loser settlement | Current BMJA engine structurally close | Reuse settlement infrastructure, not automatically the BMJA formula |
-| East payment multiplier | Existing settlement field | Reuse only if source crosswalk confirms exact semantics |
-| East retains after East win | Current BMJA progression matches | Reuse strategy only after exact source verification |
-| East retains after dead hand | Current BMJA progression matches | Reuse strategy only after exact source verification |
-| non-East win rotates dealer | Current BMJA progression structurally matches | Reuse/verify |
-| Standing Hand | Missing | **Build profile-local declaration/state** |
-| locked discard behaviour after Standing declaration | Missing | **Build legality/state transition** |
-| +100 Standing Hand reward | Scoring can add points, but declaration evidence missing | Add Buzzard scoring rule over Standing state |
-| 14 tiles remain unused / dead wall | Missing table-state concept | **Build profile-owned wall/dead-wall state when full playable support begins** |
-| Loose Tiles/replacements | win method exists, inventory lifecycle does not | Extend shared event/table primitives; Buzzard strategy owns semantics |
-| claim priority including timing | not represented in final score/game ledger | Build only to degree Table Companion actively tracks claims; reference otherwise |
-| multiple simultaneous win claims resolved by turn priority | current outcome is single-winner, which matches resolved result but not claim event | Store resolved winner for scoring; add claim-event evidence only if enforcing table procedure |
-| promoted Kong can be robbed | win event exists | Reuse after source binding |
-| concealed Kong cannot be robbed | current generic event model does not encode legality | Buzzard legality rule |
-| incomplete Four Wind / Three Dragon limit achievements | current scoring assumes player hand records, but special result can be independent of winner | Extend profile scoring result/record semantics; do not assume `limit => winner` |
-| dangerous-discard liability | OTB has a cannon-style incident but shape is club-specific | Extract/generalize liability evidence only if semantics genuinely shared; Buzzard gets own trigger policy |
-| liability suppresses loser-to-loser settlement | current settlement can be replaced per profile | Buzzard settlement policy |
-| penalties / dead hands / false Mahjong | fixed incident union is insufficient | Profile-owned procedure incidents or generic tagged procedure-event envelope |
+| ordinary Chow/Pung/Kong/pair points | Direct | **REUSE** |
+| exposed/concealed values | Direct | **REUSE** |
+| Flowers/Seasons basic 4 points | Direct | **REUSE** |
+| own/round Wind + Dragon doubles | Direct | **REUSE** |
+| +20 Mahjong / +2 self-draw | Direct | **REUSE** |
+| mixed-one-suit / majors-family doubles | High | **REUSE** |
+| rob-Kong / last-wall / loose-tile win evidence | Direct event primitives | **REUSE** |
+| ordinary settlement | Same transaction shape | **REUSE** |
+| East payment doubling | Direct | **REUSE** |
+| East/seat/prevailing-wind progression | Same strategy shape | **REUSE + fixture** |
+| complete Flowers/Seasons ×8 | Different bouquet rule | **AMEND** |
+| pure one-suit ×8 | Current BMJA predicate too narrow | **AMEND predicate** |
+| Standing Hand +100 | Evidence field missing | **ADD small scoring fact** |
+| only-possible tile +2 | Evidence field/inference missing | **ADD** |
+| no Chows +10 | Missing additive bonus | **ADD** |
+| scoreless +10 | Missing additive bonus | **ADD** |
+| last-wall +10 | Existing double, missing additive bonus | **ADD** |
+| Loose Tile +10 | Existing double, missing additive bonus | **ADD** |
+| all Chows + non-scoring pair ×2 | Missing | **ADD** |
+| Buzzard ten limit hands | Registry can express most | **CONFIGURE/ADD bindings** |
+| incomplete Four-Wind/Three-Dragon limit for a loser | Current assumptions too winner-centric | **SMALL ADAPT** |
+| dangerous-discard liability | OTB cannon infrastructure is close | **REUSE shape + CONFIGURE policy** |
+| false Mahjong / tile-count consequences | Existing incident concepts exist | **CONFIGURE/ADAPT policy** |
+| BMJA fully-concealed ordinary double | Not a Buzzard ordinary double | **REMOVE / do not inherit** |
+| BMJA `originalCall` | Not Standing Hand | **REMOVE / do not inherit** |
+| BMJA generic final-discard double | Not stated by Buzzard | **REMOVE / do not inherit** |
 
-## What can probably be implemented with little new scoring code
+## The right mental model
 
-The **hand-value grammar** is the strongest reuse area.
+The implementation should behave like selecting rules from a profile menu, not copying one scorer and editing it into another.
 
-A future Buzzard scorer should aim to compose:
+Conceptually:
 
 ```text
-shared tile/group model
-+ canonical structural predicates
-+ classical intrinsic-point rules
-+ Buzzard bonus/double/special bindings
-+ Buzzard limit policy
-= Buzzard hand value
+shared classical primitives
++ Buzzard KEEP rules
++ Buzzard ADD rules
++ Buzzard AMEND rules
+- rules not in Buzzard
+= buzzard-2000-classical profile
 ```
 
-Do not duplicate BMJA's entire `scoreHand`. Extend the classical scorer only where Buzzard exposes a real grammar difference.
+This does **not** mean the runtime should literally invoke `BMJA_RULESET` and mutate its result. It means the reusable lower-level rules/predicates/policies should be composed into profile-specific behaviour.
 
-Before code, transcribe the source into stable rule bindings for:
+The important isolation rule remains: changing Buzzard must not change BMJA, Western T&M or Outside the Box outputs.
 
-- set/pair point values;
-- Flowers/Seasons;
-- winner bonuses;
-- doubles;
-- special/limit hands;
-- calculation order;
-- exposure/concealment effects.
+## What is genuinely new architecture
 
-## What is genuinely new product behaviour
+Only two seams look materially new enough to deserve architecture attention.
 
-### Standing Hand
+### 1. Non-winner special/limit result
 
-Do **not** map Standing Hand to current `originalCall`.
+Buzzard permits incomplete Four-Wind and Three-Dragon achievements to score the limit against the other losers even though that player did not win the hand.
 
-The source describes a later declaration after initial play which locks future hand changes and changes scoring. It therefore needs its own state, conceptually:
+So a special/limit result cannot universally mean `isWinner === true`.
 
-```text
-standingHand?: {
-  declared: true
-  declaredAtTurnOrDiscard: ...
-  locked: true
-}
-```
+This is a modest scorer/settlement generalisation, not a new engine.
 
-The exact persisted shape can be chosen during implementation, but the semantic distinction is fixed.
+### 2. Profile-owned incident settlement policy
 
-### Dead-wall / Loose Tile lifecycle
+Buzzard's dangerous-discard liability and false-Mahjong/tile-count consequences differ numerically or procedurally from OTB, but the existing incident → settlement-override architecture is already the right shape.
 
-The current game can score a win identified as `loose-tile`, but it does not know whether the table has reached the final 14 unused tiles or which replacement tiles remain.
+Generalise only the shared evidence/transaction seam; keep Buzzard trigger/amount policy profile-local.
 
-For a hand calculator, final-event evidence may be enough.
+## What does **not** need architecture work
 
-For a **fully playable Table Companion**, Buzzard needs a profile-owned hand/table snapshot capable of answering:
+The source describes physical-play procedure for:
 
-- how many live-wall tiles remain;
-- whether a replacement Loose Tile was created/drawn;
-- whether the source's final 14-tile boundary has been reached;
-- whether the deal ends as a dead hand.
+- wall breach and Loose Tiles;
+- the final 14 dead-wall tiles;
+- Chow/Pung/Kong claim timing;
+- priority between competing claims;
+- promoted/concealed Kong procedure;
+- Standing Hand lock behaviour.
 
-This should not be forced into the ordinary `MahjongHand` tile grouping object.
+These are important rules-reference facts, but they do not require state machines in the current Table Companion.
 
-### Liability
+The real table supplies resolved facts such as:
 
-Represent liability as a settlement-routing fact, not a modified hand score.
+- `draw/dead hand`;
+- `standing hand`;
+- `last wall tile`;
+- `loose tile`;
+- `robbed kong`;
+- `dangerous discard liability` and liable player.
 
-A future generic liability event should be able to identify:
+The companion scores/settles those facts.
 
-- liable player;
-- beneficiary/winner;
-- rule trigger ID;
-- whether liability replaces other payers or supplements them;
-- source/profile provenance.
+## Proposed profile identity
 
-Buzzard's dangerous-discard rule then becomes one policy over that evidence.
-
-## Proposed first profile identity
-
-Do not create the production identity until the remaining scoring transcription is complete.
-
-Working engineering identity:
+Working identity:
 
 ```text
 buzzard-2000-classical@0.x
 ```
 
-Final public label should retain both provenance and family, for example:
+Public label:
 
-> British/Western Classical — Buzzard 2000
+> **British/Western Classical — Buzzard 2000**
 
-Never expose this as generic `Traditional Mahjong` or universal `Western Mahjong`.
+Never present it as universal `Traditional Mahjong`, `Classical Mahjong` or `Western Mahjong`.
 
-## Implementation order
+## Build order
 
-1. source-register entry + rule IDs/locators;
-2. scoring-table/doubles/special-hand transcription;
-3. golden hand-value fixtures;
-4. provisional profile using existing classical scorer where possible;
-5. Buzzard settlement/progression fixtures;
-6. Standing Hand state;
-7. dead-wall/Loose Tile lifecycle for full-table support;
-8. dangerous-discard liability and penalties;
-9. cross-profile regression;
-10. real-player/source review before public `playable` status.
+1. encode source-linked golden fixtures from `BUZZARD_2000_RULE_EVIDENCE.md`;
+2. add the versioned Buzzard profile;
+3. compose ordinary KEEP rules from existing classical primitives;
+4. add/amend/remove the small scoring deltas;
+5. add Buzzard limit bindings;
+6. adapt the non-winner limit seam;
+7. reuse ordinary settlement/progression and prove with fixtures;
+8. configure Buzzard incident/liability settlement;
+9. expose in the profile picker only after cross-profile regression passes;
+10. add profile-specific reference/help content.
 
 ## Build-size judgement
 
-Buzzard is **not** a new scoring engine family.
+For the current scoring/table-running scope, Buzzard is **small-to-medium**, not a new mini-platform.
 
-Expected engineering shape:
+The majority of work is profile configuration and regression fixtures. The only meaningful domain extensions are non-winner limit scoring and profile-specific settlement incidents.
 
-- low-to-medium work for hand scoring once source facts are fully transcribed;
-- medium work for full playable table semantics because Standing Hand/dead-wall/liability are genuine new state.
-
-This makes Buzzard a sensible first architecture stress test before MCR or Riichi.
-
-## Remaining evidence gaps before implementation
-
-The issue/source capture is sufficient to establish architecture, but implementation still needs exact locators for:
-
-- all ordinary point values and doubles;
-- Flowers/Seasons scoring details;
-- complete special-hand values/conditions;
-- exact settlement/East multipliers;
-- exact dangerous-discard triggers;
-- full dealer/round progression text;
-- all penalty/dead-hand consequences.
-
-Unknowns stay unknown. Do not fill them from BMJA simply because the grammar is similar.
-
-## Promotion gate
-
-Open a bounded implementation issue only when the crosswalk has enough exact source locators to tell Codex which mechanics are:
-
-- **REUSE** existing classical primitives;
-- **CONFIGURE** Buzzard values/bindings;
-- **ADAPT** settlement/progression/liability;
-- **BUILD** Standing/dead-wall/procedure state.
+This makes Buzzard a useful first proof that our rules architecture can genuinely compose another classical profile before we move to MCR and Riichi, where the scoring grammar changes much more substantially.

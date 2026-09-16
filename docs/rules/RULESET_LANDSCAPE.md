@@ -1,6 +1,6 @@
 # Mahjong ruleset landscape
 
-This document records the high-level rules families identified in the 9 September 2026 research pass.
+This document records the high-level rules families identified in the 9 September 2026 research pass and subsequent named-profile research.
 
 Its purpose is to stop the project from treating every Mahjong variation as either "BMJA" or an arbitrary house rule.
 
@@ -10,6 +10,7 @@ Its purpose is to stop the project from treating every Mahjong variation as eith
 Classical / Western family
 ├── British / BMJA
 ├── Thompson & Maloney Western
+├── British/Western Classical — Buzzard 2000
 └── named club profiles
     └── Outside the Box
 
@@ -28,18 +29,18 @@ This is a product/engineering taxonomy, not a claim that the historical relation
 
 ## At-a-glance comparison
 
-| Dimension | British / BMJA | Thompson & Maloney Western | Outside the Box | Hong Kong / Cantonese | Japanese Riichi | Chinese Official / MCR | American / NMJL |
-|---|---|---|---|---|---|---|---|
-| Broad family | Classical/Western | Classical/Western | Named club profile | Faan-based Chinese family | Japanese | Competition Chinese | American card-based |
-| Standard winning shape | Four sets + pair, plus special hands | Classical four sets + pair, plus special hands | British/Western core + selected exceptions | Four sets + pair + recognised exceptions | Four groups + pair, Seven Pairs or Thirteen Orphans | Four sets + pair + recognised exceptions | Exact annual-card target pattern |
-| Core scoring grammar | Base points + doublings + fixed specials | Base points + doublings + fixed specials | Classical core + fixed specials/local rules | Additive faan + conversion | Han/yaku + fu + capped payment formula | Additive fan, minimum qualifying threshold | Printed annual-card value |
-| Ready/incomplete scoring | Fishing values for special hands | Fishing values present in Companion material | Fishing values | No generic fishing payout | Tenpai/noten settlement, not fishing | No fishing payout | No generic fishing payout |
-| Non-winner hands score? | Yes | Main rules source still to verify completely | Yes | Normally no | No, except draw settlement | No | No |
-| Dealer/East treatment | East pays/receives double | Verify exact Western source/edition | East pays/receives double | Profile-dependent/classical modifiers | Dealer payment multiplier + continuation | No BMJA-style dealer doubling | No comparable BMJA-style dealer multiplier |
-| Special-hand catalogue | Finite BMJA list | Large Western catalogue ecosystem | BMJA + selected Western + local | Named faan patterns | Yaku/yakuman catalogue | 81 fan combinations | Annual card catalogue |
-| Exchange mechanic | Goulash after draw | Western Goulash tradition; verify exact source | Local Goulash | None standard | None | None | Charleston before ordinary play |
-| Liability concept | No OTB-style cannon in current BMJA source | Verify | Explicit cannon rule | Dangerous-discard liability exists in codified variants | Pao for specified yakuman | Different settlement model | Discard/self-draw payer consequences |
-| Versioning need | Rulebook/clarification edition | Book edition + catalogue edition | Club guide version | Named rules authority/version | WRC/EMA rules version | MCR edition | Annual year is mandatory |
+| Dimension | British / BMJA | Thompson & Maloney Western | Buzzard 2000 Classical | Outside the Box | Hong Kong / Cantonese | Japanese Riichi | Chinese Official / MCR | American / NMJL |
+|---|---|---|---|---|---|---|---|---|
+| Broad family | Classical/Western | Classical/Western | Classical/Western named historical profile | Named club profile | Faan-based Chinese family | Japanese | Competition Chinese | American card-based |
+| Standard winning shape | Four sets + pair, plus special hands | Classical four sets + pair, plus special hands | Four sets + pair plus documented irregular hands | British/Western core + selected exceptions | Four sets + pair + recognised exceptions | Four groups + pair, Seven Pairs or Thirteen Orphans | Four sets + pair + recognised exceptions | Exact annual-card target pattern |
+| Core scoring grammar | Base points + doublings + fixed specials | Base points + doublings + fixed specials | Classical base/additive points + doubles + limit treatment | Classical core + fixed specials/local rules | Additive faan + conversion | Han/yaku + fu + capped payment formula | Additive fan, minimum qualifying threshold | Printed annual-card value |
+| Ready/incomplete scoring | Fishing values for special hands | Fishing values present in Companion material | Calling/Standing Hand; source-specific ready-state semantics | Fishing values | No generic fishing payout | Tenpai/noten settlement, not fishing | No fishing payout | No generic fishing payout |
+| Non-winner hands score? | Yes | Main rules source still to verify completely | Yes, including two incomplete limit cases | Yes | Normally no | No, except draw settlement | No | No |
+| Dealer/East treatment | East pays/receives double | Verify exact Western source/edition | East pays/receives double; retains after own win/dead hand | East pays/receives double | Profile-dependent/classical modifiers | Dealer payment multiplier + continuation | No BMJA-style dealer doubling | No comparable BMJA-style dealer multiplier |
+| Special-hand catalogue | Finite BMJA list | Large Western catalogue ecosystem | Smaller source-specific classical list + ten limit hands | BMJA + selected Western + local | Named faan patterns | Yaku/yakuman catalogue | 81 fan combinations | Annual card catalogue |
+| Exchange mechanic | Goulash after draw | Western Goulash tradition; verify exact source | None identified in Buzzard profile | Local Goulash | None standard | None | None | Charleston before ordinary play |
+| Liability concept | No OTB-style cannon in current BMJA source | Verify | Dangerous-discard liability with source-defined triggers and routing | Explicit cannon rule | Dangerous-discard liability exists in codified variants | Pao for specified yakuman | Different settlement model | Discard/self-draw payer consequences |
+| Versioning need | Rulebook/clarification edition | Book edition + catalogue edition | Named 2000 source/version | Club guide version | Named rules authority/version | WRC/EMA rules version | MCR edition | Annual year is mandatory |
 
 ## Classical / Western family
 
@@ -71,6 +72,30 @@ The project currently has two distinct Thompson & Maloney source roles:
 The Companion demonstrates that the Western hand ecosystem is substantially larger than the BMJA-approved special-hand list. It also demonstrates profile-specific score variation: identical or near-identical tile patterns can carry different fixed values in different rule profiles.
 
 The Western baseline remains **not yet fully verified** until the main rules book is checked for ordinary play and settlement details.
+
+### British/Western Classical — Buzzard 2000
+
+Jonathan Buzzard's 2000 rules page is retained as a **named historical classical profile**, not as a universal definition of traditional or Western Mahjong.
+
+For Mahjong Reference's actual product boundary — **score the physical game and run the table** — Buzzard is a close adjacent profile rather than a new engine family.
+
+Most of the profile is composed from existing classical capabilities:
+
+- the same ordinary set/pair point grammar;
+- familiar Wind/Dragon/Flower/Season doubles;
+- existing win-source evidence for rob-Kong, last wall and Loose Tile;
+- non-winner scoring and loser-to-loser settlement;
+- East double payments;
+- the existing East/prevailing-wind progression strategy;
+- existing incident/transaction infrastructure for liability and penalties.
+
+Its meaningful deltas are profile-local scoring additions/amendments/removals, ten limit-hand bindings, two unusual non-winner limit cases, and Buzzard-specific incident settlement policy.
+
+The source also describes Standing Hand, the final 14-tile dead-wall boundary, Loose Tile procedure and claim precedence. Those remain important rules/reference facts, but the current Table Companion does **not** need to simulate them. The real table supplies resolved scoring evidence such as Standing Hand, dead hand, Loose-Tile win or liability.
+
+The architecture crosswalk is `BUZZARD_2000_COMPATIBILITY_CROSSWALK.md`; the recovered primary-source evidence is `BUZZARD_2000_RULE_EVIDENCE.md`.
+
+The profile should reuse the classical engine rather than fork it.
 
 ### Outside the Box
 
@@ -119,6 +144,8 @@ Important differences:
 - dealer continuation affects progression.
 
 Riichi should reuse shared pattern/hand-state primitives where sensible, but needs its own scoring strategy.
+
+The Table Companion should still capture only the physical-table facts needed for scoring, settlement and progression unless a later product decision deliberately expands into gameplay enforcement.
 
 ## Chinese Official / MCR
 
@@ -197,7 +224,7 @@ That pattern/value separation is one of the strongest conclusions of the researc
 - fixed doubles;
 - fixed special-hand values;
 - exposure rules;
-- fishing values;
+- fishing/ready values where that profile has them;
 - East/dealer multipliers;
 - settlement multipliers;
 - Goulash parameters;
@@ -208,7 +235,7 @@ That pattern/value separation is one of the strongest conclusions of the researc
 
 ### Likely separate scoring strategies
 
-- Western/BMJA base-points-and-doublings;
+- Western/BMJA/Buzzard base-points-and-doublings family;
 - Hong Kong faan conversion;
 - Riichi han/fu;
 - MCR additive fan + interaction rules;
@@ -216,10 +243,10 @@ That pattern/value separation is one of the strongest conclusions of the researc
 
 ## Immediate implementation relevance
 
-The project should prove the architecture first with:
+The architecture has already proved BMJA and a provisional Thompson & Maloney Western profile can coexist. The next ruleset tests are:
 
-1. **BMJA** — preserve current behaviour exactly.
-2. **Thompson & Maloney Western** — verify and encode the wider Western baseline.
-3. **Outside the Box** — compose a real named club profile from British/Western components plus local rules.
+1. **Buzzard 2000** — prove an adjacent historical profile can be composed mostly by selecting existing classical rules plus small profile-local deltas;
+2. **MCR** — prove the platform can host a materially different additive scoring grammar without pretending it is classical points/doubles;
+3. **Riichi** — prove a separate han/fu/payment/progression strategy while retaining the Table Companion's physical-game boundary.
 
-If those three can coexist cleanly, the architecture is likely strong enough to consider Hong Kong, Riichi and MCR next.
+Outside the Box remains a valuable real-table validation of the named club-profile architecture and cross-profile isolation.

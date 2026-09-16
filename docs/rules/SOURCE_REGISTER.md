@@ -26,6 +26,7 @@ It is intentionally conservative. A source can be useful without being authorita
 | `tm-companion` | Patricia A. Thompson & Betty Maloney, *The Mah Jong Player's Companion* (1997, ISBN 978-0864178916) | B | Supplementary special-hand catalogue, names, values and indexes | Partial source available from supplied photographs; not a complete rules text |
 | `otb-guide-2026-09` | Outside the Box Mahjong guide supplied by Rachel, 9 Sep 2026 | C | Named Outside the Box club profile and local rules | Strong primary club source; several interpretation questions remain |
 | `outside-the-box-site` | Outside the Box — https://www.outsidetheboxltd.co.uk/ | C | Club identity, attribution and public context | Verified for identity/context, not rules details |
+| `buzzard-2000-classical` | Jonathan Buzzard, *Mah-Jongg: the Game and How To Play It* (last modified 30 Mar 2000) — http://www.buzzard.me.uk/jonathan/MahJongg.html | D | Named historical British/Western Classical profile; scoring, settlement, progression and table procedure | **Primary snapshot recovered 16 Sep 2026** as a 13-page downloaded/printed PDF. SHA-256 `76b7548f8a8708473340a65bfaf810c99188b95a37311ce6127676588f20b0a5`. Page-level scoring/limit/settlement/progression/penalty evidence is now implementation-ready in `BUZZARD_2000_RULE_EVIDENCE.md`. |
 | `wrc-rules` | World Riichi Championship rules — https://www.worldriichi.org/wrc-rules | A | Future canonical Riichi profile | Strong source; pin exact rules edition when implemented |
 | `hkma-rules` | Hong Kong Mahjong Association rules — https://www.hkmahjong.org/rules?lang=en | A | Future named Hong Kong profile | Strong source; avoid genericising all HK play from one codification |
 | `mcr-ema` | Mahjong Competition Rules PDF — https://mahjong-europe.org/portal/images/docs/mcr_EN.pdf | A | Future Chinese Official / MCR profile | Strong formal rules source |
@@ -117,6 +118,30 @@ Genuine outstanding questions:
 
 Do not generalise a club rule into "Western Mahjong" without independent Western-source support.
 
+### Buzzard 2000 British/Western Classical
+
+Treat Buzzard 2000 as a **named historical profile**, not as an authority over modern BMJA or all Western Mahjong.
+
+On 16 September 2026 a printed/downloaded 13-page PDF copy of the canonical Buzzard page was recovered and retained as the implementation snapshot. Its heading identifies *Mah-Jongg: the Game and How To Play It* and states `Last modified on 30th March 2000`. The snapshot SHA-256 is recorded above.
+
+This resolves the previous primary-source gap for:
+
+- ordinary Pung/Kong/pair and Flower/Season values;
+- winner bonuses and doubles;
+- the ten limit hands;
+- loser/non-winner Wind/Dragon limit behaviour;
+- ordinary settlement and East doubling;
+- East/prevailing-wind progression;
+- dangerous-discard liability;
+- false-Mahjong and incorrect-hand consequences;
+- Standing Hand and physical procedure reference material.
+
+The implementation-facing evidence ledger is `BUZZARD_2000_RULE_EVIDENCE.md`.
+
+Product-scope guardrail: Mahjong Reference scores and runs the real table; it does not need to simulate Buzzard wall construction, draw/discard history, claim timing or Standing-Hand lock enforcement. Those remain rules/reference content unless a future product decision changes scope.
+
+The main remaining interpretation fixture is whether the source's separately listed own Flower/Season double and complete-set ×8 treatment cumulate when both apply. Do not silently inherit the BMJA bouquet convention.
+
 ### American / NMJL
 
 The official annual card is a sold, copyrighted product.
@@ -200,14 +225,23 @@ The approved BMJA source family is already authoritative, but exact heading-leve
 
 ### Outside the Box confirmation
 
-Resolve the five questions listed above before treating the first club profile as version 1.0; do not reopen points, settlement, Goulash or penalty questions already resolved by the supplied guide.
+Resolve the questions listed above before treating the first club profile as version 1.0; do not reopen points, settlement, Goulash or penalty questions already resolved by the supplied guide.
+
+### Buzzard 2000
+
+The previous source-recovery backlog is complete. Remaining work is implementation preparation rather than evidence recovery:
+
+1. encode page-linked golden fixtures;
+2. pin the complete Flower/Season + own-tile cumulative-double interpretation explicitly;
+3. compose the profile using KEEP / ADD / AMEND / REMOVE rules;
+4. preserve cross-profile isolation.
 
 ## Likely next pass
 
 Use the pass-2 evidence model to reshape the implementation backlog:
 
-1. rewrite issue #51 as the umbrella versioned rules-profile architecture issue;
-2. create implementation child issues for canonical patterns, BMJA migration, Western baseline, Companion catalogue and Outside the Box;
-3. define zero-behaviour-change BMJA migration tests;
+1. keep versioned rules-profile architecture as the umbrella;
+2. promote only bounded, dependency-ready implementation children;
+3. define zero-behaviour-change BMJA regression tests;
 4. define cross-profile golden fixtures;
-5. keep wider disciplines documented but out of immediate implementation scope.
+5. keep wider disciplines documented but out of immediate implementation scope until their own evidence gates are ready.
