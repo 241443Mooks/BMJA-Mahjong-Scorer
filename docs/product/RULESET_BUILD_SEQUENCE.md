@@ -31,9 +31,13 @@ This order is provisional only in the sense that implementation effort may chang
 
 Buzzard:
 
-- finish exact point/double/special-hand source transcription;
-- source-bind settlement/liability/progression;
-- prepare golden fixtures.
+- source architecture/crosswalk is complete;
+- durable executable evidence ledger is `docs/rules/BUZZARD_2000_RULE_EVIDENCE.md`;
+- recover/re-open the canonical Buzzard page or a trustworthy archived exact copy;
+- bind the ordinary point table, winner bonuses, doubles and limit list to exact Buzzard locators;
+- resolve the live `no Chows` / `scoreless` bonus-vs-double uncertainty rather than importing a neighbouring classical rule;
+- source-bind liability/penalty/progression edge cases;
+- prepare golden fixtures for bounded implementation child #217.
 
 MCR:
 
@@ -83,6 +87,14 @@ A current supported game can round-trip through the neutral cloud envelope and r
 ### Checkpoint C — Buzzard
 
 The source-bound profile proves the classical engine can be reused without application fork and identifies only the genuine new state: Standing Hand, dead-wall/Loose Tile lifecycle, liability/procedure.
+
+Checkpoint C is deliberately split:
+
+1. **C1 evidence gate** — exact executable score/double/limit bindings are pinned to Buzzard, with conflicts resolved;
+2. **C2 hand/profile proof** — #217 reuses the classical engine for an internal/provisional Buzzard profile and proves isolation from BMJA/Western;
+3. **C3 full-table proof** — Standing Hand, dead wall, liability and procedure are added only when their source semantics are exact.
+
+Do not promote C1 uncertainty into C2 code merely because another classical source looks similar.
 
 ### Checkpoint D — MCR
 
