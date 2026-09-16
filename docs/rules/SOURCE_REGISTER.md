@@ -26,6 +26,7 @@ It is intentionally conservative. A source can be useful without being authorita
 | `tm-companion` | Patricia A. Thompson & Betty Maloney, *The Mah Jong Player's Companion* (1997, ISBN 978-0864178916) | B | Supplementary special-hand catalogue, names, values and indexes | Partial source available from supplied photographs; not a complete rules text |
 | `otb-guide-2026-09` | Outside the Box Mahjong guide supplied by Rachel, 9 Sep 2026 | C | Named Outside the Box club profile and local rules | Strong primary club source; several interpretation questions remain |
 | `outside-the-box-site` | Outside the Box — https://www.outsidetheboxltd.co.uk/ | C | Club identity, attribution and public context | Verified for identity/context, not rules details |
+| `buzzard-2000-classical` | Jonathan Buzzard, *Mah-Jongg: the Game and How To Play It* (last modified 30 Mar 2000) — http://www.buzzard.me.uk/jonathan/MahJongg.html | D | Named historical British/Western Classical profile; setup, play, scoring, settlement, progression and procedure | Primary page manually captured into #175 on 14 Sep 2026; automated refetch returned 502 on 16 Sep. Exact scoring-table/doubles/limit/liability locators still need recovery before executable binding. See `BUZZARD_2000_RULE_EVIDENCE.md`. |
 | `wrc-rules` | World Riichi Championship rules — https://www.worldriichi.org/wrc-rules | A | Future canonical Riichi profile | Strong source; pin exact rules edition when implemented |
 | `hkma-rules` | Hong Kong Mahjong Association rules — https://www.hkmahjong.org/rules?lang=en | A | Future named Hong Kong profile | Strong source; avoid genericising all HK play from one codification |
 | `mcr-ema` | Mahjong Competition Rules PDF — https://mahjong-europe.org/portal/images/docs/mcr_EN.pdf | A | Future Chinese Official / MCR profile | Strong formal rules source |
@@ -117,6 +118,20 @@ Genuine outstanding questions:
 
 Do not generalise a club rule into "Western Mahjong" without independent Western-source support.
 
+### Buzzard 2000 British/Western Classical
+
+Treat Buzzard 2000 as a **named historical profile**, not as an authority over modern BMJA or all Western Mahjong.
+
+The 14 September capture in #175 is strong enough to establish distinctive profile mechanics such as Standing Hand, a final 14-tile dead-wall boundary, Loose Tile replacement behaviour, claim precedence, non-winner settlement and source-specific progression/procedure concepts.
+
+However, the canonical page could not be automatically refetched on 16 September (HTTP 502). Detailed secondary classical-rules pages corroborate much of the structure but differ in some scoring details. Therefore:
+
+- architecture compatibility may be treated as established;
+- exact numeric score/double/limit bindings must come from the Buzzard source itself or a trustworthy archived exact copy;
+- liability and penalty triggers must not be filled from another classical source;
+- the durable implementation gate is `BUZZARD_2000_RULE_EVIDENCE.md`;
+- #217 is the bounded provisional implementation child once its executable rows are source-complete.
+
 ### American / NMJL
 
 The official annual card is a sold, copyrighted product.
@@ -201,6 +216,19 @@ The approved BMJA source family is already authoritative, but exact heading-leve
 ### Outside the Box confirmation
 
 Resolve the five questions listed above before treating the first club profile as version 1.0; do not reopen points, settlement, Goulash or penalty questions already resolved by the supplied guide.
+
+### Buzzard 2000 recovery
+
+Recover the canonical Buzzard page or a trustworthy archived exact copy, then replace the remaining `needs-primary-source` rows in `BUZZARD_2000_RULE_EVIDENCE.md` with narrow section locators. Priority order:
+
+1. ordinary point table;
+2. winner bonuses;
+3. double catalogue;
+4. limit/cap rules;
+5. settlement edge cases;
+6. dangerous-discard liability;
+7. procedural penalties;
+8. exact round/progression wording.
 
 ## Likely next pass
 
