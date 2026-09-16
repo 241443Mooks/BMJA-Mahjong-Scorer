@@ -1,245 +1,324 @@
 # Buzzard 2000 British/Western Classical — rule evidence ledger
 
-Status: **implementation gate / provenance ledger**  
+Status: **source-complete for scoring/table-companion design**  
 Issue: #175  
 Implementation child: #217  
 Working source ID: `buzzard-2000-classical`  
-Intended source: Jonathan Buzzard, *Mah-Jongg: the Game and How To Play It*, last modified 30 March 2000  
-Canonical source URL: `http://www.buzzard.me.uk/jonathan/MahJongg.html`
+Source: Jonathan Buzzard, *Mah-Jongg: the Game and How To Play It*, last modified 30 March 2000  
+Canonical URL: `http://www.buzzard.me.uk/jonathan/MahJongg.html`
 
-## Why this file exists
+## Source snapshot recovered — 16 September 2026
 
-`BUZZARD_2000_COMPATIBILITY_CROSSWALK.md` answers **where Buzzard fits in the software architecture**.
+A printed/downloaded PDF copy of the canonical Buzzard page is now held as the implementation evidence snapshot.
 
-This file answers the stricter implementation question:
+- 13 pages;
+- page heading identifies the source and states `Last modified on 30th March 2000`;
+- local PDF SHA-256: `76b7548f8a8708473340a65bfaf810c99188b95a37311ce6127676588f20b0a5`;
+- the live URL returning HTTP 502 no longer blocks implementation because exact page-level source evidence is available from this snapshot.
 
-> **Which Buzzard rule facts are evidenced closely enough to become executable, and which still need the original source re-checked before code is allowed to depend on them?**
+This source remains a **named historical profile**, not an authority over modern BMJA or every Western/Classical table.
 
-The project must not fill a Buzzard gap by copying BMJA, Thompson & Maloney, another classical rules page, or a plausible historical convention.
+## Product scope matters
 
-## Source-access note — 16 September 2026
+Mahjong Reference is a **scoring and table-running companion**. It does not play the physical game for the players.
 
-The Buzzard page was read and manually captured into #175 during the 14 September research pass. On 16 September an automated refetch of the canonical URL returned HTTP 502, so the original page could not be independently re-opened during this evidence-normalisation pass.
+Therefore the implementation only needs to know the facts required to:
 
-Two detailed secondary classical-rules pages were used only as corroboration/checking aids:
+1. calculate each player's score from the completed/entered hand and relevant table evidence;
+2. calculate settlement, including liability/penalty overrides;
+3. advance East, seats and prevailing wind;
+4. record a dead hand/draw when the table tells us one occurred.
 
-- h2g2, *How to Play Mah Jong*, `https://h2g2.com/approved_entry/A6844520`;
-- CasinoCity, *Rules of Mah Jong*, `https://www.casinocity.com/rule/mah_jong.htm`.
+The app does **not** need to simulate the wall, police every draw/discard, enforce claim priority in real time, or prove that a Standing Hand remained locked. Those procedures belong in the rules/reference layer unless a future product requirement explicitly changes scope.
 
-They overlap strongly with the captured Buzzard mechanics, but they are **not substitutes for Buzzard**. Where they differ, or where #175 lacks an exact original-source locator/value, the evidence below remains `needs-primary-source`.
+## Core implementation conclusion
 
-This is deliberate. Similar classical rules are evidence of architectural compatibility, not proof of Buzzard's exact rule.
+Buzzard is mostly a **classical profile composition over capabilities already present**.
 
-## Evidence-status rule
+Conceptually:
 
-Use the existing `PROVENANCE_MODEL.md` vocabulary:
+> **Start with the existing classical/BMJA scoring and table primitives; keep the identical rules; add Buzzard-only rules; amend the few rules whose values/conditions differ; remove BMJA-only rules; then add two small table-companion seams for Buzzard-specific non-winner limits and settlement incidents.**
 
-- `verified` — the original Buzzard source was captured clearly enough in #175 to support the factual rule;
-- `needs-primary-source` — an exact value/condition still needs the Buzzard page or an archived exact copy checked;
-- `secondary-only` — useful corroboration, but not enough to drive Buzzard implementation.
+This is a profile/configuration job, not a new engine family.
 
-`verified` here means **verified for this named Buzzard profile from the captured primary-source research**, not governing-body authority. The source remains Authority D in the source register.
+## A. Ordinary hand values — direct reuse
 
-## A. Setup, wall and turn procedure
+Source: PDF pages 9–10, “THE SCORES AND HOW TO CALCULATE THEM”.
 
-| Rule ID | Buzzard claim | Locator / evidence | Status | Implementation consequence |
-|---|---|---|---|---|
-| `setup.hand.ordinary-13-14` | Ordinary play holds 13 tiles, draws to 14, and normally wins with four sets plus a pair. | Buzzard capture #175: Core hand/play | verified | Reuse classical hand structure. |
-| `setup.wall.basic-136` | Without Flowers/Seasons, each player builds a 17×2 wall for 136 basic tiles. | Buzzard capture #175: Wall / dead-wall behaviour | verified | Reuse tile set; Buzzard wall strategy owns lifecycle. |
-| `setup.wall.loose-tiles` | The breach creates two initial Loose Tiles used for replacement behaviour. | Buzzard capture #175: Wall / dead-wall behaviour | verified | New full-table state later; hand scorer can use final event evidence only. |
-| `setup.wall.dead-14` | The final 14 tiles, including Loose Tiles, remain unused; reaching them without Mahjong ends the deal without scoring. | Buzzard capture #175: Wall / dead-wall behaviour | verified | Full-table implementation needs automatic dead-wall state; #217 defers it. |
-| `progression.dead-hand.east-retains` | A dead/invalid deal leaves East as East. | Buzzard capture #175: Dealer / East / round progression | verified | Buzzard progression fixture required later. |
-| `play.turn.order` | Play proceeds East → South → West → North in the source's seating direction. | Buzzard capture #175: Core hand/play | verified | Reuse ordered players; do not infer physical clockwise/counter-clockwise UI from labels alone. |
-| `play.claim.chow-preceding` | Chow may be claimed only from the immediately preceding player's discard. | Buzzard capture #175: Core hand/play | verified | Profile legality rule if claim enforcement is implemented. |
-| `play.claim.priority.mahjong` | Mahjong takes precedence over Pung/Kong/Chow claims. | Buzzard capture #175: Core hand/play | verified | Procedure layer, not hand value. |
-| `play.claim.priority.multiple-winners-turn-order` | If more than one player can win on a discard, the earliest player in normal turn order has precedence. | Buzzard capture #175: Core hand/play | verified | Current single-winner outcome can store the resolved result; claim-event enforcement can come later. |
-| `play.claim.after-next-draw` | A previous discard can still be claimed before the next drawing player discards; their just-drawn wall tile may be returned. | Buzzard capture #175: Core hand/play | verified | Full procedure tracker only; #217 defers. |
-
-## B. Kong and replacement behaviour
-
-| Rule ID | Buzzard claim | Locator / evidence | Status | Implementation consequence |
-|---|---|---|---|---|
-| `play.kong.exposed-from-discard` | A Kong can be exposed from a discard. | Buzzard capture #175: Kong / replacement-tile behaviour | verified | Reuse Kong primitive. |
-| `play.kong.concealed` | A concealed Kong can be declared. | Buzzard capture #175: Kong / replacement-tile behaviour | verified | Reuse concealed Kong primitive. |
-| `play.kong.promote-exposed-pung` | A self-drawn fourth matching tile may promote an exposed Pung to Kong. | Buzzard capture #175: Kong / replacement-tile behaviour | verified | Reuse/extend event evidence. |
-| `play.kong.replacement-loose-tile` | A Kong replacement comes from the source's Loose Tiles. | Buzzard capture #175: Kong / replacement-tile behaviour | verified | Full wall inventory later. |
-| `play.kong.promoted-robbable` | A promoted exposed Kong may be robbed for Mahjong. | Buzzard capture #175: Kong / replacement-tile behaviour | verified | Existing rob-Kong win evidence can be reused. |
-| `play.kong.concealed-not-robbable` | A concealed Kong cannot be robbed under this profile. | Buzzard capture #175: Kong / replacement-tile behaviour | verified | Buzzard-specific legality policy. |
-
-## C. Calling and Standing Hand
-
-| Rule ID | Buzzard claim | Locator / evidence | Status | Implementation consequence |
-|---|---|---|---|---|
-| `ready.calling.one-away` | A player one tile from Mahjong is Calling. | Buzzard capture #175: Calling / Standing Hand | verified | Keep separate from Riichi tenpai semantics. |
-| `ready.standing-hand.declare` | After the first draw/discard (East after the first discard), a Calling player may declare Standing Hand. | Buzzard capture #175: Calling / Standing Hand | verified | New profile-local declaration state. |
-| `ready.standing-hand.lock` | After declaring Standing Hand, the held hand is locked and subsequent wall draws are discarded unless they supply the winning tile. | Buzzard capture #175: Calling / Standing Hand | verified | New legality/state transition; do not map to `originalCall`. |
-| `score.bonus.standing` | A completed Standing Hand receives an additive score bonus. | Buzzard capture #175 records **+100 points**. Secondary h2g2/CasinoCity independently show +100. | verified | Later Standing slice can add +100 after the declaration evidence exists. |
-
-## D. Irregular/special structures and event patterns
-
-| Rule ID | Buzzard claim | Locator / evidence | Status | Implementation consequence |
-|---|---|---|---|---|
-| `pattern.thirteen-odd-majors` | Thirteen Odd Majors is a legal irregular Mahjong structure. | Buzzard capture #175: Special hands; secondary h2g2 gives the structural form. | verified | Reuse canonical Thirteen-Orphans-family predicate only after exact structural equivalence fixture. |
-| `pattern.calling-nine-tile` | Calling Nine Tile Hand is a legal irregular Mahjong structure. | Buzzard capture #175: Special hands; secondary h2g2 gives the 111 + 2–8 + 999 one-suit form plus one duplicate. | verified | Likely Nine-Gates-family predicate; verify exact structural mapping in golden fixture. |
-| `pattern.original-hand` | East can score an Original Hand / Hand from Heaven / Natural Winning. | Buzzard capture #175: Special hands | verified | Event/context pattern, not merely tile structure. |
-| `score.limit.incomplete-wind-achievement` | The source allows a Four-Wind-family limit consequence even where the player has not gone Mahjong. | Buzzard capture #175: Special hands / settlement | verified | Do not encode `limit => winner`; result model must allow non-winner high/limit value. |
-| `score.limit.incomplete-dragon-achievement` | The source allows a Three-Dragon-family limit consequence even where the player has not gone Mahjong. | Buzzard capture #175: Special hands / settlement | verified | Same architectural consequence as above. |
-
-## E. Ordinary intrinsic points — exact values still gated
-
-The secondary sources expose a coherent classical point table, but #175 did not yet preserve the original Buzzard table as narrow source locators. These numbers are therefore **candidate transcription values, not yet executable Buzzard authority**.
-
-| Rule ID | Candidate value from secondary corroboration | Status |
+| Rule ID | Buzzard value | Implementation |
 |---|---:|---|
-| `score.base.pung.simple.exposed` | 2 | needs-primary-source |
-| `score.base.pung.simple.concealed` | 4 | needs-primary-source |
-| `score.base.pung.terminal.exposed` | 4 | needs-primary-source |
-| `score.base.pung.terminal.concealed` | 8 | needs-primary-source |
-| `score.base.pung.honour.exposed` | 4 | needs-primary-source |
-| `score.base.pung.honour.concealed` | 8 | needs-primary-source |
-| `score.base.kong.simple.exposed` | 8 | needs-primary-source |
-| `score.base.kong.simple.concealed` | 16 | needs-primary-source |
-| `score.base.kong.terminal.exposed` | 16 | needs-primary-source |
-| `score.base.kong.terminal.concealed` | 32 | needs-primary-source |
-| `score.base.kong.honour.exposed` | 16 | needs-primary-source |
-| `score.base.kong.honour.concealed` | 32 | needs-primary-source |
-| `score.base.pair.dragon` | 2 | needs-primary-source |
-| `score.base.pair.own-wind` | 2 | needs-primary-source |
-| `score.base.pair.round-wind` | 2 | needs-primary-source |
-| `score.base.bonus-tile` | 4 per Flower/Season | needs-primary-source |
+| `score.base.chow` | 0 | REUSE |
+| `score.base.pung.simple.exposed` | 2 | REUSE |
+| `score.base.pung.simple.concealed` | 4 | REUSE |
+| `score.base.pung.major.exposed` | 4 | REUSE |
+| `score.base.pung.major.concealed` | 8 | REUSE |
+| `score.base.kong.simple.exposed` | 8 | REUSE |
+| `score.base.kong.simple.concealed` | 16 | REUSE |
+| `score.base.kong.major.exposed` | 16 | REUSE |
+| `score.base.kong.major.concealed` | 32 | REUSE |
+| `score.base.pair.dragon` | 2 | REUSE |
+| `score.base.pair.own-wind` | 2 | REUSE |
+| `score.base.pair.round-wind` | 2 | REUSE |
+| `score.base.bonus-tile` | 4 per Flower/Season | REUSE |
 
-Secondary corroboration: h2g2 and CasinoCity report this same ordinary Pung/Kong/pair table. That agreement is useful, but the final Buzzard profile must bind these numbers to the Buzzard source itself.
+“Major” here covers terminal suit tiles and Winds/Dragons in the source table.
 
-## F. Winner additive bonuses — separate confirmed concept from exact binding
+## B. Doubles — mostly menu selection from the existing classical rules
 
-#175 captured the following score concepts from Buzzard. Where an exact numeric value is preserved in #175, it is recorded below; otherwise the implementation remains gated.
+Source: PDF page 10 “DOUBLES”, plus page 11 “NOTES ON SCORING”.
 
-| Rule ID | Candidate / captured value | Status | Note |
-|---|---:|---|---|
-| `score.bonus.mahjong` | 20 in both secondary checks | needs-primary-source | Exact Buzzard table locator still required. |
-| `score.bonus.self-draw` | +2 | verified | #175 explicitly captured +2. |
-| `score.bonus.only-possible` | +2 | verified | #175 explicitly captured +2. |
-| `score.bonus.standing` | +100 | verified | Captured in #175 and independently corroborated. |
-| `score.bonus.no-chows` | +10 in h2g2/CasinoCity | needs-primary-source | #175's earlier summary described a possible double, so this is a live conflict until Buzzard is re-opened. |
-| `score.bonus.scoreless` | +10 in h2g2/CasinoCity | needs-primary-source | Same caution: do not infer Buzzard exact treatment. |
-| `score.bonus.last-wall` | +10 in h2g2/CasinoCity | needs-primary-source | #175 captured last-wall scoring but not this exact table locator. |
-| `score.bonus.loose-tile` | +10 in h2g2/CasinoCity | needs-primary-source | #175 captured replacement/Loose Tile significance but exact value must be rebound to Buzzard. |
+### All hands
 
-This conflict is important: it proves why “classical-family compatibility” must not be treated as “all classical sources share the same scoring table”.
-
-## G. Doubles — do not import a secondary table into Buzzard
-
-The captured Buzzard issue identifies doubles for Winds/Dragons, hand composition, last-wall/replacement/rob-Kong circumstances and Original Hand. Secondary classical pages do not agree perfectly about which items are additive bonuses, doubles or limits.
-
-The current implementation gate is therefore:
-
-- stable rule IDs may be prepared now;
-- **no Buzzard double count should become executable until the original table is re-opened or an archived exact copy is pinned.**
-
-Candidate IDs to bind:
-
-```text
-score.double.own-wind
-score.double.round-wind
-score.double.dragon
-score.double.own-flower-season
-score.double.flower-season-set
-score.double.one-suit-honours
-score.double.terminals-honours
-score.double.pure-suit
-score.double.pure-terminals
-score.double.all-honours
-score.double.rob-kong
-score.double.original-hand
-score.double.last-wall
-score.double.loose-tile
-score.double.all-pungs
-score.double.all-chows-scoreless-pair
-```
-
-Evidence status for the exact Buzzard value/eligibility of these entries: **`needs-primary-source`** unless a later row explicitly upgrades it.
-
-## H. Limit/cap rules
-
-| Rule ID | Current evidence | Status |
+| Rule | Buzzard | Delta from current BMJA implementation |
 |---|---|---|
-| `score.limit.normal` | #175 confirms a classical limit/cap exists. h2g2 says a typical limit is 600, but this is not enough to bind Buzzard's production default. | needs-primary-source |
-| `score.limit.three-winds` | #175 confirms Four-Wind-family limit treatment can apply to a non-winner. | verified concept; exact condition/value needs-primary-source |
-| `score.limit.three-dragons` | #175 confirms Three-Dragon-family limit treatment can apply to a non-winner. | verified concept; exact condition/value needs-primary-source |
-| `score.limit.thirteen-odd-majors` | #175 records the hand; secondary sources commonly treat it as a limit. | needs-primary-source for Buzzard value |
-| `score.limit.calling-nine-tile` | #175 records the hand; secondary sources commonly treat it as a limit. | needs-primary-source for Buzzard value |
-| `score.limit.original-hand` | #175 records Original Hand; secondary sources vary between doubles and limit treatment. | needs-primary-source |
-| `score.limit.east-thirteenth` | #175 records East/dealer progression and classical source material mentions a thirteenth-consecutive-Mahjong rule. | needs-primary-source for exact Buzzard condition/value |
+| Pung/Kong of own Wind | ×2 | KEEP |
+| Pung/Kong of Wind of Round | ×2 | KEEP |
+| Pung/Kong of any Dragon | ×2 | KEEP |
+| Own Season or Flower | ×2 | KEEP |
+| Four Seasons or Four Flowers | ×8 | AMEND bouquet treatment; source lists this separately from own-tile double |
 
-## I. Settlement and progression
+The source says that where several doubles occur, they are cumulative. A golden fixture must explicitly pin the cumulative treatment when a complete Flower/Season set also contains the player's own tile rather than silently importing BMJA's bouquet convention.
 
-| Rule ID | Buzzard claim | Status | Implementation consequence |
-|---|---|---|---|
-| `settlement.winner-paid-first` | Winner is paid their score by each loser before loser-to-loser settlement. | verified | Reuse transaction infrastructure. |
-| `settlement.loser-to-loser` | Losers then settle score differences among themselves. | verified | Strong classical reuse fit. |
-| `settlement.east-double` | East pays and receives at double stakes. | verified concept | Exact multiplication order/edge cases should receive golden fixtures before production. |
-| `settlement.incomplete-limit` | Incomplete Wind/Dragon limit achievements can affect loser-to-loser settlement. | verified concept | Requires score result independent of winner status. |
-| `progression.east-win-retains` | East retains East after winning. | verified | Profile progression strategy. |
-| `progression.dead-hand-retains-east` | Dead hand leaves East unchanged. | verified | Profile progression strategy. |
-| `progression.non-east-win-rotates` | Non-East win rotates dealer/seat winds. | verified | Profile progression strategy. |
-| `progression.prevailing-wind-cycle` | Prevailing wind advances after the source-defined East/dealer cycle. | verified concept | Exact cycle fixture/locator still required before code. |
+### Winner only
 
-## J. Liability and penalties — intentionally blocked
+| Rule | Buzzard | Delta |
+|---|---|---|
+| Snatching a Kong | ×2 | KEEP existing rob-Kong event double |
+| One suit + Winds/Dragons | ×2 | KEEP |
+| Ones/Nines + Winds/Dragons | ×2 | KEEP all-major-family double |
+| Entirely one suit | ×8 | AMEND predicate: Buzzard does not restrict this to Pungs/Kongs |
+| Original Hand | ×8 | ADD/PROFILE-BIND; also a limit hand below |
+| All Winds and Dragons | ×8 | ADD/PROFILE-BIND; also a limit hand below |
+| Winning by Pairs: Pungs/Kongs + pair, no Chows | ×2 | KEEP no-Chows/all-Pungs-family double |
+| All Chows + a non-scoring pair | ×2 | ADD |
+| Last drawable wall tile | ×2 | KEEP existing last-wall win evidence |
+| Loose Tile win | ×2 | KEEP existing loose-tile win evidence |
 
-These are the highest-risk areas for accidental rule invention.
+### Remove BMJA-only scoring behaviour from Buzzard
 
-#175 captured that Buzzard includes dangerous-discard liability and procedural penalties. It did **not** yet preserve enough narrow original-source detail to make every trigger and payment consequence safely executable, and generic classical sources vary.
+Do not inherit a rule merely because it exists in the current BMJA profile.
 
-Keep all of the following `needs-primary-source` until the exact Buzzard wording/locator is pinned:
+For Buzzard specifically:
 
-```text
-liability.dangerous-discard.trigger
-liability.dangerous-discard.payer-routing
-liability.dangerous-discard.suppress-loser-settlement
-penalty.false-mahjong.fully-exposed
-penalty.false-mahjong.withdrawn-before-exposure
-penalty.wrong-tile-count
-penalty.invalid-chow-pung-kong
-penalty.wall-deal-irregularity
-```
+- generic “fully concealed hand” is **not** listed as an ordinary double; instead concealed Pungs/Kongs form one of the named limit hands;
+- `originalCall` is **not** Standing Hand and must not be reused as if they were identical;
+- no separate generic final-discard double is stated in this source.
 
-Architecture may prepare a generic evidence envelope, but no numeric penalty or liability trigger should be copied from BMJA, OTB, Millington, Babcock or another secondary classical rules page.
+## C. Winner additive bonuses
 
-## K. Phase 1 implementation gate (#217)
+Source: PDF page 10 “BONUS SCORES”, clarified by page 11 notes.
 
-The architecture is ready, but **Phase 1 is not yet fully source-ready** because the exact ordinary point table, double catalogue and limit bindings still need an exact Buzzard source copy/locator.
+| Rule ID | Buzzard value | Delta |
+|---|---:|---|
+| `score.bonus.mahjong` | +20 | KEEP |
+| `score.bonus.self-draw` | +2 | KEEP |
+| `score.bonus.only-possible` | +2 | ADD evidence toggle/inference |
+| `score.bonus.standing` | +100 | ADD evidence toggle |
+| `score.bonus.no-chows` | +10 | ADD; this is in addition to the no-Chows/all-Pungs double where applicable |
+| `score.bonus.scoreless` | +10 | ADD |
+| `score.bonus.last-wall` | +10 | ADD; existing event double still applies |
+| `score.bonus.loose-tile` | +10 | ADD; existing event double still applies |
 
-What is safe now:
+The source says bonuses are added **before** the hand is multiplied by doubles.
 
-- create fixtures/schema around stable IDs;
-- reuse canonical hand/group primitives;
-- implement nothing that invents a disputed numeric binding;
-- prepare the profile pack structure behind an internal/provisional gate.
+For product scope, `Standing Hand`, `only possible tile`, `last wall tile` and `Loose Tile` are final scoring facts the player/table can supply. We do not need to reconstruct the preceding play sequence.
 
-What must happen before Codex writes scoring mathematics:
+## D. Limit hands
 
-1. recover/re-open the canonical Buzzard page or a trustworthy archived exact copy;
-2. transcribe the ordinary points table, winner bonuses, doubles and limit list into this ledger with section locators;
-3. resolve the `no Chows` / `scoreless` treatment conflict;
-4. pin the ordinary limit default (if the source specifies one rather than merely giving an example);
-5. add source-linked golden fixtures to #217.
+Source: PDF page 11 “The following ten hands are Limit Hands”.
 
-## L. Later full-playable gates
+The source states these score the agreed limit irrespective of ordinary scoring value:
 
-Even after #217, public `playable` status remains blocked on:
+1. all Winds and Dragons;
+2. Pungs/Kongs of three Winds + pair of the fourth + any final set;
+3. Original Hand;
+4. winning with East Wind's first discard;
+5. all Ones and Nines;
+6. Pungs/Kongs of at least three Dragons;
+7. concealed Pungs/Kongs;
+8. Thirteen Odd Majors;
+9. Calling Nine Tile Hand;
+10. East Wind's thirteenth consecutive Mahjong.
 
-- Standing Hand declaration/lock UI + legality;
-- Loose Tile/dead-wall table lifecycle;
-- exact liability triggers and routing;
-- procedural penalties/dead-hand consequences;
-- progression edge cases;
-- cross-profile regression against BMJA/T&M/OTB;
-- real-player/source review.
+Implementation shape:
+
+- REUSE canonical structural detectors where exact structure matches;
+- CONFIGURE Buzzard limit value rather than hard-coding a universal number;
+- ADD small event/context evidence for Original Hand, East's first discard and East's thirteenth consecutive Mahjong;
+- ADD/ADAPT profile bindings for Buzzard's exact structural conditions.
+
+### Limit amount
+
+Source: PDF page 8 says players should agree a maximum and gives **600 points as an example** (“say, 600”), with East able to receive double.
+
+Therefore:
+
+- Buzzard has a table-configured limit;
+- 600 is a sensible source-derived default/example, **not a universal mandatory constant**;
+- persisted game setup should retain the chosen limit.
+
+## E. The one unusual scoring seam: non-winner limits
+
+Source: PDF pages 11–12.
+
+The Four-Wind-family hand and the Three-Dragon hand are exceptional: the source says these can score the limit against the other two losers even when incomplete/non-winning. The player still pays the actual winner normally.
+
+This means Buzzard proves one small generalisation we genuinely need:
+
+> **A special/limit hand result must not universally imply `isWinner === true`.**
+
+This is a scoring/table settlement concern, not gameplay simulation.
+
+## F. Settlement — direct reuse for the ordinary case
+
+Source: PDF page 8 “SETTLEMENT OF SCORES”.
+
+Ordinary settlement is the same shape already implemented for BMJA:
+
+- each loser pays the winner the winner's score;
+- the losers then settle pairwise score differences;
+- whenever East is one side of a payment, the amount is doubled.
+
+Therefore ordinary Buzzard settlement should REUSE the existing transaction engine and be proven with Buzzard source fixtures rather than reimplemented.
+
+## G. Progression — direct reuse
+
+Source: PDF page 7 Rules 11–14.
+
+- dead hand: no scoring; East remains East;
+- East wins: East remains East;
+- East loses: South becomes East;
+- once every player has held and lost East, prevailing wind advances East → South → West → North;
+- the source describes a complete game as four rounds.
+
+This matches the existing classical/BMJA progression strategy closely enough to REUSE it, with Buzzard-specific golden fixtures.
+
+The companion only needs the table's resolved outcome (`win` or `draw/dead hand`). It does not need to count physical wall tiles to decide whether the real table is dead.
+
+## H. Standing Hand — scoring evidence, not simulated play
+
+Source: PDF page 7 Rule 10.
+
+A Calling player may declare Standing Hand after the source-defined first-turn point; the hand is then locked and a completed Standing Hand gains +100.
+
+For the current product:
+
+- rules/reference content should explain the declaration and lock requirement;
+- the scorer needs only a `standingHand: true/false` scoring fact (or equivalent profile evidence field);
+- the app does not need to monitor every subsequent draw/discard to police compliance.
+
+Standing Hand remains distinct from BMJA `originalCall`.
+
+## I. Liability and penalties — existing incident infrastructure with Buzzard policy
+
+Source: PDF page 12 “ERRORS AND PENALTIES”.
+
+### Dangerous discard / full-payment liability
+
+If a player discards the tile that completes certain visibly dangerous special hands, that player pays the winner's losses on behalf of the other two players as well as their own. When this penalty is imposed, there is no loser-to-loser settlement.
+
+Named source situations include:
+
+- one-suit hand with three exposed Pungs;
+- Three Dragon hand with two Dragon sets exposed;
+- All Wind hand with three Wind sets exposed;
+- Ones-and-Nines hand with three relevant sets exposed.
+
+This is structurally very close to the existing OTB `cannon` settlement override. REUSE the incident/transaction pattern; CONFIGURE Buzzard's trigger labels and semantics. Because the companion is not watching discards, the table records that liability occurred and identifies the liable player.
+
+### False Mahjong
+
+If the player fully exposes an invalid Mahjong, they pay **double the limit to each of the other three players**. If the hand has not been completely exposed, the call may be withdrawn.
+
+This is another profile-specific policy over the existing incident machinery.
+
+### Incorrect tile count
+
+Source: PDF page 7 Rule 12.
+
+A hand with the wrong tile count is dead and cannot win. At settlement:
+
+- too many tiles: player pays the others' scores without deducting their own;
+- too few tiles: their own score is deducted first.
+
+The current incident union already has an incorrect-hand concept; Buzzard needs its own settlement consequence rather than OTB's policy.
+
+### Procedure-only errors
+
+Wrong wall breach/deal and incorrect exposed combinations have procedural consequences in the source. These belong primarily in rules/reference content unless we later decide the Table Companion should explicitly record them.
+
+## J. What we do **not** build for Buzzard v1
+
+The source contains detailed physical-play procedure for wall construction, breach, Loose Tile replacement, claim timing/priority, Kong promotion and robbing, and Standing Hand restrictions.
+
+Under the current Table Companion scope, do **not** build:
+
+- wall/dead-wall simulator;
+- draw/discard event log;
+- real-time Chow/Pung/Kong legality enforcement;
+- claim-priority arbitration;
+- automated Standing-Hand lock enforcement;
+- automatic dangerous-discard detection from a full discard history.
+
+Keep those rules in reference/help content. Capture only the final facts needed to score and settle the real table.
+
+## K. Implementation delta: “BMJA + / −”
+
+This is the practical build model for #217.
+
+### KEEP / REUSE
+
+- tile/group model;
+- ordinary Chow/Pung/Kong/pair points;
+- Flowers/Seasons = 4 points each;
+- +20 Mahjong and +2 self-draw;
+- own/round Wind and Dragon doubles;
+- mixed-one-suit and terminal/honour-family doubles;
+- rob-Kong, last-wall and loose-tile event evidence/doubles;
+- four-player winner/loser settlement;
+- East payment doubling;
+- East/seat/prevailing-wind progression;
+- versioned profile/persistence/replay;
+- transaction-based settlement;
+- existing incident infrastructure shape.
+
+### ADD
+
+- +100 Standing Hand;
+- +2 only-possible winning tile;
+- +10 no Chows;
+- +10 scoreless hand;
+- +10 last-wall win;
+- +10 Loose-Tile win;
+- all-Chows + non-scoring-pair double;
+- Buzzard limit-hand bindings;
+- event evidence for East-first-discard / Original Hand / East 13th consecutive win;
+- incomplete Four-Wind / Three-Dragon non-winner limit result;
+- Buzzard liability/penalty policies.
+
+### AMEND
+
+- complete Flower/Season set = ×8 source rule, with cumulative-own-tile fixture explicitly pinned;
+- pure one-suit ×8 predicate must allow Chows;
+- configured table limit, with 600 as source example/default rather than universal constant.
+
+### REMOVE / DO NOT INHERIT
+
+- generic BMJA fully-concealed ordinary double;
+- BMJA `originalCall` semantics;
+- generic final-discard double unless independently source-backed for Buzzard;
+- BMJA-only special-hand catalogue entries/values that are not in Buzzard.
+
+## L. Readiness gate for #217
+
+The source gate is now satisfied for a bounded implementation pass.
+
+Before coding, turn the rows above into golden fixtures. The first implementation should be profile composition/policy over the existing classical engine, not a copied scorer.
+
+The only remaining source-interpretation fixture that deserves explicit attention is cumulative Flower/Season doubling when a complete set also contains the player's own tile. Do not resolve that by silently inheriting BMJA behaviour.
 
 ## Product wording
 
-Until all gates pass:
+> **British/Western Classical — Buzzard 2000**
 
-> **British/Western Classical — Buzzard 2000** — research/provisional profile.
-
-Do not label it simply `Traditional Mahjong`, `Classical Mahjong` or `Western Mahjong`.
+Do not label this generic `Traditional Mahjong`, `Classical Mahjong` or universal `Western Mahjong`.
