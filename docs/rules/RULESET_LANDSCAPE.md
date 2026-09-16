@@ -35,11 +35,11 @@ This is a product/engineering taxonomy, not a claim that the historical relation
 | Standard winning shape | Four sets + pair, plus special hands | Classical four sets + pair, plus special hands | Four sets + pair plus documented irregular hands | British/Western core + selected exceptions | Four sets + pair + recognised exceptions | Four groups + pair, Seven Pairs or Thirteen Orphans | Four sets + pair + recognised exceptions | Exact annual-card target pattern |
 | Core scoring grammar | Base points + doublings + fixed specials | Base points + doublings + fixed specials | Classical base/additive points + doubles + limit treatment | Classical core + fixed specials/local rules | Additive faan + conversion | Han/yaku + fu + capped payment formula | Additive fan, minimum qualifying threshold | Printed annual-card value |
 | Ready/incomplete scoring | Fishing values for special hands | Fishing values present in Companion material | Calling/Standing Hand; source-specific ready-state semantics | Fishing values | No generic fishing payout | Tenpai/noten settlement, not fishing | No fishing payout | No generic fishing payout |
-| Non-winner hands score? | Yes | Main rules source still to verify completely | Yes | Yes | Normally no | No, except draw settlement | No | No |
+| Non-winner hands score? | Yes | Main rules source still to verify completely | Yes, including two incomplete limit cases | Yes | Normally no | No, except draw settlement | No | No |
 | Dealer/East treatment | East pays/receives double | Verify exact Western source/edition | East pays/receives double; retains after own win/dead hand | East pays/receives double | Profile-dependent/classical modifiers | Dealer payment multiplier + continuation | No BMJA-style dealer doubling | No comparable BMJA-style dealer multiplier |
-| Special-hand catalogue | Finite BMJA list | Large Western catalogue ecosystem | Smaller source-specific classical list + limit achievements | BMJA + selected Western + local | Named faan patterns | Yaku/yakuman catalogue | 81 fan combinations | Annual card catalogue |
-| Exchange mechanic | Goulash after draw | Western Goulash tradition; verify exact source | None identified in captured Buzzard profile | Local Goulash | None standard | None | None | Charleston before ordinary play |
-| Liability concept | No OTB-style cannon in current BMJA source | Verify | Dangerous-discard liability in source; exact triggers still need locator recovery | Explicit cannon rule | Dangerous-discard liability exists in codified variants | Pao for specified yakuman | Different settlement model | Discard/self-draw payer consequences |
+| Special-hand catalogue | Finite BMJA list | Large Western catalogue ecosystem | Smaller source-specific classical list + ten limit hands | BMJA + selected Western + local | Named faan patterns | Yaku/yakuman catalogue | 81 fan combinations | Annual card catalogue |
+| Exchange mechanic | Goulash after draw | Western Goulash tradition; verify exact source | None identified in Buzzard profile | Local Goulash | None standard | None | None | Charleston before ordinary play |
+| Liability concept | No OTB-style cannon in current BMJA source | Verify | Dangerous-discard liability with source-defined triggers and routing | Explicit cannon rule | Dangerous-discard liability exists in codified variants | Pao for specified yakuman | Different settlement model | Discard/self-draw payer consequences |
 | Versioning need | Rulebook/clarification edition | Book edition + catalogue edition | Named 2000 source/version | Club guide version | Named rules authority/version | WRC/EMA rules version | MCR edition | Annual year is mandatory |
 
 ## Classical / Western family
@@ -77,21 +77,25 @@ The Western baseline remains **not yet fully verified** until the main rules boo
 
 Jonathan Buzzard's 2000 rules page is retained as a **named historical classical profile**, not as a universal definition of traditional or Western Mahjong.
 
-Its scoring grammar is close enough to the existing classical-family engine to be the next low-cost architecture proof, but its full table semantics are distinctive enough to matter:
+For Mahjong Reference's actual product boundary — **score the physical game and run the table** — Buzzard is a close adjacent profile rather than a new engine family.
 
-- Calling and a lockable Standing Hand declaration;
-- a final 14-tile unused/dead-wall boundary;
-- source-specific Loose Tile replacement lifecycle;
-- claim precedence and promoted-Kong robbing rules;
+Most of the profile is composed from existing classical capabilities:
+
+- the same ordinary set/pair point grammar;
+- familiar Wind/Dragon/Flower/Season doubles;
+- existing win-source evidence for rob-Kong, last wall and Loose Tile;
 - non-winner scoring and loser-to-loser settlement;
-- East double payments and source-specific dealer/round progression;
-- dangerous-discard liability;
-- procedural penalties;
-- limit-scoring achievements that may matter even when the player did not go Mahjong.
+- East double payments;
+- the existing East/prevailing-wind progression strategy;
+- existing incident/transaction infrastructure for liability and penalties.
 
-The architecture crosswalk is `BUZZARD_2000_COMPATIBILITY_CROSSWALK.md`; executable provenance is gated by `BUZZARD_2000_RULE_EVIDENCE.md`.
+Its meaningful deltas are profile-local scoring additions/amendments/removals, ten limit-hand bindings, two unusual non-winner limit cases, and Buzzard-specific incident settlement policy.
 
-The profile should reuse the classical engine rather than fork it, while Standing Hand, dead-wall lifecycle, liability and procedure remain profile-owned behaviour.
+The source also describes Standing Hand, the final 14-tile dead-wall boundary, Loose Tile procedure and claim precedence. Those remain important rules/reference facts, but the current Table Companion does **not** need to simulate them. The real table supplies resolved scoring evidence such as Standing Hand, dead hand, Loose-Tile win or liability.
+
+The architecture crosswalk is `BUZZARD_2000_COMPATIBILITY_CROSSWALK.md`; the recovered primary-source evidence is `BUZZARD_2000_RULE_EVIDENCE.md`.
+
+The profile should reuse the classical engine rather than fork it.
 
 ### Outside the Box
 
@@ -140,6 +144,8 @@ Important differences:
 - dealer continuation affects progression.
 
 Riichi should reuse shared pattern/hand-state primitives where sensible, but needs its own scoring strategy.
+
+The Table Companion should still capture only the physical-table facts needed for scoring, settlement and progression unless a later product decision deliberately expands into gameplay enforcement.
 
 ## Chinese Official / MCR
 
@@ -237,10 +243,10 @@ That pattern/value separation is one of the strongest conclusions of the researc
 
 ## Immediate implementation relevance
 
-The architecture has already proved BMJA and a provisional Thompson & Maloney Western profile can coexist. The next classical-family stress tests are:
+The architecture has already proved BMJA and a provisional Thompson & Maloney Western profile can coexist. The next ruleset tests are:
 
-1. **Buzzard 2000** — prove an adjacent historical profile can reuse the classical scoring platform while introducing genuinely new table state only where required;
-2. **Outside the Box** — prove a named modern club profile can compose catalogue/local rules without application forks;
-3. cross-profile golden fixtures — prove neither profile contaminates BMJA or Western behaviour.
+1. **Buzzard 2000** — prove an adjacent historical profile can be composed mostly by selecting existing classical rules plus small profile-local deltas;
+2. **MCR** — prove the platform can host a materially different additive scoring grammar without pretending it is classical points/doubles;
+3. **Riichi** — prove a separate han/fu/payment/progression strategy while retaining the Table Companion's physical-game boundary.
 
-After that, MCR and Riichi can test materially different scoring grammars and richer table state.
+Outside the Box remains a valuable real-table validation of the named club-profile architecture and cross-profile isolation.
