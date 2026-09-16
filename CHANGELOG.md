@@ -4,10 +4,39 @@ This file records meaningful changes to **Mahjong Reference** at product-milesto
 
 ## Unreleased
 
+_No unreleased product changes at this checkpoint._
+
+## 2026-09-16 — Rules-platform and repository readiness
+
+### Added
+
+- Recovered and page-bound the Buzzard 2000 primary source, turning the future British/Western Classical profile into an implementation-ready KEEP / ADD / AMEND / REMOVE crosswalk rather than a speculative new scorer. [#218](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/pull/218)
+- Defined a repeatable Classical/Western configuration model so BMJA, provisional T&M, Club/OTB and Buzzard can converge on shared typed configuration, canonical pattern bindings and profile-local values instead of copied scorers. [#223](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/pull/223)
+- Stress-tested the Classical configuration against an external European Classical profile and identified the reusable additive concealed-hand bonus plus progression/source gaps without widening the runtime speculatively. [#225](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/pull/225)
+- Stress-tested the wider rules architecture across eight external Mahjong profiles and established four scoring-grammar families: Classical points/doubles, pattern accumulators, Riichi han/fu and versioned target catalogues. [#226](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/pull/226)
+
+### Changed
+
+- Added one shared, intentionally small product footer across public/reference/learning pages, kept active game/hand workspaces uncluttered, and promoted the search-friendly raster favicon declaration. [#216](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/pull/216)
+- Checkpointed repository authority so `main` remains the production line while the cross-family rules-platform migration is staged behind #227 on `integration/rules-platform-v1` until parity/cutover gates pass.
+
 ### Fixed
 
 - Kept manual table-score entry calm while typing or editing multi-digit values by requiring an explicit **Review settlement** action before the settlement workspace appears; progression still requires **Record hand and advance**. [#191](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/191)
-- Closed the manual WCAG audit findings around Escape focus restoration, recovered-game status contrast, recorded-tile semantics, live error announcements, outcome selected state and confirmation before discarding a recoverable game. [#194](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/194) [#195](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/195) [#196](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/196) [#197](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/197) [#198](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/198) [#199](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/199)
+- Closed the bounded manual WCAG audit findings around Escape focus restoration, recovered-game status contrast, recorded-tile semantics, live error announcements, outcome selected state and confirmation before discarding a recoverable game. [#194](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/194) [#195](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/195) [#196](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/196) [#197](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/197) [#198](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/198) [#199](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/199)
+
+## 2026-09-15 — Plus and cross-profile development readiness
+
+### Added
+
+- Defined the Mahjong Reference Plus Phase 0 contract: existing scoring/table play stays free and account-free, Plus is subscription-based convenience, and metered voice/services use a separate auditable credit ledger. [#213](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/pull/213)
+- Completed a reuse-before-build Plus implementation package covering Cloudflare/Hono, D1/Drizzle, Better Auth Email OTP, Stripe-hosted billing, cloud-game versioning, service credits, i18n and bounded implementation slices. [#214](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/pull/214)
+- Defined a neutral cross-profile cloud-game contract so future rules families add validated replay codecs/engines rather than forcing the current BMJA-shaped in-memory state into permanent cloud storage. [#214](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/pull/214)
+- Resolved the major EMA Riichi 2025 architecture questions while keeping the next correctness gate source-linked yaku/fu/payment fixtures rather than broad implementation. [#214](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/pull/214)
+
+### Changed
+
+- Checkpointed the repository README/programme map after the Table Companion consolidation so the remaining priorities became evidence-led validation, voice exploration, paid-platform readiness and rules expansion rather than another broad UI rewrite. [#190](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/pull/190)
 
 ## 2026-09-14 — Accessible, guided and crawlable Table Companion
 
