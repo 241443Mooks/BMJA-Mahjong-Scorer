@@ -1,5 +1,6 @@
+import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import { compactFooterLinks, footerGroups } from './SiteFooter';
+import { compactFooterLinks, footerGroups, SiteFooter } from './SiteFooter';
 
 describe('site footer', () => {
   it('keeps the full footer focused on Play, Learn and Project', () => {
@@ -36,5 +37,11 @@ describe('site footer', () => {
       ['User Guide', '/help'],
       ['About', '/about'],
     ]);
+  });
+
+  it('shows project ownership without the old BMJA-only independence disclaimer', () => {
+    const markup = renderToStaticMarkup(SiteFooter({}));
+    expect(markup).toContain('© 2026 SMooks');
+    expect(markup).not.toContain('not an official BMJA publication');
   });
 });
