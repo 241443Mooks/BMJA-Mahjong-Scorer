@@ -209,9 +209,24 @@ The issue/source capture is sufficient to establish architecture, but implementa
 
 Unknowns stay unknown. Do not fill them from BMJA simply because the grammar is similar.
 
+## 16 September evidence pass
+
+The durable evidence gate is now `BUZZARD_2000_RULE_EVIDENCE.md` and the first bounded implementation child is #217.
+
+The canonical Buzzard URL was automatically re-tried on 16 September 2026 and returned HTTP 502. Detailed h2g2 and CasinoCity classical-rules pages strongly corroborate much of the captured structure, ordinary point-table shape, Standing Hand +100 treatment and winner/loser settlement. They also expose enough variation in bonus/double treatment to prove they cannot safely substitute for the named Buzzard source.
+
+Therefore:
+
+- setup/play/Standing/dead-wall concepts explicitly preserved in #175 can remain source-backed architecture facts;
+- exact numeric point/double/limit bindings stay behind the evidence ledger until the Buzzard page or a trustworthy archived exact copy is recovered;
+- liability and penalties remain especially strict `needs-primary-source` areas;
+- #217 may prepare the profile pack/fixture shape, but Codex should not write disputed scoring mathematics until those rows are upgraded.
+
+This is a narrower and safer gate than blocking all Buzzard work, while preserving the rule that we do not infer a named profile from a neighbouring tradition.
+
 ## Promotion gate
 
-Open a bounded implementation issue only when the crosswalk has enough exact source locators to tell Codex which mechanics are:
+Open or execute a bounded implementation slice only when the evidence ledger has enough exact source locators to tell Codex which mechanics are:
 
 - **REUSE** existing classical primitives;
 - **CONFIGURE** Buzzard values/bindings;
