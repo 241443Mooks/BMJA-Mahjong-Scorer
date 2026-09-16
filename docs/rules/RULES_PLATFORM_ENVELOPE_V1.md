@@ -2,39 +2,35 @@
 
 Status: **pre-Codex implementation contract for #227**  
 Branch target: `integration/rules-platform-v1`  
-Derived from: `EIGHT_RULESET_ARCHITECTURE_STRESS_TEST.md`, `EIGHT_RULESET_PAPER_MANIFESTS.md`, `CLASSICAL_PROFILE_CONFIG_V1.md`, `MCR_PROFILE_CROSSWALK.md`, `riichi/EMA_2025_ARCHITECTURE_DECISIONS.md`, and `CROSS_PROFILE_CLOUD_GAME_CONTRACT.md`.
+Derived from: `EIGHT_RULESET_ARCHITECTURE_STRESS_TEST.md`, `RULES_PLATFORM_EIGHT_MANIFESTS_V1.md`, `CLASSICAL_PROFILE_CONFIG_V1.md`, `MCR_PROFILE_CROSSWALK.md`, `riichi/EMA_2025_ARCHITECTURE_DECISIONS.md`, and `CROSS_PROFILE_CLOUD_GAME_CONTRACT.md`.
 
 ## 1. Purpose
 
-Define the smallest universal contract that can host materially different Mahjong rules families without turning the application into either:
+Define the smallest universal contract that can host materially different Mahjong rules families without producing either bespoke scorer copies or one giant universal switchboard.
 
-- a pile of bespoke scorers; or
-- one giant switchboard containing every Mahjong concept.
+> **The universal layer describes the table, tile set, hand grammar, scoring grammar, evidence contract and finite strategies. Family modules own scoring semantics. Published and custom profiles resolve to one immutable executable snapshot.**
 
-This document settles the platform boundary before Codex changes runtime code.
-
-> **The universal layer describes the table, tile set, hand grammar, scoring grammar, required evidence and finite strategies. Family modules own scoring semantics. Published and custom profiles resolve to one immutable executable snapshot.**
-
-The universal layer does **not** calculate Mahjong. It selects and configures registered code that does.
+The universal layer selects/configures registered code. It does not itself calculate Mahjong.
 
 ## 2. Core invariants
 
 1. A profile has exactly one scoring grammar.
 2. A profile may only select capabilities registered for that grammar/family.
-3. Shared canonical predicates describe structural/event truth, not score meaning.
+3. Shared canonical predicates describe structural/event truth, never score meaning.
 4. Scoring, settlement, progression and game completion remain separate concerns.
-5. Authoring inheritance is resolved before play; runtime never follows a mutable base-profile chain.
-6. Published profiles and custom profiles produce the same resolved runtime shape.
-7. Unknown IDs, unknown fields and incompatible overrides fail closed.
-8. No profile contains JavaScript, callbacks, expression languages or arbitrary executable strings.
-9. Every saved game pins exact profile identity **and** an immutable resolved-rules fingerprint/snapshot contract.
-10. Existing BMJA/T&M/OTB behaviour must remain byte-for-byte/fixture-equivalent while the new platform is introduced alongside it.
+5. Authoring inheritance is fully resolved before play.
+6. Published and custom profiles produce the same resolved runtime shape.
+7. Unknown IDs/fields and incompatible overrides fail closed.
+8. Profiles contain no JavaScript, callbacks, expression languages or arbitrary executable strings.
+9. Saved games pin exact profile identity plus immutable rules fingerprint/snapshot contract.
+10. Current BMJA/T&M/OTB behaviour remains fixture-equivalent while new infrastructure is introduced beside it.
+11. The current `MahjongHand`, `ScoreBreakdown`, four-player `GameState` and single-winner `HandOutcome` are current-family contracts, not universal platform contracts.
 
 ---
 
-# 3. Identity and version primitives
+# 3. Identity/version primitives
 
-Retain the existing language-independent primitive:
+Retain:
 
 ```ts
 export type RulesProfileRef = {
@@ -43,7 +39,7 @@ export type RulesProfileRef = {
 };
 ```
 
-Add stable architecture identifiers:
+Initial scoring grammars:
 
 ```ts
 export type ScoringGrammarId =
@@ -51,7 +47,11 @@ export type ScoringGrammarId =
   | 'pattern-accumulator'
   | 'riichi-han-fu'
   | 'target-catalogue';
+```
 
+Profile status:
+
+```ts
 export type ProfileStatus =
   | 'published'
   | 'club'
@@ -59,7 +59,7 @@ export type ProfileStatus =
   | 'custom';
 ```
 
-`familyId` is a stable namespaced string rather than a closed universal enum. Initial examples:
+`familyId` is a stable namespaced string, initially including examples such as:
 
 ```text
 family.classical-western
@@ -72,15 +72,13 @@ family.riichi-sanma
 family.american-nmjl-style
 ```
 
-A new family ID does not imply a new scoring grammar.
+A new family does not imply a new scoring grammar.
 
 ---
 
-# 4. Authoring profile versus resolved profile
+# 4. Authoring versus resolved profiles
 
 ## 4.1 Authoring definition
-
-Humans and future Plus UI work with intent:
 
 ```ts
 export type ProfileAuthoringDefinition = {
@@ -96,7 +94,7 @@ export type ProfileAuthoringDefinition = {
 };
 ```
 
-The `overrides` keys are **registered capability IDs**, not arbitrary object paths.
+Override keys are **registered capability IDs**, not arbitrary object paths.
 
 Example:
 
@@ -117,20 +115,11 @@ Example:
 }
 ```
 
-The authoring resolver must reject an override when:
+Reject an override when its ID is unknown, non-customisable, invalid for the base family/grammar, fails its value schema, violates requires/conflicts, or references unavailable executable capability.
 
-- the ID is unknown;
-- the base profile does not declare it customisable;
-- its value fails the capability schema;
-- it changes scoring grammar;
-- it violates a declared require/conflict rule;
-- it references an unavailable predicate/catalogue/strategy.
-
-Changing grammar means choosing a different base profile, not applying an override.
+Changing grammar requires choosing a different base profile.
 
 ## 4.2 Resolved runtime snapshot
-
-Runtime consumes a complete snapshot:
 
 ```ts
 export type ResolvedRulesProfile = {
@@ -165,25 +154,25 @@ export type ResolvedRulesProfile = {
 };
 ```
 
-There is no unresolved inheritance in this object.
+No unresolved inheritance remains here.
 
 ---
 
-# 5. Table, tile-set and hand-shape boundaries
+# 5. Table boundary
 
-These are universal because the eight-profile stress test proves they vary independently of scoring grammar.
-
-## 5.1 Table
+Do not hard-code 3/4 players into the universal type merely because the current acceptance corpus contains 3- and 4-player profiles.
 
 ```ts
 export type ResolvedTableConfig = {
-  playerCount: 3 | 4;
+  playerCount: number;     // validated positive integer + seat-model compatibility
   seatModelId: string;
   dealerModelId: string;
 };
 ```
 
-Initial registered examples:
+V1 acceptance explicitly proves 3 and 4 players. Future legitimate player-count variants can be added by registered table/seat models without changing this envelope.
+
+Initial examples:
 
 ```text
 seats.winds-4
@@ -195,20 +184,49 @@ dealer.always-pass
 dealer.riichi-renchan
 ```
 
-Do not make East retention, four players or four seat winds platform invariants.
+East retention, four players and four Wind seats are not platform invariants.
 
-## 5.2 Tile set
+---
+
+# 6. Tile identity and tile-set boundary
+
+The current `PlayingTile` (`suit | wind | dragon`) is a useful current primitive but cannot be the permanent universal physical-tile type because the architecture corpus includes Flowers/Seasons, red fives, removed Sanma ranks and American Jokers.
+
+Keep two concepts separate:
+
+```ts
+export type CanonicalTileFace =
+  | { family: 'suit'; suit: string; rank: number }
+  | { family: 'wind'; wind: string }
+  | { family: 'dragon'; dragon: string }
+  | { family: 'flower'; id: string }
+  | { family: 'season'; id: string }
+  | { family: 'joker'; id: string };
+
+export type PhysicalTileEvidence = {
+  face: CanonicalTileFace;
+  traitIds?: string[];   // e.g. red-five physical variant
+};
+```
+
+Exact final TypeScript naming may differ, but the semantic rule is fixed:
+
+> **structural face identity and physical/scoring variants are separable.**
+
+A red five remains structurally a five of its suit while retaining a red trait for Riichi dora calculation. A North tile used as Sanma nuki-dora remains a North tile; extraction/nuki is event/evidence state rather than a new tile face. A Joker is a real tile identity only in tile sets/profiles that permit it.
+
+Current Classical code may continue using `PlayingTile` behind an adapter while these universal primitives are introduced additively.
+
+Tile-set config:
 
 ```ts
 export type ResolvedTileSetConfig = {
   presetId: string;
-  options: JsonObject;
+  options: JsonObject; // validated by selected tile-set registry entry
 };
 ```
 
-`options` is validated by the selected tile-set registry entry. It is not arbitrary runtime JSON.
-
-Initial architecture fixtures require at least:
+Initial architecture fixtures require:
 
 ```text
 tiles.standard-136
@@ -219,9 +237,13 @@ tiles.sanma-108
 tiles.american-joker-capable
 ```
 
-The tile-set registry owns multiplicity, excluded ranks, red-tile identity, bonus/joker properties and any source-bound tile capability.
+The tile-set registry owns multiplicity, excluded tiles/ranks and physical variants. It does **not** decide score value.
 
-## 5.3 Hand shape
+---
+
+# 7. Hand shape and hand-evidence boundary
+
+## 7.1 Hand shape
 
 ```ts
 export type ResolvedHandShapeConfig = {
@@ -239,28 +261,59 @@ shape.irregular-canonical
 shape.target-catalogue
 ```
 
-Family modules may additionally register legal irregular structures/catalogues.
+Four sets + pair and BMJA Chow restrictions are not universal.
 
-This is the seam that removes current BMJA assumptions such as globally fixed group count or a one-Chow rule from generic validation.
+## 7.2 Do not universalise `MahjongHand`
+
+The platform needs one **evidence envelope**, not one giant family-independent hand object.
+
+Conceptually:
+
+```ts
+export type HandEvidenceEnvelope = {
+  evidenceSchemaVersion: number;
+  kind: string;                    // stable registered evidence codec id
+  shared?: SharedHandEvidence;
+  profilePayload: JsonObject;      // validated by the selected evidence codec
+};
+```
+
+Family runtimes use typed codecs/generics internally. `profilePayload` is not unchecked JSON at runtime.
+
+Shared primitives may include canonical tile faces, grouped sets, exposure state and winning-tile provenance where semantics match. A family may add evidence without polluting every other hand type.
+
+Migration examples:
+
+```text
+Classical current profiles
+  → adapter over existing MahjongHand + GameContext
+
+MCR
+  → shared grouped-hand primitives + MCR context/evidence
+
+Riichi
+  → shared grouped-hand primitives + RiichiScoreEvidence
+
+American target catalogue
+  → target-catalogue evidence codec with Joker/exposure semantics
+```
+
+This also keeps future voice interpretation clean: speech maps into the active profile's validated evidence contract; it does not need a universal “VoiceHand”.
 
 ---
 
-# 6. Validation boundary
+# 8. Validation boundary
 
 Validation has two layers.
 
-## 6.1 Universal structural validation
+Universal structural validation may safely check things such as:
 
-The platform may safely validate facts that are universally structural, for example:
+- tile identity exists in the selected tile set;
+- copy/multiplicity constraints;
+- generic data/schema correctness;
+- group primitives are structurally well-formed where that evidence codec uses groups.
 
-- tile IDs exist in the selected tile set;
-- physical copy counts do not exceed the selected tile-set multiplicity;
-- supplied groups contain structurally valid tile combinations;
-- required generic fields have the correct shape.
-
-## 6.2 Profile/family validation
-
-Everything else is selected by registered policy IDs:
+Family/profile validation is selected by policy:
 
 ```ts
 export type ResolvedValidationConfig = {
@@ -272,58 +325,44 @@ export type ResolvedValidationConfig = {
 Examples:
 
 ```text
-validation.classical-standard
+validation.classical-current
 validation.classical-bmja-max-one-chow
 validation.mcr-winning-shape
 validation.taiwanese-five-sets-pair
 validation.riichi-winning-shape
-validation.sanma-calls-no-chii
+validation.sanma-no-chii
 validation.target-catalogue-match
 ```
 
-A rule such as “BMJA ordinary hand may contain at most one Chow” must never again be expressed as a universal `validateHand()` invariant.
+The current `validateHand()` first moves behind `validation.classical-current` unchanged. Extraction/generalisation happens only with parity tests.
 
 ---
 
-# 7. Scoring grammar discriminated union
+# 9. Scoring grammar union
 
 ```ts
 export type ResolvedScoringConfig =
-  | {
-      grammar: 'classical-points-doubles';
-      config: ClassicalScoringConfigV1;
-    }
-  | {
-      grammar: 'pattern-accumulator';
-      config: PatternAccumulatorConfigV1;
-    }
-  | {
-      grammar: 'riichi-han-fu';
-      config: RiichiScoringConfigV1;
-    }
-  | {
-      grammar: 'target-catalogue';
-      config: TargetCatalogueConfigV1;
-    };
+  | { grammar: 'classical-points-doubles'; config: ClassicalScoringConfigV1 }
+  | { grammar: 'pattern-accumulator'; config: PatternAccumulatorConfigV1 }
+  | { grammar: 'riichi-han-fu'; config: RiichiScoringConfigV1 }
+  | { grammar: 'target-catalogue'; config: TargetCatalogueConfigV1 };
 ```
 
-The `identity.grammar` and `scoring.grammar` values must match exactly.
+`identity.grammar` and `scoring.grammar` must match.
 
-## 7.1 Classical points × doubles
-
-Target semantics:
+## 9.1 Classical
 
 ```text
 intrinsic points
 + additive bonuses
 → base score
-× configured doubles/multipliers
-→ limit/cap/special treatment
+× doubles/multipliers
+→ cap/limit/special treatment
 ```
 
-`CLASSICAL_PROFILE_CONFIG_V1.md` remains the authoritative family design input for the first implementation proof. During migration it may be adapted/split so table/evidence/settlement/progression fields move into the universal envelope; its scoring semantics must not change merely for naming neatness.
+`CLASSICAL_PROFILE_CONFIG_V1.md` remains authoritative design input. During migration its non-scoring fields may move to the universal envelope without changing scoring semantics.
 
-## 7.2 Pattern accumulator
+## 9.2 Pattern accumulator
 
 ```ts
 export type PatternAccumulatorConfigV1 = {
@@ -340,16 +379,9 @@ export type PatternAccumulatorConfigV1 = {
 };
 ```
 
-This grammar does **not** imply “sum every matched pattern”. The selected interaction policy controls combinations/exclusions/series rules.
+This hosts HK/MCR/Taiwanese/Zung Jung with different interaction/qualification/conversion policies. It never implies “sum all matches blindly”.
 
-Required architecture examples:
-
-- Hong Kong — fan catalogue + profile minimum + fan/payment conversion;
-- MCR — 81 fan + non-combination policy + 8-point qualification + Flower treatment;
-- Taiwanese — additive tai + five-set hand grammar;
-- Zung Jung — 44 patterns + same-series exclusion + floor/cap policy.
-
-## 7.3 Riichi han + fu
+## 9.3 Riichi han + fu
 
 ```ts
 export type RiichiScoringConfigV1 = {
@@ -364,27 +396,24 @@ export type RiichiScoringConfigV1 = {
 };
 ```
 
-The EMA architecture decision remains binding:
+EMA architecture remains binding:
 
 ```text
-enumerate legal decompositions
+enumerate legal interpretations
 → evaluate yaku/han/dora/fu
 → reject no-yaku interpretations
 → calculate lawful value
 → choose maximum lawful result deterministically
 ```
 
-Sanma selects the same scoring grammar with different table/tile/call/dora/settlement/progression policies; it does not fork the scorer.
+Sanma uses this same grammar with different table/tile/dora/settlement/progression policies.
 
-## 7.4 Target catalogue
+## 9.4 Target catalogue
 
 ```ts
 export type TargetCatalogueConfigV1 = {
   configVersion: 1;
-  catalogueRef: {
-    id: string;
-    version: string;
-  };
+  catalogueRef: { id: string; version: string };
   matchPolicyId: string;
   substitutionPolicyId: string;
   exposurePolicyId: string;
@@ -392,13 +421,13 @@ export type TargetCatalogueConfigV1 = {
 };
 ```
 
-The platform supports a versioned target-matching engine independently from the legal/licensing question of distributing a commercial annual card.
+Engine capability remains independent of catalogue licensing/distribution.
 
 ---
 
-# 8. Score-result boundary
+# 10. Score-result boundary
 
-Do not stretch the current Classical `ScoreBreakdown` into a universal result with dozens of nullable fields.
+Do not widen Classical `ScoreBreakdown` until it means everything.
 
 ```ts
 export type HandScoreResult =
@@ -408,7 +437,7 @@ export type HandScoreResult =
   | TargetCatalogueHandScoreResult;
 ```
 
-Every result carries a small common audit header:
+Common audit header:
 
 ```ts
 export type HandScoreAuditHeader = {
@@ -421,37 +450,33 @@ export type HandScoreAuditHeader = {
 };
 ```
 
-Grammar-specific result bodies retain their real concepts:
+Grammar-specific bodies retain their actual concepts:
 
-- Classical: points, doubles, cap/limit, special treatment;
-- accumulator: matched bindings, interaction decisions, qualifying subtotal, bonuses, conversion/cap;
-- Riichi: yaku, han, dora, fu, tier/base value/payment input;
-- target catalogue: matched target, substitutions, exposure legality, value.
+- Classical: points/doubles/cap/special treatment;
+- accumulator: bindings/interactions/qualifying subtotal/bonuses/conversion;
+- Riichi: yaku/han/dora/fu/tier/payment input;
+- target catalogue: target match/substitution/exposure/value.
 
-A presentation adapter may derive a common UI summary. The domain result must not pretend these grammars are mathematically identical.
+Current `ScoreBreakdown` becomes the Classical body/adapter initially.
 
 ---
 
-# 9. Evidence contract
-
-Evidence is a registry of explicit physical-table facts required to score or progress a selected profile.
+# 11. Evidence contract
 
 ```ts
-export type EvidenceFieldId = string;
-
 export type ResolvedEvidenceConfig = {
   policyIds: string[];
-  alwaysRequired: EvidenceFieldId[];
+  alwaysRequired: string[];
 };
 
 export type EvidenceRequirement = {
-  id: EvidenceFieldId;
+  id: string;
   requirement: 'required' | 'optional' | 'not-needed';
   reasonIds: string[];
 };
 ```
 
-Runtime interface:
+Runtime:
 
 ```ts
 requiredEvidence(
@@ -460,50 +485,26 @@ requiredEvidence(
 ): EvidenceRequirement[];
 ```
 
-A field is shown only when the active resolved profile/rules need it.
+A field appears only when active rules/context require it.
 
-Initial stable namespaces should include examples such as:
+Examples include winning method/provenance, Winds, Standing Hand, liability, riichi declaration, furiten/ippatsu, dora indicators, honba, riichi sticks and nuki-dora count.
 
-```text
-evidence.winning-method
-evidence.winning-tile-provenance
-evidence.seat-wind
-evidence.round-wind
-evidence.standing-hand
-evidence.original-call
-evidence.only-possible-tile
-evidence.liable-player
-evidence.riichi-declaration
-evidence.ippatsu-eligibility
-evidence.furiten-status
-evidence.dora-indicators
-evidence.ura-dora-indicators
-evidence.honba
-evidence.riichi-sticks
-evidence.nuki-dora-count
-evidence.initial-hand-event
-```
-
-Do not overload one evidence ID merely because two rules have similar English labels. Exact semantics must be proven first.
+Similar labels are not merged until semantics are proven.
 
 ---
 
-# 10. Strategies: settlement, progression and game end
-
-A strategy reference is generic but its parameters are validated by the selected registry entry.
+# 12. Strategy references
 
 ```ts
 export type ResolvedStrategyRef = {
   id: string;
-  params: JsonObject;
+  params: JsonObject; // validated by strategy registry schema
 };
 ```
 
-`params` must pass the strategy's registered schema before the profile can resolve.
+## Settlement
 
-## 10.1 Settlement
-
-All settlement strategies emit neutral transactions:
+All strategies emit neutral transactions:
 
 ```ts
 export type SettlementTransaction = {
@@ -515,163 +516,96 @@ export type SettlementTransaction = {
 };
 ```
 
-No universal `eastMultiplier` field. No fixed British reason union.
+No mandatory universal `eastMultiplier`; no British-only reason union.
 
-Required strategy fixtures include:
+## Progression
 
-```text
-settlement.classical-pairwise
-settlement.hk-profile
-settlement.mcr-2006
-settlement.taiwanese-winner-only
-settlement.zung-jung-formal
-settlement.riichi-four-player
-settlement.riichi-sanma
-```
+Returns next profile-owned strategy state.
 
-## 10.2 Progression
+Initial examples include Classical East cycle, rotate-every-hand, always-pass, Riichi renchan and Sanma renchan.
 
-Progression returns the next profile-owned strategy state. Initial examples:
+## Game end
 
-```text
-progression.classical-east-cycle
-progression.rotate-every-hand
-progression.always-pass
-progression.riichi-renchan
-progression.riichi-sanma-renchan
-```
-
-## 10.3 Game end
-
-Game completion is not hidden inside BMJA orchestration.
-
-```text
-game-end.classical-east-cycle
-game-end.four-round-always-pass
-game-end.zung-jung-profile
-game-end.riichi-profile
-game-end.riichi-sanma
-```
-
-The exact strategy list grows only from evidenced profiles.
+Game completion is an explicit strategy. Generic orchestration must not infer universal completion from BMJA prevailing-Wind advancement.
 
 ---
 
-# 11. Round outcome and profile strategy state
+# 13. Round outcome / strategy state
 
-The current single-winner/draw outcome cannot be the universal contract.
+Current single-winner/draw `HandOutcome` remains a legacy current-profile type.
 
-Use a generic envelope with a validated profile-owned body:
+Universal envelope:
 
 ```ts
 export type ResolvedRoundOutcome = {
-  kind: string;            // stable namespaced outcome ID
-  payload: JsonObject;     // validated by active profile/family codec
+  kind: string;
+  payload: JsonObject; // validated by active family/profile codec
 };
 ```
 
-Examples may include:
+This can represent current Classical win/draw, MCR win, Riichi ron/tsumo, multi-ron, exhaustive draw and future profile-owned results without adding every possibility to one union.
 
-```text
-classical.win
-classical.draw
-mcr.win
-riichi.ron
-riichi.tsumo
-riichi.exhaustive-draw
-riichi.abortive-draw
-```
+Game orchestration may carry profile-owned `strategyState`, likewise codec-validated.
 
-Likewise, game orchestration may carry a `strategyState` JSON payload, but it is always validated by a registered profile/family codec. It is not a universal untyped dumping ground.
-
-This matches the existing cloud-game contract: generic envelope, profile-owned validated replay payload.
+This matches the existing cloud contract: generic envelope + profile-owned validated replay payload.
 
 ---
 
-# 12. Canonical resolution and fingerprint
+# 14. Canonical resolution and fingerprint
 
-The resolver contract is:
+Resolver contract:
 
 ```text
-load exact base profile id/version
+load exact base id/version
 → validate authoring identity
-→ validate every override capability ID/value
-→ apply overrides through capability registry
-→ resolve every referenced preset/catalogue/strategy ID
+→ validate each capability override
+→ apply through capability registry
+→ resolve all preset/catalogue/strategy IDs
 → validate cross-field invariants
 → produce complete resolved profile
-→ canonicalise executable rules snapshot
-→ fingerprint
-→ deep-freeze / treat immutable
+→ project executable semantic fields
+→ canonicalise JSON
+→ SHA-256 fingerprint
+→ freeze/treat immutable
 ```
 
-## Fingerprint rule
+Fingerprint includes executable family/grammar/table/tile/hand/validation/scoring/evidence/settlement/progression/game-end semantics and exact executable catalogue/version references.
 
-Use a deterministic cryptographic fingerprint (target: SHA-256) over canonical JSON of **executable resolved rule semantics**.
+Exclude display labels, translations/help text and decorative presentation metadata.
 
-Include:
+Recursively sort object keys; preserve semantically ordered arrays. Do not fingerprint raw insertion-order `JSON.stringify()`.
 
-- family + grammar;
-- table/tile/hand/validation configuration;
-- scoring config and complete bound catalogue/version references required for execution;
-- evidence policy IDs that change executable interpretation;
-- settlement/progression/game-end/hand-mode/incident/procedure strategy IDs + validated params.
-
-Exclude presentation-only mutable metadata such as:
-
-- display label;
-- translated strings;
-- help copy;
-- decorative category/order metadata.
-
-Provenance remains stored separately and profile identity/version remains pinned. The fingerprint is an integrity/replay guard, not a substitute for profile identity.
-
-Canonicalisation must recursively sort object keys and preserve array order where array order is semantic. Do not fingerprint normal `JSON.stringify()` output unless canonical ordering has first been enforced.
+Fingerprint is an integrity/replay guard, not a substitute for exact profile identity/version.
 
 ---
 
-# 13. Published and custom profile persistence
+# 15. Published/custom persistence
 
-## Published profiles
+Published reviewed profiles/catalogues remain version-controlled application assets initially.
 
-Keep reviewed published profiles and catalogues as version-controlled application assets initially.
-
-They are source-controlled, testable and ship with the deterministic rules core.
-
-## Custom/club profiles
-
-Future Plus persistence stores authoring intent and frozen resolution:
+Future Plus custom profiles store:
 
 ```text
 custom_profile
-- id
-- owner_user_id
-- name
-- created_at
+  identity/owner/name
 
 custom_profile_version
-- id
-- custom_profile_id
-- version
-- base_profile_id
-- base_profile_version
-- overrides_json
-- resolved_profile_json
-- rules_fingerprint
-- created_at
+  base profile id/version
+  overrides JSON
+  frozen resolved snapshot
+  rules fingerprint
+  creation/version metadata
 ```
 
-A game pins the exact custom profile version/fingerprint used at creation/confirmation time.
+Editing a club/table profile creates a new version. Old games never silently reinterpret.
 
-Changing `Tuesday Club` later creates a new version; it never silently reinterprets old games.
-
-This is a future D1 concern and does not require #227 to build the database.
+No D1 work is required in #227.
 
 ---
 
-# 14. Capability / override contract
+# 16. Capability contract
 
-Each user-configurable option is registered metadata, conceptually:
+Customisable options are registered metadata, conceptually:
 
 ```ts
 export type ProfileCapabilityDefinition = {
@@ -689,98 +623,95 @@ export type ProfileCapabilityDefinition = {
 };
 ```
 
-The resolver applies overrides through these definitions rather than arbitrary deep-object patching.
-
-This is also the future source for a Plus “How does your table play?” UI.
+The same metadata later drives override validation, profile diffing and Plus “How does your table play?” UI.
 
 ---
 
-# 15. Fail-closed compatibility rules
+# 17. Fail-closed rules
 
-The following must be rejected deterministically:
+Reject deterministically:
 
-- unknown profile ID/version;
-- unknown grammar;
-- `identity.grammar !== scoring.grammar`;
-- unknown registry or strategy ID;
-- unknown capability override;
-- capability from another grammar/family;
-- arbitrary additional fields in validated config;
-- negative/NaN/infinite values where not explicitly legal;
-- unresolved `research-required` placeholders in a playable published profile;
-- custom profile attempting to change grammar;
-- custom profile attempting to override a non-customisable authority field;
-- target catalogue profile without an exact catalogue version;
-- profile referencing an executable predicate/strategy unavailable in the current application build;
-- saved game whose pinned profile/fingerprint cannot be resolved/validated.
+- unknown profile/version/grammar;
+- grammar mismatch between identity and scoring config;
+- unknown/unavailable registry ID;
+- unknown or forbidden capability override;
+- cross-family/grammar capability misuse;
+- additional unvalidated fields;
+- malformed strategy params;
+- unresolved architecture placeholders in a playable profile;
+- custom grammar mutation;
+- target catalogue without exact version;
+- saved game whose exact pinned profile/fingerprint cannot be resolved.
 
-No “best effort” fallback to the current/latest profile.
+Never fall back to “latest” or a nearby profile.
 
 ---
 
-# 16. Platform compiler boundary
+# 18. Compiler/runtime boundary
 
-The target runtime entry point is conceptually:
+Conceptually:
 
 ```ts
-export type RulesRuntime = {
+export interface RulesRuntime<
+  THandEvidence,
+  TScore extends HandScoreResult,
+  TRoundOutcome,
+  TStrategyState
+> {
   profile: ResolvedRulesProfile;
-  validateHand(...args: unknown[]): ValidationResult;
-  scoreHand(...args: unknown[]): HandScoreResult;
-  requiredEvidence(...args: unknown[]): EvidenceRequirement[];
-  settleRound(...args: unknown[]): SettlementTransaction[];
-  progressGame(...args: unknown[]): ProfileStrategyState;
-  isGameComplete(...args: unknown[]): boolean;
-};
-
-export function compileProfile(profile: ResolvedRulesProfile): RulesRuntime;
+  validateHand(evidence: THandEvidence): ValidationResult;
+  scoreHand(evidence: THandEvidence): TScore;
+  requiredEvidence(context: PartialHandContext): EvidenceRequirement[];
+  settleRound(outcome: TRoundOutcome, state: TStrategyState): SettlementTransaction[];
+  progressGame(outcome: TRoundOutcome, state: TStrategyState): TStrategyState;
+  isGameComplete(state: TStrategyState): boolean;
+}
 ```
 
-The implementation should use proper typed generic/family adapters rather than literally `unknown[]`; the pseudotype above describes the architectural boundary only.
-
-Named rulesets become data + registered strategies:
+Named profiles become:
 
 ```text
-published profile manifest
+published/custom manifest
 → resolve/validate
 → compileProfile()
-→ RulesRuntime
+→ typed RulesRuntime
 ```
 
-Current hand-written `BMJA_RULESET`, `WESTERN_TM_RULESET` and `OUTSIDE_THE_BOX_RULESET` become migration adapters first, then eventually compiled outputs once parity is proven.
+Current `BMJA_RULESET`, `WESTERN_TM_RULESET` and `OUTSIDE_THE_BOX_RULESET` are migration adapters first and compiled outputs only after parity is proven.
 
 ---
 
-# 17. Deliberate exclusions
+# 19. Deliberate exclusions
 
-#227 does not design or permit:
+#227 does not permit or require:
 
 - arbitrary expressions/JSONLogic;
 - user-authored JavaScript;
-- general-purpose rule scripting;
-- full physical wall/draw/discard simulation;
-- a universal event log of every tile action;
+- generic rule scripting;
+- full wall/draw/discard simulation;
+- one universal event log of every tile action;
+- one universal hand-evidence object;
+- one giant hand-score object;
 - server-side scoring authority;
-- one giant universal hand-score structure;
-- automatic equivalence of similarly named patterns;
-- current NMJL card reproduction/distribution without an approved lawful catalogue path.
+- fuzzy/name-based pattern equivalence;
+- unlicensed current commercial catalogue distribution.
 
 ---
 
-# 18. Acceptance gate
+# 20. Acceptance gate
 
-The envelope is ready for implementation only when the architecture fixtures prove that one schema can represent and validate all eight external paper profiles while rejecting invalid cross-family combinations.
+The envelope is Codex-ready only when the architecture fixtures prove all eight external profile families can be represented while invalid cross-family combinations fail.
 
-Implementation is then mechanical:
+Implementation should then be mechanical:
 
 ```text
 define types/schemas
 → define registries
-→ make eight manifests validate
-→ make negative manifests fail
+→ make eight architecture manifests validate
+→ make negative fixtures fail
 → fingerprint deterministically
 → adapt current runtime behind compiler boundary
 → prove BMJA/T&M/OTB parity
 ```
 
-If coding discovers an unresolved Mahjong-domain decision, implementation pauses and the contract is amended outside Codex before proceeding.
+If implementation exposes an unresolved Mahjong-domain decision, pause the slice and amend this contract outside Codex before continuing.
