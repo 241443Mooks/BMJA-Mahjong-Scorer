@@ -1,49 +1,85 @@
 # Documentation map
 
-This directory contains a mixture of current product direction, rules evidence, shipped-product records and historical planning. Use this map to avoid treating every document as equally current.
+This directory contains current product/architecture decisions, rules evidence, research, shipped-product records and historical planning. **Do not treat every document as equally current.**
 
-## Current product direction
+## Start here
 
-- `product/TABLE_COMPANION_TRANSFORMATION.md` — canonical public-product direction and #105 delivery plan. **Start here for current product/route decisions.**
-- GitHub issue #105 — umbrella implementation tracker for the Table Companion transformation.
+Choose the authority that matches the work:
+
+- **What the product currently does:** merged code/tests on `main` + root `README.md`.
+- **Live programme priorities:** GitHub issue **#105**.
+- **Table Companion product direction:** `product/TABLE_COMPANION_TRANSFORMATION.md`.
+- **Plus/accounts/cloud/billing direction:** `product/MAHJONG_REFERENCE_PLUS_ARCHITECTURE.md`, the supporting `PLUS_*` / cloud-contract docs and issue **#206**.
+- **Rules truth/provenance:** `rules/`, `../BMJA_RULES_REFERENCE.md` and the relevant source register/crosswalk.
+- **Cross-family rules-platform implementation:** issue **#227** and the exact normative documents named by its child ticket on `integration/rules-platform-v1`.
+- **Implementation discipline:** `../Agents.md`.
+
+## Current branch boundary
+
+`main` is the production line.
+
+The cross-family rules-platform migration is intentionally staged on:
+
+`integration/rules-platform-v1`
+
+That branch contains the implementation contract developed through #228, the senior-review hardening contract from #237 and the registry audit from #238. Those documents are normative for #229–#236 even though they are not yet promoted to production `main`.
+
+Do **not** copy fragments of those contracts back into an implementation ticket from memory. Read the exact files named by the issue from the integration branch.
 
 ## Product research and discovery
 
 - `research/` — evidence-led product discovery, pain mining, Jobs-to-be-Done clusters and opportunity hypotheses.
-- Research is an input to product decisions, not a source of scoring/rules truth and not an implementation authority by itself.
-- Use the chain `user evidence -> job/pain cluster -> opportunity hypothesis -> product decision -> GitHub issue -> implementation` rather than promoting isolated comments directly into features.
+- Research is input to product decisions, not scoring/rules authority and not implementation authority by itself.
+- Use the chain `user evidence -> job/pain cluster -> opportunity hypothesis -> product decision -> GitHub issue -> implementation`.
 
 ## Rules and provenance
 
 - `rules/` — durable evidence, provenance, crosswalks and future-ruleset architecture.
-- `BMJA_RULES_REFERENCE.md` at repository root — engineering source for BMJA rules behaviour.
-- `artifacts/mahjong-scorer/SCORING_AUDIT.md` — implementation/scoring coverage record.
+- `../BMJA_RULES_REFERENCE.md` — engineering source for BMJA behaviour.
+- `../artifacts/mahjong-scorer/SCORING_AUDIT.md` — current scoring implementation/audit record.
 
-Rules/provenance documents may intentionally preserve uncertainty, source status and historical research. Do not simplify those distinctions merely to make the repository tidier.
+Important current rules records on `main` include:
 
-## Current implementation guidance
+- the Classical/Western configuration model and examples;
+- Buzzard 2000 primary-source evidence/crosswalk;
+- MCR and Riichi architecture/source records;
+- European Classical and eight-ruleset architecture stress tests.
 
-- `../Agents.md` — repository operating guardrails for implementation work.
-- `../README.md` — repository front door and shipped-product overview. It should be kept aligned with the current public product as #105 lands.
-- `product/SCREENSHOT_LIBRARY.md` — canonical catalogue and operating rules for deterministic reusable product screenshots used by Help, How It Works and future product guidance.
+Rules/provenance documents may intentionally preserve uncertainty, source status and unresolved questions. Do not “tidy” those distinctions away.
+
+## Product/platform records
+
+Useful current records include:
+
+- `product/SCREENSHOT_LIBRARY.md` — canonical deterministic product screenshot library;
+- `product/MAHJONG_REFERENCE_PLUS_ARCHITECTURE.md` — Free/Plus, identity, billing and local-first invariants;
+- `product/PLUS_IMPLEMENTATION_BACKLOG.md` — bounded Plus concerns;
+- `product/PLUS_REUSE_MAP.md` / `product/PLUS_LEGO_STACK.md` — reuse-before-build guidance;
+- `product/CROSS_PROFILE_CLOUD_GAME_CONTRACT.md` — neutral versioned cloud-game envelope;
+- `product/I18N_FOUNDATION.md` — multilingual UI/public-route foundation;
+- `product/RULESET_BUILD_SEQUENCE.md` — staged rules-family implementation sequence.
 
 ## Shipped-product/content records
 
-Documents such as `PRODUCT_HANDBOOK.md`, `FEATURES_CONTENT.md`, `HELP_CONTENT.md`, `HOW_IT_WORKS_CONTENT.md`, `MARKETING_COPY_BANK.md`, and earlier content plans record how existing public pages and product claims were developed. They remain useful evidence and archaeology, but they are **not** the authority for new product direction when they conflict with the Table Companion plan.
+Documents such as `PRODUCT_HANDBOOK.md`, `FEATURES_CONTENT.md`, `HELP_CONTENT.md`, `HOW_IT_WORKS_CONTENT.md`, `MARKETING_COPY_BANK.md` and earlier content plans preserve useful shipped-copy/design history. They are **not** current product authority when they conflict with the live product or current programme map.
 
 ## Historical / superseded planning
 
-Older files such as `PRODUCT_DIRECTION.md` and `PRODUCT_CONTENT_PLAN.md` describe earlier product assumptions, including a primarily British-only scorer and possible future companion directions. Preserve them as historical context until they are deliberately archived, but do not use them to override current #105 decisions.
+Older files such as `PRODUCT_DIRECTION.md` and `PRODUCT_CONTENT_PLAN.md` describe earlier assumptions, including a primarily British-only scorer. Preserve them as archaeology unless a deliberate archive/delete task says otherwise, but do not use them to override current decisions.
+
+Closed/superseded PR branches are also not authority. In particular, the useful ideas from superseded design PRs #222 and #224 were consolidated into later merged contracts; implementation should not revive those branches.
 
 ## Decision hierarchy
 
-When documents disagree, use this order:
+When sources disagree, use this order:
 
-1. current merged implementation and tests for what the product actually does;
-2. current rules/provenance evidence for rule truth and confidence;
-3. `product/TABLE_COMPANION_TRANSFORMATION.md` + #105 for current public-product direction;
-4. `Agents.md` for implementation discipline;
-5. `research/` for evidence and hypotheses that inform future product decisions;
-6. older planning/content documents for historical context only.
+1. current merged implementation and tests for what the production product actually does;
+2. current source/provenance evidence for Mahjong rule truth and confidence;
+3. the active issue/PR execution contract for the named task;
+4. for #227 work, the normative integration-branch rules-platform docs named by that ticket;
+5. current product/platform architecture docs + programme issues (#105/#206 as relevant);
+6. `Agents.md` for repository execution discipline;
+7. `research/` for evidence and hypotheses;
+8. older planning/content documents for historical context only.
 
-If a proposed change would alter scoring/rules behaviour, do not infer the answer from product copy or product research. Resolve it through the relevant rules evidence and tests.
+If a proposed change alters scoring/rules behaviour, do not infer the answer from product copy, historical planning or user-interface similarity. Resolve it through the relevant rules evidence and tests.
