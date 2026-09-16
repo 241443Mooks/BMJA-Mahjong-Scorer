@@ -2,10 +2,7 @@ import {
   ArrowRight,
   BookOpen,
   Calculator,
-  CircleHelp,
-  Coffee,
   Gamepad2,
-  Info,
   Sparkles,
 } from 'lucide-react';
 import { SiteHeader } from '../components/SiteHeader';
@@ -281,57 +278,7 @@ export function HomePage() {
             </div>
           </div>
         </section>
-
-        <section className="mt-7">
-          <a
-            href="/about"
-            className="group flex items-center gap-4 rounded-lg px-2 py-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]"
-          >
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#efe8da] text-[#7a7769]">
-              <Info size={17} strokeWidth={1.8} />
-            </div>
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center justify-between gap-3">
-                <h2 className="font-serif text-[19px] text-[#284d45]">About this project</h2>
-                <ArrowRight size={14} className="shrink-0 text-[#ae6249] transition-transform group-hover:translate-x-1" />
-              </div>
-              <p className="mt-1 text-[14px] leading-6 text-[#7a7769]">
-                How a hand scorer became a Table Companion, which sources it uses and why the project stays independent.
-              </p>
-            </div>
-          </a>
-        </section>
-
-        <section className="mt-2 border-t border-[#e2d9c7] pt-2">
-          <a
-            href="https://buymeacoffee.com/sharronmo"
-            target="_blank"
-            rel="noreferrer"
-            className="group flex items-center gap-4 rounded-lg px-2 py-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]"
-          >
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#efe8da] text-[#ae6249]">
-              <Coffee size={17} strokeWidth={1.8} />
-            </div>
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center justify-between gap-3">
-                <h2 className="font-serif text-[19px] text-[#284d45]">Support the project</h2>
-                <ArrowRight size={14} className="shrink-0 text-[#ae6249] transition-transform group-hover:translate-x-1" />
-              </div>
-              <p className="mt-1 text-[14px] leading-6 text-[#7a7769]">
-                Mahjong Reference is free to use. If it helps your table, you can optionally buy me a coffee.
-              </p>
-            </div>
-          </a>
-        </section>
       </main>
-
-      <footer className="mx-auto flex max-w-[1100px] flex-wrap items-center justify-between gap-3 border-t border-[#d8ceb8] px-5 py-5 lg:px-8">
-        <p className="text-[13px] leading-5 text-[#8c8a7f]">Independent project · not an official BMJA publication.</p>
-        <div className="flex items-center gap-2 text-[13px] text-[#8c8a7f]">
-          <CircleHelp size={13} />
-          <span>Scoring stays one tap away.</span>
-        </div>
-      </footer>
     </div>
   );
 }
