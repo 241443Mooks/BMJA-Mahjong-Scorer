@@ -21,23 +21,21 @@ Coordinate the shared platform work (i18n, account foundation, cloud saves) with
 
 ### Rules wave
 
-1. **Buzzard 2000** — first adjacent classical-family architecture proof.
+1. **Buzzard 2000** — first adjacent classical-family composition proof.
 2. **MCR / WMO 2006** — first materially different scoring grammar.
 3. **EMA Riichi 2025** — scoring + richer game-state architecture after the shared seams have been exercised.
 
-This order is provisional only in the sense that implementation effort may change after source transcription. The architecture intent is firm: use the least-different profile first to expose bad abstractions cheaply, then test a different scoring grammar, then tackle Riichi's larger state model.
+The architecture intent is: use the least-different profile first to prove that our rules are genuinely composable, then test a different scoring grammar, then tackle Riichi's larger state model.
 
 ## What can progress in parallel before coding
 
 Buzzard:
 
-- source architecture/crosswalk is complete;
-- durable executable evidence ledger is `docs/rules/BUZZARD_2000_RULE_EVIDENCE.md`;
-- recover/re-open the canonical Buzzard page or a trustworthy archived exact copy;
-- bind the ordinary point table, winner bonuses, doubles and limit list to exact Buzzard locators;
-- resolve the live `no Chows` / `scoreless` bonus-vs-double uncertainty rather than importing a neighbouring classical rule;
-- source-bind liability/penalty/progression edge cases;
-- prepare golden fixtures for bounded implementation child #217.
+- source PDF recovered and hashed;
+- exact point table, winner bonuses, doubles, limit list, settlement, progression, liability and penalties are now page-bound in `docs/rules/BUZZARD_2000_RULE_EVIDENCE.md`;
+- architecture crosswalk has been corrected to the actual product scope: score the physical game and run the table, do not simulate play;
+- prepare source-linked golden fixtures for #217;
+- explicitly resolve/pin the cumulative complete-Flower/Season + own-tile double fixture rather than silently inheriting BMJA bouquet behaviour.
 
 MCR:
 
@@ -64,7 +62,7 @@ Examples already justified by current + future profiles:
 - neutral cloud envelope + profile codec;
 - generic payer→payee settlement transactions;
 - profile-owned game/progression/completion state;
-- richer round outcomes than single winner/draw.
+- richer round outcomes than single winner/draw where a future profile proves that need.
 
 Examples **not** justified yet:
 
@@ -86,15 +84,14 @@ A current supported game can round-trip through the neutral cloud envelope and r
 
 ### Checkpoint C — Buzzard
 
-The source-bound profile proves the classical engine can be reused without application fork and identifies only the genuine new state: Standing Hand, dead-wall/Loose Tile lifecycle, liability/procedure.
+Buzzard proves the existing classical engine can be composed rather than copied.
 
-Checkpoint C is deliberately split:
+1. **C1 evidence** — COMPLETE: primary PDF snapshot recovered; executable score/double/limit/settlement/progression/penalty facts are page-bound.
+2. **C2 profile composition** — #217: KEEP existing classical rules, ADD Buzzard-only rules, AMEND the few divergent predicates/values, REMOVE BMJA-only behaviour, and prove profile isolation.
+3. **C3 table-companion seams** — support Buzzard's non-winner Wind/Dragon limit result and profile-specific incident/liability settlement using the existing transaction infrastructure.
+4. **C4 public profile** — profile-picker/reference/help exposure after source fixtures and cross-profile regression pass.
 
-1. **C1 evidence gate** — exact executable score/double/limit bindings are pinned to Buzzard, with conflicts resolved;
-2. **C2 hand/profile proof** — #217 reuses the classical engine for an internal/provisional Buzzard profile and proves isolation from BMJA/Western;
-3. **C3 full-table proof** — Standing Hand, dead wall, liability and procedure are added only when their source semantics are exact.
-
-Do not promote C1 uncertainty into C2 code merely because another classical source looks similar.
+There is **no Buzzard wall/claim gameplay simulator checkpoint** in the current product scope. Physical-play procedure belongs in reference/help unless a later product decision changes that scope.
 
 ### Checkpoint D — MCR
 
@@ -102,7 +99,7 @@ The platform can present/store a non-classical score result, settle it and progr
 
 ### Checkpoint E — Riichi
 
-The platform supports multi-winner/draw evidence, profile strategy state and neutral transactions before the full Riichi engine is layered on top.
+The platform supports the Riichi scoring/settlement/progression evidence actually needed by a physical-table companion; do not default to simulating play unless the product requires it.
 
 ## Rule
 
