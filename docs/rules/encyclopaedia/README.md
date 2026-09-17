@@ -54,7 +54,7 @@ Do not reverse that flow by inventing Encyclopaedia IDs and then forcing the rul
 
 ## Authority rule
 
-`SOURCE_INVENTORY_V1.md` is an **index/manfiest**, not a duplicate rulebook. Where a profile already has a complete item-level catalogue, that source-owned catalogue remains authoritative and this directory points to it rather than copying hundreds of rows into another drifting table.
+`SOURCE_INVENTORY_V1.md` is an **index/manifest**, not a duplicate rulebook. Where a profile already has a complete item-level catalogue, that source-owned catalogue remains authoritative and this directory points to it rather than copying hundreds of rows into another drifting table.
 
 If an inventory statement conflicts with the named source corpus, the source corpus wins.
 
