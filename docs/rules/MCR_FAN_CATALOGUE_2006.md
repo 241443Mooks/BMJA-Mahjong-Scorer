@@ -108,7 +108,7 @@ The implementation should derive `H`, `X` and `W` facts where possible rather th
 | 77 | `mcr2006.fan.edge-wait` | Edge Wait | 1 | Sole winning tile is 3 for 12 or 7 for 89 | H,W,I | §3.8.1 #77; App.1 #77 |
 | 78 | `mcr2006.fan.closed-wait` | Closed Wait | 1 | Sole winning tile fills middle of a Chow | H,W,I | §3.8.1 #78; App.1 #78 |
 | 79 | `mcr2006.fan.single-wait` | Single Wait | 1 | Sole winning tile completes the pair | H,W,I | §3.8.1 #79; App.1 #79 |
-| 80 | `mcr2006.fan.self-drawn` | Self-Drawn | 1 | Ordinary fresh-wall self-draw, including Flower replacement | M,E,I | §3.8.1 #80; App.1 #80 |
+| 80 | `mcr2006.fan.self-drawn` | Self-Drawn | 1 | Ordinary self-draw, including Flower replacement | M,E,I | §3.8.1 #80; App.1 #80 |
 | 81 | `mcr2006.fan.flower-tiles` | Flower Tiles | 1 each | One point per Flower retained by winner, applied after win qualification | F,I | §3.8.1 #81; §3.11.6.6 |
 
 ## Scoring interaction policy
@@ -165,26 +165,25 @@ These are especially useful because they prevent an implementation from relying 
 | Robbing the Kong | source explicitly suppresses Last Tile |
 | Melded Hand | source explicitly suppresses Single Wait |
 | All Chows | No Honors is implied and not additionally scored |
-| Edge / Closed / Single Wait | only score when the reconstructed pre-win hand has exactly that single winning tile possibility; overlapping/multiple waits do not score the wait fan |
+| Edge / Closed / Single Wait | score only when the reconstructed pre-win hand has exactly that single winning tile possibility |
 | Flower Tiles | ignored for the 8-point legal-Hu threshold; added only after non-Flower qualification succeeds |
 
-## 2006 English-text anomalies that must not be silently guessed
+## Formal-source interaction note: fan 14 / fan 15
 
-Two Appendix 1 lines appear internally inconsistent with the structures they describe:
+Two Appendix 1 exclusions look surprising if read only as a structural subset hierarchy:
 
-- fan 14 **Quadruple Chow** says it does not combine with “Pure Shifted Pungs”, although a four-identical-Chow structure naturally contains lower identical-Chow fan rather than shifted Pungs;
-- fan 15 **Four Pure Shifted Pungs** says it does not combine with “Pure Triple Chow”, although the structure naturally contains the lower Pure Shifted Pungs fan.
+- **Quadruple Chow** names `Pure Shifted Pungs` in its explicit non-combination wording;
+- **Four Pure Shifted Pungs** names `Pure Triple Chow`.
 
-Later/secondary MCR references commonly treat these as:
+This was checked against later formal trilingual MCR text. The same pairings are retained in the Chinese and English formal text, so the project does **not** classify them as an English mistranslation or silently repair them from Mahjong intuition.
 
-```text
-Quadruple Chow -> suppress Pure Triple Chow (+ Pure Double Chow / Tile Hog as applicable)
-Four Pure Shifted Pungs -> suppress Pure Shifted Pungs (+ All Pungs)
-```
+The implementation rule is therefore:
 
-For `mcr-wmo-2006@1.0`, do **not** silently replace the Green Book English wording merely because the correction looks obvious. Resolve this with a documented interpretation source (preferably the Chinese text / formal later clarification) and lock the result with fixtures.
+1. preserve the explicit source-owned interaction wording;
+2. independently apply the general §3.9.1 principles, especially **Non-Repeat**, which suppress fan inevitably contained by a higher fan;
+3. prove the resulting scores with named fixtures rather than deriving exclusions from English names.
 
-Until then these two interaction edges are `interpretation-required`, not `research-required` for the rest of the catalogue.
+`MCR_GOLDEN_FIXTURES_2006.md` fixture MCR-F006 locks this behaviour. There is no remaining source blocker here for the scoring-corpus handoff.
 
 ## Implementation consequence
 
