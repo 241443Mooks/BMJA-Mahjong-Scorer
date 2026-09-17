@@ -9,6 +9,7 @@ Choose the authority that matches the work:
 - **What the product currently does:** merged code/tests on `main` + root `README.md`.
 - **Live programme priorities:** GitHub issue **#105**.
 - **Table Companion product direction:** `product/TABLE_COMPANION_TRANSFORMATION.md`.
+- **Search/SEO growth strategy:** `product/SEO_GROWTH_STRATEGY.md` — current Search Console evidence, acquisition clusters, canonical query/page ownership and prioritised quick wins.
 - **Analytics/privacy measurement:** `ANALYTICS_MEASUREMENT_PLAN.md` + issue **#246**. This includes the current PostHog cookieless traffic-classification caveat and reporting rules.
 - **Plus/accounts/cloud/billing direction:** `product/MAHJONG_REFERENCE_PLUS_ARCHITECTURE.md`, the supporting `PLUS_*` / cloud-contract docs and issue **#206**.
 - **Rules truth/provenance:** `rules/`, `../BMJA_RULES_REFERENCE.md` and the relevant source register/crosswalk.
@@ -53,6 +54,7 @@ Rules/provenance documents may intentionally preserve uncertainty, source status
 Useful current records include:
 
 - `ANALYTICS_MEASUREMENT_PLAN.md` — analytics purpose, privacy boundaries, event taxonomy, validation rules and known provider caveats;
+- `product/SEO_GROWTH_STRATEGY.md` — evidence-led SEO/acquisition strategy, Search Console opportunity set and route/query ownership;
 - `product/SCREENSHOT_LIBRARY.md` — canonical deterministic product screenshot library;
 - `product/MAHJONG_REFERENCE_PLUS_ARCHITECTURE.md` — Free/Plus, identity, billing and local-first invariants;
 - `product/PLUS_IMPLEMENTATION_BACKLOG.md` — bounded Plus concerns;
@@ -83,7 +85,7 @@ When sources disagree, use this order:
 2. current source/provenance evidence for Mahjong rule truth and confidence;
 3. the active issue/PR execution contract for the named task;
 4. for #227 work, the normative integration-branch rules-platform docs named by that ticket;
-5. current product/platform architecture docs + programme issues (#105/#206 as relevant);
+5. current product/platform architecture docs + programme issues (#105/#206 as relevant), including `product/SEO_GROWTH_STRATEGY.md` for acquisition decisions;
 6. `Agents.md` for repository execution discipline;
 7. `research/` for evidence and hypotheses;
 8. older planning/content documents for historical context only.
