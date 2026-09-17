@@ -26,7 +26,7 @@ The imported artwork is treated by this project as licensed under the Creative C
 
 - Source: https://github.com/xhokir/riichi-mahjong-tiles
 - Licence: https://creativecommons.org/licenses/by/4.0/
-- Pinned revision and implementation details: `docs/TILE_ASSET_DECISION.md`
+- Pinned revision and implementation details: `docs/product/TILE_ASSET_DECISION.md`
 - Local artwork attribution notice: `artifacts/mahjong-scorer/src/assets/MAHJONG_TILE_ARTWORK_ATTRIBUTION.md`
 
 Recommended attribution:
@@ -37,7 +37,7 @@ The tile artwork is not relicensed under MIT by this repository.
 
 ## British Mahjong rules and source material
 
-British Mahjong Scorer is an independent project. It is not an official British Mah-Jong Association (BMJA) publication or product.
+Mahjong Reference is an independent project. It is not an official British Mah-Jong Association (BMJA) publication or product.
 
 The project references and paraphrases published British Mahjong rules and explanatory sources identified in `BMJA_RULES_REFERENCE.md`. Those underlying publications, websites, books, names, and rule texts remain subject to their own rights and are **not relicensed by this repository**.
 
