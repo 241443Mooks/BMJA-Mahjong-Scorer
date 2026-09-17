@@ -173,6 +173,7 @@ The language model is not a second Mahjong scoring authority.
 Start with:
 
 - [`docs/README.md`](docs/README.md) — documentation authority map;
+- [`docs/ANALYTICS_MEASUREMENT_PLAN.md`](docs/ANALYTICS_MEASUREMENT_PLAN.md) — analytics purpose, privacy boundaries, event taxonomy and known provider/reporting caveats;
 - [`docs/product/TABLE_COMPANION_TRANSFORMATION.md`](docs/product/TABLE_COMPANION_TRANSFORMATION.md) — durable Table Companion product direction;
 - [`docs/product/MAHJONG_REFERENCE_PLUS_ARCHITECTURE.md`](docs/product/MAHJONG_REFERENCE_PLUS_ARCHITECTURE.md) — Plus product/architecture decisions;
 - [`docs/rules/`](docs/rules/) — rules evidence, provenance, crosswalks and family architecture;
@@ -202,6 +203,12 @@ Public-route SEO configuration lives in:
 [`artifacts/mahjong-scorer/src/site-seo.json`](artifacts/mahjong-scorer/src/site-seo.json)
 
 The build produces crawler-visible route content, metadata, canonical URLs, structured data, sitemap, robots and redirects from the same route/product sources rather than maintaining search-only copy.
+
+### Analytics and privacy
+
+Mahjong Reference uses **PostHog Cloud EU** for deliberately limited web/product measurement. The current implementation is cookieless, uses no PostHog person profiles, disables session replay and interaction autocapture, and is intended to measure aggregate navigation plus a small set of explicit product events. The live privacy explanation is available at `/privacy`; the implementation contract is [`docs/ANALYTICS_MEASUREMENT_PLAN.md`](docs/ANALYTICS_MEASUREMENT_PLAN.md) and tracked by [issue #246](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/246).
+
+**Known reporting caveat, verified 17 September 2026:** PostHog's query-time bot/traffic classifier can label genuine cookieless JavaScript pageviews as `Automation` with `traffic_category = no_user_agent` because the raw user-agent property used by that classifier is absent, even when ordinary browser/device properties are present. For Mahjong Reference reporting, `Automation + no_user_agent + cookieless=true` must be treated as **unclassified**, not as positive bot evidence. Do **not** filter reporting to `Traffic type = Regular`, and do not add raw `navigator.userAgent` capture merely to improve this classifier without revisiting the privacy design.
 
 ## Run locally
 

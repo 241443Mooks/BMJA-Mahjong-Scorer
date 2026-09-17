@@ -9,6 +9,7 @@ Choose the authority that matches the work:
 - **What the product currently does:** merged code/tests on `main` + root `README.md`.
 - **Live programme priorities:** GitHub issue **#105**.
 - **Table Companion product direction:** `product/TABLE_COMPANION_TRANSFORMATION.md`.
+- **Analytics/privacy measurement:** `ANALYTICS_MEASUREMENT_PLAN.md` + issue **#246**. This includes the current PostHog cookieless traffic-classification caveat and reporting rules.
 - **Plus/accounts/cloud/billing direction:** `product/MAHJONG_REFERENCE_PLUS_ARCHITECTURE.md`, the supporting `PLUS_*` / cloud-contract docs and issue **#206**.
 - **Rules truth/provenance:** `rules/`, `../BMJA_RULES_REFERENCE.md` and the relevant source register/crosswalk.
 - **Cross-family rules-platform implementation:** issue **#227** and the exact normative documents named by its child ticket on `integration/rules-platform-v1`.
@@ -51,6 +52,7 @@ Rules/provenance documents may intentionally preserve uncertainty, source status
 
 Useful current records include:
 
+- `ANALYTICS_MEASUREMENT_PLAN.md` — analytics purpose, privacy boundaries, event taxonomy, validation rules and known provider caveats;
 - `product/SCREENSHOT_LIBRARY.md` — canonical deterministic product screenshot library;
 - `product/MAHJONG_REFERENCE_PLUS_ARCHITECTURE.md` — Free/Plus, identity, billing and local-first invariants;
 - `product/PLUS_IMPLEMENTATION_BACKLOG.md` — bounded Plus concerns;
@@ -58,6 +60,10 @@ Useful current records include:
 - `product/CROSS_PROFILE_CLOUD_GAME_CONTRACT.md` — neutral versioned cloud-game envelope;
 - `product/I18N_FOUNDATION.md` — multilingual UI/public-route foundation;
 - `product/RULESET_BUILD_SEQUENCE.md` — staged rules-family implementation sequence.
+
+### Analytics caveat authority
+
+The current PostHog implementation is deliberately cookieless. As verified on 17 September 2026, PostHog's query-time traffic classifier can label genuine cookieless JavaScript pageviews as `Automation` / `no_user_agent` because the raw user-agent property it expects is absent. Do not introduce a `Traffic type = Regular` reporting filter, treat that combination as positive bot evidence, or add raw user-agent capture merely to make the classifier label cleaner without first reviewing `ANALYTICS_MEASUREMENT_PLAN.md` and issue #246.
 
 ## Shipped-product/content records
 
