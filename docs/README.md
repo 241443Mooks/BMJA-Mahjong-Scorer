@@ -23,6 +23,7 @@ For a bounded task, start with the named issue or PR. Then use only the relevant
 - **Analytics/privacy measurement:** `product/ANALYTICS_MEASUREMENT_PLAN.md` and #246.
 - **Plus/accounts/cloud:** `product/MAHJONG_REFERENCE_PLUS_ARCHITECTURE.md`, supporting `PLUS_*` docs and #206.
 - **Rules/scoring:** relevant `rules/` source/evidence files, `BMJA_RULES_REFERENCE.md`, executable tests and the named profile issue.
+- **Encyclopaedia research staging:** `rules/encyclopaedia/` and #251. 251A1 is profile-local source inventory only; cross-family concept matching waits for executable Buzzard/MCR/Riichi profiles.
 - **Rules-platform migration:** #227 plus the exact normative files named by #229–#236 on `integration/rules-platform-v1`.
 - **Durable product history:** root `CHANGELOG.md`.
 
