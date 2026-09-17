@@ -25,9 +25,11 @@ It must **not** decide that items from different profiles are the same concept m
 Current inventory records:
 
 - `SOURCE_INVENTORY_V1.md` — initial five-corpus pass: BMJA, Thompson & Maloney, Buzzard, MCR and EMA Riichi;
-- `SOURCE_INVENTORY_V2.md` — current expanded manifest: adds Outside the Box and Mahjong Time European Classical, taking the conservative finite profile-local corpus to **279 entries**, and records the next inventory frontier.
+- `SOURCE_INVENTORY_V2.md` — adds Outside the Box and Mahjong Time European Classical and records the wider inventory frontier;
+- `ZUNG_JUNG_V33_SOURCE_INDEX.md` — official-source 44-pattern Zung Jung v3.3 index;
+- `SOURCE_INVENTORY_V3.md` — **current coverage manifest: 8 corpora / 323 finite profile-local entries**.
 
-`SOURCE_INVENTORY_V2.md` is the current coverage manifest. It points back to V1 and to the underlying source/profile files rather than duplicating all item-level rules data.
+`SOURCE_INVENTORY_V3.md` is the current coverage manifest. It points back to the earlier inventory passes and to underlying source/profile files rather than duplicating all rules data.
 
 ### 251A2 — concept crosswalk — held until runtime profiles exist
 
