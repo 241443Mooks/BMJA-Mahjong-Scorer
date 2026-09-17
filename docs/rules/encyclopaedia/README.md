@@ -22,6 +22,13 @@ This phase may record:
 
 It must **not** decide that items from different profiles are the same concept merely because names or tile shapes look similar.
 
+Current inventory records:
+
+- `SOURCE_INVENTORY_V1.md` — initial five-corpus pass: BMJA, Thompson & Maloney, Buzzard, MCR and EMA Riichi;
+- `SOURCE_INVENTORY_V2.md` — current expanded manifest: adds Outside the Box and Mahjong Time European Classical, taking the conservative finite profile-local corpus to **279 entries**, and records the next inventory frontier.
+
+`SOURCE_INVENTORY_V2.md` is the current coverage manifest. It points back to V1 and to the underlying source/profile files rather than duplicating all item-level rules data.
+
 ### 251A2 — concept crosswalk — held until runtime profiles exist
 
 After Buzzard 2000, MCR and Riichi are executable on the shared rules platform, compare the implemented profile/catalogue identities and classify relationships such as:
@@ -54,7 +61,7 @@ Do not reverse that flow by inventing Encyclopaedia IDs and then forcing the rul
 
 ## Authority rule
 
-`SOURCE_INVENTORY_V1.md` is an **index/manifest**, not a duplicate rulebook. Where a profile already has a complete item-level catalogue, that source-owned catalogue remains authoritative and this directory points to it rather than copying hundreds of rows into another drifting table.
+The inventory documents are **indexes/manifests**, not duplicate rulebooks. Where a profile already has a complete item-level catalogue, that source-owned catalogue remains authoritative and this directory points to it rather than copying hundreds of rows into another drifting table.
 
 If an inventory statement conflicts with the named source corpus, the source corpus wins.
 
