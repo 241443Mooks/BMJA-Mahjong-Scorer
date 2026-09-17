@@ -70,6 +70,35 @@ Allowed properties:
 
 Do not attach player names, hand data, free text or stable visitor identifiers.
 
+## Known PostHog traffic-classification caveat
+
+Verified against live production events on 17 September 2026.
+
+Genuine cookieless JavaScript pageviews can currently be classified by PostHog's query-time traffic/bot classifier as:
+
+- `Traffic type = Automation`
+- `traffic_category = no_user_agent`
+
+This can happen even when the same event contains ordinary browser/device properties such as Chrome, Android and Mobile. The relevant `$user_agent` property used by PostHog's query-time classifier is absent on the affected cookieless pageviews, and PostHog treats an empty user agent as automated traffic.
+
+This is a reporting caveat, not evidence that the visit was automated.
+
+### Reporting rule
+
+Until the provider behaviour changes or is otherwise verified as resolved:
+
+- **do not filter Mahjong Reference reporting to `Traffic type = Regular`;**
+- **do not treat `Automation + no_user_agent + cookieless=true` as bot evidence;**
+- treat that combination as **unclassified traffic** when interpreting paths, visitors and product use;
+- keep genuinely identified bot/crawler classes separate where PostHog has positive classifier evidence;
+- re-check this caveat before adding any future bot-exclusion rule to a dashboard, saved insight or recurring report.
+
+### Privacy rule
+
+Do **not** add or persist `navigator.userAgent`, `$user_agent`, `$raw_user_agent` or another raw browser user-agent value merely to make this classifier produce a nicer label. The privacy boundary takes precedence over a secondary reporting field.
+
+If PostHog changes cookieless traffic classification, verify the live event behaviour before removing this caveat.
+
 ## Planned semantic events
 
 Add these only when there is a reliable success point in the product code. A button click is not necessarily a successful outcome.
@@ -98,6 +127,7 @@ Do not send any of the following to analytics:
 - clipboard contents
 - stable account/user identifiers unless a future account system has a separately reviewed analytics design
 - raw IP addresses
+- raw browser user-agent strings added solely for analytics classification
 - email addresses or contact details
 
 If a proposed event seems to require any of these, stop and redesign the measurement question first.
@@ -113,6 +143,8 @@ Once enough traffic exists, maintain a small set of repeatable analyses:
 5. **Scorer funnel** — when semantic scorer events are added: scorer started → hand scored → score accepted (for game-linked scoring).
 
 Do not create dashboards merely because data exists. Each saved chart should answer a product decision question.
+
+Any analysis that uses PostHog's bot/traffic virtual properties must apply the known cookieless classification caveat above.
 
 ## Validation checklist
 
@@ -130,6 +162,7 @@ After deployment:
 - verify a deliberate rules-profile change produces `ruleset_selected`
 - confirm no session recordings are created
 - inspect event properties for unexpected player-entered or free-text data
+- inspect traffic-classification properties before applying any `Regular`/bot filter
 - create baseline path/funnel insights only after the corresponding events exist
 
 ## Cloudflare Web Analytics
@@ -142,3 +175,4 @@ Cloudflare Web Analytics can be enabled separately as a simple independent traff
 - PostHog JavaScript configuration: https://posthog.com/docs/libraries/js/config
 - PostHog privacy controls: https://posthog.com/docs/product-analytics/privacy
 - PostHog cookieless tracking: https://posthog.com/tutorials/cookieless-tracking
+- PostHog bot and traffic detection: https://posthog.com/docs/web-analytics/bot-detection
