@@ -16,7 +16,16 @@ This file records sources used specifically by the Riichi programme. The global 
 
 **Important scope:** this source defines the project's first **EMA 2025 Riichi** profile. It must not be generalised into a claim that every Japanese professional league, online platform or local Riichi group uses identical rules.
 
-**Implementation status:** active research / not yet executable.
+**Current status — 17 September 2026:** the pre-code scoring/settlement/progression research gate is complete. The profile is **not yet executable**. Implementation must use the source-bound corpus below rather than rediscovering Riichi semantics while editing production code.
+
+Normative implementation-facing corpus:
+
+- `EMA_2025_SCORE_EVIDENCE_CONTRACT.md`
+- `EMA_2025_YAKU_CATALOGUE.md`
+- `EMA_2025_SCORING_AND_SETTLEMENT_CONTRACT.md`
+- `EMA_2025_GOLDEN_FIXTURES.md`
+- `EMA_2025_CORPUS_COMPLETENESS_AUDIT.md`
+- `EMA_2025_ARCHITECTURE_DECISIONS.md`
 
 **High-value locators:**
 
@@ -49,5 +58,6 @@ The 2025 rulebook contains its own official compact yaku list on p. 42, which su
 1. EMA 2025 wins any conflict for the initial profile.
 2. Common Riichi practice on apps/forums is not authority unless deliberately introduced as a separate named profile.
 3. WRC rules may be useful as a later comparison source but must not silently modify EMA behaviour.
-4. Project docs/tests should record rule facts and source locators in original wording; do not reproduce long passages/tables from the source unnecessarily.
+4. Project docs/tests should record rule facts and source locators without reproducing long passages/tables from the source unnecessarily.
 5. Any future EMA edition must become a new source/version decision; saved games must not silently change mathematics.
+6. If implementation exposes a contradiction with the pinned source, stop that slice and return to source review; do not resolve it from another app or general Riichi convention.
