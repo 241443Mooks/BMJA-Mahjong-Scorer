@@ -6,6 +6,20 @@ This file records meaningful changes to **Mahjong Reference** at product-milesto
 
 _No unreleased product changes at this checkpoint._
 
+## 2026-09-17 — Source-correct expansion and measurement baseline
+
+### Added
+
+- Completed the source-pinned **MCR 2006** pre-code correctness corpus: all 81 fan, evidence requirements, interaction/qualification rules, Flowers treatment, settlement/progression and golden fixtures. Runtime implementation is now the bounded #241 handoff. [#242](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/pull/242)
+- Completed the source-pinned **EMA Riichi 2025** pre-code correctness corpus: yaku/yakuman catalogue, dora, fu, value/payment rules, ten official worked examples, settlement/progression and completeness audit. Runtime implementation is now #244. [#245](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/pull/245)
+- Added privacy-conscious, cookieless PostHog Cloud EU analytics with SPA pageviews, a deliberately small semantic-event boundary, a public `/privacy` page and an in-repo measurement plan. [#248](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/pull/248)
+
+### Changed
+
+- Aligned the completed MCR corpus with the rules-platform registry/Lego vocabulary without reopening architecture; MCR Flowers remain a post-qualification bonus and progression alone owns dealer movement. [#243](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/pull/243)
+- Documented the verified PostHog cookieless traffic-classification caveat so genuine `Automation + no_user_agent + cookieless=true` pageviews are treated as unclassified rather than filtered as bots. [#249](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/pull/249)
+- Reorganised repository documentation by authority/purpose, reduced the README to a case-study/front-door, and archived superseded planning without discarding evidence.
+
 ## 2026-09-16 — Rules-platform and repository readiness
 
 ### Added
