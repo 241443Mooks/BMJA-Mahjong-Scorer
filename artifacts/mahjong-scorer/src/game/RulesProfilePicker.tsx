@@ -1,3 +1,4 @@
+import { captureProductEvent } from '../lib/analytics';
 import { descriptorForRulesProfile, PUBLIC_RULES_DESCRIPTORS } from './rules-presentation';
 import type { RulesProfileRef } from './types';
 
@@ -22,7 +23,10 @@ export function RulesProfilePicker({ prompt, selectedProfile, onSelect }: { prom
     <div className="mt-3 grid gap-2 sm:grid-cols-3">
       {PUBLIC_RULES_DESCRIPTORS.map((descriptor) => {
         const isSelected = sameProfile(descriptor.profile, selectedProfile);
-        return <button key={descriptor.slug} type="button" data-testid={`rules-card-${descriptor.slug}`} aria-pressed={isSelected} onClick={() => onSelect(descriptor.profile)} className={`min-h-24 rounded-lg border p-3 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249] ${isSelected ? 'border-[#ae6249] bg-[#fff4e8] ring-1 ring-[#ae6249]/30' : 'border-[#d8ceb8] bg-[#fdfbf5] hover:border-[#ae6249]/60'}`}>
+        return <button key={descriptor.slug} type="button" data-testid={`rules-card-${descriptor.slug}`} aria-pressed={isSelected} onClick={() => {
+          if (!isSelected) captureProductEvent('ruleset_selected', { ruleset: descriptor.slug });
+          onSelect(descriptor.profile);
+        }} className={`min-h-24 rounded-lg border p-3 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249] ${isSelected ? 'border-[#ae6249] bg-[#fff4e8] ring-1 ring-[#ae6249]/30' : 'border-[#d8ceb8] bg-[#fdfbf5] hover:border-[#ae6249]/60'}`}>
           <span className="block text-[13px] font-bold text-[#284d45]">{descriptor.title}</span>
           <span className="mt-1 block text-[11px] leading-4 text-[#66746e]">{rulesCardStatus(descriptor)}</span>
         </button>;

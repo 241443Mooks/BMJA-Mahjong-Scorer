@@ -26,6 +26,7 @@ export const footerGroups: readonly FooterGroup[] = [
     label: 'Project',
     links: [
       ['About', '/about'],
+      ['Privacy & analytics', '/privacy'],
       ['Source on GitHub', 'https://github.com/241443Mooks/BMJA-Mahjong-Scorer'],
       ['Support the project', 'https://buymeacoffee.com/sharronmo'],
     ],
@@ -35,6 +36,7 @@ export const footerGroups: readonly FooterGroup[] = [
 export const compactFooterLinks: readonly FooterLink[] = [
   ['User Guide', '/help'],
   ['About', '/about'],
+  ['Privacy', '/privacy'],
 ] as const;
 
 const isExternal = (href: string) => href.startsWith('http://') || href.startsWith('https://');

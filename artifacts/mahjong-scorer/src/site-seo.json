@@ -45,7 +45,8 @@
     { "path": "/how-it-works", "title": "How the Mahjong Table Companion Works | Mahjong Reference", "description": "See how Mahjong Reference moves from rules and game context through hand evidence, scoring, explanations, settlement and the final game record.", "indexable": true },
     { "path": "/help", "title": "User Guide & Help | Mahjong Reference", "description": "Use Mahjong Reference to track a game, score hands, understand settlement, recover play and save records, with practical help for supported Table Companion workflows.", "indexable": true },
     { "path": "/mahjong-rules-compared", "title": "British vs Riichi vs Hong Kong vs American Mahjong Rules | Mahjong Reference", "description": "Compare British, Hong Kong, Japanese Riichi, Chinese Official/MCR and American Mahjong. See how winning hands, scoring, Chows, Flowers, Jokers and special rules differ.", "indexable": true },
-    { "path": "/about", "title": "About Mahjong Reference | Mahjong Table Companion", "description": "Learn how Mahjong Reference grew from a hand scorer into a rules-aware Mahjong Table Companion, how supported rules are sourced, and how browser-side game data works.", "indexable": true }
+    { "path": "/about", "title": "About Mahjong Reference | Mahjong Table Companion", "description": "Learn how Mahjong Reference grew from a hand scorer into a rules-aware Mahjong Table Companion, how supported rules are sourced, and how browser-side game data works.", "indexable": true },
+    { "path": "/privacy", "title": "Privacy & Analytics | Mahjong Reference", "description": "See what Mahjong Reference measures, how privacy-conscious cookieless analytics are configured, and what game data stays in your browser.", "indexable": true }
   ],
   "aliases": [
     { "path": "/beginner-guide", "target": "/guide" },
