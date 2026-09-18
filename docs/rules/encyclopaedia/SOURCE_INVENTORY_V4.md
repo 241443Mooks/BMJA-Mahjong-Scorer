@@ -1,12 +1,12 @@
 # Encyclopaedia 251A1 — current source inventory manifest v4
 
-Status: **fourteen source/profile corpora inventoried; cross-family concept matching deliberately not started**  
+Status: **fifteen source/profile corpora inventoried; cross-family concept matching deliberately not started**  
 Parent: #251  
 Date: 18 September 2026
 
 ## Current coverage
 
-The conservative finite profile-local corpus now contains **at least 534 catalogue/limit/pattern/concept entries before any cross-family de-duplication**:
+The conservative finite profile-local corpus now contains **at least 565 catalogue/limit/pattern/concept entries before any cross-family de-duplication**:
 
 | Profile/source corpus | Finite inventory counted | Status / authority |
 | --- | ---: | --- |
@@ -24,12 +24,13 @@ The conservative finite profile-local corpus now contains **at least 534 catalog
 | Babcock 1923 | 24 | fixed public-domain historical edition; reference-worthy scoring concepts only |
 | SingaporeMahjong.com profile | 26 | first-party to a named web/mobile implementation; not a national standard |
 | Sichuan T/TFMJ 01-2024 | 14 | formal named group standard; full scoring table recovered through mirrored standard text |
+| SPGG Mahjong Competition Jan 2024 | 31 | first-party dated organiser competition profile; Fan/special/bonus concepts only |
 
 ```text
-18 + 84 + 10 + 81 + 41 + 33 + 12 + 44 + 56 + 36 + 55 + 24 + 26 + 14 = 534
+18 + 84 + 10 + 81 + 41 + 33 + 12 + 44 + 56 + 36 + 55 + 24 + 26 + 14 + 31 = 565
 ```
 
-**534 is profile/source-local inventory, not 534 unique public concepts or pages.**
+**565 is profile/source-local inventory, not 565 unique public concepts or pages.**
 
 ## Authority chain
 
@@ -44,6 +45,7 @@ Detailed records remain distributed deliberately:
 - `BABCOCK_1923_SOURCE_INDEX.md` — fixed historical-edition index of 24 reference-worthy Babcock scoring concepts;
 - `SINGAPORE_MAHJONG_IMPLEMENTATION_SOURCE_INDEX.md` — 26-condition Fan catalogue for the named SingaporeMahjong.com implementation profile;
 - `SICHUAN_TFMJ_2024_SOURCE_INDEX.md` — 14-category Sichuan competition standard index with MIL SBR corroboration;
+- `SPGG_2024_SOURCE_INDEX.md` — 31-concept January 2024 SPGG competition-profile index;
 - `CHINESE_CLASSICAL_SOURCE_MAP.md` — historical source/edition map; research only except for separately admitted Babcock 1923;
 - `HKMA_SOURCE_PINS.md` — first-party HKMA Clear Chapter / 16-tile source pins; not yet counted because item tables still need complete extraction;
 - `TENHOU_SANMA_PROFILE_NOTE.md` — formal first-party Sanma profile delta; deliberately not re-counted as a duplicate Riichi corpus;
@@ -94,6 +96,14 @@ The 2024 Sichuan competition standard is admitted as a **formal named group stan
 The standard defines a Bloody-style profile with required voided suit, continued play after wins, multiple winners, kong scoring and wall-exhaustion treatment. Mahjong International League material independently corroborates the broader SBR profile family and recognises Sichuan/SBR as a principal competition rules family.
 
 MIL's shorter nine-Fan SBR introduction is useful corroborating/profile evidence but is **not counted as a second corpus** merely to duplicate overlapping Sichuan concepts. See `SICHUAN_TFMJ_2024_SOURCE_INDEX.md`.
+
+### SPGG Mahjong Competition January 2024
+
+Singapore Polytechnic Graduates' Guild publishes a dated **named organiser competition profile**. The document says the rules were adapted from NUS Mahjong Club and reviewed for SPGG competition use, while explicitly acknowledging local variation.
+
+A1 counts **31 reference-worthy scoring concepts**: 18 Double/Fan conditions, 10 special/limit hands and 3 bonus winning situations. Five instant-payout rows, liability (`Bao`) rules, payment tables and penalties remain settlement/procedure evidence and are not used to inflate the concept count.
+
+The PDF retains visible revision markup on some values; the source index records those ambiguities instead of silently normalising them. See `SPGG_2024_SOURCE_INDEX.md`.
 
 ### HKMA Clear Chapter and HKMA 16-tile
 
