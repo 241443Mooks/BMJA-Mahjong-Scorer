@@ -1,12 +1,12 @@
 # Encyclopaedia 251A1 — current source inventory manifest v4
 
-Status: **thirteen source/profile corpora inventoried; cross-family concept matching deliberately not started**  
+Status: **fourteen source/profile corpora inventoried; cross-family concept matching deliberately not started**  
 Parent: #251  
 Date: 18 September 2026
 
 ## Current coverage
 
-The conservative finite profile-local corpus now contains **at least 520 catalogue/limit/pattern/concept entries before any cross-family de-duplication**:
+The conservative finite profile-local corpus now contains **at least 534 catalogue/limit/pattern/concept entries before any cross-family de-duplication**:
 
 | Profile/source corpus | Finite inventory counted | Status / authority |
 | --- | ---: | --- |
@@ -23,12 +23,13 @@ The conservative finite profile-local corpus now contains **at least 520 catalog
 | International Mahjong® Rules (IMJ®) | 55 | first-party maintained named Cantonese-derived ruleset |
 | Babcock 1923 | 24 | fixed public-domain historical edition; reference-worthy scoring concepts only |
 | SingaporeMahjong.com profile | 26 | first-party to a named web/mobile implementation; not a national standard |
+| Sichuan T/TFMJ 01-2024 | 14 | formal named group standard; full scoring table recovered through mirrored standard text |
 
 ```text
-18 + 84 + 10 + 81 + 41 + 33 + 12 + 44 + 56 + 36 + 55 + 24 + 26 = 520
+18 + 84 + 10 + 81 + 41 + 33 + 12 + 44 + 56 + 36 + 55 + 24 + 26 + 14 = 534
 ```
 
-**520 is profile/source-local inventory, not 520 unique public concepts or pages.**
+**534 is profile/source-local inventory, not 534 unique public concepts or pages.**
 
 ## Authority chain
 
@@ -42,6 +43,7 @@ Detailed records remain distributed deliberately:
 - `IMJ_SOURCE_INDEX.md` — first-party maintained 55-grade-element International Mahjong index;
 - `BABCOCK_1923_SOURCE_INDEX.md` — fixed historical-edition index of 24 reference-worthy Babcock scoring concepts;
 - `SINGAPORE_MAHJONG_IMPLEMENTATION_SOURCE_INDEX.md` — 26-condition Fan catalogue for the named SingaporeMahjong.com implementation profile;
+- `SICHUAN_TFMJ_2024_SOURCE_INDEX.md` — 14-category Sichuan competition standard index with MIL SBR corroboration;
 - `CHINESE_CLASSICAL_SOURCE_MAP.md` — historical source/edition map; research only except for separately admitted Babcock 1923;
 - `HKMA_SOURCE_PINS.md` — first-party HKMA Clear Chapter / 16-tile source pins; not yet counted because item tables still need complete extraction;
 - `TENHOU_SANMA_PROFILE_NOTE.md` — formal first-party Sanma profile delta; deliberately not re-counted as a duplicate Riichi corpus;
@@ -85,6 +87,14 @@ Its first-party rules page contains a closed `How To Earn Fan (or Doubles)` sect
 
 The source itself documents table variations and differences between its web/mobile implementations. One source row also contains a likely wording ambiguity involving “three of four Dragon Tiles”; the A1 index flags that ambiguity rather than silently correcting it.
 
+### Sichuan T/TFMJ 01-2024
+
+The 2024 Sichuan competition standard is admitted as a **formal named group standard**. Its text explicitly states that it recognises **14 scoring categories (`番种`)** and Table 1 enumerates all 14.
+
+The standard defines a Bloody-style profile with required voided suit, continued play after wins, multiple winners, kong scoring and wall-exhaustion treatment. Mahjong International League material independently corroborates the broader SBR profile family and recognises Sichuan/SBR as a principal competition rules family.
+
+MIL's shorter nine-Fan SBR introduction is useful corroborating/profile evidence but is **not counted as a second corpus** merely to duplicate overlapping Sichuan concepts. See `SICHUAN_TFMJ_2024_SOURCE_INDEX.md`.
+
 ### HKMA Clear Chapter and HKMA 16-tile
 
 The Hong Kong Mahjong Association supplies strong **first-party named profile authority** for both Hong Kong Mahjong / Clear Chapter and HKMA 16-Tile Modern Mahjong.
@@ -108,7 +118,7 @@ Further A1 expansion remains possible without starting A2:
 3. **Other named HKOS/New Chapter source profiles** — continue following direct source works; IMJ/HKMA do not exhaust historical/local variation.
 4. **Other Chinese Classical historical editions** — Mauger/Shen/other bounded editions may be inventoried only from sufficiently strong direct source pins; do not count modern composite columns as a profile.
 5. **Max Robertson** — obtain/index the intended edition directly.
-6. **Malaysia / other Southeast Asian regional profiles** — admit only a bounded named source/implementation profile rather than a generic regional synthesis.
+6. **Malaysia / other Southeast Asian regional profiles** — current Malaysian evidence shows substantial table variation; admit only a bounded named source/implementation profile rather than synthesising a national standard.
 7. **American/NMJL** — keep annual target-catalogue content licensing/access gated.
 8. **Other regional families** — only when bounded source/demand work justifies them.
 
