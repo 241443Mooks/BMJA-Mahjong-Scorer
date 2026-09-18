@@ -1,70 +1,107 @@
-# Taiwanese 16-tile — 251A1 source-recovery note
+# Taiwanese 16-tile association rules — 251A1 recovered source-local index
 
-Status: **candidate named corpus; not yet admitted to counted inventory**  
+Status: **recovered named source corpus; admitted with preserved-source evidence grade**  
 Parent: #251  
 Date checked: 18 September 2026
 
-## Candidate authority
+## Source identity and provenance
 
-Research traces repeatedly point to a Taiwanese rules page formerly hosted at:
+The scoring/rules material was formerly hosted at:
 
 - http://atawmj.org.tw/mjking.htm
 
-Surviving sources identify this material with the **中華麻將競技協會 / Chinese Mahjong Sports Association** and describe it as a Taiwanese 16-tile rules/scoring reference.
+Surviving references identify it with **中華麻將競技協會 / Chinese Mahjong Sports Association** and describe it as a Taiwanese 16-tile rules/scoring reference.
 
-The original page is not currently available to this research pass, so this file records a provenance-recovery chain rather than pretending the source has been directly verified.
+The original page is not currently available to this research pass. The corpus is therefore admitted as a **recovered/preserved copy of a named association source**, not mislabelled as directly accessed current primary material.
 
-## Surviving evidence
+## Preservation chain
 
-Useful preserved/secondary traces include:
+The strongest surviving copy is a 2024 PTT preservation post that explicitly says it is backing up the disappearing source and names the original URL:
 
-- PTT 2024 preservation post quoting substantial portions of the scoring table and explicitly naming the original `atawmj.org.tw/mjking.htm` page:
-  https://www.ptt.cc/bbs/heart/M.1710649783.A.8F3.html
-- older PTT discussion quoting the same URL and specific source-defined items such as 天聽 and 地聽:
-  https://www.ptt.cc/bbs/MJ/M.1331702578.A.8B8.html
-- Google Play listing for a Taiwanese 16-tile implementation whose developer states that the game is based on Taiwanese Mahjong rules written by 中華麻將競技協會:
-  https://play.google.com/store/apps/details?id=com.andy.mahjong&hl=zh_TW
+- https://www.ptt.cc/bbs/heart/M.1710649783.A.8F3.html
 
-Other surviving discussions also cite the same original rule URL for penalties/procedure, which strengthens the provenance trail but does not substitute for the original document.
+The preserved text contains the scoring-table heading, the full sequence of named tai items, then visibly transitions into the separate gameplay/terminology section after the final optional scored hand. That boundary makes the finite scoring inventory countable rather than an open-ended scrape.
 
-## What is recoverable already
+Independent older traces cite the same original URL and quote source-specific definitions, including 天聽 / 地聽 and penalty/procedure rules:
 
-The preserved scoring material demonstrates a bounded 16-tile `tai` system with named source-local items and interaction rules, including examples of:
+- https://www.ptt.cc/bbs/MJ/M.1331702578.A.8B8.html
+- https://www.ptt.cc/bbs/MJ/M.1331124249.A.FE8.html
 
-- Wind/Dragon set tai;
-- concealed/open-hand conditions;
-- Ping Hu / All Pungs;
-- dealer and repeat-dealer treatment;
-- single-wait and Robbing-the-Kong events;
-- flush/honour patterns;
-- concealed-triplet ladders;
-- declared-ready conditions such as 天聽 / 地聽;
-- source-specific non-combination/mandatory-coexistence treatment.
+A current Taiwanese 16-tile app listing also states that its implementation is based on Taiwanese Mahjong rules written by 中華麻將競技協會:
 
-These are evidence that a finite catalogue exists, but this pass has **not yet proved the full item count or reconstructed the complete original table without gaps**.
+- https://play.google.com/store/apps/details?id=com.andy.mahjong&hl=zh_TW
+
+These independent traces strengthen attribution to the same named source family without pretending the missing original page has been directly re-fetched.
+
+## Catalogue facts
+
+The recovered scoring section is a 16-tile additive `tai` system with source-specific combination/suppression rules. The finite scored inventory contains **36 named scored items**.
+
+`花胡` appears in the preserved text as an umbrella/procedure concept for flower-completion wins; it is **not counted as a 37th scored row** because its scored forms are separately named (`配牌花胡`, `八仙過海`, `七搶一`).
+
+## 36 source-local scored items
+
+This is minimal factual indexing data only: preserved source-local name and listed value/treatment. It does not reproduce the source explanations or examples.
+
+| # | Source-local name | Preserved value / treatment |
+| ---: | --- | --- |
+| 1 | 風字坎 | 1 tai per applicable Wind relationship; source interaction rules apply |
+| 2 | 箭字坎 | 1 tai each |
+| 3 | 門清 | 1 |
+| 4 | 全求 | 2 |
+| 5 | 半求 | 1 |
+| 6 | 平胡 | 2 |
+| 7 | 對對胡 | 4 |
+| 8 | 作莊 | 1 |
+| 9 | 連N拉N | 2N |
+| 10 | 獨聽 | 1 |
+| 11 | 搶槓 | 1 |
+| 12 | 字一色 | 16 |
+| 13 | 清一色 | 12 |
+| 14 | 湊一色 | 4 |
+| 15 | 三暗坎 | 2 |
+| 16 | 四暗坎 | 6 |
+| 17 | 五暗坎 | 16 |
+| 18 | 大四喜 | 16 |
+| 19 | 小四喜 | 8 |
+| 20 | 大三元 | 8 |
+| 21 | 小三元 | 4 |
+| 22 | 自摸 | 1 |
+| 23 | 不求.自摸 | 2 |
+| 24 | 槓上開花 | 1 plus source-defined self-draw treatment |
+| 25 | 海底撈月 | 1 plus source-defined self-draw treatment |
+| 26 | 花牌 | variable: individual/matched-set/full-flower treatment |
+| 27 | 配牌花胡 | 12 |
+| 28 | 八仙過海 | 8 |
+| 29 | 七搶一 | 8 |
+| 30 | 天聽 | 8 |
+| 31 | 地聽 | 4 |
+| 32 | 地聽一發 | 8 |
+| 33 | 天胡 | 16 |
+| 34 | 地胡 | 16 |
+| 35 | 人胡 | 16 |
+| 36 | 嚦咕嚦咕（選用） | 8; explicitly optional in the preserved source |
 
 ## 251A1 treatment
 
-Do **not** add Taiwanese entries to the numerical A1 total yet.
+Admit these as **36 Taiwanese-association-source-local scoring records**.
 
-The next admission gate is:
+Do not generalise them into “Taiwanese Mahjong universally”. Other Taiwanese tables use overlapping names with materially different tai values and local rules. The Mahjong Wiki Taiwanese comparison page, for example, explicitly compares differing IGS and LA rule values rather than presenting one universal table.
 
-1. recover an archived/original copy of `atawmj.org.tw/mjking.htm`, or
-2. reconstruct the complete finite scoring table from sufficiently independent preserved copies with clear gap checking;
-3. pin the association/profile identity and source date/version as far as the evidence permits;
-4. itemise the tai catalogue conservatively;
-5. only then add the corpus to the counted A1 manifest.
+Do not cross-map these records to MCR, Riichi, GMCR, Zung Jung or other profiles yet. That is 251A2 work.
 
-Generic “Taiwanese Mahjong” tables must not be substituted for this named candidate profile merely because individual item names overlap.
+## Evidence grade and later work
 
-## Why keep this note now
+Evidence grade: **named association source recovered through a near-complete preserved copy, independently corroborated by older quotations and an implementation attribution; original page currently unavailable**.
 
-The source trail is strong enough that future research should not restart from generic Taiwanese-search results. It is not yet strong enough to claim a complete source-local inventory.
+If an archived capture of the original `atawmj.org.tw/mjking.htm` is later recovered, compare it line-by-line against this index and correct any transcription/value discrepancy before runtime implementation.
 
-That distinction preserves the A1 rule:
+Later executable-profile work should add:
 
-```text
-recoverable source evidence    yes
-complete counted corpus        not yet
-cross-family concept identity  no
-```
+- stable profile/catalogue identity and semantic revision;
+- exact 16-tile shape/evidence model;
+- interaction/suppression rules;
+- dealer/repeat-dealer settlement and progression semantics;
+- flower-event handling;
+- source locators per item;
+- tests for the source-specific edge cases.
