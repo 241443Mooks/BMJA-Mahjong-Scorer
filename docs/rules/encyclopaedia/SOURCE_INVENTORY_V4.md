@@ -1,12 +1,12 @@
 # Encyclopaedia 251A1 — current source inventory manifest v4
 
-Status: **ten source/profile corpora inventoried; cross-family concept matching deliberately not started**  
+Status: **eleven source/profile corpora inventoried; cross-family concept matching deliberately not started**  
 Parent: #251  
 Date: 18 September 2026
 
 ## Current coverage
 
-The conservative finite profile-local corpus now contains **at least 415 catalogue/limit/pattern entries before any cross-family de-duplication**:
+The conservative finite profile-local corpus now contains **at least 470 catalogue/limit/pattern entries before any cross-family de-duplication**:
 
 | Profile/source corpus | Finite inventory counted | Status / authority |
 | --- | ---: | --- |
@@ -20,12 +20,13 @@ The conservative finite profile-local corpus now contains **at least 415 catalog
 | Zung Jung v3.3 | 44 | official Alan Kwan pattern catalogue |
 | Guangdong Mahjong Competition Rules (GMCR) | 56 | named synthetic profile; accessible published scoring source is secondary/curated |
 | Taiwanese 16-tile association rules | 36 | named association source recovered through preserved copy; original page unavailable |
+| International Mahjong® Rules (IMJ®) | 55 | first-party maintained named Cantonese-derived ruleset |
 
 ```text
-18 + 84 + 10 + 81 + 41 + 33 + 12 + 44 + 56 + 36 = 415
+18 + 84 + 10 + 81 + 41 + 33 + 12 + 44 + 56 + 36 + 55 = 470
 ```
 
-**415 is profile-local source inventory, not 415 unique public concepts or pages.**
+**470 is profile-local source inventory, not 470 unique public concepts or pages.**
 
 ## Authority chain
 
@@ -36,6 +37,7 @@ Detailed records remain distributed deliberately:
 - `ZUNG_JUNG_V33_SOURCE_INDEX.md` — source-local 44-pattern Zung Jung v3.3 index;
 - `GMCR_SOURCE_INDEX.md` — source-local 56-condition GMCR admission and evidence-grade note;
 - `TAIWANESE_16_TILE_SOURCE_RECOVERY.md` — recovered 36-item Taiwanese association scoring index and provenance chain;
+- `IMJ_SOURCE_INDEX.md` — first-party maintained 55-grade-element International Mahjong index;
 - this file — current coverage manifest.
 
 Where a dedicated rules/profile catalogue already exists, that catalogue remains authoritative. The Encyclopaedia inventory does not become a second scoring database.
@@ -50,17 +52,23 @@ Current accessible GMCR source quality is weaker than the official-source Zung J
 
 ## Taiwanese 16-tile admission decision
 
-The former `atawmj.org.tw/mjking.htm` association rules are now admitted as a **recovered named corpus** because a preservation copy contains the scoring-table heading, the complete finite sequence of scored items, and the visible transition into the subsequent gameplay/terminology section. Older independent quotations cite the same original URL and reproduce source-specific rules.
+The former `atawmj.org.tw/mjking.htm` association rules are admitted as a **recovered named corpus** because a preservation copy contains the scoring-table heading, the complete finite sequence of scored items, and the visible transition into the subsequent gameplay/terminology section. Older independent quotations cite the same original URL and reproduce source-specific rules.
 
 The recovered scoring inventory contains **36 scored named items**. `花胡` is treated as an umbrella/procedure concept rather than an additional scored row because its scored forms are separately named.
 
 This is not evidence that all Taiwanese Mahjong tables use identical values. The evidence grade remains explicit: preserved copy of a named association source, not direct current access to the original page.
 
+## International Mahjong admission decision
+
+International Mahjong® Rules (IMJ®) is admitted as a **first-party maintained named corpus**. Its source site states that it was created from Cantonese/Hong Kong Mahjong gameplay and then-common Hong Kong house rules, but it is a distinct maintained ruleset with deliberate clarifications/modifications.
+
+The first-party Grade Elements table explicitly states that it is the complete set of **55 valid grade elements**. IMJ must not be relabelled as generic HKOS.
+
 ## Remaining pre-runtime inventory frontier
 
 Further A1 expansion remains possible without starting A2:
 
-1. **Named Hong Kong Old Style / New Chapter subprofiles** — follow source works rather than treating generic HKOS synthesis as one profile.
+1. **Named Hong Kong Old Style / New Chapter source profiles** — continue following direct source works rather than treating generic HKOS synthesis as one profile. IMJ now provides one strong Cantonese-derived profile but does not exhaust HKOS/New Chapter.
 2. **Chinese Classical historical profiles** — pursue Early Classical / Late Classical / Shanghai New Style / Hong Kong New Style only with sufficiently strong historical source pins.
 3. **Max Robertson** — obtain/index the intended edition directly.
 4. **Sanma** — select a formal named target profile/edition rather than architecture-only `mt-sanma`.
