@@ -32,6 +32,8 @@ Current inventory records:
 - `IMJ_SOURCE_INDEX.md` — first-party maintained 55-grade-element International Mahjong index;
 - `BABCOCK_1923_SOURCE_INDEX.md` — fixed public-domain 1923 source index with 24 reference-worthy scoring concepts;
 - `CHINESE_CLASSICAL_SOURCE_MAP.md` — historical source/edition map; research only except for separately admitted Babcock 1923;
+- `HKMA_SOURCE_PINS.md` — first-party HKMA Clear Chapter and 16-tile profile pins; tables not yet counted;
+- `TENHOU_SANMA_PROFILE_NOTE.md` — first-party Tenhou ranked Sanma delta; deliberately not a duplicate counted Riichi corpus;
 - `SOURCE_INVENTORY_V4.md` — **current coverage manifest: 12 corpora / 494 finite source-local entries**.
 
 `SOURCE_INVENTORY_V4.md` is the current coverage manifest. It points back to earlier inventory passes and to underlying source/profile files rather than duplicating all rules data.
@@ -77,11 +79,13 @@ If an inventory statement conflicts with the named source corpus, the source cor
 
 ## Inventory boundary rule
 
-Not every score-table row is an Encyclopaedia concept.
+Not every score-table row is an Encyclopaedia concept, and not every profile deserves a second copy of an inherited catalogue.
 
 Historical/Classical sources may mix primitive arithmetic mechanics with named hands, patterns, event bonuses and configurable optional treatments. Count the latter when they are useful reference concepts; keep primitive set/pair arithmetic in the future rules/scoring model rather than inflating A1 page-like counts.
 
-`BABCOCK_1923_SOURCE_INDEX.md` is the first explicit application of this boundary.
+Likewise, a derived profile such as Tenhou Sanma may be important because of its profile delta while inheriting an existing Riichi yaku vocabulary. Record the delta rather than automatically duplicating the whole inherited catalogue.
+
+`BABCOCK_1923_SOURCE_INDEX.md` and `TENHOU_SANMA_PROFILE_NOTE.md` demonstrate these two boundaries.
 
 ## Explicit non-goals for 251A1
 
