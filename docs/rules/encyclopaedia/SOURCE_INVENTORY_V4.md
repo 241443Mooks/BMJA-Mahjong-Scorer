@@ -41,50 +41,67 @@ Detailed records remain distributed deliberately:
 - `IMJ_SOURCE_INDEX.md` — first-party maintained 55-grade-element International Mahjong index;
 - `BABCOCK_1923_SOURCE_INDEX.md` — fixed historical-edition index of 24 reference-worthy Babcock scoring concepts;
 - `CHINESE_CLASSICAL_SOURCE_MAP.md` — historical source/edition map; research only except for separately admitted Babcock 1923;
+- `HKMA_SOURCE_PINS.md` — first-party HKMA Clear Chapter / 16-tile source pins; not yet counted because item tables still need complete extraction;
+- `TENHOU_SANMA_PROFILE_NOTE.md` — formal first-party Sanma profile delta; deliberately not re-counted as a duplicate Riichi corpus;
 - this file — current coverage manifest.
 
 Where a dedicated rules/profile catalogue already exists, that catalogue remains authoritative. The Encyclopaedia inventory does not become a second scoring database.
 
-## GMCR admission decision
+## Admission decisions from the 18 September regional pass
+
+### GMCR
 
 GMCR is admitted because it is a **bounded named ruleset** with a published finite catalogue of 56 winning conditions, explicit scoring restrictions and a defined settlement model.
 
-It is not used as evidence that generic “Guangdong Mahjong” universally has those 56 conditions. The separate comparative Guangdong Style material remains research evidence only.
+It is not used as evidence that generic “Guangdong Mahjong” universally has those 56 conditions. Current accessible source quality is labelled secondary/curated rather than silently promoted to federation/primary status.
 
-Current accessible GMCR source quality is weaker than the official-source Zung Jung/MCR/Riichi corpora, so its authority label remains explicit rather than being silently promoted to federation/primary status.
+### Taiwanese 16-tile association rules
 
-## Taiwanese 16-tile admission decision
-
-The former `atawmj.org.tw/mjking.htm` association rules are admitted as a **recovered named corpus** because a preservation copy contains the scoring-table heading, the complete finite sequence of scored items, and the visible transition into the subsequent gameplay/terminology section. Older independent quotations cite the same original URL and reproduce source-specific rules.
+The former `atawmj.org.tw/mjking.htm` association rules are admitted as a **recovered named corpus** because a preservation copy contains the scoring-table heading, complete finite sequence of scored items and visible transition into the following rules section. Older independent quotations cite the same original URL and reproduce source-specific rules.
 
 The recovered scoring inventory contains **36 scored named items**. `花胡` is treated as an umbrella/procedure concept rather than an additional scored row because its scored forms are separately named.
 
 This is not evidence that all Taiwanese Mahjong tables use identical values. The evidence grade remains explicit: preserved copy of a named association source, not direct current access to the original page.
 
-## International Mahjong admission decision
+### International Mahjong
 
-International Mahjong® Rules (IMJ®) is admitted as a **first-party maintained named corpus**. Its source site states that it was created from Cantonese/Hong Kong Mahjong gameplay and then-common Hong Kong house rules, but it is a distinct maintained ruleset with deliberate clarifications/modifications.
+International Mahjong® Rules (IMJ®) is admitted as a **first-party maintained named corpus**. Its source site describes Cantonese/Hong Kong origins, but IMJ is a distinct maintained ruleset with deliberate clarifications/modifications.
 
 The first-party Grade Elements table explicitly states that it is the complete set of **55 valid grade elements**. IMJ must not be relabelled as generic HKOS.
 
-## Babcock 1923 admission decision
+### Babcock 1923
 
 Babcock's fixed 1923 second edition is admitted as a **public-domain historical source corpus**.
 
-Its raw Standard Score Sheet contains both primitive arithmetic rows and higher-level bonuses/patterns. To avoid inflating the Encyclopaedia with mechanics that belong in a future Classical scorer, the A1 count excludes ordinary pung/kong/pair point rows and the base 20-point win. It counts **24 reference-worthy source-local concepts** across standard bonuses, doubling conditions, special scores and optional treatments.
+Its Standard Score Sheet mixes primitive arithmetic rows with higher-level bonuses/patterns. To avoid inflating the Encyclopaedia with mechanics that belong in a future Classical scorer, A1 excludes ordinary pung/kong/pair point rows and the base 20-point win. It counts **24 reference-worthy source-local concepts** across standard bonuses, doubling conditions, special scores and optional treatments.
 
-Optional Chapter VII treatments remain explicitly optional; they are not silently promoted into universal or mandatory Babcock rules.
+### HKMA Clear Chapter and HKMA 16-tile
+
+The Hong Kong Mahjong Association now supplies strong **first-party named profile authority** for both Hong Kong Mahjong / Clear Chapter and HKMA 16-Tile Modern Mahjong.
+
+They are **not counted yet** because the public Google Docs rendering has not yielded a fully gap-checkable list of scoring rows. For Clear Chapter the accessible document outline confirms scoring bands at 1, 3, 5, 7 and 10-faan ceiling, but headings alone are insufficient for a finite A1 count.
+
+This is now a source-extraction gate, not an authority-selection gate. See `HKMA_SOURCE_PINS.md`.
+
+### Tenhou ranked Sanma
+
+Tenhou's first-party manual gives a formal named three-player profile and explicitly lists the delta from ranked four-player play, including tile-set changes, no chi and North/nuki-dora semantics.
+
+A1 deliberately **does not re-count the inherited Tenhou/Riichi yaku catalogue** as a new corpus merely because the table profile is three-player. `TENHOU_SANMA_PROFILE_NOTE.md` records the profile delta and future runtime pressure without inflating the inventory total.
 
 ## Remaining pre-runtime inventory frontier
 
 Further A1 expansion remains possible without starting A2:
 
-1. **Named Hong Kong Old Style / New Chapter source profiles** — continue following direct source works rather than treating generic HKOS synthesis as one profile. IMJ now provides one strong Cantonese-derived profile but does not exhaust HKOS/New Chapter.
-2. **Other Chinese Classical historical editions** — Mauger/Shen/other bounded editions may be inventoried only from sufficiently strong direct source pins; do not count modern composite columns as a profile.
-3. **Max Robertson** — obtain/index the intended edition directly.
-4. **Sanma** — select a formal named target profile/edition rather than architecture-only `mt-sanma`.
-5. **American/NMJL** — keep annual target-catalogue content licensing/access gated.
-6. **Other regional families** — only when bounded source/demand work justifies them.
+1. **HKMA Clear Chapter** — recover/extract the complete first-party Faan Items table and then count it.
+2. **HKMA 16-Tile Modern Mahjong** — gap-check the first-party `番種一覽表` before admission.
+3. **Other named HKOS/New Chapter source profiles** — continue following direct source works; IMJ/HKMA do not exhaust historical/local variation.
+4. **Other Chinese Classical historical editions** — Mauger/Shen/other bounded editions may be inventoried only from sufficiently strong direct source pins; do not count modern composite columns as a profile.
+5. **Max Robertson** — obtain/index the intended edition directly.
+6. **American/NMJL** — keep annual target-catalogue content licensing/access gated.
+7. **Other regional families** — only when bounded source/demand work justifies them.
+
+The generic `Sanma` frontier is now narrowed: Tenhou provides one formal profile, but its inherited Riichi catalogue is not separately counted. Additional Sanma profiles should only be added when they contribute materially distinct source-local scoring concepts or satisfy a real product/runtime need.
 
 Architecture-only paper manifests and generic comparison tables do not count as source inventory truth.
 
