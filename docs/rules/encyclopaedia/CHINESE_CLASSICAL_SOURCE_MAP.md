@@ -1,10 +1,10 @@
 # Chinese Classical — 251A1 historical source map
 
-Status: **research map only; no counted corpus admitted yet**  
+Status: **research map; Babcock 1923 separately admitted, other editions remain gated**  
 Parent: #251  
 Date checked: 18 September 2026
 
-## Why this is not one A1 corpus yet
+## Why this is not one A1 corpus
 
 Modern comparison pages use labels such as “Early Classical”, “Late Classical”, “Shanghai New Style” and “Hong Kong New Style”, but those labels can represent reconstructions or families assembled from multiple historical sources.
 
@@ -22,23 +22,40 @@ Accessible source page:
 
 Mahjong history references identify Mauger's `Ma-Tchio-Pai` section as an early rules description. This is potentially useful for a **named 1915 historical profile**, but it should be indexed from the actual article rather than from a modern “Early Classical” summary.
 
+The public HTML page provides the article and download links, but this research pass did not establish a closed item-level scoring catalogue without deeper source reading. It therefore remains a source pin, not a counted A1 corpus.
+
 ### Shen Yifan — early Chinese manual / 1924 edition scan
 
-Mahjong history research identifies `Hui Tu Ma Qiao Pai Pu` by Shen Yifan as an early Chinese book dedicated to Mahjong, with a 1924 edition scan now available through modern archival links.
+Mahjong history research identifies `Hui Tu Ma Qiao Pai Pu` / `Huitu maque paipu` by Shen Yifan as an early Chinese Mahjong manual, first published in 1914. A 1924-edition scan has been recovered through modern archival links.
 
 Research locator:
 
 - https://www.sloperama.com/mjfaq/mjfaq11h.html
 
-Before admission, pin the exact scanned edition and determine whether its scoring material is sufficiently complete and extractable for a finite source-local catalogue.
+The scan is a substantial Chinese manual. Converting it into a scoring inventory requires a careful page-level reading/translation and should not be rushed into an A1 count from later summaries. It remains a high-quality historical source pin.
 
-### J. P. Babcock — 1923 rules
+### J. P. Babcock — 1923 rules — ADMITTED SEPARATELY
 
-A public-domain 1923 edition is available on Wikisource:
+A public-domain 1923 second edition is available on Wikisource:
 
 - https://en.wikisource.org/wiki/Babcock%27s_Rules_for_Mah-Jongg
 
-Its contents explicitly include a standard score sheet, scoring aids, worked scoring examples and optional scores. This makes it a strong candidate for a **named historical Babcock corpus**, but it is a commercial/Western codification of Mahjong rather than automatically “Chinese Classical itself”.
+Its standard score sheet and optional scoring material were reviewed during this pass. A1 now counts **24 reference-worthy Babcock-local concepts** while excluding primitive pung/kong/pair arithmetic and the base win.
+
+See `BABCOCK_1923_SOURCE_INDEX.md` for the admitted corpus.
+
+Babcock remains a specific Western codification, not a synonym for Chinese Classical as a whole.
+
+### Tchou Kia-kien / Zhu Jiajian — 1924
+
+Direct historical edition:
+
+- Tchou Kia-kien, *Le Mah-Jong tel qu'il est joué par les Chinois*, Les Éditions du Monde Moderne, Paris, 1924.
+- accessible historical-library page: https://www.chineancienne.fr/d%C3%A9but-20e-s/tchou-kia-kien-le-mah-jong/
+
+The page exposes substantial direct text and downloadable edition files. Later comparative scholarship identifies **17 special hands** in Tchou 1924, making it a promising finite historical corpus candidate.
+
+However, A1 does **not** promote that secondary count into source truth. Admission still requires extracting and gap-checking the 17 source-local names/treatments from the direct edition itself.
 
 ### Historical comparative scholarship
 
@@ -50,24 +67,27 @@ Useful secondary mapping sources include:
 
 These are valuable for deciding which historical editions to compare, but should not replace the named original sources when an original is available.
 
+One comparative source is particularly useful as a research map because it reports different finite special-hand counts across historical editions (for example Babcock 1923 and Tchou 1924). Those figures are leads for direct extraction, not automatic A1 counts.
+
 ## Candidate A1 strategy
 
-Do not create one generic `Chinese Classical` row set from the Mahjong Wiki comparison table.
+Do not create one generic `Chinese Classical` row set from a modern comparison table.
 
-Instead, future A1 work should choose bounded historical source profiles such as:
+Continue with bounded historical source profiles such as:
 
 ```text
-Mauger 1915 description
-Babcock 1923 edition
-Shen Yifan 1924 edition scan
-[other specifically pinned source/edition]
+Mauger 1915 description            [source pinned]
+Shen Yifan 1924-edition scan       [source pinned; deep reading needed]
+Babcock 1923 second edition        [24 concepts admitted separately]
+Tchou Kia-kien 1924                [source pinned; 17-hand extraction lead]
+[other specifically pinned edition]
 ```
 
 For each candidate:
 
 1. pin edition/date and provenance;
 2. determine the finite scoring vocabulary actually present in that source;
-3. distinguish basic set/pair/bonus scoring from named limit/special-hand concepts;
+3. distinguish basic set/pair/bonus arithmetic from named limit/special-hand concepts;
 4. record source-local names/values only;
 5. do not infer that similarly named items across editions are identical;
 6. only then decide whether the source is useful enough to add to the counted A1 total.
