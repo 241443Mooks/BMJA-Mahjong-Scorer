@@ -1,12 +1,12 @@
 # Encyclopaedia 251A1 — current source inventory manifest v4
 
-Status: **twelve source/profile corpora inventoried; cross-family concept matching deliberately not started**  
+Status: **thirteen source/profile corpora inventoried; cross-family concept matching deliberately not started**  
 Parent: #251  
 Date: 18 September 2026
 
 ## Current coverage
 
-The conservative finite profile-local corpus now contains **at least 494 catalogue/limit/pattern/concept entries before any cross-family de-duplication**:
+The conservative finite profile-local corpus now contains **at least 520 catalogue/limit/pattern/concept entries before any cross-family de-duplication**:
 
 | Profile/source corpus | Finite inventory counted | Status / authority |
 | --- | ---: | --- |
@@ -22,12 +22,13 @@ The conservative finite profile-local corpus now contains **at least 494 catalog
 | Taiwanese 16-tile association rules | 36 | named association source recovered through preserved copy; original page unavailable |
 | International Mahjong® Rules (IMJ®) | 55 | first-party maintained named Cantonese-derived ruleset |
 | Babcock 1923 | 24 | fixed public-domain historical edition; reference-worthy scoring concepts only |
+| SingaporeMahjong.com profile | 26 | first-party to a named web/mobile implementation; not a national standard |
 
 ```text
-18 + 84 + 10 + 81 + 41 + 33 + 12 + 44 + 56 + 36 + 55 + 24 = 494
+18 + 84 + 10 + 81 + 41 + 33 + 12 + 44 + 56 + 36 + 55 + 24 + 26 = 520
 ```
 
-**494 is profile/source-local inventory, not 494 unique public concepts or pages.**
+**520 is profile/source-local inventory, not 520 unique public concepts or pages.**
 
 ## Authority chain
 
@@ -40,6 +41,7 @@ Detailed records remain distributed deliberately:
 - `TAIWANESE_16_TILE_SOURCE_RECOVERY.md` — recovered 36-item Taiwanese association scoring index and provenance chain;
 - `IMJ_SOURCE_INDEX.md` — first-party maintained 55-grade-element International Mahjong index;
 - `BABCOCK_1923_SOURCE_INDEX.md` — fixed historical-edition index of 24 reference-worthy Babcock scoring concepts;
+- `SINGAPORE_MAHJONG_IMPLEMENTATION_SOURCE_INDEX.md` — 26-condition Fan catalogue for the named SingaporeMahjong.com implementation profile;
 - `CHINESE_CLASSICAL_SOURCE_MAP.md` — historical source/edition map; research only except for separately admitted Babcock 1923;
 - `HKMA_SOURCE_PINS.md` — first-party HKMA Clear Chapter / 16-tile source pins; not yet counted because item tables still need complete extraction;
 - `TENHOU_SANMA_PROFILE_NOTE.md` — formal first-party Sanma profile delta; deliberately not re-counted as a duplicate Riichi corpus;
@@ -75,9 +77,17 @@ Babcock's fixed 1923 second edition is admitted as a **public-domain historical 
 
 Its Standard Score Sheet mixes primitive arithmetic rows with higher-level bonuses/patterns. To avoid inflating the Encyclopaedia with mechanics that belong in a future Classical scorer, A1 excludes ordinary pung/kong/pair point rows and the base 20-point win. It counts **24 reference-worthy source-local concepts** across standard bonuses, doubling conditions, special scores and optional treatments.
 
+### SingaporeMahjong.com profile
+
+The SingaporeMahjong.com rules are admitted as a **bounded named implementation profile**, not as a national or association standard for all Singapore Mahjong.
+
+Its first-party rules page contains a closed `How To Earn Fan (or Doubles)` section with **26 Fan conditions**, ending immediately before `Maximum Fan Limit`. Side payouts and later `Pay All` liability rules are settlement/procedure material and are not added to the Fan catalogue count.
+
+The source itself documents table variations and differences between its web/mobile implementations. One source row also contains a likely wording ambiguity involving “three of four Dragon Tiles”; the A1 index flags that ambiguity rather than silently correcting it.
+
 ### HKMA Clear Chapter and HKMA 16-tile
 
-The Hong Kong Mahjong Association now supplies strong **first-party named profile authority** for both Hong Kong Mahjong / Clear Chapter and HKMA 16-Tile Modern Mahjong.
+The Hong Kong Mahjong Association supplies strong **first-party named profile authority** for both Hong Kong Mahjong / Clear Chapter and HKMA 16-Tile Modern Mahjong.
 
 They are **not counted yet** because the public Google Docs rendering has not yielded a fully gap-checkable list of scoring rows. For Clear Chapter the accessible document outline confirms scoring bands at 1, 3, 5, 7 and 10-faan ceiling, but headings alone are insufficient for a finite A1 count.
 
@@ -98,8 +108,9 @@ Further A1 expansion remains possible without starting A2:
 3. **Other named HKOS/New Chapter source profiles** — continue following direct source works; IMJ/HKMA do not exhaust historical/local variation.
 4. **Other Chinese Classical historical editions** — Mauger/Shen/other bounded editions may be inventoried only from sufficiently strong direct source pins; do not count modern composite columns as a profile.
 5. **Max Robertson** — obtain/index the intended edition directly.
-6. **American/NMJL** — keep annual target-catalogue content licensing/access gated.
-7. **Other regional families** — only when bounded source/demand work justifies them.
+6. **Malaysia / other Southeast Asian regional profiles** — admit only a bounded named source/implementation profile rather than a generic regional synthesis.
+7. **American/NMJL** — keep annual target-catalogue content licensing/access gated.
+8. **Other regional families** — only when bounded source/demand work justifies them.
 
 The generic `Sanma` frontier is now narrowed: Tenhou provides one formal profile, but its inherited Riichi catalogue is not separately counted. Additional Sanma profiles should only be added when they contribute materially distinct source-local scoring concepts or satisfy a real product/runtime need.
 
