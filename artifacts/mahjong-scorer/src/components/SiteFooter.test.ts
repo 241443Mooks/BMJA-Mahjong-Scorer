@@ -25,7 +25,7 @@ describe('site footer', () => {
         label: 'Project',
         links: [
           ['About', '/about'],
-          ['Source on GitHub', 'https://github.com/241443Mooks/BMJA-Mahjong-Scorer'],
+          ['Privacy & analytics', '/privacy'],
           ['Support the project', 'https://buymeacoffee.com/sharronmo'],
         ],
       },
@@ -36,6 +36,7 @@ describe('site footer', () => {
     expect(compactFooterLinks).toEqual([
       ['User Guide', '/help'],
       ['About', '/about'],
+      ['Privacy', '/privacy'],
     ]);
   });
 
