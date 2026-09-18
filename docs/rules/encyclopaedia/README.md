@@ -27,9 +27,11 @@ Current inventory records:
 - `SOURCE_INVENTORY_V1.md` — initial five-corpus pass: BMJA, Thompson & Maloney, Buzzard, MCR and EMA Riichi;
 - `SOURCE_INVENTORY_V2.md` — adds Outside the Box and Mahjong Time European Classical and records the wider inventory frontier;
 - `ZUNG_JUNG_V33_SOURCE_INDEX.md` — official-source 44-pattern Zung Jung v3.3 index;
-- `SOURCE_INVENTORY_V3.md` — **current coverage manifest: 8 corpora / 323 finite profile-local entries**.
+- `GMCR_SOURCE_INDEX.md` — named GMCR 56-condition source-local admission and evidence-grade note;
+- `TAIWANESE_16_TILE_SOURCE_RECOVERY.md` — association-derived Taiwanese 16-tile provenance recovery; not yet counted;
+- `SOURCE_INVENTORY_V4.md` — **current coverage manifest: 9 corpora / 379 finite profile-local entries**.
 
-`SOURCE_INVENTORY_V3.md` is the current coverage manifest. It points back to the earlier inventory passes and to underlying source/profile files rather than duplicating all rules data.
+`SOURCE_INVENTORY_V4.md` is the current coverage manifest. It points back to earlier inventory passes and to underlying source/profile files rather than duplicating all rules data.
 
 ### 251A2 — concept crosswalk — held until runtime profiles exist
 
@@ -38,6 +40,7 @@ After Buzzard 2000, MCR and Riichi are executable on the shared rules platform, 
 - exact same implemented concept;
 - sourced alias;
 - genuine equivalent;
+- narrower/broader treatment where justified;
 - partial analogue;
 - related but materially different;
 - unrelated lookalike.
@@ -64,6 +67,8 @@ Do not reverse that flow by inventing Encyclopaedia IDs and then forcing the rul
 ## Authority rule
 
 The inventory documents are **indexes/manifests**, not duplicate rulebooks. Where a profile already has a complete item-level catalogue, that source-owned catalogue remains authoritative and this directory points to it rather than copying hundreds of rows into another drifting table.
+
+Authority grades must stay explicit. A named secondary/curated profile source may be useful A1 evidence without being mislabelled as a federation or primary historical authority.
 
 If an inventory statement conflicts with the named source corpus, the source corpus wins.
 
