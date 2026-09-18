@@ -30,8 +30,9 @@ Current inventory records:
 - `GMCR_SOURCE_INDEX.md` — named GMCR 56-condition source-local admission and evidence-grade note;
 - `TAIWANESE_16_TILE_SOURCE_RECOVERY.md` — recovered 36-item Taiwanese 16-tile association scoring index and provenance chain;
 - `IMJ_SOURCE_INDEX.md` — first-party maintained 55-grade-element International Mahjong index;
-- `CHINESE_CLASSICAL_SOURCE_MAP.md` — historical source/edition map; research only, not counted;
-- `SOURCE_INVENTORY_V4.md` — **current coverage manifest: 11 corpora / 470 finite profile-local entries**.
+- `BABCOCK_1923_SOURCE_INDEX.md` — fixed public-domain 1923 source index with 24 reference-worthy scoring concepts;
+- `CHINESE_CLASSICAL_SOURCE_MAP.md` — historical source/edition map; research only except for separately admitted Babcock 1923;
+- `SOURCE_INVENTORY_V4.md` — **current coverage manifest: 12 corpora / 494 finite source-local entries**.
 
 `SOURCE_INVENTORY_V4.md` is the current coverage manifest. It points back to earlier inventory passes and to underlying source/profile files rather than duplicating all rules data.
 
@@ -73,6 +74,14 @@ The inventory documents are **indexes/manifests**, not duplicate rulebooks. Wher
 Authority grades must stay explicit. A first-party source, a named secondary/curated profile source, a recovered copy and a modern historical synthesis are all different evidence classes and must not be collapsed into one label.
 
 If an inventory statement conflicts with the named source corpus, the source corpus wins.
+
+## Inventory boundary rule
+
+Not every score-table row is an Encyclopaedia concept.
+
+Historical/Classical sources may mix primitive arithmetic mechanics with named hands, patterns, event bonuses and configurable optional treatments. Count the latter when they are useful reference concepts; keep primitive set/pair arithmetic in the future rules/scoring model rather than inflating A1 page-like counts.
+
+`BABCOCK_1923_SOURCE_INDEX.md` is the first explicit application of this boundary.
 
 ## Explicit non-goals for 251A1
 
