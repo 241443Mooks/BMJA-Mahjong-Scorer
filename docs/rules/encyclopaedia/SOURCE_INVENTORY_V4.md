@@ -1,12 +1,12 @@
 # Encyclopaedia 251A1 — current source inventory manifest v4
 
-Status: **eleven source/profile corpora inventoried; cross-family concept matching deliberately not started**  
+Status: **twelve source/profile corpora inventoried; cross-family concept matching deliberately not started**  
 Parent: #251  
 Date: 18 September 2026
 
 ## Current coverage
 
-The conservative finite profile-local corpus now contains **at least 470 catalogue/limit/pattern entries before any cross-family de-duplication**:
+The conservative finite profile-local corpus now contains **at least 494 catalogue/limit/pattern/concept entries before any cross-family de-duplication**:
 
 | Profile/source corpus | Finite inventory counted | Status / authority |
 | --- | ---: | --- |
@@ -21,12 +21,13 @@ The conservative finite profile-local corpus now contains **at least 470 catalog
 | Guangdong Mahjong Competition Rules (GMCR) | 56 | named synthetic profile; accessible published scoring source is secondary/curated |
 | Taiwanese 16-tile association rules | 36 | named association source recovered through preserved copy; original page unavailable |
 | International Mahjong® Rules (IMJ®) | 55 | first-party maintained named Cantonese-derived ruleset |
+| Babcock 1923 | 24 | fixed public-domain historical edition; reference-worthy scoring concepts only |
 
 ```text
-18 + 84 + 10 + 81 + 41 + 33 + 12 + 44 + 56 + 36 + 55 = 470
+18 + 84 + 10 + 81 + 41 + 33 + 12 + 44 + 56 + 36 + 55 + 24 = 494
 ```
 
-**470 is profile-local source inventory, not 470 unique public concepts or pages.**
+**494 is profile/source-local inventory, not 494 unique public concepts or pages.**
 
 ## Authority chain
 
@@ -38,6 +39,8 @@ Detailed records remain distributed deliberately:
 - `GMCR_SOURCE_INDEX.md` — source-local 56-condition GMCR admission and evidence-grade note;
 - `TAIWANESE_16_TILE_SOURCE_RECOVERY.md` — recovered 36-item Taiwanese association scoring index and provenance chain;
 - `IMJ_SOURCE_INDEX.md` — first-party maintained 55-grade-element International Mahjong index;
+- `BABCOCK_1923_SOURCE_INDEX.md` — fixed historical-edition index of 24 reference-worthy Babcock scoring concepts;
+- `CHINESE_CLASSICAL_SOURCE_MAP.md` — historical source/edition map; research only except for separately admitted Babcock 1923;
 - this file — current coverage manifest.
 
 Where a dedicated rules/profile catalogue already exists, that catalogue remains authoritative. The Encyclopaedia inventory does not become a second scoring database.
@@ -64,12 +67,20 @@ International Mahjong® Rules (IMJ®) is admitted as a **first-party maintained 
 
 The first-party Grade Elements table explicitly states that it is the complete set of **55 valid grade elements**. IMJ must not be relabelled as generic HKOS.
 
+## Babcock 1923 admission decision
+
+Babcock's fixed 1923 second edition is admitted as a **public-domain historical source corpus**.
+
+Its raw Standard Score Sheet contains both primitive arithmetic rows and higher-level bonuses/patterns. To avoid inflating the Encyclopaedia with mechanics that belong in a future Classical scorer, the A1 count excludes ordinary pung/kong/pair point rows and the base 20-point win. It counts **24 reference-worthy source-local concepts** across standard bonuses, doubling conditions, special scores and optional treatments.
+
+Optional Chapter VII treatments remain explicitly optional; they are not silently promoted into universal or mandatory Babcock rules.
+
 ## Remaining pre-runtime inventory frontier
 
 Further A1 expansion remains possible without starting A2:
 
 1. **Named Hong Kong Old Style / New Chapter source profiles** — continue following direct source works rather than treating generic HKOS synthesis as one profile. IMJ now provides one strong Cantonese-derived profile but does not exhaust HKOS/New Chapter.
-2. **Chinese Classical historical profiles** — pursue Early Classical / Late Classical / Shanghai New Style / Hong Kong New Style only with sufficiently strong historical source pins.
+2. **Other Chinese Classical historical editions** — Mauger/Shen/other bounded editions may be inventoried only from sufficiently strong direct source pins; do not count modern composite columns as a profile.
 3. **Max Robertson** — obtain/index the intended edition directly.
 4. **Sanma** — select a formal named target profile/edition rather than architecture-only `mt-sanma`.
 5. **American/NMJL** — keep annual target-catalogue content licensing/access gated.
