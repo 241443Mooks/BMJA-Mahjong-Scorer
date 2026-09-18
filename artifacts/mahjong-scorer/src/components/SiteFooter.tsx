@@ -27,7 +27,6 @@ export const footerGroups: readonly FooterGroup[] = [
     links: [
       ['About', '/about'],
       ['Privacy & analytics', '/privacy'],
-      ['Source on GitHub', 'https://github.com/241443Mooks/BMJA-Mahjong-Scorer'],
       ['Support the project', 'https://buymeacoffee.com/sharronmo'],
     ],
   },
