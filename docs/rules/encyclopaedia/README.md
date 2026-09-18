@@ -30,6 +30,7 @@ Current inventory records:
 - `GMCR_SOURCE_INDEX.md` — named GMCR 56-condition source-local admission and evidence-grade note;
 - `TAIWANESE_16_TILE_SOURCE_RECOVERY.md` — recovered 36-item Taiwanese 16-tile association scoring index and provenance chain;
 - `IMJ_SOURCE_INDEX.md` — first-party maintained 55-grade-element International Mahjong index;
+- `CHINESE_CLASSICAL_SOURCE_MAP.md` — historical source/edition map; research only, not counted;
 - `SOURCE_INVENTORY_V4.md` — **current coverage manifest: 11 corpora / 470 finite profile-local entries**.
 
 `SOURCE_INVENTORY_V4.md` is the current coverage manifest. It points back to earlier inventory passes and to underlying source/profile files rather than duplicating all rules data.
@@ -69,7 +70,7 @@ Do not reverse that flow by inventing Encyclopaedia IDs and then forcing the rul
 
 The inventory documents are **indexes/manifests**, not duplicate rulebooks. Where a profile already has a complete item-level catalogue, that source-owned catalogue remains authoritative and this directory points to it rather than copying hundreds of rows into another drifting table.
 
-Authority grades must stay explicit. A first-party source, a named secondary/curated profile source, and a recovered copy are all different evidence classes and must not be collapsed into one label.
+Authority grades must stay explicit. A first-party source, a named secondary/curated profile source, a recovered copy and a modern historical synthesis are all different evidence classes and must not be collapsed into one label.
 
 If an inventory statement conflicts with the named source corpus, the source corpus wins.
 
