@@ -32,10 +32,11 @@ Current inventory records:
 - `IMJ_SOURCE_INDEX.md` — first-party maintained 55-grade-element International Mahjong index;
 - `BABCOCK_1923_SOURCE_INDEX.md` — fixed public-domain 1923 source index with 24 reference-worthy scoring concepts;
 - `SINGAPORE_MAHJONG_IMPLEMENTATION_SOURCE_INDEX.md` — 26-condition Fan index for the named SingaporeMahjong.com implementation profile;
+- `SICHUAN_TFMJ_2024_SOURCE_INDEX.md` — 14-category formal Sichuan competition-standard index with MIL SBR corroboration;
 - `CHINESE_CLASSICAL_SOURCE_MAP.md` — historical source/edition map; research only except for separately admitted Babcock 1923;
 - `HKMA_SOURCE_PINS.md` — first-party HKMA Clear Chapter and 16-tile profile pins; tables not yet counted;
 - `TENHOU_SANMA_PROFILE_NOTE.md` — first-party Tenhou ranked Sanma delta; deliberately not a duplicate counted Riichi corpus;
-- `SOURCE_INVENTORY_V4.md` — **current coverage manifest: 13 corpora / 520 finite source-local entries**.
+- `SOURCE_INVENTORY_V4.md` — **current coverage manifest: 14 corpora / 534 finite source-local entries**.
 
 `SOURCE_INVENTORY_V4.md` is the current coverage manifest. It points back to earlier inventory passes and to underlying source/profile files rather than duplicating all rules data.
 
@@ -74,7 +75,7 @@ Do not reverse that flow by inventing Encyclopaedia IDs and then forcing the rul
 
 The inventory documents are **indexes/manifests**, not duplicate rulebooks. Where a profile already has a complete item-level catalogue, that source-owned catalogue remains authoritative and this directory points to it rather than copying hundreds of rows into another drifting table.
 
-Authority grades must stay explicit. A first-party source, a named secondary/curated profile source, a recovered copy, a named implementation source and a modern historical synthesis are different evidence classes and must not be collapsed into one label.
+Authority grades must stay explicit. A first-party source, formal standard, named secondary/curated profile source, recovered copy, named implementation source and modern historical synthesis are different evidence classes and must not be collapsed into one label.
 
 If an inventory statement conflicts with the named source corpus, the source corpus wins.
 
@@ -87,6 +88,8 @@ Historical/Classical sources may mix primitive arithmetic mechanics with named h
 Likewise, a derived profile such as Tenhou Sanma may be important because of its profile delta while inheriting an existing Riichi yaku vocabulary. Record the delta rather than automatically duplicating the whole inherited catalogue.
 
 A named implementation profile may be admitted when its own first-party rules expose a closed finite scoring catalogue, but its authority grade must not be promoted into a regional/national standard. `SINGAPORE_MAHJONG_IMPLEMENTATION_SOURCE_INDEX.md` is the current example.
+
+A formal regional competition standard may be counted when its own text explicitly enumerates a finite scoring catalogue. `SICHUAN_TFMJ_2024_SOURCE_INDEX.md` is the current example; overlapping MIL SBR summary material is kept as corroboration rather than automatically counted again.
 
 ## Explicit non-goals for 251A1
 
