@@ -65,7 +65,7 @@ Cross-family migration work is isolated on `integration/rules-platform-v1` until
 
 The longer-term reference direction is not a wiki or a second prose rules database. Issue [#251](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/251) is building toward a **machine-readable, source/runtime-backed Mahjong knowledge layer** whose human-readable reference pages are views over the same verified concepts, profile treatments, relationships and evidence.
 
-The source-local inventory currently covers 626 concepts across 18 corpora. Cross-family matching deliberately waits for executable Buzzard, MCR and Riichi identities so similar names are not treated as equivalent without proof.
+The source-local inventory currently contains **626 entries across 18 corpora** before any cross-family de-duplication or canonical concept matching. Cross-family matching deliberately waits for executable Buzzard, MCR and Riichi identities so similar names are not treated as equivalent without proof.
 
 That same structured layer is intended to support future search/reference pages, scorer links, comparison tools and grounded AI/voice explanations. See `docs/product/REFERENCE_KNOWLEDGE_ARCHITECTURE.md`.
 
