@@ -39,7 +39,7 @@ export const classicalStrategyRegistryEntries: readonly RegistryEntry[] = [
 export const classicalStrategyRegistry = new RegistryBank(classicalStrategyRegistryEntries);
 
 type StrategyCategory = 'settlement' | 'progression' | 'game-end' | 'hand-mode';
-export type StrategyRegistryIdentity<C extends StrategyCategory> =
+export type StrategyRegistryIdentity<C extends string> =
   ExecutableRegistryIdentity & { id: `${C}.${string}` };
 
 export const CLASSICAL_PAIRWISE_SETTLEMENT: StrategyRegistryIdentity<'settlement'> = {

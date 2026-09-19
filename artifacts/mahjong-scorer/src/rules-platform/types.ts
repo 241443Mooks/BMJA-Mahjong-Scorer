@@ -200,6 +200,9 @@ export type ProgressionStrategy<TInput, TState> = (
 ) => ExplainedProgressionResult<TState>;
 export type GameEndStrategy<TInput> = (input: TInput) => GameEndResult;
 export type HandModeStrategy<TInput, THandMode> = (input: TInput) => THandMode;
+export type RoundPreparationStrategy<TInput, TPreparedRound> = (
+  input: TInput,
+) => TPreparedRound;
 
 export type ProfileProvenance = { sources?: readonly string[]; metadata?: JsonObject };
 export type ResolvedRulesProfile = {
