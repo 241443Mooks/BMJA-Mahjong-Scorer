@@ -1,3 +1,5 @@
+import * as React from 'react';
+
 type FooterLink = readonly [label: string, href: string];
 
 type FooterGroup = {
