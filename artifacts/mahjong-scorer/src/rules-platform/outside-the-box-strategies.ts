@@ -21,7 +21,7 @@ import type { StrategyRegistryIdentity } from './classical-strategies';
 const deterministic = { kind: 'deterministic', dependencies: [] } as const;
 
 export const outsideTheBoxStrategyRegistryEntries: readonly RegistryEntry[] = [
-  { id: 'settlement.outside-the-box-incidents', category: 'settlement', status: 'executable', semanticRevision: 1, executableContract: deterministic },
+  { id: 'settlement.outside-the-box-incidents', category: 'settlement', status: 'executable', semanticRevision: 1, parameterSchemaId: 'params.settlement.outside-the-box-incidents@1', executableContract: deterministic },
   { id: 'incident.outside-the-box-round-preparation', category: 'incident', status: 'executable', semanticRevision: 1, executableContract: deterministic },
   { id: 'hand-mode.outside-the-box-goulash', category: 'hand-mode', status: 'executable', semanticRevision: 1, executableContract: deterministic },
 ];

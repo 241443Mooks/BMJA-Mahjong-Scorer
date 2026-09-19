@@ -133,6 +133,18 @@ const classicalCurrentConfigContract: JsonContract = {
   },
 };
 
+/** Current OTB settlement is deliberately parameterised: the legacy limit is 1000. */
+const outsideTheBoxSettlementContract: JsonContract = {
+  validate(value: JsonValue) {
+    const params = value as JsonObject;
+    if (Object.keys(params).join(',') !== 'limit' ||
+      typeof params.limit !== 'number' || !Number.isFinite(params.limit) || params.limit <= 0) {
+      throw new Error('OUTSIDE_THE_BOX_SETTLEMENT_PARAMS_INVALID');
+    }
+    return { value: { limit: params.limit } };
+  },
+};
+
 const profile = (
   identity: RootProfileDefinition['identity'],
   config: ClassicalCurrentConfig,
@@ -186,7 +198,7 @@ export const OUTSIDE_THE_BOX_CURRENT_PROFILE: RootProfileDefinition = profile(
   { id: OUTSIDE_THE_BOX_PROFILE_REF.id, version: OUTSIDE_THE_BOX_PROFILE_REF.version, name: 'Outside the Box', status: 'club' },
   classicalCurrentConfigs['outside-the-box@0.1'],
   {
-    settlement: { id: 'settlement.outside-the-box-incidents', params: {} },
+    settlement: { id: 'settlement.outside-the-box-incidents', params: { limit: 1000 } },
     progression: { id: 'progression.classical-east-cycle', params: {} },
     gameEnd: { id: 'game-end.classical-east-cycle', params: {} },
     handMode: { id: 'hand-mode.outside-the-box-goulash', params: {} },
@@ -211,5 +223,6 @@ export const currentPlayableResolverEnvironment: ResolverEnvironment = {
   families: { get: (id) => id === CURRENT_CLASSICAL_FAMILY.id ? CURRENT_CLASSICAL_FAMILY : undefined },
   seatModels: { get: (id) => seatModels.get(id) },
   profiles: { get: ({ id, version }: RulesProfileRef) => profiles.get(`${id}@${version}`) },
+  contracts: { get: (id) => id === 'params.settlement.outside-the-box-incidents@1' ? outsideTheBoxSettlementContract : undefined },
   familyContracts: { get: (id) => id === CURRENT_CLASSICAL_FAMILY.id ? classicalCurrentConfigContract : undefined },
 };

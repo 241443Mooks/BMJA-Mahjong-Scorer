@@ -28,7 +28,7 @@ describe('current playable profile inventory', () => {
       { configVersion: 1, scorerId: 'classical.scorer.current', bindingId: 'classical.bindings.outside-the-box-current', policyId: 'classical.policy.outside-the-box-current' },
     ]);
     expect(artifacts[2].profile).toMatchObject({
-      settlement: { id: 'settlement.outside-the-box-incidents' },
+      settlement: { id: 'settlement.outside-the-box-incidents', params: { limit: 1000 } },
       handMode: { id: 'hand-mode.outside-the-box-goulash' },
       incidents: [{ id: 'incident.outside-the-box-round-preparation' }],
     });

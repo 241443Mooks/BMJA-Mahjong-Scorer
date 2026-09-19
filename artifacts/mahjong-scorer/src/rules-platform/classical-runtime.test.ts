@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { bonus, dragon, scoreHand, set, suited, validateHand, wind, type GameContext, type MahjongHand } from '../scoring';
 import { bmjaSpecialHandBindings } from '../scoring/special-hands';
 import { westernTmSpecialHandBindings } from '../game/western-tm-catalogue';
-import { BMJA_RULESET, WESTERN_TM_RULESET } from '../game/ruleset';
+import { BMJA_RULESET, OUTSIDE_THE_BOX_RULESET, WESTERN_TM_RULESET } from '../game/ruleset';
 import { progressBmjaGame } from '../game/progression';
 import { settleBmjaRound } from '../game/settlement';
 import type { GamePlayer, ProgressionState, SeatAssignments } from '../game/types';
@@ -29,10 +29,12 @@ const special: MahjongHand = {
 };
 const players: GamePlayer[] = ['a', 'b', 'c', 'd'].map((id) => ({ id, name: id }));
 const seats: SeatAssignments = { a: 'east', b: 'south', c: 'west', d: 'north' };
+const scores = { a: 100, b: 30, c: 20, d: 10 };
 const progression: ProgressionState = { seats, prevailingWind: 'east', eastCycleStartPlayerId: 'a' };
 
 const bmjaArtifact = () => resolvePlayableProfile({ id: 'bmja', version: '1.0' }, currentPlayableResolverEnvironment);
 const westernTmArtifact = () => resolvePlayableProfile({ id: 'western-tm', version: '0.1' }, currentPlayableResolverEnvironment);
+const outsideTheBoxArtifact = () => resolvePlayableProfile({ id: 'outside-the-box', version: '0.1' }, currentPlayableResolverEnvironment);
 const breakdown = (result: ReturnType<ReturnType<typeof compileRulesRuntime>['scoreHand']>) =>
   (result.result as unknown as { breakdown: ReturnType<typeof scoreHand> }).breakdown;
 
@@ -65,7 +67,7 @@ describe('BMJA compiled current runtime', () => {
       prevailingWindAdvanced: directProgression.prevailingWindAdvanced,
     });
     expect(runtime.evaluateGameEnd({ gameLength: 'one-round', previousPrevailingWind: 'east', progression: { prevailingWindAdvanced: true } })).toMatchObject({ complete: true });
-    expect(runtime.nextHandMode({})).toBe('normal');
+    expect(runtime.nextHandMode({ current: 'normal', outcome: { type: 'draw' } })).toBe('normal');
   });
 
   it('retains authoritative disposition and deterministic audit identity without treating partial as missing evidence', async () => {
@@ -156,7 +158,7 @@ describe('T&M compiled current runtime', () => {
     expect(runtime.validateHand({ evidence: threeGreatScholars, context: westernContext })).toEqual(
       validateHand(threeGreatScholars, westernContext, westernTmSpecialHandBindings),
     );
-    expect(runtime.nextHandMode({})).toBe('normal');
+    expect(runtime.nextHandMode({ current: 'normal', outcome: { type: 'draw' } })).toBe('normal');
     const round = { outcome: { type: 'win' as const, winnerId: 'b' }, scores: { a: 100, b: 200, c: 300, d: 400 } };
     expect(runtime.settleRound({ players, seats, round }).map(({ from, to, amount }) => ({ from, to, amount }))).toEqual(
       settleBmjaRound(players, seats, round).transactions.map(({ fromPlayerId, toPlayerId, amount }) => ({ from: fromPlayerId, to: toPlayerId, amount })),
@@ -194,5 +196,86 @@ describe('T&M compiled current runtime', () => {
     expect(() => compileRulesRuntime(unimplemented)).toThrow(
       'RUNTIME_SCORING_IMPLEMENTATION_UNAVAILABLE:classical.scorer.current@1|classical.bindings.bmja-current@1|classical.policy.western-tm-current@1',
     );
+  });
+});
+
+// These are the authoritative existing OTB profile/scoring/incident fixtures.
+describe('Outside the Box compiled current runtime', () => {
+  const otbContext: GameContext = { ...context, playerWind: 'east' };
+  const otbPlayers: GamePlayer[] = ['east', 'south', 'west', 'north'].map((id) => ({ id, name: id }));
+  const otbSeats: SeatAssignments = { east: 'east', south: 'south', west: 'west', north: 'north' };
+  const otbScores = { east: 100, south: 30, west: 20, north: 10 };
+  const otbScore = (hand: MahjongHand, limit = 1000) => OUTSIDE_THE_BOX_RULESET.scoreHand({
+    hand, playerWind: 'east', prevailingWind: 'east', limit,
+  });
+
+  it('selects OTB profile-local bindings and scoring policy without a second engine', async () => {
+    const runtime = compileRulesRuntime(await outsideTheBoxArtifact());
+    expect(breakdown(runtime.scoreHand({ evidence: threeGreatScholars, context: otbContext }))).toEqual(otbScore(threeGreatScholars));
+    expect(breakdown(runtime.scoreHand({ evidence: threeGreatScholars, context: otbContext })).finalScore).toBe(1000);
+    const policyFixture: MahjongHand = {
+      sets: [
+        set('r', 'pung', dragon('red')), set('e', 'pung', wind('east')),
+        set('s', 'pung', suited('characters', 3)), set('w', 'pung', suited('circles', 4)),
+        set('p', 'pair', suited('bamboo', 5)),
+      ], bonusTiles: [], isWinner: true, winningMethod: 'wall',
+    };
+    const policyContext = { ...otbContext, limit: 100 };
+    expect(breakdown(runtime.scoreHand({ evidence: policyFixture, context: policyContext }))).toEqual(otbScore(policyFixture, 100));
+    expect(breakdown(runtime.scoreHand({ evidence: policyFixture, context: policyContext })).finalScore).toBe(100);
+  });
+
+  it('preserves sealed OTB table, hand-mode, and round-preparation behaviour', async () => {
+    const runtime = compileRulesRuntime(await outsideTheBoxArtifact());
+    expect(runtime.nextHandMode({ current: 'normal', outcome: { type: 'draw' } })).toBe('goulash');
+    expect(runtime.nextHandMode({ current: 'goulash', outcome: { type: 'win', winnerId: 'east' } })).toBe('normal');
+    expect(runtime.prepareRound).toBeDefined();
+    const preparation = { outcome: { type: 'win' as const, winnerId: 'east' }, scores: otbScores, scoreRecords: { south: { source: 'manual' as const, finalScore: 30 } }, incidents: [{ type: 'incorrect-hand' as const, playerId: 'south', condition: 'too-many' as const }] };
+    expect(runtime.prepareRound!({ players: otbPlayers, seats: otbSeats, round: preparation })).toEqual(
+      OUTSIDE_THE_BOX_RULESET.prepareRound!(otbPlayers, otbSeats, preparation),
+    );
+    const falseName = { outcome: { type: 'win' as const, winnerId: 'east' }, scores: otbScores, incidents: [{ type: 'false-discard-name' as const, discarderId: 'south', claimantId: 'east', result: 'mah-jong' as const }] };
+    expect(runtime.settleRound({ players: otbPlayers, seats: otbSeats, round: falseName }).map(({ from, to, amount }) => ({ from, to, amount }))).toEqual(
+      OUTSIDE_THE_BOX_RULESET.settleRound(otbPlayers, otbSeats, falseName).transactions.map(({ fromPlayerId, toPlayerId, amount }) => ({ from: fromPlayerId, to: toPlayerId, amount })),
+    );
+    const cannon = { outcome: { type: 'win' as const, winnerId: 'south' }, scores: otbScores, incidents: [{ type: 'cannon' as const, liablePlayerId: 'east', danger: 'one-suit' as const, noChoiceAccepted: false }] };
+    expect(runtime.settleRound({ players: otbPlayers, seats: otbSeats, round: cannon }).map(({ from, to, amount }) => ({ from, to, amount }))).toEqual(
+      OUTSIDE_THE_BOX_RULESET.settleRound(otbPlayers, otbSeats, cannon).transactions.map(({ fromPlayerId, toPlayerId, amount }) => ({ from: fromPlayerId, to: toPlayerId, amount })),
+    );
+    const falseMahJong = { outcome: { type: 'draw' as const }, scores: { east: 0, south: 0, west: 0, north: 0 }, incidents: [{ type: 'false-mah-jong' as const, declarerId: 'east', anyHandExposed: true }] };
+    expect(runtime.settleRound({ players: otbPlayers, seats: otbSeats, round: falseMahJong })).toEqual(expect.arrayContaining([
+      expect.objectContaining({ reasonId: 'settlement.outside-the-box-incidents.false-mah-jong-penalty' }),
+    ]));
+    const recipientGap = { outcome: { type: 'win' as const, winnerId: 'east' }, scores: otbScores, incidents: [{ type: 'false-discard-name' as const, discarderId: 'south', claimantId: 'east', result: 'claimed' as const }] };
+    expect(() => runtime.settleRound({ players: otbPlayers, seats: otbSeats, round: recipientGap })).toThrow('recipient is not established');
+  });
+
+  it('retains exact OTB audit identity and limits round preparation to selected incidents', async () => {
+    const runtime = compileRulesRuntime(await outsideTheBoxArtifact());
+    expect(runtime.scoreHand({ evidence: threeGreatScholars, context: otbContext }).decisionTrace).toContainEqual(
+      expect.objectContaining({ id: 'classical-runtime.scoring', identities: { ruleId: 'classical.scorer.current@1', bindingId: 'classical.bindings.outside-the-box-current@1', policyId: 'classical.policy.outside-the-box-current@1' } }),
+    );
+    expect(runtime.artifact.executableDependencies.map(({ id, semanticRevision }) => `${id}@${semanticRevision}`)).toEqual(expect.arrayContaining([
+      'settlement.outside-the-box-incidents@1', 'hand-mode.outside-the-box-goulash@1', 'incident.outside-the-box-round-preparation@1',
+    ]));
+    expect(compileRulesRuntime(await bmjaArtifact()).prepareRound).toBeUndefined();
+    expect(compileRulesRuntime(await westernTmArtifact()).prepareRound).toBeUndefined();
+  });
+
+  it('fails closed for unsupported OTB incident selections', async () => {
+    const artifact = await outsideTheBoxArtifact();
+    const unknown = {
+      ...artifact,
+      profile: { ...artifact.profile, incidents: [{ id: 'incident.unknown', params: {} }] },
+    } as ResolvedProfileArtifact;
+    expect(() => compileRulesRuntime(unknown)).toThrow('RUNTIME_DEPENDENCY_UNAVAILABLE:incident.unknown');
+    const multiple = {
+      ...artifact,
+      profile: { ...artifact.profile, incidents: [
+        { id: 'incident.outside-the-box-round-preparation', params: {} },
+        { id: 'incident.outside-the-box-round-preparation', params: {} },
+      ] },
+    } as ResolvedProfileArtifact;
+    expect(() => compileRulesRuntime(multiple)).toThrow('RUNTIME_INCIDENTS_UNSUPPORTED');
   });
 });

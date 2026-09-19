@@ -1,12 +1,19 @@
 import { scoreHand, type GameContext, type MahjongHand, type ScoreBreakdown } from '../scoring';
 import { bmjaSpecialHandBindings } from '../scoring/special-hands';
 import { westernTmSpecialHandBindings } from '../game/western-tm-catalogue';
+import { outsideTheBoxSpecialHandBindings } from '../game/outside-the-box-catalogue';
+import { OUTSIDE_THE_BOX_SCORING_POLICY } from '../game/outside-the-box-scoring';
 import {
   gameEndImplementation,
   handModeImplementation,
   progressionImplementation,
   settlementImplementation,
 } from './classical-strategies';
+import {
+  outsideTheBoxHandModeImplementation,
+  outsideTheBoxRoundPreparationImplementation,
+  outsideTheBoxSettlementImplementation,
+} from './outside-the-box-strategies';
 import {
   CLASSICAL_WESTERN_VALIDATION_FAMILY,
   currentClassicalValidationImplementation,
@@ -37,11 +44,14 @@ const currentBmjaScoring: ClassicalScoringImplementation = ({ evidence, context 
   scoreHand(evidence, context, bmjaSpecialHandBindings);
 const currentWesternTmScoring: ClassicalScoringImplementation = ({ evidence, context }) =>
   scoreHand(evidence, context, westernTmSpecialHandBindings);
+const currentOutsideTheBoxScoring: ClassicalScoringImplementation = ({ evidence, context }) =>
+  scoreHand(evidence, context, outsideTheBoxSpecialHandBindings, OUTSIDE_THE_BOX_SCORING_POLICY);
 
 /** Exact current Classical tuples, selected solely from the sealed artifact. */
 const scoringImplementations = new Map<string, ClassicalScoringImplementation>([
   ['classical.scorer.current@1|classical.bindings.bmja-current@1|classical.policy.bmja-current@1', currentBmjaScoring],
   ['classical.scorer.current@1|classical.bindings.western-tm-current@1|classical.policy.western-tm-current@1', currentWesternTmScoring],
+  ['classical.scorer.current@1|classical.bindings.outside-the-box-current@1|classical.policy.outside-the-box-current@1', currentOutsideTheBoxScoring],
 ]);
 
 const selectedIdentity = (
@@ -165,7 +175,8 @@ export type RulesRuntime = Readonly<{
   settleRound: ReturnType<typeof settlementImplementation>;
   progressGame: ReturnType<typeof progressionImplementation>;
   evaluateGameEnd: ReturnType<typeof gameEndImplementation>;
-  nextHandMode: ReturnType<typeof handModeImplementation>;
+  nextHandMode: ReturnType<typeof outsideTheBoxHandModeImplementation>;
+  prepareRound?: ReturnType<typeof outsideTheBoxRoundPreparationImplementation>;
 }>;
 
 /** Compiles a sealed current Classical artifact into its exact selected implementations. */
@@ -180,6 +191,30 @@ export const compileRulesRuntime = (artifact: ResolvedProfileArtifact): RulesRun
   const { scorer, binding, policy } = classicalConfig(artifact);
   const scoring = scoringImplementations.get(`${keyFor(scorer)}|${keyFor(binding)}|${keyFor(policy)}`);
   if (!scoring) throw new Error(`RUNTIME_SCORING_IMPLEMENTATION_UNAVAILABLE:${keyFor(scorer)}|${keyFor(binding)}|${keyFor(policy)}`);
+  const settlementRuntime: ReturnType<typeof settlementImplementation> = settlement.id === 'settlement.outside-the-box-incidents'
+    ? (() => {
+        const { limit } = artifact.profile.settlement.params;
+        if (typeof limit !== 'number' || !Number.isFinite(limit) || limit <= 0) {
+          throw new Error('RUNTIME_OTB_SETTLEMENT_PARAMS_INVALID');
+        }
+        const settle = outsideTheBoxSettlementImplementation(settlement as Parameters<typeof outsideTheBoxSettlementImplementation>[0]);
+        return ({ players, seats, round }: Parameters<ReturnType<typeof settlementImplementation>>[0]) =>
+          settle({ players, seats, round, limit });
+      })()
+    : settlementImplementation(settlement as Parameters<typeof settlementImplementation>[0]);
+  const handModeRuntime: ReturnType<typeof outsideTheBoxHandModeImplementation> = handMode.id === 'hand-mode.outside-the-box-goulash'
+    ? outsideTheBoxHandModeImplementation(handMode as Parameters<typeof outsideTheBoxHandModeImplementation>[0])
+    : () => handModeImplementation(handMode as Parameters<typeof handModeImplementation>[0])({});
+  const incidents = artifact.profile.incidents ?? [];
+  if (incidents.length > 1) throw new Error('RUNTIME_INCIDENTS_UNSUPPORTED');
+  const prepareRound = incidents.length === 0 ? undefined : (() => {
+    const incident = incidents[0]!;
+    const identity = selectedIdentity(artifact, incident.id);
+    if (identity.id !== 'incident.outside-the-box-round-preparation') {
+      throw new Error(`RUNTIME_INCIDENT_IMPLEMENTATION_UNAVAILABLE:${keyFor(identity)}`);
+    }
+    return outsideTheBoxRoundPreparationImplementation(identity as Parameters<typeof outsideTheBoxRoundPreparationImplementation>[0]);
+  })();
 
   const validate = (input: HandEvaluationInput<MahjongHand, GameContext>) => validateCurrentClassicalHand(
     validation as ValidationRegistryIdentity,
@@ -223,10 +258,11 @@ export const compileRulesRuntime = (artifact: ResolvedProfileArtifact): RulesRun
         result: jsonSafeBreakdown(breakdown),
       };
     },
-    settleRound: settlementImplementation(settlement as Parameters<typeof settlementImplementation>[0]),
+    settleRound: settlementRuntime,
     progressGame: progressionImplementation(progression as Parameters<typeof progressionImplementation>[0]),
     evaluateGameEnd: gameEndImplementation(gameEnd as Parameters<typeof gameEndImplementation>[0]),
-    nextHandMode: handModeImplementation(handMode as Parameters<typeof handModeImplementation>[0]),
+    nextHandMode: handModeRuntime,
+    ...(prepareRound ? { prepareRound } : {}),
   });
 };
 
