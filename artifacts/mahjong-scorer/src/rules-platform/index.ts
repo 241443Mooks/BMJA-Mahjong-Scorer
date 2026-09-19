@@ -4,3 +4,4 @@ export * from './registry';
 export * from './capabilities';
 export * from './resolver';
 export * from './architecture-seeds';
+export * from './classical-strategies';
