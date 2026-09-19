@@ -27,6 +27,27 @@ const special: MahjongHand = {
     { family: 'dragon', dragon: 'red' }, { family: 'dragon', dragon: 'green' }, { family: 'dragon', dragon: 'white' }, wind('east'),
   ], bonusTiles: [], isWinner: true,
 };
+const publishedUniqueWondersFishing: MahjongHand = {
+  sets: [],
+  looseTiles: [
+    suited('bamboo', 1), suited('bamboo', 9), suited('characters', 1), suited('characters', 9),
+    suited('circles', 1), suited('circles', 9), wind('east'), wind('south'), wind('west'), wind('north'),
+    dragon('red'), dragon('green'), dragon('white'),
+  ],
+  bonusTiles: [bonus('flower', 4), bonus('season', 2)], isWinner: false, originalCall: false,
+};
+const bmjaPurityFishing: MahjongHand = {
+  sets: [
+    set('1', 'pung', suited('bamboo', 2)), set('2', 'pung', suited('bamboo', 3)),
+    set('3', 'kong', suited('bamboo', 6)), set('4', 'pair', suited('bamboo', 8)),
+  ], remainingTiles: [suited('bamboo', 4), suited('bamboo', 4)], bonusTiles: [], isWinner: false,
+};
+const bmjaAllPairHonoursFishing: MahjongHand = {
+  sets: [
+    set('1', 'pair', wind('east')), set('2', 'pair', wind('south')), set('3', 'pair', dragon('red')),
+    set('4', 'pair', suited('bamboo', 1)), set('5', 'pair', suited('circles', 9)), set('6', 'pair', suited('characters', 1)),
+  ], remainingTiles: [dragon('green')], bonusTiles: [], isWinner: false,
+};
 const players: GamePlayer[] = ['a', 'b', 'c', 'd'].map((id) => ({ id, name: id }));
 const seats: SeatAssignments = { a: 'east', b: 'south', c: 'west', d: 'north' };
 const scores = { a: 100, b: 30, c: 20, d: 10 };
@@ -41,9 +62,21 @@ const breakdown = (result: ReturnType<ReturnType<typeof compileRulesRuntime>['sc
 describe('BMJA compiled current runtime', () => {
   it('preserves ordinary and special legacy scoring through the sealed artifact', async () => {
     const runtime = compileRulesRuntime(await bmjaArtifact());
-    expect(breakdown(runtime.scoreHand({ evidence: ordinary, context }))).toEqual(scoreHand(ordinary, context, bmjaSpecialHandBindings));
-    expect(breakdown(runtime.scoreHand({ evidence: special, context }))).toEqual(scoreHand(special, context, bmjaSpecialHandBindings));
+    expect(breakdown(runtime.scoreHand({ evidence: ordinary, context }))).toEqual(scoreHand(ordinary, context));
+    expect(breakdown(runtime.scoreHand({ evidence: special, context }))).toEqual(scoreHand(special, context));
     expect(runtime.scoreHand({ evidence: special, context }).matchedCanonicalPatternIds).toContain('thirteen-unique-wonders');
+  });
+
+  it.each([
+    ['published Thirteen Unique Wonders', publishedUniqueWondersFishing, { ...context, playerWind: 'north' }],
+    ['Purity', bmjaPurityFishing, context],
+    ['All Pair Honours', bmjaAllPairHonoursFishing, context],
+  ] as const)('preserves legacy BMJA fishing and 13-tile validation for %s', async (_name, evidence, fishingContext) => {
+    const runtime = compileRulesRuntime(await bmjaArtifact());
+    const input = { evidence, context: fishingContext };
+    expect(runtime.validateHand(input)).toEqual(validateHand(evidence, fishingContext));
+    expect(runtime.validateHand(input)).toEqual([]);
+    expect(breakdown(runtime.scoreHand(input))).toEqual(scoreHand(evidence, fishingContext));
   });
 
   it('preserves validation and current Classical table/hand-mode adapters', async () => {
@@ -76,7 +109,7 @@ describe('BMJA compiled current runtime', () => {
     expect(scored).toMatchObject({ legal: true, disposition: { kind: 'scored' }, profile: { id: 'bmja', version: '1.0' }, rulesFingerprint: artifact.rulesFingerprint });
     expect(scored.decisionTrace).toEqual(expect.arrayContaining([
       expect.objectContaining({ id: 'classical-runtime.validation', metadata: expect.objectContaining({ rulesFingerprint: artifact.rulesFingerprint, executableDependencies: artifact.executableDependencies.map(({ id, semanticRevision }) => `${id}@${semanticRevision}`) }) }),
-      expect.objectContaining({ id: 'classical-runtime.scoring', identities: { ruleId: 'classical.scorer.current@1', bindingId: 'classical.bindings.bmja-current@1', policyId: 'classical.policy.bmja-current@1' } }),
+      expect.objectContaining({ id: 'classical-runtime.scoring', identities: { ruleId: 'classical.scorer.current@1', bindingId: 'classical.bindings.bmja-current@2', policyId: 'classical.policy.bmja-current@1' } }),
     ]));
     const invalid = runtime.scoreHand({ evidence: { ...ordinary, sets: [set('pair', 'pair', wind('east'))] }, context });
     expect(invalid).toMatchObject({ legal: false, disposition: { kind: 'invalid' } });
@@ -87,9 +120,9 @@ describe('BMJA compiled current runtime', () => {
   it('fails explicitly rather than falling back from a mismatched sealed revision', async () => {
     const artifact = await bmjaArtifact();
     const mismatched = { ...artifact, executableDependencies: artifact.executableDependencies.map((dependency) =>
-      dependency.id === 'validation.classical-current' ? { ...dependency, semanticRevision: 2 } : dependency,
+      dependency.id === 'validation.classical-current' ? { ...dependency, semanticRevision: 3 } : dependency,
     ) };
-    expect(() => compileRulesRuntime(mismatched)).toThrow('Unknown current validation implementation: validation.classical-current@2');
+    expect(() => compileRulesRuntime(mismatched)).toThrow('Unknown current validation implementation: validation.classical-current@3');
   });
 
   it('fails closed when a mutated selected profile ref leaves the old dependency present', async () => {

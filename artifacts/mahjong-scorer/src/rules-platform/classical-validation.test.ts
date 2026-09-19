@@ -180,9 +180,9 @@ describe('current Classical validation adapter', () => {
       evidenceCodecId: 'mcr.hand.v1', profile: BMJA_CLASSICAL_VALIDATION_PROFILE, input: malformedInput,
     })).toThrow('Validation evidence codec is incompatible: mcr.hand.v1');
     expect(() => validateCurrentClassicalHand(
-      { ...CLASSICAL_CURRENT_VALIDATION, semanticRevision: 2 },
+      { ...CLASSICAL_CURRENT_VALIDATION, semanticRevision: 3 },
       { family: CLASSICAL_WESTERN_VALIDATION_FAMILY, evidenceCodecId: 'classical.hand.v1', profile: BMJA_CLASSICAL_VALIDATION_PROFILE, input: malformedInput },
-    )).toThrow('Unknown current validation implementation: validation.classical-current@2');
+    )).toThrow('Unknown current validation implementation: validation.classical-current@3');
   });
 
   it('keeps future validation identities architecture-only and non-invocable', () => {
@@ -198,6 +198,6 @@ describe('current Classical validation adapter', () => {
         { family: CLASSICAL_WESTERN_VALIDATION_FAMILY, evidenceCodecId: 'classical.hand.v1', profile: BMJA_CLASSICAL_VALIDATION_PROFILE, input: { evidence: undefined as never, context } },
       )).toThrow(`Unknown registry ID: ${id}`);
     }
-    expect(classicalValidationRegistry.requireExecutable('validation', CLASSICAL_CURRENT_VALIDATION.id).semanticRevision).toBe(1);
+    expect(classicalValidationRegistry.requireExecutable('validation', CLASSICAL_CURRENT_VALIDATION.id).semanticRevision).toBe(2);
   });
 });
