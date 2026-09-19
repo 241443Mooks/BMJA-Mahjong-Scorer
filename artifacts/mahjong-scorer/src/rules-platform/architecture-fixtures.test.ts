@@ -128,3 +128,60 @@ describe('eight architecture fixtures', () => {
     expect(inspectProfile(mismatch, envFor(fixtures[0])).blockers).toEqual(expect.arrayContaining([expect.objectContaining({ blockerCode: 'SEAT_PLAYER_COUNT_MISMATCH' })]));
   });
 });
+
+const executableEntry = (id: string, category: ConstructorParameters<typeof RegistryBank>[0][number]['category'], semanticRevision = 1) => ({ id, category, status: 'executable' as const, semanticRevision, executableContract: { kind: 'deterministic' as const, dependencies: [] as const } });
+const playableRoot = (): RootProfileDefinition => root('phase2-base', 'family.phase2', 'classical-points-doubles', { playerCount: 4, seatModelId: 'seats.phase2-four' }, { presetId: 'tiles.phase2', options: {} }, { presetId: 'shape.phase2', options: {} }, { handShapePolicyId: 'validation.phase2', policyIds: [] }, {}, { policyIds: [], alwaysRequired: [] }, 'settlement.phase2', 'progression.phase2', 'game-end.phase2', 'source.phase2');
+const capabilityEnvironment = (overrides: JsonObject, capability: Record<string, unknown>, mutate = false): ResolverEnvironment => {
+  const base = playableRoot();
+  const derived: ProfileAuthoringDefinition = { kind: 'derived', schemaVersion: 1, identity: { id: 'phase2-derived', version: '1', name: 'phase2-derived', status: 'custom' }, baseProfile: { id: base.identity.id, version: base.identity.version }, overrides };
+  const entries = [
+    executableEntry('family.phase2', 'family'), executableEntry('seats.phase2-four', 'seats'), executableEntry('tiles.phase2', 'tiles'), executableEntry('shape.phase2', 'shape'), executableEntry('validation.phase2', 'validation'), executableEntry('settlement.phase2', 'settlement'), executableEntry('progression.phase2', 'progression'), executableEntry('game-end.phase2', 'game-end'), executableEntry('validation.phase2-capability', 'validation'), { id: 'source.phase2', category: 'source' as const, status: 'metadata' as const },
+  ];
+  const profiles = new Map([[`${base.identity.id}@${base.identity.version}`, base as ProfileAuthoringDefinition], ['phase2-derived@1', derived]]);
+  return { registry: new RegistryBank(entries), families: { get: id => id === 'family.phase2' ? { id, allowedGrammars: ['classical-points-doubles'], handEvidenceCodecId: 'phase2.hand', roundOutcomeCodecId: 'phase2.round', strategyStateCodecId: 'phase2.strategy' } : undefined }, seatModels: { get: id => id === 'seats.phase2-four' ? { id, playerCount: 4 } : undefined }, profiles: { get: ref => profiles.get(`${ref.id}@${ref.version}`) }, capabilities: { get: id => id === 'validation.phase2-capability' ? capability as never : undefined }, capabilityState: { all: () => [] }, contracts: { get: id => id === 'phase2.value' ? { validate: value => { if (!value || typeof value !== 'object' || Array.isArray(value) || (value as Record<string, unknown>).enabled !== true || Object.keys(value as object).length !== 1) throw new Error('invalid'); return { value: { enabled: true } }; } } : undefined }, capabilityAdapters: { get: id => id === 'validation.phase2-capability' ? { apply: profile => mutate ? { ...profile, scoring: { grammar: 'riichi-han-fu', config: profile.scoring.config as never } } : profile, isActive: () => false } : undefined } };
+};
+const capability = (extra: Record<string, unknown> = {}) => ({ id: 'validation.phase2-capability', category: 'validation' as const, status: 'executable' as const, semanticRevision: 1, customisation: 'customisable' as const, valueSchemaId: 'phase2.value', presentation: { presentationKey: 'phase2' }, authoringDimensions: [], ...extra });
+
+describe('phase 2 negative and metamorphic matrix', () => {
+  const inspect = (fixtureId: string, mutate: (definition: RootProfileDefinition) => void) => { const fixture = fixtures.find(item => item.id === fixtureId)!; const definition = JSON.parse(JSON.stringify(fixture.definition)) as RootProfileDefinition; mutate(definition); return inspectProfile(definition, envFor(fixture)); };
+
+  it('1 unknown IDs, 2 wrong categories, and 16 stale dealer state fail closed', () => {
+    expect(inspect('A01', definition => ((definition.definition.evidence as { policyIds: string[] }).policyIds = ['evidence-policy.unknown'])).blockers).toEqual(expect.arrayContaining([expect.objectContaining({ blockerCode: 'REFERENCE_UNRESOLVED' })]));
+    expect(inspect('A01', definition => ((definition.definition.validation as { handShapePolicyId: string }).handShapePolicyId = 'tiles.flowers-144')).blockers).toEqual(expect.arrayContaining([expect.objectContaining({ blockerCode: 'REFERENCE_CATEGORY_MISMATCH' })]));
+    expect(inspect('A01', definition => ((definition.definition as Record<string, unknown>).dealerModelId = 'dealer.old')).blockers).toEqual([expect.objectContaining({ blockerCode: 'ROOT_INVALID' })]);
+  });
+
+  it('3 target category/version and 12 architecture-only playability preserve their real blockers', async () => {
+    const wrongCatalogue = inspect('A08', definition => (((definition.definition.scoring as { config: { catalogueRef: { id: string } } }).config.catalogueRef.id) = 'catalogue.pattern.hk-profile'));
+    expect(wrongCatalogue.blockers).toEqual(expect.arrayContaining([expect.objectContaining({ blockerCode: 'REFERENCE_CATEGORY_MISMATCH' }), expect.objectContaining({ blockerCode: 'CATALOGUE_UNAVAILABLE' })]));
+    const missingVersion = inspect('A08', definition => (((definition.definition.scoring as { config: { catalogueRef: { version: string } } }).config.catalogueRef.version) = ''));
+    expect(missingVersion.blockers).toEqual(expect.arrayContaining([expect.objectContaining({ blockerCode: 'CATALOGUE_VERSION_REQUIRED' }), expect.objectContaining({ blockerCode: 'CATALOGUE_UNAVAILABLE' })]));
+    const fixture = fixtures[0]; await expect(resolvePlayableProfile({ id: fixture.definition.identity.id, version: fixture.definition.identity.version }, envFor(fixture))).rejects.toThrow('PROFILE_NOT_PLAYABLE:REFERENCE_NOT_EXECUTABLE');
+  });
+
+  it('4 cross-family, 5 cross-grammar, 10 protected grammar mutation, and 11 invalid overrides fail through #231', async () => {
+    await expect(resolvePlayableProfile({ id: 'phase2-derived', version: '1' }, capabilityEnvironment({ 'validation.phase2-capability': { enabled: true } }, capability({ compatibleFamilyIds: ['family.other'] })))).rejects.toThrow('CAPABILITY_FAMILY_INCOMPATIBLE');
+    await expect(resolvePlayableProfile({ id: 'phase2-derived', version: '1' }, capabilityEnvironment({ 'validation.phase2-capability': { enabled: true } }, capability({ compatibleGrammars: ['riichi-han-fu'] })))).rejects.toThrow('CAPABILITY_GRAMMAR_INCOMPATIBLE');
+    await expect(resolvePlayableProfile({ id: 'phase2-derived', version: '1' }, capabilityEnvironment({ 'validation.phase2-capability': { enabled: true } }, capability(), true))).rejects.toThrow('CAPABILITY_PROTECTED_FIELD_MUTATION');
+    await expect(resolvePlayableProfile({ id: 'phase2-derived', version: '1' }, capabilityEnvironment({ 'validation.phase2-capability': { enabled: 'yes' } }, capability()))).rejects.toThrow('CAPABILITY_VALUE_INVALID');
+    await expect(resolvePlayableProfile({ id: 'phase2-derived', version: '1' }, capabilityEnvironment({ 'validation.unknown': true }, capability()))).rejects.toThrow('CAPABILITY_UNRESOLVED');
+  });
+
+  it('6 codec, 7 tile, 8 seat, and 9 cardinality incompatibilities are distinct', () => {
+    const fixture = fixtures.find(item => item.id === 'A05')!;
+    expect(() => assertFamilyCompatibility(fixture.family, 'riichi-han-fu', { ...fixture.family, handEvidenceCodecId: 'wrong' })).toThrow('Codec combination is incompatible');
+    expect(inspect('A05', definition => { (definition.definition.tileSet as { presetId: string; options: JsonObject }).presetId = 'tiles.sanma-108'; (definition.definition.tileSet as { options: JsonObject }).options = { nukiDoraTile: 'north', redFives: 3 }; }).blockers).toEqual(expect.arrayContaining([expect.objectContaining({ blockerCode: 'FAMILY_TILESET_INCOMPATIBLE' })]));
+    expect(inspect('A05', definition => ((definition.definition.table as { seatModelId: string }).seatModelId = 'seats.winds-4')).blockers).toEqual(expect.arrayContaining([expect.objectContaining({ blockerCode: 'FAMILY_SEATMODEL_INCOMPATIBLE' })]));
+    expect(inspect('A06', definition => ((definition.definition.table as { playerCount: number }).playerCount = 4)).blockers).toEqual(expect.arrayContaining([expect.objectContaining({ blockerCode: 'SEAT_PLAYER_COUNT_MISMATCH' })]));
+  });
+
+  it('13 metadata is inert, 14 captures exact executable revisions, and 17 rejects executable fields', () => {
+    const normal = inspectProfile(fixtures[0].definition, envFor(fixtures[0]));
+    expect(normal.references.find(reference => reference.path === 'provenance.sources')).toMatchObject({ role: 'metadata', actualStatus: 'metadata', blockerCode: undefined });
+    const executable = new RegistryBank([executableEntry('pattern.phase2', 'pattern', 7)]).requireExecutable('pattern', 'pattern.phase2');
+    expect(executable.semanticRevision).toBe(7);
+    expect(inspect('A01', definition => ((definition.definition as Record<string, unknown>).callback = () => true)).blockers).toEqual([expect.objectContaining({ blockerCode: 'ROOT_INVALID' })]);
+    const inert = inspect('A01', definition => ((definition.definition.provenance as { metadata: JsonObject }).metadata.expression = '() => score'));
+    expect(inert.profile).toBeDefined();
+  });
+});
