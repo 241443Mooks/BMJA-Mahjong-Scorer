@@ -83,6 +83,26 @@ describe('BMJA compiled current runtime', () => {
     const mismatched = { ...artifact, executableDependencies: artifact.executableDependencies.map((dependency) =>
       dependency.id === 'validation.classical-current' ? { ...dependency, semanticRevision: 2 } : dependency,
     ) };
-    expect(() => compileBmjaRuntime(mismatched)).toThrow('RUNTIME_DEPENDENCY_REVISION_MISMATCH:validation.classical-current@1');
+    expect(() => compileBmjaRuntime(mismatched)).toThrow('Unknown current validation implementation: validation.classical-current@2');
+  });
+
+  it('fails closed when a mutated selected profile ref leaves the old dependency present', async () => {
+    const artifact = await bmjaArtifact();
+    const mutated = {
+      ...artifact,
+      profile: {
+        ...artifact.profile,
+        settlement: { ...artifact.profile.settlement, id: 'settlement.mutated' },
+      },
+    };
+    expect(artifact.executableDependencies.some(({ id }) => id === 'settlement.classical-pairwise')).toBe(true);
+    expect(() => compileBmjaRuntime(mutated)).toThrow('RUNTIME_DEPENDENCY_UNAVAILABLE:settlement.mutated');
+  });
+
+  it('returns a JSON-safe payload without optional undefined values', async () => {
+    const runtime = compileBmjaRuntime(await bmjaArtifact());
+    const result = runtime.scoreHand({ evidence: ordinary, context }).result;
+    expect(JSON.parse(JSON.stringify(result))).toEqual(result);
+    expect(JSON.stringify(result)).not.toContain('undefined');
   });
 });
