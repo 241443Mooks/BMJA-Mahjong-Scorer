@@ -1,5 +1,6 @@
 import { scoreHand, type GameContext, type MahjongHand, type ScoreBreakdown } from '../scoring';
 import { bmjaSpecialHandBindings } from '../scoring/special-hands';
+import { westernTmSpecialHandBindings } from '../game/western-tm-catalogue';
 import {
   gameEndImplementation,
   handModeImplementation,
@@ -25,7 +26,6 @@ import type {
 } from './types';
 import { jsonValueSchema } from './schemas';
 
-const BMJA_PROFILE = { id: 'bmja', version: '1.0' } as const;
 const keyFor = ({ id, semanticRevision }: ExecutableRegistryIdentity) =>
   `${id}@${semanticRevision}`;
 
@@ -35,10 +35,13 @@ type ClassicalScoringImplementation = (
 
 const currentBmjaScoring: ClassicalScoringImplementation = ({ evidence, context }) =>
   scoreHand(evidence, context, bmjaSpecialHandBindings);
+const currentWesternTmScoring: ClassicalScoringImplementation = ({ evidence, context }) =>
+  scoreHand(evidence, context, westernTmSpecialHandBindings);
 
-/** Exact bank entries, not inferred aliases: Run 1 deliberately contains BMJA only. */
+/** Exact current Classical tuples, selected solely from the sealed artifact. */
 const scoringImplementations = new Map<string, ClassicalScoringImplementation>([
   ['classical.scorer.current@1|classical.bindings.bmja-current@1|classical.policy.bmja-current@1', currentBmjaScoring],
+  ['classical.scorer.current@1|classical.bindings.western-tm-current@1|classical.policy.western-tm-current@1', currentWesternTmScoring],
 ]);
 
 const selectedIdentity = (
@@ -165,11 +168,8 @@ export type RulesRuntime = Readonly<{
   nextHandMode: ReturnType<typeof handModeImplementation>;
 }>;
 
-/** Compiles only the Run-0 sealed BMJA artifact into exact current implementations. */
-export const compileBmjaRuntime = (artifact: ResolvedProfileArtifact): RulesRuntime => {
-  if (artifact.profile.identity.id !== BMJA_PROFILE.id || artifact.profile.identity.version !== BMJA_PROFILE.version) {
-    throw new Error(`RUNTIME_PROFILE_UNSUPPORTED:${artifact.profile.identity.id}@${artifact.profile.identity.version}`);
-  }
+/** Compiles a sealed current Classical artifact into its exact selected implementations. */
+export const compileRulesRuntime = (artifact: ResolvedProfileArtifact): RulesRuntime => {
   const validation = selectedIdentity(artifact, artifact.profile.validation.handShapePolicyId);
   const settlement = selectedIdentity(artifact, artifact.profile.settlement.id);
   const progression = selectedIdentity(artifact, artifact.profile.progression.id);
@@ -186,7 +186,10 @@ export const compileBmjaRuntime = (artifact: ResolvedProfileArtifact): RulesRunt
     {
       family: CLASSICAL_WESTERN_VALIDATION_FAMILY,
       evidenceCodecId: CLASSICAL_WESTERN_VALIDATION_FAMILY.handEvidenceCodecId,
-      profile: BMJA_PROFILE,
+      profile: {
+        id: artifact.profile.identity.id,
+        version: artifact.profile.identity.version,
+      },
       input,
     },
   );
@@ -207,7 +210,10 @@ export const compileBmjaRuntime = (artifact: ResolvedProfileArtifact): RulesRunt
         : { kind: 'invalid' as const, reasonId: 'validation.classical-current.invalid' };
       return {
         grammar: 'classical-points-doubles',
-        profile: BMJA_PROFILE,
+        profile: {
+          id: artifact.profile.identity.id,
+          version: artifact.profile.identity.version,
+        },
         rulesFingerprint: artifact.rulesFingerprint,
         legal: disposition.kind === 'scored',
         disposition,
