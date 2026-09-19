@@ -193,6 +193,8 @@ export async function resolvePlayableProfile(ref: RulesProfileRef, env: Resolver
     const inspection = inspectProfile(rootFromProfile(profile), env);
     const references = [...inspection.references]; for (const nested of contractRefs) use(references, nested.path, 'functional', nested.category, nested.id, env);
     const blockers = [...inspection.blockers, ...references.filter(reference => reference.blockerCode)]; if (!inspection.profile || blockers.length) throw new Error(`PROFILE_NOT_PLAYABLE:${blockers.map(b => b.blockerCode).join(',')}`);
+    profile = inspection.profile;
+    if (definition.kind === 'derived') profile.identity.baseProfile = clone(definition.baseProfile);
     const dependencies = references.filter(r => r.role === 'functional' && !r.blockerCode).map(r => executableIdentity(env.registry.requireExecutable(r.expectedCategory, r.id))).filter((d,i,a) => a.findIndex(x => x.id === d.id && x.semanticRevision === d.semanticRevision) === i).sort((a,b) => a.id.localeCompare(b.id) || a.semanticRevision - b.semanticRevision);
     const artifact = freeze({ profile: freeze(clone(profile)), executableDependencies: freeze(dependencies), rulesFingerprint: await fingerprint(profile, dependencies) }); contractRefsByProfile.set(key, contractRefs); resolving.delete(key); return artifact;
   };

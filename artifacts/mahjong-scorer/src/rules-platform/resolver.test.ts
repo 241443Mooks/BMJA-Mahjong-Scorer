@@ -51,4 +51,51 @@ describe('rules profile resolver', () => {
     await expect(resolvePlayableProfile(ref('derived'), environment([root('base'), derived]))).resolves.toMatchObject({ profile: { identity: { baseProfile: ref('base') } } });
     await expect(resolvePlayableProfile(ref('derived'), environment([derived]))).rejects.toThrow('PROFILE_UNRESOLVED');
   });
+
+  it.each([
+    ['empty id', (d: RootProfileDefinition) => { d.identity.id = ''; }],
+    ['empty version', (d: RootProfileDefinition) => { d.identity.version = ''; }],
+    ['unknown fixed field', (d: RootProfileDefinition) => { (d.definition as Record<string, unknown>).unknown = true; }],
+    ['non-integer players', (d: RootProfileDefinition) => { (d.definition.table as { playerCount: number }).playerCount = 3.5; }],
+    ['non-positive players', (d: RootProfileDefinition) => { (d.definition.table as { playerCount: number }).playerCount = 0; }],
+    ['grammar mismatch', (d: RootProfileDefinition) => { (d.definition.scoring as { grammar: string }).grammar = 'riichi-han-fu'; }],
+  ])('strict root parsing rejects %s', (_name, change) => {
+    const definition = root(); change(definition);
+    expect(inspectProfile(definition, environment()).blockers[0]?.blockerCode).toBeTruthy();
+  });
+
+  it('enforces present family allow lists and leaves omitted lists unrestricted', () => {
+    const definition = root();
+    const constrained = { ...environment(), families: { get: (id: string) => id === 'family.test' ? { id, allowedGrammars: ['classical-points-doubles' as const], allowedTileSetIds: ['tiles.other'], allowedSeatModelIds: ['seats.other'], handEvidenceCodecId: 'codec.hand', roundOutcomeCodecId: 'codec.round', strategyStateCodecId: 'codec.strategy' } : undefined } };
+    expect(inspectProfile(definition, constrained).blockers.map(b => b.blockerCode)).toEqual(expect.arrayContaining(['FAMILY_TILESET_INCOMPATIBLE', 'FAMILY_SEATMODEL_INCOMPATIBLE']));
+    expect(inspectProfile(definition, environment()).blockers).toEqual([]);
+  });
+
+  it('distinguishes functional metadata, architecture-only, and category blockers', () => {
+    const metadata = new RegistryBank([...entries.filter(entry => entry.id !== 'seats.four'), { id: 'seats.four', category: 'seats', status: 'metadata' }]);
+    expect(inspectProfile(root(), { ...environment(), registry: metadata }).blockers.some(b => b.blockerCode === 'REFERENCE_NOT_EXECUTABLE')).toBe(true);
+    const wrong = root(); (wrong.definition.table as { seatModelId: string }).seatModelId = 'tiles.test';
+    expect(inspectProfile(wrong, environment()).blockers.some(b => b.blockerCode === 'REFERENCE_CATEGORY_MISMATCH')).toBe(true);
+  });
+
+  it('rejects unsafe non-empty open JSON and preserves canonical sealed sets', async () => {
+    const unsafe = root(); (unsafe.definition.settlement as { params: Record<string, unknown> }).params = { x: 1 };
+    expect(inspectProfile(unsafe, environment()).blockers.some(b => b.blockerCode === 'OPEN_JSON_UNVALIDATED')).toBe(true);
+    const setty = root(); (setty.definition.validation as { policyIds: string[] }).policyIds = ['validation.policy', 'validation.policy'];
+    (setty.definition.evidence as { policyIds: string[]; alwaysRequired: string[] }).policyIds = ['evidence-policy.test', 'evidence-policy.test'];
+    const artifact = await resolvePlayableProfile(ref(), environment([setty]));
+    expect(artifact.profile.validation.policyIds).toEqual(['validation.policy']);
+    expect(artifact.profile.evidence.policyIds).toEqual(['evidence-policy.test']);
+    expect(artifact.rulesFingerprint).toMatch(/^[a-f0-9]{64}$/);
+  });
+
+  it('fails self and cyclic inheritance and deep-freezes every returned level', async () => {
+    const self: ProfileAuthoringDefinition = { kind: 'derived', schemaVersion: 1, identity: { id: 'self', version: '1', name: 'self', status: 'custom' }, baseProfile: ref('self'), overrides: {} };
+    const a: ProfileAuthoringDefinition = { kind: 'derived', schemaVersion: 1, identity: { id: 'a', version: '1', name: 'a', status: 'custom' }, baseProfile: ref('b'), overrides: {} };
+    const b: ProfileAuthoringDefinition = { kind: 'derived', schemaVersion: 1, identity: { id: 'b', version: '1', name: 'b', status: 'custom' }, baseProfile: ref('a'), overrides: {} };
+    await expect(resolvePlayableProfile(ref('self'), environment([self]))).rejects.toThrow('PROFILE_INHERITANCE_SELF');
+    await expect(resolvePlayableProfile(ref('a'), environment([a, b]))).rejects.toThrow('PROFILE_INHERITANCE_CYCLE');
+    const artifact = await resolvePlayableProfile(ref(), environment());
+    expect(Object.isFrozen(artifact)).toBe(true); expect(Object.isFrozen(artifact.executableDependencies)).toBe(true); expect(Object.isFrozen(artifact.profile.table)).toBe(true);
+  });
 });
