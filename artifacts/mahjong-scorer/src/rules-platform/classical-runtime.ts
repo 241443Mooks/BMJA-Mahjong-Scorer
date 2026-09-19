@@ -1,5 +1,4 @@
 import { scoreHand, type GameContext, type MahjongHand, type ScoreBreakdown } from '../scoring';
-import { bmjaSpecialHandBindings } from '../scoring/special-hands';
 import { westernTmSpecialHandBindings } from '../game/western-tm-catalogue';
 import { outsideTheBoxSpecialHandBindings } from '../game/outside-the-box-catalogue';
 import { OUTSIDE_THE_BOX_SCORING_POLICY } from '../game/outside-the-box-scoring';
@@ -41,7 +40,9 @@ type ClassicalScoringImplementation = (
 ) => ScoreBreakdown;
 
 const currentBmjaScoring: ClassicalScoringImplementation = ({ evidence, context }) =>
-  scoreHand(evidence, context, bmjaSpecialHandBindings);
+  // BMJA's sealed binding identity audits the selected adapter. Its legacy
+  // fishing semantics, however, are the scorer's omitted-binding default.
+  scoreHand(evidence, context);
 const currentWesternTmScoring: ClassicalScoringImplementation = ({ evidence, context }) =>
   scoreHand(evidence, context, westernTmSpecialHandBindings);
 const currentOutsideTheBoxScoring: ClassicalScoringImplementation = ({ evidence, context }) =>
@@ -49,7 +50,7 @@ const currentOutsideTheBoxScoring: ClassicalScoringImplementation = ({ evidence,
 
 /** Exact current Classical tuples, selected solely from the sealed artifact. */
 const scoringImplementations = new Map<string, ClassicalScoringImplementation>([
-  ['classical.scorer.current@1|classical.bindings.bmja-current@1|classical.policy.bmja-current@1', currentBmjaScoring],
+  ['classical.scorer.current@1|classical.bindings.bmja-current@2|classical.policy.bmja-current@1', currentBmjaScoring],
   ['classical.scorer.current@1|classical.bindings.western-tm-current@1|classical.policy.western-tm-current@1', currentWesternTmScoring],
   ['classical.scorer.current@1|classical.bindings.outside-the-box-current@1|classical.policy.outside-the-box-current@1', currentOutsideTheBoxScoring],
 ]);

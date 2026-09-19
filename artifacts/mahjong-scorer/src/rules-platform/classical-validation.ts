@@ -1,5 +1,4 @@
 import {
-  bmjaSpecialHandBindings,
   validateHand,
   type GameContext,
   type MahjongHand,
@@ -26,7 +25,7 @@ const deterministic = { kind: 'deterministic', dependencies: [] } as const;
 /** The legacy BMJA validator's exact current-runtime contract. */
 export const CLASSICAL_CURRENT_VALIDATION: ValidationRegistryIdentity = {
   id: 'validation.classical-current',
-  semanticRevision: 1,
+  semanticRevision: 2,
 };
 
 export type ValidationRegistryIdentity =
@@ -67,13 +66,13 @@ export type ClassicalValidationInput = {
 
 type ClassicalValidationImplementation = (
   input: HandEvaluationInput<MahjongHand, GameContext>,
-  specialHandBindings: readonly SpecialHandPatternBinding[],
+  specialHandBindings?: readonly SpecialHandPatternBinding[],
 ) => string[];
 
 type ClassicalValidationConfiguration = {
   familyId: string;
   evidenceCodecId: string;
-  profiles: ReadonlyMap<string, readonly SpecialHandPatternBinding[]>;
+  profiles: ReadonlyMap<string, readonly SpecialHandPatternBinding[] | undefined>;
 };
 
 const profileKey = ({ id, version }: RulesProfileRef) => `${id}@${version}`;
@@ -82,7 +81,9 @@ const currentClassicalConfiguration: ClassicalValidationConfiguration = {
   familyId: CLASSICAL_WESTERN_VALIDATION_FAMILY.id,
   evidenceCodecId: CLASSICAL_WESTERN_VALIDATION_FAMILY.handEvidenceCodecId,
   profiles: new Map([
-    [profileKey(BMJA_CLASSICAL_VALIDATION_PROFILE), bmjaSpecialHandBindings],
+    // The current BMJA validator's omitted-binding default includes its full
+    // legacy fishing catalogue; explicit bindings intentionally do not.
+    [profileKey(BMJA_CLASSICAL_VALIDATION_PROFILE), undefined],
     [profileKey(WESTERN_TM_PROFILE_REF), westernTmSpecialHandBindings],
     [profileKey(OUTSIDE_THE_BOX_PROFILE_REF), outsideTheBoxSpecialHandBindings],
   ]),
@@ -91,7 +92,7 @@ const currentClassicalConfiguration: ClassicalValidationConfiguration = {
 const validateCurrentClassical: ClassicalValidationImplementation = (
   { evidence, context },
   specialHandBindings,
-) => validateHand(evidence, context, [...specialHandBindings]);
+) => validateHand(evidence, context, specialHandBindings && [...specialHandBindings]);
 
 const keyFor = ({ id, semanticRevision }: ExecutableRegistryIdentity) =>
   `${id}@${semanticRevision}`;
@@ -136,9 +137,9 @@ export const validateCurrentClassicalHand = (
       evidenceCodecId !== configuration.evidenceCodecId) {
     throw new Error(`Validation evidence codec is incompatible: ${evidenceCodecId}`);
   }
-  const specialHandBindings = configuration.profiles.get(profileKey(profile));
-  if (!specialHandBindings) {
+  const key = profileKey(profile);
+  if (!configuration.profiles.has(key)) {
     throw new Error(`Validation profile is unavailable: ${profileKey(profile)}`);
   }
-  return implementation.validate(input, specialHandBindings);
+  return implementation.validate(input, configuration.profiles.get(key));
 };
