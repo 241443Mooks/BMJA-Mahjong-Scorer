@@ -4,7 +4,14 @@ This file records meaningful changes to **Mahjong Reference** at product-milesto
 
 ## Unreleased
 
-_No unreleased product changes at this checkpoint._
+### Added
+
+- Expanded the source-local reference inventory to **626 concepts across 18 rules/source corpora**, while deliberately keeping cross-family equivalence work held until executable profile identities exist. [#265](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/pull/265)
+- Defined the structured-reference architecture for #251: human pages are views over a source/runtime-backed concept, profile-treatment, relationship and evidence layer rather than a wiki or second prose rules database. The same verified records are intended to support future scorer links, comparisons and grounded AI/voice explanations. [#281](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/pull/281)
+
+### Changed
+
+- Reframed the repository front door and documentation authority map around durable programme boundaries rather than short-lived child-issue sequencing.
 
 ## 2026-09-17 — Source-correct expansion and measurement baseline
 
