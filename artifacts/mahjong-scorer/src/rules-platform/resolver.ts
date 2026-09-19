@@ -4,7 +4,7 @@ import { categoryForId, executableIdentity, type RegistryBank, type RegistryCate
 import { jsonValueSchema, profileAuthoringDefinitionSchema, resolvedScoringConfigSchema } from './schemas';
 import type {
   CatalogueRef, DerivedProfileDefinition, ExecutableRegistryIdentity, JsonObject, JsonValue,
-  ProfileAuthoringDefinition, ResolvedProfileArtifact, ResolvedRulesProfile, RulesFamilyDefinition,
+  ProfileAuthoringDefinition, ResolvedProfileArtifact, ResolvedRulesProfile, RulesFamilyDefinition, SeatModelDefinition,
   RulesProfileRef, ScoringGrammarId,
 } from './types';
 
@@ -24,6 +24,7 @@ export type CapabilityAdapter = {
 export type ResolverEnvironment = {
   registry: RegistryBank;
   families: { get(id: string): RulesFamilyDefinition | undefined };
+  seatModels: { get(id: string): SeatModelDefinition | undefined };
   profiles: { get(ref: RulesProfileRef): ProfileAuthoringDefinition | undefined };
   capabilities?: { get(id: string): CapabilityMetadata | undefined };
   /** The narrow, code-owned set whose adapters can report final active state. */
@@ -128,6 +129,9 @@ export function inspectProfile(definition: ProfileAuthoringDefinition, env: Reso
     if (family.allowedTileSetIds && !family.allowedTileSetIds.includes(profile.tileSet.presetId)) refs.push({ path: 'tileSet.presetId', role: 'functional', expectedCategory: 'tiles', id: profile.tileSet.presetId, blockerCode: 'FAMILY_TILESET_INCOMPATIBLE' });
     if (family.allowedSeatModelIds && !family.allowedSeatModelIds.includes(profile.table.seatModelId)) refs.push({ path: 'table.seatModelId', role: 'functional', expectedCategory: 'seats', id: profile.table.seatModelId, blockerCode: 'FAMILY_SEATMODEL_INCOMPATIBLE' });
   }
+  const seatModel = env.seatModels.get(profile.table.seatModelId);
+  if (!seatModel) refs.push({ path: 'table.seatModelId', role: 'functional', expectedCategory: 'seats', id: profile.table.seatModelId, blockerCode: 'SEAT_MODEL_UNAVAILABLE' });
+  else if (seatModel.playerCount !== profile.table.playerCount) refs.push({ path: 'table.playerCount', role: 'functional', expectedCategory: 'seats', id: profile.table.seatModelId, blockerCode: 'SEAT_PLAYER_COUNT_MISMATCH' });
   use(refs, 'table.seatModelId','functional','seats',profile.table.seatModelId,env); use(refs, 'tileSet.presetId','functional','tiles',profile.tileSet.presetId,env); use(refs, 'handShape.presetId','functional','shape',profile.handShape.presetId,env); use(refs, 'validation.handShapePolicyId','functional','validation',profile.validation.handShapePolicyId,env);
   profile.validation.policyIds.forEach((id,i) => use(refs, `validation.policyIds[${i}]`,'functional','validation',id,env)); profile.evidence.policyIds.forEach((id,i) => use(refs, `evidence.policyIds[${i}]`,'functional','evidence-policy',id,env)); profile.evidence.alwaysRequired.forEach((id,i) => use(refs, `evidence.alwaysRequired[${i}]`,'functional','evidence',id,env));
   const strategies: [string, RegistryCategory, { id: string; params: JsonObject }][] = [['settlement','settlement',profile.settlement],['progression','progression',profile.progression],['gameEnd','game-end',profile.gameEnd], ...profile.handMode ? [['handMode','hand-mode',profile.handMode] as [string,RegistryCategory,{id:string;params:JsonObject}]] : [], ...profile.incidents?.map((s,i) => [`incidents[${i}]`,'incident',s] as [string,RegistryCategory,{id:string;params:JsonObject}]) ?? [], ...profile.procedure ? [['procedure','procedure',profile.procedure] as [string,RegistryCategory,{id:string;params:JsonObject}]] : []];

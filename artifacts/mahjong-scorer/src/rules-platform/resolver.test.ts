@@ -5,7 +5,7 @@ import type { JsonObject, JsonValue, ProfileAuthoringDefinition, RootProfileDefi
 
 const executable = (id: string, category: ConstructorParameters<typeof RegistryBank>[0][number]['category'], semanticRevision = 1) => ({ id, category, status: 'executable' as const, semanticRevision, executableContract: { kind: 'deterministic' as const, dependencies: [] as const } });
 const entries = [
-  executable('family.test', 'family'), executable('seats.four', 'seats'), executable('tiles.test', 'tiles'), executable('shape.standard', 'shape'), executable('validation.shape', 'validation'), executable('validation.policy', 'validation'), executable('evidence-policy.test', 'evidence-policy'), executable('evidence.test', 'evidence'), executable('settlement.test', 'settlement'), executable('progression.test', 'progression'), executable('game-end.test', 'game-end'), { id: 'source.test', category: 'source' as const, status: 'metadata' as const },
+  executable('family.test', 'family'), executable('seats.four', 'seats'), executable('seats.three', 'seats'), executable('tiles.test', 'tiles'), executable('shape.standard', 'shape'), executable('validation.shape', 'validation'), executable('validation.policy', 'validation'), executable('evidence-policy.test', 'evidence-policy'), executable('evidence.test', 'evidence'), executable('settlement.test', 'settlement'), executable('progression.test', 'progression'), executable('game-end.test', 'game-end'), { id: 'source.test', category: 'source' as const, status: 'metadata' as const },
 ];
 const ref = (id = 'test', version = '1') => ({ id, version });
 function root(id = 'test', version = '1'): RootProfileDefinition {
@@ -15,7 +15,7 @@ function root(id = 'test', version = '1'): RootProfileDefinition {
 }
 function environment(definitions: readonly ProfileAuthoringDefinition[] = [root()]): ResolverEnvironment {
   const profiles = new Map(definitions.map(d => [`${d.identity.id}@${d.identity.version}`, d]));
-  return { registry: new RegistryBank(entries), families: { get: id => id === 'family.test' ? { id, allowedGrammars: ['classical-points-doubles'], handEvidenceCodecId: 'codec.hand', roundOutcomeCodecId: 'codec.round', strategyStateCodecId: 'codec.strategy' } : undefined }, profiles: { get: value => profiles.get(`${value.id}@${value.version}`) } };
+  return { registry: new RegistryBank(entries), families: { get: id => id === 'family.test' ? { id, allowedGrammars: ['classical-points-doubles'], handEvidenceCodecId: 'codec.hand', roundOutcomeCodecId: 'codec.round', strategyStateCodecId: 'codec.strategy' } : undefined }, seatModels: { get: id => id === 'seats.four' ? { id, playerCount: 4 } : id === 'seats.three' ? { id, playerCount: 3 } : undefined }, profiles: { get: value => profiles.get(`${value.id}@${value.version}`) } };
 }
 
 describe('rules profile resolver', () => {
@@ -42,7 +42,7 @@ describe('rules profile resolver', () => {
     const a = root('a'); const b = root('b'); (b.definition.provenance as { metadata: Record<string, unknown> }).metadata = { changed: true };
     const first = await resolvePlayableProfile(ref('a'), environment([a, b])); const second = await resolvePlayableProfile(ref('b'), environment([a, b]));
     expect(first.rulesFingerprint).toBe(second.rulesFingerprint);
-    const changed = root('changed'); (changed.definition.table as { playerCount: number }).playerCount = 3;
+    const changed = root('changed'); (changed.definition.table as { playerCount: number; seatModelId: string }).playerCount = 3; (changed.definition.table as { playerCount: number; seatModelId: string }).seatModelId = 'seats.three';
     expect((await resolvePlayableProfile(ref('changed'), environment([changed]))).rulesFingerprint).not.toBe(first.rulesFingerprint);
   });
 
@@ -69,6 +69,13 @@ describe('rules profile resolver', () => {
     const constrained = { ...environment(), families: { get: (id: string) => id === 'family.test' ? { id, allowedGrammars: ['classical-points-doubles' as const], allowedTileSetIds: ['tiles.other'], allowedSeatModelIds: ['seats.other'], handEvidenceCodecId: 'codec.hand', roundOutcomeCodecId: 'codec.round', strategyStateCodecId: 'codec.strategy' } : undefined } };
     expect(inspectProfile(definition, constrained).blockers.map(b => b.blockerCode)).toEqual(expect.arrayContaining(['FAMILY_TILESET_INCOMPATIBLE', 'FAMILY_SEATMODEL_INCOMPATIBLE']));
     expect(inspectProfile(definition, environment()).blockers).toEqual([]);
+  });
+
+  it('rejects player counts that contradict the explicit seat descriptor', () => {
+    const definition = root(); (definition.definition.table as { playerCount: number }).playerCount = 3;
+    expect(inspectProfile(definition, environment()).blockers).toEqual(expect.arrayContaining([
+      expect.objectContaining({ blockerCode: 'SEAT_PLAYER_COUNT_MISMATCH' }),
+    ]));
   });
 
   it('distinguishes functional metadata, architecture-only, and category blockers', () => {
