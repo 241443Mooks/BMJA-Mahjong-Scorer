@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { RegistryBank } from './registry';
 import { inspectProfile, resolvePlayableProfile, type ResolverEnvironment } from './resolver';
-import type { ProfileAuthoringDefinition, RootProfileDefinition } from './types';
+import type { JsonObject, JsonValue, ProfileAuthoringDefinition, RootProfileDefinition } from './types';
 
 const executable = (id: string, category: ConstructorParameters<typeof RegistryBank>[0][number]['category'], semanticRevision = 1) => ({ id, category, status: 'executable' as const, semanticRevision, executableContract: { kind: 'deterministic' as const, dependencies: [] as const } });
 const entries = [
@@ -108,6 +108,199 @@ describe('rules profile resolver', () => {
     await expect(resolvePlayableProfile(ref('derived'), env(cap('validation.cap', { compatibleFamilyIds: ['other'] })))).rejects.toThrow('CAPABILITY_FAMILY_INCOMPATIBLE');
     await expect(resolvePlayableProfile(ref('derived'), env(cap('validation.cap', { compatibleGrammars: ['riichi-han-fu'] })))).rejects.toThrow('CAPABILITY_GRAMMAR_INCOMPATIBLE');
     await expect(resolvePlayableProfile(ref('derived'), env({ ...cap('validation.cap'), status: 'architecture-only' }))).rejects.toThrow('CAPABILITY_REGISTRY_MISMATCH');
+  });
+
+  it('rejects missing and invalid capability value-schema contracts', async () => {
+    const derived: ProfileAuthoringDefinition = { kind: 'derived', schemaVersion: 1, identity: { id: 'derived', version: '1', name: 'derived', status: 'custom' }, baseProfile: ref('base'), overrides: { 'validation.cap': true } };
+    const metadata = { id: 'validation.cap', category: 'validation' as const, status: 'executable' as const, semanticRevision: 1, customisation: 'customisable' as const, valueSchemaId: 'value.missing', presentation: { presentationKey: 'validation.cap' }, authoringDimensions: [] };
+    const base: ResolverEnvironment = {
+      ...environment([root('base'), derived]), registry: new RegistryBank([...entries, executable('validation.cap', 'validation')]), capabilities: { get: () => metadata }, capabilityState: { all: () => [] },
+      capabilityAdapters: { get: () => ({ apply: profile => profile, isActive: () => false }) },
+    };
+    await expect(resolvePlayableProfile(ref('derived'), { ...base, contracts: { get: () => undefined } })).rejects.toThrow('CAPABILITY_VALUE_UNVALIDATED');
+    await expect(resolvePlayableProfile(ref('derived'), { ...base, contracts: { get: () => ({ validate: () => ({ value: undefined as never }) }) } })).rejects.toThrow('CAPABILITY_VALUE_INVALID');
+  });
+
+  it('rejects capabilities whose metadata disagrees with the authoritative registry', async () => {
+    const derived: ProfileAuthoringDefinition = { kind: 'derived', schemaVersion: 1, identity: { id: 'derived', version: '1', name: 'derived', status: 'custom' }, baseProfile: ref('base'), overrides: { 'validation.cap': true } };
+    const metadata = { id: 'validation.cap', category: 'validation' as const, status: 'executable' as const, semanticRevision: 2, customisation: 'customisable' as const, valueSchemaId: 'value', presentation: { presentationKey: 'validation.cap' }, authoringDimensions: [] };
+    const env: ResolverEnvironment = {
+      ...environment([root('base'), derived]), registry: new RegistryBank([...entries, executable('validation.cap', 'validation', 1)]),
+      capabilities: { get: () => metadata }, capabilityState: { all: () => [] }, contracts: { get: () => ({ validate: value => ({ value }) }) },
+      capabilityAdapters: { get: () => ({ apply: profile => profile, isActive: () => false }) },
+    };
+    await expect(resolvePlayableProfile(ref('derived'), env)).rejects.toThrow('CAPABILITY_REGISTRY_MISMATCH');
+  });
+
+  it('rejects capability provenance without resolvable source metadata', async () => {
+    const derived: ProfileAuthoringDefinition = { kind: 'derived', schemaVersion: 1, identity: { id: 'derived', version: '1', name: 'derived', status: 'custom' }, baseProfile: ref('base'), overrides: { 'validation.cap': true } };
+    const metadata = (sourceId: string) => ({ id: 'validation.cap', category: 'validation' as const, status: 'executable' as const, semanticRevision: 1, customisation: 'customisable' as const, valueSchemaId: 'value', presentation: { presentationKey: 'validation.cap' }, authoringDimensions: [], provenance: { sourceId } });
+    const env = (sourceId: string): ResolverEnvironment => ({
+      ...environment([root('base'), derived]), registry: new RegistryBank([...entries, executable('validation.cap', 'validation')]),
+      capabilities: { get: () => metadata(sourceId) }, capabilityState: { all: () => [] }, contracts: { get: () => ({ validate: value => ({ value }) }) },
+      capabilityAdapters: { get: () => ({ apply: profile => profile, isActive: () => false }) },
+    });
+    await expect(resolvePlayableProfile(ref('derived'), env('source.missing'))).rejects.toThrow('CAPABILITY_UNRESOLVED');
+    await expect(resolvePlayableProfile(ref('derived'), env('validation.policy'))).rejects.toThrow('CAPABILITY_UNRESOLVED');
+  });
+
+  it('seals normalised capability values and exact nested semantic dependencies', async () => {
+    const derived: ProfileAuthoringDefinition = { kind: 'derived', schemaVersion: 1, identity: { id: 'derived', version: '1', name: 'derived', status: 'custom' }, baseProfile: ref('base'), overrides: { 'validation.cap': { raw: 'input' } } };
+    const metadata = { id: 'validation.cap', category: 'validation' as const, status: 'executable' as const, semanticRevision: 1, customisation: 'customisable' as const, valueSchemaId: 'value', presentation: { presentationKey: 'validation.cap' }, authoringDimensions: [] };
+    const env: ResolverEnvironment = {
+      ...environment([root('base'), derived]), registry: new RegistryBank([...entries, executable('validation.cap', 'validation'), executable('evidence.nested', 'evidence', 7)]),
+      capabilities: { get: () => metadata }, capabilityState: { all: () => [] },
+      contracts: { get: () => ({ validate: () => ({ value: { canonical: 'value' }, references: [{ path: 'evidence', category: 'evidence' as const, id: 'evidence.nested' }] }) }) },
+      capabilityAdapters: { get: () => ({ apply: (profile, value) => ({ ...profile, provenance: { ...profile.provenance, metadata: value as JsonObject } }), isActive: () => false }) },
+    };
+    const artifact = await resolvePlayableProfile(ref('derived'), env);
+    expect(artifact.profile.provenance.metadata).toEqual({ canonical: 'value' });
+    expect(artifact.profile.provenance.metadata).not.toEqual({ raw: 'input' });
+    expect(artifact.executableDependencies).toContainEqual({ id: 'evidence.nested', semanticRevision: 7 });
+  });
+
+  it('rejects target catalogues from the wrong registry category', async () => {
+    const definition = root();
+    (definition.definition as Record<string, any>).grammar = 'target-catalogue';
+    (definition.definition.scoring as Record<string, unknown>) = { grammar: 'target-catalogue', config: { configVersion: 1, catalogueRef: { id: 'catalogue.pattern.test', version: '2026.1' }, matchPolicyId: 'target-match.test', substitutionPolicyId: 'substitution.test', exposurePolicyId: 'target-exposure.test', valuePolicyId: 'target-value.test' } };
+    const registry = new RegistryBank([...entries, executable('catalogue.pattern.test', 'catalogue.pattern'), executable('target-match.test', 'target-match'), executable('substitution.test', 'substitution'), executable('target-exposure.test', 'target-exposure'), executable('target-value.test', 'target-value')]);
+    const env = { ...environment([definition]), registry, families: { get: (id: string) => id === 'family.test' ? { id, allowedGrammars: ['target-catalogue' as const], handEvidenceCodecId: 'codec.hand', roundOutcomeCodecId: 'codec.round', strategyStateCodecId: 'codec.strategy' } : undefined }, targetCatalogues: { has: () => true } };
+    await expect(resolvePlayableProfile(ref(), env)).rejects.toThrow('PROFILE_NOT_PLAYABLE:REFERENCE_CATEGORY_MISMATCH');
+  });
+
+  it.each([
+    ['empty version', '', true],
+    ['unavailable exact version', '2026.2', false],
+  ])('rejects target catalogue with %s', async (_name, version, available) => {
+    const definition = root();
+    (definition.definition as Record<string, any>).grammar = 'target-catalogue';
+    (definition.definition.scoring as Record<string, unknown>) = { grammar: 'target-catalogue', config: { configVersion: 1, catalogueRef: { id: 'catalogue.target.test', version }, matchPolicyId: 'target-match.test', substitutionPolicyId: 'substitution.test', exposurePolicyId: 'target-exposure.test', valuePolicyId: 'target-value.test' } };
+    const registry = new RegistryBank([...entries, executable('catalogue.target.test', 'catalogue.target'), executable('target-match.test', 'target-match'), executable('substitution.test', 'substitution'), executable('target-exposure.test', 'target-exposure'), executable('target-value.test', 'target-value')]);
+    const env = { ...environment([definition]), registry, families: { get: (id: string) => id === 'family.test' ? { id, allowedGrammars: ['target-catalogue' as const], handEvidenceCodecId: 'codec.hand', roundOutcomeCodecId: 'codec.round', strategyStateCodecId: 'codec.strategy' } : undefined }, targetCatalogues: { has: ({ id, version: candidateVersion }: { id: string; version: string }) => available && id === 'catalogue.target.test' && candidateVersion === '2026.1' } };
+    await expect(resolvePlayableProfile(ref(), env)).rejects.toThrow('PROFILE_NOT_PLAYABLE');
+  });
+
+  it('resolves an available exact target catalogue ref', async () => {
+    const definition = root();
+    (definition.definition as Record<string, any>).grammar = 'target-catalogue';
+    (definition.definition.scoring as Record<string, unknown>) = { grammar: 'target-catalogue', config: { configVersion: 1, catalogueRef: { id: 'catalogue.target.test', version: '2026.1' }, matchPolicyId: 'target-match.test', substitutionPolicyId: 'substitution.test', exposurePolicyId: 'target-exposure.test', valuePolicyId: 'target-value.test' } };
+    const registry = new RegistryBank([...entries, executable('catalogue.target.test', 'catalogue.target'), executable('target-match.test', 'target-match'), executable('substitution.test', 'substitution'), executable('target-exposure.test', 'target-exposure'), executable('target-value.test', 'target-value')]);
+    const env = { ...environment([definition]), registry, families: { get: (id: string) => id === 'family.test' ? { id, allowedGrammars: ['target-catalogue' as const], handEvidenceCodecId: 'codec.hand', roundOutcomeCodecId: 'codec.round', strategyStateCodecId: 'codec.strategy' } : undefined }, targetCatalogues: { has: ({ id, version }: { id: string; version: string }) => id === 'catalogue.target.test' && version === '2026.1' } };
+    await expect(resolvePlayableProfile(ref(), env)).resolves.toMatchObject({ profile: { scoring: { config: { catalogueRef: { id: 'catalogue.target.test', version: '2026.1' } } } } });
+  });
+
+  it('enforces final-state capability requirements and conflicts, including a base-only requiring capability', async () => {
+    const derived = (id: string, overrides: Record<string, JsonValue>): ProfileAuthoringDefinition => ({ kind: 'derived', schemaVersion: 1, identity: { id, version: '1', name: id, status: 'custom' }, baseProfile: ref('base'), overrides });
+    const capability = (id: string, extra: Record<string, unknown> = {}) => ({ id, category: 'validation' as const, status: 'executable' as const, semanticRevision: 1, customisation: 'customisable' as const, valueSchemaId: 'value', presentation: { presentationKey: id }, authoringDimensions: [], ...extra });
+    const resolveRelationships = async (definition: ProfileAuthoringDefinition, baseState: Record<string, boolean>, metadata: readonly ReturnType<typeof capability>[]) => {
+      const base = root('base'); (base.definition.provenance as { metadata: JsonObject }).metadata = { capabilities: baseState };
+      const state = (profile: { provenance: { metadata?: JsonObject } }, id: string) => Boolean((profile.provenance.metadata?.capabilities as Record<string, boolean> | undefined)?.[id]);
+      const env: ResolverEnvironment = {
+        ...environment([base, definition]), registry: new RegistryBank([...entries, ...metadata.map(item => executable(item.id, 'validation'))]), capabilities: { get: id => metadata.find(item => item.id === id) }, capabilityState: { all: () => metadata }, contracts: { get: () => ({ validate: value => ({ value }) }) },
+        capabilityAdapters: { get: id => ({ apply: (profile, value) => ({ ...profile, provenance: { ...profile.provenance, metadata: { ...profile.provenance.metadata, capabilities: { ...(profile.provenance.metadata?.capabilities as JsonObject), [id]: value } } } }), isActive: profile => state(profile, id) }) },
+      };
+      return resolvePlayableProfile(ref(definition.identity.id), env);
+    };
+    const requiringA = capability('validation.a', { requires: ['validation.b'] });
+    const b = capability('validation.b');
+    await expect(resolveRelationships(derived('disables-b', { 'validation.b': false }), { 'validation.a': true, 'validation.b': true }, [requiringA, b])).rejects.toThrow('CAPABILITY_REQUIREMENT_UNMET');
+    const conflictingA = capability('validation.a', { conflicts: ['validation.b'] });
+    const noop = capability('validation.noop');
+    await expect(resolveRelationships(derived('conflict', { 'validation.noop': true }), { 'validation.a': true, 'validation.b': true }, [conflictingA, b, noop])).rejects.toThrow('CAPABILITY_CONFLICT_ACTIVE');
+  });
+
+  it('makes derived override insertion order semantically and fingerprint deterministic', async () => {
+    const derived = (id: string, overrides: Record<string, JsonValue>): ProfileAuthoringDefinition => ({ kind: 'derived', schemaVersion: 1, identity: { id, version: '1', name: id, status: 'custom' }, baseProfile: ref('base'), overrides });
+    const metadata = (id: string) => ({ id, category: 'validation' as const, status: 'executable' as const, semanticRevision: 1, customisation: 'customisable' as const, valueSchemaId: 'value', presentation: { presentationKey: id }, authoringDimensions: [] });
+    const a = metadata('validation.a'); const b = metadata('validation.b');
+    const left = derived('left', { 'validation.b': 4, 'validation.a': 3 });
+    const right = derived('right', { 'validation.a': 3, 'validation.b': 4 });
+    const env: ResolverEnvironment = {
+      ...environment([root('base'), left, right]), registry: new RegistryBank([...entries, executable('validation.a', 'validation'), executable('validation.b', 'validation')]), capabilities: { get: id => [a, b].find(item => item.id === id) }, capabilityState: { all: () => [] }, contracts: { get: () => ({ validate: value => ({ value }) }) },
+      capabilityAdapters: { get: () => ({ apply: (profile, value) => ({ ...profile, table: { ...profile.table, playerCount: value as number } }), isActive: () => false }) },
+    };
+    const [first, second] = await Promise.all([resolvePlayableProfile(ref('left'), env), resolvePlayableProfile(ref('right'), env)]);
+    expect(first.profile.table).toEqual(second.profile.table);
+    expect(first.rulesFingerprint).toBe(second.rulesFingerprint);
+  });
+
+  it('canonicalises ordinary JSON object-key ordering for configs and params', async () => {
+    const first = root('first'); const second = root('second');
+    (first.definition.scoring as { config: JsonObject }).config = { beta: { y: 2, x: 1 }, alpha: true };
+    (second.definition.scoring as { config: JsonObject }).config = { alpha: true, beta: { x: 1, y: 2 } };
+    (first.definition.settlement as { params: JsonObject }).params = { beta: { y: 2, x: 1 }, alpha: true };
+    (second.definition.settlement as { params: JsonObject }).params = { alpha: true, beta: { x: 1, y: 2 } };
+    const registry = new RegistryBank([...entries.filter(entry => entry.id !== 'settlement.test'), { ...executable('settlement.test', 'settlement'), parameterSchemaId: 'params' }]);
+    const env: ResolverEnvironment = { ...environment([first, second]), registry, contracts: { get: () => ({ validate: value => ({ value }) }) }, familyContracts: { get: () => ({ validate: value => ({ value }) }) } };
+    const [a, b] = await Promise.all([resolvePlayableProfile(ref('first'), env), resolvePlayableProfile(ref('second'), env)]);
+    expect(a.profile.scoring).toEqual(b.profile.scoring);
+    expect(a.profile.settlement.params).toEqual(b.profile.settlement.params);
+    expect(a.rulesFingerprint).toBe(b.rulesFingerprint);
+  });
+
+  it('normalises set-like arrays before sealing their semantics and fingerprint', async () => {
+    const first = root('first'); const second = root('second');
+    (first.definition.validation as { policyIds: string[] }).policyIds = ['validation.policy-two', 'validation.policy', 'validation.policy-two'];
+    (second.definition.validation as { policyIds: string[] }).policyIds = ['validation.policy', 'validation.policy-two'];
+    (first.definition.evidence as { policyIds: string[]; alwaysRequired: string[] }).policyIds = ['evidence-policy.two', 'evidence-policy.test', 'evidence-policy.two'];
+    (second.definition.evidence as { policyIds: string[]; alwaysRequired: string[] }).policyIds = ['evidence-policy.test', 'evidence-policy.two'];
+    (first.definition.evidence as { policyIds: string[]; alwaysRequired: string[] }).alwaysRequired = ['evidence.two', 'evidence.test', 'evidence.two'];
+    (second.definition.evidence as { policyIds: string[]; alwaysRequired: string[] }).alwaysRequired = ['evidence.test', 'evidence.two'];
+    const env = { ...environment([first, second]), registry: new RegistryBank([...entries, executable('validation.policy-two', 'validation'), executable('evidence-policy.two', 'evidence-policy'), executable('evidence.two', 'evidence')]) };
+    const [a, b] = await Promise.all([resolvePlayableProfile(ref('first'), env), resolvePlayableProfile(ref('second'), env)]);
+    expect(a.profile.validation.policyIds).toEqual(b.profile.validation.policyIds);
+    expect(a.profile.evidence).toEqual(b.profile.evidence);
+    expect(a.rulesFingerprint).toBe(b.rulesFingerprint);
+  });
+
+  it('preserves incident order as fingerprint-significant semantics', async () => {
+    const first = root('first'); const second = root('second');
+    (first.definition as Record<string, unknown>).incidents = [{ id: 'incident.first', params: {} }, { id: 'incident.second', params: {} }];
+    (second.definition as Record<string, unknown>).incidents = [{ id: 'incident.second', params: {} }, { id: 'incident.first', params: {} }];
+    const env = { ...environment([first, second]), registry: new RegistryBank([...entries, executable('incident.first', 'incident'), executable('incident.second', 'incident')]) };
+    const [a, b] = await Promise.all([resolvePlayableProfile(ref('first'), env), resolvePlayableProfile(ref('second'), env)]);
+    expect(a.profile.incidents).not.toEqual(b.profile.incidents);
+    expect(a.rulesFingerprint).not.toBe(b.rulesFingerprint);
+  });
+
+  it('includes executable dependency semantic revisions in the fingerprint', async () => {
+    const definition = root();
+    const standard = environment([definition]);
+    const revised: ResolverEnvironment = { ...environment([definition]), registry: new RegistryBank([...entries.filter(entry => entry.id !== 'settlement.test'), executable('settlement.test', 'settlement', 2)]) };
+    const [first, second] = await Promise.all([resolvePlayableProfile(ref(), standard), resolvePlayableProfile(ref(), revised)]);
+    expect(first.profile).toEqual(second.profile);
+    expect(first.executableDependencies.find(entry => entry.id === 'settlement.test')?.semanticRevision).toBe(1);
+    expect(second.executableDependencies.find(entry => entry.id === 'settlement.test')?.semanticRevision).toBe(2);
+    expect(first.rulesFingerprint).not.toBe(second.rulesFingerprint);
+  });
+
+  it('preserves resolved semantics and fingerprint through JSON authoring round-trip', async () => {
+    const definition = root();
+    const parsed = JSON.parse(JSON.stringify(definition)) as ProfileAuthoringDefinition;
+    const [original, roundTripped] = await Promise.all([
+      resolvePlayableProfile(ref(), environment([definition])),
+      resolvePlayableProfile(ref(), environment([parsed])),
+    ]);
+    expect(roundTripped.profile).toEqual(original.profile);
+    expect(roundTripped.rulesFingerprint).toBe(original.rulesFingerprint);
+  });
+
+  it('does not mutate a previously resolved base artifact while resolving a derived profile', async () => {
+    const base = root('base');
+    const derived: ProfileAuthoringDefinition = { kind: 'derived', schemaVersion: 1, identity: { id: 'derived', version: '1', name: 'derived', status: 'custom' }, baseProfile: ref('base'), overrides: {} };
+    const env = environment([base, derived]);
+    const artifact = await resolvePlayableProfile(ref('base'), env);
+    const before = JSON.parse(JSON.stringify(artifact));
+    await resolvePlayableProfile(ref('derived'), env);
+    expect(artifact).toEqual(before);
+  });
+
+  it('seals nested profile and executable dependency state against mutation', async () => {
+    const artifact = await resolvePlayableProfile(ref(), environment());
+    const before = JSON.parse(JSON.stringify(artifact));
+    expect(() => { (artifact.profile.table as { playerCount: number }).playerCount = 99; }).toThrow();
+    expect(() => { (artifact.executableDependencies[0] as { semanticRevision: number }).semanticRevision = 99; }).toThrow();
+    expect(artifact).toEqual(before);
   });
 
   it('rejects architecture-only profiles through playable resolution after structured inspection', async () => {
