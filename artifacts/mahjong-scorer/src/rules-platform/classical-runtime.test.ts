@@ -279,3 +279,92 @@ describe('Outside the Box compiled current runtime', () => {
     expect(() => compileRulesRuntime(multiple)).toThrow('RUNTIME_INCIDENTS_UNSUPPORTED');
   });
 });
+
+describe('#233 Run 3 closure', () => {
+  const classicalRequiredEvidence = [
+    'evidence.classical-hand-v1',
+    'evidence.round-wind',
+    'evidence.seat-wind',
+  ];
+
+  it('declares only each sealed profile’s canonical always-required evidence', async () => {
+    for (const artifact of await Promise.all([bmjaArtifact(), westernTmArtifact(), outsideTheBoxArtifact()])) {
+      const requiredEvidence = compileRulesRuntime(artifact).requiredEvidence();
+      expect(requiredEvidence).toEqual(classicalRequiredEvidence);
+      expect(Object.isFrozen(requiredEvidence)).toBe(true);
+    }
+  });
+
+  it('keeps current Classical outputs limited to scored and invalid without contradiction', async () => {
+    for (const artifact of await Promise.all([bmjaArtifact(), westernTmArtifact(), outsideTheBoxArtifact()])) {
+      const runtime = compileRulesRuntime(artifact);
+      const scored = runtime.scoreHand({ evidence: ordinary, context });
+      const invalid = runtime.scoreHand({ evidence: { ...ordinary, sets: [set('pair', 'pair', wind('east'))] }, context });
+      expect(scored).toMatchObject({ legal: true, disposition: { kind: 'scored' } });
+      expect(invalid).toMatchObject({ legal: false, disposition: { kind: 'invalid' } });
+      expect([scored.disposition.kind, invalid.disposition.kind]).toEqual(['scored', 'invalid']);
+    }
+  });
+
+  it('fails unsupported grammar and missing exact selected strategy revisions', async () => {
+    const artifact = await bmjaArtifact();
+    const unsupportedGrammar = {
+      ...artifact,
+      profile: { ...artifact.profile, scoring: { ...artifact.profile.scoring, grammar: 'riichi-han-fu' } },
+    } as ResolvedProfileArtifact;
+    expect(() => compileRulesRuntime(unsupportedGrammar)).toThrow('RUNTIME_GRAMMAR_UNSUPPORTED:riichi-han-fu');
+    const missingStrategyRevision = {
+      ...artifact,
+      executableDependencies: artifact.executableDependencies.map((dependency) =>
+        dependency.id === 'settlement.classical-pairwise' ? { ...dependency, semanticRevision: 2 } : dependency,
+      ),
+    };
+    expect(() => compileRulesRuntime(missingStrategyRevision)).toThrow(
+      'Unknown current strategy implementation: settlement.classical-pairwise@2',
+    );
+  });
+
+  it('fails if selected validation and the selected legacy scorer disagree', async () => {
+    // Existing OTB readiness fixture: Ruby Jade is a profile-owned irregular
+    // layout, so cross-wiring the sealed validation profile must be rejected.
+    const rubyJade: MahjongHand = {
+      sets: [],
+      looseTiles: [
+        dragon('green'), dragon('green'), dragon('red'), dragon('red'),
+        ...[1, 3, 5, 7, 9].flatMap((rank) => [
+          suited('bamboo', rank as 1 | 3 | 5 | 7 | 9),
+          suited('bamboo', rank as 1 | 3 | 5 | 7 | 9),
+        ]),
+      ],
+      ungroupedBlankTiles: [{ id: 'blank-ruby-jade', location: 'loose', tileIndex: 2 }],
+      bonusTiles: [],
+      isWinner: true,
+    };
+    const artifact = await outsideTheBoxArtifact();
+    const mismatchedValidationProfile = {
+      ...artifact,
+      profile: {
+        ...artifact.profile,
+        identity: { ...artifact.profile.identity, id: 'bmja', version: '1.0' },
+      },
+    } as ResolvedProfileArtifact;
+    const runtime = compileRulesRuntime(mismatchedValidationProfile);
+    expect(() => runtime.scoreHand({ evidence: rubyJade, context: { ...context, playerWind: 'east', handMode: 'goulash' } })).toThrow(
+      'RUNTIME_VALIDATION_DISAGREEMENT',
+    );
+  });
+
+  it('keeps JSON-safe audit traces deterministic across repeated compilation and evaluation', async () => {
+    const artifact = await westernTmArtifact();
+    const first = compileRulesRuntime(artifact).scoreHand({ evidence: ordinary, context });
+    const second = compileRulesRuntime(artifact).scoreHand({ evidence: ordinary, context });
+    expect(second.decisionTrace).toEqual(first.decisionTrace);
+    expect(second).toMatchObject({
+      profile: first.profile,
+      rulesFingerprint: artifact.rulesFingerprint,
+      legal: true,
+      disposition: { kind: 'scored' },
+    });
+    expect(JSON.parse(JSON.stringify(second))).toEqual(second);
+  });
+});

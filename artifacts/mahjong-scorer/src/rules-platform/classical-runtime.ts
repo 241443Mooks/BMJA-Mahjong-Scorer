@@ -170,6 +170,7 @@ const traceFor = (
 
 export type RulesRuntime = Readonly<{
   artifact: ResolvedProfileArtifact;
+  requiredEvidence(): readonly string[];
   validateHand(input: HandEvaluationInput<MahjongHand, GameContext>): readonly string[];
   scoreHand(input: HandEvaluationInput<MahjongHand, GameContext>): HandScoreResult;
   settleRound: ReturnType<typeof settlementImplementation>;
@@ -228,9 +229,13 @@ export const compileRulesRuntime = (artifact: ResolvedProfileArtifact): RulesRun
       input,
     },
   );
+  // The resolver canonicalises this contract in the sealed artifact. It is a
+  // declarative discovery surface, not a claim that other evidence is invalid.
+  const requiredEvidence = Object.freeze([...artifact.profile.evidence.alwaysRequired]);
 
   return Object.freeze({
     artifact,
+    requiredEvidence: () => requiredEvidence,
     validateHand: validate,
     scoreHand(input: HandEvaluationInput<MahjongHand, GameContext>): HandScoreResult {
       const validationErrors = validate(input);
