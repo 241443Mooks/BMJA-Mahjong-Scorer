@@ -5,4 +5,5 @@ export * from './capabilities';
 export * from './resolver';
 export * from './architecture-seeds';
 export * from './classical-strategies';
+export * from './classical-validation';
 export * from './outside-the-box-strategies';
