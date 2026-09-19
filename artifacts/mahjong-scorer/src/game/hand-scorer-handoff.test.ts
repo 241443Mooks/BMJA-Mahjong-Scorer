@@ -1,4 +1,5 @@
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
+import { initialiseCurrentRulesRuntimes } from '../rules-platform/current-runtime-registry';
 import { suited } from '../scoring';
 import { confirmHand, createBmjaGame, undoLastHand } from './game';
 import {
@@ -15,15 +16,20 @@ import type {
   RoundScoringDraft,
 } from './types';
 
-const game = createBmjaGame(
-  [
-    { id: 'jenn', name: 'Jenn' },
-    { id: 'bill', name: 'Bill' },
-    { id: 'ben', name: 'Ben' },
-    { id: 'jack', name: 'Jack' },
-  ],
-  { jenn: 'east', bill: 'south', ben: 'west', jack: 'north' },
-);
+let game: ReturnType<typeof createBmjaGame>;
+
+beforeAll(async () => {
+  await initialiseCurrentRulesRuntimes();
+  game = createBmjaGame(
+    [
+      { id: 'jenn', name: 'Jenn' },
+      { id: 'bill', name: 'Bill' },
+      { id: 'ben', name: 'Ben' },
+      { id: 'jack', name: 'Jack' },
+    ],
+    { jenn: 'east', bill: 'south', ben: 'west', jack: 'north' },
+  );
+});
 
 const billWins = { type: 'win' as const, winnerId: 'bill' };
 

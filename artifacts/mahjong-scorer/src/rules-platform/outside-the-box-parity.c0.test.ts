@@ -1,4 +1,5 @@
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
+import { initialiseCurrentRulesRuntimes } from './current-runtime-registry';
 import { bonus, dragon, set, suited, wind, type MahjongHand } from '../scoring';
 import { confirmHand, createBmjaGame } from '../game/game';
 import { OUTSIDE_THE_BOX_PROFILE_REF } from '../game/ruleset';
@@ -11,6 +12,8 @@ import {
   projectSettlementTransactions,
   runtimeBreakdown,
 } from './parity-harness.test-support';
+
+beforeAll(() => initialiseCurrentRulesRuntimes());
 
 // Curated source fixtures: outside-the-box-scoring/goulash/incidents/readiness and outside-the-box-strategies tests.
 const players: GamePlayer[] = ['east', 'south', 'west', 'north'].map((id) => ({ id, name: id }));

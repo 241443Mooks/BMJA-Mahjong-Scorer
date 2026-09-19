@@ -1,7 +1,10 @@
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
+import { initialiseCurrentRulesRuntimes } from '../rules-platform/current-runtime-registry';
 import { confirmHand, createBmjaGame, replayGame, undoLastHand } from './game';
 import { OUTSIDE_THE_BOX_PROFILE_REF } from './ruleset';
 import { previewRoundSettlement } from './GameScorer';
+
+beforeAll(() => initialiseCurrentRulesRuntimes());
 
 const players = ['east', 'south', 'west', 'north'].map((id) => ({ id, name: id }));
 const seats = { east: 'east', south: 'south', west: 'west', north: 'north' } as const;

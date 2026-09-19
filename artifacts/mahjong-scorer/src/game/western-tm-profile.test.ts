@@ -1,4 +1,5 @@
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
+import { initialiseCurrentRulesRuntimes } from '../rules-platform/current-runtime-registry';
 import { bonus, dragon, set, suited, wind } from '../scoring';
 import { canonicalSpecialHandPatterns } from '../scoring/special-hands';
 import type { MahjongHand } from '../scoring';
@@ -13,6 +14,8 @@ import {
 } from './ruleset';
 import { loadGameRecovery, saveGameRecovery } from './persistence';
 import type { GamePlayer, SeatAssignments } from './types';
+
+beforeAll(() => initialiseCurrentRulesRuntimes());
 
 const players: GamePlayer[] = [
   { id: 'east', name: 'East' },

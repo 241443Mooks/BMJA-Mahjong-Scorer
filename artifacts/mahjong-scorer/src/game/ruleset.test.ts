@@ -1,4 +1,5 @@
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
+import { initialiseCurrentRulesRuntimes } from '../rules-platform/current-runtime-registry';
 import { createBmjaGame } from './game';
 import {
   BMJA_PROFILE_REF,
@@ -6,6 +7,8 @@ import {
   resolveRulesProfile,
 } from './ruleset';
 import type { GamePlayer, SeatAssignments } from './types';
+
+beforeAll(() => initialiseCurrentRulesRuntimes());
 
 const players: GamePlayer[] = [
   { id: 'east', name: 'East' },
