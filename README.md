@@ -39,7 +39,7 @@ The project is independent and does not claim BMJA endorsement.
 
 A few decisions shape the whole project:
 
-- **Deterministic rules engines are the authority.** AI may later help translate speech into structured evidence; it does not calculate the Mahjong score.
+- **Deterministic rules engines are the authority.** AI may later help translate speech into structured evidence or explain verified facts; it does not invent or calculate the Mahjong rules.
 - **Explain rather than guess.** Unknown material evidence remains unknown and fails conservatively.
 - **Hand value and settlement are separate.** What a hand scores is not automatically what a player pays or receives.
 - **Rules identity is data, not a label.** Saved games retain an exact profile/version so later changes cannot silently reinterpret old play.
@@ -50,25 +50,31 @@ A few decisions shape the whole project:
 
 The project started as a British Mahjong scorer. Adding Western and Club profiles exposed a larger design problem: related Mahjong traditions can share tile structures and pattern recognition while differing in values, settlement, progression and even the scoring grammar itself.
 
-The current architecture therefore uses one profile envelope above a small number of scoring grammars:
+The rules platform therefore uses one profile envelope above a small number of scoring grammars:
 
 1. **Classical points + doubles** — British/Western/Classical profiles;
 2. **Pattern accumulator** — MCR and related traditions;
 3. **Riichi han + fu** — Riichi-family profiles;
 4. **Target catalogue** — American/NMJL-style versioned catalogue matching.
 
-Rules research is deliberately separated from implementation. Buzzard 2000 is source-ready as a Classical configuration proof; the MCR 2006 81-fan correctness corpus and EMA Riichi 2025 yaku/fu/payment corpus are both source-pinned and waiting for the shared runtime platform rather than for more rules discovery.
+Rules research is deliberately separated from implementation. Buzzard 2000 is source-ready as a Classical configuration proof; the MCR 2006 81-fan correctness corpus and EMA Riichi 2025 yaku/fu/payment corpus are source-pinned for later executable profiles.
 
-Cross-family implementation is staged on `integration/rules-platform-v1` under issue #227. The next engineering slices are #229 (universal type/schema boxes) and #230 (typed registries/labelled pieces). #231 is intentionally held until those two implementation slices provide real feedback.
+Cross-family migration work is isolated on `integration/rules-platform-v1` until its parity and caller-cutover gates pass. The durable programme authority is issue [#227](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/227) and the rollout tracker [#275](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/275). For the live priority map, use [#105](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/105) rather than treating this README as a roadmap.
 
-For the live priority map, use [issue #105](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/105) rather than treating this README as a roadmap.
+## Structured Mahjong knowledge
+
+The longer-term reference direction is not a wiki or a second prose rules database. Issue [#251](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/251) is building toward a **machine-readable, source/runtime-backed Mahjong knowledge layer** whose human-readable reference pages are views over the same verified concepts, profile treatments, relationships and evidence.
+
+The source-local inventory currently covers 626 concepts across 18 corpora. Cross-family matching deliberately waits for executable Buzzard, MCR and Riichi identities so similar names are not treated as equivalent without proof.
+
+That same structured layer is intended to support future search/reference pages, scorer links, comparison tools and grounded AI/voice explanations. See `docs/product/REFERENCE_KNOWLEDGE_ARCHITECTURE.md`.
 
 ## Other product work
 
 - **Mahjong Reference Plus** is designed as optional convenience: cloud memory, preferences and later metered services; free scoring/table play remains account-free. See `docs/product/MAHJONG_REFERENCE_PLUS_ARCHITECTURE.md` and #206.
 - **Voice hand entry** is an evaluation-first experiment: speech → structured evidence → deterministic scorer → Accept/Edit. See #147.
 - **Analytics** is deliberately limited and cookieless. See `docs/product/ANALYTICS_MEASUREMENT_PLAN.md` and #246.
-- **Search/content growth** is evidence-led. The current strategy is `docs/product/SEO_GROWTH_STRATEGY.md`; major encyclopaedia/SEO expansion is deliberately sequenced after the multi-ruleset runtime exists.
+- **Search/content growth** is evidence-led. The current strategy is `docs/product/SEO_GROWTH_STRATEGY.md`; reference expansion is sequenced around verified rules identities rather than speculative page generation.
 
 ## Repository map
 
