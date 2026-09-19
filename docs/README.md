@@ -20,6 +20,7 @@ For a bounded task, start with the named issue or PR. Then use only the relevant
 - **Live product priorities:** issue #105.
 - **Durable Table Companion direction:** `product/TABLE_COMPANION_TRANSFORMATION.md`.
 - **Search/acquisition strategy:** `product/SEO_GROWTH_STRATEGY.md`.
+- **Structured reference / Encyclopaedia product architecture:** `product/REFERENCE_KNOWLEDGE_ARCHITECTURE.md` and #251. Public pages should be views over source/runtime-backed concept and profile-treatment data, not a wiki or a second rules database.
 - **Analytics/privacy measurement:** `product/ANALYTICS_MEASUREMENT_PLAN.md` and #246.
 - **Plus/accounts/cloud:** `product/MAHJONG_REFERENCE_PLUS_ARCHITECTURE.md`, supporting `PLUS_*` docs and #206.
 - **Rules/scoring:** relevant `rules/` source/evidence files, `BMJA_RULES_REFERENCE.md`, executable tests and the named profile issue.
