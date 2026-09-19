@@ -115,4 +115,11 @@ describe('current Classical strategy adapters', () => {
     expect(selectNoHandMode({})).toBe('normal');
     expect(() => progressionImplementation({ id: 'progression.classical-east-cycle', semanticRevision: 2 })).toThrow('Unknown current strategy implementation');
   });
+
+  it('fails closed when a different strategy category reaches an accessor', () => {
+    expect(() => settlementImplementation(CLASSICAL_EAST_CYCLE_PROGRESSION as never)).toThrow('category mismatch');
+    expect(() => progressionImplementation(CLASSICAL_EAST_CYCLE_GAME_END as never)).toThrow('category mismatch');
+    expect(() => gameEndImplementation(NO_HAND_MODE as never)).toThrow('category mismatch');
+    expect(() => handModeImplementation(CLASSICAL_PAIRWISE_SETTLEMENT as never)).toThrow('category mismatch');
+  });
 });

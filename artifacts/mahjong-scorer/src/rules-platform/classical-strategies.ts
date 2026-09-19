@@ -38,16 +38,20 @@ export const classicalStrategyRegistryEntries: readonly RegistryEntry[] = [
 
 export const classicalStrategyRegistry = new RegistryBank(classicalStrategyRegistryEntries);
 
-export const CLASSICAL_PAIRWISE_SETTLEMENT: ExecutableRegistryIdentity = {
+type StrategyCategory = 'settlement' | 'progression' | 'game-end' | 'hand-mode';
+export type StrategyRegistryIdentity<C extends StrategyCategory> =
+  ExecutableRegistryIdentity & { id: `${C}.${string}` };
+
+export const CLASSICAL_PAIRWISE_SETTLEMENT: StrategyRegistryIdentity<'settlement'> = {
   id: 'settlement.classical-pairwise', semanticRevision: 1,
 };
-export const CLASSICAL_EAST_CYCLE_PROGRESSION: ExecutableRegistryIdentity = {
+export const CLASSICAL_EAST_CYCLE_PROGRESSION: StrategyRegistryIdentity<'progression'> = {
   id: 'progression.classical-east-cycle', semanticRevision: 1,
 };
-export const CLASSICAL_EAST_CYCLE_GAME_END: ExecutableRegistryIdentity = {
+export const CLASSICAL_EAST_CYCLE_GAME_END: StrategyRegistryIdentity<'game-end'> = {
   id: 'game-end.classical-east-cycle', semanticRevision: 1,
 };
-export const NO_HAND_MODE: ExecutableRegistryIdentity = {
+export const NO_HAND_MODE: StrategyRegistryIdentity<'hand-mode'> = {
   id: 'hand-mode.none', semanticRevision: 1,
 };
 
@@ -156,21 +160,21 @@ const implementations = new Map<string, unknown>([
   [keyFor(NO_HAND_MODE), selectNoHandMode],
 ]);
 
-function implementation<T>(identity: ExecutableRegistryIdentity): T {
-  classicalStrategyRegistry.requireExecutable(
-    identity.id.split('.')[0] as 'settlement' | 'progression' | 'game-end' | 'hand-mode',
-    identity.id,
-  );
+function implementation<C extends StrategyCategory, T>(
+  category: C,
+  identity: StrategyRegistryIdentity<C>,
+): T {
+  classicalStrategyRegistry.requireExecutable(category, identity.id);
   const value = implementations.get(keyFor(identity));
   if (!value) throw new Error(`Unknown current strategy implementation: ${keyFor(identity)}`);
   return value as T;
 }
 
-export const settlementImplementation = (identity: ExecutableRegistryIdentity) =>
-  implementation<SettlementStrategy<ClassicalSettlementInput>>(identity);
-export const progressionImplementation = (identity: ExecutableRegistryIdentity) =>
-  implementation<ProgressionStrategy<ClassicalProgressionInput, ProgressionState>>(identity);
-export const gameEndImplementation = (identity: ExecutableRegistryIdentity) =>
-  implementation<GameEndStrategy<ClassicalGameEndInput>>(identity);
-export const handModeImplementation = (identity: ExecutableRegistryIdentity) =>
-  implementation<HandModeStrategy<Record<string, never>, HandMode>>(identity);
+export const settlementImplementation = (identity: StrategyRegistryIdentity<'settlement'>) =>
+  implementation<'settlement', SettlementStrategy<ClassicalSettlementInput>>('settlement', identity);
+export const progressionImplementation = (identity: StrategyRegistryIdentity<'progression'>) =>
+  implementation<'progression', ProgressionStrategy<ClassicalProgressionInput, ProgressionState>>('progression', identity);
+export const gameEndImplementation = (identity: StrategyRegistryIdentity<'game-end'>) =>
+  implementation<'game-end', GameEndStrategy<ClassicalGameEndInput>>('game-end', identity);
+export const handModeImplementation = (identity: StrategyRegistryIdentity<'hand-mode'>) =>
+  implementation<'hand-mode', HandModeStrategy<Record<string, never>, HandMode>>('hand-mode', identity);
