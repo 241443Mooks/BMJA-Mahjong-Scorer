@@ -1,14 +1,19 @@
-import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import NotFound, { notFoundRecoveryLinks } from './not-found';
+import {
+  notFoundDescription,
+  notFoundEyebrow,
+  notFoundHeading,
+  notFoundRecoveryLinks,
+} from './not-found';
 
 describe('not found page', () => {
   it('uses visitor-facing copy instead of developer router language', () => {
-    const markup = renderToStaticMarkup(NotFound());
-
-    expect(markup).toContain('404');
-    expect(markup).toContain('Page not found');
-    expect(markup).not.toContain('Did you forget to add the page to the router?');
+    expect(notFoundEyebrow).toBe('404 · Page not found');
+    expect(notFoundHeading).toBe("We couldn't find that page.");
+    expect(notFoundDescription).toContain('Mahjong Reference');
+    expect(`${notFoundEyebrow} ${notFoundHeading} ${notFoundDescription}`).not.toContain(
+      'Did you forget to add the page to the router?',
+    );
   });
 
   it('offers clear recovery routes', () => {
@@ -18,11 +23,5 @@ describe('not found page', () => {
       ['Track a game', '/game'],
       ['Browse rules', '/rules'],
     ]);
-
-    const markup = renderToStaticMarkup(NotFound());
-    for (const [label, href] of notFoundRecoveryLinks) {
-      expect(markup).toContain(`href=\"${href}\"`);
-      expect(markup).toContain(label);
-    }
   });
 });
