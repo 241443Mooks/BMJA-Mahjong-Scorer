@@ -186,6 +186,24 @@ export type GameEndResult = {
   finalisation?: { transactions?: readonly SettlementTransaction[]; payload?: JsonObject };
 };
 
+/** A transition decision with enough stable context for replay/audit. */
+export type ExplainedProgressionResult<TState> = {
+  nextState: TState;
+  reasonId: string;
+  metadata?: JsonObject;
+};
+
+/** Narrow, pure seams implemented by code-owned strategy banks. */
+export type SettlementStrategy<TInput> = (input: TInput) => readonly SettlementTransaction[];
+export type ProgressionStrategy<TInput, TState> = (
+  input: TInput,
+) => ExplainedProgressionResult<TState>;
+export type GameEndStrategy<TInput> = (input: TInput) => GameEndResult;
+export type HandModeStrategy<TInput, THandMode> = (input: TInput) => THandMode;
+export type RoundPreparationStrategy<TInput, TPreparedRound> = (
+  input: TInput,
+) => TPreparedRound;
+
 export type ProfileProvenance = { sources?: readonly string[]; metadata?: JsonObject };
 export type ResolvedRulesProfile = {
   schemaVersion: 1;
