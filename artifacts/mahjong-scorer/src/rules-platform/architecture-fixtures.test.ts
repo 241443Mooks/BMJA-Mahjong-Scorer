@@ -130,12 +130,12 @@ describe('eight architecture fixtures', () => {
 });
 
 const executableEntry = (id: string, category: ConstructorParameters<typeof RegistryBank>[0][number]['category'], semanticRevision = 1) => ({ id, category, status: 'executable' as const, semanticRevision, executableContract: { kind: 'deterministic' as const, dependencies: [] as const } });
-const playableRoot = (): RootProfileDefinition => root('phase2-base', 'family.phase2', 'classical-points-doubles', { playerCount: 4, seatModelId: 'seats.phase2-four' }, { presetId: 'tiles.phase2', options: {} }, { presetId: 'shape.phase2', options: {} }, { handShapePolicyId: 'validation.phase2', policyIds: [] }, {}, { policyIds: [], alwaysRequired: [] }, 'settlement.phase2', 'progression.phase2', 'game-end.phase2', 'source.phase2');
+const playableRoot = (): RootProfileDefinition => root('phase2-base', 'family.phase2', 'classical-points-doubles', { playerCount: 4, seatModelId: 'seats.phase2-four' }, { presetId: 'tiles.phase2', options: {} }, { presetId: 'shape.phase2', options: {} }, { handShapePolicyId: 'validation.phase2', policyIds: ['validation.phase2-exact-revision'] }, {}, { policyIds: [], alwaysRequired: [] }, 'settlement.phase2', 'progression.phase2', 'game-end.phase2', 'source.phase2');
 const capabilityEnvironment = (overrides: JsonObject, capability: Record<string, unknown>, mutate = false): ResolverEnvironment => {
   const base = playableRoot();
   const derived: ProfileAuthoringDefinition = { kind: 'derived', schemaVersion: 1, identity: { id: 'phase2-derived', version: '1', name: 'phase2-derived', status: 'custom' }, baseProfile: { id: base.identity.id, version: base.identity.version }, overrides };
   const entries = [
-    executableEntry('family.phase2', 'family'), executableEntry('seats.phase2-four', 'seats'), executableEntry('tiles.phase2', 'tiles'), executableEntry('shape.phase2', 'shape'), executableEntry('validation.phase2', 'validation'), executableEntry('settlement.phase2', 'settlement'), executableEntry('progression.phase2', 'progression'), executableEntry('game-end.phase2', 'game-end'), executableEntry('validation.phase2-capability', 'validation'), { id: 'source.phase2', category: 'source' as const, status: 'metadata' as const },
+    executableEntry('family.phase2', 'family'), executableEntry('seats.phase2-four', 'seats'), executableEntry('tiles.phase2', 'tiles'), executableEntry('shape.phase2', 'shape'), executableEntry('validation.phase2', 'validation'), executableEntry('validation.phase2-exact-revision', 'validation', 7), executableEntry('settlement.phase2', 'settlement'), executableEntry('progression.phase2', 'progression'), executableEntry('game-end.phase2', 'game-end'), executableEntry('validation.phase2-capability', 'validation'), { id: 'source.phase2', category: 'source' as const, status: 'metadata' as const },
   ];
   const profiles = new Map([[`${base.identity.id}@${base.identity.version}`, base as ProfileAuthoringDefinition], ['phase2-derived@1', derived]]);
   return { registry: new RegistryBank(entries), families: { get: id => id === 'family.phase2' ? { id, allowedGrammars: ['classical-points-doubles'], handEvidenceCodecId: 'phase2.hand', roundOutcomeCodecId: 'phase2.round', strategyStateCodecId: 'phase2.strategy' } : undefined }, seatModels: { get: id => id === 'seats.phase2-four' ? { id, playerCount: 4 } : undefined }, profiles: { get: ref => profiles.get(`${ref.id}@${ref.version}`) }, capabilities: { get: id => id === 'validation.phase2-capability' ? capability as never : undefined }, capabilityState: { all: () => [] }, contracts: { get: id => id === 'phase2.value' ? { validate: value => { if (!value || typeof value !== 'object' || Array.isArray(value) || (value as Record<string, unknown>).enabled !== true || Object.keys(value as object).length !== 1) throw new Error('invalid'); return { value: { enabled: true } }; } } : undefined }, capabilityAdapters: { get: id => id === 'validation.phase2-capability' ? { apply: profile => mutate ? { ...profile, scoring: { grammar: 'riichi-han-fu', config: profile.scoring.config as never } } : profile, isActive: () => false } : undefined } };
@@ -175,11 +175,18 @@ describe('phase 2 negative and metamorphic matrix', () => {
     expect(inspect('A06', definition => ((definition.definition.table as { playerCount: number }).playerCount = 4)).blockers).toEqual(expect.arrayContaining([expect.objectContaining({ blockerCode: 'SEAT_PLAYER_COUNT_MISMATCH' })]));
   });
 
-  it('13 metadata is inert, 14 captures exact executable revisions, and 17 rejects executable fields', () => {
-    const normal = inspectProfile(fixtures[0].definition, envFor(fixtures[0]));
-    expect(normal.references.find(reference => reference.path === 'provenance.sources')).toMatchObject({ role: 'metadata', actualStatus: 'metadata', blockerCode: undefined });
-    const executable = new RegistryBank([executableEntry('pattern.phase2', 'pattern', 7)]).requireExecutable('pattern', 'pattern.phase2');
-    expect(executable.semanticRevision).toBe(7);
+  it('13 metadata provenance is inert through playable resolution, and 14 captures exact revisions through #231', async () => {
+    const environment = capabilityEnvironment({}, capability());
+    const rootDefinition = playableRoot();
+    const inspection = inspectProfile(rootDefinition, environment);
+    expect(inspection.references.find(reference => reference.path === 'provenance.sources')).toMatchObject({ role: 'metadata', actualStatus: 'metadata', blockerCode: undefined });
+    expect(inspection.references.find(reference => reference.id === 'validation.phase2-exact-revision')).toMatchObject({ role: 'functional', semanticRevision: 7 });
+    const artifact = await resolvePlayableProfile({ id: rootDefinition.identity.id, version: rootDefinition.identity.version }, environment);
+    expect(artifact.executableDependencies).toContainEqual({ id: 'validation.phase2-exact-revision', semanticRevision: 7 });
+    expect(artifact.executableDependencies.map(dependency => dependency.id)).not.toContain('source.phase2');
+  });
+
+  it('17 rejects executable fields while metadata expression strings remain inert', () => {
     expect(inspect('A01', definition => ((definition.definition as Record<string, unknown>).callback = () => true)).blockers).toEqual([expect.objectContaining({ blockerCode: 'ROOT_INVALID' })]);
     const inert = inspect('A01', definition => ((definition.definition.provenance as { metadata: JsonObject }).metadata.expression = '() => score'));
     expect(inert.profile).toBeDefined();
