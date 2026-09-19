@@ -22,11 +22,11 @@ import type {
 } from './types';
 
 const deterministic = { kind: 'deterministic', dependencies: [] } as const;
-const executable = <C extends RegistryEntry['category']>(id: string, category: C): RegistryEntry<C> => ({
+const executable = <C extends RegistryEntry['category']>(id: string, category: C, semanticRevision = 1): RegistryEntry<C> => ({
   id,
   category,
   status: 'executable',
-  semanticRevision: 1,
+  semanticRevision,
   executableContract: deterministic,
 });
 
@@ -45,7 +45,7 @@ export const currentClassicalRegistryEntries: readonly RegistryEntry[] = [
   executable('evidence.round-wind', 'evidence'),
   executable('evidence-policy.classical-current', 'evidence-policy'),
   executable('classical.scorer.current', 'classical'),
-  executable('classical.bindings.bmja-current', 'classical'),
+  executable('classical.bindings.bmja-current', 'classical', 2),
   executable('classical.bindings.western-tm-current', 'classical'),
   executable('classical.bindings.outside-the-box-current', 'classical'),
   executable('classical.policy.bmja-current', 'classical'),

@@ -17,7 +17,9 @@ describe('current playable profile inventory', () => {
     expect(first).toEqual(second);
     expect(Object.isFrozen(first)).toBe(true);
     expect(first.executableDependencies).toEqual([...first.executableDependencies].sort((a, b) => a.id.localeCompare(b.id)));
-    expect(first.executableDependencies.every(({ semanticRevision }) => semanticRevision === 1)).toBe(true);
+    expect(first.executableDependencies.every(({ id, semanticRevision }) =>
+      semanticRevision === (id === 'classical.bindings.bmja-current' || id === 'validation.classical-current' ? 2 : 1),
+    )).toBe(true);
   });
 
   it('keeps current profile-local scoring and table selections exact', async () => {
@@ -38,23 +40,23 @@ describe('current playable profile inventory', () => {
     const artifacts = await Promise.all(refs.map((ref) => resolvePlayableProfile(ref, currentPlayableResolverEnvironment)));
     expect(artifacts.map(({ executableDependencies }) => executableDependencies.map(({ id, semanticRevision }) => `${id}@${semanticRevision}`))).toEqual([
       [
-        'classical.bindings.bmja-current@1', 'classical.policy.bmja-current@1', 'classical.scorer.current@1',
+        'classical.bindings.bmja-current@2', 'classical.policy.bmja-current@1', 'classical.scorer.current@1',
         'evidence-policy.classical-current@1', 'evidence.classical-hand-v1@1', 'evidence.round-wind@1', 'evidence.seat-wind@1',
         'family.classical-western@1', 'game-end.classical-east-cycle@1', 'hand-mode.none@1', 'progression.classical-east-cycle@1',
-        'seats.winds-4@1', 'settlement.classical-pairwise@1', 'shape.four-sets-pair@1', 'tiles.flowers-144@1', 'validation.classical-current@1',
+        'seats.winds-4@1', 'settlement.classical-pairwise@1', 'shape.four-sets-pair@1', 'tiles.flowers-144@1', 'validation.classical-current@2',
       ],
       [
         'classical.bindings.western-tm-current@1', 'classical.policy.western-tm-current@1', 'classical.scorer.current@1',
         'evidence-policy.classical-current@1', 'evidence.classical-hand-v1@1', 'evidence.round-wind@1', 'evidence.seat-wind@1',
         'family.classical-western@1', 'game-end.classical-east-cycle@1', 'hand-mode.none@1', 'progression.classical-east-cycle@1',
-        'seats.winds-4@1', 'settlement.classical-pairwise@1', 'shape.four-sets-pair@1', 'tiles.flowers-144@1', 'validation.classical-current@1',
+        'seats.winds-4@1', 'settlement.classical-pairwise@1', 'shape.four-sets-pair@1', 'tiles.flowers-144@1', 'validation.classical-current@2',
       ],
       [
         'classical.bindings.outside-the-box-current@1', 'classical.policy.outside-the-box-current@1', 'classical.scorer.current@1',
         'evidence-policy.classical-current@1', 'evidence.classical-hand-v1@1', 'evidence.round-wind@1', 'evidence.seat-wind@1',
         'family.classical-western@1', 'game-end.classical-east-cycle@1', 'hand-mode.outside-the-box-goulash@1',
         'incident.outside-the-box-round-preparation@1', 'progression.classical-east-cycle@1', 'seats.winds-4@1',
-        'settlement.outside-the-box-incidents@1', 'shape.four-sets-pair@1', 'tiles.flowers-144@1', 'validation.classical-current@1',
+        'settlement.outside-the-box-incidents@1', 'shape.four-sets-pair@1', 'tiles.flowers-144@1', 'validation.classical-current@2',
       ],
     ]);
   });
