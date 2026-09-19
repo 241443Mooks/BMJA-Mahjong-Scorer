@@ -1,12 +1,32 @@
 import siteSeo from './site-seo.json';
 import { describe, expect, it } from 'vitest';
 
+const canonicalPublicPaths = [
+  '/',
+  '/about',
+  '/features',
+  '/game',
+  '/gameplay-basics',
+  '/guide',
+  '/hand',
+  '/help',
+  '/how-it-works',
+  '/mahjong-rules-compared',
+  '/mahjong-settlement',
+  '/privacy',
+  '/rules',
+  '/rules/british',
+  '/rules/western',
+  '/scoring-examples',
+  '/special-hands',
+] as const;
+
 describe('public SEO configuration', () => {
-  it('defines unique canonical, indexable routes', () => {
+  it('defines the complete canonical, indexable public route set', () => {
     const paths = siteSeo.routes.map((route) => route.path);
     const titles = siteSeo.routes.map((route) => route.title);
 
-    expect(siteSeo.routes).toHaveLength(16);
+    expect([...paths].sort()).toEqual([...canonicalPublicPaths]);
     expect(new Set(paths).size).toBe(paths.length);
     expect(new Set(titles).size).toBe(titles.length);
     expect(siteSeo.routes.every((route) => route.indexable)).toBe(true);
@@ -31,6 +51,8 @@ describe('public SEO configuration', () => {
     expect(siteSeo.routes.find((route) => route.path === '/features')?.description).toContain('whole-game tracking');
     expect(siteSeo.routes.find((route) => route.path === '/about')?.title).toBe('About Mahjong Reference | Mahjong Table Companion');
     expect(siteSeo.routes.find((route) => route.path === '/about')?.description).toContain('rules-aware Mahjong Table Companion');
+    expect(siteSeo.routes.find((route) => route.path === '/privacy')?.title).toContain('Privacy & Analytics');
+    expect(siteSeo.routes.find((route) => route.path === '/privacy')?.description).toContain('cookieless analytics');
   });
 
   it('keeps product-wide metadata broader than British-only learning content', () => {
@@ -41,9 +63,16 @@ describe('public SEO configuration', () => {
     }
   });
 
-  it('maps aliases to canonical public routes', () => {
+  it('maps legacy aliases onto canonical routes without duplicating sitemap surfaces', () => {
     const paths = new Set(siteSeo.routes.map((route) => route.path));
+    const aliasPaths = siteSeo.aliases.map((alias) => alias.path);
 
+    expect(siteSeo.aliases).toEqual([
+      { path: '/beginner-guide', target: '/guide' },
+      { path: '/special-hand-catalogue', target: '/special-hands' },
+    ]);
     expect(siteSeo.aliases.every((alias) => paths.has(alias.target))).toBe(true);
+    expect(aliasPaths.every((path) => !paths.has(path))).toBe(true);
+    expect(new Set(aliasPaths).size).toBe(aliasPaths.length);
   });
 });
