@@ -78,6 +78,7 @@ export type PhysicalTileEvidence = {
 };
 
 export type ResolvedTableConfig = { playerCount: number; seatModelId: string };
+export type SeatModelDefinition = { id: string; playerCount: number };
 export type ResolvedTileSetConfig = { presetId: string; options: JsonObject };
 export type ResolvedHandShapeConfig = { presetId: string; options: JsonObject };
 export type ResolvedValidationConfig = { handShapePolicyId: string; policyIds: readonly string[] };
