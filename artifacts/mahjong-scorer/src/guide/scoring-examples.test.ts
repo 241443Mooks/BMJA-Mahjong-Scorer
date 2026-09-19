@@ -1,8 +1,11 @@
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
+import { initialiseCurrentRulesRuntimes } from '../rules-platform/current-runtime-registry';
 import { scoreHand } from '../scoring';
 import { createBmjaGame } from '../game/game';
 import { GAME_SNAPSHOT_STORAGE_KEY, saveGameRecovery } from '../game/persistence';
 import { completedExampleHref, exampleExitLabel, handForScorerMode, initialHandForExampleMode, practiceScorerContext, practiceSetSummary, practiceExampleHref, resolveScorerExample, scoringExampleBonusTiles, scoringExampleById, scoringExampleContext, scoringExamples } from './scoring-examples';
+
+beforeAll(() => initialiseCurrentRulesRuntimes());
 
 describe('worked scoring examples', () => {
   it('asserts every published educational result through the real scoring engine', () => {

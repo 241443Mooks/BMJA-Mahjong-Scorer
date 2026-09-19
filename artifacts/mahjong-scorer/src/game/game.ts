@@ -1,5 +1,7 @@
-import { BMJA_PROFILE_REF, resolveRulesProfile } from './ruleset';
+import { BMJA_PROFILE_REF } from './ruleset';
 import { assertDetailedWinnerMatchesOutcome } from './hand-scorer-handoff';
+import { mapCurrentRuntimeProgression, mapCurrentRuntimeSettlement } from '../rules-platform/current-runtime-compat';
+import { getCurrentRulesRuntime } from '../rules-platform/current-runtime-registry';
 import type {
   ConfirmedHand,
   DetailedHandRecord,
@@ -72,7 +74,7 @@ const cloneScoreRecord = (record: PlayerScoreRecord): PlayerScoreRecord =>
     : { ...record };
 
 const validateSetup = (setup: GameSetup) => {
-  resolveRulesProfile(setup.rulesProfile);
+  getCurrentRulesRuntime(setup.rulesProfile);
   if (setup.players.length !== 4) {
     throw new Error('A game requires exactly four players.');
   }
@@ -131,7 +133,6 @@ export const createBmjaGame = (
   gameLength: GameLength = 'full-game',
   rulesProfile: RulesProfileRef = BMJA_PROFILE_REF,
 ): GameState => {
-  const ruleset = resolveRulesProfile(rulesProfile);
   const balances =
     startingBalances ??
     Object.fromEntries(players.map((player) => [player.id, 0]));
@@ -145,7 +146,7 @@ export const createBmjaGame = (
   };
   validateSetup(setup);
   return {
-    rulesetId: ruleset.id,
+    rulesetId: rulesProfile.id,
     setup,
     players: setup.players.map((player) => ({ ...player })),
     seats: cloneSeats(startingSeats),
@@ -171,17 +172,16 @@ const applyRound = (state: GameState, round: RoundInput): GameState => {
         incidents: cloneIncidents(round.incidents),
       }
     : { ...round, incidents: cloneIncidents(round.incidents) };
-  const ruleset = resolveRulesProfile(state.setup.rulesProfile);
-  if (!ruleset.prepareRound && submittedRound.incidents && submittedRound.incidents.length > 0) {
-    throw new Error(`${ruleset.name} does not support round incidents.`);
+  const runtime = getCurrentRulesRuntime(state.setup.rulesProfile);
+  if (!runtime.prepareRound && submittedRound.incidents && submittedRound.incidents.length > 0) {
+    throw new Error('This rules profile does not support round incidents.');
   }
-  const appliedRound = ruleset.prepareRound
-    ? ruleset.prepareRound(state.players, state.seats, submittedRound)
+  const appliedRound = runtime.prepareRound
+    ? runtime.prepareRound({ players: state.players, seats: state.seats, round: submittedRound })
     : submittedRound;
-  const settlement = ruleset.settleRound(
-    state.players,
-    state.seats,
-    appliedRound,
+  const settlement = mapCurrentRuntimeSettlement(
+    state.players.map(({ id }) => id),
+    runtime.settleRound({ players: state.players, seats: state.seats, round: appliedRound }),
   );
   const scoreRecords = normaliseScoreRecords(state, appliedRound);
   const runningTotals = Object.fromEntries(
@@ -190,25 +190,24 @@ const applyRound = (state: GameState, round: RoundInput): GameState => {
       state.balances[player.id] + settlement.changes[player.id],
     ]),
   );
-  const progression = ruleset.progressGame(
-    state.players,
-    {
+  const progression = mapCurrentRuntimeProgression(runtime.progressGame({
+    players: state.players,
+    current: {
       seats: state.seats,
       prevailingWind: state.prevailingWind,
       eastCycleStartPlayerId: state.eastCycleStartPlayerId,
     },
-    appliedRound.outcome,
-  );
-  const nextHandMode = ruleset.nextHandMode(state.currentHandMode, appliedRound.outcome);
-
-  let isComplete = false;
-  if (progression.prevailingWindAdvanced) {
-    if (state.setup.gameLength === 'one-round') {
-      isComplete = true;
-    } else if (state.setup.gameLength === 'full-game' && state.prevailingWind === 'north') {
-      isComplete = true;
-    }
-  }
+    outcome: appliedRound.outcome,
+  }));
+  const nextHandMode = runtime.nextHandMode({
+    current: state.currentHandMode,
+    outcome: appliedRound.outcome,
+  });
+  const isComplete = runtime.evaluateGameEnd({
+    gameLength: state.setup.gameLength,
+    previousPrevailingWind: state.prevailingWind,
+    progression,
+  }).complete;
 
   const confirmed: ConfirmedHand = {
     handNumber: state.handHistory.length + 1,

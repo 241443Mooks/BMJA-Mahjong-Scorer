@@ -23,11 +23,12 @@ import {
   reconcileDetailedHandsForOutcome,
   returnAppliedScoreToTable,
   undoLastHand,
-  resolveRulesProfile,
   clearGameRecovery,
   loadInProgressGameRecovery,
   saveGameRecovery,
 } from '.';
+import { mapCurrentRuntimeSettlement } from '../rules-platform/current-runtime-compat';
+import { getCurrentRulesRuntime } from '../rules-platform/current-runtime-registry';
 import { RulesProfilePicker } from './RulesProfilePicker';
 import { descriptorForRulesProfile, isBritishRulesProfile } from './rules-presentation';
 import { prepareFullPrintDisclosures, watchPrintLifecycle } from './print-disclosures';
@@ -89,14 +90,15 @@ export const previewRoundSettlement = (
   const fullScores = Object.fromEntries(
     game.players.map((player) => [player.id, scores[player.id] ?? 0]),
   ) as PlayerAmounts;
-  const ruleset = resolveRulesProfile(game.setup.rulesProfile);
-  if (!ruleset.prepareRound && incidents.length > 0) throw new Error(`${ruleset.name} does not support round incidents.`);
+  const runtime = getCurrentRulesRuntime(game.setup.rulesProfile);
+  if (!runtime.prepareRound && incidents.length > 0) throw new Error('This rules profile does not support round incidents.');
   const round = { outcome, scores: fullScores, incidents };
-  const prepared = ruleset.prepareRound ? ruleset.prepareRound(game.players, game.seats, round) : round;
-  return ruleset.settleRound(
-    game.players,
-    game.seats,
-    prepared,
+  const prepared = runtime.prepareRound
+    ? runtime.prepareRound({ players: game.players, seats: game.seats, round })
+    : round;
+  return mapCurrentRuntimeSettlement(
+    game.players.map(({ id }) => id),
+    runtime.settleRound({ players: game.players, seats: game.seats, round: prepared }),
   );
 };
 

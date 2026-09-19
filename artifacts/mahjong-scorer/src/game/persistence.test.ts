@@ -1,4 +1,5 @@
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
+import { initialiseCurrentRulesRuntimes } from '../rules-platform/current-runtime-registry';
 import { confirmHand, createBmjaGame } from "./game";
 import {
   clearGameRecovery,
@@ -10,6 +11,8 @@ import {
   saveGameRecovery,
 } from "./persistence";
 import { BMJA_PROFILE_REF, OUTSIDE_THE_BOX_PROFILE_REF } from "./ruleset";
+
+beforeAll(() => initialiseCurrentRulesRuntimes());
 
 const memoryStorage = () => {
   const values = new Map<string, string>();

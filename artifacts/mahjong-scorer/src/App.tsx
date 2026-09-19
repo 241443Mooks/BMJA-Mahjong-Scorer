@@ -11,9 +11,11 @@ import { exampleExitLabel, handForScorerMode, practiceScorerContext, practiceSet
 import { TileStrip } from './guide/MahjongTileGallery';
 import { ReturnToGame } from './components/ReturnToGame';
 import { handScorerLocalContext } from './game';
-import { BMJA_PROFILE_REF, resolveRulesProfile } from './game/ruleset';
+import { BMJA_PROFILE_REF } from './game/ruleset';
 import { ActiveRules, RulesProfilePicker } from './game/RulesProfilePicker';
 import { descriptorForRulesProfile, isBritishRulesProfile, isConfiguredClubProfile, normaliseStandaloneHandMode } from './game/rules-presentation';
+import { getCurrentRulesRuntime } from './rules-platform/current-runtime-registry';
+import { mapCurrentClassicalScoreBreakdown } from './rules-platform/current-runtime-compat';
 import { handScorerInitialBaseline, hasHandScorerUnsavedWork } from './game/hand-scorer-dirty-state';
 import { normaliseStructuredChoiceForGroup, recoverWorkingDraft } from './game/hand-entry-workspace';
 import { applicableUngroupedBlanks, hasUngroupedBlankAt, reindexUngroupedBlanksAfterRemoval, toggleUngroupedBlankAt } from './game/ungrouped-blank-state';
@@ -49,7 +51,6 @@ import {
   isFirstDiscardEvidenceCandidate,
   isReplacementSequenceEvidenceCandidate,
   isWinningEventEvidenceCompatible,
-  validateHand,
   resolveWinningTileProvenance,
   suited,
   wind,
@@ -486,6 +487,12 @@ function HandScorer({ context, onClose, standaloneHand, standaloneRulesProfile, 
     [handMode, limit, playerWind, prevailingWind],
   );
 
+  const scoringRuntime = useMemo(
+    () =>
+      getCurrentRulesRuntime(context?.rulesProfile ?? standaloneRulesProfile),
+    [context, standaloneRulesProfile],
+  );
+
   const isStructureComplete = useMemo(() => {
     if (!isWinner) return false;
     const tempHand: MahjongHand = {
@@ -493,18 +500,12 @@ function HandScorer({ context, onClose, standaloneHand, standaloneRulesProfile, 
       winningMethod: 'wall',
       winningTileProvenance: undefined,
     };
-    return validateHand(tempHand, gameContext).length === 0;
-  }, [hand, isWinner, gameContext]);
-
-  const scoringProfile = useMemo(
-    () =>
-      resolveRulesProfile(context?.rulesProfile ?? standaloneRulesProfile),
-    [context, standaloneRulesProfile],
-  );
+    return scoringRuntime.validateHand({ evidence: tempHand, context: gameContext }).length === 0;
+  }, [hand, isWinner, gameContext, scoringRuntime]);
 
   const score = useMemo(
-    () => scoringProfile.scoreHand({ ...gameContext, hand }),
-    [gameContext, hand, scoringProfile],
+    () => mapCurrentClassicalScoreBreakdown(scoringRuntime.scoreHand({ evidence: hand, context: gameContext })),
+    [gameContext, hand, scoringRuntime],
   );
   const patterns = useMemo(() => detectedPatterns(score), [score]);
 

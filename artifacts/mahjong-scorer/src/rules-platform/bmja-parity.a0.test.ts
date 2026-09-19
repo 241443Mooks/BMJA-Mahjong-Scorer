@@ -1,4 +1,5 @@
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
+import { initialiseCurrentRulesRuntimes } from './current-runtime-registry';
 import { bonus, dragon, set, suited, wind, type MahjongHand } from '../scoring';
 import { confirmHand, createBmjaGame } from '../game/game';
 import { BMJA_PROFILE_REF } from '../game/ruleset';
@@ -11,6 +12,8 @@ import {
   projectSettlementTransactions,
   runtimeBreakdown,
 } from './parity-harness.test-support';
+
+beforeAll(() => initialiseCurrentRulesRuntimes());
 
 // Source fixture: scoring/golden-fixtures.test.ts — standard mixed-one-suit winner.
 const ordinary: MahjongHand = {

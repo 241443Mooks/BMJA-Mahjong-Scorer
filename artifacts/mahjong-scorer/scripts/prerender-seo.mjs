@@ -68,6 +68,8 @@ const vite = await createServer({
 });
 const renderedRoutes = new Map();
 try {
+  const { initialiseCurrentRulesRuntimes } = await vite.ssrLoadModule('/src/rules-platform/current-runtime-registry.ts');
+  await initialiseCurrentRulesRuntimes();
   const { renderRoute } = await vite.ssrLoadModule('/src/prerender.tsx');
   for (const route of seo.routes) {
     const body = renderRoute(route.path);
