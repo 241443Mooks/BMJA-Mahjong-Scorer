@@ -20,31 +20,32 @@ For a bounded task, start with the named issue or PR. Then use only the relevant
 - **Live product priorities:** issue #105.
 - **Durable Table Companion direction:** `product/TABLE_COMPANION_TRANSFORMATION.md`.
 - **Search/acquisition strategy:** `product/SEO_GROWTH_STRATEGY.md`.
-- **Structured reference / Encyclopaedia product architecture:** `product/REFERENCE_KNOWLEDGE_ARCHITECTURE.md` and #251. Public pages should be views over source/runtime-backed concept and profile-treatment data, not a wiki or a second rules database.
+- **Structured reference knowledge:** `product/REFERENCE_KNOWLEDGE_ARCHITECTURE.md` and #251. Public pages are views over source/runtime-backed concepts, profile treatments, relationships and evidence; they are not a wiki or a second rules database.
 - **Analytics/privacy measurement:** `product/ANALYTICS_MEASUREMENT_PLAN.md` and #246.
 - **Plus/accounts/cloud:** `product/MAHJONG_REFERENCE_PLUS_ARCHITECTURE.md`, supporting `PLUS_*` docs and #206.
 - **Rules/scoring:** relevant `rules/` source/evidence files, `BMJA_RULES_REFERENCE.md`, executable tests and the named profile issue.
-- **Encyclopaedia research staging:** `rules/encyclopaedia/` and #251. 251A1 is profile-local source inventory only; cross-family concept matching waits for executable Buzzard/MCR/Riichi profiles.
-- **Rules-platform migration:** #227 plus the exact normative files named by #229–#236 on `integration/rules-platform-v1`.
+- **Reference research staging:** `rules/encyclopaedia/` and #251. 251A1 is a source-local inventory; cross-family concept matching remains held until executable Buzzard/MCR/Riichi identities exist.
+- **Rules-platform migration:** #227 is the architecture umbrella and #275 is the rollout tracker. Exact child-issue contracts on `integration/rules-platform-v1` govern implementation.
 - **Durable product history:** root `CHANGELOG.md`.
 
 ## Branch boundary
 
 `main` is the production line.
 
-The cross-family rules-platform migration is staged on `integration/rules-platform-v1`. Its design/hardening documents are intentionally branch-specific until the migration passes parity/cutover gates. Do not reconstruct or override those contracts from older `main` planning notes.
+The cross-family rules-platform migration is staged on `integration/rules-platform-v1`. Its design, implementation and hardening documents remain branch-specific until the migration passes its parity and caller-cutover gates. Do not reconstruct or override those contracts from older `main` planning notes.
 
-Current implementation order remains:
+The durable migration shape is:
 
 ```text
-#229 universal types/schemas
-→ #230 typed registries/capabilities
-→ review what implementation taught us
-→ #231 resolver/fingerprint
-→ later #227 slices
+rules-platform contracts and executable foundation
+→ #236 parity / replay gate
+→ #274 caller cutover
+→ merge only after the migration gates are satisfied
 ```
 
-MCR and Riichi correctness research is already source-pinned; implementation belongs to #241 and #244 after the shared platform prerequisites exist.
+For the exact current state and next child issue, use #275 rather than freezing a step-by-step roadmap into this file.
+
+MCR and Riichi correctness research is already source-pinned. Their implementation belongs to their named profile issues after the shared platform migration is ready for new-family execution.
 
 ## Decision hierarchy
 
@@ -60,6 +61,6 @@ Unknown Mahjong semantics remain explicit. Do not fill gaps from similarly named
 
 ## Why the archive exists
 
-This project has moved quickly from a British scorer to a rules-aware Table Companion and then toward a multi-grammar rules platform. Earlier plans are still useful for understanding decisions, but leaving them beside current contracts made the repository look more ambiguous than it is.
+This project has moved quickly from a British scorer to a rules-aware Table Companion and then toward a multi-grammar rules platform and structured Mahjong knowledge layer. Earlier plans are still useful for understanding decisions, but leaving them beside current contracts made the repository look more ambiguous than it is.
 
 `archive/` preserves that history without asking future maintainers or Codex to guess whether it still governs the product.
