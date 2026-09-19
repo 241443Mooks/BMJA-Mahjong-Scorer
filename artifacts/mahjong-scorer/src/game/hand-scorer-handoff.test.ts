@@ -10,7 +10,8 @@ import {
   handScorerLocalContext,
   reconcileDetailedHandsForOutcome,
 } from './hand-scorer-handoff';
-import { BMJA_PROFILE_REF, OUTSIDE_THE_BOX_PROFILE_REF, resolveRulesProfile, WESTERN_TM_PROFILE_REF } from './ruleset';
+import { BMJA_PROFILE_REF, OUTSIDE_THE_BOX_PROFILE_REF, WESTERN_TM_PROFILE_REF } from './ruleset';
+import { currentClassicalScorerDefaultLimit } from './rules-presentation';
 import type {
   HandScorerResult,
   RoundScoringDraft,
@@ -104,12 +105,12 @@ describe('game hand-scorer handoff', () => {
 
   it('defaults a standalone scorer session explicitly to bmja@1.0', () => {
     expect(handScorerLocalContext(null).limit).toBe(
-      resolveRulesProfile(BMJA_PROFILE_REF).defaultLimit,
+      currentClassicalScorerDefaultLimit(BMJA_PROFILE_REF),
     );
   });
 
   it('uses the selected standalone profile for the local score context and preserves game profile inheritance', () => {
-    expect(handScorerLocalContext(null, WESTERN_TM_PROFILE_REF).limit).toBe(resolveRulesProfile(WESTERN_TM_PROFILE_REF).defaultLimit);
+    expect(handScorerLocalContext(null, WESTERN_TM_PROFILE_REF).limit).toBe(currentClassicalScorerDefaultLimit(WESTERN_TM_PROFILE_REF));
     expect(handScorerLocalContext(null, OUTSIDE_THE_BOX_PROFILE_REF).handMode).toBe('normal');
     const clubGame = createBmjaGame(game.players, game.seats, undefined, 'full-game', OUTSIDE_THE_BOX_PROFILE_REF);
     expect(createHandScorerContext(clubGame, 'bill', billWins).rulesProfile).toEqual(OUTSIDE_THE_BOX_PROFILE_REF);

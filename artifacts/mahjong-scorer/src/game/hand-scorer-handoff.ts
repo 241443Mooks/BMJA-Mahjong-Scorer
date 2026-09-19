@@ -1,4 +1,5 @@
-import { BMJA_PROFILE_REF, resolveRulesProfile } from './ruleset';
+import { BMJA_PROFILE_REF } from './ruleset';
+import { currentClassicalScorerDefaultLimit } from './rules-presentation';
 import type {
   GameState,
   HandScorerLocalContext,
@@ -29,7 +30,7 @@ export const createHandScorerContext = (
     playerWind: game.seats[playerId],
     prevailingWind: game.prevailingWind,
     isWinner: outcome?.type === 'win' && outcome.winnerId === playerId,
-    limit: resolveRulesProfile(game.setup.rulesProfile).defaultLimit,
+    limit: currentClassicalScorerDefaultLimit(game.setup.rulesProfile),
     handMode: game.currentHandMode,
     ...(scoreRecord?.source === 'detailed-scorer'
       ? {
@@ -200,7 +201,7 @@ export const handScorerLocalContext = (
   playerWind: context?.playerWind ?? 'east',
   prevailingWind: context?.prevailingWind ?? 'east',
   limit:
-    context?.limit ?? resolveRulesProfile(rulesProfile).defaultLimit,
+    context?.limit ?? currentClassicalScorerDefaultLimit(rulesProfile),
   isWinner: context?.isWinner ?? false,
   handMode: context?.handMode ?? 'normal',
 });

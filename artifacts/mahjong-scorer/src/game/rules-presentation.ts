@@ -95,6 +95,17 @@ export const descriptorForRulesProfile = (profile: RulesProfileRef): RulesDescri
   return descriptor;
 };
 
+/**
+ * The current hand-scorer UI cap is presentation configuration, deliberately
+ * separate from runtime selection and executable scoring semantics.
+ */
+export const currentClassicalScorerDefaultLimit = (
+  profile: RulesProfileRef,
+): number => {
+  descriptorForRulesProfile(profile);
+  return 1000;
+};
+
 export const descriptorForSlug = (slug: PublicRulesSlug): RulesDescriptor =>
   PUBLIC_RULES_DESCRIPTORS.find((descriptor) => descriptor.slug === slug)!;
 

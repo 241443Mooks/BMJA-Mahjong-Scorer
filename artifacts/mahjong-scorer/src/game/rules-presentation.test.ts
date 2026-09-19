@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { bmjaSpecialHandBindings } from '../scoring';
 import { outsideTheBoxSpecialHandBindings } from './outside-the-box-catalogue';
-import { descriptorForRulesProfile, descriptorForSlug, isBritishRulesProfile, normaliseStandaloneHandMode, PUBLIC_RULES_DESCRIPTORS, publicRulesSlugFromGamePath } from './rules-presentation';
+import { currentClassicalScorerDefaultLimit, descriptorForRulesProfile, descriptorForSlug, isBritishRulesProfile, normaliseStandaloneHandMode, PUBLIC_RULES_DESCRIPTORS, publicRulesSlugFromGamePath } from './rules-presentation';
 import { rulesCardStatus } from './RulesProfilePicker';
 import { BMJA_PROFILE_REF, OUTSIDE_THE_BOX_PROFILE_REF, WESTERN_TM_PROFILE_REF } from './ruleset';
 import { westernTmSpecialHandBindings } from './western-tm-catalogue';
@@ -45,5 +45,14 @@ describe('public rules presentation', () => {
     expect(isBritishRulesProfile(BMJA_PROFILE_REF)).toBe(true);
     expect(isBritishRulesProfile(WESTERN_TM_PROFILE_REF)).toBe(false);
     expect(isBritishRulesProfile(OUTSIDE_THE_BOX_PROFILE_REF)).toBe(false);
+  });
+
+  it('keeps the current scorer limit in presentation and fails closed for unknown profiles', () => {
+    expect(currentClassicalScorerDefaultLimit(BMJA_PROFILE_REF)).toBe(1000);
+    expect(currentClassicalScorerDefaultLimit(WESTERN_TM_PROFILE_REF)).toBe(1000);
+    expect(currentClassicalScorerDefaultLimit(OUTSIDE_THE_BOX_PROFILE_REF)).toBe(1000);
+    expect(() => currentClassicalScorerDefaultLimit({ id: 'unknown', version: '1.0' })).toThrow(
+      'No public descriptor for rules profile unknown@1.0.',
+    );
   });
 });
