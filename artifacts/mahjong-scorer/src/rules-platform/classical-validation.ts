@@ -5,6 +5,15 @@ import {
   type MahjongHand,
   type SpecialHandPatternBinding,
 } from '../scoring';
+import {
+  OUTSIDE_THE_BOX_PROFILE_REF,
+  outsideTheBoxSpecialHandBindings,
+} from '../game/outside-the-box-catalogue';
+import {
+  WESTERN_TM_PROFILE_REF,
+  westernTmSpecialHandBindings,
+} from '../game/western-tm-catalogue';
+import type { RulesProfileRef } from '../game/types';
 import { RegistryBank, type RegistryEntry } from './registry';
 import type {
   ExecutableRegistryIdentity,
@@ -45,9 +54,14 @@ export const CLASSICAL_WESTERN_VALIDATION_FAMILY: RulesFamilyDefinition = {
   strategyStateCodecId: 'classical.strategy.v1',
 };
 
+export const BMJA_CLASSICAL_VALIDATION_PROFILE: RulesProfileRef = {
+  id: 'bmja', version: '1.0',
+};
+
 export type ClassicalValidationInput = {
   family: RulesFamilyDefinition;
   evidenceCodecId: string;
+  profile: RulesProfileRef;
   input: HandEvaluationInput<MahjongHand, GameContext>;
 };
 
@@ -59,13 +73,19 @@ type ClassicalValidationImplementation = (
 type ClassicalValidationConfiguration = {
   familyId: string;
   evidenceCodecId: string;
-  specialHandBindings: readonly SpecialHandPatternBinding[];
+  profiles: ReadonlyMap<string, readonly SpecialHandPatternBinding[]>;
 };
+
+const profileKey = ({ id, version }: RulesProfileRef) => `${id}@${version}`;
 
 const currentClassicalConfiguration: ClassicalValidationConfiguration = {
   familyId: CLASSICAL_WESTERN_VALIDATION_FAMILY.id,
   evidenceCodecId: CLASSICAL_WESTERN_VALIDATION_FAMILY.handEvidenceCodecId,
-  specialHandBindings: bmjaSpecialHandBindings,
+  profiles: new Map([
+    [profileKey(BMJA_CLASSICAL_VALIDATION_PROFILE), bmjaSpecialHandBindings],
+    [profileKey(WESTERN_TM_PROFILE_REF), westernTmSpecialHandBindings],
+    [profileKey(OUTSIDE_THE_BOX_PROFILE_REF), outsideTheBoxSpecialHandBindings],
+  ]),
 };
 
 const validateCurrentClassical: ClassicalValidationImplementation = (
@@ -92,7 +112,7 @@ const implementations = new Map<string, {
  */
 export const validateCurrentClassicalHand = (
   identity: ValidationRegistryIdentity,
-  { family, evidenceCodecId, input }: ClassicalValidationInput,
+  { family, evidenceCodecId, profile, input }: ClassicalValidationInput,
 ): string[] => {
   classicalValidationRegistry.requireExecutable('validation', identity.id);
   const implementation = implementations.get(keyFor(identity));
@@ -108,5 +128,9 @@ export const validateCurrentClassicalHand = (
       evidenceCodecId !== configuration.evidenceCodecId) {
     throw new Error(`Validation evidence codec is incompatible: ${evidenceCodecId}`);
   }
-  return implementation.validate(input, configuration.specialHandBindings);
+  const specialHandBindings = configuration.profiles.get(profileKey(profile));
+  if (!specialHandBindings) {
+    throw new Error(`Validation profile is unavailable: ${profileKey(profile)}`);
+  }
+  return implementation.validate(input, specialHandBindings);
 };
