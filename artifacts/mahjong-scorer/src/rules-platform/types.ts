@@ -203,3 +203,9 @@ export type ResolvedRulesProfile = {
   procedure?: ResolvedStrategyRef;
   provenance: ProfileProvenance;
 };
+
+export type ResolvedProfileArtifact = {
+  profile: ResolvedRulesProfile;
+  rulesFingerprint: string;
+  executableDependencies: readonly ExecutableRegistryIdentity[];
+};
