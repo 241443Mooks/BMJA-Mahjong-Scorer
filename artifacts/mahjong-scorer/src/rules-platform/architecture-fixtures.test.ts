@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   architectureSeedEntries, assertFamilyCompatibility, inspectProfile, RegistryBank, resolvePlayableProfile,
+  canonicalTileFaceSchema, resolvedScoringConfigSchema,
   type JsonContract, type JsonObject, type ProfileAuthoringDefinition, type ResolverEnvironment,
   type RootProfileDefinition, type RulesFamilyDefinition, type ScoringGrammarId,
 } from './index';
@@ -236,5 +237,92 @@ describe('phase 3 cross-profile semantic pressure', () => {
     const classical = inspectProfile(fixtures.find(fixture => fixture.id === 'A01')!.definition, envFor(fixtures.find(fixture => fixture.id === 'A01')!));
     expect(riichi.references).toContainEqual(expect.objectContaining({ path: 'evidence.alwaysRequired[4]', id: 'evidence.riichi-declaration', expectedCategory: 'evidence' }));
     expect(classical.references.map(reference => reference.id)).not.toContain('evidence.riichi-declaration');
+  });
+});
+
+describe('phase 4 post-design discovery pressure', () => {
+  const vietnameseJokers = [
+    { face: { family: 'joker', id: 'vietnamese.joker.universal' }, substitutionDomainId: 'substitution.vietnamese.universal' },
+    { face: { family: 'joker', id: 'vietnamese.joker.suits' }, substitutionDomainId: 'substitution.vietnamese.suits' },
+    { face: { family: 'joker', id: 'vietnamese.joker.honours' }, substitutionDomainId: 'substitution.vietnamese.honours' },
+    { face: { family: 'joker', id: 'vietnamese.joker.bamboos' }, substitutionDomainId: 'substitution.vietnamese.bamboos' },
+    { face: { family: 'joker', id: 'vietnamese.joker.characters' }, substitutionDomainId: 'substitution.vietnamese.characters' },
+    { face: { family: 'joker', id: 'vietnamese.joker.circles' }, substitutionDomainId: 'substitution.vietnamese.circles' },
+    { face: { family: 'joker', id: 'vietnamese.joker.flowers' }, substitutionDomainId: 'substitution.vietnamese.flowers' },
+  ] as const;
+  const vietnameseFlowers = Array.from({ length: 16 }, (_, index) => ({ family: 'flower' as const, id: `vietnamese.flower.${index + 1}` }));
+  const vietnameseBigFlower = { family: 'profile-defined' as const, kindId: 'vietnamese.big-flower', id: 'vietnamese.big-flower' };
+  const vietnameseConversion = 'conversion.vietnamese-phan-to-mun';
+  const vietnameseScoring = {
+    grammar: 'pattern-accumulator' as const,
+    config: accumulator('fan', 'catalogue.pattern.vietnamese-classic', 'interaction.vietnamese-classic', 'qualification.vietnamese-mosquito-hand-zero', {
+      conversionPolicyId: vietnameseConversion,
+    }),
+  };
+
+  it('D01 represents only the pinned Vietnamese component pressure without inventing a playable table', () => {
+    const registry = new RegistryBank([
+      { id: 'tiles.vietnamese-classic-160', category: 'tiles', status: 'architecture-only' },
+      { id: 'catalogue.pattern.vietnamese-classic', category: 'catalogue.pattern', status: 'architecture-only' },
+      { id: 'interaction.vietnamese-classic', category: 'interaction', status: 'architecture-only' },
+      { id: 'qualification.vietnamese-mosquito-hand-zero', category: 'qualification', status: 'architecture-only' },
+      { id: 'conversion.vietnamese-phan-to-mun', category: 'conversion', status: 'architecture-only' },
+      { id: 'evidence.vietnamese.no-flowers', category: 'evidence', status: 'architecture-only' },
+      { id: 'evidence.vietnamese.no-leaves', category: 'evidence', status: 'architecture-only' },
+      { id: 'settlement.vietnamese-classic-liability', category: 'settlement', status: 'architecture-only' },
+      ...vietnameseJokers.map(({ substitutionDomainId }) => ({ id: substitutionDomainId, category: 'substitution' as const, status: 'architecture-only' as const })),
+    ]);
+    const physicalTileSet = {
+      id: 'tiles.vietnamese-classic-160', physicalTileCount: 160, numberedFlowers: vietnameseFlowers,
+      jokers: vietnameseJokers, bigFlower: vietnameseBigFlower,
+    };
+
+    expect(physicalTileSet.physicalTileCount).toBe(160);
+    expect(physicalTileSet.numberedFlowers).toHaveLength(16);
+    expect(physicalTileSet.numberedFlowers.every(face => canonicalTileFaceSchema.parse(JSON.parse(JSON.stringify(face))).family === 'flower')).toBe(true);
+    const parsedJokers = physicalTileSet.jokers.map(({ face }) => canonicalTileFaceSchema.parse(JSON.parse(JSON.stringify(face)))).filter((face): face is { family: 'joker'; id: string } => face.family === 'joker');
+    expect(new Set(parsedJokers.map(face => face.id)).size).toBe(7);
+    expect(new Set(physicalTileSet.jokers.map(({ substitutionDomainId }) => substitutionDomainId)).size).toBe(7);
+    expect(canonicalTileFaceSchema.parse(JSON.parse(JSON.stringify(physicalTileSet.bigFlower)))).toEqual(vietnameseBigFlower);
+    expect(physicalTileSet.bigFlower.family).not.toBe('joker');
+    expect(resolvedScoringConfigSchema.parse(JSON.parse(JSON.stringify(vietnameseScoring)))).toEqual(vietnameseScoring);
+    expect(() => resolvedScoringConfigSchema.parse({ ...vietnameseScoring, config: { ...vietnameseScoring.config, expression: 'score(hand)' } })).toThrow();
+    for (const [category, id] of [
+      ['tiles', physicalTileSet.id], ['catalogue.pattern', vietnameseScoring.config.patternCatalogueId], ['interaction', vietnameseScoring.config.interactionPolicyId],
+      ['qualification', vietnameseScoring.config.qualificationPolicyId], ['conversion', vietnameseConversion],
+      ['evidence', 'evidence.vietnamese.no-flowers'], ['evidence', 'evidence.vietnamese.no-leaves'], ['settlement', 'settlement.vietnamese-classic-liability'],
+    ] as const) expect(registry.get(category, id).status).toBe('architecture-only');
+    for (const { substitutionDomainId } of physicalTileSet.jokers) expect(registry.get('substitution', substitutionDomainId).status).toBe('architecture-only');
+  });
+
+  it('D02 represents the bounded Malaysian three-player profile without coercing Faces or Animals', async () => {
+    const family: RulesFamilyDefinition = { id: 'family.malaysian-cheah-sloper', allowedGrammars: ['pattern-accumulator'], handEvidenceCodecId: 'malaysian.hand.v1', roundOutcomeCodecId: 'malaysian.round.v1', strategyStateCodecId: 'malaysian.strategy.v1', allowedTileSetIds: ['tiles.malaysian-cheah-sloper-84'], allowedSeatModelIds: ['seats.malaysian-east-south-west'] };
+    const definition = root('malaysian-cheah-sloper-paper', family.id, 'pattern-accumulator', { playerCount: 3, seatModelId: 'seats.malaysian-east-south-west' }, { presetId: 'tiles.malaysian-cheah-sloper-84', options: {} }, { presetId: 'shape.four-sets-pair', options: {} }, { handShapePolicyId: 'validation.malaysian-cheah-sloper', policyIds: [] }, accumulator('fan', 'catalogue.pattern.malaysian-cheah-sloper', 'interaction.malaysian-cheah-sloper', 'qualification.malaysian-five-fan', { capPolicyId: 'value-policy.malaysian-max-fan-listed-limit' }), { policyIds: ['evidence-policy.malaysian-cheah-sloper'], alwaysRequired: [] }, 'settlement.malaysian-cheah-sloper', 'progression.malaysian-winner-next-dealer', 'game-end.malaysian-cheah-sloper', source('cheah-sloper-published-profile'));
+    const malaysianTiles = [
+      { family: 'suit' as const, suit: 'malaysian.numbered', rank: 1 }, { family: 'wind' as const, wind: 'east' }, { family: 'wind' as const, wind: 'south' }, { family: 'wind' as const, wind: 'west' }, { family: 'dragon' as const, dragon: 'red' }, { family: 'flower' as const, id: 'malaysian.flower.1' }, { family: 'season' as const, id: 'malaysian.season.1' },
+      { family: 'profile-defined' as const, kindId: 'malaysian.face', id: 'malaysian.face.1' }, { family: 'profile-defined' as const, kindId: 'malaysian.animal', id: 'malaysian.animal.1' }, { family: 'joker' as const, id: 'malaysian.fly.1' },
+    ];
+    const entries = [
+      { id: family.id, category: 'family' as const, status: 'architecture-only' as const }, { id: 'tiles.malaysian-cheah-sloper-84', category: 'tiles' as const, status: 'architecture-only' as const }, { id: 'seats.malaysian-east-south-west', category: 'seats' as const, status: 'architecture-only' as const }, { id: 'shape.four-sets-pair', category: 'shape' as const, status: 'architecture-only' as const }, { id: 'validation.malaysian-cheah-sloper', category: 'validation' as const, status: 'architecture-only' as const }, { id: 'catalogue.pattern.malaysian-cheah-sloper', category: 'catalogue.pattern' as const, status: 'architecture-only' as const }, { id: 'interaction.malaysian-cheah-sloper', category: 'interaction' as const, status: 'architecture-only' as const }, { id: 'qualification.malaysian-five-fan', category: 'qualification' as const, status: 'architecture-only' as const }, { id: 'interpretation.max-lawful-profile', category: 'interpretation' as const, status: 'architecture-only' as const }, { id: 'value-policy.malaysian-max-fan-listed-limit', category: 'value-policy' as const, status: 'architecture-only' as const }, { id: 'evidence-policy.malaysian-cheah-sloper', category: 'evidence-policy' as const, status: 'architecture-only' as const }, { id: 'settlement.malaysian-cheah-sloper', category: 'settlement' as const, status: 'architecture-only' as const }, { id: 'progression.malaysian-winner-next-dealer', category: 'progression' as const, status: 'architecture-only' as const }, { id: 'game-end.malaysian-cheah-sloper', category: 'game-end' as const, status: 'architecture-only' as const }, { id: source('cheah-sloper-published-profile'), category: 'source' as const, status: 'metadata' as const },
+    ];
+    const profiles = new Map([[`${definition.identity.id}@${definition.identity.version}`, definition as ProfileAuthoringDefinition]]);
+    const environment: ResolverEnvironment = { registry: new RegistryBank(entries), families: { get: id => id === family.id ? family : undefined }, seatModels: { get: id => id === 'seats.malaysian-east-south-west' ? { id, playerCount: 3 } : undefined }, profiles: { get: ref => profiles.get(`${ref.id}@${ref.version}`) } };
+    const inspection = inspectProfile(definition, environment);
+
+    expect(inspection.profile).toBeDefined();
+    expect(inspection.profile!.table).toEqual({ playerCount: 3, seatModelId: 'seats.malaysian-east-south-west' });
+    expect(inspection.profile!.scoring).toMatchObject({ grammar: 'pattern-accumulator', config: { qualificationPolicyId: 'qualification.malaysian-five-fan', capPolicyId: 'value-policy.malaysian-max-fan-listed-limit' } });
+    expect(inspection.profile!.progression.id).toBe('progression.malaysian-winner-next-dealer');
+    expect(inspection.references.find(reference => reference.path === 'provenance.sources')).toMatchObject({ role: 'metadata', actualStatus: 'metadata' });
+    expect(inspection.blockers).toEqual(expect.arrayContaining([expect.objectContaining({ blockerCode: 'REFERENCE_NOT_EXECUTABLE' })]));
+    const decodedTiles = malaysianTiles.map(face => canonicalTileFaceSchema.parse(JSON.parse(JSON.stringify(face))));
+    expect(decodedTiles).toContainEqual({ family: 'profile-defined', kindId: 'malaysian.face', id: 'malaysian.face.1' });
+    expect(decodedTiles).toContainEqual({ family: 'profile-defined', kindId: 'malaysian.animal', id: 'malaysian.animal.1' });
+    expect(decodedTiles.filter(face => face.family === 'joker')).toEqual([{ family: 'joker', id: 'malaysian.fly.1' }]);
+    expect(decodedTiles.filter(face => face.family === 'wind').map(face => face.wind)).toEqual(['east', 'south', 'west']);
+    expect(decodedTiles.filter(face => face.family === 'wind').map(face => face.wind)).not.toContain('north');
+    expect(decodedTiles.filter(face => face.family === 'profile-defined').map(face => face.kindId)).not.toContain('flower');
+    expect(() => resolvedScoringConfigSchema.parse({ grammar: 'pattern-accumulator', config: { ...(definition.definition.scoring as { config: JsonObject }).config, callback: 'pay()' } })).toThrow();
+    await expect(resolvePlayableProfile({ id: definition.identity.id, version: definition.identity.version }, environment)).rejects.toThrow('PROFILE_NOT_PLAYABLE:REFERENCE_NOT_EXECUTABLE');
   });
 });
