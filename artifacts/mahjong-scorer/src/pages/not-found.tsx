@@ -1,6 +1,11 @@
 import { ArrowRight, Home } from 'lucide-react';
 import { SiteHeader } from '@/components/SiteHeader';
 
+export const notFoundEyebrow = '404 · Page not found';
+export const notFoundHeading = "We couldn't find that page.";
+export const notFoundDescription =
+  'The link may be old, mistyped or no longer available. You can head home or continue with one of the main Mahjong Reference tools.';
+
 export const notFoundRecoveryLinks = [
   ['Home', '/'],
   ['Score a hand', '/hand'],
@@ -15,12 +20,12 @@ export default function NotFound() {
 
       <main className="mx-auto flex max-w-[1100px] items-center px-5 py-12 sm:py-16 lg:px-8 lg:py-20">
         <section className="w-full max-w-[760px] rounded-2xl border border-[#d8ceb8] bg-[#fbf8ed] p-6 shadow-[var(--shadow-sm)] sm:p-9">
-          <p className="font-mono text-[12px] uppercase tracking-[.14em] text-[#ae6249]">404 · Page not found</p>
+          <p className="font-mono text-[12px] uppercase tracking-[.14em] text-[#ae6249]">{notFoundEyebrow}</p>
           <h1 className="mt-3 font-serif text-[clamp(34px,6vw,52px)] leading-[1.05] text-[#284d45]">
-            We couldn&apos;t find that page.
+            {notFoundHeading}
           </h1>
           <p className="mt-4 max-w-[620px] text-[15px] leading-7 text-[#66746e]">
-            The link may be old, mistyped or no longer available. You can head home or continue with one of the main Mahjong Reference tools.
+            {notFoundDescription}
           </p>
 
           <div className="mt-7 grid gap-3 sm:grid-cols-2" aria-label="Page recovery options">
