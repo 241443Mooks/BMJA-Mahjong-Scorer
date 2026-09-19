@@ -69,7 +69,8 @@ export type CanonicalTileFace =
   | { family: 'dragon'; dragon: string }
   | { family: 'flower'; id: string }
   | { family: 'season'; id: string }
-  | { family: 'joker'; id: string };
+  | { family: 'joker'; id: string }
+  | { family: 'profile-defined'; kindId: string; id: string };
 
 export type PhysicalTileEvidence = {
   face: CanonicalTileFace;
@@ -121,13 +122,37 @@ export type ResolvedScoringConfig =
   | { grammar: 'riichi-han-fu'; config: RiichiScoringConfigV1 }
   | { grammar: 'target-catalogue'; config: TargetCatalogueConfigV1 };
 
+export type EvaluationDisposition =
+  | { kind: 'scored' }
+  | { kind: 'not-qualifying'; reasonId: string }
+  | { kind: 'invalid'; reasonId: string }
+  | { kind: 'needs-evidence'; missingEvidenceIds: readonly string[] }
+  | { kind: 'unsupported'; reasonId: string };
+
+export type ScoreDecisionIdentity = {
+  ruleId?: string;
+  bindingId?: string;
+  policyId?: string;
+  reasonId?: string;
+  sourceId?: string;
+};
+
+export type ScoreDecisionTraceEntry = {
+  id: string;
+  kind: 'candidate' | 'count' | 'suppress' | 'select' | 'stage' | 'final';
+  identities: ScoreDecisionIdentity;
+  metadata?: JsonObject;
+};
+
 export type ScoreExplanationEntry = { id: string; detail?: JsonObject };
 export type HandScoreAuditHeader = {
   grammar: ScoringGrammarId;
   profile: RulesProfileRef;
   rulesFingerprint: string;
   legal: boolean;
+  disposition: EvaluationDisposition;
   explanation: readonly ScoreExplanationEntry[];
+  decisionTrace: readonly ScoreDecisionTraceEntry[];
   matchedCanonicalPatternIds: readonly string[];
 };
 

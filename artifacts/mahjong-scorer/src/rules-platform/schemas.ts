@@ -18,6 +18,36 @@ const profileIdentitySchema = z.object({
 }).strict();
 const profileRefSchema = z.object({ id: z.string(), version: z.string() }).strict();
 
+export const canonicalTileFaceSchema = z.discriminatedUnion('family', [
+  z.object({ family: z.literal('suit'), suit: z.string(), rank: z.number() }).strict(),
+  z.object({ family: z.literal('wind'), wind: z.string() }).strict(),
+  z.object({ family: z.literal('dragon'), dragon: z.string() }).strict(),
+  z.object({ family: z.literal('flower'), id: z.string() }).strict(),
+  z.object({ family: z.literal('season'), id: z.string() }).strict(),
+  z.object({ family: z.literal('joker'), id: z.string() }).strict(),
+  z.object({ family: z.literal('profile-defined'), kindId: z.string(), id: z.string() }).strict(),
+]);
+
+export const evaluationDispositionSchema = z.discriminatedUnion('kind', [
+  z.object({ kind: z.literal('scored') }).strict(),
+  z.object({ kind: z.literal('not-qualifying'), reasonId: z.string() }).strict(),
+  z.object({ kind: z.literal('invalid'), reasonId: z.string() }).strict(),
+  z.object({ kind: z.literal('needs-evidence'), missingEvidenceIds: z.array(z.string()) }).strict(),
+  z.object({ kind: z.literal('unsupported'), reasonId: z.string() }).strict(),
+]);
+
+const scoreDecisionIdentitySchema = z.object({
+  ruleId: z.string().optional(), bindingId: z.string().optional(), policyId: z.string().optional(),
+  reasonId: z.string().optional(), sourceId: z.string().optional(),
+}).strict();
+
+export const scoreDecisionTraceEntrySchema = z.object({
+  id: z.string(),
+  kind: z.enum(['candidate', 'count', 'suppress', 'select', 'stage', 'final']),
+  identities: scoreDecisionIdentitySchema,
+  metadata: jsonObjectSchema.optional(),
+}).strict();
+
 export const profileAuthoringDefinitionSchema = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('root'), schemaVersion: z.literal(1), identity: profileIdentitySchema, definition: jsonObjectSchema }).strict(),
   z.object({ kind: z.literal('derived'), schemaVersion: z.literal(1), identity: profileIdentitySchema, baseProfile: profileRefSchema, overrides: jsonObjectSchema }).strict(),
