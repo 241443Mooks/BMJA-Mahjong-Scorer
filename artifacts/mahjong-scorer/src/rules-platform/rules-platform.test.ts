@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { profileAuthoringDefinitionSchema, resolvedScoringConfigSchema } from './schemas';
+import {
+  canonicalTileFaceSchema, evaluationDispositionSchema, profileAuthoringDefinitionSchema,
+  resolvedScoringConfigSchema, scoreDecisionTraceEntrySchema,
+} from './schemas';
 import type {
   CanonicalTileFace, CatalogueRef, ExecutableRegistryIdentity, GameEndResult, HandEvaluationInput,
   HandScoreResult, ProfileAuthoringDefinition, ResolvedTableConfig, RoundResolution,
@@ -61,6 +64,12 @@ describe('rules platform vocabulary', () => {
     expect('dealerModelId' in table).toBe(false);
   });
 
+  it('represents profile-defined tile identities without widening the hand contract', () => {
+    const face: CanonicalTileFace = { family: 'profile-defined', kindId: 'malaysian-face', id: 'scholar' };
+    expect(canonicalTileFaceSchema.parse(face)).toEqual(face);
+    expect(canonicalTileFaceSchema.safeParse({ family: 'profile-defined', kindId: 'animal', id: 'cat', unknown: true }).success).toBe(false);
+  });
+
   it('keeps profile and catalogue references as separate contracts', () => {
     const profile: RulesProfileRef = { id: 'profile', version: '1' };
     const catalogue: CatalogueRef = { id: 'catalogue', version: '1' };
@@ -70,8 +79,32 @@ describe('rules platform vocabulary', () => {
   it('discriminates scoring and score-result grammar bodies', () => {
     const config = resolvedScoringConfigSchema.parse({ grammar: 'pattern-accumulator', config: { configVersion: 1, unit: 'fan', patternCatalogueId: 'p', interactionPolicyId: 'i', qualificationPolicyId: 'q', interpretationPolicyId: 'x' } });
     expect(config.grammar).toBe('pattern-accumulator');
-    const result: HandScoreResult = { grammar: 'riichi-han-fu', profile: { id: 'p', version: '1' }, rulesFingerprint: 'f', legal: true, explanation: [], matchedCanonicalPatternIds: [], result: { han: 3, fu: 40, value: 5200 } };
+    const result: HandScoreResult = { grammar: 'riichi-han-fu', profile: { id: 'p', version: '1' }, rulesFingerprint: 'f', legal: true, disposition: { kind: 'scored' }, explanation: [], decisionTrace: [], matchedCanonicalPatternIds: [], result: { han: 3, fu: 40, value: 5200 } };
     expect(result.result.han).toBe(3);
+  });
+
+  it('records every evaluation disposition and machine-readable score decisions', () => {
+    expect([
+      { kind: 'scored' }, { kind: 'not-qualifying', reasonId: 'minimum-fan' },
+      { kind: 'invalid', reasonId: 'tile-count' }, { kind: 'needs-evidence', missingEvidenceIds: ['winning-method'] },
+      { kind: 'unsupported', reasonId: 'profile-unavailable' },
+    ].every(
+      (disposition) => evaluationDispositionSchema.safeParse(disposition).success,
+    )).toBe(true);
+    const kinds = ['candidate', 'count', 'suppress', 'select', 'stage', 'final'] as const;
+    for (const kind of kinds) {
+      expect(scoreDecisionTraceEntrySchema.safeParse({
+        id: `decision-${kind}`, kind,
+        identities: { ruleId: 'rule-1', bindingId: 'binding-1', policyId: 'policy-1', reasonId: 'reason-1', sourceId: 'source-1' },
+        metadata: { amount: 8 },
+      }).success).toBe(true);
+    }
+    expect(scoreDecisionTraceEntrySchema.safeParse({
+      id: 'bad', kind: 'suppress', identities: { reasonId: 'reason-1', callback: () => true },
+    }).success).toBe(false);
+    expect(scoreDecisionTraceEntrySchema.safeParse({
+      id: 'open-metadata', kind: 'final', identities: { policyId: 'total' }, metadata: { total: { unit: 'fan', value: 8 } },
+    }).success).toBe(true);
   });
 
   it('supports multi-score rounds, neutral ledger parties, and distinct finalisation', () => {
