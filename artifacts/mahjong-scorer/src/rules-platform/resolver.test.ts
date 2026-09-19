@@ -98,4 +98,22 @@ describe('rules profile resolver', () => {
     const artifact = await resolvePlayableProfile(ref(), environment());
     expect(Object.isFrozen(artifact)).toBe(true); expect(Object.isFrozen(artifact.executableDependencies)).toBe(true); expect(Object.isFrozen(artifact.profile.table)).toBe(true);
   });
+
+  it('rejects unknown, locked, incompatible, non-executable and schema-less capability overrides', async () => {
+    const derived = (overrides: Record<string, any>): ProfileAuthoringDefinition => ({ kind: 'derived', schemaVersion: 1, identity: { id: 'derived', version: '1', name: 'derived', status: 'custom' }, baseProfile: ref('base'), overrides });
+    const cap = (id: string, extra: Record<string, any> = {}) => ({ id, category: 'validation' as const, status: 'executable' as const, semanticRevision: 1, customisation: 'customisable' as const, valueSchemaId: 'value', presentation: { presentationKey: id }, authoringDimensions: [], ...extra });
+    const env = (metadata: unknown) => ({ ...environment([root('base'), derived({ 'validation.cap': true })]), registry: new RegistryBank([...entries, executable('validation.cap', 'validation')]), capabilities: { get: () => metadata as never }, capabilityState: { all: () => [metadata] as never[] }, contracts: { get: () => ({ validate: (value: unknown) => ({ value }) }) }, capabilityAdapters: { get: () => ({ apply: (profile: any) => profile, isActive: () => false }) } } as unknown as ResolverEnvironment);
+    await expect(resolvePlayableProfile(ref('derived'), env(undefined))).rejects.toThrow('CAPABILITY_UNRESOLVED');
+    await expect(resolvePlayableProfile(ref('derived'), env(cap('validation.cap', { customisation: 'locked' })))).rejects.toThrow('CAPABILITY_LOCKED');
+    await expect(resolvePlayableProfile(ref('derived'), env(cap('validation.cap', { compatibleFamilyIds: ['other'] })))).rejects.toThrow('CAPABILITY_FAMILY_INCOMPATIBLE');
+    await expect(resolvePlayableProfile(ref('derived'), env(cap('validation.cap', { compatibleGrammars: ['riichi-han-fu'] })))).rejects.toThrow('CAPABILITY_GRAMMAR_INCOMPATIBLE');
+    await expect(resolvePlayableProfile(ref('derived'), env({ ...cap('validation.cap'), status: 'architecture-only' }))).rejects.toThrow('CAPABILITY_REGISTRY_MISMATCH');
+  });
+
+  it('rejects architecture-only profiles through playable resolution after structured inspection', async () => {
+    const definition = root(); (definition.definition.table as { seatModelId: string }).seatModelId = 'seats.placeholder';
+    const env = environment([definition]); const registry = new RegistryBank([...entries, { id: 'seats.placeholder', category: 'seats' as const, status: 'architecture-only' as const }]);
+    expect(inspectProfile(definition, { ...env, registry }).blockers.some(blocker => blocker.blockerCode === 'REFERENCE_NOT_EXECUTABLE')).toBe(true);
+    await expect(resolvePlayableProfile(ref(), { ...env, registry })).rejects.toThrow('PROFILE_NOT_PLAYABLE');
+  });
 });
