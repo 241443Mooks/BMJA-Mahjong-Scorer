@@ -106,6 +106,18 @@ const implementations = new Map<string, {
   }],
 ]);
 
+/** Resolves the exact current implementation before any validation input runs. */
+export const currentClassicalValidationImplementation = (
+  identity: ValidationRegistryIdentity,
+) => {
+  classicalValidationRegistry.requireExecutable('validation', identity.id);
+  const implementation = implementations.get(keyFor(identity));
+  if (!implementation) {
+    throw new Error(`Unknown current validation implementation: ${keyFor(identity)}`);
+  }
+  return implementation;
+};
+
 /**
  * Invokes only the exact current Classical validation contract. Evidence stays
  * as MahjongHand while GameContext remains a separate trusted input.
@@ -114,11 +126,7 @@ export const validateCurrentClassicalHand = (
   identity: ValidationRegistryIdentity,
   { family, evidenceCodecId, profile, input }: ClassicalValidationInput,
 ): string[] => {
-  classicalValidationRegistry.requireExecutable('validation', identity.id);
-  const implementation = implementations.get(keyFor(identity));
-  if (!implementation) {
-    throw new Error(`Unknown current validation implementation: ${keyFor(identity)}`);
-  }
+  const implementation = currentClassicalValidationImplementation(identity);
   const { configuration } = implementation;
   if (family.id !== configuration.familyId ||
       !family.allowedGrammars.includes('classical-points-doubles')) {
