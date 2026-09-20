@@ -11,6 +11,7 @@ import {
   saveGameRecovery,
 } from "./persistence";
 import { BMJA_PROFILE_REF, OUTSIDE_THE_BOX_PROFILE_REF } from "./ruleset";
+import { BUZZARD_2000_PROFILE_REF } from './buzzard-2000';
 
 beforeAll(() => initialiseCurrentRulesRuntimes());
 
@@ -37,6 +38,18 @@ const newGame = () =>
   );
 
 describe("game recovery persistence", () => {
+  it('migrates a missing Buzzard limit to 600 and rejects an explicit invalid limit', () => {
+    const storage = memoryStorage();
+    const buzzard = createBmjaGame(newGame().players, newGame().seats, undefined, 'full-game', BUZZARD_2000_PROFILE_REF);
+    saveGameRecovery(storage, buzzard, 'win', 'east', { scores: {}, scoreRecords: {} });
+    const snapshot = JSON.parse(storage.getItem(GAME_SNAPSHOT_STORAGE_KEY)!);
+    delete snapshot.game.setup.tableLimit;
+    storage.setItem(GAME_SNAPSHOT_STORAGE_KEY, JSON.stringify(snapshot));
+    expect(loadGameRecovery(storage)?.game.setup.tableLimit).toBe(600);
+    snapshot.game.setup.tableLimit = 0;
+    storage.setItem(GAME_SNAPSHOT_STORAGE_KEY, JSON.stringify(snapshot));
+    expect(loadGameRecovery(storage)).toBeNull();
+  });
   it("validates Cannon danger while preserving valid incident evidence", () => {
     const storage = memoryStorage();
     const otb = createBmjaGame(newGame().players, newGame().seats, undefined, 'full-game', OUTSIDE_THE_BOX_PROFILE_REF);
