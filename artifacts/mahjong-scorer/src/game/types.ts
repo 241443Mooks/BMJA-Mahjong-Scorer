@@ -78,6 +78,7 @@ export type ConfirmedHand = {
   handNumber: number;
   outcome: HandOutcome;
   handMode: HandMode;
+  eastThirteenthConsecutiveMahjong?: boolean;
   nextHandMode: HandMode;
   scores: PlayerAmounts;
   scoreRecords: PlayerScoreRecords;
@@ -159,6 +160,7 @@ export type HandScorerContext = {
   isWinner: boolean;
   limit: number;
   handMode: HandMode;
+  eastThirteenthConsecutiveMahjong?: boolean;
   detailedHand?: DetailedHandRecord;
   requiresRecalculation?: boolean;
 };

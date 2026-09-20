@@ -1,5 +1,6 @@
 import type { JsonObject, ScoringGrammarId } from './types';
 import type { RegistryCategory, RegistryStatus } from './registry';
+import type { RulesProfileRef } from './types';
 
 export type AuthoringDimension =
   | 'membership-binding' | 'score-selector' | 'incident-liability' | 'hand-mode'
@@ -44,6 +45,16 @@ export const CURRENT_CAPABILITY_METADATA: Readonly<Record<CurrentCapabilityId, P
   'table.round-incidents': { id: 'table.round-incidents', presentation: { presentationKey: 'round-incidents' } },
   'hand.goulash': { id: 'hand.goulash', presentation: { presentationKey: 'goulash' } },
 });
+
+const capabilityKey = ({ id, version }: RulesProfileRef) => `${id}@${version}`;
+const CURRENT_PROFILE_CAPABILITIES: Readonly<Record<string, readonly CurrentCapabilityId[]>> = Object.freeze({
+  'buzzard-2000@0.1': Object.freeze(['hand.standing-hand', 'hand.only-possible-winning-tile', 'hand.winning-event-evidence', 'context.east-thirteenth-consecutive-mahjong', 'table.buzzard-profile-results', 'table.buzzard-dangerous-discard', 'table.buzzard-false-mah-jong', 'table.incorrect-hand', 'table.configurable-limit'] as CurrentCapabilityId[]),
+  'outside-the-box@0.1': Object.freeze(['table.round-incidents', 'hand.goulash'] as CurrentCapabilityId[]),
+});
+
+/** Exact finite lookup; unknown identities deliberately advertise nothing. */
+export const supportedCapabilitiesForProfile = (profile: RulesProfileRef): readonly CurrentCapabilityId[] =>
+  CURRENT_PROFILE_CAPABILITIES[capabilityKey(profile)] ?? Object.freeze([]);
 
 export function decisionTraceIdentities(metadata: CapabilityMetadata, reasonId: string, policyId?: string) {
   return {

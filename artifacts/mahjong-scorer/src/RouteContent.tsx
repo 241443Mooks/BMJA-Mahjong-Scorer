@@ -15,6 +15,7 @@ import { MahjongSettlementPage } from './home/MahjongSettlementPage';
 import NotFound from './pages/not-found';
 import { RulesHubPage, RulesProfilePage } from './rules/RulesReference';
 import { descriptorForSlug, publicRulesSlugFromGamePath } from './game/rules-presentation';
+import { RulesProfilePickerScalabilityFixture } from './game/RulesProfilePicker';
 
 function returnHome() {
   if (typeof window !== 'undefined') window.location.assign('/');
@@ -25,6 +26,7 @@ function withFullFooter(content: ReactNode) {
 }
 
 export function RouteContent({ path, prerender = false }: { path: string; prerender?: boolean }) {
+  if (import.meta.env.DEV && path === '/__fixtures/rules-profile-picker') return <RulesProfilePickerScalabilityFixture />;
   if (path === '/') return withFullFooter(<HomePage />);
   if (path === '/game' || path === '/game/british' || path === '/game/western' || path === '/game/club' || path === '/game/buzzard') {
     return <App initialRulesProfile={descriptorForSlug(publicRulesSlugFromGamePath(path)).profile} prerenderOnly={prerender} />;

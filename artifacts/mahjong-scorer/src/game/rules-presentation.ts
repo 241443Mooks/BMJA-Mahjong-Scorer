@@ -3,8 +3,9 @@ import { OUTSIDE_THE_BOX_PROFILE_REF, outsideTheBoxSpecialHandBindings } from '.
 import { BMJA_PROFILE_REF } from './ruleset';
 import { WESTERN_TM_PROFILE_REF, westernTmSpecialHandBindings } from './western-tm-catalogue';
 import { BUZZARD_2000_PROFILE_REF, buzzard2000SpecialHandBindings } from './buzzard-2000';
-import type { RulesProfileRef } from './types';
+import { getCurrentRulesRuntime } from '../rules-platform/current-runtime-registry';
 import type { HandMode } from './types';
+import type { RulesProfileRef } from './types';
 
 export type PublicRulesSlug = 'british' | 'western' | 'club' | 'buzzard';
 
@@ -19,7 +20,6 @@ export type RulesDescriptor = {
   configuredClubProfile: boolean;
   referenceKeys: readonly string[];
   atAGlance: readonly string[];
-  defaultTableLimit: number;
   support: {
     scorer: string;
     source: string;
@@ -46,7 +46,6 @@ export const PUBLIC_RULES_DESCRIPTORS: readonly RulesDescriptor[] = Object.freez
     configuredClubProfile: false,
     referenceKeys: ['british-scoring', 'british-settlement'],
     atAGlance: [catalogueCount(bmjaSpecialHandBindings), 'British settlement and game progression', 'Normal hand play'],
-    defaultTableLimit: 1000,
     support: {
       scorer: 'Available',
       source: 'Verified for the British / BMJA-style scorer baseline',
@@ -65,7 +64,6 @@ export const PUBLIC_RULES_DESCRIPTORS: readonly RulesDescriptor[] = Object.freez
     configuredClubProfile: false,
     referenceKeys: ['western-special-hands', 'western-ordinary-play-status'],
     atAGlance: [catalogueCount(westernTmSpecialHandBindings), 'Ordinary play and settlement remain provisional while source review continues', 'Normal hand play'],
-    defaultTableLimit: 1000,
     support: {
       scorer: 'Available',
       source: 'Companion special-hand catalogue source-verified; ordinary rules under source review',
@@ -84,7 +82,6 @@ export const PUBLIC_RULES_DESCRIPTORS: readonly RulesDescriptor[] = Object.freez
     configuredClubProfile: true,
     referenceKeys: ['club-special-hands', 'club-goulash', 'club-incidents'],
     atAGlance: [catalogueCount(outsideTheBoxSpecialHandBindings), 'Draws lead to a Goulash hand with physical blank tiles', 'Club incidents and liability are recorded at the table'],
-    defaultTableLimit: 1000,
     support: {
       scorer: 'Available',
       source: 'Configured local profile',
@@ -103,7 +100,6 @@ export const PUBLIC_RULES_DESCRIPTORS: readonly RulesDescriptor[] = Object.freez
     configuredClubProfile: false,
     referenceKeys: ['buzzard-2000'],
     atAGlance: [catalogueCount(buzzard2000SpecialHandBindings), 'Buzzard table incidents and configured limit', 'Source-specific Classical profile'],
-    defaultTableLimit: 600,
     support: { scorer: 'Available', source: 'Buzzard 2000 evidence record', implementation: 'Provisional', authority: 'Buzzard 2000 source material' },
   },
 ]);
@@ -114,27 +110,18 @@ export const descriptorForRulesProfile = (profile: RulesProfileRef): RulesDescri
   return descriptor;
 };
 
-/**
- * The current hand-scorer UI cap is presentation configuration, deliberately
- * separate from runtime selection and executable scoring semantics.
- */
-export const currentClassicalScorerDefaultLimit = (
-  profile: RulesProfileRef,
-): number => {
-  return descriptorForRulesProfile(profile).defaultTableLimit;
-};
-
 export const descriptorForSlug = (slug: PublicRulesSlug): RulesDescriptor =>
   PUBLIC_RULES_DESCRIPTORS.find((descriptor) => descriptor.slug === slug)!;
-
-export const isConfiguredClubProfile = (profile: RulesProfileRef) =>
-  descriptorForRulesProfile(profile).configuredClubProfile;
 
 export const isBritishRulesProfile = (profile: RulesProfileRef) =>
   sameProfile(profile, BMJA_PROFILE_REF);
 
+/** Compatibility seam backed by the resolved runtime, never presentation data. */
+export const currentClassicalScorerDefaultLimit = (profile: RulesProfileRef) =>
+  getCurrentRulesRuntime(profile).defaultTableLimit;
+
 export const normaliseStandaloneHandMode = (profile: RulesProfileRef, handMode: HandMode): HandMode =>
-  isConfiguredClubProfile(profile) ? handMode : 'normal';
+  getCurrentRulesRuntime(profile).supportedCapabilities().includes('hand.goulash') ? handMode : 'normal';
 
 export const publicRulesSlugFromGamePath = (path: string): PublicRulesSlug =>
   path === '/game/western' ? 'western' : path === '/game/club' ? 'club' : path === '/game/buzzard' ? 'buzzard' : 'british';
