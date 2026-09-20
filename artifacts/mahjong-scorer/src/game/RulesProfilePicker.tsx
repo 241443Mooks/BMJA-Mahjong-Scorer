@@ -65,6 +65,7 @@ export function RulesProfilePicker({ prompt, selectedProfile, onSelect }: { prom
       </div>
       <h3 className="mt-1 font-serif text-[20px] text-[#284d45]">{selected.title}</h3>
       <p className="mt-1 text-[12px] leading-5 text-[#66746e]">{selected.status}</p>
+      <p className="mt-2 text-[11px] leading-4 text-[#66746e]">Profile version: {selected.profile.version} · Source: {selected.support.source}</p>
       <ul className="mt-3 space-y-1 text-[12px] leading-5 text-[#284d45]">{selected.atAGlance.map((fact) => <li key={fact}>• {fact}</li>)}</ul>
     </div></div>
   </section>;

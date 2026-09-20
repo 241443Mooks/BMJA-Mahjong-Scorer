@@ -207,4 +207,5 @@ export const handScorerLocalContext = (
     context?.limit ?? getCurrentRulesRuntime(rulesProfile).defaultTableLimit,
   isWinner: context?.isWinner ?? false,
   handMode: context?.handMode ?? 'normal',
+  eastThirteenthConsecutiveMahjong: context?.eastThirteenthConsecutiveMahjong,
 });
