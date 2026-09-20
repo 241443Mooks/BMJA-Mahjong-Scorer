@@ -64,6 +64,14 @@ describe("game recovery persistence", () => {
     expect(recovered.handHistory[0].settlement.transactions.map(({ reason }) => reason)).toEqual(['buzzard-dangerous-discard-liability', 'buzzard-dangerous-discard-liability', 'buzzard-dangerous-discard-liability']);
     expect(undoLastHand(recovered).setup.tableLimit).toBe(725);
   });
+  it('restores active Buzzard incident and profile-result drafts without replacing profile identity', () => {
+    const storage = memoryStorage();
+    const game = createBmjaGame(newGame().players, newGame().seats, undefined, 'full-game', BUZZARD_2000_PROFILE_REF, 725);
+    saveGameRecovery(storage, game, 'win', 'east', { scores: { east: 100, south: 725, west: 0, north: 0 }, scoreRecords: {}, buzzardIncidents: [], profileScoreResults: { south: { resultId: 'buzzard.incomplete-four-wind-limit' } } });
+    const recovered = loadGameRecovery(storage)!;
+    expect(recovered.game.setup).toMatchObject({ rulesProfile: BUZZARD_2000_PROFILE_REF, tableLimit: 725 });
+    expect(recovered.draft.profileScoreResults).toEqual({ south: { resultId: 'buzzard.incomplete-four-wind-limit' } });
+  });
   it('rejects Buzzard-only evidence under Outside the Box orchestration', () => {
     const otb = createBmjaGame(newGame().players, newGame().seats, undefined, 'full-game', OUTSIDE_THE_BOX_PROFILE_REF);
     expect(() => confirmHand(otb, { outcome: { type: 'win', winnerId: 'east' }, scores: { east: 100, south: 0, west: 0, north: 0 }, buzzardIncidents: [{ type: 'buzzard-dangerous-discard', liablePlayerId: 'south', reason: 'one-suit' }] })).toThrow('does not support Buzzard round evidence');

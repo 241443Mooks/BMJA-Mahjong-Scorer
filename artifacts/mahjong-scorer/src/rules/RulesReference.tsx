@@ -56,6 +56,16 @@ const pageCopy: Record<Exclude<PublicRulesSlug, 'club'>, { eyebrow: string; intr
     provenance: <>The 1997 <em>Mah Jong Player's Companion</em> is the source-certified catalogue reference. <em>The Game of Mah Jong Illustrated</em> is the intended ordinary-rules source, but its executable domains have not yet all been checked. Until that work is complete, ordinary play remains provisional rather than fully verified.</>,
     links: [['Track a Western game', '/game/western'], ['Score a hand', '/hand'], ['Compare Mahjong rules', '/mahjong-rules-compared']],
   },
+  buzzard: {
+    eyebrow: 'Rules reference', intro: 'British/Western Classical — Buzzard 2000 is a source-specific profile with a configurable table limit.',
+    identity: <>This profile identifies Buzzard 2000 exactly; it is not a claim about all Classical or Western Mahjong.</>,
+    table: <>Standing Hand is declared and locked at the physical table; this app records the resolved scoring fact, not later physical actions. Dead-hand/final-14, claim priority and Kong replacement or rob-Kong remain table procedures, not wall simulation or arbitration.</>,
+    scoring: <>The scorer records existing winning-method evidence such as last-wall, Loose Tile and rob-Kong. The configured table limit is a table setting: 600 is the source-backed Buzzard default/example, not a universal Mahjong constant.</>,
+    after: <>Dangerous discard is entered as an already-resolved table incident and liability, never inferred from discard history.</>,
+    distinctive: <>Use the game tracker to record the established incident and incomplete-hand facts; it does not police physical play.</>,
+    provenance: <>Copy follows the profile evidence record and stays deliberately concise.</>,
+    links: [['Track a Buzzard game', '/game/buzzard'], ['Score a hand', '/hand']],
+  },
 };
 
 export function RulesProfilePage({ slug }: { slug: Exclude<PublicRulesSlug, 'club'> }) {

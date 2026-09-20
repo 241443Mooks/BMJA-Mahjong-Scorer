@@ -199,6 +199,8 @@ export type RoundScoringDraft = {
   scores: RoundScoreDraft;
   scoreRecords: PlayerScoreRecords;
   incidents?: RoundIncident[];
+  buzzardIncidents?: BuzzardIncident[];
+  profileScoreResults?: Partial<Record<PlayerId, ProfileScoreResult>>;
 };
 
 export type HandScorerLocalContext = {
@@ -207,4 +209,5 @@ export type HandScorerLocalContext = {
   limit: number;
   isWinner: boolean;
   handMode: HandMode;
+  eastThirteenthConsecutiveMahjong?: boolean;
 };

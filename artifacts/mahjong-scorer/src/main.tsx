@@ -17,7 +17,7 @@ function setMeta(selector: string, attribute: string, value: string) {
 }
 
 function canonicalPathFor(currentPath: string) {
-  if (currentPath === '/game/british' || currentPath === '/game/western' || currentPath === '/game/club') return '/game';
+  if (currentPath === '/game/british' || currentPath === '/game/western' || currentPath === '/game/club' || currentPath === '/game/buzzard') return '/game';
   return aliases.find((alias) => alias.path === currentPath)?.target ?? currentPath;
 }
 

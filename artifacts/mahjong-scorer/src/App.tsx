@@ -244,6 +244,9 @@ function HandScorer({ context, onClose, standaloneHand, standaloneRulesProfile, 
   const [originalCall, setOriginalCall] = useState<boolean>(
     initialContext.isWinner ? initialHand?.originalCall ?? (practice ? practiceContext.originalCall : false) : false,
   );
+  const [standingHand, setStandingHand] = useState(initialHand?.classicalEvidence?.standingHand ?? false);
+  const [onlyPossibleWinningTile, setOnlyPossibleWinningTile] = useState(initialHand?.classicalEvidence?.onlyPossibleWinningTile ?? false);
+  const [eastThirteenthConsecutiveMahjong, setEastThirteenthConsecutiveMahjong] = useState(('eastThirteenthConsecutiveMahjong' in initialContext ? initialContext.eastThirteenthConsecutiveMahjong : undefined) ?? false);
   const [winningTileProvenance, setWinningTileProvenance] = useState<WinningTileProvenance | undefined>(
     initialHand?.winningTileProvenance
       ? {
@@ -365,6 +368,9 @@ function HandScorer({ context, onClose, standaloneHand, standaloneRulesProfile, 
     setOriginalCall(
       nextContext.isWinner ? savedHand?.originalCall ?? (practice ? nextPracticeContext.originalCall : false) : false,
     );
+    setStandingHand(savedHand?.classicalEvidence?.standingHand ?? false);
+    setOnlyPossibleWinningTile(savedHand?.classicalEvidence?.onlyPossibleWinningTile ?? false);
+    setEastThirteenthConsecutiveMahjong(('eastThirteenthConsecutiveMahjong' in nextContext ? nextContext.eastThirteenthConsecutiveMahjong : undefined) ?? false);
     setWinningTileProvenance(
       savedHand?.winningTileProvenance
         ? {
@@ -398,7 +404,11 @@ function HandScorer({ context, onClose, standaloneHand, standaloneRulesProfile, 
     // Goulash is a Club-only explicit standalone choice. Keep ordinary tile
     // entry when rules change, but remove metadata that has no meaning outside it.
     setHandMode((current) => normaliseStandaloneHandMode(standaloneRulesProfile, current));
+    setLimit(getCurrentRulesRuntime(standaloneRulesProfile).defaultTableLimit);
     setUngroupedBlankTiles([]);
+    setStandingHand(false);
+    setOnlyPossibleWinningTile(false);
+    setEastThirteenthConsecutiveMahjong(false);
     setSets((current) => current.map(({ blankTileIds: _blankTileIds, ...set }) => set));
   }, [hasContext, practice, standaloneRulesProfile]);
 
@@ -422,8 +432,9 @@ function HandScorer({ context, onClose, standaloneHand, standaloneRulesProfile, 
       winningTileProvenance: isWinner && winningMethod !== 'initial-deal' ? winningTileProvenance : undefined,
       winningEventEvidence: effectiveWinningEventEvidence,
       originalCall: isWinner ? originalCall : false,
+      classicalEvidence: standingHand || onlyPossibleWinningTile ? { standingHand, onlyPossibleWinningTile } : undefined,
     };
-  }, [sets, looseTiles, remainingTiles, ungroupedBlankTiles, layoutMode, flowers, seasons, isWinner, winningMethod, originalCall, winningTileProvenance, effectiveWinningEventEvidence]);
+  }, [sets, looseTiles, remainingTiles, ungroupedBlankTiles, layoutMode, flowers, seasons, isWinner, winningMethod, originalCall, standingHand, onlyPossibleWinningTile, winningTileProvenance, effectiveWinningEventEvidence]);
 
   useEffect(() => {
     if (winningTileProvenance) {
@@ -483,8 +494,8 @@ function HandScorer({ context, onClose, standaloneHand, standaloneRulesProfile, 
   }, [isWinner, winningMethod, numberOfKongs]);
 
   const gameContext = useMemo<GameContext>(
-    () => ({ playerWind, prevailingWind, limit, handMode }),
-    [handMode, limit, playerWind, prevailingWind],
+    () => ({ playerWind, prevailingWind, limit, handMode, eastThirteenthConsecutiveMahjong }),
+    [handMode, limit, playerWind, prevailingWind, eastThirteenthConsecutiveMahjong],
   );
 
   const scoringRuntime = useMemo(
@@ -910,6 +921,7 @@ function HandScorer({ context, onClose, standaloneHand, standaloneRulesProfile, 
 
           {standaloneHand && !hasContext && !example && !practice && <div className="max-w-[900px]"><RulesProfilePicker prompt="Which rules are you scoring?" selectedProfile={standaloneRulesProfile} onSelect={onStandaloneRulesProfileChange} />
             {isConfiguredClubProfile(standaloneRulesProfile) && <label className="mb-6 block rounded-lg border border-[#d8ceb8] bg-[#fbf8ed] p-4 text-[12px] text-[#284d45]"><span className="mb-2 block font-semibold">Hand mode</span><select data-testid="select-standalone-hand-mode" value={handMode} onChange={(event) => setHandMode(event.target.value as 'normal' | 'goulash')} className="w-full rounded-md border border-[#cfc3aa] bg-[#fdfbf5] px-3 py-2"><option value="normal">Normal hand</option><option value="goulash">Goulash hand (blank tiles; no chows)</option></select></label>}</div>}
+          {(() => { const capabilities = getCurrentRulesRuntime(context?.rulesProfile ?? standaloneRulesProfile).supportedCapabilities(); return (capabilities.includes('hand.standing-hand') || capabilities.includes('context.east-thirteenth-consecutive-mahjong')) && <section data-testid="buzzard-hand-evidence" className="mx-auto mb-5 max-w-[900px] rounded-lg border border-[#d8ceb8] bg-[#fbf8ed] p-4 text-[12px] text-[#284d45]"><h2 className="font-serif text-[20px]">Buzzard scoring evidence</h2>{capabilities.includes('hand.standing-hand') && <><label className="mt-3 flex gap-2"><input type="checkbox" checked={standingHand} onChange={(event) => setStandingHand(event.target.checked)} />Standing Hand (declared/locked table state)</label><label className="mt-2 flex gap-2"><input type="checkbox" checked={onlyPossibleWinningTile} onChange={(event) => setOnlyPossibleWinningTile(event.target.checked)} />Only possible winning tile</label></>}{capabilities.includes('context.east-thirteenth-consecutive-mahjong') && <label className="mt-2 flex gap-2"><input type="checkbox" checked={eastThirteenthConsecutiveMahjong} onChange={(event) => setEastThirteenthConsecutiveMahjong(event.target.checked)} />East's thirteenth consecutive Mah Jong</label>}</section>; })()}
 
           <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-5 xl:grid-cols-[minmax(0,1.18fr)_minmax(280px,.82fr)]">
             <div className="min-w-0 space-y-5">
@@ -1395,10 +1407,7 @@ function HandScorer({ context, onClose, standaloneHand, standaloneRulesProfile, 
                       </div>
                     ) : (
                       <select data-testid="select-limit" value={limit} onChange={(e) => setLimit(Number(e.target.value))} className="w-full min-w-0 rounded-md border border-[#cfc3aa] bg-[#fdfbf5] px-3 py-2.5 text-[12px] font-semibold text-[#284d45] focus:ring-2">
-                        <option value={300}>300 points</option>
-                        <option value={500}>500 points</option>
-                        <option value={1000}>1,000 points</option>
-                        <option value={2000}>2,000 points</option>
+                        {[...new Set([300, 500, limit, 1000, 2000])].sort((a, b) => a - b).map((value) => <option key={value} value={value}>{value.toLocaleString()} points</option>)}
                       </select>
                     )}
                   </label>

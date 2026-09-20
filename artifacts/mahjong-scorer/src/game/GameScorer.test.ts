@@ -3,6 +3,7 @@ import { initialiseCurrentRulesRuntimes } from '../rules-platform/current-runtim
 import { confirmHand, createBmjaGame } from './game';
 import { gameRecordRulesLabel, gameWorkspaceStage, getRoundSettlementPreview, previewRoundSettlement, recoveredGameConflictsWithRoute, settlementPreviewPresentation, shouldKeepScoreEntryOpen, shouldShowBritishSetupHelper, shouldShowEditCurrentHandSummary } from './GameScorer';
 import { BMJA_PROFILE_REF, OUTSIDE_THE_BOX_PROFILE_REF, resolveRulesProfile, WESTERN_TM_PROFILE_REF } from './ruleset';
+import { BUZZARD_2000_PROFILE_REF } from './buzzard-2000';
 
 beforeAll(() => initialiseCurrentRulesRuntimes());
 
@@ -50,6 +51,19 @@ describe('game settlement preview', () => {
     const seats = { east: 'east', south: 'south', west: 'west', north: 'north' } as const;
     expect(createBmjaGame(players, seats, undefined, 'full-game', WESTERN_TM_PROFILE_REF).setup.rulesProfile).toEqual(WESTERN_TM_PROFILE_REF);
     expect(createBmjaGame(players, seats, undefined, 'full-game', OUTSIDE_THE_BOX_PROFILE_REF).setup.rulesProfile).toEqual(OUTSIDE_THE_BOX_PROFILE_REF);
+    expect(createBmjaGame(players, seats, undefined, 'full-game', BUZZARD_2000_PROFILE_REF, 725).setup).toMatchObject({ rulesProfile: BUZZARD_2000_PROFILE_REF, tableLimit: 725 });
+  });
+
+  it('previews the Buzzard exceptional evidence through the same round supplied to confirmation', () => {
+    const players = ['east', 'south', 'west', 'north'].map((id) => ({ id, name: id }));
+    const game = createBmjaGame(players, { east: 'east', south: 'south', west: 'west', north: 'north' }, undefined, 'full-game', BUZZARD_2000_PROFILE_REF, 600);
+    const outcome = { type: 'win' as const, winnerId: 'east' };
+    const scores = { east: 100, south: 30, west: 20, north: 10 };
+    const dangerous = [{ type: 'buzzard-dangerous-discard' as const, liablePlayerId: 'south', reason: 'one-suit' as const }];
+    const preview = previewRoundSettlement(game, outcome, scores, [], dangerous);
+    expect(confirmHand(game, { outcome, scores, buzzardIncidents: dangerous }).handHistory[0].settlement).toEqual(preview);
+    const incomplete = previewRoundSettlement(game, outcome, { ...scores, south: 600 }, [], [], { south: { resultId: 'buzzard.incomplete-four-wind-limit' } });
+    expect(incomplete.zeroSum).toBe(true);
   });
 
   it('keeps recovered profile provenance when a rules-specific route asks for another profile', () => {

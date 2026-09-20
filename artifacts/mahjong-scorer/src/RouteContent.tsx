@@ -26,7 +26,7 @@ function withFullFooter(content: ReactNode) {
 
 export function RouteContent({ path, prerender = false }: { path: string; prerender?: boolean }) {
   if (path === '/') return withFullFooter(<HomePage />);
-  if (path === '/game' || path === '/game/british' || path === '/game/western' || path === '/game/club') {
+  if (path === '/game' || path === '/game/british' || path === '/game/western' || path === '/game/club' || path === '/game/buzzard') {
     return <App initialRulesProfile={descriptorForSlug(publicRulesSlugFromGamePath(path)).profile} prerenderOnly={prerender} />;
   }
   if (path === '/hand') return <App initialView="hand" standaloneHand prerenderOnly={prerender} />;
@@ -42,6 +42,7 @@ export function RouteContent({ path, prerender = false }: { path: string; preren
   if (path === '/rules') return withFullFooter(<RulesHubPage />);
   if (path === '/rules/british') return withFullFooter(<RulesProfilePage slug="british" />);
   if (path === '/rules/western') return withFullFooter(<RulesProfilePage slug="western" />);
+  if (path === '/rules/buzzard') return withFullFooter(<RulesProfilePage slug="buzzard" />);
   if (path === '/about') return withFullFooter(<AboutPage />);
   return <NotFound />;
 }
