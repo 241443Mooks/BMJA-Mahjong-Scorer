@@ -16,7 +16,6 @@ const winds = new Set<McrWind>(['east', 'south', 'west', 'north']);
 const winSources = new Set<McrWinSource>(['discard', 'self-draw']);
 const winEvents = new Set<McrResolvedWinEvent>(['none', 'last-wall-draw', 'last-discard', 'kong-replacement', 'flower-replacement', 'rob-kong']);
 const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null;
-const faceKey = (tile: PhysicalTileEvidence) => JSON.stringify(tile.face);
 const validTile = (tile: unknown): tile is PhysicalTileEvidence => {
   if (!isRecord(tile) || !isRecord(tile.face)) return false;
   const face = tile.face;
@@ -24,8 +23,16 @@ const validTile = (tile: unknown): tile is PhysicalTileEvidence => {
     || (face.family === 'wind' && winds.has(face.wind as McrWind))
     || (face.family === 'dragon' && ['red', 'green', 'white'].includes(face.dragon as string));
 };
+const faceKey = (tile: PhysicalTileEvidence) => {
+  const { face } = tile;
+  if (face.family === 'suit') return `suit:${face.suit}:${face.rank}`;
+  if (face.family === 'wind') return `wind:${face.wind}`;
+  if (face.family === 'dragon') return `dragon:${face.dragon}`;
+  return 'invalid';
+};
 const validGroup = (group: unknown): group is McrResolvedGroup => {
   if (!isRecord(group) || !['chow', 'pung', 'kong'].includes(group.kind as string) || !['concealed', 'melded'].includes(group.exposure as string) || !Array.isArray(group.tiles)) return false;
+  if (group.exposure === 'concealed' && group.kind !== 'kong') return false;
   const tiles = group.tiles;
   if (!tiles.every(validTile) || tiles.length !== (group.kind === 'kong' ? 4 : 3)) return false;
   if (group.kind !== 'chow') return tiles.every((tile) => faceKey(tile) === faceKey(tiles[0]!));

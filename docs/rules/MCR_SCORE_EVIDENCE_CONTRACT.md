@@ -63,7 +63,7 @@ type McrScoreContext = {
 
 The exact runtime type belongs to the rules-platform implementation. This document defines the **facts**, not final TypeScript spelling.
 
-`fixedGroups` are only physically declared groups (including declared concealed Kongs); their exposure remains evidence. `freeTiles` is the final ungrouped concealed multiset, including the recorded winning tile. It intentionally does not encode a Chow, Pung, pair, or irregular-hand interpretation.
+`fixedGroups` are only physically declared groups: melded Chows, Pungs, and Kongs, plus declared concealed Kongs. Their exposure remains evidence. `freeTiles` is the final ungrouped concealed multiset, including the recorded winning tile. It intentionally does not encode a Chow, Pung, pair, or irregular-hand interpretation.
 
 ## What is derivable from the submitted hand
 
