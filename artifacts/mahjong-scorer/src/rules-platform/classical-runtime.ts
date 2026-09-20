@@ -201,9 +201,7 @@ export const compileRulesRuntime = (artifact: ResolvedProfileArtifact): RulesRun
   if (!scoring) throw new Error(`RUNTIME_SCORING_IMPLEMENTATION_UNAVAILABLE:${keyFor(scorer)}|${keyFor(binding)}|${keyFor(policy)}`);
   const settlementRuntime: ReturnType<typeof settlementImplementation> = (() => {
     const dispatch = new Map<string, () => ReturnType<typeof settlementImplementation>>([
-      [keyFor(settlement), () => settlement.id === 'settlement.classical-pairwise'
-        ? settlementImplementation(settlement as Parameters<typeof settlementImplementation>[0])
-        : (() => { throw new Error(`RUNTIME_SETTLEMENT_IMPLEMENTATION_UNAVAILABLE:${keyFor(settlement)}`); })()],
+      ['settlement.classical-pairwise@1', () => settlementImplementation(settlement as Parameters<typeof settlementImplementation>[0])],
       ['settlement.outside-the-box-incidents@1', () => {
         const { limit } = artifact.profile.settlement.params;
         if (typeof limit !== 'number' || !Number.isFinite(limit) || limit <= 0) {
@@ -218,9 +216,7 @@ export const compileRulesRuntime = (artifact: ResolvedProfileArtifact): RulesRun
         return ({ players, seats, round, tableLimit }: Parameters<ReturnType<typeof settlementImplementation>>[0] & { tableLimit?: number }) => settle({ players, seats, round, tableLimit: tableLimit ?? defaultTableLimit });
       }],
     ]);
-    const selected = dispatch.get(keyFor(settlement));
-    if (!selected) throw new Error(`RUNTIME_SETTLEMENT_IMPLEMENTATION_UNAVAILABLE:${keyFor(settlement)}`);
-    return selected();
+    return (dispatch.get(keyFor(settlement)) ?? (() => settlementImplementation(settlement as Parameters<typeof settlementImplementation>[0])))();
   })();
   const defaultTableLimit = (() => {
     const value = (artifact.profile.scoring.config as JsonObject).defaultTableLimit;
@@ -235,9 +231,13 @@ export const compileRulesRuntime = (artifact: ResolvedProfileArtifact): RulesRun
   const prepareRound = incidents.length === 0 ? undefined : (() => {
     const incident = incidents[0]!;
     const identity = selectedIdentity(artifact, incident.id);
-    if (identity.id === 'incident.outside-the-box-round-preparation') return outsideTheBoxRoundPreparationImplementation(identity as Parameters<typeof outsideTheBoxRoundPreparationImplementation>[0]);
-    if (identity.id === 'incident.buzzard-2000-round-preparation') return prepareBuzzardRound as ReturnType<typeof outsideTheBoxRoundPreparationImplementation>;
-    throw new Error(`RUNTIME_INCIDENT_IMPLEMENTATION_UNAVAILABLE:${keyFor(identity)}`);
+    const dispatch = new Map<string, () => ReturnType<typeof outsideTheBoxRoundPreparationImplementation>>([
+      ['incident.outside-the-box-round-preparation@1', () => outsideTheBoxRoundPreparationImplementation(identity as Parameters<typeof outsideTheBoxRoundPreparationImplementation>[0])],
+      ['incident.buzzard-2000-round-preparation@1', () => prepareBuzzardRound as ReturnType<typeof outsideTheBoxRoundPreparationImplementation>],
+    ]);
+    const selected = dispatch.get(keyFor(identity));
+    if (!selected) throw new Error(`RUNTIME_INCIDENT_IMPLEMENTATION_UNAVAILABLE:${keyFor(identity)}`);
+    return selected();
   })();
 
   const validate = (input: HandEvaluationInput<MahjongHand, GameContext>) => validateCurrentClassicalHand(

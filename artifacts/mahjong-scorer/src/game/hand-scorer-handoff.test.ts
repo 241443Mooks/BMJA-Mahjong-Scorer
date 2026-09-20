@@ -11,6 +11,7 @@ import {
   reconcileDetailedHandsForOutcome,
 } from './hand-scorer-handoff';
 import { BMJA_PROFILE_REF, OUTSIDE_THE_BOX_PROFILE_REF, WESTERN_TM_PROFILE_REF } from './ruleset';
+import { BUZZARD_2000_PROFILE_REF } from './buzzard-2000';
 import { currentClassicalScorerDefaultLimit } from './rules-presentation';
 import type {
   HandScorerResult,
@@ -114,6 +115,11 @@ describe('game hand-scorer handoff', () => {
     expect(handScorerLocalContext(null, OUTSIDE_THE_BOX_PROFILE_REF).handMode).toBe('normal');
     const clubGame = createBmjaGame(game.players, game.seats, undefined, 'full-game', OUTSIDE_THE_BOX_PROFILE_REF);
     expect(createHandScorerContext(clubGame, 'bill', billWins).rulesProfile).toEqual(OUTSIDE_THE_BOX_PROFILE_REF);
+  });
+
+  it('passes a persisted non-default Buzzard table limit into in-game detailed scoring', () => {
+    const buzzard = createBmjaGame(game.players, game.seats, undefined, 'full-game', BUZZARD_2000_PROFILE_REF, 725);
+    expect(createHandScorerContext(buzzard, 'bill', billWins).limit).toBe(725);
   });
 
   it('inherits the next Club game hand mode after a draw changes it to Goulash', () => {

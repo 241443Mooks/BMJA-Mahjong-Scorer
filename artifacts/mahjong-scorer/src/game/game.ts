@@ -177,10 +177,12 @@ const applyRound = (state: GameState, round: RoundInput): GameState => {
         scores: Object.fromEntries(state.players.map((player) => [player.id, 0])),
         scoreRecords: {},
         incidents: cloneIncidents(round.incidents),
+        buzzardIncidents: cloneBuzzardIncidents(round.buzzardIncidents),
+        profileScoreResults: cloneProfileScoreResults(round.profileScoreResults),
       }
     : { ...round, incidents: cloneIncidents(round.incidents), buzzardIncidents: cloneBuzzardIncidents(round.buzzardIncidents), profileScoreResults: cloneProfileScoreResults(round.profileScoreResults) };
   const runtime = getCurrentRulesRuntime(state.setup.rulesProfile);
-  if (!runtime.prepareRound && submittedRound.incidents && submittedRound.incidents.length > 0) {
+  if (!runtime.prepareRound && ((submittedRound.incidents?.length ?? 0) > 0 || (submittedRound.buzzardIncidents?.length ?? 0) > 0 || Object.keys(submittedRound.profileScoreResults ?? {}).length > 0)) {
     throw new Error('This rules profile does not support round incidents.');
   }
   const appliedRound = runtime.prepareRound

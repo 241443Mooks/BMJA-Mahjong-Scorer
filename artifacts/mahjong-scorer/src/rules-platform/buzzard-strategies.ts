@@ -14,17 +14,23 @@ export const prepareBuzzardRound = ({ players, round, tableLimit }: Input): Roun
   if (!Number.isFinite(tableLimit) || tableLimit <= 0) fail('TABLE_LIMIT');
   const winner = round.outcome.type === 'win' ? round.outcome.winnerId : undefined;
   const results = round.profileScoreResults ?? {};
+  const incorrect = (round.incidents ?? []).filter((incident) => incident.type === 'incorrect-hand');
+  if (Object.keys(results).length > 1 || incorrect.length > 1) fail('AMBIGUOUS_COMBINATION');
   for (const [playerId, result] of Object.entries(results)) {
-    if (!result || !validPlayers(players, [playerId]) || playerId === winner ||
+    if (!result || !winner || !validPlayers(players, [playerId]) || playerId === winner ||
       !['buzzard.incomplete-four-wind-limit', 'buzzard.incomplete-three-dragon-limit'].includes(result.resultId) || round.scores[playerId] !== tableLimit) fail('PROFILE_RESULT');
   }
   const incidents = round.buzzardIncidents ?? [];
-  if (incidents.length > 1 || (Object.keys(results).length && incidents.length)) fail('AMBIGUOUS_COMBINATION');
+  if (incidents.length > 1 || (Object.keys(results).length && incidents.length) || ((Object.keys(results).length || incidents.length) && incorrect.length)) fail('AMBIGUOUS_COMBINATION');
   for (const incident of incidents) {
     const playerId = incident.type === 'buzzard-dangerous-discard' ? incident.liablePlayerId : incident.declarerId;
     if (!validPlayers(players, [playerId]) || playerId === winner) fail('INCIDENT_PLAYER');
+    if (incident.type === 'buzzard-dangerous-discard' && !winner) fail('INCIDENT_CONTEXT');
+    if (incident.type === 'buzzard-false-mah-jong' && winner) fail('AMBIGUOUS_COMBINATION');
+    if (incident.type === 'buzzard-dangerous-discard' && !['one-suit', 'three-dragons', 'all-winds', 'ones-and-nines'].includes(incident.reason)) fail('DANGER_REASON');
+    if (incident.type === 'buzzard-false-mah-jong' && !['fully-exposed', 'not-fully-exposed'].includes(incident.exposure)) fail('FALSE_MAH_JONG_EXPOSURE');
   }
-  for (const incident of round.incidents ?? []) if (incident.type === 'incorrect-hand') {
+  for (const incident of incorrect) {
     if (!validPlayers(players, [incident.playerId]) || incident.playerId === winner) fail('INCORRECT_HAND_PLAYER');
   }
   return round;
