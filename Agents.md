@@ -76,6 +76,18 @@ Use targeted tests while developing. Before a PR is ready to merge, run from the
 
 For migration/parity issues, also run the exact old-path/new-path fixtures required by the issue. A parity mismatch is a blocker unless a separately evidenced bug task explicitly authorises changing current behaviour.
 
+### Completion discipline
+
+For any task with an authoritative implementation or acceptance contract:
+
+- Do **not** claim completion merely because the implementation appears finished or the existing test suite is green.
+- Before the final gate, re-read the authoritative contract and audit the **actual branch diff and committed tests** against every required acceptance item.
+- Every acceptance requirement must be demonstrably implemented and proved by the required committed fixture/test, or reported as a blocker. If any required item is missing or unproved, continue working.
+- Inspect `git diff <base>...HEAD` and the committed test files before reporting done. Confirm the proof surface covers the contract rather than assuming existing tests are sufficient.
+- Do not silently narrow, reinterpret or omit acceptance criteria to save time or tokens.
+- Run the final full gate only after the contract audit is clean, unless the issue explicitly specifies a different order.
+- A green build is verification evidence, not by itself proof that the task is complete.
+
 ## History
 
 - `CHANGELOG.md` records meaningful product and maintenance changes, not every commit.
