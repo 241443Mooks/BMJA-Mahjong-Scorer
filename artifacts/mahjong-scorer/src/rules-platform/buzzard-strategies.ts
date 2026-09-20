@@ -14,6 +14,7 @@ export const prepareBuzzardRound = ({ players, round, tableLimit }: Input): Roun
   if (!Number.isFinite(tableLimit) || tableLimit <= 0) fail('TABLE_LIMIT');
   const winner = round.outcome.type === 'win' ? round.outcome.winnerId : undefined;
   const results = round.profileScoreResults ?? {};
+  if ((round.incidents ?? []).some((incident) => incident.type !== 'incorrect-hand')) fail('UNSUPPORTED_LEGACY_INCIDENT');
   const incorrect = (round.incidents ?? []).filter((incident) => incident.type === 'incorrect-hand');
   const incidents = round.buzzardIncidents ?? [];
   if (Object.keys(results).length > 1 || incorrect.length > 1 || incidents.length > 1 || (Object.keys(results).length && incidents.length) || ((Object.keys(results).length || incidents.length) && incorrect.length)) fail('AMBIGUOUS_COMBINATION');

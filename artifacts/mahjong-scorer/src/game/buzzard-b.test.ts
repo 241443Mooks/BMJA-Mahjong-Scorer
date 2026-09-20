@@ -18,6 +18,14 @@ describe('Buzzard B table-running acceptance fixtures', () => {
     expect(() => prepareBuzzardRound(input({ ...win, buzzardIncidents: [{ type: 'buzzard-dangerous-discard', liablePlayerId: 'south', reason: 'bad' }] }))).toThrow('DANGER_REASON');
     expect(() => prepareBuzzardRound(input({ ...win, incidents: [{ type: 'incorrect-hand', playerId: 'south', condition: 'too-many' }], profileScoreResults: { west: { resultId: 'buzzard.incomplete-four-wind-limit' } } }))).toThrow('AMBIGUOUS_COMBINATION');
   });
+  it.each([
+    { type: 'false-discard-name', discarderId: 'south', claimantId: 'west', result: 'claimed' },
+    { type: 'false-mah-jong', declarerId: 'south', anyHandExposed: true },
+    { type: 'wrong-tile-claim', playerId: 'south', correctedBeforeNextDraw: true },
+    { type: 'cannon', liablePlayerId: 'south', noChoiceAccepted: true },
+  ])('rejects unsupported legacy incident $type', (incident) => {
+    expect(() => prepareBuzzardRound(input({ ...win, incidents: [incident] }))).toThrow('UNSUPPORTED_LEGACY_INCIDENT');
+  });
   it('routes dangerous discard only through winner obligations and makes false Mahjong non-East-multiplied', () => {
     const danger = { ...win, buzzardIncidents: [{ type: 'buzzard-dangerous-discard' as const, liablePlayerId: 'south', reason: 'one-suit' as const }] };
     expect(settleBuzzardRound(input(danger)).every((transaction) => transaction.from === 'south' && transaction.reasonId.includes('dangerous-discard'))).toBe(true);
