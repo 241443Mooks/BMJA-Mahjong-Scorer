@@ -15,13 +15,12 @@ export const prepareBuzzardRound = ({ players, round, tableLimit }: Input): Roun
   const winner = round.outcome.type === 'win' ? round.outcome.winnerId : undefined;
   const results = round.profileScoreResults ?? {};
   const incorrect = (round.incidents ?? []).filter((incident) => incident.type === 'incorrect-hand');
-  if (Object.keys(results).length > 1 || incorrect.length > 1) fail('AMBIGUOUS_COMBINATION');
+  const incidents = round.buzzardIncidents ?? [];
+  if (Object.keys(results).length > 1 || incorrect.length > 1 || incidents.length > 1 || (Object.keys(results).length && incidents.length) || ((Object.keys(results).length || incidents.length) && incorrect.length)) fail('AMBIGUOUS_COMBINATION');
   for (const [playerId, result] of Object.entries(results)) {
     if (!result || !winner || !validPlayers(players, [playerId]) || playerId === winner ||
       !['buzzard.incomplete-four-wind-limit', 'buzzard.incomplete-three-dragon-limit'].includes(result.resultId) || round.scores[playerId] !== tableLimit) fail('PROFILE_RESULT');
   }
-  const incidents = round.buzzardIncidents ?? [];
-  if (incidents.length > 1 || (Object.keys(results).length && incidents.length) || ((Object.keys(results).length || incidents.length) && incorrect.length)) fail('AMBIGUOUS_COMBINATION');
   for (const incident of incidents) {
     const playerId = incident.type === 'buzzard-dangerous-discard' ? incident.liablePlayerId : incident.declarerId;
     if (!validPlayers(players, [playerId]) || playerId === winner) fail('INCIDENT_PLAYER');

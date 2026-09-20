@@ -182,6 +182,9 @@ const applyRound = (state: GameState, round: RoundInput): GameState => {
       }
     : { ...round, incidents: cloneIncidents(round.incidents), buzzardIncidents: cloneBuzzardIncidents(round.buzzardIncidents), profileScoreResults: cloneProfileScoreResults(round.profileScoreResults) };
   const runtime = getCurrentRulesRuntime(state.setup.rulesProfile);
+  if (state.setup.rulesProfile.id !== 'buzzard-2000' && ((submittedRound.buzzardIncidents?.length ?? 0) > 0 || Object.keys(submittedRound.profileScoreResults ?? {}).length > 0)) {
+    throw new Error('This rules profile does not support Buzzard round evidence.');
+  }
   if (!runtime.prepareRound && ((submittedRound.incidents?.length ?? 0) > 0 || (submittedRound.buzzardIncidents?.length ?? 0) > 0 || Object.keys(submittedRound.profileScoreResults ?? {}).length > 0)) {
     throw new Error('This rules profile does not support round incidents.');
   }

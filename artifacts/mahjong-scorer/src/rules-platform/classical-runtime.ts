@@ -15,6 +15,7 @@ import {
   outsideTheBoxSettlementImplementation,
 } from './outside-the-box-strategies';
 import { buzzardSettlementImplementation, prepareBuzzardRound } from './buzzard-strategies';
+import { currentRoundPreparationImplementation, currentSettlementImplementation } from './current-table-dispatch';
 import {
   CLASSICAL_WESTERN_VALIDATION_FAMILY,
   currentClassicalValidationImplementation,
@@ -199,30 +200,12 @@ export const compileRulesRuntime = (artifact: ResolvedProfileArtifact): RulesRun
   const { scorer, binding, policy } = classicalConfig(artifact);
   const scoring = scoringImplementations.get(`${keyFor(scorer)}|${keyFor(binding)}|${keyFor(policy)}`);
   if (!scoring) throw new Error(`RUNTIME_SCORING_IMPLEMENTATION_UNAVAILABLE:${keyFor(scorer)}|${keyFor(binding)}|${keyFor(policy)}`);
-  const settlementRuntime: ReturnType<typeof settlementImplementation> = (() => {
-    const dispatch = new Map<string, () => ReturnType<typeof settlementImplementation>>([
-      ['settlement.classical-pairwise@1', () => settlementImplementation(settlement as Parameters<typeof settlementImplementation>[0])],
-      ['settlement.outside-the-box-incidents@1', () => {
-        const { limit } = artifact.profile.settlement.params;
-        if (typeof limit !== 'number' || !Number.isFinite(limit) || limit <= 0) {
-          throw new Error('RUNTIME_OTB_SETTLEMENT_PARAMS_INVALID');
-        }
-        const settle = outsideTheBoxSettlementImplementation(settlement as Parameters<typeof outsideTheBoxSettlementImplementation>[0]);
-        return ({ players, seats, round }: Parameters<ReturnType<typeof settlementImplementation>>[0]) =>
-          settle({ players, seats, round, limit });
-      }],
-      ['settlement.buzzard-2000@1', () => {
-        const settle = buzzardSettlementImplementation(settlement);
-        return ({ players, seats, round, tableLimit }: Parameters<ReturnType<typeof settlementImplementation>>[0] & { tableLimit?: number }) => settle({ players, seats, round, tableLimit: tableLimit ?? defaultTableLimit });
-      }],
-    ]);
-    return (dispatch.get(keyFor(settlement)) ?? (() => settlementImplementation(settlement as Parameters<typeof settlementImplementation>[0])))();
-  })();
   const defaultTableLimit = (() => {
     const value = (artifact.profile.scoring.config as JsonObject).defaultTableLimit;
     if (typeof value !== 'number' || !Number.isFinite(value) || value <= 0) throw new Error('RUNTIME_TABLE_LIMIT_INVALID');
     return value;
   })();
+  const settlementRuntime: ReturnType<typeof settlementImplementation> = currentSettlementImplementation(settlement, artifact.profile.settlement.params, defaultTableLimit) as ReturnType<typeof settlementImplementation>;
   const handModeRuntime: ReturnType<typeof outsideTheBoxHandModeImplementation> = handMode.id === 'hand-mode.outside-the-box-goulash'
     ? outsideTheBoxHandModeImplementation(handMode as Parameters<typeof outsideTheBoxHandModeImplementation>[0])
     : () => handModeImplementation(handMode as Parameters<typeof handModeImplementation>[0])({});
@@ -231,13 +214,7 @@ export const compileRulesRuntime = (artifact: ResolvedProfileArtifact): RulesRun
   const prepareRound = incidents.length === 0 ? undefined : (() => {
     const incident = incidents[0]!;
     const identity = selectedIdentity(artifact, incident.id);
-    const dispatch = new Map<string, () => ReturnType<typeof outsideTheBoxRoundPreparationImplementation>>([
-      ['incident.outside-the-box-round-preparation@1', () => outsideTheBoxRoundPreparationImplementation(identity as Parameters<typeof outsideTheBoxRoundPreparationImplementation>[0])],
-      ['incident.buzzard-2000-round-preparation@1', () => prepareBuzzardRound as ReturnType<typeof outsideTheBoxRoundPreparationImplementation>],
-    ]);
-    const selected = dispatch.get(keyFor(identity));
-    if (!selected) throw new Error(`RUNTIME_INCIDENT_IMPLEMENTATION_UNAVAILABLE:${keyFor(identity)}`);
-    return selected();
+    return currentRoundPreparationImplementation(identity) as ReturnType<typeof outsideTheBoxRoundPreparationImplementation>;
   })();
 
   const validate = (input: HandEvaluationInput<MahjongHand, GameContext>) => validateCurrentClassicalHand(
