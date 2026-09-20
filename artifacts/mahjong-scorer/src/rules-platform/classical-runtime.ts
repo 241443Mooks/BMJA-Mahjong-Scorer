@@ -2,6 +2,7 @@ import { scoreHand, type GameContext, type MahjongHand, type ScoreBreakdown } fr
 import { westernTmSpecialHandBindings } from '../game/western-tm-catalogue';
 import { outsideTheBoxSpecialHandBindings } from '../game/outside-the-box-catalogue';
 import { OUTSIDE_THE_BOX_SCORING_POLICY } from '../game/outside-the-box-scoring';
+import { BUZZARD_2000_SCORING_POLICY, buzzard2000SpecialHandBindings } from '../game/buzzard-2000';
 import {
   gameEndImplementation,
   handModeImplementation,
@@ -47,12 +48,15 @@ const currentWesternTmScoring: ClassicalScoringImplementation = ({ evidence, con
   scoreHand(evidence, context, westernTmSpecialHandBindings);
 const currentOutsideTheBoxScoring: ClassicalScoringImplementation = ({ evidence, context }) =>
   scoreHand(evidence, context, outsideTheBoxSpecialHandBindings, OUTSIDE_THE_BOX_SCORING_POLICY);
+const buzzard2000Scoring: ClassicalScoringImplementation = ({ evidence, context }) =>
+  scoreHand(evidence, context, buzzard2000SpecialHandBindings, BUZZARD_2000_SCORING_POLICY);
 
 /** Exact current Classical tuples, selected solely from the sealed artifact. */
 const scoringImplementations = new Map<string, ClassicalScoringImplementation>([
   ['classical.scorer.current@1|classical.bindings.bmja-current@2|classical.policy.bmja-current@1', currentBmjaScoring],
   ['classical.scorer.current@1|classical.bindings.western-tm-current@1|classical.policy.western-tm-current@1', currentWesternTmScoring],
   ['classical.scorer.current@1|classical.bindings.outside-the-box-current@1|classical.policy.outside-the-box-current@1', currentOutsideTheBoxScoring],
+  ['classical.scorer.current@1|classical.bindings.buzzard-2000@1|classical.policy.buzzard-2000@1', buzzard2000Scoring],
 ]);
 
 const selectedIdentity = (

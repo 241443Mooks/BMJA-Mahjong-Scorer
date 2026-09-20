@@ -57,15 +57,18 @@ export type CalculatedSpecialHandPatternBinding =
       };
     };
   };
+export type ConfiguredLimitSpecialHandPatternBinding = CommonSpecialHandPatternBinding & { scoreModel: { kind: 'configured-limit' } };
 
 export type SpecialHandPatternBinding =
   | FixedSpecialHandPatternBinding
-  | CalculatedSpecialHandPatternBinding;
+  | CalculatedSpecialHandPatternBinding
+  | ConfiguredLimitSpecialHandPatternBinding;
 
 export const isFixedSpecialHandBinding = (
   binding: SpecialHandPatternBinding,
 ): binding is FixedSpecialHandPatternBinding =>
-  binding.scoreModel?.kind !== 'calculated';
+  binding.scoreModel?.kind === undefined || binding.scoreModel.kind === 'fixed';
+export const isConfiguredLimitSpecialHandBinding = (binding: SpecialHandPatternBinding): binding is ConfiguredLimitSpecialHandPatternBinding => binding.scoreModel?.kind === 'configured-limit';
 
 export const isCalculatedSpecialHandBinding = (
   binding: SpecialHandPatternBinding,
@@ -1541,6 +1544,20 @@ export const canonicalSpecialHandPatterns: CanonicalSpecialHandPattern[] = [
   },
   { id: 'four-winds-with-one-two-two-fours-three-sixes-four-eights', detect: (hand) => hasFourWindsWithSingleSuitRankMultiplicities(hand, { 2: 1, 4: 2, 6: 3, 8: 4 }) },
   { id: 'four-winds-with-four-twos-three-fours-two-sixes-one-eight', detect: (hand) => hasFourWindsWithSingleSuitRankMultiplicities(hand, { 2: 4, 4: 3, 6: 2, 8: 1 }) },
+  { id: 'one-suit-nine-gates-any-completion', detect: (hand) => {
+    const all = tiles(hand); if (!hand.isWinner || all.length !== 14 || all.some((tile) => tile.family !== 'suit')) return false;
+    const suited = all as Extract<PlayingTile, { family: 'suit' }>[]; if (new Set(suited.map((tile) => tile.suit)).size !== 1) return false;
+    const tally = new Map<number, number>(); for (const tile of suited) tally.set(tile.rank, (tally.get(tile.rank) ?? 0) + 1);
+    return (tally.get(1) ?? 0) >= 3 && (tally.get(9) ?? 0) >= 3 && [2,3,4,5,6,7,8].every((rank) => (tally.get(rank) ?? 0) >= 1) && [...tally.values()].reduce((sum, count) => sum + count, 0) === 14;
+  } },
+  { id: 'three-winds-and-fourth-wind-pair', detect: (hand) => {
+    const winds = hand.sets.filter((set) => (set.kind === 'pung' || set.kind === 'kong') && set.tile.family === 'wind');
+    const pair = hand.sets.find((set) => set.kind === 'pair' && set.tile.family === 'wind');
+    const pairWind = pair?.tile.family === 'wind' ? pair.tile.wind : undefined;
+    return hand.isWinner && winds.length === 3 && new Set(winds.map((set) => set.tile.family === 'wind' ? set.tile.wind : '')).size === 3 && pairWind !== undefined && !winds.some((set) => set.tile.family === 'wind' && set.tile.wind === pairWind);
+  } },
+  { id: 'four-concealed-pung-kong-hand', detect: (hand) => hand.isWinner && hand.sets.length === 5 && hand.sets.filter((set) => set.kind === 'pung' || set.kind === 'kong').length === 4 && hand.sets.every((set) => set.visibility === 'concealed') },
+  { id: 'east-thirteenth-consecutive-mahjong', eventBased: true, detect: (hand, context) => hand.isWinner && context?.playerWind === 'east' && context.eastThirteenthConsecutiveMahjong === true },
 ];
 
 const BMJA_SPECIAL_HAND_PROFILE: RulesProfileRef = Object.freeze({
@@ -1723,14 +1740,16 @@ export const detectSpecialHands = (
     bindings[0]?.profile ?? BMJA_SPECIAL_HAND_PROFILE,
     bindings,
   ).map(({ binding, pattern }) =>
-    isFixedSpecialHandBinding(binding)
+    isFixedSpecialHandBinding(binding) || isConfiguredLimitSpecialHandBinding(binding)
       ? {
           id: pattern.id,
           name: binding.name,
           description: binding.description,
           scoreModel: 'fixed' as const,
-          value: specialHandValueFor(hand, binding),
-          matched: pattern.detect(hand, context) && fixedBindingAllowsHand(hand, binding),
+          value: isConfiguredLimitSpecialHandBinding(binding)
+            ? (() => { if (typeof context?.limit !== 'number' || !Number.isFinite(context.limit) || context.limit <= 0) throw new Error('CONFIGURED_LIMIT_CONTEXT_REQUIRED'); return context.limit; })()
+            : specialHandValueFor(hand, binding),
+          matched: pattern.detect(hand, context) && bindingAllowsHand(hand, binding),
         }
       : {
           id: pattern.id,

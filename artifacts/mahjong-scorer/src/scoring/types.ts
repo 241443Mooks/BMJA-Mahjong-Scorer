@@ -115,6 +115,7 @@ export type MahjongHand = {
   /** Minimal event facts not represented by winningMethod; absence means unknown. */
   winningEventEvidence?: WinningEventEvidence;
   originalCall?: boolean;
+  classicalEvidence?: { standingHand?: boolean; onlyPossibleWinningTile?: boolean };
 };
 
 export type GameContext = {
@@ -122,6 +123,7 @@ export type GameContext = {
   prevailingWind: Wind;
   limit: number;
   handMode?: 'normal' | 'goulash';
+  eastThirteenthConsecutiveMahjong?: boolean;
 };
 
 export type RuleResult = {

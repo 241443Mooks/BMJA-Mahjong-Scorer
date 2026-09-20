@@ -21,4 +21,5 @@ export type ScoringPolicy = {
   ) => RuleResult[];
   /** Fixed specials may retain their separately-calculated bonus subtotal. */
   fixedSpecialBonusSubtotalAboveLimit?: boolean;
+  pureSuitAnyStandardMeld?: boolean;
 };

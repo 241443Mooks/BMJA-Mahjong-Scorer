@@ -18,7 +18,7 @@ describe('current runtime registry', () => {
 
   it('initialises and retrieves every exact current profile artifact', async () => {
     await initialiseCurrentRulesRuntimes();
-    expect(currentRefs).toHaveLength(3);
+    expect(currentRefs).toHaveLength(4);
     for (const ref of currentRefs) {
       const runtime = getCurrentRulesRuntime(ref);
       expect(runtime.artifact.profile.identity).toMatchObject(ref);

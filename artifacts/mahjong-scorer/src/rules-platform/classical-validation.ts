@@ -12,6 +12,7 @@ import {
   WESTERN_TM_PROFILE_REF,
   westernTmSpecialHandBindings,
 } from '../game/western-tm-catalogue';
+import { BUZZARD_2000_PROFILE_REF, buzzard2000SpecialHandBindings } from '../game/buzzard-2000';
 import type { RulesProfileRef } from '../game/types';
 import { RegistryBank, type RegistryEntry } from './registry';
 import type {
@@ -27,6 +28,7 @@ export const CLASSICAL_CURRENT_VALIDATION: ValidationRegistryIdentity = {
   id: 'validation.classical-current',
   semanticRevision: 2,
 };
+export const BUZZARD_CLASSICAL_VALIDATION: ValidationRegistryIdentity = { id: 'validation.classical-buzzard', semanticRevision: 1 };
 
 export type ValidationRegistryIdentity =
   ExecutableRegistryIdentity & { id: `validation.${string}` };
@@ -39,6 +41,7 @@ export const classicalValidationRegistryEntries: readonly RegistryEntry[] = [
     semanticRevision: CLASSICAL_CURRENT_VALIDATION.semanticRevision,
     executableContract: deterministic,
   },
+  { id: BUZZARD_CLASSICAL_VALIDATION.id, category: 'validation', status: 'executable', semanticRevision: 1, executableContract: deterministic },
 ];
 
 export const classicalValidationRegistry = new RegistryBank(
@@ -86,6 +89,7 @@ const currentClassicalConfiguration: ClassicalValidationConfiguration = {
     [profileKey(BMJA_CLASSICAL_VALIDATION_PROFILE), undefined],
     [profileKey(WESTERN_TM_PROFILE_REF), westernTmSpecialHandBindings],
     [profileKey(OUTSIDE_THE_BOX_PROFILE_REF), outsideTheBoxSpecialHandBindings],
+    [profileKey(BUZZARD_2000_PROFILE_REF), buzzard2000SpecialHandBindings],
   ]),
 };
 
@@ -105,6 +109,7 @@ const implementations = new Map<string, {
     configuration: currentClassicalConfiguration,
     validate: validateCurrentClassical,
   }],
+  [keyFor(BUZZARD_CLASSICAL_VALIDATION), { configuration: currentClassicalConfiguration, validate: validateCurrentClassical }],
 ]);
 
 /** Resolves the exact current implementation before any validation input runs. */
@@ -141,5 +146,8 @@ export const validateCurrentClassicalHand = (
   if (!configuration.profiles.has(key)) {
     throw new Error(`Validation profile is unavailable: ${profileKey(profile)}`);
   }
-  return implementation.validate(input, configuration.profiles.get(key));
+  const errors = implementation.validate(input, configuration.profiles.get(key));
+  return identity.id === BUZZARD_CLASSICAL_VALIDATION.id
+    ? errors.filter((error) => error !== 'A normal BMJA hand may contain at most one chow.')
+    : errors;
 };
