@@ -17,6 +17,16 @@ describe('game settlement preview', () => {
     expect(moved).toEqual({ profileScoreResults: { west: { resultId: 'buzzard.incomplete-three-dragon-limit' } }, scores: { east: 100, west: 725 }, scoreRecords: { east: { source: 'manual', finalScore: 100 } } });
     expect(selectProfileScoreResult(moved.scores, moved.scoreRecords, moved.profileScoreResults, '', '', 725)).toEqual({ profileScoreResults: {}, scores: { east: 100 }, scoreRecords: { east: { source: 'manual', finalScore: 100 } } });
   });
+
+  it('clears profile-result-owned score state before a competing incident replaces it', () => {
+    const result = selectProfileScoreResult(
+      { east: 100, south: 30, west: 20 },
+      { east: { source: 'manual', finalScore: 100 }, south: { source: 'manual', finalScore: 30 }, west: { source: 'manual', finalScore: 20 } },
+      {}, 'south', 'buzzard.incomplete-four-wind-limit', 725,
+    );
+    const dangerousDiscard = selectProfileScoreResult(result.scores, result.scoreRecords, result.profileScoreResults, '', '', 725);
+    expect(dangerousDiscard).toEqual({ profileScoreResults: {}, scores: { east: 100, west: 20 }, scoreRecords: { east: { source: 'manual', finalScore: 100 }, west: { source: 'manual', finalScore: 20 } } });
+  });
   it('only presents the British setup helper for the British profile', () => {
     expect(shouldShowBritishSetupHelper(BMJA_PROFILE_REF)).toBe(true);
     expect(shouldShowBritishSetupHelper(WESTERN_TM_PROFILE_REF)).toBe(false);
