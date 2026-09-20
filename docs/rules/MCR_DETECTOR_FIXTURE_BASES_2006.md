@@ -41,7 +41,7 @@ Use `BASE-EVENT` for:
 - fan 46 Out with Replacement Tile, with `winSource=self-draw`, `resolvedWinEvent=kong-replacement`;
 - fan 47 Robbing the Kong, with `winSource=discard`, `resolvedWinEvent=rob-kong`;
 - fan 58 Last Tile, with `lastVisibleCopy=true` and any source-compatible win source/event;
-- fan 80 Self-Drawn, with `winSource=self-draw`, first `resolvedWinEvent=none`, then a second positive boundary case `resolvedWinEvent=flower-replacement`.
+- fan 80 Self-Drawn, with `winSource=self-draw`. Positive boundary cases must cover `resolvedWinEvent=none`, `last-wall-draw`, `kong-replacement`, and `flower-replacement`. Candidate detection still emits Self-Drawn for those self-drawn events; #300 applies any source-owned non-combination such as Last Tile Draw not combining with Self-Drawn.
 
 For event rows, keep `lastVisibleCopy=false` unless Last Tile itself is the target so the tests do not accidentally conflate fan 58 with the wall-event fan.
 
