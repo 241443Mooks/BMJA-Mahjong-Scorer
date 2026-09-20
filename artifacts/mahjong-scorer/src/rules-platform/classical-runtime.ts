@@ -14,6 +14,7 @@ import {
   outsideTheBoxRoundPreparationImplementation,
   outsideTheBoxSettlementImplementation,
 } from './outside-the-box-strategies';
+import { buzzardSettlementImplementation, prepareBuzzardRound } from './buzzard-strategies';
 import {
   CLASSICAL_WESTERN_VALIDATION_FAMILY,
   currentClassicalValidationImplementation,
@@ -175,6 +176,7 @@ const traceFor = (
 
 export type RulesRuntime = Readonly<{
   artifact: ResolvedProfileArtifact;
+  defaultTableLimit: number;
   requiredEvidence(): readonly string[];
   validateHand(input: HandEvaluationInput<MahjongHand, GameContext>): readonly string[];
   scoreHand(input: HandEvaluationInput<MahjongHand, GameContext>): HandScoreResult;
@@ -197,8 +199,12 @@ export const compileRulesRuntime = (artifact: ResolvedProfileArtifact): RulesRun
   const { scorer, binding, policy } = classicalConfig(artifact);
   const scoring = scoringImplementations.get(`${keyFor(scorer)}|${keyFor(binding)}|${keyFor(policy)}`);
   if (!scoring) throw new Error(`RUNTIME_SCORING_IMPLEMENTATION_UNAVAILABLE:${keyFor(scorer)}|${keyFor(binding)}|${keyFor(policy)}`);
-  const settlementRuntime: ReturnType<typeof settlementImplementation> = settlement.id === 'settlement.outside-the-box-incidents'
-    ? (() => {
+  const settlementRuntime: ReturnType<typeof settlementImplementation> = (() => {
+    const dispatch = new Map<string, () => ReturnType<typeof settlementImplementation>>([
+      [keyFor(settlement), () => settlement.id === 'settlement.classical-pairwise'
+        ? settlementImplementation(settlement as Parameters<typeof settlementImplementation>[0])
+        : (() => { throw new Error(`RUNTIME_SETTLEMENT_IMPLEMENTATION_UNAVAILABLE:${keyFor(settlement)}`); })()],
+      ['settlement.outside-the-box-incidents@1', () => {
         const { limit } = artifact.profile.settlement.params;
         if (typeof limit !== 'number' || !Number.isFinite(limit) || limit <= 0) {
           throw new Error('RUNTIME_OTB_SETTLEMENT_PARAMS_INVALID');
@@ -206,8 +212,21 @@ export const compileRulesRuntime = (artifact: ResolvedProfileArtifact): RulesRun
         const settle = outsideTheBoxSettlementImplementation(settlement as Parameters<typeof outsideTheBoxSettlementImplementation>[0]);
         return ({ players, seats, round }: Parameters<ReturnType<typeof settlementImplementation>>[0]) =>
           settle({ players, seats, round, limit });
-      })()
-    : settlementImplementation(settlement as Parameters<typeof settlementImplementation>[0]);
+      }],
+      ['settlement.buzzard-2000@1', () => {
+        const settle = buzzardSettlementImplementation(settlement);
+        return ({ players, seats, round, tableLimit }: Parameters<ReturnType<typeof settlementImplementation>>[0] & { tableLimit?: number }) => settle({ players, seats, round, tableLimit: tableLimit ?? defaultTableLimit });
+      }],
+    ]);
+    const selected = dispatch.get(keyFor(settlement));
+    if (!selected) throw new Error(`RUNTIME_SETTLEMENT_IMPLEMENTATION_UNAVAILABLE:${keyFor(settlement)}`);
+    return selected();
+  })();
+  const defaultTableLimit = (() => {
+    const value = (artifact.profile.scoring.config as JsonObject).defaultTableLimit;
+    if (typeof value !== 'number' || !Number.isFinite(value) || value <= 0) throw new Error('RUNTIME_TABLE_LIMIT_INVALID');
+    return value;
+  })();
   const handModeRuntime: ReturnType<typeof outsideTheBoxHandModeImplementation> = handMode.id === 'hand-mode.outside-the-box-goulash'
     ? outsideTheBoxHandModeImplementation(handMode as Parameters<typeof outsideTheBoxHandModeImplementation>[0])
     : () => handModeImplementation(handMode as Parameters<typeof handModeImplementation>[0])({});
@@ -216,10 +235,9 @@ export const compileRulesRuntime = (artifact: ResolvedProfileArtifact): RulesRun
   const prepareRound = incidents.length === 0 ? undefined : (() => {
     const incident = incidents[0]!;
     const identity = selectedIdentity(artifact, incident.id);
-    if (identity.id !== 'incident.outside-the-box-round-preparation') {
-      throw new Error(`RUNTIME_INCIDENT_IMPLEMENTATION_UNAVAILABLE:${keyFor(identity)}`);
-    }
-    return outsideTheBoxRoundPreparationImplementation(identity as Parameters<typeof outsideTheBoxRoundPreparationImplementation>[0]);
+    if (identity.id === 'incident.outside-the-box-round-preparation') return outsideTheBoxRoundPreparationImplementation(identity as Parameters<typeof outsideTheBoxRoundPreparationImplementation>[0]);
+    if (identity.id === 'incident.buzzard-2000-round-preparation') return prepareBuzzardRound as ReturnType<typeof outsideTheBoxRoundPreparationImplementation>;
+    throw new Error(`RUNTIME_INCIDENT_IMPLEMENTATION_UNAVAILABLE:${keyFor(identity)}`);
   })();
 
   const validate = (input: HandEvaluationInput<MahjongHand, GameContext>) => validateCurrentClassicalHand(
@@ -240,6 +258,7 @@ export const compileRulesRuntime = (artifact: ResolvedProfileArtifact): RulesRun
 
   return Object.freeze({
     artifact,
+    defaultTableLimit,
     requiredEvidence: () => requiredEvidence,
     validateHand: validate,
     scoreHand(input: HandEvaluationInput<MahjongHand, GameContext>): HandScoreResult {

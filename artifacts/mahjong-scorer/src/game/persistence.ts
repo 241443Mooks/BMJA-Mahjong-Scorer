@@ -1,5 +1,6 @@
 import { replayGame } from "./game";
 import { BMJA_PROFILE_REF } from "./ruleset";
+import { getCurrentRulesRuntime } from '../rules-platform/current-runtime-registry';
 import type { Wind } from "../scoring";
 import type {
   GameSetup,
@@ -142,14 +143,19 @@ const isValidSnapshotShape = (
 const normalisePersistedSetup = (setup: PersistedGameSetup): GameSetup => ({
   ...setup,
   rulesProfile: { ...(setup.rulesProfile ?? BMJA_PROFILE_REF) },
+  tableLimit: typeof setup.tableLimit === 'number' && Number.isFinite(setup.tableLimit) && setup.tableLimit > 0
+    ? setup.tableLimit
+    : getCurrentRulesRuntime(setup.rulesProfile ?? BMJA_PROFILE_REF).defaultTableLimit,
 });
 
 const roundsFrom = (game: GameState): RoundInput[] =>
-  game.handHistory.map(({ outcome, scores, scoreRecords, incidents }) => ({
+  game.handHistory.map(({ outcome, scores, scoreRecords, incidents, buzzardIncidents, profileScoreResults }) => ({
     outcome,
     scores,
     scoreRecords,
     incidents,
+    buzzardIncidents,
+    profileScoreResults,
   }));
 
 export const saveGameRecovery = (

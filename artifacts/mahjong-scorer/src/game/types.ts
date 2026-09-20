@@ -34,12 +34,18 @@ export type RoundIncident =
   | { type: 'false-mah-jong'; declarerId: PlayerId; anyHandExposed: boolean }
   | { type: 'wrong-tile-claim'; playerId: PlayerId; correctedBeforeNextDraw: boolean }
   | { type: 'cannon'; liablePlayerId: PlayerId; danger?: 'third-dragon' | 'fourth-wind' | 'honours' | 'majors' | 'one-suit'; noChoiceAccepted: boolean };
+export type BuzzardIncident =
+  | { type: 'buzzard-dangerous-discard'; liablePlayerId: PlayerId; reason: 'one-suit' | 'three-dragons' | 'all-winds' | 'ones-and-nines' }
+  | { type: 'buzzard-false-mah-jong'; declarerId: PlayerId; exposure: 'fully-exposed' | 'not-fully-exposed' };
+export type ProfileScoreResult = { resultId: 'buzzard.incomplete-four-wind-limit' | 'buzzard.incomplete-three-dragon-limit' };
 
 export type RoundInput = {
   outcome: HandOutcome;
   scores: PlayerAmounts;
   scoreRecords?: PlayerScoreRecords;
   incidents?: RoundIncident[];
+  buzzardIncidents?: BuzzardIncident[];
+  profileScoreResults?: Partial<Record<PlayerId, ProfileScoreResult>>;
 };
 
 export type SettlementTransaction = {
@@ -48,7 +54,7 @@ export type SettlementTransaction = {
   amount: number;
   baseAmount: number;
   eastMultiplier: 1 | 2;
-  reason: 'winner-payment' | 'score-difference' | 'false-discard-name-penalty' | 'false-mah-jong-penalty' | 'false-name-mah-jong-liability' | 'cannon-liability';
+  reason: 'winner-payment' | 'score-difference' | 'false-discard-name-penalty' | 'false-mah-jong-penalty' | 'false-name-mah-jong-liability' | 'cannon-liability' | 'buzzard-dangerous-discard-liability' | 'buzzard-false-mah-jong-penalty';
 };
 
 export type SettlementResult = {
@@ -76,6 +82,8 @@ export type ConfirmedHand = {
   scores: PlayerAmounts;
   scoreRecords: PlayerScoreRecords;
   incidents: RoundIncident[];
+  buzzardIncidents?: BuzzardIncident[];
+  profileScoreResults?: Partial<Record<PlayerId, ProfileScoreResult>>;
   eastPlayerId: PlayerId;
   prevailingWind: Wind;
   seats: SeatAssignments;
@@ -93,6 +101,7 @@ export type GameSetup = {
   startingPrevailingWind: Wind;
   startingBalances: PlayerAmounts;
   gameLength: GameLength;
+  tableLimit: number;
 };
 
 export type GameState = {
