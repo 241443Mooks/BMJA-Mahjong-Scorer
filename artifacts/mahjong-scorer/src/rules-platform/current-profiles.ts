@@ -2,10 +2,12 @@ import {
   OUTSIDE_THE_BOX_PROFILE_REF,
 } from '../game/outside-the-box-catalogue';
 import { WESTERN_TM_PROFILE_REF } from '../game/western-tm-catalogue';
+import { BUZZARD_2000_PROFILE_REF } from '../game/buzzard-2000';
 import { architectureSeedEntries } from './architecture-seeds';
 import { classicalStrategyRegistryEntries } from './classical-strategies';
 import {
   CLASSICAL_WESTERN_VALIDATION_FAMILY,
+  BUZZARD_CLASSICAL_VALIDATION,
   classicalValidationRegistryEntries,
 } from './classical-validation';
 import { outsideTheBoxStrategyRegistryEntries } from './outside-the-box-strategies';
@@ -51,6 +53,8 @@ export const currentClassicalRegistryEntries: readonly RegistryEntry[] = [
   executable('classical.policy.bmja-current', 'classical'),
   executable('classical.policy.western-tm-current', 'classical'),
   executable('classical.policy.outside-the-box-current', 'classical'),
+  executable('classical.bindings.buzzard-2000', 'classical'),
+  executable('classical.policy.buzzard-2000', 'classical'),
 ];
 
 const currentIds = new Set([
@@ -105,6 +109,7 @@ const classicalCurrentConfigs: Readonly<Record<string, ClassicalCurrentConfig>> 
     bindingId: 'classical.bindings.outside-the-box-current',
     policyId: 'classical.policy.outside-the-box-current',
   },
+  'buzzard-2000@0.1': { configVersion: 1, scorerId: 'classical.scorer.current', bindingId: 'classical.bindings.buzzard-2000', policyId: 'classical.policy.buzzard-2000' },
 };
 
 const own = (value: unknown, key: string): unknown =>
@@ -149,7 +154,7 @@ const profile = (
   identity: RootProfileDefinition['identity'],
   config: ClassicalCurrentConfig,
   overrides: Pick<JsonObject, 'settlement' | 'progression' | 'gameEnd'> &
-    Partial<Pick<JsonObject, 'handMode' | 'incidents'>>,
+    Partial<Pick<JsonObject, 'handMode' | 'incidents' | 'validation'>>,
 ): RootProfileDefinition => ({
   kind: 'root',
   schemaVersion: 1,
@@ -205,11 +210,16 @@ export const OUTSIDE_THE_BOX_CURRENT_PROFILE: RootProfileDefinition = profile(
     incidents: [{ id: 'incident.outside-the-box-round-preparation', params: {} }],
   },
 );
+export const BUZZARD_2000_CURRENT_PROFILE: RootProfileDefinition = profile(
+  { id: BUZZARD_2000_PROFILE_REF.id, version: BUZZARD_2000_PROFILE_REF.version, name: 'British/Western Classical — Buzzard 2000', status: 'provisional' },
+  classicalCurrentConfigs['buzzard-2000@0.1'], { ...classicalTable, validation: { handShapePolicyId: BUZZARD_CLASSICAL_VALIDATION.id, policyIds: [] } },
+);
 
 export const currentPlayableProfiles: readonly ProfileAuthoringDefinition[] = [
   BMJA_CURRENT_PROFILE,
   WESTERN_TM_CURRENT_PROFILE,
   OUTSIDE_THE_BOX_CURRENT_PROFILE,
+  BUZZARD_2000_CURRENT_PROFILE,
 ];
 
 const profiles = new Map(currentPlayableProfiles.map((definition) => [

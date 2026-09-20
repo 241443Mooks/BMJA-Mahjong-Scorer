@@ -68,7 +68,7 @@ export const scoreHand = (
   const calculatedExposureMultiplier = !matchedFixedSpecial && calculatedBinding
     ? calculatedSpecialHandExposureMultiplierFor(hand, calculatedBinding)
     : 1;
-  const purity = canAnalyseWholeHand && isPurityHand(hand);
+  const purity = canAnalyseWholeHand && isPurityHand(hand) && !scoringPolicy?.pureSuitAnyStandardMeld;
   const specialFinalDiscardDouble =
     matchedFixedSpecial && hand.winningMethod === 'final-discard'
       ? [
