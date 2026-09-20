@@ -3,7 +3,8 @@ import type { HandEvaluationInput, PhysicalTileEvidence } from './types';
 export type McrWind = 'east' | 'south' | 'west' | 'north';
 export type McrWinSource = 'discard' | 'self-draw';
 export type McrResolvedWinEvent = 'none' | 'last-wall-draw' | 'last-discard' | 'kong-replacement' | 'flower-replacement' | 'rob-kong';
-export type McrResolvedGroup = { kind: 'chow' | 'pung' | 'kong'; tiles: readonly PhysicalTileEvidence[] };
+export type McrGroupExposure = 'concealed' | 'melded';
+export type McrResolvedGroup = { kind: 'chow' | 'pung' | 'kong'; exposure: McrGroupExposure; tiles: readonly PhysicalTileEvidence[] };
 export type McrHandEvidence = { groups: readonly McrResolvedGroup[]; pairOrIrregularTiles: readonly PhysicalTileEvidence[]; winningTile: PhysicalTileEvidence; flowerCount: number };
 /** Trusted table facts are intentionally separate from player-entered hand evidence. */
 export type McrScoreContext = { seatWind?: McrWind; prevailingWind?: McrWind; winSource: McrWinSource; resolvedWinEvent: McrResolvedWinEvent; lastVisibleCopy?: boolean };
@@ -28,6 +29,7 @@ const validGroup = (group: McrResolvedGroup) => {
 export const validateMcrScoringInput = (input: McrScoringInput): McrInputValidation => {
   const { evidence, context } = input;
   if (!Number.isInteger(evidence.flowerCount) || evidence.flowerCount < 0 || evidence.flowerCount > 8) return { valid: false, reasonId: 'mcr.evidence.invalid-flower-count' };
+  if (!evidence.groups.every((group) => group.exposure === 'concealed' || group.exposure === 'melded')) return { valid: false, reasonId: 'mcr.evidence.invalid-group-exposure' };
   if (!validTile(evidence.winningTile) || !evidence.pairOrIrregularTiles.every(validTile) || !evidence.groups.every(validGroup)) return { valid: false, reasonId: 'mcr.evidence.invalid-resolved-tiles' };
   const tiles = [...evidence.groups.flatMap((group) => group.tiles), ...evidence.pairOrIrregularTiles];
   if (!tiles.some((tile) => faceKey(tile) === faceKey(evidence.winningTile))) return { valid: false, reasonId: 'mcr.evidence.winning-tile-not-resolved' };
