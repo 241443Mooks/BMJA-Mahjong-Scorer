@@ -26,6 +26,10 @@ const cloneRulesProfile = (profile: RulesProfileRef): RulesProfileRef => ({
 });
 const cloneIncidents = (incidents: RoundIncident[] | undefined): RoundIncident[] =>
   incidents ? incidents.map((incident) => ({ ...incident })) : [];
+const cloneBuzzardIncidents = (incidents: RoundInput['buzzardIncidents']) =>
+  incidents?.map((incident) => ({ ...incident }));
+const cloneProfileScoreResults = (results: RoundInput['profileScoreResults']) =>
+  results ? Object.fromEntries(Object.entries(results).map(([id, result]) => [id, { ...result! }])) : undefined;
 
 const cloneDetailedHandRecord = (
   record: DetailedHandRecord,
@@ -75,6 +79,7 @@ const cloneScoreRecord = (record: PlayerScoreRecord): PlayerScoreRecord =>
 
 const validateSetup = (setup: GameSetup) => {
   getCurrentRulesRuntime(setup.rulesProfile);
+  if (!Number.isFinite(setup.tableLimit) || setup.tableLimit <= 0) throw new Error('A game requires a finite positive table limit.');
   if (setup.players.length !== 4) {
     throw new Error('A game requires exactly four players.');
   }
@@ -132,6 +137,7 @@ export const createBmjaGame = (
   startingBalances?: PlayerAmounts,
   gameLength: GameLength = 'full-game',
   rulesProfile: RulesProfileRef = BMJA_PROFILE_REF,
+  tableLimit?: number,
 ): GameState => {
   const balances =
     startingBalances ??
@@ -143,6 +149,7 @@ export const createBmjaGame = (
     startingPrevailingWind: 'east',
     startingBalances: cloneAmounts(balances),
     gameLength,
+    tableLimit: tableLimit ?? getCurrentRulesRuntime(rulesProfile).defaultTableLimit,
   };
   validateSetup(setup);
   return {
@@ -170,18 +177,23 @@ const applyRound = (state: GameState, round: RoundInput): GameState => {
         scores: Object.fromEntries(state.players.map((player) => [player.id, 0])),
         scoreRecords: {},
         incidents: cloneIncidents(round.incidents),
+        buzzardIncidents: cloneBuzzardIncidents(round.buzzardIncidents),
+        profileScoreResults: cloneProfileScoreResults(round.profileScoreResults),
       }
-    : { ...round, incidents: cloneIncidents(round.incidents) };
+    : { ...round, incidents: cloneIncidents(round.incidents), buzzardIncidents: cloneBuzzardIncidents(round.buzzardIncidents), profileScoreResults: cloneProfileScoreResults(round.profileScoreResults) };
   const runtime = getCurrentRulesRuntime(state.setup.rulesProfile);
-  if (!runtime.prepareRound && submittedRound.incidents && submittedRound.incidents.length > 0) {
+  if (state.setup.rulesProfile.id !== 'buzzard-2000' && ((submittedRound.buzzardIncidents?.length ?? 0) > 0 || Object.keys(submittedRound.profileScoreResults ?? {}).length > 0)) {
+    throw new Error('This rules profile does not support Buzzard round evidence.');
+  }
+  if (!runtime.prepareRound && ((submittedRound.incidents?.length ?? 0) > 0 || (submittedRound.buzzardIncidents?.length ?? 0) > 0 || Object.keys(submittedRound.profileScoreResults ?? {}).length > 0)) {
     throw new Error('This rules profile does not support round incidents.');
   }
   const appliedRound = runtime.prepareRound
-    ? runtime.prepareRound({ players: state.players, seats: state.seats, round: submittedRound })
+    ? runtime.prepareRound({ players: state.players, seats: state.seats, round: submittedRound, tableLimit: state.setup.tableLimit } as Parameters<NonNullable<typeof runtime.prepareRound>>[0])
     : submittedRound;
   const settlement = mapCurrentRuntimeSettlement(
     state.players.map(({ id }) => id),
-    runtime.settleRound({ players: state.players, seats: state.seats, round: appliedRound }),
+    runtime.settleRound({ players: state.players, seats: state.seats, round: appliedRound, tableLimit: state.setup.tableLimit } as Parameters<typeof runtime.settleRound>[0]),
   );
   const scoreRecords = normaliseScoreRecords(state, appliedRound);
   const runningTotals = Object.fromEntries(
@@ -217,6 +229,8 @@ const applyRound = (state: GameState, round: RoundInput): GameState => {
     scores: cloneAmounts(appliedRound.scores),
     scoreRecords,
     incidents: cloneIncidents(appliedRound.incidents),
+    buzzardIncidents: cloneBuzzardIncidents(appliedRound.buzzardIncidents),
+    profileScoreResults: cloneProfileScoreResults(appliedRound.profileScoreResults),
     eastPlayerId: eastPlayerId(state.seats),
     prevailingWind: state.prevailingWind,
     seats: cloneSeats(state.seats),
@@ -254,6 +268,7 @@ export const replayGame = (
     setup.startingBalances,
     setup.gameLength,
     setup.rulesProfile,
+    setup.tableLimit,
   );
   for (const round of rounds) state = applyRound(state, round);
   return state;
@@ -262,10 +277,12 @@ export const replayGame = (
 export const undoLastHand = (state: GameState): GameState =>
   replayGame(
     state.setup,
-    state.handHistory.slice(0, -1).map(({ outcome, scores, scoreRecords, incidents }) => ({
+    state.handHistory.slice(0, -1).map(({ outcome, scores, scoreRecords, incidents, buzzardIncidents, profileScoreResults }) => ({
       outcome,
       scores,
       scoreRecords,
       incidents,
+      buzzardIncidents,
+      profileScoreResults,
     })),
   );

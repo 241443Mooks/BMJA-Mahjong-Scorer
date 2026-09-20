@@ -1,5 +1,6 @@
 import { replayGame } from "./game";
 import { BMJA_PROFILE_REF } from "./ruleset";
+import { getCurrentRulesRuntime } from '../rules-platform/current-runtime-registry';
 import type { Wind } from "../scoring";
 import type {
   GameSetup,
@@ -88,6 +89,11 @@ const isValidIncident = (value: unknown, playerIds: Set<string>): value is Round
   return value.type === 'cannon' && has('liablePlayerId') && typeof value.noChoiceAccepted === 'boolean' &&
     (value.danger === undefined || ['third-dragon', 'fourth-wind', 'honours', 'majors', 'one-suit'].includes(value.danger as string));
 };
+const isValidBuzzardIncident = (value: unknown, playerIds: Set<string>) => isRecord(value) && (
+  (value.type === 'buzzard-dangerous-discard' && typeof value.liablePlayerId === 'string' && playerIds.has(value.liablePlayerId) && ['one-suit', 'three-dragons', 'all-winds', 'ones-and-nines'].includes(value.reason as string)) ||
+  (value.type === 'buzzard-false-mah-jong' && typeof value.declarerId === 'string' && playerIds.has(value.declarerId) && ['fully-exposed', 'not-fully-exposed'].includes(value.exposure as string))
+);
+const isValidProfileResults = (value: unknown, playerIds: Set<string>) => isRecord(value) && Object.entries(value).every(([playerId, result]) => playerIds.has(playerId) && isRecord(result) && ['buzzard.incomplete-four-wind-limit', 'buzzard.incomplete-three-dragon-limit'].includes(result.resultId as string));
 
 const isValidSnapshotShape = (
   value: unknown,
@@ -114,6 +120,7 @@ const isValidSnapshotShape = (
   if (playerIds.size !== 4 || playerIds.has("")) return false;
   if (!isFiniteAmountMap(value.game.setup.startingBalances, playerIds))
     return false;
+  if ('tableLimit' in value.game.setup && (!Number.isFinite(value.game.setup.tableLimit) || (value.game.setup.tableLimit as number) <= 0)) return false;
   if (
     !isFiniteAmountMap(
       value.currentRound.draft && isRecord(value.currentRound.draft)
@@ -124,7 +131,7 @@ const isValidSnapshotShape = (
   ) {
     return false;
   }
-  if (!value.game.rounds.every((round) => isRecord(round) && (!round.incidents || Array.isArray(round.incidents) && round.incidents.every((incident) => isValidIncident(incident, playerIds))))) return false;
+  if (!value.game.rounds.every((round) => isRecord(round) && (!round.incidents || Array.isArray(round.incidents) && round.incidents.every((incident) => isValidIncident(incident, playerIds))) && (!round.buzzardIncidents || Array.isArray(round.buzzardIncidents) && round.buzzardIncidents.every((incident) => isValidBuzzardIncident(incident, playerIds))) && (!round.profileScoreResults || isValidProfileResults(round.profileScoreResults, playerIds)))) return false;
   return (
     (value.currentRound.outcomeType === "win" ||
       value.currentRound.outcomeType === "draw") &&
@@ -142,14 +149,19 @@ const isValidSnapshotShape = (
 const normalisePersistedSetup = (setup: PersistedGameSetup): GameSetup => ({
   ...setup,
   rulesProfile: { ...(setup.rulesProfile ?? BMJA_PROFILE_REF) },
+  tableLimit: typeof setup.tableLimit === 'number' && Number.isFinite(setup.tableLimit) && setup.tableLimit > 0
+    ? setup.tableLimit
+    : getCurrentRulesRuntime(setup.rulesProfile ?? BMJA_PROFILE_REF).defaultTableLimit,
 });
 
 const roundsFrom = (game: GameState): RoundInput[] =>
-  game.handHistory.map(({ outcome, scores, scoreRecords, incidents }) => ({
+  game.handHistory.map(({ outcome, scores, scoreRecords, incidents, buzzardIncidents, profileScoreResults }) => ({
     outcome,
     scores,
     scoreRecords,
     incidents,
+    buzzardIncidents,
+    profileScoreResults,
   }));
 
 export const saveGameRecovery = (

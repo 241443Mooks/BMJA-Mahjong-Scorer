@@ -94,11 +94,11 @@ export const previewRoundSettlement = (
   if (!runtime.prepareRound && incidents.length > 0) throw new Error('This rules profile does not support round incidents.');
   const round = { outcome, scores: fullScores, incidents };
   const prepared = runtime.prepareRound
-    ? runtime.prepareRound({ players: game.players, seats: game.seats, round })
+    ? runtime.prepareRound({ players: game.players, seats: game.seats, round, tableLimit: game.setup.tableLimit } as Parameters<NonNullable<typeof runtime.prepareRound>>[0])
     : round;
   return mapCurrentRuntimeSettlement(
     game.players.map(({ id }) => id),
-    runtime.settleRound({ players: game.players, seats: game.seats, round: prepared }),
+    runtime.settleRound({ players: game.players, seats: game.seats, round: prepared, tableLimit: game.setup.tableLimit } as Parameters<typeof runtime.settleRound>[0]),
   );
 };
 

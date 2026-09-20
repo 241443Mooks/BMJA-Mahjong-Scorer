@@ -25,9 +25,9 @@ describe('current playable profile inventory', () => {
   it('keeps current profile-local scoring and table selections exact', async () => {
     const artifacts = await Promise.all(refs.map((ref) => resolvePlayableProfile(ref, currentPlayableResolverEnvironment)));
     expect(artifacts.map(({ profile }) => profile.scoring.config)).toEqual([
-      { configVersion: 1, scorerId: 'classical.scorer.current', bindingId: 'classical.bindings.bmja-current', policyId: 'classical.policy.bmja-current' },
-      { configVersion: 1, scorerId: 'classical.scorer.current', bindingId: 'classical.bindings.western-tm-current', policyId: 'classical.policy.western-tm-current' },
-      { configVersion: 1, scorerId: 'classical.scorer.current', bindingId: 'classical.bindings.outside-the-box-current', policyId: 'classical.policy.outside-the-box-current' },
+      { configVersion: 1, scorerId: 'classical.scorer.current', bindingId: 'classical.bindings.bmja-current', policyId: 'classical.policy.bmja-current', defaultTableLimit: 1000 },
+      { configVersion: 1, scorerId: 'classical.scorer.current', bindingId: 'classical.bindings.western-tm-current', policyId: 'classical.policy.western-tm-current', defaultTableLimit: 1000 },
+      { configVersion: 1, scorerId: 'classical.scorer.current', bindingId: 'classical.bindings.outside-the-box-current', policyId: 'classical.policy.outside-the-box-current', defaultTableLimit: 1000 },
     ]);
     expect(artifacts[2].profile).toMatchObject({
       settlement: { id: 'settlement.outside-the-box-incidents', params: { limit: 1000 } },

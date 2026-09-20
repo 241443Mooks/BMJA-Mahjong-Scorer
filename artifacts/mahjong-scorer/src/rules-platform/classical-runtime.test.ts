@@ -353,7 +353,7 @@ describe('#233 Run 3 closure', () => {
       ),
     };
     expect(() => compileRulesRuntime(missingStrategyRevision)).toThrow(
-      'Unknown current strategy implementation: settlement.classical-pairwise@2',
+      'RUNTIME_SETTLEMENT_IMPLEMENTATION_UNAVAILABLE:settlement.classical-pairwise@2',
     );
   });
 

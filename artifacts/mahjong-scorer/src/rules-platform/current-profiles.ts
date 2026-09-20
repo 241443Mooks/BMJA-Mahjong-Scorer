@@ -11,6 +11,7 @@ import {
   classicalValidationRegistryEntries,
 } from './classical-validation';
 import { outsideTheBoxStrategyRegistryEntries } from './outside-the-box-strategies';
+import { BUZZARD_PREPARATION, BUZZARD_SETTLEMENT } from './buzzard-strategies';
 import { RegistryBank, type RegistryEntry } from './registry';
 import type { JsonContract, ResolverEnvironment } from './resolver';
 import type {
@@ -55,6 +56,8 @@ export const currentClassicalRegistryEntries: readonly RegistryEntry[] = [
   executable('classical.policy.outside-the-box-current', 'classical'),
   executable('classical.bindings.buzzard-2000', 'classical'),
   executable('classical.policy.buzzard-2000', 'classical'),
+  executable(BUZZARD_SETTLEMENT.id, 'settlement'),
+  executable(BUZZARD_PREPARATION.id, 'incident'),
 ];
 
 const currentIds = new Set([
@@ -88,6 +91,7 @@ type ClassicalCurrentConfig = {
   scorerId: 'classical.scorer.current';
   bindingId: string;
   policyId: string;
+  defaultTableLimit: number;
 };
 
 const classicalCurrentConfigs: Readonly<Record<string, ClassicalCurrentConfig>> = {
@@ -95,21 +99,21 @@ const classicalCurrentConfigs: Readonly<Record<string, ClassicalCurrentConfig>> 
     configVersion: 1,
     scorerId: 'classical.scorer.current',
     bindingId: 'classical.bindings.bmja-current',
-    policyId: 'classical.policy.bmja-current',
+    policyId: 'classical.policy.bmja-current', defaultTableLimit: 1000,
   },
   'western-tm@0.1': {
     configVersion: 1,
     scorerId: 'classical.scorer.current',
     bindingId: 'classical.bindings.western-tm-current',
-    policyId: 'classical.policy.western-tm-current',
+    policyId: 'classical.policy.western-tm-current', defaultTableLimit: 1000,
   },
   'outside-the-box@0.1': {
     configVersion: 1,
     scorerId: 'classical.scorer.current',
     bindingId: 'classical.bindings.outside-the-box-current',
-    policyId: 'classical.policy.outside-the-box-current',
+    policyId: 'classical.policy.outside-the-box-current', defaultTableLimit: 1000,
   },
-  'buzzard-2000@0.1': { configVersion: 1, scorerId: 'classical.scorer.current', bindingId: 'classical.bindings.buzzard-2000', policyId: 'classical.policy.buzzard-2000' },
+  'buzzard-2000@0.1': { configVersion: 1, scorerId: 'classical.scorer.current', bindingId: 'classical.bindings.buzzard-2000', policyId: 'classical.policy.buzzard-2000', defaultTableLimit: 600 },
 };
 
 const own = (value: unknown, key: string): unknown =>
@@ -120,11 +124,11 @@ const classicalCurrentConfigContract: JsonContract = {
   validate(value: JsonValue) {
     const config = value as JsonObject;
     const keys = Object.keys(config).sort();
-    if (keys.join(',') !== 'bindingId,configVersion,policyId,scorerId' ||
+    if (keys.join(',') !== 'bindingId,configVersion,defaultTableLimit,policyId,scorerId' ||
       own(config, 'configVersion') !== 1 ||
       own(config, 'scorerId') !== 'classical.scorer.current' ||
       typeof own(config, 'bindingId') !== 'string' ||
-      typeof own(config, 'policyId') !== 'string') {
+      typeof own(config, 'policyId') !== 'string' || typeof own(config, 'defaultTableLimit') !== 'number' || !Number.isFinite(own(config, 'defaultTableLimit')) || (own(config, 'defaultTableLimit') as number) <= 0) {
       throw new Error('CLASSICAL_CURRENT_CONFIG_INVALID');
     }
     return {
@@ -212,7 +216,7 @@ export const OUTSIDE_THE_BOX_CURRENT_PROFILE: RootProfileDefinition = profile(
 );
 export const BUZZARD_2000_CURRENT_PROFILE: RootProfileDefinition = profile(
   { id: BUZZARD_2000_PROFILE_REF.id, version: BUZZARD_2000_PROFILE_REF.version, name: 'British/Western Classical — Buzzard 2000', status: 'provisional' },
-  classicalCurrentConfigs['buzzard-2000@0.1'], { ...classicalTable, validation: { handShapePolicyId: BUZZARD_CLASSICAL_VALIDATION.id, policyIds: [] } },
+  classicalCurrentConfigs['buzzard-2000@0.1'], { ...classicalTable, settlement: { id: BUZZARD_SETTLEMENT.id, params: {} }, incidents: [{ id: BUZZARD_PREPARATION.id, params: {} }], validation: { handShapePolicyId: BUZZARD_CLASSICAL_VALIDATION.id, policyIds: [] } },
 );
 
 export const currentPlayableProfiles: readonly ProfileAuthoringDefinition[] = [

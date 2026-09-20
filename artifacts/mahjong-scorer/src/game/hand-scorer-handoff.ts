@@ -30,7 +30,7 @@ export const createHandScorerContext = (
     playerWind: game.seats[playerId],
     prevailingWind: game.prevailingWind,
     isWinner: outcome?.type === 'win' && outcome.winnerId === playerId,
-    limit: currentClassicalScorerDefaultLimit(game.setup.rulesProfile),
+    limit: game.setup.tableLimit,
     handMode: game.currentHandMode,
     ...(scoreRecord?.source === 'detailed-scorer'
       ? {
