@@ -4,6 +4,7 @@ import { compileRulesRuntime } from '../rules-platform/classical-runtime';
 import { currentPlayableResolverEnvironment } from '../rules-platform/current-profiles';
 import { resolvePlayableProfile } from '../rules-platform/resolver';
 import { currentRoundPreparationImplementation, currentSettlementImplementation } from '../rules-platform/current-table-dispatch';
+import { settleClassicalPairwise } from '../rules-platform/classical-strategies';
 
 const players = ['east', 'south', 'west', 'north'].map((id) => ({ id, name: id }));
 const seats = { east: 'east', south: 'south', west: 'west', north: 'north' } as const;
@@ -39,7 +40,10 @@ describe('Buzzard B table-running acceptance fixtures', () => {
   });
   it('routes dangerous discard only through winner obligations and makes false Mahjong non-East-multiplied', () => {
     const danger = { ...win, buzzardIncidents: [{ type: 'buzzard-dangerous-discard' as const, liablePlayerId: 'south', reason: 'one-suit' as const }] };
-    expect(settleBuzzardRound(input(danger)).every((transaction) => transaction.from === 'south' && transaction.reasonId.includes('dangerous-discard'))).toBe(true);
+    const ordinaryWinnerPayments = settleClassicalPairwise({ players, seats: { ...seats }, round: win }).filter((transaction) => transaction.reasonId.endsWith('.winner-payment'));
+    const liability = settleBuzzardRound(input(danger));
+    expect(liability.reduce((sum, transaction) => sum + transaction.amount, 0)).toBe(ordinaryWinnerPayments.reduce((sum, transaction) => sum + transaction.amount, 0));
+    expect(liability.every((transaction) => transaction.from === 'south' && transaction.reasonId.includes('dangerous-discard') && !transaction.reasonId.includes('score-difference'))).toBe(true);
     const falseMahJong = { outcome: { type: 'draw' as const }, scores: { east: 0, south: 0, west: 0, north: 0 }, buzzardIncidents: [{ type: 'buzzard-false-mah-jong' as const, declarerId: 'east', exposure: 'fully-exposed' as const }] };
     expect(settleBuzzardRound(input(falseMahJong)).map((transaction) => transaction.amount)).toEqual([1200, 1200, 1200]);
     const withdrawn = { ...falseMahJong, buzzardIncidents: [{ type: 'buzzard-false-mah-jong' as const, declarerId: 'east', exposure: 'not-fully-exposed' as const }] };
@@ -53,7 +57,8 @@ describe('Buzzard B table-running acceptance fixtures', () => {
     const tooMany = { ...win, incidents: [{ type: 'incorrect-hand' as const, playerId: 'south', condition: 'too-many' as const }] };
     const tooFew = { ...win, incidents: [{ type: 'incorrect-hand' as const, playerId: 'south', condition: 'too-few' as const }] };
     expect(prepareBuzzardRound(input(tooMany)).scores.south).toBe(600);
-    expect(settleBuzzardRound(input(tooMany))).not.toEqual(settleBuzzardRound(input(tooFew)));
+    expect(settleBuzzardRound(input(tooMany))).toEqual(settleClassicalPairwise({ players, seats: { ...seats }, round: { ...win, scores: { ...scores, south: 0 } } }));
+    expect(settleBuzzardRound(input(tooFew))).toEqual(settleClassicalPairwise({ players, seats: { ...seats }, round: win }));
   });
   it('fails closed for unsupported exact settlement and preparation revisions', () => {
     expect(() => currentSettlementImplementation({ id: 'settlement.buzzard-2000', semanticRevision: 2 }, {}, 600)).toThrow('RUNTIME_SETTLEMENT_IMPLEMENTATION_UNAVAILABLE');

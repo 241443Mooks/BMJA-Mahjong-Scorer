@@ -60,6 +60,7 @@ describe("game recovery persistence", () => {
     saveGameRecovery(storage, confirmed, 'win', 'east', { scores: {}, scoreRecords: {} });
     const recovered = loadGameRecovery(storage)!.game;
     expect(recovered.setup.tableLimit).toBe(725);
+    expect(recovered.handHistory[0].settlement).toEqual(confirmed.handHistory[0].settlement);
     expect(recovered.handHistory[0].settlement.transactions.map(({ reason }) => reason)).toEqual(['buzzard-dangerous-discard-liability', 'buzzard-dangerous-discard-liability', 'buzzard-dangerous-discard-liability']);
     expect(undoLastHand(recovered).setup.tableLimit).toBe(725);
   });
