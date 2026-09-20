@@ -122,6 +122,14 @@ describe('game hand-scorer handoff', () => {
     expect(createHandScorerContext(buzzard, 'bill', billWins).limit).toBe(725);
   });
 
+  it('round-trips East thirteenth consecutive Mah Jong through detailed Buzzard scorer re-entry', () => {
+    const buzzard = createBmjaGame(game.players, game.seats, undefined, 'full-game', BUZZARD_2000_PROFILE_REF);
+    const record = makeCalculatedResult('bill', 100, true, 'east-thirteenth').detailedHand;
+    record.context = { ...record.context, eastThirteenthConsecutiveMahjong: true };
+    const reopened = createHandScorerContext(buzzard, 'bill', billWins, record);
+    expect(handScorerLocalContext(reopened, BUZZARD_2000_PROFILE_REF).eastThirteenthConsecutiveMahjong).toBe(true);
+  });
+
   it('inherits the next Club game hand mode after a draw changes it to Goulash', () => {
     const clubGame = createBmjaGame(game.players, game.seats, undefined, 'full-game', OUTSIDE_THE_BOX_PROFILE_REF);
     const afterDraw = confirmHand(clubGame, {

@@ -1,5 +1,5 @@
 import { BMJA_PROFILE_REF } from './ruleset';
-import { currentClassicalScorerDefaultLimit } from './rules-presentation';
+import { getCurrentRulesRuntime } from '../rules-platform/current-runtime-registry';
 import type {
   GameState,
   HandScorerLocalContext,
@@ -32,6 +32,9 @@ export const createHandScorerContext = (
     isWinner: outcome?.type === 'win' && outcome.winnerId === playerId,
     limit: game.setup.tableLimit,
     handMode: game.currentHandMode,
+    eastThirteenthConsecutiveMahjong: scoreRecord?.source === 'detailed-scorer'
+      ? scoreRecord.context.eastThirteenthConsecutiveMahjong
+      : undefined,
     ...(scoreRecord?.source === 'detailed-scorer'
       ? {
           detailedHand: scoreRecord,
@@ -201,7 +204,8 @@ export const handScorerLocalContext = (
   playerWind: context?.playerWind ?? 'east',
   prevailingWind: context?.prevailingWind ?? 'east',
   limit:
-    context?.limit ?? currentClassicalScorerDefaultLimit(rulesProfile),
+    context?.limit ?? getCurrentRulesRuntime(rulesProfile).defaultTableLimit,
   isWinner: context?.isWinner ?? false,
   handMode: context?.handMode ?? 'normal',
+  eastThirteenthConsecutiveMahjong: context?.eastThirteenthConsecutiveMahjong,
 });

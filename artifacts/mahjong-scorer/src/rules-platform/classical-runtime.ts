@@ -34,6 +34,7 @@ import type {
   ScoreDecisionTraceEntry,
 } from './types';
 import { jsonValueSchema } from './schemas';
+import { supportedCapabilitiesForProfile, type CurrentCapabilityId } from './capabilities';
 
 const keyFor = ({ id, semanticRevision }: ExecutableRegistryIdentity) =>
   `${id}@${semanticRevision}`;
@@ -179,6 +180,7 @@ export type RulesRuntime = Readonly<{
   artifact: ResolvedProfileArtifact;
   defaultTableLimit: number;
   requiredEvidence(): readonly string[];
+  supportedCapabilities(): readonly CurrentCapabilityId[];
   validateHand(input: HandEvaluationInput<MahjongHand, GameContext>): readonly string[];
   scoreHand(input: HandEvaluationInput<MahjongHand, GameContext>): HandScoreResult;
   settleRound: ReturnType<typeof settlementImplementation>;
@@ -232,11 +234,13 @@ export const compileRulesRuntime = (artifact: ResolvedProfileArtifact): RulesRun
   // The resolver canonicalises this contract in the sealed artifact. It is a
   // declarative discovery surface, not a claim that other evidence is invalid.
   const requiredEvidence = Object.freeze([...artifact.profile.evidence.alwaysRequired]);
+  const supportedCapabilities = supportedCapabilitiesForProfile(artifact.profile.identity) as readonly CurrentCapabilityId[];
 
   return Object.freeze({
     artifact,
     defaultTableLimit,
     requiredEvidence: () => requiredEvidence,
+    supportedCapabilities: () => supportedCapabilities,
     validateHand: validate,
     scoreHand(input: HandEvaluationInput<MahjongHand, GameContext>): HandScoreResult {
       const validationErrors = validate(input);

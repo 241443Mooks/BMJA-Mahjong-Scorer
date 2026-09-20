@@ -2,10 +2,12 @@ import { bmjaSpecialHandBindings } from '../scoring';
 import { OUTSIDE_THE_BOX_PROFILE_REF, outsideTheBoxSpecialHandBindings } from './outside-the-box-catalogue';
 import { BMJA_PROFILE_REF } from './ruleset';
 import { WESTERN_TM_PROFILE_REF, westernTmSpecialHandBindings } from './western-tm-catalogue';
-import type { RulesProfileRef } from './types';
+import { BUZZARD_2000_PROFILE_REF, buzzard2000SpecialHandBindings } from './buzzard-2000';
+import { getCurrentRulesRuntime } from '../rules-platform/current-runtime-registry';
 import type { HandMode } from './types';
+import type { RulesProfileRef } from './types';
 
-export type PublicRulesSlug = 'british' | 'western' | 'club';
+export type PublicRulesSlug = 'british' | 'western' | 'club' | 'buzzard';
 
 export type RulesDescriptor = {
   profile: RulesProfileRef;
@@ -87,6 +89,19 @@ export const PUBLIC_RULES_DESCRIPTORS: readonly RulesDescriptor[] = Object.freez
       authority: 'A local club rules profile',
     },
   },
+  {
+    profile: BUZZARD_2000_PROFILE_REF,
+    slug: 'buzzard',
+    title: 'British/Western Classical — Buzzard 2000',
+    compactLabel: 'Buzzard 2000',
+    status: 'Provisional, source-backed profile',
+    description: 'A source-specific British/Western Classical profile with Buzzard table procedures.',
+    publiclySelectable: true,
+    configuredClubProfile: false,
+    referenceKeys: ['buzzard-2000'],
+    atAGlance: [catalogueCount(buzzard2000SpecialHandBindings), 'Buzzard table incidents and configured limit', 'Source-specific Classical profile'],
+    support: { scorer: 'Available', source: 'Buzzard 2000 evidence record', implementation: 'Provisional', authority: 'Buzzard 2000 source material' },
+  },
 ]);
 
 export const descriptorForRulesProfile = (profile: RulesProfileRef): RulesDescriptor => {
@@ -95,28 +110,18 @@ export const descriptorForRulesProfile = (profile: RulesProfileRef): RulesDescri
   return descriptor;
 };
 
-/**
- * The current hand-scorer UI cap is presentation configuration, deliberately
- * separate from runtime selection and executable scoring semantics.
- */
-export const currentClassicalScorerDefaultLimit = (
-  profile: RulesProfileRef,
-): number => {
-  descriptorForRulesProfile(profile);
-  return 1000;
-};
-
 export const descriptorForSlug = (slug: PublicRulesSlug): RulesDescriptor =>
   PUBLIC_RULES_DESCRIPTORS.find((descriptor) => descriptor.slug === slug)!;
-
-export const isConfiguredClubProfile = (profile: RulesProfileRef) =>
-  descriptorForRulesProfile(profile).configuredClubProfile;
 
 export const isBritishRulesProfile = (profile: RulesProfileRef) =>
   sameProfile(profile, BMJA_PROFILE_REF);
 
+/** Compatibility seam backed by the resolved runtime, never presentation data. */
+export const currentClassicalScorerDefaultLimit = (profile: RulesProfileRef) =>
+  getCurrentRulesRuntime(profile).defaultTableLimit;
+
 export const normaliseStandaloneHandMode = (profile: RulesProfileRef, handMode: HandMode): HandMode =>
-  isConfiguredClubProfile(profile) ? handMode : 'normal';
+  getCurrentRulesRuntime(profile).supportedCapabilities().includes('hand.goulash') ? handMode : 'normal';
 
 export const publicRulesSlugFromGamePath = (path: string): PublicRulesSlug =>
-  path === '/game/western' ? 'western' : path === '/game/club' ? 'club' : 'british';
+  path === '/game/western' ? 'western' : path === '/game/club' ? 'club' : path === '/game/buzzard' ? 'buzzard' : 'british';

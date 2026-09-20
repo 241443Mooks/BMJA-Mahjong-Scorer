@@ -1,17 +1,21 @@
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
+import { initialiseCurrentRulesRuntimes } from '../rules-platform/current-runtime-registry';
 import { bmjaSpecialHandBindings } from '../scoring';
 import { outsideTheBoxSpecialHandBindings } from './outside-the-box-catalogue';
 import { currentClassicalScorerDefaultLimit, descriptorForRulesProfile, descriptorForSlug, isBritishRulesProfile, normaliseStandaloneHandMode, PUBLIC_RULES_DESCRIPTORS, publicRulesSlugFromGamePath } from './rules-presentation';
 import { rulesCardStatus } from './RulesProfilePicker';
 import { BMJA_PROFILE_REF, OUTSIDE_THE_BOX_PROFILE_REF, WESTERN_TM_PROFILE_REF } from './ruleset';
 import { westernTmSpecialHandBindings } from './western-tm-catalogue';
+import { BUZZARD_2000_PROFILE_REF } from './buzzard-2000';
 
 describe('public rules presentation', () => {
-  it('maps the three public choices to their exact persisted profiles without exposing the club name', () => {
-    expect(PUBLIC_RULES_DESCRIPTORS.map((descriptor) => descriptor.title)).toEqual(['British / BMJA-style', 'Western — Thompson & Maloney', 'Club rules']);
+  beforeAll(() => initialiseCurrentRulesRuntimes());
+  it('maps the four public choices to their exact persisted profiles without exposing the club name', () => {
+    expect(PUBLIC_RULES_DESCRIPTORS.map((descriptor) => descriptor.title)).toEqual(['British / BMJA-style', 'Western — Thompson & Maloney', 'Club rules', 'British/Western Classical — Buzzard 2000']);
     expect(descriptorForSlug('british').profile).toEqual(BMJA_PROFILE_REF);
     expect(descriptorForSlug('western').profile).toEqual(WESTERN_TM_PROFILE_REF);
     expect(descriptorForSlug('club').profile).toEqual(OUTSIDE_THE_BOX_PROFILE_REF);
+    expect(descriptorForSlug('buzzard').profile).toEqual(BUZZARD_2000_PROFILE_REF);
     expect(JSON.stringify(descriptorForRulesProfile(OUTSIDE_THE_BOX_PROFILE_REF))).not.toContain('Outside the Box');
   });
 
@@ -20,6 +24,7 @@ describe('public rules presentation', () => {
     expect(publicRulesSlugFromGamePath('/game/british')).toBe('british');
     expect(publicRulesSlugFromGamePath('/game/western')).toBe('western');
     expect(publicRulesSlugFromGamePath('/game/club')).toBe('club');
+    expect(publicRulesSlugFromGamePath('/game/buzzard')).toBe('buzzard');
   });
 
   it('derives catalogue claims from the executable binding collections', () => {
@@ -51,8 +56,9 @@ describe('public rules presentation', () => {
     expect(currentClassicalScorerDefaultLimit(BMJA_PROFILE_REF)).toBe(1000);
     expect(currentClassicalScorerDefaultLimit(WESTERN_TM_PROFILE_REF)).toBe(1000);
     expect(currentClassicalScorerDefaultLimit(OUTSIDE_THE_BOX_PROFILE_REF)).toBe(1000);
+    expect(currentClassicalScorerDefaultLimit(BUZZARD_2000_PROFILE_REF)).toBe(600);
     expect(() => currentClassicalScorerDefaultLimit({ id: 'unknown', version: '1.0' })).toThrow(
-      'No public descriptor for rules profile unknown@1.0.',
+      'CURRENT_RULES_RUNTIME_UNAVAILABLE:unknown@1.0',
     );
   });
 });
