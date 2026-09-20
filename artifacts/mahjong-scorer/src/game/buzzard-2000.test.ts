@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { bonus, scoreHand, set, suited, type MahjongHand } from '../scoring';
+import { bonus, scoreHand, set, suited, validateHand, type MahjongHand } from '../scoring';
 import { detectSpecialHands } from '../scoring/special-hands';
 import { BUZZARD_2000_SCORING_POLICY, buzzard2000SpecialHandBindings } from './buzzard-2000';
 import { dragon, wind } from '../scoring';
@@ -32,6 +32,30 @@ describe('Buzzard 2000 ordinary profile policy', () => {
   it('does not inherit BMJA concealed, Original Call, or final-discard doubles', () => {
     const scored = scoreHand({ ...chows, originalCall: true, winningMethod: 'final-discard' }, context, buzzard2000SpecialHandBindings, BUZZARD_2000_SCORING_POLICY);
     expect(scored.doubleRules.map((rule) => rule.id)).not.toEqual(expect.arrayContaining(['concealed-hand', 'original-call', 'win-final-discard']));
+  });
+  it.each([
+    ['Standing Hand', { classicalEvidence: { standingHand: true } }, 'classical-standing-hand', 100],
+    ['only possible tile', { classicalEvidence: { onlyPossibleWinningTile: true } }, 'classical-only-possible', 2],
+    ['no Chows', { sets: [p('a', suited('bamboo', 1)), { ...p('b', suited('bamboo', 2)), visibility: 'exposed' as const }, p('c', suited('bamboo', 3)), p('d', suited('bamboo', 4)), pair(suited('bamboo', 5))] }, 'classical-no-chows', 10],
+    ['scoreless hand', {}, 'classical-scoreless', 10],
+    ['last wall', { winningMethod: 'last-wall-tile' }, 'classical-last-wall', 10],
+    ['Loose Tile', { winningMethod: 'loose-tile' }, 'classical-loose-tile', 10],
+  ] as const)('scores %s at the source value', (_name, patch, id, amount) => {
+    const hand = { ...chows, ...patch } as MahjongHand;
+    expect(scoreHand(hand, context, buzzard2000SpecialHandBindings, BUZZARD_2000_SCORING_POLICY).pointRules).toContainEqual(expect.objectContaining({ id, amount }));
+  });
+  it('retains event doubles and validates Buzzard multi-Chow independently from BMJA', async () => {
+    for (const method of ['last-wall-tile', 'loose-tile'] as const) expect(scoreHand({ ...chows, winningMethod: method }, context, buzzard2000SpecialHandBindings, BUZZARD_2000_SCORING_POLICY).doubleRules).toContainEqual(expect.objectContaining({ id: `win-${method}`, amount: 1 }));
+    const runtime = compileRulesRuntime(await resolvePlayableProfile({ id: 'buzzard-2000', version: '0.1' }, currentPlayableResolverEnvironment));
+    expect(runtime.validateHand({ evidence: chows, context })).toEqual([]);
+    expect(validateHand(chows, context)).toContain('A normal BMJA hand may contain at most one chow.');
+  });
+  it.each([
+    ['flowers', [bonus('flower', 1), bonus('flower', 2), bonus('flower', 3), bonus('flower', 4)], 'classical-flower-complete', 'classical-own-flower'],
+    ['seasons', [bonus('season', 1), bonus('season', 2), bonus('season', 3), bonus('season', 4)], 'classical-season-complete', 'classical-own-season'],
+  ] as const)('accumulates complete %s and own tile to ×16', (_name, bonusTiles, complete, own) => {
+    const rules = scoreHand({ ...chows, bonusTiles: [...bonusTiles] }, context, buzzard2000SpecialHandBindings, BUZZARD_2000_SCORING_POLICY).doubleRules;
+    expect(rules.filter((rule) => rule.id === complete || rule.id === own).reduce((total, rule) => total + rule.amount, 0)).toBe(4);
   });
   it('binds all ten named limits to the trusted table limit', () => {
     expect(buzzard2000SpecialHandBindings).toHaveLength(10);
