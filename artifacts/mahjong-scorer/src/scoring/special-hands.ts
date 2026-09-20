@@ -1746,7 +1746,9 @@ export const detectSpecialHands = (
           name: binding.name,
           description: binding.description,
           scoreModel: 'fixed' as const,
-          value: isConfiguredLimitSpecialHandBinding(binding) ? context?.limit ?? 1000 : specialHandValueFor(hand, binding),
+          value: isConfiguredLimitSpecialHandBinding(binding)
+            ? (() => { if (typeof context?.limit !== 'number' || !Number.isFinite(context.limit) || context.limit <= 0) throw new Error('CONFIGURED_LIMIT_CONTEXT_REQUIRED'); return context.limit; })()
+            : specialHandValueFor(hand, binding),
           matched: pattern.detect(hand, context) && bindingAllowsHand(hand, binding),
         }
       : {
