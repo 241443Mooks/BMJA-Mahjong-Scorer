@@ -3,6 +3,7 @@ import { prepareBuzzardRound, settleBuzzardRound } from '../rules-platform/buzza
 import { compileRulesRuntime } from '../rules-platform/classical-runtime';
 import { currentPlayableResolverEnvironment } from '../rules-platform/current-profiles';
 import { resolvePlayableProfile } from '../rules-platform/resolver';
+import { currentRoundPreparationImplementation, currentSettlementImplementation } from '../rules-platform/current-table-dispatch';
 
 const players = ['east', 'south', 'west', 'north'].map((id) => ({ id, name: id }));
 const seats = { east: 'east', south: 'south', west: 'west', north: 'north' } as const;
@@ -53,5 +54,9 @@ describe('Buzzard B table-running acceptance fixtures', () => {
     const tooFew = { ...win, incidents: [{ type: 'incorrect-hand' as const, playerId: 'south', condition: 'too-few' as const }] };
     expect(prepareBuzzardRound(input(tooMany)).scores.south).toBe(600);
     expect(settleBuzzardRound(input(tooMany))).not.toEqual(settleBuzzardRound(input(tooFew)));
+  });
+  it('fails closed for unsupported exact settlement and preparation revisions', () => {
+    expect(() => currentSettlementImplementation({ id: 'settlement.buzzard-2000', semanticRevision: 2 }, {}, 600)).toThrow('RUNTIME_SETTLEMENT_IMPLEMENTATION_UNAVAILABLE');
+    expect(() => currentRoundPreparationImplementation({ id: 'incident.buzzard-2000-round-preparation', semanticRevision: 2 })).toThrow('RUNTIME_INCIDENT_IMPLEMENTATION_UNAVAILABLE');
   });
 });

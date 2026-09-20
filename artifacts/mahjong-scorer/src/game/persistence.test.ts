@@ -1,6 +1,6 @@
 import { beforeAll, describe, expect, it } from "vitest";
 import { initialiseCurrentRulesRuntimes } from '../rules-platform/current-runtime-registry';
-import { confirmHand, createBmjaGame } from "./game";
+import { confirmHand, createBmjaGame, undoLastHand } from "./game";
 import {
   clearGameRecovery,
   GAME_SNAPSHOT_STORAGE_KEY,
@@ -49,6 +49,23 @@ describe("game recovery persistence", () => {
     snapshot.game.setup.tableLimit = 0;
     storage.setItem(GAME_SNAPSHOT_STORAGE_KEY, JSON.stringify(snapshot));
     expect(loadGameRecovery(storage)).toBeNull();
+  });
+  it('preserves a non-default Buzzard limit and exceptional liability through recovery, replay, and undo', () => {
+    const storage = memoryStorage();
+    const setup = createBmjaGame(newGame().players, newGame().seats, undefined, 'full-game', BUZZARD_2000_PROFILE_REF, 725);
+    const confirmed = confirmHand(setup, {
+      outcome: { type: 'win', winnerId: 'east' }, scores: { east: 100, south: 30, west: 20, north: 10 },
+      buzzardIncidents: [{ type: 'buzzard-dangerous-discard', liablePlayerId: 'south', reason: 'one-suit' }],
+    });
+    saveGameRecovery(storage, confirmed, 'win', 'east', { scores: {}, scoreRecords: {} });
+    const recovered = loadGameRecovery(storage)!.game;
+    expect(recovered.setup.tableLimit).toBe(725);
+    expect(recovered.handHistory[0].settlement.transactions.map(({ reason }) => reason)).toEqual(['buzzard-dangerous-discard-liability', 'buzzard-dangerous-discard-liability', 'buzzard-dangerous-discard-liability']);
+    expect(undoLastHand(recovered).setup.tableLimit).toBe(725);
+  });
+  it('rejects Buzzard-only evidence under Outside the Box orchestration', () => {
+    const otb = createBmjaGame(newGame().players, newGame().seats, undefined, 'full-game', OUTSIDE_THE_BOX_PROFILE_REF);
+    expect(() => confirmHand(otb, { outcome: { type: 'win', winnerId: 'east' }, scores: { east: 100, south: 0, west: 0, north: 0 }, buzzardIncidents: [{ type: 'buzzard-dangerous-discard', liablePlayerId: 'south', reason: 'one-suit' }] })).toThrow('does not support Buzzard round evidence');
   });
   it("validates Cannon danger while preserving valid incident evidence", () => {
     const storage = memoryStorage();
