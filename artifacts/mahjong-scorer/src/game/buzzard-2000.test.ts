@@ -2,6 +2,10 @@ import { describe, expect, it } from 'vitest';
 import { bonus, scoreHand, set, suited, type MahjongHand } from '../scoring';
 import { detectSpecialHands } from '../scoring/special-hands';
 import { BUZZARD_2000_SCORING_POLICY, buzzard2000SpecialHandBindings } from './buzzard-2000';
+import { dragon, wind } from '../scoring';
+import { compileRulesRuntime } from '../rules-platform/classical-runtime';
+import { currentPlayableResolverEnvironment } from '../rules-platform/current-profiles';
+import { resolvePlayableProfile } from '../rules-platform/resolver';
 
 const nineGates = (extra: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9): MahjongHand => ({
   sets: [], looseTiles: [1,1,1,2,3,4,5,6,7,8,9,9,9,extra].map((rank) => suited('bamboo', rank as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9)), bonusTiles: [], isWinner: true,
@@ -33,5 +37,28 @@ describe('Buzzard 2000 ordinary profile policy', () => {
     expect(buzzard2000SpecialHandBindings).toHaveLength(10);
     expect(matched(nineGates(5))).toMatchObject({ value: 600 });
     expect(detectSpecialHands(nineGates(5), { ...context, limit: 777 }, buzzard2000SpecialHandBindings).find((result) => result.id === 'one-suit-nine-gates-any-completion')).toMatchObject({ value: 777 });
+  });
+});
+
+const p = (id: string, tile: MahjongHand['sets'][number]['tile']) => set(id, 'pung', tile);
+const pair = (tile: MahjongHand['sets'][number]['tile']) => set('pair', 'pair', tile);
+const normal = (sets: MahjongHand['sets'], extra: Partial<MahjongHand> = {}): MahjongHand => ({ sets, bonusTiles: [], isWinner: true, ...extra });
+const limitCases: readonly [string, MahjongHand, Record<string, unknown>][] = [
+  ['All Winds and Dragons', normal([p('e', wind('east')), p('s', wind('south')), p('w', wind('west')), p('r', dragon('red')), pair(dragon('green'))]), {}],
+  ['Three Winds and fourth pair', normal([p('e', wind('east')), p('s', wind('south')), p('w', wind('west')), p('x', suited('bamboo', 2)), pair(wind('north'))]), {}],
+  ['Original Hand', normal([p('a', suited('bamboo', 1)), p('b', suited('bamboo', 2)), p('c', suited('bamboo', 3)), p('d', suited('bamboo', 4)), pair(suited('bamboo', 5))], { winningMethod: 'initial-deal' }), { playerWind: 'east' }],
+  ["East's first discard", normal([p('a', suited('bamboo', 1)), p('b', suited('bamboo', 2)), p('c', suited('bamboo', 3)), p('d', suited('bamboo', 4)), pair(suited('bamboo', 5))], { winningMethod: 'discard', winningEventEvidence: { type: 'discard', discardedBy: 'east', handDiscardOrdinal: 1 } }), { playerWind: 'south' }],
+  ['All Ones and Nines', normal([p('a', suited('bamboo', 1)), p('b', suited('bamboo', 9)), p('c', suited('characters', 1)), p('d', suited('characters', 9)), pair(suited('circles', 1))]), {}],
+  ['Three Dragons', normal([p('r', dragon('red')), p('g', dragon('green')), p('w', dragon('white')), p('x', suited('bamboo', 2)), pair(suited('bamboo', 3))]), {}],
+  ['Concealed Pungs', normal([p('a', suited('bamboo', 1)), p('b', suited('bamboo', 2)), p('c', suited('bamboo', 3)), p('d', suited('bamboo', 4)), pair(suited('bamboo', 5))]), {}],
+  ['Thirteen Odd Majors', { sets: [], looseTiles: [suited('bamboo', 1), suited('bamboo', 9), suited('characters', 1), suited('characters', 9), suited('circles', 1), suited('circles', 9), wind('east'), wind('south'), wind('west'), wind('north'), dragon('red'), dragon('green'), dragon('white'), wind('east')], bonusTiles: [], isWinner: true }, {}],
+  ['Calling Nine Tile Hand', nineGates(5), {}],
+  ["East's thirteenth consecutive Mahjong", normal([p('a', suited('bamboo', 1)), p('b', suited('bamboo', 2)), p('c', suited('bamboo', 3)), p('d', suited('bamboo', 4)), pair(suited('bamboo', 5))]), { playerWind: 'east', eastThirteenthConsecutiveMahjong: true }],
+];
+describe('Buzzard configured-limit runtime fixtures', () => {
+  it.each(limitCases)('%s resolves to the supplied table limit', async (_name, evidence, overrides) => {
+    const runtime = compileRulesRuntime(await resolvePlayableProfile({ id: 'buzzard-2000', version: '0.1' }, currentPlayableResolverEnvironment));
+    const result = runtime.scoreHand({ evidence, context: { playerWind: 'east', prevailingWind: 'east', limit: 600, ...overrides } as never }).result as { breakdown: { finalScore: number } };
+    expect(result.breakdown.finalScore).toBe(600);
   });
 });
