@@ -134,13 +134,29 @@ export const settlementPreviewPresentation = (
 
 export const selectProfileScoreResult = (
   scores: RoundScoreDraft,
+  scoreRecords: PlayerScoreRecords,
+  previousProfileScoreResults: Partial<Record<string, ProfileScoreResult>>,
   playerId: string,
   resultId: ProfileScoreResult['resultId'] | '',
   tableLimit: number,
-) => ({
-  profileScoreResults: playerId && resultId ? { [playerId]: { resultId } } : {},
-  scores: playerId && resultId ? { ...scores, [playerId]: tableLimit } : scores,
-});
+) => {
+  const previousPlayerId = Object.keys(previousProfileScoreResults)[0];
+  const nextScores = { ...scores };
+  const nextScoreRecords = { ...scoreRecords };
+  if (previousPlayerId) {
+    delete nextScores[previousPlayerId];
+    delete nextScoreRecords[previousPlayerId];
+  }
+  if (playerId && resultId) {
+    nextScores[playerId] = tableLimit;
+    delete nextScoreRecords[playerId];
+  }
+  return {
+    profileScoreResults: playerId && resultId ? { [playerId]: { resultId } } : {},
+    scores: nextScores,
+    scoreRecords: nextScoreRecords,
+  };
+};
 
 export const gameWorkspaceStage = (
   game: GameState,
@@ -776,8 +792,8 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
                   <div className="font-mono text-[10px] uppercase tracking-[.15em] text-[#ae6249]">Buzzard round facts</div>
                   <p className="mt-1 text-[11px] text-[#7a7769]">Record table-resolved incidents and non-winner results; the runtime remains the settlement authority.</p>
                   <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                    {supports(game.setup.rulesProfile, 'table.buzzard-profile-results') && <><label className="text-[11px]">Non-winner<select value={selectedProfileResult?.[0] ?? ''} onChange={(event) => { const next = selectProfileScoreResult(scores, event.target.value, event.target.value ? selectedProfileResult?.[1]?.resultId ?? 'buzzard.incomplete-four-wind-limit' : '', game.setup.tableLimit); setProfileScoreResults(next.profileScoreResults); setScores(next.scores); if (Object.keys(next.profileScoreResults).length > 0) { setBuzzardIncidents([]); setIncidents([]); } }} className="mt-1 block w-full rounded border p-2"><option value="">Choose player</option>{game.players.filter((player) => player.id !== winnerId).map((player) => <option key={player.id} value={player.id}>{player.name}</option>)}</select></label>
-                    <label className="text-[11px]">Non-winner limit result<select data-testid="select-buzzard-profile-result" value={selectedProfileResult?.[1]?.resultId ?? ''} onChange={(event) => { const next = selectProfileScoreResult(scores, selectedProfileResult?.[0] ?? '', event.target.value as ProfileScoreResult['resultId'] | '', game.setup.tableLimit); setProfileScoreResults(next.profileScoreResults); setScores(next.scores); if (next.profileScoreResults && Object.keys(next.profileScoreResults).length > 0) { setBuzzardIncidents([]); setIncidents([]); } }} className="mt-1 block w-full rounded border p-2"><option value="">None</option><option value="buzzard.incomplete-four-wind-limit">Incomplete Four-Wind</option><option value="buzzard.incomplete-three-dragon-limit">Incomplete Three-Dragon</option></select></label></>}
+                    {supports(game.setup.rulesProfile, 'table.buzzard-profile-results') && <><label className="text-[11px]">Non-winner<select value={selectedProfileResult?.[0] ?? ''} onChange={(event) => { const next = selectProfileScoreResult(scores, scoreRecords, profileScoreResults, event.target.value, event.target.value ? selectedProfileResult?.[1]?.resultId ?? 'buzzard.incomplete-four-wind-limit' : '', game.setup.tableLimit); setProfileScoreResults(next.profileScoreResults); setScores(next.scores); setScoreRecords(next.scoreRecords); if (Object.keys(next.profileScoreResults).length > 0) { setBuzzardIncidents([]); setIncidents([]); } }} className="mt-1 block w-full rounded border p-2"><option value="">Choose player</option>{game.players.filter((player) => player.id !== winnerId).map((player) => <option key={player.id} value={player.id}>{player.name}</option>)}</select></label>
+                    <label className="text-[11px]">Non-winner limit result<select data-testid="select-buzzard-profile-result" value={selectedProfileResult?.[1]?.resultId ?? ''} onChange={(event) => { const next = selectProfileScoreResult(scores, scoreRecords, profileScoreResults, selectedProfileResult?.[0] ?? '', event.target.value as ProfileScoreResult['resultId'] | '', game.setup.tableLimit); setProfileScoreResults(next.profileScoreResults); setScores(next.scores); setScoreRecords(next.scoreRecords); if (next.profileScoreResults && Object.keys(next.profileScoreResults).length > 0) { setBuzzardIncidents([]); setIncidents([]); } }} className="mt-1 block w-full rounded border p-2"><option value="">None</option><option value="buzzard.incomplete-four-wind-limit">Incomplete Four-Wind</option><option value="buzzard.incomplete-three-dragon-limit">Incomplete Three-Dragon</option></select></label></>}
                     {supports(game.setup.rulesProfile, 'table.buzzard-dangerous-discard') && <button type="button" className="min-h-10 rounded border px-3 text-[11px]" onClick={() => { setBuzzardIncidents([{ type: 'buzzard-dangerous-discard', liablePlayerId: game.players.find((player) => player.id !== winnerId)?.id ?? game.players[0].id, reason: 'one-suit' }]); setProfileScoreResults({}); setIncidents([]); }}>Add dangerous discard</button>}
                     {supports(game.setup.rulesProfile, 'table.buzzard-false-mah-jong') && <button type="button" className="min-h-10 rounded border px-3 text-[11px]" onClick={() => { setBuzzardIncidents([{ type: 'buzzard-false-mah-jong', declarerId: game.players[0].id, exposure: 'not-fully-exposed' }]); setProfileScoreResults({}); setIncidents([]); }}>Add false Mah Jong</button>}
                     {supports(game.setup.rulesProfile, 'table.incorrect-hand') && <button type="button" className="min-h-10 rounded border px-3 text-[11px]" onClick={() => { setIncidents([{ type: 'incorrect-hand', playerId: game.players.find((player) => player.id !== winnerId)?.id ?? game.players[0].id, condition: 'too-few' }]); setBuzzardIncidents([]); setProfileScoreResults({}); }}>Add incorrect hand</button>}

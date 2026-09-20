@@ -4,15 +4,18 @@ import { confirmHand, createBmjaGame } from './game';
 import { gameRecordRulesLabel, gameWorkspaceStage, getRoundSettlementPreview, previewRoundSettlement, recoveredGameConflictsWithRoute, selectProfileScoreResult, settlementPreviewPresentation, shouldKeepScoreEntryOpen, shouldShowBritishSetupHelper, shouldShowEditCurrentHandSummary } from './GameScorer';
 import { BMJA_PROFILE_REF, OUTSIDE_THE_BOX_PROFILE_REF, resolveRulesProfile, WESTERN_TM_PROFILE_REF } from './ruleset';
 import { BUZZARD_2000_PROFILE_REF } from './buzzard-2000';
+import type { PlayerAmounts, PlayerScoreRecords } from './types';
 
 beforeAll(() => initialiseCurrentRulesRuntimes());
 
 describe('game settlement preview', () => {
-  it('keeps a selected non-winner profile result and its required persisted-limit score together', () => {
-    const first = selectProfileScoreResult({ east: 100, south: 30 }, 'south', 'buzzard.incomplete-four-wind-limit', 725);
-    expect(first).toEqual({ profileScoreResults: { south: { resultId: 'buzzard.incomplete-four-wind-limit' } }, scores: { east: 100, south: 725 } });
-    const moved = selectProfileScoreResult(first.scores, 'west', 'buzzard.incomplete-three-dragon-limit', 725);
-    expect(moved).toEqual({ profileScoreResults: { west: { resultId: 'buzzard.incomplete-three-dragon-limit' } }, scores: { east: 100, south: 725, west: 725 } });
+  it('keeps a selected non-winner profile result, forced score, and score record as one transition', () => {
+    const records = { east: { source: 'manual', finalScore: 100 }, south: { source: 'detailed-scorer', finalScore: 30 } } as unknown as PlayerScoreRecords;
+    const first = selectProfileScoreResult({ east: 100, south: 30 }, records, {}, 'south', 'buzzard.incomplete-four-wind-limit', 725);
+    expect(first).toEqual({ profileScoreResults: { south: { resultId: 'buzzard.incomplete-four-wind-limit' } }, scores: { east: 100, south: 725 }, scoreRecords: { east: { source: 'manual', finalScore: 100 } } });
+    const moved = selectProfileScoreResult(first.scores, first.scoreRecords, first.profileScoreResults, 'west', 'buzzard.incomplete-three-dragon-limit', 725);
+    expect(moved).toEqual({ profileScoreResults: { west: { resultId: 'buzzard.incomplete-three-dragon-limit' } }, scores: { east: 100, west: 725 }, scoreRecords: { east: { source: 'manual', finalScore: 100 } } });
+    expect(selectProfileScoreResult(moved.scores, moved.scoreRecords, moved.profileScoreResults, '', '', 725)).toEqual({ profileScoreResults: {}, scores: { east: 100 }, scoreRecords: { east: { source: 'manual', finalScore: 100 } } });
   });
   it('only presents the British setup helper for the British profile', () => {
     expect(shouldShowBritishSetupHelper(BMJA_PROFILE_REF)).toBe(true);
@@ -68,8 +71,10 @@ describe('game settlement preview', () => {
     const dangerous = [{ type: 'buzzard-dangerous-discard' as const, liablePlayerId: 'south', reason: 'one-suit' as const }];
     const preview = previewRoundSettlement(game, outcome, scores, [], dangerous);
     expect(confirmHand(game, { outcome, scores, buzzardIncidents: dangerous }).handHistory[0].settlement).toEqual(preview);
-    const incomplete = previewRoundSettlement(game, outcome, { ...scores, south: 600 }, [], [], { south: { resultId: 'buzzard.incomplete-four-wind-limit' } });
+    const incompleteDraft = selectProfileScoreResult(scores, { south: { source: 'manual', finalScore: 30 } }, {}, 'south', 'buzzard.incomplete-four-wind-limit', 600);
+    const incomplete = previewRoundSettlement(game, outcome, incompleteDraft.scores, [], [], incompleteDraft.profileScoreResults);
     expect(incomplete.zeroSum).toBe(true);
+    expect(confirmHand(game, { outcome, scores: incompleteDraft.scores as PlayerAmounts, scoreRecords: incompleteDraft.scoreRecords, profileScoreResults: incompleteDraft.profileScoreResults }).handHistory[0].settlement).toEqual(incomplete);
   });
 
   it('keeps recovered profile provenance when a rules-specific route asks for another profile', () => {
