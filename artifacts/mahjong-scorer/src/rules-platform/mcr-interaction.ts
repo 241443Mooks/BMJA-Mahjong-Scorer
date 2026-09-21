@@ -16,11 +16,11 @@ export const MCR_2006_SOURCE_EXCLUSIONS: Readonly<Record<string, readonly string
   'four-kongs': ['single-wait'],
   'seven-shifted-pairs': ['full-flush', 'concealed-hand', 'single-wait'],
   'thirteen-orphans': ['all-types', 'concealed-hand', 'single-wait'],
-  'all-terminals': ['all-pungs', 'outside-hand', 'pung-terminals-or-honors', 'no-honors', 'all-terminals-and-honors', 'four-concealed-pungs', 'three-concealed-pungs', 'two-concealed-pungs'],
+  'all-terminals': ['all-pungs', 'outside-hand', 'pung-terminals-or-honors', 'no-honors'],
   'little-four-winds': ['big-three-winds', 'pung-terminals-or-honors'],
   'little-three-dragons': ['dragon-pung', 'two-dragon-pungs'],
   'all-honors': ['all-pungs', 'outside-hand', 'pung-terminals-or-honors'],
-  'four-concealed-pungs': ['all-pungs', 'concealed-hand', 'three-concealed-pungs', 'two-concealed-pungs'],
+  'four-concealed-pungs': ['all-pungs', 'concealed-hand'],
   'pure-terminal-chows': ['seven-pairs', 'full-flush', 'all-chows', 'pure-double-chow', 'two-terminal-chows', 'no-honors', 'one-voided-suit'],
   'all-terminals-and-honors': ['all-pungs', 'pung-terminals-or-honors'],
   'seven-pairs': ['concealed-hand', 'single-wait'],
@@ -48,10 +48,13 @@ export const MCR_2006_SOURCE_EXCLUSIONS: Readonly<Record<string, readonly string
 
 /** Non-Repeat implications not stated by the table but mechanically inevitable from the detected structural occurrence. */
 const nonRepeat: Readonly<Record<string, readonly string[]>> = {
-  'quadruple-chow': ['pure-triple-chow', 'pure-double-chow', 'tile-hog', 'concealed-hand', 'no-honors'],
+  'quadruple-chow': ['pure-triple-chow', 'pure-double-chow', 'tile-hog', 'no-honors'],
   'four-pure-shifted-pungs': ['pure-shifted-pungs'],
   'four-pure-shifted-chows': ['pure-shifted-chows'],
-  'pure-terminal-chows': ['concealed-hand', 'no-honors'],
+  'triple-pung': ['double-pung'],
+  'all-terminals': ['all-terminals-and-honors'],
+  'four-concealed-pungs': ['three-concealed-pungs', 'two-concealed-pungs'],
+  'three-concealed-pungs': ['two-concealed-pungs'],
   'three-kongs': ['two-melded-kongs', 'two-concealed-kongs', 'melded-kong', 'concealed-kong'],
   'two-concealed-kongs': ['concealed-kong'],
   'two-melded-kongs': ['melded-kong'],
@@ -82,6 +85,30 @@ const availableTo = (candidate: PatternAccumulatorCandidate, alternativeId: stri
 
 const suppress = (candidate: PatternAccumulatorCandidate, reasonId: string) => ({ candidate, reasonId });
 
+const sharedElements = (left: PatternAccumulatorCandidate, right: PatternAccumulatorCandidate) => occurrenceElements(left).filter((element) => occurrenceElements(right).includes(element));
+
+/**
+ * The five principles are evaluated over structural occurrence IDs, never fan
+ * names.  Different fan bindings may reuse one already-accounted set once;
+ * two reused sets would be a prohibited re-grouping.  Exact competing uses of
+ * the same set collection are High-versus-Low alternatives.
+ */
+const incompatibility = (selected: readonly PatternAccumulatorCandidate[], next: PatternAccumulatorCandidate): string | undefined => {
+  const elements = occurrenceElements(next);
+  if (!elements.length) return undefined;
+  const sameBinding = selected.find((chosen) => binding(chosen) === binding(next) && sharedElements(chosen, next).length);
+  if (sameBinding) return reason(`non-identical-${slug(next)}-occurrence-reuse`);
+  const exactAlternative = selected.find((chosen) => binding(chosen) !== binding(next) && sharedElements(chosen, next).length === elements.length && occurrenceElements(chosen).length === elements.length);
+  if (exactAlternative) return reason(`high-versus-low-${slug(exactAlternative)}-over-${slug(next)}`);
+  const reused = [...new Set(selected.flatMap((chosen) => sharedElements(chosen, next)))];
+  if (reused.length > 1) return reason(`non-separation-${slug(next)}-structural-regrouping`);
+  if (reused.length === 1) {
+    const useCount = selected.filter((chosen) => occurrenceElements(chosen).includes(reused[0]!)).length;
+    if (useCount >= 2) return reason(`account-once-${slug(next)}-element-reused-twice`);
+  }
+  return undefined;
+};
+
 /**
  * Applies the source table first, then uses occurrence identities for the five
  * §3.9.1 principles.  The search is deliberately order-independent: it finds
@@ -109,15 +136,13 @@ const countAlternative = (candidates: readonly PatternAccumulatorCandidate[], id
     }
     visit(at + 1, selected);
     const next = remaining[at]!;
-    const elements = occurrenceElements(next);
-    const sameFanReuse = selected.some((chosen) => binding(chosen) === binding(next) && elements.length > 0 && occurrenceElements(chosen).some((element) => elements.includes(element)));
-    if (sameFanReuse) return;
+    if (incompatibility(selected, next)) return;
     visit(at + 1, [...selected, next]);
   };
   visit(0, []);
   for (const candidate of remaining) if (!best.some((chosen) => chosen.id === candidate.id)) {
-    const same = best.find((chosen) => binding(chosen) === binding(candidate) && occurrenceElements(candidate).some((element) => occurrenceElements(chosen).includes(element)));
-    if (same) suppressed.set(candidate.id, reason(`non-identical-${slug(candidate)}-occurrence-reuse`));
+    const reasonId = incompatibility(best, candidate);
+    if (reasonId) suppressed.set(candidate.id, reasonId);
   }
   return { id, counted: [...best].sort((left, right) => left.id.localeCompare(right.id)), suppressed: applicable.filter((candidate) => suppressed.has(candidate.id)).sort((left, right) => left.id.localeCompare(right.id)).map((candidate) => suppress(candidate, suppressed.get(candidate.id)!)) };
 };
