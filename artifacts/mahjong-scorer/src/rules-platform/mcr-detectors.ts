@@ -52,7 +52,7 @@ const irregular = (evidence:McrHandEvidence): McrInterpretation[] => { if(eviden
  if (fs.length===14 && pairs(fs)) out.push({id:'seven-pairs',kind:'seven-pairs',elements:[]});
  if (fs.length===14 && counts(fs).size===13 && [...terminalsHonors].every((f)=>fs.includes(f)) && [...counts(fs).values()].every(n=>n===1||n===2)) out.push({id:'thirteen-orphans',kind:'thirteen-orphans',elements:[]});
  for(const [index,set] of knitted(fs).entries()) { if(fs.length!==14||counts(fs).size!==14||!fs.every(f=>isHonor(f)||set.has(f))) continue; const honors=fs.filter(isHonor).length; if(honors===7) out.push({id:`greater-knitted:${index}`,kind:'greater-knitted',elements:[]}); else if(honors===5||honors===6) out.push({id:`lesser-knitted:${index}`,kind:'lesser-knitted',elements:[]}); }
- for(const [index,set] of knitted(fs).entries()) { const rest=fs.filter(f=>!set.has(f)); if([...set].every(f=>fs.includes(f))&&rest.length===5&&[...counts(rest).values()].sort().join(',')==='2,3') out.push({id:`knitted-straight:${index}`,kind:'knitted-straight',elements:[]}); }
+ for(const [index,set] of knitted(fs).entries()) { const rest=[...fs]; const complete=[...set].every((f)=>{const at=rest.indexOf(f);if(at<0)return false;rest.splice(at,1);return true;}); const c=counts(rest); const pair=[...c].find(([,n])=>n===2)?.[0]; const others=pair?rest.filter(f=>f!==pair):[]; const pung=others.length===3&&new Set(others).size===1; const s=suit(others[0]??''),rs=others.map(rank).sort() as number[]; const chow=!!s&&rs.length===3&&rs[1]===rs[0]!+1&&rs[2]===rs[0]!+2; if(complete&&rest.length===5&&!!pair&&(pung||chow)) out.push({id:`knitted-straight:${index}`,kind:'knitted-straight',elements:[]}); }
  return out;
 };
 
