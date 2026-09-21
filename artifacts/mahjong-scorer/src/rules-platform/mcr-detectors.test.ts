@@ -230,6 +230,10 @@ describe('MCR 2006 detector catalogue',()=>{
  it('enumerates free tiles rather than treating a UI grouping as authoritative',()=>{
   const r=detectMcr2006Fans(base()); expect(r.interpretations.filter(x=>x.kind==='ordinary').length).toBeGreaterThan(0); expect(ids(base())).toContain('mcr2006.fan.self-drawn');
  });
+ it('recognises Knitted Straight with the permitted fixed remaining set',()=>{
+  const input:McrScoringInput={evidence:{fixedGroups:[{kind:'pung',exposure:'melded',tiles:[w('east'),w('east'),w('east')]}],freeTiles:[t('characters',1),t('characters',4),t('characters',7),t('bamboo',2),t('bamboo',5),t('bamboo',8),t('dots',3),t('dots',6),t('dots',9),d('red'),d('red')],winningTile:d('red'),flowerCount:0},context:{winSource:'discard',resolvedWinEvent:'none',lastVisibleCopy:false}};
+  const matches=detectMcr2006Fans(input).candidates.filter(candidate=>candidate.bindingId==='mcr2006.fan.knitted-straight'); expect(matches).toHaveLength(1); expect(matches[0]!.interpretationId).toBe('knitted-straight:0');
+ });
  it('keeps legal repeated occurrences distinct from their stable binding',()=>{
   const input=base(); input.evidence.freeTiles=[t('characters',5),t('characters',5),t('characters',5),t('dots',5),t('dots',5),t('dots',5),t('bamboo',5),t('bamboo',5),t('bamboo',5),t('characters',1),t('characters',2),t('characters',3),t('dots',2),t('dots',2)]; input.evidence.winningTile=t('dots',2);
   const matches=detectMcr2006Fans(input).candidates.filter(x=>x.bindingId==='mcr2006.fan.double-pung'); expect(matches.length).toBe(3); expect(new Set(matches.map(x=>x.id)).size).toBe(3);
