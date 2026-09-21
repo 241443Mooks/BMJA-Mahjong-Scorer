@@ -4,10 +4,30 @@ import type { McrScoringInput } from './mcr-scoring-input';
 
 const t=(s:'characters'|'bamboo'|'dots',rank:number)=>({face:{family:'suit' as const,suit:s,rank}});
 const w=(wind:'east'|'south'|'west'|'north')=>({face:{family:'wind' as const,wind}});
+const d=(dragon:'red'|'green'|'white')=>({face:{family:'dragon' as const,dragon}});
 const base=():McrScoringInput=>({evidence:{fixedGroups:[],freeTiles:[t('characters',1),t('characters',2),t('characters',3),t('dots',4),t('dots',5),t('dots',6),t('bamboo',7),t('bamboo',8),t('bamboo',9),t('characters',7),t('characters',7),t('characters',7),t('dots',5),t('dots',5)],winningTile:t('dots',5),flowerCount:0},context:{winSource:'self-draw',resolvedWinEvent:'none',lastVisibleCopy:false}});
 const ids=(input:McrScoringInput)=>detectMcr2006Fans(input).candidates.map(x=>x.bindingId);
 
 describe('MCR 2006 detector catalogue',()=>{
+ const proves=(input:McrScoringInput, slug:string, value:number)=>{const b=`mcr2006.fan.${slug}`;const found=detectMcr2006Fans(input).candidates.filter(x=>x.bindingId===b);expect(found.length).toBeGreaterThan(0);expect(found.every(x=>x.value===value&&x.sourceLocator?.includes('§3.8.1'))).toBe(true);expect(MCR_2006_FAN_BINDINGS.find(x=>x.id===b)?.stage).toBe('candidate');};
+ it('proves source predicates 1–10 through actual detector routes',()=>{
+  const ordinary=(tiles:McrScoringInput['evidence']['freeTiles']):McrScoringInput=>({evidence:{fixedGroups:[],freeTiles:tiles,winningTile:tiles.at(-1)!,flowerCount:0},context:{winSource:'discard',resolvedWinEvent:'none',lastVisibleCopy:false}});
+  proves(ordinary([w('east'),w('east'),w('east'),w('south'),w('south'),w('south'),w('west'),w('west'),w('west'),w('north'),w('north'),w('north'),d('red'),d('red')]),'big-four-winds',88);
+  proves(ordinary([d('red'),d('red'),d('red'),d('green'),d('green'),d('green'),d('white'),d('white'),d('white'),t('characters',1),t('characters',2),t('characters',3),t('characters',5),t('characters',5)]),'big-three-dragons',88);
+  proves(ordinary([t('bamboo',2),t('bamboo',3),t('bamboo',4),t('bamboo',2),t('bamboo',2),t('bamboo',2),t('bamboo',6),t('bamboo',6),t('bamboo',6),t('bamboo',8),t('bamboo',8),t('bamboo',8),d('green'),d('green')]),'all-green',88);
+  proves(ordinary([t('characters',1),t('characters',1),t('characters',1),t('characters',2),t('characters',3),t('characters',4),t('characters',5),t('characters',6),t('characters',7),t('characters',8),t('characters',9),t('characters',9),t('characters',9),t('characters',5)]),'nine-gates',88);
+  const four=ordinary([t('characters',5),t('characters',5)]);four.evidence.fixedGroups=[{kind:'kong',exposure:'melded',tiles:[t('characters',1),t('characters',1),t('characters',1),t('characters',1)]},{kind:'kong',exposure:'concealed',tiles:[t('dots',2),t('dots',2),t('dots',2),t('dots',2)]},{kind:'kong',exposure:'melded',tiles:[t('bamboo',3),t('bamboo',3),t('bamboo',3),t('bamboo',3)]},{kind:'kong',exposure:'concealed',tiles:[w('east'),w('east'),w('east'),w('east')]}];proves(four,'four-kongs',88);
+  proves(ordinary([t('characters',1),t('characters',1),t('characters',2),t('characters',2),t('characters',3),t('characters',3),t('characters',4),t('characters',4),t('characters',5),t('characters',5),t('characters',6),t('characters',6),t('characters',7),t('characters',7)]),'seven-shifted-pairs',88);
+  proves(ordinary([t('characters',1),t('characters',9),t('bamboo',1),t('bamboo',9),t('dots',1),t('dots',9),w('east'),w('south'),w('west'),w('north'),d('red'),d('green'),d('white'),t('characters',1)]),'thirteen-orphans',88);
+  proves(ordinary([t('characters',1),t('characters',1),t('characters',1),t('characters',9),t('characters',9),t('characters',9),t('bamboo',1),t('bamboo',1),t('bamboo',1),t('bamboo',9),t('bamboo',9),t('bamboo',9),t('dots',1),t('dots',1)]),'all-terminals',64);
+  proves(ordinary([w('east'),w('east'),w('east'),w('south'),w('south'),w('south'),w('west'),w('west'),w('west'),t('characters',1),t('characters',2),t('characters',3),w('north'),w('north')]),'little-four-winds',64);
+  proves(ordinary([d('red'),d('red'),d('red'),d('green'),d('green'),d('green'),t('characters',1),t('characters',2),t('characters',3),t('bamboo',4),t('bamboo',5),t('bamboo',6),d('white'),d('white')]),'little-three-dragons',64);
+ });
+ it('rejects the pinned malformed terminal-Chow and competing wait routes',()=>{
+  const malformed=base(); malformed.evidence.freeTiles=[t('characters',1),t('characters',2),t('characters',3),t('characters',1),t('characters',2),t('characters',3),t('dots',7),t('dots',8),t('dots',9),t('dots',7),t('dots',8),t('dots',9),t('bamboo',5),t('bamboo',5)]; malformed.evidence.winningTile=t('bamboo',5); expect(ids(malformed)).not.toContain('mcr2006.fan.three-suited-terminal-chows');
+  const competing=base(); competing.evidence.freeTiles=[t('characters',1),t('characters',1),t('characters',1),t('characters',1),t('characters',2),t('characters',2),t('characters',2),t('characters',2),t('characters',3),t('characters',3),t('characters',4),t('characters',5),t('characters',5),t('characters',5)]; competing.evidence.winningTile=t('characters',5); expect(ids(competing)).not.toContain('mcr2006.fan.single-wait');
+  const irregular=base(); irregular.evidence.freeTiles=[t('characters',1),t('characters',1),t('characters',1),t('characters',1),t('characters',2),t('characters',2),t('characters',2),t('characters',2),t('characters',3),t('characters',3),t('characters',3),t('characters',3),t('characters',6),t('characters',6)]; irregular.evidence.winningTile=t('characters',6); expect(ids(irregular)).not.toContain('mcr2006.fan.single-wait');
+ });
  it('pins all 81 source bindings with source locator and the two later-stage boundaries',()=>{
   expect(MCR_2006_FAN_BINDINGS).toHaveLength(81);
   expect(MCR_2006_FAN_BINDINGS.map(x=>x.id)).toEqual(Array.from({length:81},(_,i)=>`mcr2006.fan.${MCR_2006_FAN_BINDINGS[i]!.id.slice('mcr2006.fan.'.length)}`));

@@ -50,7 +50,7 @@ const terminalsHonors = new Set(['characters:1','characters:9','bamboo:1','bambo
 const knitted = (faces:readonly Face[]) => { const groups=[[1,4,7],[2,5,8],[3,6,9]]; const ss:Suit[]=['characters','bamboo','dots']; return [[0,1,2],[0,2,1],[1,0,2],[1,2,0],[2,0,1],[2,1,0]].map((permutation)=>new Set(permutation.flatMap((p,i)=>groups[i]!.map((r)=>`${ss[p]!}:${r}`)))); };
 const irregular = (evidence:McrHandEvidence): McrInterpretation[] => { if(evidence.fixedGroups.length) return []; const fs=evidence.freeTiles.map(face); const out:McrInterpretation[]=[];
  if (fs.length===14 && pairs(fs)) out.push({id:'seven-pairs',kind:'seven-pairs',elements:[]});
- if (fs.length===14 && fs.filter(f=>terminalsHonors.has(f)).length===14 && counts(fs).size===13 && [...counts(fs).values()].every(n=>n===1||n===2)) out.push({id:'thirteen-orphans',kind:'thirteen-orphans',elements:[]});
+ if (fs.length===14 && counts(fs).size===13 && [...terminalsHonors].every((f)=>fs.includes(f)) && [...counts(fs).values()].every(n=>n===1||n===2)) out.push({id:'thirteen-orphans',kind:'thirteen-orphans',elements:[]});
  for(const [index,set] of knitted(fs).entries()) { if(fs.length!==14||counts(fs).size!==14||!fs.every(f=>isHonor(f)||set.has(f))) continue; const honors=fs.filter(isHonor).length; if(honors===7) out.push({id:`greater-knitted:${index}`,kind:'greater-knitted',elements:[]}); else if(honors===5||honors===6) out.push({id:`lesser-knitted:${index}`,kind:'lesser-knitted',elements:[]}); }
  return out;
 };
