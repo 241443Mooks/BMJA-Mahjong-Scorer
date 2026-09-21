@@ -1,15 +1,17 @@
 # MCR 2006 correctness corpus — completion audit
 
-Status: **research-complete / implementation handoff ready**  
-Issue: #176  
-Profile target: `mcr-wmo-2006@0.x`  
-Authority: WMO *Mahjong Competition Rules*, first edition / first printing July 2006 (Green Book), distributed/referenced by EMA as the detailed MCR rules authority.
+Status: **research-complete / executable-predicate handoff ready**  
+Original research issue: #176  
+Predicate-correction issue: #303  
+Profile target: `mcr-wmo-2006@0.x`
 
-## Purpose
+Authority: World Mahjong Organization, *Mahjong Competition Rules*, first edition / first printing July 2006 (“Green Book”), English edition. The English edition states that a translation/different-understanding dispute is settled against the original Chinese edition; implementation must stop for source review rather than guess if such an ambiguity remains material.
 
-This document closes the pre-code research gate for the Mahjong Reference / Table Companion MCR profile.
+## Purpose and correction history
 
-The product boundary is deliberately narrow:
+This document audits whether engineering can implement the Mahjong Reference / Table Companion MCR profile without rediscovering or guessing the rules.
+
+The product boundary remains:
 
 ```text
 resolved physical hand + score-relevant context
@@ -18,13 +20,11 @@ resolved physical hand + score-relevant context
 → next table state
 ```
 
-Mahjong Reference does not simulate the wall, turns, claims, calls or referee procedure. It records only physical-table facts that can change scoring, settlement or progression.
+The original #176 audit correctly established source identity, the 81-fan index, evidence scope, interaction principles, qualification, settlement and progression. It was, however, too optimistic when it described the corpus as “implementation handoff ready”: the first bounded #299 preflight demonstrated that concise detector synopses were not sufficient to implement every detector and every positive fixture without rereading the source or making semantic choices.
 
-The question for #176 is therefore not “have we modelled every action in MCR?” It is:
+Issue #303 corrects that gap. `MCR_DETECTOR_PREDICATES_2006.md` now provides the executable-predicate layer between the concise catalogue and runtime code.
 
-> Can engineering implement a deterministic MCR scorer/game recorder without having to rediscover the rules?
-
-The answer after this audit is **yes**.
+Result: **the handoff claim is now predicate-ready, not merely catalogue-index ready.**
 
 ---
 
@@ -35,45 +35,84 @@ Pinned authority:
 - World Mahjong Organization, *Mahjong Competition Rules*;
 - first edition / first printing July 2006;
 - Green Book;
-- English edition distributed/referenced by the European Mahjong Association;
-- repo source ID `mcr-ema`.
+- repo source identity `source.mcr-ema-green-book-2006` / `mcr-ema` as already used by the profile corpus.
 
-The EMA MCR page continues to identify the 2006 Green Book as the detailed MCR rules source.
+The source contains:
 
-A later formal rules edition must become a new profile/version. It must not silently alter `mcr-wmo-2006` games.
+- the permitted winning structures in §3.7.2;
+- the complete 81-fan table in §3.8.1;
+- the five basic-point counting principles in §3.9.1;
+- Appendix 1 definitions, examples and inclusion/exclusion notes;
+- the explicit rule that the eight-point minimum excludes Flower points in §3.11.6.6.
 
-Result: **PASS**.
-
----
-
-## 2. Catalogue audit — 81 / 81 fan
-
-`MCR_FAN_CATALOGUE_2006.md` contains all 81 fan in formal order.
-
-Every binding records:
-
-- stable project ID;
-- MCR fan name;
-- point value;
-- independent detector synopsis;
-- minimum evidence category;
-- Green Book locator.
-
-The catalogue therefore supplies the complete source-bound data contract from 88-point fan down to 1-point fan and Flower Tiles.
-
-Research does **not** require 81 separately hand-authored example hands. Engineering acceptance does require positive detector coverage for every binding when the scorer is implemented.
+A later formal edition must be a new profile/version and must not silently alter `mcr-wmo-2006`.
 
 Result: **PASS**.
 
 ---
 
-## 3. Interaction / non-combination audit
+## 2. Catalogue and executable-predicate audit — 81 / 81 fan
 
-MCR interaction is intentionally represented in two layers rather than as a guessed 81×81 exclusion matrix.
+`MCR_FAN_CATALOGUE_2006.md` remains the concise source-bound index. It records all 81 fan in formal order with stable binding ID, name, point value, evidence category and Green Book locator.
 
-### Layer A — general counting principles
+`MCR_DETECTOR_PREDICATES_2006.md` now adds, for every one of those 81 bindings:
 
-Green Book §3.9.1 defines five evaluator-wide principles:
+- stage classification;
+- implementation-ready predicate;
+- required evidence;
+- candidate-occurrence model;
+- deterministic positive fixture recipe;
+- detector-boundary notes;
+- retained §3.8.1 / Appendix 1 locator.
+
+It also pins the cases that blocked the first #299 attempt:
+
+- the exact Reversible Tiles set;
+- the `147 / 258 / 369` one-to-one knitted suit assignment;
+- the Greater-vs-Lesser Honors and Knitted boundary;
+- complete permitted irregular structures;
+- pre-win reconstruction and exact Edge / Closed / Single Wait gates;
+- repeated candidate occurrence identity;
+- Chicken Hand as later fallback semantics;
+- Flower Tiles as post-qualification bonus semantics.
+
+Result: **PASS — 81/81 predicate contracts and 81/81 positive/correct-stage fixture recipes are now research-owned.**
+
+---
+
+## 3. Decomposition-ready evidence audit
+
+The original evidence contract correctly required alternate lawful decompositions and wait reconstruction, but the first production input shape represented the hand as already-resolved groups. #302 corrected that substrate before detector implementation.
+
+The source-facing runtime boundary is now:
+
+```text
+fixed declared groups
++ ungrouped free/concealed tile multiset
++ recorded winning tile
++ Flower count
++ separate trusted context
+```
+
+This permits:
+
+- ordinary decomposition enumeration independent of UI grouping;
+- irregular structure recognition;
+- deterministic removal of one winning-tile occurrence to reconstruct the pre-win hand;
+- physical multiplicity validation across fixed and free tiles;
+- retained exposure state for melded groups and declared concealed Kongs.
+
+Result: **PASS**.
+
+---
+
+## 4. Interaction / non-combination audit
+
+MCR interaction remains deliberately split from detection.
+
+### General §3.9.1 principles
+
+The evaluator must implement:
 
 1. Non-Repeat;
 2. Non-Separation;
@@ -81,128 +120,105 @@ Green Book §3.9.1 defines five evaluator-wide principles:
 4. High-versus-Low;
 5. Account-Once.
 
-These govern interactions that cannot be truthfully represented as simple pairwise `cannotCombineWith` metadata.
+These cannot truthfully be reduced to a guessed pairwise exclusion matrix.
 
-### Layer B — source-owned fan-specific relationships
+### Source-owned specific relationships
 
-The catalogue separately records fan-specific inclusion/exclusion/event rules where the formal fan definition adds a special relationship.
+The catalogue/golden corpus retain named inclusion/exclusion rules for the high-risk families, including Wind/Dragon hierarchy, Chow/Pung/Kong hierarchy, concealed-hand hierarchy, terminal/honor composition, waits, replacement events, Last Tile, and Flowers.
 
-The explicit interaction transcription covers the high-risk families including:
+The predicate corpus additionally preserves occurrence identity rather than deduplicating by binding ID. This is required by source examples that count some lower fan more than once.
 
-- Wind / Dragon hierarchy;
-- concealed-hand hierarchy;
-- Pung / Kong hierarchy;
-- pair / irregular-hand implication rules;
-- Chow hierarchy and repeated-pattern counting;
-- flush / terminal / simple / honor composition implications;
-- wait restrictions;
-- Last Tile Draw / Self-Drawn;
-- replacement-tile distinctions;
-- Robbing the Kong / Last Tile;
-- Melded Hand / Single Wait;
-- Flowers after qualification.
+One further source arithmetic rule is now explicitly pinned for #300: Appendix 1 #57 states that one melded Kong plus one concealed Kong scores six points. The predicate corpus records the representation needed to preserve that result without inventing an 82nd fan.
 
-The unusual formal wording around fan 14 (Quadruple Chow) and fan 15 (Four Pure Shifted Pungs) has been explicitly treated as source-owned rather than “corrected” from English pattern names. General Non-Repeat still applies independently to structurally implied lower fan.
-
-No remaining interaction is marked `research-required` for the scorer handoff. If implementation exposes a contradiction with the pinned source, it returns to source review rather than being guessed in code.
-
-Result: **PASS**.
+Result: **PASS for source contract; executable interaction closure remains intentionally owned by #300.**
 
 ---
 
-## 4. Evidence completeness audit
+## 5. Evidence completeness audit
 
-`MCR_SCORE_EVIDENCE_CONTRACT.md` proves that most of the apparent complexity is derivable from the submitted hand.
+Derivable from submitted hand evidence:
 
-### Derivable from tile/group evidence
-
-Includes:
-
-- winning structure;
-- legal decompositions;
+- ordinary and irregular winning structures;
+- lawful decompositions;
 - Chow/Pung/Kong/pair structure;
 - exposure/concealment;
-- suit/rank/honor composition;
-- ordinary and irregular structural fan;
+- suit/rank/Honor composition;
 - Kong and concealed-Pung counts;
 - shifted/double/triple set relationships;
-- Tile Hog;
-- waits reconstructed from the pre-win state when the winning tile is known.
+- Tile Hog and All Types;
+- wait candidates from reconstructed pre-win state.
 
-### Trusted tracked-game context
+Trusted tracked-game context supplies facts already known to the product, such as seat wind, prevailing wind and win source.
 
-Includes:
+The deliberately small external evidence set is:
 
-- player identity;
-- seat wind;
-- prevailing wind;
-- current dealer;
-- discarder identity for a discard win;
-- profile/version.
-
-### Small external evidence set
-
-Only facts not safely derivable or already held by the game need confirmation:
-
-- discard vs self-draw;
-- winning tile;
-- finite special win event where applicable;
-- whether the winning tile was the last visible copy of that tile kind;
+- resolved win source/event where not already known;
+- whether the winning tile was the final visible copy when Last Tile is material;
 - Flower count;
-- seat / prevailing wind only for standalone scoring when no tracked-game context exists.
+- seat/prevailing wind only when not already held by a tracked game.
 
-No general wall/discard/call history is required.
+No full wall, discard, claim, call or referee history is required.
 
 Result: **PASS**.
 
 ---
 
-## 5. Qualification and Flowers audit
+## 6. Qualification, Chicken Hand and Flowers audit
 
-The corpus separates:
+The profile order remains:
 
 ```text
-non-Flower qualifying fan subtotal
+ordinary non-Flower candidate detection
+→ interaction / lawful interpretation
+→ Chicken Hand fallback where appropriate
+→ non-Flower qualifying subtotal
 → require >= 8
-→ then add Flower points
+→ Flower bonus
 → Basic Points
 ```
 
-This prevents Flower Tiles from rescuing an otherwise sub-eight Hu.
+The Green Book false-Hu rule expressly excludes Flower points from the minimum eight points.
 
-Golden fixtures include both:
+Therefore:
 
-- a seven-point non-Flower hand with Flowers that remains illegal;
-- an exactly-eight non-Flower hand where Flowers then increase Basic Points.
+- Chicken Hand is not an ordinary shape detector;
+- Flower Tiles never enter the non-Flower subtotal;
+- Flowers cannot rescue a sub-eight hand.
 
-Chicken Hand is also pinned as an 8-point fallback only when no other ordinary non-Flower fan exists.
+Named golden fixtures protect both sides of the eight-point boundary.
 
 Result: **PASS**.
 
 ---
 
-## 6. Event scoring audit
+## 7. Event and wait audit
 
-Named fixture coverage exists for every distinct external-event mechanism needed by the product boundary:
+The finite resolved-event model covers:
 
 - Last Tile Draw;
-- Flower replacement;
+- Last Tile Claim;
 - Kong replacement;
-- Robbing the Kong;
-- Last Tile as final visible copy;
-- Edge / Closed / Single Wait derivation.
+- Flower replacement;
+- Robbing the Kong.
 
-The product records the **resolved event**, not the live procedure that produced it.
+Last Tile is separately represented by the final-visible-copy fact.
+
+The predicate corpus now fixes wait derivation as a pre-win property:
+
+1. remove one recorded winning tile;
+2. enumerate all legal winning tile faces;
+3. require the recorded face to be the sole winning face;
+4. classify Edge / Closed / Single by the winning tile's role in each lawful candidate interpretation.
+
+The player is never asked to choose a favourable wait label.
 
 Result: **PASS**.
 
 ---
 
-## 7. Settlement audit
+## 8. Settlement and progression audit
 
-The scorer emits accepted Basic Points `B`; settlement consumes the accepted result without recalculating fan.
-
-Pinned cases:
+Settlement remains downstream of accepted Basic Points `B`.
 
 ### Discard win
 
@@ -218,17 +234,7 @@ other loser -> winner: 8
 each loser -> winner: 8 + B
 ```
 
-Golden fixtures include positive discard/self-draw cases, Flowers affecting accepted Basic Points, and an illegal sub-eight hand emitting no ordinary win settlement.
-
-No East multiplier and no British loser-to-loser difference settlement.
-
-Result: **PASS**.
-
----
-
-## 8. Progression / game-end audit
-
-For the ordinary Table Companion profile:
+Ordinary Table Companion progression remains:
 
 ```text
 after every completed hand: dealer passes
@@ -237,89 +243,37 @@ East → South → West → North
 completion of fourth North dealer position: game complete
 ```
 
-Fixture coverage includes:
-
-- East wins;
-- non-East wins;
-- draw / no winner;
-- round transition;
-- final game completion.
-
-Winner identity does not cause dealer retention.
-
-Tournament clocks and post-session ranking/Table Points are outside ordinary game progression.
+Tournament clocks, umpire penalties and post-session Table Points remain outside deterministic hand scoring.
 
 Result: **PASS**.
 
 ---
 
-## 9. Procedure / penalty scope audit
+## 9. Correctness corpus coverage
 
-The Green Book contains tournament procedure and penalties, but Mahjong Reference is not an automatic referee.
-
-Therefore the deterministic scorer does not require:
-
-- claim priority history;
-- call timing;
-- wall position;
-- foul detection history;
-- umpire identity/decision process;
-- tournament clock.
-
-A future tournament feature may record an already-decided adjustment as a separate manual/profile-owned transaction with provenance. It is not inferred from the final hand.
-
-Result: **PASS / deliberately out of automatic scorer scope**.
-
----
-
-## 10. Golden fixture coverage audit
-
-`MCR_GOLDEN_FIXTURES_2006.md` covers the distinct behaviour families engineering must preserve:
-
-| Behaviour family | Coverage |
-|---|---|
-| source-owned fan interaction | yes |
-| general Non-Repeat / interpretation policy | yes |
-| irregular / special structures | catalogue contract + implementation detector gate |
-| alternate decomposition | evaluator/property-test gate |
-| exactly-eight qualification | yes |
-| sub-eight failure | yes |
-| Flowers after qualification | yes |
-| Chicken Hand fallback | yes |
-| self-draw / discard context | yes |
-| special winning events | yes |
-| Last Tile | yes |
-| wait derivation | yes |
-| discard settlement | yes |
-| self-draw settlement | yes |
-| illegal-win settlement suppression | yes |
-| dealer always passes | yes |
-| draw progression | yes |
-| round transition | yes |
-| four-round game end | yes |
-| missing external evidence fails closed | yes |
-| tournament penalty excluded from fan arithmetic | yes |
-
-The remaining requirement “positive detector fixture for every one of the 81 bindings” is an **engineering test-generation requirement**, not missing Mahjong research. The source-bound expected definition/value already exists for all 81.
-
-Result: **PASS for research handoff**.
-
----
-
-## 11. Handoff decision
-
-Issue #176 has met its research completion definition.
-
-Engineering can now proceed without reconstructing MCR research from scratch, once the shared rules-platform prerequisites are available.
-
-The implementation contract is:
+The implementation-facing source contract is now:
 
 1. `MCR_PROFILE_CROSSWALK.md` — profile boundary and implementation sequence;
-2. `MCR_FAN_CATALOGUE_2006.md` — all 81 source-bound fan;
-3. `MCR_SCORE_EVIDENCE_CONTRACT.md` — minimum scorer/table evidence;
-4. `MCR_GOLDEN_FIXTURES_2006.md` — regression oracles;
-5. this audit — proof that research scope is closed rather than merely paused.
+2. `MCR_FAN_CATALOGUE_2006.md` — stable 81-fan index;
+3. `MCR_DETECTOR_PREDICATES_2006.md` — 81/81 executable predicates, occurrence rules and positive fixture recipes;
+4. `MCR_SCORE_EVIDENCE_CONTRACT.md` — minimum scorer/table evidence and product boundary;
+5. `MCR_GOLDEN_FIXTURES_2006.md` — named integration/regression oracles;
+6. this audit — research-handoff completeness check.
 
-No MCR runtime code is introduced by #176.
+The previous statement that per-binding positive fixtures were merely an engineering test-generation task is superseded. The **test code** remains engineering work; the expected predicate and deterministic positive-fixture recipe are now part of the research contract.
 
-Any future discovery that changes scoring semantics must identify the source/version, update the corpus deliberately, and change the executable semantic revision/profile fingerprint as required by the rules platform.
+Result: **PASS**.
+
+---
+
+## 10. Handoff decision
+
+The source-research blocker exposed by the first #299 attempt is closed by #303.
+
+Engineering may restart #299 only after this corrected corpus is reviewed and merged. #299 may implement candidate detection/evidence/decomposition from the pinned contracts, but it must still stop rather than guess if a real contradiction appears.
+
+#300 remains responsible for the five counting principles, source-owned combination/suppression closure, Chicken Hand final fallback, highest-lawful interpretation, qualification and golden scoring closure.
+
+No MCR runtime detector code is introduced by this research correction.
+
+Any future discovery that changes scoring semantics must identify the source/version, update the corpus deliberately, and change the executable semantic revision/profile fingerprint where required by the rules platform.
