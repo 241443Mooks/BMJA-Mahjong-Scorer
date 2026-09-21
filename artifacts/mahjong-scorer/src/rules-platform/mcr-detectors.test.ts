@@ -1,0 +1,43 @@
+import { describe, expect, it } from 'vitest';
+import { detectMcr2006Fans, MCR_2006_FAN_BINDINGS } from './mcr-detectors';
+import type { McrScoringInput } from './mcr-scoring-input';
+
+const t=(s:'characters'|'bamboo'|'dots',rank:number)=>({face:{family:'suit' as const,suit:s,rank}});
+const w=(wind:'east'|'south'|'west'|'north')=>({face:{family:'wind' as const,wind}});
+const base=():McrScoringInput=>({evidence:{fixedGroups:[],freeTiles:[t('characters',1),t('characters',2),t('characters',3),t('dots',4),t('dots',5),t('dots',6),t('bamboo',7),t('bamboo',8),t('bamboo',9),t('characters',7),t('characters',7),t('characters',7),t('dots',5),t('dots',5)],winningTile:t('dots',5),flowerCount:0},context:{winSource:'self-draw',resolvedWinEvent:'none',lastVisibleCopy:false}});
+const ids=(input:McrScoringInput)=>detectMcr2006Fans(input).candidates.map(x=>x.bindingId);
+
+describe('MCR 2006 detector catalogue',()=>{
+ it('pins all 81 source bindings with source locator and the two later-stage boundaries',()=>{
+  expect(MCR_2006_FAN_BINDINGS).toHaveLength(81);
+  expect(MCR_2006_FAN_BINDINGS.map(x=>x.id)).toEqual(Array.from({length:81},(_,i)=>`mcr2006.fan.${MCR_2006_FAN_BINDINGS[i]!.id.slice('mcr2006.fan.'.length)}`));
+  expect(MCR_2006_FAN_BINDINGS.every(x=>x.sourceLocator.length>0)).toBe(true);
+  expect(MCR_2006_FAN_BINDINGS.find(x=>x.id==='mcr2006.fan.chicken-hand')?.stage).toBe('fallback');
+  expect(MCR_2006_FAN_BINDINGS.find(x=>x.id==='mcr2006.fan.flower-tiles')?.stage).toBe('post-qualification');
+ });
+ it('enumerates free tiles rather than treating a UI grouping as authoritative',()=>{
+  const r=detectMcr2006Fans(base()); expect(r.interpretations.filter(x=>x.kind==='ordinary').length).toBeGreaterThan(0); expect(ids(base())).toContain('mcr2006.fan.self-drawn');
+ });
+ it('keeps legal repeated occurrences distinct from their stable binding',()=>{
+  const input=base(); input.evidence.freeTiles=[t('characters',5),t('characters',5),t('characters',5),t('dots',5),t('dots',5),t('dots',5),t('bamboo',5),t('bamboo',5),t('bamboo',5),t('characters',1),t('characters',2),t('characters',3),t('dots',2),t('dots',2)]; input.evidence.winningTile=t('dots',2);
+  const matches=detectMcr2006Fans(input).candidates.filter(x=>x.bindingId==='mcr2006.fan.double-pung'); expect(matches.length).toBe(3); expect(new Set(matches.map(x=>x.id)).size).toBe(3);
+ });
+ it('uses the exact reversible set and rejects an excluded face',()=>{
+  const input=base(); input.evidence.freeTiles=[t('dots',1),t('dots',2),t('dots',3),t('dots',3),t('dots',4),t('dots',5),t('bamboo',4),t('bamboo',5),t('bamboo',6),t('bamboo',8),t('bamboo',8),t('bamboo',8),{face:{family:'dragon',dragon:'white'}},{face:{family:'dragon',dragon:'white'}}]; input.evidence.winningTile={face:{family:'dragon',dragon:'white'}};
+  expect(ids(input)).toContain('mcr2006.fan.reversible-tiles'); input.evidence.freeTiles=[t('bamboo',1),...input.evidence.freeTiles.slice(1)]; expect(ids(input)).not.toContain('mcr2006.fan.reversible-tiles');
+ });
+ it('keeps flower points and Chicken Hand outside ordinary candidates',()=>{
+  const input=base(); input.evidence.flowerCount=8; const r=detectMcr2006Fans(input); expect(r.candidates.some(x=>x.bindingId==='mcr2006.fan.flower-tiles'||x.bindingId==='mcr2006.fan.chicken-hand')).toBe(false); expect(r.flowerCount).toBe(8);
+ });
+ it('distinguishes flower and Kong replacement while preserving Self-Drawn',()=>{
+  const flower=base(); flower.context.resolvedWinEvent='flower-replacement'; expect(ids(flower)).toContain('mcr2006.fan.self-drawn'); expect(ids(flower)).not.toContain('mcr2006.fan.out-with-replacement-tile'); const kong=base(); kong.context.resolvedWinEvent='kong-replacement'; expect(ids(kong)).toContain('mcr2006.fan.out-with-replacement-tile'); expect(ids(kong)).toContain('mcr2006.fan.self-drawn');
+ });
+ it('reconstructs waits globally before assigning an exclusive wait class',()=>{
+  const edge:McrScoringInput={evidence:{fixedGroups:[{kind:'chow',exposure:'melded',tiles:[t('dots',1),t('dots',2),t('dots',3)]},{kind:'pung',exposure:'melded',tiles:[t('bamboo',5),t('bamboo',5),t('bamboo',5)]},{kind:'pung',exposure:'melded',tiles:[w('east'),w('east'),w('east')]}],freeTiles:[t('characters',1),t('characters',2),t('dots',7),t('dots',7),t('characters',3)],winningTile:t('characters',3),flowerCount:0},context:{winSource:'discard',resolvedWinEvent:'none',lastVisibleCopy:false}};
+  expect(ids(edge)).toContain('mcr2006.fan.edge-wait');
+  const closed={...edge,evidence:{...edge.evidence,freeTiles:[t('characters',2),t('characters',4),t('dots',7),t('dots',7),t('characters',3)]}}; expect(ids(closed)).toContain('mcr2006.fan.closed-wait');
+ });
+ it('fails closed for malformed evidence and surfaces only material trusted wind evidence',()=>{
+  const malformed=base(); malformed.evidence.winningTile=t('dots',1); expect(detectMcr2006Fans(malformed).interpretations).toEqual([]); expect(detectMcr2006Fans(base()).missingEvidenceIds).not.toContain('evidence.seat-wind'); const withWind=base(); withWind.evidence.freeTiles=[t('characters',1),t('characters',2),t('characters',3),t('dots',4),t('dots',5),t('dots',6),t('bamboo',7),t('bamboo',8),t('bamboo',9),w('east'),w('east'),w('east'),t('dots',5),t('dots',5)]; withWind.evidence.winningTile=t('dots',5); expect(detectMcr2006Fans(withWind).missingEvidenceIds).toContain('evidence.seat-wind');
+ });
+});
