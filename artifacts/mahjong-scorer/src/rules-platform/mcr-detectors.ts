@@ -1,7 +1,7 @@
 import type { PhysicalTileEvidence } from './types';
 import type { McrHandEvidence, McrScoreContext } from './mcr-scoring-input';
 import { removeMcrWinningTileFromFreeTiles, validateMcrScoringInput } from './mcr-scoring-input';
-import type { PatternAccumulatorCandidate } from './pattern-accumulator-runtime';
+import type { PatternAccumulatorCandidate, PatternAccumulatorStageContracts } from './pattern-accumulator-runtime';
 
 type Suit = 'characters' | 'bamboo' | 'dots';
 type Face = string;
@@ -25,7 +25,12 @@ const combinations = <T>(items: readonly T[], n: number): T[][] => n === 0 ? [[]
 const sorted = <T>(items: readonly T[], f: (x: T) => string) => [...items].sort((a,b) => f(a).localeCompare(f(b)));
 
 const counts = (faces: readonly Face[]) => new Map(faces.map((f) => [f, faces.filter((x) => x === f).length]));
-const fixedElements = (evidence: McrHandEvidence): Element[] => evidence.fixedGroups.map((group, index) => ({ id: `fixed:${index}`, kind: group.kind, faces: group.tiles.map(face), fixed: group.exposure }));
+/** Physical group order is presentation-only; faces and occurrence ordinals are canonical. */
+const fixedElements = (evidence: McrHandEvidence): Element[] => {
+ const groups = evidence.fixedGroups.map((group) => ({ kind: group.kind, fixed: group.exposure, faces: group.tiles.map(face).sort() }));
+ const ordered = groups.sort((a,b)=>`${a.kind}:${a.fixed}:${a.faces.join(',')}`.localeCompare(`${b.kind}:${b.fixed}:${b.faces.join(',')}`));
+ return ordered.map((group,index)=>({ ...group, id:`fixed:${group.kind}:${group.fixed}:${group.faces.join(',')}:${ordered.slice(0,index).filter(x=>x.kind===group.kind&&x.fixed===group.fixed&&x.faces.join(',')===group.faces.join(',')).length}` }));
+};
 const ordinary = (evidence: McrHandEvidence): McrInterpretation[] => {
  const fixed = fixedElements(evidence); const needSets = 4 - fixed.length; if (needSets < 0) return [];
  const free = evidence.freeTiles.map(face); const needed = needSets * 3 + 2; if (free.length !== needed) return [];
@@ -114,4 +119,11 @@ export const detectMcr2006Fans = (input:{ evidence:McrHandEvidence; context:McrS
  const faces=winningFaces(evidence); if(faces.length===1&&faces[0]===winner){const routeRoles=interpretations.flatMap(i=>roles(i,winner).map(r=>({i,r}))); const kinds=new Set(routeRoles.map(x=>x.r)); if(routeRoles.length&&kinds.size===1&&![...kinds][0]!.includes('other')) for(const {i,r} of routeRoles) candidate(out,`${r}-wait`,i.id,'winning-role');}
  const preFree=removeMcrWinningTileFromFreeTiles(evidence.freeTiles,evidence.winningTile); if(context.winSource==='discard'&&evidence.fixedGroups.length===4&&evidence.fixedGroups.every(g=>g.exposure==='melded')&&preFree?.length===1&&face(preFree[0]!)===winner&&faces.length===1) candidate(out,'melded-hand',ordinaryOnly[0]?.id??'ordinary','pair');
  return {bindings:MCR_2006_FAN_BINDINGS,interpretations,candidates:sorted(out,x=>x.id),missingEvidenceIds:[...new Set(missing)].sort(),flowerCount:evidence.flowerCount};
+};
+
+/** Production catalogue evidence seam; #300 supplies only the later interaction stages. */
+export const MCR_2006_EVIDENCE_POLICY_ID = 'evidence-policy.mcr-wmo-2006';
+export const MCR_2006_INPUT_EVIDENCE: PatternAccumulatorStageContracts<{ evidence:McrHandEvidence; context:McrScoreContext }>['inputEvidence'] = {
+ validate: validateMcrScoringInput,
+ requiredEvidence: (input) => detectMcr2006Fans(input).missingEvidenceIds,
 };

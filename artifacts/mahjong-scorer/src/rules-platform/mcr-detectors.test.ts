@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { detectMcr2006Fans, MCR_2006_FAN_BINDINGS } from './mcr-detectors';
+import { detectMcr2006Fans, MCR_2006_FAN_BINDINGS, MCR_2006_EVIDENCE_POLICY_ID, MCR_2006_INPUT_EVIDENCE } from './mcr-detectors';
 import type { McrScoringInput } from './mcr-scoring-input';
 
 const t=(s:'characters'|'bamboo'|'dots',rank:number)=>({face:{family:'suit' as const,suit:s,rank}});
@@ -50,5 +50,11 @@ describe('MCR 2006 detector catalogue',()=>{
  });
  it('does not emit direct fan paths without a lawful completion',()=>{
   const bad=base(); bad.evidence.freeTiles=[t('characters',5),t('characters',5),t('characters',5),t('characters',5),t('dots',1),t('dots',4),t('dots',7),t('bamboo',2),t('bamboo',5),t('bamboo',8),t('dots',2),t('dots',5),t('dots',8),t('characters',9)]; bad.evidence.winningTile=t('characters',9); const r=detectMcr2006Fans(bad); expect(r.interpretations).toEqual([]); expect(r.candidates.map(x=>x.bindingId)).not.toEqual(expect.arrayContaining(['mcr2006.fan.tile-hog','mcr2006.fan.knitted-straight','mcr2006.fan.nine-gates']));
+ });
+ it('canonicalises fixed Chow faces and fixed-group occurrence identities',()=>{
+  const input:McrScoringInput={evidence:{fixedGroups:[{kind:'chow',exposure:'melded',tiles:[t('characters',1),t('characters',2),t('characters',3)]},{kind:'chow',exposure:'melded',tiles:[t('dots',1),t('dots',2),t('dots',3)]},{kind:'pung',exposure:'melded',tiles:[w('east'),w('east'),w('east')]}],freeTiles:[t('bamboo',4),t('bamboo',5),t('bamboo',6),t('bamboo',7),t('bamboo',7)],winningTile:t('bamboo',7),flowerCount:0},context:{winSource:'discard',resolvedWinEvent:'none',lastVisibleCopy:false}}; const permuted={...input,evidence:{...input.evidence,fixedGroups:[{...input.evidence.fixedGroups[1]!,tiles:[t('dots',3),t('dots',1),t('dots',2)]},input.evidence.fixedGroups[2]!,{...input.evidence.fixedGroups[0]!,tiles:[t('characters',2),t('characters',3),t('characters',1)]}]}}; const a=detectMcr2006Fans(input),b=detectMcr2006Fans(permuted); expect(a.interpretations.map(x=>x.id)).toEqual(b.interpretations.map(x=>x.id)); expect(a.candidates.map(x=>x.id)).toEqual(b.candidates.map(x=>x.id));
+ });
+ it('exposes the production MCR evidence-policy seam',()=>{
+  expect(MCR_2006_EVIDENCE_POLICY_ID).toBe('evidence-policy.mcr-wmo-2006'); expect(MCR_2006_INPUT_EVIDENCE.validate(base())).toEqual({valid:true}); const unknown=base(); delete unknown.context.lastVisibleCopy; expect(MCR_2006_INPUT_EVIDENCE.requiredEvidence(unknown)).toContain('evidence.last-visible-copy');
  });
 });
