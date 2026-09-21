@@ -16,13 +16,14 @@ describe('pattern accumulator banks',()=>{const total=(r:ReturnType<ReturnType<t
 it('preserves branch-specific interaction alternatives through deterministic selection', () => {
   type AlternateInput = { amount: number; lawful: boolean };
   const ids = PATTERN_ACCUMULATOR_A0_PROOF_IDENTITIES;
+  let qualificationCalls = 0;
   const bank: PatternAccumulatorImplementationBank<AlternateInput> = {
     resultProvenance: { kind: 'production-style-alternate' },
     inputEvidence: new Map([[`${ids.evidencePolicy.id}@1`, { validate: (input: AlternateInput) => input.amount >= 0 ? { valid: true as const } : { valid: false as const, reasonId: 'alternate.invalid' }, requiredEvidence: () => [] }]]),
     catalogue: new Map([[`${ids.catalogue.id}@1`, (input: AlternateInput) => [{ id: 'alternate.low', value: input.amount - 1, interpretationId: 'low' }, { id: 'alternate.high', value: input.amount, interpretationId: 'high' }, { id: 'alternate.low-suppressed', value: 1, interpretationId: 'low' }, { id: 'alternate.high-suppressed', value: 1, interpretationId: 'high' }]]]),
     interaction: new Map([[`${ids.interaction.id}@1`, (candidates, input) => input.lawful ? { alternatives: [{ id: 'low', counted: candidates.filter((candidate) => candidate.id === 'alternate.low'), suppressed: candidates.filter((candidate) => candidate.id === 'alternate.low-suppressed').map((candidate) => ({ candidate, reasonId: 'alternate.low-reason' })) }, { id: 'high', counted: candidates.filter((candidate) => candidate.id === 'alternate.high'), suppressed: candidates.filter((candidate) => candidate.id === 'alternate.high-suppressed').map((candidate) => ({ candidate, reasonId: 'alternate.high-reason' })) }] } : { alternatives: [] }]]),
     interpretation: new Map([[`${ids.interpretation.id}@1`, (interaction) => [...interaction.alternatives].sort((left, right) => right.counted.reduce((sum, candidate) => sum + candidate.value, 0) - left.counted.reduce((sum, candidate) => sum + candidate.value, 0))[0]?.id]]),
-    qualification: new Map([[`${ids.qualification.id}@1`, (subtotal: number) => subtotal >= 8 ? undefined : 'alternate.too-small']]),
+    qualification: new Map([[`${ids.qualification.id}@1`, (subtotal: number) => { qualificationCalls += 1; return subtotal >= 8 ? undefined : 'alternate.too-small'; }]]),
     postQualificationBonus: new Map([[`${ids.postQualificationBonus!.id}@1`, () => 0]]),
     conversion: new Map([[`${ids.conversion!.id}@1`, (value: number) => value]]),
   };
@@ -34,16 +35,21 @@ it('preserves branch-specific interaction alternatives through deterministic sel
   expect(details.suppressedPatterns.map((item) => item.reasonId)).toEqual(['alternate.high-reason']);
   expect(result.decisionTrace.filter((entry) => entry.kind === 'suppress').map((entry) => entry.identities.reasonId)).toEqual(['alternate.high-reason']);
   expect((result.result as unknown as { details: { countedPatterns: readonly { id: string }[]; selectedInterpretationId: string } }).details).toMatchObject({ countedPatterns: [{ id: 'alternate.high' }], selectedInterpretationId: 'high' });
-  expect(score({ amount: 8, lawful: false }).disposition).toEqual({ kind: 'not-qualifying', reasonId: 'pattern-accumulator.no-lawful-alternative' });
+  const noLawful = score({ amount: 8, lawful: false });
+  expect(noLawful.disposition).toEqual({ kind: 'invalid', reasonId: 'pattern-accumulator.no-lawful-alternative' });
+  expect((noLawful.result as unknown as { details: Record<string, unknown> }).details).not.toHaveProperty('selectedInterpretationId');
+  expect(qualificationCalls).toBe(1);
 });
 
 it('keeps a typed MCR detector result compatible without making an MCR policy executable', () => {
   const ids = PATTERN_ACCUMULATOR_A0_PROOF_IDENTITIES;
+  let qualificationCalls = 0;
   const input: McrScoringInput = { evidence: { fixedGroups: [], freeTiles: [{ face: { family: 'suit', suit: 'characters', rank: 1 } }, { face: { family: 'suit', suit: 'characters', rank: 2 } }, { face: { family: 'suit', suit: 'characters', rank: 3 } }, { face: { family: 'suit', suit: 'bamboo', rank: 4 } }, { face: { family: 'suit', suit: 'bamboo', rank: 5 } }, { face: { family: 'suit', suit: 'bamboo', rank: 6 } }, { face: { family: 'suit', suit: 'dots', rank: 7 } }, { face: { family: 'suit', suit: 'dots', rank: 8 } }, { face: { family: 'suit', suit: 'dots', rank: 9 } }, { face: { family: 'wind', wind: 'east' } }, { face: { family: 'wind', wind: 'east' } }, { face: { family: 'wind', wind: 'east' } }, { face: { family: 'suit', suit: 'dots', rank: 5 } }, { face: { family: 'suit', suit: 'dots', rank: 5 } }], winningTile: { face: { family: 'suit', suit: 'dots', rank: 5 } }, flowerCount: 0 }, context: { winSource: 'discard', resolvedWinEvent: 'none', lastVisibleCopy: false } };
-  const bank: PatternAccumulatorImplementationBank<McrScoringInput> = { resultProvenance: { kind: 'mcr-compatibility-proof' }, inputEvidence: new Map([[`${ids.evidencePolicy.id}@1`, { validate: () => ({ valid: true }), requiredEvidence: () => [] }]]), catalogue: new Map([[`${ids.catalogue.id}@1`, (value) => detectMcr2006Fans(value).candidates]]), interaction: new Map([[`${ids.interaction.id}@1`, (candidates, value) => ({ alternatives: value.evidence.flowerCount === 0 ? [{ id: 'detected-facts', counted: candidates, suppressed: [] }, { id: 'lawful-zero', counted: [], suppressed: [] }] : [] })]]), interpretation: new Map([[`${ids.interpretation.id}@1`, () => 'lawful-zero']]), qualification: new Map([[`${ids.qualification.id}@1`, (subtotal) => subtotal === 0 ? 'compatibility.zero-not-qualifying' : undefined]]), postQualificationBonus: new Map([[`${ids.postQualificationBonus!.id}@1`, () => 0]]), conversion: new Map([[`${ids.conversion!.id}@1`, (value) => value]]) };
+  const bank: PatternAccumulatorImplementationBank<McrScoringInput> = { resultProvenance: { kind: 'mcr-compatibility-proof' }, inputEvidence: new Map([[`${ids.evidencePolicy.id}@1`, { validate: () => ({ valid: true }), requiredEvidence: () => [] }]]), catalogue: new Map([[`${ids.catalogue.id}@1`, (value) => detectMcr2006Fans(value).candidates]]), interaction: new Map([[`${ids.interaction.id}@1`, (candidates, value) => ({ alternatives: value.evidence.flowerCount === 0 ? [{ id: 'detected-facts', counted: candidates, suppressed: [] }, { id: 'lawful-zero', counted: [], suppressed: [] }] : [] })]]), interpretation: new Map([[`${ids.interpretation.id}@1`, () => 'lawful-zero']]), qualification: new Map([[`${ids.qualification.id}@1`, (subtotal) => { qualificationCalls += 1; return subtotal === 0 ? 'compatibility.zero-not-qualifying' : undefined; }]]), postQualificationBonus: new Map([[`${ids.postQualificationBonus!.id}@1`, () => 0]]), conversion: new Map([[`${ids.conversion!.id}@1`, (value) => value]]) };
   const detected = detectMcr2006Fans(input).candidates;
   const result = compilePatternAccumulatorHandScorer(artifact(), bank)(input);
   expect((result.result as unknown as { details: { candidatePatterns: readonly { id: string; value: number }[] } }).details.candidatePatterns).toEqual(detected.map(({ interpretationId: _, ...candidate }) => candidate));
   expect(result.disposition).toEqual({ kind: 'not-qualifying', reasonId: 'compatibility.zero-not-qualifying' });
   expect((result.result as unknown as { details: { selectedInterpretationId: string; countedPatterns: readonly unknown[] } }).details).toMatchObject({ selectedInterpretationId: 'lawful-zero', countedPatterns: [] });
+  expect(qualificationCalls).toBe(1);
 });
