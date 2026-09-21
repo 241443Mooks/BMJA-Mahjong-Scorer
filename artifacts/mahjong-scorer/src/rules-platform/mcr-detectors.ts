@@ -75,13 +75,13 @@ export const detectMcr2006Fans = (input:{ evidence:McrHandEvidence; context:McrS
  const pface=(e:Element)=>e.faces[0]!;
  // Hand-wide composition and fixed physical facts.
  hand('all-green',fs.every(f=>['bamboo:2','bamboo:3','bamboo:4','bamboo:6','bamboo:8','dragon:green'].includes(f)));
- hand('four-kongs',kongs.length===4); hand('three-kongs',kongs.length>=3);
+ hand('four-kongs',kongs.length===4); for(const i of ordinaryOnly) if(kongs.length>=3) candidate(out,'three-kongs',i.id,'kongs');
  hand('all-terminals',fs.every(f=>!!rank(f)&&isTerminal(f))); hand('all-terminals-and-honors',fs.every(f=>isTerminal(f)||isHonor(f)));
  hand('all-honors',fs.every(isHonor)); hand('full-flush',suits.size===1&&honors.length===0); hand('half-flush',suits.size===1&&honors.length>0);
  hand('upper-tiles',fs.every(f=>{const r=rank(f);return r!==undefined&&r>=7})); hand('middle-tiles',fs.every(f=>{const r=rank(f);return r!==undefined&&r>=4&&r<=6})); hand('lower-tiles',fs.every(f=>{const r=rank(f);return r!==undefined&&r<=3}));
  hand('upper-four',fs.every(f=>{const r=rank(f);return r!==undefined&&r>=6})); hand('lower-four',fs.every(f=>{const r=rank(f);return r!==undefined&&r<=4})); hand('all-simples',fs.every(f=>{const r=rank(f);return r!==undefined&&r>=2&&r<=8})); hand('no-honors',honors.length===0); hand('one-voided-suit',suits.size===2);
  hand('reversible-tiles',fs.every(f=>['dots:1','dots:2','dots:3','dots:4','dots:5','dots:8','dots:9','bamboo:2','bamboo:4','bamboo:5','bamboo:6','bamboo:8','bamboo:9','dragon:white'].includes(f)));
- hand('seven-pairs',interpretations.some(i=>i.kind==='seven-pairs')); hand('thirteen-orphans',interpretations.some(i=>i.kind==='thirteen-orphans')); hand('greater-honors-knitted',interpretations.some(i=>i.kind==='greater-knitted')); hand('lesser-honors-knitted',interpretations.some(i=>i.kind==='lesser-knitted'));
+ hand('seven-pairs',interpretations.some(i=>i.kind==='seven-pairs')); hand('thirteen-orphans',interpretations.some(i=>i.kind==='thirteen-orphans')); for(const i of interpretations.filter(x=>x.kind==='greater-knitted')) candidate(out,'greater-honors-knitted',i.id,`assignment:${i.id.split(':')[1]}`); for(const i of interpretations.filter(x=>x.kind==='lesser-knitted')) candidate(out,'lesser-honors-knitted',i.id,`assignment:${i.id.split(':')[1]}`);
  const count=counts(fs); if(interpretations.length) for(const [f,n] of count) if(n===4&&!!suit(f)&&!kongs.some(k=>pface(k)===f)) candidate(out,'tile-hog','hand',f);
  if(interpretations.length) for(const [index,set] of knitted(fs).entries()) if([...set].every(f=>fs.includes(f))) candidate(out,'knitted-straight','hand',`assignment:${index}`);
  const pre=removeMcrWinningTileFromFreeTiles(evidence.freeTiles,evidence.winningTile)?.map(face); const winner=face(evidence.winningTile); if(interpretations.length&&!evidence.fixedGroups.some(g=>g.exposure==='melded')&&pre&&pre.length===13){ const sf=suit(winner), rr=rank(winner); const wanted=sf?[1,1,1,2,3,4,5,6,7,8,9,9,9].map(r=>`${sf}:${r}`):[]; if(rr&&pre.slice().sort().join('|')===wanted.slice().sort().join('|')) candidate(out,'nine-gates','hand','pre-win'); }
