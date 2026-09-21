@@ -9,3 +9,5 @@ export * from './classical-validation';
 export * from './outside-the-box-strategies';
 export * from './current-profiles';
 export * from './classical-runtime';
+export * from './mcr-scoring-input';
+export * from './mcr-detectors';
