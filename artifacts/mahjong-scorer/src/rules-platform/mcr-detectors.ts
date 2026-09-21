@@ -6,7 +6,7 @@ import type { PatternAccumulatorCandidate, PatternAccumulatorStageContracts } fr
 type Suit = 'characters' | 'bamboo' | 'dots';
 type Face = string;
 type Element = { id: string; kind: 'chow' | 'pung' | 'kong' | 'pair'; faces: readonly Face[]; fixed?: 'melded' | 'concealed' };
-export type McrInterpretation = { id: string; kind: 'ordinary' | 'seven-pairs' | 'thirteen-orphans' | 'greater-knitted' | 'lesser-knitted'; elements: readonly Element[] };
+export type McrInterpretation = { id: string; kind: 'ordinary' | 'seven-pairs' | 'thirteen-orphans' | 'greater-knitted' | 'lesser-knitted' | 'knitted-straight'; elements: readonly Element[] };
 export type McrFanBinding = { id: string; name: string; value: number; sourceLocator: string; stage: 'candidate' | 'fallback' | 'post-qualification' };
 export type McrDetection = { bindings: readonly McrFanBinding[]; interpretations: readonly McrInterpretation[]; candidates: readonly PatternAccumulatorCandidate[]; missingEvidenceIds: readonly string[]; flowerCount: number };
 
@@ -52,6 +52,7 @@ const irregular = (evidence:McrHandEvidence): McrInterpretation[] => { if(eviden
  if (fs.length===14 && pairs(fs)) out.push({id:'seven-pairs',kind:'seven-pairs',elements:[]});
  if (fs.length===14 && counts(fs).size===13 && [...terminalsHonors].every((f)=>fs.includes(f)) && [...counts(fs).values()].every(n=>n===1||n===2)) out.push({id:'thirteen-orphans',kind:'thirteen-orphans',elements:[]});
  for(const [index,set] of knitted(fs).entries()) { if(fs.length!==14||counts(fs).size!==14||!fs.every(f=>isHonor(f)||set.has(f))) continue; const honors=fs.filter(isHonor).length; if(honors===7) out.push({id:`greater-knitted:${index}`,kind:'greater-knitted',elements:[]}); else if(honors===5||honors===6) out.push({id:`lesser-knitted:${index}`,kind:'lesser-knitted',elements:[]}); }
+ for(const [index,set] of knitted(fs).entries()) { const rest=fs.filter(f=>!set.has(f)); if([...set].every(f=>fs.includes(f))&&rest.length===5&&[...counts(rest).values()].sort().join(',')==='2,3') out.push({id:`knitted-straight:${index}`,kind:'knitted-straight',elements:[]}); }
  return out;
 };
 
