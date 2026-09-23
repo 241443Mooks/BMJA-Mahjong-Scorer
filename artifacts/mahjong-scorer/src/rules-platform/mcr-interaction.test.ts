@@ -116,6 +116,19 @@ describe('interaction.mcr-2006-non-combination', () => {
     expect(alternative.counted.filter((candidate) => candidate.bindingId === 'mcr2006.fan.double-pung')).toHaveLength(2);
   });
 
+  it('keeps All Terminals with Triple Pung and Flower replacement with Self-Drawn', () => {
+    const terminals = ordinary([...pung('characters', 1), ...pung('dots', 1), ...pung('bamboo', 1), ...pung('characters', 9), tile('dots', 9), tile('dots', 9)]);
+    const terminalFans = one(terminals).counted.map((candidate) => candidate.bindingId);
+    expect(terminalFans).toEqual(expect.arrayContaining(['mcr2006.fan.all-terminals', 'mcr2006.fan.triple-pung']));
+
+    const replacement = withFixed([meldedChow('characters', 1)], [...chow('dots', 4), ...chow('bamboo', 7), ...pung('characters', 5), tile('dots', 5), tile('dots', 5)]);
+    replacement.context.winSource = 'self-draw';
+    replacement.context.resolvedWinEvent = 'flower-replacement';
+    const flowerFans = one(replacement).counted.map((candidate) => candidate.bindingId);
+    expect(flowerFans).toContain('mcr2006.fan.self-drawn');
+    expect(flowerFans).not.toContain('mcr2006.fan.out-with-replacement-tile');
+  });
+
   it('keeps a source-independent concealed-Pung fan with All Terminals when the exposure supports it', () => {
     const input = ordinary([...pung('characters', 1), ...pung('dots', 1), ...pung('characters', 9), ...pung('bamboo', 9), tile('dots', 9), tile('dots', 9)]);
     const alternative = one(input);
