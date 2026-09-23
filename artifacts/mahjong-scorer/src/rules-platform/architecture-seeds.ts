@@ -7,7 +7,7 @@ const ids = [
   'seats.winds-4','seats.riichi-winds-4','seats.riichi-sanma-east-south-west','seats.american-four-player',
   'shape.four-sets-pair','shape.five-sets-pair','shape.target-catalogue',
   'validation.classical-standard','validation.hk-profile','validation.mcr-winning-shape','validation.mcr-minimum-win-context','validation.taiwanese-five-sets-pair','validation.riichi-winning-shape','validation.riichi-yaku-required','validation.sanma-no-chii','validation.zung-jung-winning-shape','validation.target-catalogue-match',
-  'evidence.winning-method','evidence.winning-tile-provenance','evidence.seat-wind','evidence.round-wind',
+  'evidence.winning-method','evidence.winning-tile-provenance','evidence.seat-wind','evidence.round-wind','evidence.resolved-win-event','evidence.last-visible-copy','evidence.flower-count',
   'evidence-policy.classical-winning-context','evidence-policy.mt-european-classical-waits','evidence-policy.hk-profile','evidence-policy.mcr-wmo-2006','evidence-policy.taiwanese-profile','evidence-policy.riichi-ema-2025','evidence-policy.riichi-sanma','evidence-policy.zung-jung-1.03','evidence-policy.american-nmjl-style',
   'classical.standard','classical.bindings.mt-european-classical',
   'catalogue.pattern.mt-european-classical-specials','catalogue.pattern.hk-profile-specials','catalogue.pattern.hk-profile','catalogue.pattern.mcr-special-shapes','catalogue.pattern.mcr-wmo-2006','catalogue.pattern.taiwanese-profile-specials','catalogue.pattern.taiwanese-profile','catalogue.pattern.riichi-ema-2025-special-shapes','catalogue.pattern.sanma-profile-special-shapes','catalogue.pattern.zung-jung-special-shapes','catalogue.pattern.zung-jung-1.03-44',

@@ -69,15 +69,18 @@ const currentIds = new Set([
   ...outsideTheBoxStrategyRegistryEntries,
 ].map(({ id }) => id));
 
-/** The single registry used to seal the three current playable profiles. */
-export const currentPlayableRegistry = new RegistryBank([
+/** Registry vocabulary for the existing product profiles; MCR stays non-public. */
+export const currentPlayableRegistryEntries: readonly RegistryEntry[] = [
   ...architectureSeedEntries.filter(({ id }) => !currentIds.has(id)),
   ...MCR_2006_SCORING_REGISTRY_ENTRIES,
   ...currentClassicalRegistryEntries,
   ...classicalStrategyRegistryEntries,
   ...classicalValidationRegistryEntries,
   ...outsideTheBoxStrategyRegistryEntries,
-]);
+];
+
+/** The single registry used to seal the current product profiles. */
+export const currentPlayableRegistry = new RegistryBank(currentPlayableRegistryEntries);
 
 export const CURRENT_CLASSICAL_FAMILY: RulesFamilyDefinition = {
   ...CLASSICAL_WESTERN_VALIDATION_FAMILY,

@@ -66,9 +66,15 @@ const roles = (i:McrInterpretation, winning:Face): readonly ('edge'|'closed'|'si
 const legalWith = (evidence:McrHandEvidence, f:Face): McrInterpretation[] => { const [s,r]=f.split(':'); const tile:PhysicalTileEvidence = s==='wind'?{face:{family:'wind',wind:r}}:s==='dragon'?{face:{family:'dragon',dragon:r}}:{face:{family:'suit',suit:s as Suit,rank:Number(r)}}; const next={...evidence,freeTiles:[...evidence.freeTiles,tile],winningTile:tile}; return [...ordinary(next),...irregular(next)]; };
 const winningFaces = (evidence:McrHandEvidence): readonly Face[] => { const pre=removeMcrWinningTileFromFreeTiles(evidence.freeTiles,evidence.winningTile); if(!pre)return []; const base={...evidence,freeTiles:pre}; const all=[...terminalsHonors,...(['characters','bamboo','dots'] as Suit[]).flatMap(s=>Array.from({length:9},(_,i)=>`${s}:${i+1}`))]; const used=allFaces(base); return all.filter(f=>(used.filter(x=>x===f).length<4)&&legalWith(base,f).length>0); };
 
+/** A1's accepted interpretation resolver, shared with profile validation. */
+export const resolveMcrWinningInterpretations = (input:{ evidence:McrHandEvidence; context:McrScoreContext }): readonly McrInterpretation[] => {
+ const valid=validateMcrScoringInput(input);
+ return valid.valid ? [...ordinary(input.evidence),...irregular(input.evidence)] : [];
+};
+
 export const detectMcr2006Fans = (input:{ evidence:McrHandEvidence; context:McrScoreContext }): McrDetection => {
  const valid=validateMcrScoringInput(input); if(!valid.valid) return {bindings:MCR_2006_FAN_BINDINGS,interpretations:[],candidates:[],missingEvidenceIds:[],flowerCount:0};
- const {evidence,context}=input; const fs=allFaces(evidence); const interpretations=[...ordinary(evidence),...irregular(evidence)]; const out:PatternAccumulatorCandidate[]=[]; const missing:string[]=[];
+ const {evidence,context}=input; const fs=allFaces(evidence); const interpretations=resolveMcrWinningInterpretations(input); const out:PatternAccumulatorCandidate[]=[]; const missing:string[]=[];
  const hand=(slug:string, predicate:boolean)=>interpretations.length>0&&predicate&&candidate(out,slug,'hand','hand');
  const ordinaryOnly=interpretations.filter(i=>i.kind==='ordinary');
  const kongs=fixedElements(evidence).filter(e=>e.kind==='kong'); const melded=kongs.filter(e=>e.fixed==='melded'); const concealed=kongs.filter(e=>e.fixed==='concealed');
