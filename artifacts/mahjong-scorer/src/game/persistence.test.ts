@@ -10,7 +10,7 @@ import {
   recoverableGameForReturn,
   saveGameRecovery,
 } from "./persistence";
-import { BMJA_PROFILE_REF, OUTSIDE_THE_BOX_PROFILE_REF } from "./ruleset";
+import { BMJA_PROFILE_REF, OUTSIDE_THE_BOX_PROFILE_REF, WESTERN_TM_PROFILE_REF } from "./ruleset";
 import { BUZZARD_2000_PROFILE_REF } from './buzzard-2000';
 
 beforeAll(() => initialiseCurrentRulesRuntimes());
@@ -43,6 +43,8 @@ describe("game recovery persistence", () => {
     const buzzard = createBmjaGame(newGame().players, newGame().seats, undefined, 'full-game', BUZZARD_2000_PROFILE_REF);
     saveGameRecovery(storage, buzzard, 'win', 'east', { scores: {}, scoreRecords: {} });
     const snapshot = JSON.parse(storage.getItem(GAME_SNAPSHOT_STORAGE_KEY)!);
+    snapshot.version = 1;
+    snapshot.game.rounds = snapshot.game.rounds.map((round: { input: unknown }) => round.input);
     delete snapshot.game.setup.tableLimit;
     storage.setItem(GAME_SNAPSHOT_STORAGE_KEY, JSON.stringify(snapshot));
     expect(loadGameRecovery(storage)?.game.setup.tableLimit).toBe(600);
@@ -140,29 +142,56 @@ describe("game recovery persistence", () => {
 
   it("persists the exact rules profile identity with new saves", () => {
     const storage = memoryStorage();
-    saveGameRecovery(storage, newGame(), "win", "east", {
+    const game = newGame();
+    saveGameRecovery(storage, game, "win", "east", {
       scores: {},
       scoreRecords: {},
     });
 
     const saved = JSON.parse(storage.getItem(GAME_SNAPSHOT_STORAGE_KEY)!);
-    expect(saved.version).toBe(1);
+    expect(saved.version).toBe(2);
     expect(saved.game.setup.rulesProfile).toEqual(BMJA_PROFILE_REF);
+    expect(saved.game.runtimeFingerprint).toBe(game.runtimeFingerprint);
+    expect(saved.game.rounds).toEqual([]);
+    expect(saved.currentRound.grammar).toBe('classical-points-doubles');
+    expect(loadGameRecovery(storage)?.game.runtimeFingerprint).toBe(game.runtimeFingerprint);
   });
 
   it("recovers legacy v1 snapshots without profile metadata as BMJA 1.0", () => {
     const storage = memoryStorage();
-    saveGameRecovery(storage, newGame(), "win", "east", {
+    const confirmed = confirmHand(newGame(), { outcome: { type: 'win', winnerId: 'east' }, scores: { east: 0, south: 0, west: 0, north: 0 } });
+    saveGameRecovery(storage, confirmed, "win", "east", {
       scores: {},
       scoreRecords: {},
     });
     const legacy = JSON.parse(storage.getItem(GAME_SNAPSHOT_STORAGE_KEY)!);
+    legacy.version = 1;
+    legacy.game.rounds = legacy.game.rounds.map((round: { input: unknown }) => round.input);
     delete legacy.game.setup.rulesProfile;
     storage.setItem(GAME_SNAPSHOT_STORAGE_KEY, JSON.stringify(legacy));
 
     const recovered = loadGameRecovery(storage);
     expect(recovered?.game.setup.rulesProfile).toEqual(BMJA_PROFILE_REF);
     expect(recovered?.game.rulesetId).toBe("bmja");
+    expect(recovered?.game.handHistory).toEqual(confirmed.handHistory);
+  });
+
+  it('keeps valid legacy v1 profile snapshots readable without rewriting them', () => {
+    for (const profile of [BMJA_PROFILE_REF, WESTERN_TM_PROFILE_REF, OUTSIDE_THE_BOX_PROFILE_REF, BUZZARD_2000_PROFILE_REF]) {
+      const storage = memoryStorage();
+      const setup = createBmjaGame(newGame().players, newGame().seats, undefined, 'full-game', profile);
+      const game = confirmHand(setup, { outcome: { type: 'win', winnerId: 'east' }, scores: { east: 0, south: 0, west: 0, north: 0 } });
+      saveGameRecovery(storage, game, 'win', 'east', { scores: {}, scoreRecords: {} });
+      const snapshot = JSON.parse(storage.getItem(GAME_SNAPSHOT_STORAGE_KEY)!);
+      snapshot.version = 1;
+      delete snapshot.game.runtimeFingerprint;
+      snapshot.game.rounds = snapshot.game.rounds.map((round: { input: unknown }) => round.input);
+      storage.setItem(GAME_SNAPSHOT_STORAGE_KEY, JSON.stringify(snapshot));
+      const original = storage.getItem(GAME_SNAPSHOT_STORAGE_KEY);
+      expect(loadGameRecovery(storage)?.game.setup.rulesProfile).toEqual(profile);
+      expect(loadGameRecovery(storage)?.game.handHistory).toEqual(game.handHistory);
+      expect(storage.getItem(GAME_SNAPSHOT_STORAGE_KEY)).toBe(original);
+    }
   });
 
   it("does not silently replace an unknown saved profile with BMJA", () => {
@@ -177,6 +206,17 @@ describe("game recovery persistence", () => {
 
     expect(loadGameRecovery(storage)).toBeNull();
     expect(storage.getItem(GAME_SNAPSHOT_STORAGE_KEY)).toBeNull();
+
+    const legacyStorage = memoryStorage();
+    saveGameRecovery(legacyStorage, newGame(), 'win', 'east', { scores: {}, scoreRecords: {} });
+    const legacy = JSON.parse(legacyStorage.getItem(GAME_SNAPSHOT_STORAGE_KEY)!);
+    legacy.version = 1;
+    delete legacy.game.runtimeFingerprint;
+    legacy.game.rounds = legacy.game.rounds.map((round: { input: unknown }) => round.input);
+    legacy.game.setup.rulesProfile = { id: 'bmja', version: '999' };
+    legacyStorage.setItem(GAME_SNAPSHOT_STORAGE_KEY, JSON.stringify(legacy));
+    expect(loadGameRecovery(legacyStorage)).toBeNull();
+    expect(legacyStorage.getItem(GAME_SNAPSHOT_STORAGE_KEY)).toBeNull();
   });
 
   it("clears a saved game for intentional start-over/new-game actions", () => {
