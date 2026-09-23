@@ -33,6 +33,35 @@ describe('interaction.mcr-2006-non-combination', () => {
     expect(alternative.suppressed.map((item) => item.candidate.bindingId)).toEqual(expect.arrayContaining(['mcr2006.fan.pure-triple-chow', 'mcr2006.fan.pure-double-chow', 'mcr2006.fan.tile-hog', 'mcr2006.fan.no-honors']));
   });
 
+  it('keeps corrected Q001 and Q002 qualification fixtures interaction-neutral', () => {
+    const corrected = (kongForCharacters: boolean): McrScoringInput => {
+      const groups = [
+        kongForCharacters ? kong('characters', 2, 'melded') : meldedPung('characters', 2),
+        meldedPung('dots', 5),
+        meldedPung('bamboo', 8),
+      ];
+      const input = withFixed(groups, [...pung('characters', 4), wind('west'), wind('west')], tile('characters', 4));
+      input.context.winSource = 'self-draw';
+      input.context.resolvedWinEvent = 'none';
+      input.context.lastVisibleCopy = false;
+      input.evidence.flowerCount = 2;
+      return input;
+    };
+    const expected = (input: McrScoringInput, slugs: string[]) => {
+      const detected = detectMcr2006Fans(input);
+      const ordinary = detected.interpretations.find((item) => item.kind === 'ordinary')!;
+      expect(detected.interpretations).toHaveLength(1);
+      const selected = interactMcr2006NonCombination(detected.candidates, input).alternatives.find((item) => item.id === ordinary.id)!;
+      expect(selected.counted.map((item) => item.bindingId).sort()).toEqual(slugs.map((slug) => `mcr2006.fan.${slug}`).sort());
+      expect(selected.counted.reduce((sum, item) => sum + item.value, 0)).toBe(slugs.reduce((sum, slug) => sum + ({ 'all-pungs': 6, 'melded-kong': 1, 'self-drawn': 1 }[slug] ?? 0), 0));
+      expect(detected.candidates.some((item) => ['mixed-shifted-pungs', 'double-pung', 'triple-pung', 'two-concealed-pungs', 'three-concealed-pungs', 'four-concealed-pungs', 'edge-wait', 'closed-wait', 'single-wait', 'chicken-hand'].some((slug) => item.bindingId === `mcr2006.fan.${slug}`))).toBe(false);
+      expect(detected.candidates.some((item) => item.bindingId === 'mcr2006.fan.two-melded-kongs')).toBe(false);
+      expect(detected.flowerCount).toBe(2);
+    };
+    expected(corrected(false), ['all-pungs', 'self-drawn']);
+    expected(corrected(true), ['all-pungs', 'melded-kong', 'self-drawn']);
+  });
+
   it('MCR-F002 preserves Pure Terminal Chows as the only source-owned interaction result', () => {
     const input = withFixed([meldedChow('characters', 1)], [...chow('characters', 1), ...chow('characters', 7), ...chow('characters', 7), tile('characters', 5), tile('characters', 5)], tile('characters', 1));
     const alternative = containing(input, 'pure-terminal-chows');

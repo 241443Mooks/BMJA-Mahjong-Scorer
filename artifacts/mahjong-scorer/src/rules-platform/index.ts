@@ -11,3 +11,4 @@ export * from './current-profiles';
 export * from './classical-runtime';
 export * from './mcr-scoring-input';
 export * from './mcr-detectors';
+export * from './mcr-scoring';
