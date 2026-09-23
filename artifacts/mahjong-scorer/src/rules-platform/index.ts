@@ -12,3 +12,4 @@ export * from './classical-runtime';
 export * from './mcr-scoring-input';
 export * from './mcr-detectors';
 export * from './mcr-scoring';
+export * from './four-wind-always-pass-strategies';
