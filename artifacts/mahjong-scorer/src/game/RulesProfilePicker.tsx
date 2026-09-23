@@ -1,7 +1,7 @@
 import { descriptorForRulesProfile, PUBLIC_RULES_DESCRIPTORS } from './rules-presentation';
 import type { RulesProfileRef } from './types';
 
-/** Non-selectable layout fixture: production always uses the four public descriptors. */
+/** Non-selectable layout fixture: production choices follow descriptor availability for each surface. */
 export const RULES_PROFILE_PICKER_SCALABILITY_FIXTURE = Object.freeze([
   ...PUBLIC_RULES_DESCRIPTORS.map(({ compactLabel, status }) => ({ compactLabel, status })),
   { compactLabel: 'Representative future profile A', status: 'Not publicly selectable' },
@@ -9,6 +9,7 @@ export const RULES_PROFILE_PICKER_SCALABILITY_FIXTURE = Object.freeze([
 ]);
 
 const sameProfile = (left: RulesProfileRef, right: RulesProfileRef) => left.id === right.id && left.version === right.version;
+export const descriptorsForPickerSurface = (surface: 'hand' | 'game') => PUBLIC_RULES_DESCRIPTORS.filter(({ availability }) => surface === 'hand' ? availability.handScorer : availability.gameTracker);
 
 export const rulesCardStatus = (descriptor: ReturnType<typeof descriptorForRulesProfile>) =>
   descriptor.support.implementation === 'Stable'
@@ -45,9 +46,9 @@ export function ActiveRules({ profile, inherited = false, locked = false }: { pr
   return <p data-testid="active-rules" className="mt-3 text-[13px] leading-6 text-[#284d45]"><strong>Rules: {descriptor.title}.</strong>{inherited ? ' Inherited from this game.' : locked ? ' Fixed for this game.' : ''}</p>;
 }
 
-export function RulesProfilePicker({ prompt, selectedProfile, onSelect }: { prompt: string; selectedProfile: RulesProfileRef; onSelect: (profile: RulesProfileRef) => void }) {
+export function RulesProfilePicker({ prompt, selectedProfile, onSelect, surface = 'game' }: { prompt: string; selectedProfile: RulesProfileRef; onSelect: (profile: RulesProfileRef) => void; surface?: 'hand' | 'game' }) {
   const selected = descriptorForRulesProfile(selectedProfile);
-  const choices: readonly CompactChoice[] = PUBLIC_RULES_DESCRIPTORS.map((descriptor) => ({
+  const choices: readonly CompactChoice[] = descriptorsForPickerSurface(surface).map((descriptor) => ({
     key: descriptor.slug,
     label: descriptor.compactLabel,
     status: rulesCardStatus(descriptor),
