@@ -33,6 +33,8 @@ export const homeRulesStatusLabel = (slug: PublicRulesSlug) => {
       return 'Set up';
     case 'buzzard':
       return 'Available — source-specific';
+    case 'mcr':
+      return 'Provisional standalone scorer';
   }
 };
 
@@ -41,6 +43,7 @@ const homeRulesSummary: Record<PublicRulesSlug, string> = {
   western: 'Western scoring with Thompson & Maloney special hands. Some ordinary rules are still being checked.',
   club: 'Rules set up for one club, including its own special hands and Goulash.',
   buzzard: 'British/Western Classical Buzzard 2000 scoring and table procedures.',
+  mcr: 'Provisional Mahjong Competition Rules / WMO 2006 fan scoring for winning hands.',
 };
 
 const homeRulesHref = (slug: PublicRulesSlug) =>

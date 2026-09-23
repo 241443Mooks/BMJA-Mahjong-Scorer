@@ -3,19 +3,25 @@ import { initialiseCurrentRulesRuntimes } from '../rules-platform/current-runtim
 import { bmjaSpecialHandBindings } from '../scoring';
 import { outsideTheBoxSpecialHandBindings } from './outside-the-box-catalogue';
 import { currentClassicalScorerDefaultLimit, descriptorForRulesProfile, descriptorForSlug, isBritishRulesProfile, normaliseStandaloneHandMode, PUBLIC_RULES_DESCRIPTORS, publicRulesSlugFromGamePath } from './rules-presentation';
-import { rulesCardStatus } from './RulesProfilePicker';
+import { descriptorsForPickerSurface, rulesCardStatus } from './RulesProfilePicker';
 import { BMJA_PROFILE_REF, OUTSIDE_THE_BOX_PROFILE_REF, WESTERN_TM_PROFILE_REF } from './ruleset';
 import { westernTmSpecialHandBindings } from './western-tm-catalogue';
 import { BUZZARD_2000_PROFILE_REF } from './buzzard-2000';
 
 describe('public rules presentation', () => {
   beforeAll(() => initialiseCurrentRulesRuntimes());
-  it('maps the four public choices to their exact persisted profiles without exposing the club name', () => {
-    expect(PUBLIC_RULES_DESCRIPTORS.map((descriptor) => descriptor.title)).toEqual(['British / BMJA-style', 'Western — Thompson & Maloney', 'Club rules', 'British/Western Classical — Buzzard 2000']);
+  it('maps five public descriptors while retaining surface-specific availability', () => {
+    expect(PUBLIC_RULES_DESCRIPTORS.map((descriptor) => descriptor.title)).toEqual(['British / BMJA-style', 'Western — Thompson & Maloney', 'Club rules', 'British/Western Classical — Buzzard 2000', 'MCR / WMO 2006']);
     expect(descriptorForSlug('british').profile).toEqual(BMJA_PROFILE_REF);
     expect(descriptorForSlug('western').profile).toEqual(WESTERN_TM_PROFILE_REF);
     expect(descriptorForSlug('club').profile).toEqual(OUTSIDE_THE_BOX_PROFILE_REF);
     expect(descriptorForSlug('buzzard').profile).toEqual(BUZZARD_2000_PROFILE_REF);
+    expect(descriptorForSlug('mcr').profile).toEqual({ id: 'mcr-wmo-2006', version: '0.1' });
+    expect(descriptorsForPickerSurface('hand')).toHaveLength(5);
+    expect(descriptorsForPickerSurface('game')).toHaveLength(4);
+    expect(descriptorsForPickerSurface('game').some(({ slug }) => slug === 'mcr')).toBe(false);
+    expect(descriptorForSlug('mcr').availability).toEqual({ handScorer: true, gameTracker: false, rulesReference: true });
+    expect(descriptorForSlug('mcr')).toMatchObject({ status: 'Provisional', profile: { id: 'mcr-wmo-2006', version: '0.1' }, support: { source: expect.stringContaining('source.mcr-ema-green-book-2006') } });
     expect(JSON.stringify(descriptorForRulesProfile(OUTSIDE_THE_BOX_PROFILE_REF))).not.toContain('Outside the Box');
   });
 
@@ -25,6 +31,7 @@ describe('public rules presentation', () => {
     expect(publicRulesSlugFromGamePath('/game/western')).toBe('western');
     expect(publicRulesSlugFromGamePath('/game/club')).toBe('club');
     expect(publicRulesSlugFromGamePath('/game/buzzard')).toBe('buzzard');
+    expect(publicRulesSlugFromGamePath('/game/mcr')).toBeUndefined();
   });
 
   it('derives catalogue claims from the executable binding collections', () => {

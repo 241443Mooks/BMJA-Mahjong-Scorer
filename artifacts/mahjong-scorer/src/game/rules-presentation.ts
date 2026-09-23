@@ -7,7 +7,7 @@ import { getCurrentRulesRuntime } from '../rules-platform/current-runtime-regist
 import type { HandMode } from './types';
 import type { RulesProfileRef } from './types';
 
-export type PublicRulesSlug = 'british' | 'western' | 'club' | 'buzzard';
+export type PublicRulesSlug = 'british' | 'western' | 'club' | 'buzzard' | 'mcr';
 
 export type RulesDescriptor = {
   profile: RulesProfileRef;
@@ -17,6 +17,7 @@ export type RulesDescriptor = {
   status: string;
   description: string;
   publiclySelectable: true;
+  availability: { handScorer: boolean; gameTracker: boolean; rulesReference: boolean };
   configuredClubProfile: boolean;
   referenceKeys: readonly string[];
   atAGlance: readonly string[];
@@ -43,6 +44,7 @@ export const PUBLIC_RULES_DESCRIPTORS: readonly RulesDescriptor[] = Object.freez
     status: 'Stable',
     description: 'The established British scorer and settlement model.',
     publiclySelectable: true,
+    availability: { handScorer: true, gameTracker: true, rulesReference: true },
     configuredClubProfile: false,
     referenceKeys: ['british-scoring', 'british-settlement'],
     atAGlance: [catalogueCount(bmjaSpecialHandBindings), 'British settlement and game progression', 'Normal hand play'],
@@ -61,6 +63,7 @@ export const PUBLIC_RULES_DESCRIPTORS: readonly RulesDescriptor[] = Object.freez
     status: 'Scorer available. Special-hand catalogue source-verified; ordinary play is still under source review.',
     description: 'A selectable Western profile with its own source-verified special-hand catalogue.',
     publiclySelectable: true,
+    availability: { handScorer: true, gameTracker: true, rulesReference: true },
     configuredClubProfile: false,
     referenceKeys: ['western-special-hands', 'western-ordinary-play-status'],
     atAGlance: [catalogueCount(westernTmSpecialHandBindings), 'Ordinary play and settlement remain provisional while source review continues', 'Normal hand play'],
@@ -79,6 +82,7 @@ export const PUBLIC_RULES_DESCRIPTORS: readonly RulesDescriptor[] = Object.freez
     status: 'Configured club profile',
     description: 'A configured club profile with its own specials, Goulash and incident handling.',
     publiclySelectable: true,
+    availability: { handScorer: true, gameTracker: true, rulesReference: true },
     configuredClubProfile: true,
     referenceKeys: ['club-special-hands', 'club-goulash', 'club-incidents'],
     atAGlance: [catalogueCount(outsideTheBoxSpecialHandBindings), 'Draws lead to a Goulash hand with physical blank tiles', 'Club incidents and liability are recorded at the table'],
@@ -97,10 +101,19 @@ export const PUBLIC_RULES_DESCRIPTORS: readonly RulesDescriptor[] = Object.freez
     status: 'Provisional, source-backed profile',
     description: 'A source-specific British/Western Classical profile with Buzzard table procedures.',
     publiclySelectable: true,
+    availability: { handScorer: true, gameTracker: true, rulesReference: true },
     configuredClubProfile: false,
     referenceKeys: ['buzzard-2000'],
     atAGlance: [catalogueCount(buzzard2000SpecialHandBindings), 'Buzzard table incidents and configured limit', 'Source-specific Classical profile'],
     support: { scorer: 'Available', source: 'Buzzard 2000 evidence record', implementation: 'Provisional', authority: 'Buzzard 2000 source material' },
+  },
+  {
+    profile: { id: 'mcr-wmo-2006', version: '0.1' }, slug: 'mcr',
+    title: 'MCR / WMO 2006', compactLabel: 'MCR / WMO 2006', status: 'Provisional',
+    description: 'Mahjong Competition Rules / WMO 2006 fan scoring for completed winning hands.',
+    publiclySelectable: true, availability: { handScorer: true, gameTracker: false, rulesReference: true }, configuredClubProfile: false,
+    referenceKeys: ['source.mcr-ema-green-book-2006'], atAGlance: ['8-point qualifying minimum before Flowers', 'Flowers are post-qualification', 'Standalone winning-hand scorer'],
+    support: { scorer: 'Standalone hand scorer available', source: 'source.mcr-ema-green-book-2006 · 2006 MCR/EMA Green Book', implementation: 'Provisional', authority: 'Mahjong Competition Rules / WMO 2006' },
   },
 ]);
 
@@ -123,5 +136,5 @@ export const currentClassicalScorerDefaultLimit = (profile: RulesProfileRef) =>
 export const normaliseStandaloneHandMode = (profile: RulesProfileRef, handMode: HandMode): HandMode =>
   getCurrentRulesRuntime(profile).supportedCapabilities().includes('hand.goulash') ? handMode : 'normal';
 
-export const publicRulesSlugFromGamePath = (path: string): PublicRulesSlug =>
-  path === '/game/western' ? 'western' : path === '/game/club' ? 'club' : path === '/game/buzzard' ? 'buzzard' : 'british';
+export const publicRulesSlugFromGamePath = (path: string): PublicRulesSlug | undefined =>
+  path === '/game' || path === '/game/british' ? 'british' : path === '/game/western' ? 'western' : path === '/game/club' ? 'club' : path === '/game/buzzard' ? 'buzzard' : undefined;

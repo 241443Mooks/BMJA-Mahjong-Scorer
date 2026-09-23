@@ -15,6 +15,8 @@ import { BMJA_PROFILE_REF } from './game/ruleset';
 import { ActiveRules, RulesProfilePicker } from './game/RulesProfilePicker';
 import { descriptorForRulesProfile, isBritishRulesProfile } from './game/rules-presentation';
 import { getCurrentRulesRuntime } from './rules-platform/current-runtime-registry';
+import { getCurrentCompiledRulesRuntime } from './rules-platform/current-runtime-registry';
+import { McrStandaloneHandScorer } from './game/McrStandaloneHandScorer';
 import { mapCurrentClassicalScoreBreakdown } from './rules-platform/current-runtime-compat';
 import { handScorerInitialBaseline, hasHandScorerUnsavedWork } from './game/hand-scorer-dirty-state';
 import { normaliseStructuredChoiceForGroup, recoverWorkingDraft } from './game/hand-entry-workspace';
@@ -919,7 +921,7 @@ function HandScorer({ context, onClose, standaloneHand, standaloneRulesProfile, 
             </div>
           </div>
 
-          {standaloneHand && !hasContext && !example && !practice && <div className="max-w-[900px]"><RulesProfilePicker prompt="Which rules are you scoring?" selectedProfile={standaloneRulesProfile} onSelect={onStandaloneRulesProfileChange} />
+          {standaloneHand && !hasContext && !example && !practice && <div className="max-w-[900px]"><RulesProfilePicker surface="hand" prompt="Which rules are you scoring?" selectedProfile={standaloneRulesProfile} onSelect={onStandaloneRulesProfileChange} />
             {getCurrentRulesRuntime(standaloneRulesProfile).supportedCapabilities().includes('hand.goulash') && <label className="mb-6 block rounded-lg border border-[#d8ceb8] bg-[#fbf8ed] p-4 text-[12px] text-[#284d45]"><span className="mb-2 block font-semibold">Hand mode</span><select data-testid="select-standalone-hand-mode" value={handMode} onChange={(event) => setHandMode(event.target.value as 'normal' | 'goulash')} className="w-full rounded-md border border-[#cfc3aa] bg-[#fdfbf5] px-3 py-2"><option value="normal">Normal hand</option><option value="goulash">Goulash hand (blank tiles; no chows)</option></select></label>}</div>}
           {(() => { const capabilities = getCurrentRulesRuntime(context?.rulesProfile ?? standaloneRulesProfile).supportedCapabilities(); return (capabilities.includes('hand.standing-hand') || capabilities.includes('hand.only-possible-winning-tile') || capabilities.includes('context.east-thirteenth-consecutive-mahjong')) && <section data-testid="profile-hand-evidence" className="mx-auto mb-5 max-w-[900px] rounded-lg border border-[#d8ceb8] bg-[#fbf8ed] p-4 text-[12px] text-[#284d45]"><h2 className="font-serif text-[20px]">Scoring evidence</h2>{capabilities.includes('hand.standing-hand') && <label className="mt-3 flex gap-2"><input type="checkbox" checked={standingHand} onChange={(event) => setStandingHand(event.target.checked)} />Standing Hand (declared/locked table state)</label>}{capabilities.includes('hand.only-possible-winning-tile') && <label className="mt-2 flex gap-2"><input type="checkbox" checked={onlyPossibleWinningTile} onChange={(event) => setOnlyPossibleWinningTile(event.target.checked)} />Only possible winning tile</label>}{capabilities.includes('context.east-thirteenth-consecutive-mahjong') && <label className="mt-2 flex gap-2"><input type="checkbox" checked={eastThirteenthConsecutiveMahjong} onChange={(event) => setEastThirteenthConsecutiveMahjong(event.target.checked)} />East's thirteenth consecutive Mah Jong</label>}</section>; })()}
 
@@ -1557,7 +1559,8 @@ export default function App({ initialView = 'game', standaloneHand = false, init
           )}
           {(!prerenderOnly || view === 'hand') && (
             <div className={view === 'hand' ? 'block' : 'hidden'}>
-              <HandScorer
+              {standaloneHand && !scorerContext && !example && !practice && <div className={getCurrentCompiledRulesRuntime(standaloneRulesProfile).grammar === 'pattern-accumulator' ? 'block' : 'hidden'}><McrStandaloneHandScorer selectedProfile={standaloneRulesProfile} onProfileChange={setStandaloneRulesProfile} onClose={handleCloseHandScorer} /></div>}
+              {!(standaloneHand && !scorerContext && !example && !practice && getCurrentCompiledRulesRuntime(standaloneRulesProfile).grammar === 'pattern-accumulator') && <HandScorer
                 key={scorerSession}
                 context={scorerContext}
                 onClose={handleCloseHandScorer}
@@ -1566,7 +1569,7 @@ export default function App({ initialView = 'game', standaloneHand = false, init
                 onStandaloneRulesProfileChange={setStandaloneRulesProfile}
                 example={example}
                 practice={practice && !!example}
-              />
+              />}
             </div>
           )}
           <Toaster />
