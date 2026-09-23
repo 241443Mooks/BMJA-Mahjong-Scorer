@@ -36,7 +36,7 @@ import { prepareFullPrintDisclosures, watchPrintLifecycle } from './print-disclo
 import type {
   GameLength,
   GamePlayer,
-  GameState,
+  ClassicalGameState as GameState,
   HandOutcome,
   HandScorerContext,
   HandScorerResult,
@@ -703,7 +703,7 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
                         </span>
                            {scoreRecords[player.id]?.source ===
                              'detailed-scorer' &&
-                             scoreRecords[player.id]?.requiresRecalculation && (
+                             (scoreRecords[player.id] as { requiresRecalculation?: boolean }).requiresRecalculation && (
                                <span className="ml-2 font-normal text-[#ae6249]">
                                  Winner changed — recalculate
                                </span>

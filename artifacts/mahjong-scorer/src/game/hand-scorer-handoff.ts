@@ -22,6 +22,7 @@ export const createHandScorerContext = (
   if (!player || !game.seats[playerId]) {
     throw new Error('The selected player must belong to the current game.');
   }
+  if (game.setup.tableLimit === undefined) throw new Error('A Classical hand scorer requires a table limit.');
 
   return {
     rulesProfile: game.setup.rulesProfile,

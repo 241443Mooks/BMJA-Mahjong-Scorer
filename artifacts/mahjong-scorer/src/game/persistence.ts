@@ -5,6 +5,7 @@ import type { Wind } from "../scoring";
 import type {
   GameSetup,
   GameState,
+  ClassicalGameState,
   HandOutcome,
   RoundInput,
   RoundScoringDraft,
@@ -33,7 +34,7 @@ type PersistedGameSnapshot = {
 };
 
 export type RecoveredGame = {
-  game: GameState;
+  game: ClassicalGameState;
   outcomeType: "win" | "draw";
   winnerId: string;
   draft: RoundScoringDraft;
@@ -146,7 +147,7 @@ const isValidSnapshotShape = (
   );
 };
 
-const normalisePersistedSetup = (setup: PersistedGameSetup): GameSetup => ({
+const normalisePersistedSetup = (setup: PersistedGameSetup): ClassicalGameState['setup'] => ({
   ...setup,
   rulesProfile: { ...(setup.rulesProfile ?? BMJA_PROFILE_REF) },
   tableLimit: typeof setup.tableLimit === 'number' && Number.isFinite(setup.tableLimit) && setup.tableLimit > 0
@@ -155,14 +156,18 @@ const normalisePersistedSetup = (setup: PersistedGameSetup): GameSetup => ({
 });
 
 const roundsFrom = (game: GameState): RoundInput[] =>
-  game.handHistory.map(({ outcome, scores, scoreRecords, incidents, buzzardIncidents, profileScoreResults }) => ({
-    outcome,
-    scores,
-    scoreRecords,
-    incidents,
-    buzzardIncidents,
-    profileScoreResults,
-  }));
+  game.handHistory.flatMap((hand) => {
+    // C2A MCR replay data is deliberately in-memory only until snapshot v2 (C2B).
+    if (hand.mcrReplay || hand.outcome.type === 'mcr-win' || hand.outcome.type === 'mcr-draw') return [];
+    return [{
+      outcome: hand.outcome,
+      scores: hand.scores,
+      scoreRecords: Object.fromEntries(Object.entries(hand.scoreRecords).filter(([, record]) => record !== undefined && record.source !== 'mcr-detailed-scorer')),
+      incidents: hand.incidents,
+      buzzardIncidents: hand.buzzardIncidents,
+      profileScoreResults: hand.profileScoreResults,
+    }];
+  });
 
 export const saveGameRecovery = (
   storage: StorageLike,
@@ -171,10 +176,14 @@ export const saveGameRecovery = (
   winnerId: string,
   draft: RoundScoringDraft,
 ): void => {
+  const persistedDraft: RoundScoringDraft = {
+    ...draft,
+    scoreRecords: Object.fromEntries(Object.entries(draft.scoreRecords).filter(([, record]) => record !== undefined && record.source !== 'mcr-detailed-scorer')),
+  };
   const snapshot: PersistedGameSnapshot = {
     version: GAME_SNAPSHOT_VERSION,
     game: { setup: game.setup, rounds: roundsFrom(game) },
-    currentRound: { outcomeType, winnerId, draft },
+    currentRound: { outcomeType, winnerId, draft: persistedDraft },
   };
   try {
     storage.setItem(GAME_SNAPSHOT_STORAGE_KEY, JSON.stringify(snapshot));
