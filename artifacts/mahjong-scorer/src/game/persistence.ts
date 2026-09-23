@@ -202,7 +202,7 @@ const validMcrRecordMap = (
   fingerprint: string,
   owner?: string,
   source?: 'discard' | 'self-draw',
-): boolean => isRecord(value) && Object.entries(value).every(([playerId, record]) => validateMcrRecord(record, profile, fingerprint, owner ?? playerId, source));
+): boolean => isRecord(value) && Object.entries(value).length <= 1 && Object.entries(value).every(([playerId, record]) => isRecord(record) && playerId === record.playerId && (!owner || playerId === owner) && validateMcrRecord(record, profile, fingerprint, playerId, source));
 
 const isValidMcrRoundInput = (value: unknown, setup: GameSetup, fingerprint: string): value is McrRoundInput => {
   if (!isRecord(value) || !isRecord(value.mcrOutcome) || !isFiniteAmountMap(value.scores, new Set(setup.players.map(({ id }) => id)))) return false;
@@ -339,6 +339,12 @@ export const loadGameRecoveryCore = (storage: StorageLike): RecoveredGameV2 | nu
     const inputs: GameRoundInput[] = parsed.game.rounds.map((round) => round.input);
     const game = replayGame(parsed.game.setup, inputs);
     if (game.runtimeFingerprint !== parsed.game.runtimeFingerprint) throw new Error('Recovered runtime fingerprint mismatch.');
+    if (parsed.currentRound.grammar === 'pattern-accumulator') {
+      for (const record of Object.values(parsed.currentRound.draft.scoreRecords)) {
+        if (!record || record.source !== 'mcr-detailed-scorer') continue;
+        if ((record.input.context.seatWind !== undefined && record.input.context.seatWind !== game.seats[record.playerId]) || (record.input.context.prevailingWind !== undefined && record.input.context.prevailingWind !== game.prevailingWind)) throw new Error('Active MCR score table context does not match the recovered game.');
+      }
+    }
     return { game, currentRound: parsed.currentRound };
   } catch { clearGameRecovery(storage); return null; }
 };

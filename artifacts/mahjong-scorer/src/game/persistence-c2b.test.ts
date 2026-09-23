@@ -36,6 +36,23 @@ const memoryStorage = () => {
 };
 const save = (storage: ReturnType<typeof memoryStorage>, game: GameState, currentRound: PersistedCurrentRoundV2 = { grammar: 'pattern-accumulator', draft: { scores: {}, scoreRecords: {} } }) => saveGameRecoveryV2(storage, game, currentRound);
 const load = (storage: ReturnType<typeof memoryStorage>) => loadGameRecoveryCore(storage);
+const rotatedGame = () => confirmHand(createGame(players, seats, undefined, 'full-game', ref), draw);
+const activeWin = (record: McrAcceptedScoreRecord, scoreRecords: Record<string, McrAcceptedScoreRecord> = { [record.playerId]: record }) => ({
+  grammar: 'pattern-accumulator' as const,
+  outcomeType: 'win' as const,
+  winnerId: record.playerId,
+  winSource: record.input.context.winSource,
+  draft: { scores: { [record.playerId]: record.finalScore }, scoreRecords },
+});
+const rescorePersistedRecord = (snapshot: any, owner: string, contextField: 'seatWind' | 'prevailingWind', wind: 'east' | 'south' | 'west' | 'north') => {
+  const record = snapshot.currentRound.draft.scoreRecords[owner];
+  record.input.context[contextField] = wind;
+  const compiled = getCurrentCompiledRulesRuntime(ref);
+  if (compiled.grammar !== 'pattern-accumulator') throw new Error('Expected pattern-accumulator runtime');
+  record.result = compiled.runtime.scoreHand(record.input);
+  record.finalScore = record.result.result.total;
+  snapshot.currentRound.draft.scores[owner] = record.finalScore;
+};
 
 beforeAll(() => initialiseCurrentRulesRuntimes());
 
@@ -86,6 +103,53 @@ describe('C2B MCR persistence/recovery v2', () => {
     const routedPartial = { grammar: 'pattern-accumulator' as const, outcomeType: 'win' as const, winSource: 'discard' as const, discarderId: 'B', draft: { scores: {}, scoreRecords: {} } };
     save(storage, game, routedPartial);
     expect(load(storage)?.currentRound).toEqual(routedPartial);
+  });
+
+  it('validates active trusted winds against the post-replay table state', () => {
+    const game = rotatedGame();
+    expect(game.seats.A).toBe('north');
+    const record = accepted('A', 'self-draw', { seatWind: game.seats.A, prevailingWind: game.prevailingWind });
+    const storage = memoryStorage();
+    save(storage, game, activeWin(record));
+    expect(load(storage)?.game).toEqual(game);
+    expect(load(storage)?.currentRound).toEqual(activeWin(record));
+  });
+
+  it('clears active records with a re-scored but wrong current seatWind', () => {
+    const game = rotatedGame();
+    const record = accepted('A', 'self-draw', { seatWind: game.seats.A, prevailingWind: game.prevailingWind });
+    const storage = memoryStorage(); save(storage, game, activeWin(record));
+    const snapshot = JSON.parse(storage.values.get(GAME_SNAPSHOT_STORAGE_KEY)!);
+    rescorePersistedRecord(snapshot, 'A', 'seatWind', 'south');
+    storage.setItem(GAME_SNAPSHOT_STORAGE_KEY, JSON.stringify(snapshot));
+    expect(load(storage)).toBeNull(); expect(storage.getItem(GAME_SNAPSHOT_STORAGE_KEY)).toBeNull();
+  });
+
+  it('clears active records with a re-scored but wrong current prevailingWind', () => {
+    const game = rotatedGame();
+    const record = accepted('A', 'self-draw', { seatWind: game.seats.A, prevailingWind: game.prevailingWind });
+    const storage = memoryStorage(); save(storage, game, activeWin(record));
+    const snapshot = JSON.parse(storage.values.get(GAME_SNAPSHOT_STORAGE_KEY)!);
+    rescorePersistedRecord(snapshot, 'A', 'prevailingWind', 'south');
+    storage.setItem(GAME_SNAPSHOT_STORAGE_KEY, JSON.stringify(snapshot));
+    expect(load(storage)).toBeNull(); expect(storage.getItem(GAME_SNAPSHOT_STORAGE_KEY)).toBeNull();
+  });
+
+  it('rejects active accepted records stored under a different player key', () => {
+    const game = rotatedGame();
+    const record = accepted('A', 'self-draw');
+    const currentRound = { grammar: 'pattern-accumulator' as const, winSource: 'self-draw' as const, draft: { scores: { A: record.finalScore }, scoreRecords: { B: record } } };
+    const storage = memoryStorage(); save(storage, game, currentRound);
+    expect(load(storage)).toBeNull(); expect(storage.getItem(GAME_SNAPSHOT_STORAGE_KEY)).toBeNull();
+  });
+
+  it('rejects more than one accepted MCR record in an active draft', () => {
+    const game = rotatedGame();
+    const first = accepted('A', 'self-draw');
+    const second = accepted('C', 'discard');
+    const currentRound = { grammar: 'pattern-accumulator' as const, draft: { scores: { A: first.finalScore, C: second.finalScore }, scoreRecords: { A: first, C: second } } };
+    const storage = memoryStorage(); save(storage, game, currentRound);
+    expect(load(storage)).toBeNull(); expect(storage.getItem(GAME_SNAPSHOT_STORAGE_KEY)).toBeNull();
   });
 
   it('fails closed on game and accepted-record fingerprint/profile/version tampering', () => {
