@@ -27,7 +27,7 @@ it('preserves branch-specific interaction alternatives through deterministic sel
   const bank: PatternAccumulatorImplementationBank<AlternateInput> = {
     resultProvenance: { kind: 'production-style-alternate' },
     inputEvidence: new Map([[`${ids.evidencePolicy.id}@1`, { validate: (input: AlternateInput) => input.amount >= 0 ? { valid: true as const } : { valid: false as const, reasonId: 'alternate.invalid' }, requiredEvidence: () => [] }]]),
-    catalogue: new Map([[`${ids.catalogue.id}@1`, (input: AlternateInput) => [{ id: 'alternate.low', value: input.amount - 1, interpretationId: 'low' }, { id: 'alternate.high', value: input.amount, interpretationId: 'high' }, { id: 'alternate.low-suppressed', value: 1, interpretationId: 'low' }, { id: 'alternate.high-suppressed', value: 1, interpretationId: 'high' }]]]),
+    catalogue: new Map([[`${ids.catalogue.id}@1`, (input: AlternateInput) => [{ id: 'alternate.low', value: input.amount - 1, interpretationId: 'low' }, { id: 'alternate.high', value: input.amount, interpretationId: 'high', bindingId: 'binding.alternate.high', sourceLocator: 'source:alternate-high' }, { id: 'alternate.low-suppressed', value: 1, interpretationId: 'low' }, { id: 'alternate.high-suppressed', value: 1, interpretationId: 'high', bindingId: 'binding.alternate.high-suppressed', sourceLocator: 'source:alternate-high-suppressed' }]]]),
     interaction: new Map([[`${ids.interaction.id}@1`, (candidates, input) => input.lawful ? { alternatives: [{ id: 'low', counted: candidates.filter((candidate) => candidate.id === 'alternate.low'), suppressed: candidates.filter((candidate) => candidate.id === 'alternate.low-suppressed').map((candidate) => ({ candidate, reasonId: 'alternate.low-reason' })) }, { id: 'high', counted: candidates.filter((candidate) => candidate.id === 'alternate.high'), suppressed: candidates.filter((candidate) => candidate.id === 'alternate.high-suppressed').map((candidate) => ({ candidate, reasonId: 'alternate.high-reason' })) }] } : { alternatives: [] }]]),
     interpretation: new Map([[`${ids.interpretation.id}@1`, (interaction) => [...interaction.alternatives].sort((left, right) => right.counted.reduce((sum, candidate) => sum + candidate.value, 0) - left.counted.reduce((sum, candidate) => sum + candidate.value, 0))[0]?.id]]),
     qualification: new Map([[`${ids.qualification.id}@1`, (subtotal: number) => { qualificationCalls += 1; return subtotal >= 8 ? undefined : 'alternate.too-small'; }]]),
@@ -37,11 +37,13 @@ it('preserves branch-specific interaction alternatives through deterministic sel
   const score = compilePatternAccumulatorHandScorer(artifact(), bank);
   const result = score({ amount: 8, lawful: true });
   expect((result.result as { total: number }).total).toBe(8);
-  const details = (result.result as unknown as { details: { provenance: { kind: string }; suppressedPatterns: readonly { reasonId: string }[] } }).details;
+  const details = (result.result as unknown as { details: { provenance: { kind: string }; suppressedPatterns: readonly { id: string; reasonId: string; bindingId?: string; sourceLocator?: string }[] } }).details;
   expect(details.provenance.kind).toBe('production-style-alternate');
   expect(details.suppressedPatterns.map((item) => item.reasonId)).toEqual(['alternate.high-reason']);
-  expect(result.decisionTrace.filter((entry) => entry.kind === 'suppress').map((entry) => entry.identities.reasonId)).toEqual(['alternate.high-reason']);
-  expect((result.result as unknown as { details: { countedPatterns: readonly { id: string }[]; selectedInterpretationId: string } }).details).toMatchObject({ countedPatterns: [{ id: 'alternate.high' }], selectedInterpretationId: 'high' });
+  expect(details.suppressedPatterns[0]).toMatchObject({ bindingId: 'binding.alternate.high-suppressed', sourceLocator: 'source:alternate-high-suppressed' });
+  expect(result.decisionTrace.filter((entry) => entry.kind === 'suppress')).toMatchObject([{ identities: { bindingId: 'binding.alternate.high-suppressed', reasonId: 'alternate.high-reason' }, metadata: { sourceLocator: 'source:alternate-high-suppressed' } }]);
+  expect((result.result as unknown as { details: { countedPatterns: readonly { id: string; bindingId?: string; sourceLocator?: string }[]; selectedInterpretationId: string } }).details).toMatchObject({ countedPatterns: [{ id: 'alternate.high', bindingId: 'binding.alternate.high', sourceLocator: 'source:alternate-high' }], selectedInterpretationId: 'high' });
+  expect(result.decisionTrace.filter((entry) => entry.kind === 'count')).toMatchObject([{ identities: { bindingId: 'binding.alternate.high' }, metadata: { sourceLocator: 'source:alternate-high' } }]);
   const noLawful = score({ amount: 8, lawful: false });
   expect(noLawful.disposition).toEqual({ kind: 'invalid', reasonId: 'pattern-accumulator.no-lawful-alternative' });
   expect((noLawful.result as unknown as { details: Record<string, unknown> }).details).not.toHaveProperty('selectedInterpretationId');

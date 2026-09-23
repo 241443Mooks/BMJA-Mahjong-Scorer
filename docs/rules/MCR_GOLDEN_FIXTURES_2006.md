@@ -221,21 +221,28 @@ Acceptance:
 Type: `CONSTRUCTED NEGATIVE`
 
 ```text
-C222 D333 B444 C555 pair WEWE
-all Pungs; at least one set melded
-win: self-draw
+Fixed / melded:
+- C222 Pung
+- D555 Pung
+- B888 Pung
+
+Free / concealed:
+- C444 Pung
+- pair WEWE
+
+Win: self-draw C4 completing C444
 Flowers: 2
 ```
 
-Choose exposure so no concealed-hand fan applies and the hand has no other composition fan.
+The non-consecutive Pung ranks and the three melded groups avoid Mixed Shifted Pungs, concealed-Pung fans, and wait fans.
 
-Expected non-Flower fan:
+Expected ordinary fan exactly:
 
 ```text
 All Pungs   6
 Self-Drawn  1
--------------
-qualifying  7
+-----------------
+subtotal    7
 ```
 
 Flowers would be `+2` **only after qualification**, therefore:
@@ -253,21 +260,29 @@ This is directly protected by §3.11.6.6: the 8-point minimum excludes Flower po
 Type: `CONSTRUCTED POSITIVE`
 
 ```text
-C222 D333 B444 C5555(km) pair WEWE
-win: self-draw
+Fixed / melded:
+- C2222 melded Kong
+- D555 Pung
+- B888 Pung
+
+Free / concealed:
+- C444 Pung
+- pair WEWE
+
+Win: self-draw C4 completing C444
 Flowers: 2
 ```
 
-Choose exposure/context to avoid any other fan.
+The non-consecutive Pung ranks and the three melded groups avoid Mixed Shifted Pungs, concealed-Pung fans, and wait fans.
 
-Expected:
+Expected ordinary fan exactly:
 
 ```text
 All Pungs    6
 Melded Kong  1
 Self-Drawn   1
---------------
-qualifying   8  -> legal Hu
+-----------------
+subtotal     8  -> legal Hu
 Flowers      2  -> post-qualification
 Basic Points 10
 ```

@@ -4,6 +4,7 @@ import {
 import { WESTERN_TM_PROFILE_REF } from '../game/western-tm-catalogue';
 import { BUZZARD_2000_PROFILE_REF } from '../game/buzzard-2000';
 import { architectureSeedEntries } from './architecture-seeds';
+import { MCR_2006_SCORING_REGISTRY_ENTRIES } from './mcr-scoring';
 import { classicalStrategyRegistryEntries } from './classical-strategies';
 import {
   CLASSICAL_WESTERN_VALIDATION_FAMILY,
@@ -61,6 +62,7 @@ export const currentClassicalRegistryEntries: readonly RegistryEntry[] = [
 ];
 
 const currentIds = new Set([
+  ...MCR_2006_SCORING_REGISTRY_ENTRIES,
   ...currentClassicalRegistryEntries,
   ...classicalStrategyRegistryEntries,
   ...classicalValidationRegistryEntries,
@@ -70,6 +72,7 @@ const currentIds = new Set([
 /** The single registry used to seal the three current playable profiles. */
 export const currentPlayableRegistry = new RegistryBank([
   ...architectureSeedEntries.filter(({ id }) => !currentIds.has(id)),
+  ...MCR_2006_SCORING_REGISTRY_ENTRIES,
   ...currentClassicalRegistryEntries,
   ...classicalStrategyRegistryEntries,
   ...classicalValidationRegistryEntries,
