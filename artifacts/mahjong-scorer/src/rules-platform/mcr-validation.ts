@@ -17,3 +17,13 @@ export const validateMcrWinningShape = (input: McrScoringInput): McrInputValidat
     ? { valid: true }
     : { valid: false, reasonId: 'validation.mcr-winning-shape.no-lawful-winning-interpretation' };
 };
+
+const key = ({ id, semanticRevision }: { id: string; semanticRevision: number }) => `${id}@${semanticRevision}`;
+const implementations = new Map([[key(MCR_WINNING_SHAPE_VALIDATION), validateMcrWinningShape]]);
+
+export const mcrValidationImplementation = (identity: { id: string; semanticRevision: number }) => {
+  mcrValidationRegistry.requireExecutable('validation', identity.id);
+  const found = implementations.get(key(identity));
+  if (!found) throw new Error(`Unknown MCR validation implementation: ${key(identity)}`);
+  return found;
+};
