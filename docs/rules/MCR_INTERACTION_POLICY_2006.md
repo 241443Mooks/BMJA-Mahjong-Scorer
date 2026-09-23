@@ -137,6 +137,7 @@ Implementation must evaluate them against the actual occurrence identities and s
 The following are mechanically lower forms under the accepted detector semantics and should not add points when represented by the same physical structure:
 
 - Four Kongs -> Three Kongs.
+- Four Kongs -> All Pungs.
 - Quadruple Chow -> Pure Triple Chow occurrences contained in those four Chows.
 - Four Pure Shifted Pungs -> Pure Shifted Pungs occurrences contained in those four Pungs/Kongs.
 - Four Pure Shifted Chows -> Pure Shifted Chows occurrences contained in those four Chows.
@@ -147,6 +148,11 @@ The following are mechanically lower forms under the accepted detector semantics
 - Two Concealed Kongs -> lower Concealed Kong occurrences formed by those Kongs.
 - Two Melded Kongs -> lower Melded Kong occurrences formed by those Kongs.
 - All Terminals -> the broader All Terminals and Honors candidate under the accepted detector predicate.
+- All Honors -> All Terminals and Honors.
+- Thirteen Orphans -> All Terminals and Honors.
+- All Terminals and Honors -> Outside Hand.
+- Seven Shifted Pairs -> Seven Pairs and No Honors.
+- Nine Gates -> No Honors.
 - Upper Tiles -> Upper Four.
 - Lower Tiles -> Lower Four.
 - Fully Concealed Hand -> Self-Drawn: fan 56's definition itself requires a self-drawn win.
@@ -176,7 +182,7 @@ Therefore the runtime must not derive a universal hierarchy from English fan nam
 
 ## 5. Correction to the abbreviated catalogue table used by PR #309
 
-Compared with the current `MCR_2006_SOURCE_EXCLUSIONS` table at PR #309 head `813762412ae74cc133d826504252c9e67f41129c`, the source-explicit table above requires these exact corrections:
+Compared with the original `MCR_2006_SOURCE_EXCLUSIONS` table at PR #309 head `813762412ae74cc133d826504252c9e67f41129c`, the source-explicit table above requires these exact corrections:
 
 ### Missing source-explicit relationships
 
@@ -198,6 +204,7 @@ These are not direct Green-Book exclusion sentences and must not use `source-*` 
 
 - `quadruple-chow -> no-honors` is not generally valid: the pair can be an Honor. Remove this static implication.
 - add the missing principle-derived cases listed in section 4, especially Four Kongs -> Three Kongs, Upper Tiles -> Upper Four, Lower Tiles -> Lower Four, Fully Concealed Hand -> Self-Drawn, and Kong-replacement Out with Replacement Tile -> Self-Drawn.
+- also apply the section 4.1 safe detector-predicate implications for Four Kongs -> All Pungs, All Honors / Thirteen Orphans -> All Terminals and Honors, All Terminals and Honors -> Outside Hand, Seven Shifted Pairs -> Seven Pairs / No Honors, and Nine Gates -> No Honors.
 
 ---
 

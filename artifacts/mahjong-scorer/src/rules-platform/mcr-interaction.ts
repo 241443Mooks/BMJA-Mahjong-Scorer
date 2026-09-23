@@ -8,7 +8,7 @@ const binding = (candidate: PatternAccumulatorCandidate) => candidate.bindingId 
 const slug = (candidate: PatternAccumulatorCandidate) => binding(candidate).replace('mcr2006.fan.', '');
 const reason = (kind: string) => `${MCR_2006_INTERACTION_POLICY_ID}.${kind}`;
 
-/** Appendix-1 wording transcribed from the source-linked catalogue, rather than inferred from fan names. */
+/** Appendix-1 wording transcribed from the authoritative Green Book interaction policy. */
 export const MCR_2006_SOURCE_EXCLUSIONS: Readonly<Record<string, readonly string[]>> = {
   'big-four-winds': ['big-three-winds', 'all-pungs', 'prevalent-wind', 'seat-wind', 'pung-terminals-or-honors'],
   'big-three-dragons': ['two-dragon-pungs', 'dragon-pung'],
@@ -21,13 +21,14 @@ export const MCR_2006_SOURCE_EXCLUSIONS: Readonly<Record<string, readonly string
   'little-three-dragons': ['dragon-pung', 'two-dragon-pungs'],
   'all-honors': ['all-pungs', 'outside-hand', 'pung-terminals-or-honors'],
   'four-concealed-pungs': ['all-pungs', 'concealed-hand'],
-  'pure-terminal-chows': ['seven-pairs', 'full-flush', 'all-chows', 'pure-double-chow', 'two-terminal-chows', 'no-honors', 'one-voided-suit'],
+  'pure-terminal-chows': ['seven-pairs', 'full-flush', 'all-chows', 'pure-double-chow', 'two-terminal-chows'],
   'all-terminals-and-honors': ['all-pungs', 'pung-terminals-or-honors'],
   'seven-pairs': ['concealed-hand', 'single-wait'],
   'greater-honors-knitted': ['all-types', 'concealed-hand'],
   'all-even-pungs': ['all-pungs', 'all-simples'],
-  'full-flush': ['no-honors', 'one-voided-suit'],
-  'pure-triple-chow': ['pure-double-chow'],
+  'full-flush': ['no-honors'],
+  'pure-triple-chow': ['pure-shifted-pungs', 'pure-double-chow'],
+  'pure-shifted-pungs': ['pure-triple-chow'],
   'upper-tiles': ['no-honors'],
   'middle-tiles': ['no-honors', 'all-simples'],
   'lower-tiles': ['no-honors'],
@@ -42,23 +43,45 @@ export const MCR_2006_SOURCE_EXCLUSIONS: Readonly<Record<string, readonly string
   'melded-hand': ['single-wait'],
   'all-chows': ['no-honors'],
   // Preserve the formal names exactly; these are not typo repairs.
-  'quadruple-chow': ['pure-shifted-pungs'],
-  'four-pure-shifted-pungs': ['pure-triple-chow'],
+  'quadruple-chow': ['pure-shifted-pungs', 'tile-hog', 'pure-double-chow'],
+  'four-pure-shifted-pungs': ['pure-triple-chow', 'all-pungs'],
+  'four-pure-shifted-chows': ['short-straight'],
 };
 
-/** Non-Repeat implications not stated by the table but mechanically inevitable from the detected structural occurrence. */
+/** Non-Repeat implications explicitly pinned by policy sections 4.1 and 4.2. */
 const nonRepeat: Readonly<Record<string, readonly string[]>> = {
-  'quadruple-chow': ['pure-triple-chow', 'pure-double-chow', 'tile-hog', 'no-honors'],
+  'quadruple-chow': ['pure-triple-chow'],
   'four-pure-shifted-pungs': ['pure-shifted-pungs'],
   'four-pure-shifted-chows': ['pure-shifted-chows'],
   'triple-pung': ['double-pung'],
   'all-terminals': ['all-terminals-and-honors'],
+  'all-honors': ['all-terminals-and-honors'],
+  'all-terminals-and-honors': ['outside-hand'],
+  'thirteen-orphans': ['all-terminals-and-honors'],
+  'seven-shifted-pairs': ['seven-pairs', 'no-honors'],
+  'nine-gates': ['no-honors'],
+  'four-kongs': ['three-kongs', 'all-pungs'],
+  'pure-terminal-chows': ['no-honors'],
+  'all-even-pungs': ['no-honors'],
+  'all-fives': ['no-honors'],
+  'all-simples': ['no-honors'],
   'four-concealed-pungs': ['three-concealed-pungs', 'two-concealed-pungs'],
   'three-concealed-pungs': ['two-concealed-pungs'],
   'three-kongs': ['two-melded-kongs', 'two-concealed-kongs', 'melded-kong', 'concealed-kong'],
   'two-concealed-kongs': ['concealed-kong'],
   'two-melded-kongs': ['melded-kong'],
+  'upper-tiles': ['upper-four'],
+  'lower-tiles': ['lower-four'],
+  'fully-concealed-hand': ['self-drawn'],
+  'out-with-replacement-tile': ['self-drawn'],
 };
+
+const containedNonRepeatPairs = new Set([
+  'quadruple-chow->pure-triple-chow',
+  'four-pure-shifted-pungs->pure-shifted-pungs',
+  'four-pure-shifted-chows->pure-shifted-chows',
+  'triple-pung->double-pung',
+]);
 
 const specialOwner: Readonly<Record<string, string>> = {
   'seven-pairs': 'seven-pairs',
@@ -86,6 +109,11 @@ const availableTo = (candidate: PatternAccumulatorCandidate, alternativeId: stri
 const suppress = (candidate: PatternAccumulatorCandidate, reasonId: string) => ({ candidate, reasonId });
 
 const sharedElements = (left: PatternAccumulatorCandidate, right: PatternAccumulatorCandidate) => occurrenceElements(left).filter((element) => occurrenceElements(right).includes(element));
+const containsOccurrence = (higher: PatternAccumulatorCandidate, lower: PatternAccumulatorCandidate) => {
+  const higherElements = occurrenceElements(higher);
+  const lowerElements = occurrenceElements(lower);
+  return higherElements.length > 0 && lowerElements.length > 0 && lowerElements.every((element) => higherElements.includes(element));
+};
 
 /**
  * The five principles are evaluated over structural occurrence IDs, never fan
@@ -119,10 +147,15 @@ const countAlternative = (candidates: readonly PatternAccumulatorCandidate[], id
   const suppressed = new Map<string, string>();
   for (const high of applicable) {
     for (const low of MCR_2006_SOURCE_EXCLUSIONS[slug(high)] ?? []) {
-      for (const target of applicable.filter((candidate) => slug(candidate) === low)) suppressed.set(target.id, reason(`source-${slug(high)}-excludes-${low}`));
+      for (const target of applicable.filter((candidate) => slug(candidate) === low)) {
+        if (!suppressed.has(target.id)) suppressed.set(target.id, reason(`source-${slug(high)}-excludes-${low}`));
+      }
     }
     for (const low of nonRepeat[slug(high)] ?? []) {
-      for (const target of applicable.filter((candidate) => slug(candidate) === low)) suppressed.set(target.id, reason(`non-repeat-${slug(high)}-implies-${low}`));
+      for (const target of applicable.filter((candidate) => slug(candidate) === low)) {
+        const pair = `${slug(high)}->${low}`;
+        if ((!containedNonRepeatPairs.has(pair) || containsOccurrence(high, target)) && !suppressed.has(target.id)) suppressed.set(target.id, reason(`non-repeat-${slug(high)}-implies-${low}`));
+      }
     }
   }
   const remaining = applicable.filter((candidate) => !suppressed.has(candidate.id));
