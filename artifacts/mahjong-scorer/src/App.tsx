@@ -20,6 +20,7 @@ import { toMcrScoringInput } from './game/mcr-hand-input';
 import { presentMcrScore } from './game/mcr-score-presentation';
 import type { McrResolvedWinEvent, McrWinSource, McrWind } from './rules-platform/mcr-scoring-input';
 import { handScorerInitialBaseline, hasHandScorerUnsavedWork } from './game/hand-scorer-dirty-state';
+import { transitionStandaloneHandProfile } from './game/hand-scorer-profile-transition';
 import { normaliseStructuredChoiceForGroup, recoverWorkingDraft } from './game/hand-entry-workspace';
 import { applicableUngroupedBlanks, hasUngroupedBlankAt, reindexUngroupedBlanksAfterRemoval, toggleUngroupedBlankAt } from './game/ungrouped-blank-state';
 import type {
@@ -426,26 +427,32 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
     standaloneProfileRef.current = standaloneRulesProfile;
     if (!profileChanged) return;
 
-    // Goulash is a Club-only explicit standalone choice. Keep ordinary tile
-    // entry when rules change, but remove metadata that has no meaning outside it.
     const compiled = getCurrentCompiledRulesRuntime(standaloneRulesProfile);
-    if (compiled.grammar === 'classical-points-doubles') {
-      if (!compiled.runtime.supportedCapabilities().includes('hand.goulash')) setHandMode('normal');
-      setLimit(compiled.runtime.defaultTableLimit);
-      if (standaloneWasMcrRef.current) setIsWinner(classicalWinnerRef.current);
-      setMcrWinSource(undefined); setMcrResolvedWinEvent(undefined); setMcrLastVisibleCopy(undefined); setMcrSeatWind(undefined); setMcrPrevailingWind(undefined);
-    } else {
-      if (!standaloneWasMcrRef.current) classicalWinnerRef.current = isWinner;
-      setIsWinner(true);
-      setHandMode('normal'); setUngroupedBlankTiles([]); setStandingHand(false); setOnlyPossibleWinningTile(false); setEastThirteenthConsecutiveMahjong(false); setOriginalCall(false); setWinningMethod('wall'); setWinningEventEvidence(undefined); setDiscardAnswer(null); setReplacementAnswer(null);
-      setMcrWinSource(undefined); setMcrResolvedWinEvent(undefined); setMcrLastVisibleCopy(undefined); setMcrSeatWind(undefined); setMcrPrevailingWind(undefined);
-    }
-    standaloneWasMcrRef.current = compiled.grammar === 'pattern-accumulator' && compiled.artifact.profile.identity.familyId === 'family.mcr';
-    setUngroupedBlankTiles([]);
-    setStandingHand(false);
-    setOnlyPossibleWinningTile(false);
-    setEastThirteenthConsecutiveMahjong(false);
-    setSets((current) => current.map(({ blankTileIds: _blankTileIds, ...set }) => set));
+    const nextIsMcr = compiled.grammar === 'pattern-accumulator' && compiled.artifact.profile.identity.familyId === 'family.mcr';
+    const supportsGoulash = compiled.grammar === 'classical-points-doubles' && compiled.runtime.supportedCapabilities().includes('hand.goulash');
+    const transition = transitionStandaloneHandProfile({
+      shared: { sets, layoutMode, looseTiles, flowers, seasons, winningTileProvenance },
+      classical: { handMode, ungroupedBlankTiles, standingHand, onlyPossibleWinningTile, eastThirteenthConsecutiveMahjong, originalCall, winningMethod, winningEventEvidence, discardAnswer, replacementAnswer },
+      mcr: { winSource: mcrWinSource, resolvedWinEvent: mcrResolvedWinEvent, lastVisibleCopy: mcrLastVisibleCopy, seatWind: mcrSeatWind, prevailingWind: mcrPrevailingWind },
+      currentWinner: isWinner, savedClassicalWinner: classicalWinnerRef.current, wasMcr: standaloneWasMcrRef.current,
+      nextIsMcr, supportsGoulash,
+    });
+    classicalWinnerRef.current = transition.savedClassicalWinner;
+    standaloneWasMcrRef.current = transition.wasMcr;
+    setSets(transition.shared.sets);
+    setIsWinner(transition.isWinner);
+    setHandMode(transition.classical.handMode);
+    setUngroupedBlankTiles(transition.classical.ungroupedBlankTiles);
+    setStandingHand(transition.classical.standingHand);
+    setOnlyPossibleWinningTile(transition.classical.onlyPossibleWinningTile);
+    setEastThirteenthConsecutiveMahjong(transition.classical.eastThirteenthConsecutiveMahjong);
+    setOriginalCall(transition.classical.originalCall);
+    setWinningMethod(transition.classical.winningMethod);
+    setWinningEventEvidence(transition.classical.winningEventEvidence);
+    setDiscardAnswer(transition.classical.discardAnswer);
+    setReplacementAnswer(transition.classical.replacementAnswer);
+    setMcrWinSource(transition.mcr.winSource); setMcrResolvedWinEvent(transition.mcr.resolvedWinEvent); setMcrLastVisibleCopy(transition.mcr.lastVisibleCopy); setMcrSeatWind(transition.mcr.seatWind); setMcrPrevailingWind(transition.mcr.prevailingWind);
+    if (compiled.grammar === 'classical-points-doubles') setLimit(compiled.runtime.defaultTableLimit);
   }, [hasContext, practice, standaloneRulesProfile]);
 
   const activeProfile = context?.rulesProfile ?? standaloneRulesProfile;
