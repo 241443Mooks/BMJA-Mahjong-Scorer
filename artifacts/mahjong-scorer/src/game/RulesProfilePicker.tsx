@@ -1,7 +1,7 @@
 import { descriptorForRulesProfile, PUBLIC_RULES_DESCRIPTORS } from './rules-presentation';
 import type { RulesProfileRef } from './types';
 
-/** Non-selectable layout fixture: production always uses the four public descriptors. */
+/** Non-selectable layout fixture: production choices follow descriptor availability for each surface. */
 export const RULES_PROFILE_PICKER_SCALABILITY_FIXTURE = Object.freeze([
   ...PUBLIC_RULES_DESCRIPTORS.map(({ compactLabel, status }) => ({ compactLabel, status })),
   { compactLabel: 'Representative future profile A', status: 'Not publicly selectable' },

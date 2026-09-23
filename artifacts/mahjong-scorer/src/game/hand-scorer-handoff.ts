@@ -1,5 +1,5 @@
 import { BMJA_PROFILE_REF } from './ruleset';
-import { getCurrentRulesRuntime } from '../rules-platform/current-runtime-registry';
+import { getCurrentCompiledRulesRuntime } from '../rules-platform/current-runtime-registry';
 import type {
   GameState,
   HandScorerLocalContext,
@@ -200,12 +200,14 @@ export const applyManualScore = (
 export const handScorerLocalContext = (
   context: HandScorerContext | null,
   rulesProfile = BMJA_PROFILE_REF,
-): HandScorerLocalContext => ({
-  playerWind: context?.playerWind ?? 'east',
-  prevailingWind: context?.prevailingWind ?? 'east',
-  limit:
-    context?.limit ?? getCurrentRulesRuntime(rulesProfile).defaultTableLimit,
-  isWinner: context?.isWinner ?? false,
-  handMode: context?.handMode ?? 'normal',
-  eastThirteenthConsecutiveMahjong: context?.eastThirteenthConsecutiveMahjong,
-});
+): HandScorerLocalContext => {
+  const compiled = getCurrentCompiledRulesRuntime(rulesProfile);
+  return {
+    playerWind: context?.playerWind ?? 'east',
+    prevailingWind: context?.prevailingWind ?? 'east',
+    ...(context?.limit !== undefined ? { limit: context.limit } : compiled.grammar === 'classical-points-doubles' ? { limit: compiled.runtime.defaultTableLimit } : {}),
+    isWinner: context?.isWinner ?? false,
+    handMode: context?.handMode ?? 'normal',
+    eastThirteenthConsecutiveMahjong: context?.eastThirteenthConsecutiveMahjong,
+  };
+};

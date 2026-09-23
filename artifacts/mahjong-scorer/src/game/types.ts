@@ -208,7 +208,7 @@ export type RoundScoringDraft = {
 export type HandScorerLocalContext = {
   playerWind: Wind;
   prevailingWind: Wind;
-  limit: number;
+  limit?: number;
   isWinner: boolean;
   handMode: HandMode;
   eastThirteenthConsecutiveMahjong?: boolean;

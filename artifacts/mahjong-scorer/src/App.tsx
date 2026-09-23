@@ -14,10 +14,11 @@ import { handScorerLocalContext } from './game';
 import { BMJA_PROFILE_REF } from './game/ruleset';
 import { ActiveRules, RulesProfilePicker } from './game/RulesProfilePicker';
 import { descriptorForRulesProfile, isBritishRulesProfile } from './game/rules-presentation';
-import { getCurrentRulesRuntime } from './rules-platform/current-runtime-registry';
 import { getCurrentCompiledRulesRuntime } from './rules-platform/current-runtime-registry';
-import { McrStandaloneHandScorer } from './game/McrStandaloneHandScorer';
 import { mapCurrentClassicalScoreBreakdown } from './rules-platform/current-runtime-compat';
+import { toMcrScoringInput } from './game/mcr-hand-input';
+import { presentMcrScore } from './game/mcr-score-presentation';
+import type { McrResolvedWinEvent, McrWinSource, McrWind } from './rules-platform/mcr-scoring-input';
 import { handScorerInitialBaseline, hasHandScorerUnsavedWork } from './game/hand-scorer-dirty-state';
 import { normaliseStructuredChoiceForGroup, recoverWorkingDraft } from './game/hand-entry-workspace';
 import { applicableUngroupedBlanks, hasUngroupedBlankAt, reindexUngroupedBlanksAfterRemoval, toggleUngroupedBlankAt } from './game/ungrouped-blank-state';
@@ -146,12 +147,14 @@ function BonusTileButton({
   selected,
   playerWind,
   onToggle,
+  showOwn = true,
 }: {
   family: BonusTile['family'];
   number: BonusTile['number'];
   selected: boolean;
   playerWind: Wind;
   onToggle: () => void;
+  showOwn?: boolean;
 }) {
   const artwork = bonusTileDefinition(family, number);
   const isOwn = artwork.wind === playerWind;
@@ -180,7 +183,7 @@ function BonusTileButton({
       />
       <span className="mt-1 text-center text-[9px] font-semibold leading-3 text-[#66746e]">{artwork.name}</span>
       <span className="mt-0.5 text-center text-[8px] leading-3 text-[#7a7769]">{family === 'flower' ? 'Flower' : 'Season'} {number} · {artwork.wind}</span>
-      {isOwn && <span className="mt-1 rounded bg-[#e6efe9] px-1 py-0.5 text-[8px] font-semibold text-[#284d45]">Own {family === 'flower' ? 'Flower' : 'Season'}</span>}
+      {showOwn && isOwn && <span className="mt-1 rounded bg-[#e6efe9] px-1 py-0.5 text-[8px] font-semibold text-[#284d45]">Own {family === 'flower' ? 'Flower' : 'Season'}</span>}
     </button>
   );
 }
@@ -197,11 +200,24 @@ function SectionLabel({ eyebrow, title, count }: { eyebrow: string; title: strin
   );
 }
 
-function HandScorer({ context, onClose, standaloneHand, standaloneRulesProfile, onStandaloneRulesProfileChange, example, practice }: { context: HandScorerContext | null; onClose: (result?: HandScorerResult) => void; standaloneHand: boolean; standaloneRulesProfile: import('./game').RulesProfileRef; onStandaloneRulesProfileChange: (profile: import('./game').RulesProfileRef) => void; example?: ResolvedScorerExample; practice?: boolean }) {
+const mcrEvents: readonly { value: McrResolvedWinEvent; label: string }[] = [
+  { value: 'none', label: 'Normal win' }, { value: 'last-wall-draw', label: 'Last wall draw' },
+  { value: 'last-discard', label: 'Last discard' }, { value: 'kong-replacement', label: 'Kong replacement' },
+  { value: 'flower-replacement', label: 'Flower replacement' }, { value: 'rob-kong', label: 'Robbing a Kong' },
+];
+const eventSource: Partial<Record<McrResolvedWinEvent, McrWinSource>> = {
+  'last-wall-draw': 'self-draw', 'kong-replacement': 'self-draw', 'flower-replacement': 'self-draw',
+  'last-discard': 'discard', 'rob-kong': 'discard',
+};
+const mcrWinds: readonly McrWind[] = ['east', 'south', 'west', 'north'];
+
+export function HandScorer({ context, onClose, standaloneHand, standaloneRulesProfile, onStandaloneRulesProfileChange, example, practice }: { context: HandScorerContext | null; onClose: (result?: HandScorerResult) => void; standaloneHand: boolean; standaloneRulesProfile: import('./game').RulesProfileRef; onStandaloneRulesProfileChange: (profile: import('./game').RulesProfileRef) => void; example?: ResolvedScorerExample; practice?: boolean }) {
   // An example borrows the hand contract only; it must never acquire the game callback.
   const hasContext = !!context && !example;
   const practiceContext = practiceScorerContext(example);
   const initialContext = practice ? practiceContext : handScorerLocalContext(context, standaloneRulesProfile);
+  const initialCompiledRuntime = getCurrentCompiledRulesRuntime(context?.rulesProfile ?? standaloneRulesProfile);
+  const initialIsMcr = initialCompiledRuntime.grammar === 'pattern-accumulator' && initialCompiledRuntime.artifact.profile.identity.familyId === 'family.mcr';
   const initialHand = handForScorerMode(context, example, !!practice);
   const [sets, setSets] = useState<UIHandSet[]>(() =>
     initialHand
@@ -235,11 +251,11 @@ function HandScorer({ context, onClose, standaloneHand, standaloneRulesProfile, 
   const [prevailingWind, setPrevailingWind] = useState<Wind>(
     initialContext.prevailingWind,
   );
-  const [limit, setLimit] = useState<number>(initialContext.limit);
+  const [limit, setLimit] = useState<number | undefined>(initialContext.limit);
   const [handMode, setHandMode] = useState(initialContext.handMode);
   const standaloneProfileRef = useRef(standaloneRulesProfile);
 
-  const [isWinner, setIsWinner] = useState<boolean>(initialContext.isWinner);
+  const [isWinner, setIsWinner] = useState<boolean>(initialIsMcr || initialContext.isWinner);
   const [winningMethod, setWinningMethod] = useState<WinningMethod>(
     initialHand?.winningMethod ?? (practice ? practiceContext.winningMethod : 'wall'),
   );
@@ -266,6 +282,13 @@ function HandScorer({ context, onClose, standaloneHand, standaloneRulesProfile, 
   const [replacementAnswer, setReplacementAnswer] = useState<'yes' | 'no' | 'unsure' | null>(
     initialHand?.winningEventEvidence?.type === 'replacement-chain' ? 'yes' : null
   );
+  const [mcrWinSource, setMcrWinSource] = useState<McrWinSource>();
+  const [mcrResolvedWinEvent, setMcrResolvedWinEvent] = useState<McrResolvedWinEvent>();
+  const [mcrLastVisibleCopy, setMcrLastVisibleCopy] = useState<boolean>();
+  const [mcrSeatWind, setMcrSeatWind] = useState<McrWind>();
+  const [mcrPrevailingWind, setMcrPrevailingWind] = useState<McrWind>();
+  const classicalWinnerRef = useRef(initialContext.isWinner);
+  const standaloneWasMcrRef = useRef(initialIsMcr);
 
   const availableWinningMethods = useMemo(() => {
     const baseMethods: { value: WinningMethod; label: string }[] = [
@@ -296,7 +319,7 @@ function HandScorer({ context, onClose, standaloneHand, standaloneRulesProfile, 
   const practiceTarget = practice ? scoringExampleById(example?.id) : undefined;
   const initialBaseline = useMemo(() => handScorerInitialBaseline(initialHand, {
     playerWind: initialContext.playerWind, prevailingWind: initialContext.prevailingWind, limit: initialContext.limit,
-    isWinner: initialContext.isWinner, winningMethod: initialHand?.winningMethod ?? (practice ? practiceContext.winningMethod : 'wall'),
+    isWinner: initialIsMcr || initialContext.isWinner, winningMethod: initialHand?.winningMethod ?? (practice ? practiceContext.winningMethod : 'wall'),
     originalCall: initialContext.isWinner ? initialHand?.originalCall ?? (practice ? practiceContext.originalCall : false) : false,
   }), [context, example, practice]);
   const hasUnsavedWork = !hasContext && hasHandScorerUnsavedWork({ sets, layoutMode, looseTiles, remainingTiles, ungroupedBlankTiles, flowers, seasons, playerWind, prevailingWind, limit, isWinner, winningMethod, originalCall, winningTileProvenance, winningEventEvidence }, initialBaseline);
@@ -405,14 +428,30 @@ function HandScorer({ context, onClose, standaloneHand, standaloneRulesProfile, 
 
     // Goulash is a Club-only explicit standalone choice. Keep ordinary tile
     // entry when rules change, but remove metadata that has no meaning outside it.
-    if (!getCurrentRulesRuntime(standaloneRulesProfile).supportedCapabilities().includes('hand.goulash')) setHandMode('normal');
-    setLimit(getCurrentRulesRuntime(standaloneRulesProfile).defaultTableLimit);
+    const compiled = getCurrentCompiledRulesRuntime(standaloneRulesProfile);
+    if (compiled.grammar === 'classical-points-doubles') {
+      if (!compiled.runtime.supportedCapabilities().includes('hand.goulash')) setHandMode('normal');
+      setLimit(compiled.runtime.defaultTableLimit);
+      if (standaloneWasMcrRef.current) setIsWinner(classicalWinnerRef.current);
+      setMcrWinSource(undefined); setMcrResolvedWinEvent(undefined); setMcrLastVisibleCopy(undefined); setMcrSeatWind(undefined); setMcrPrevailingWind(undefined);
+    } else {
+      if (!standaloneWasMcrRef.current) classicalWinnerRef.current = isWinner;
+      setIsWinner(true);
+      setHandMode('normal'); setUngroupedBlankTiles([]); setStandingHand(false); setOnlyPossibleWinningTile(false); setEastThirteenthConsecutiveMahjong(false); setOriginalCall(false); setWinningMethod('wall'); setWinningEventEvidence(undefined); setDiscardAnswer(null); setReplacementAnswer(null);
+      setMcrWinSource(undefined); setMcrResolvedWinEvent(undefined); setMcrLastVisibleCopy(undefined); setMcrSeatWind(undefined); setMcrPrevailingWind(undefined);
+    }
+    standaloneWasMcrRef.current = compiled.grammar === 'pattern-accumulator' && compiled.artifact.profile.identity.familyId === 'family.mcr';
     setUngroupedBlankTiles([]);
     setStandingHand(false);
     setOnlyPossibleWinningTile(false);
     setEastThirteenthConsecutiveMahjong(false);
     setSets((current) => current.map(({ blankTileIds: _blankTileIds, ...set }) => set));
   }, [hasContext, practice, standaloneRulesProfile]);
+
+  const activeProfile = context?.rulesProfile ?? standaloneRulesProfile;
+  const compiledRuntime = useMemo(() => getCurrentCompiledRulesRuntime(activeProfile), [activeProfile]);
+  const isMcr = compiledRuntime.grammar === 'pattern-accumulator'
+    && compiledRuntime.artifact.profile.identity.familyId === 'family.mcr';
 
   const hand = useMemo<MahjongHand>(() => {
     const validSets = sets.filter((s): s is HandSet => s.tile !== null);
@@ -439,6 +478,7 @@ function HandScorer({ context, onClose, standaloneHand, standaloneRulesProfile, 
   }, [sets, looseTiles, remainingTiles, ungroupedBlankTiles, layoutMode, flowers, seasons, isWinner, winningMethod, originalCall, standingHand, onlyPossibleWinningTile, winningTileProvenance, effectiveWinningEventEvidence]);
 
   useEffect(() => {
+    if (isMcr) return;
     if (winningTileProvenance) {
       const validSets = sets.filter((s): s is HandSet => s.tile !== null);
       const tempHand: MahjongHand = {
@@ -454,7 +494,7 @@ function HandScorer({ context, onClose, standaloneHand, standaloneRulesProfile, 
         setWinningTileProvenance(undefined);
       }
     }
-  }, [sets, looseTiles, layoutMode, isWinner, winningMethod, winningTileProvenance]);
+  }, [sets, looseTiles, layoutMode, isWinner, winningMethod, winningTileProvenance, isMcr]);
 
   useEffect(() => {
     if (playerWind !== 'east' && winningMethod === 'initial-deal') {
@@ -496,15 +536,11 @@ function HandScorer({ context, onClose, standaloneHand, standaloneRulesProfile, 
   }, [isWinner, winningMethod, numberOfKongs]);
 
   const gameContext = useMemo<GameContext>(
-    () => ({ playerWind, prevailingWind, limit, handMode, eastThirteenthConsecutiveMahjong }),
+    () => ({ playerWind, prevailingWind, limit: limit as number, handMode, eastThirteenthConsecutiveMahjong }),
     [handMode, limit, playerWind, prevailingWind, eastThirteenthConsecutiveMahjong],
   );
 
-  const scoringRuntime = useMemo(
-    () =>
-      getCurrentRulesRuntime(context?.rulesProfile ?? standaloneRulesProfile),
-    [context, standaloneRulesProfile],
-  );
+  const scoringRuntime = compiledRuntime.grammar === 'classical-points-doubles' ? compiledRuntime.runtime : undefined;
 
   const isStructureComplete = useMemo(() => {
     if (!isWinner) return false;
@@ -513,14 +549,21 @@ function HandScorer({ context, onClose, standaloneHand, standaloneRulesProfile, 
       winningMethod: 'wall',
       winningTileProvenance: undefined,
     };
-    return scoringRuntime.validateHand({ evidence: tempHand, context: gameContext }).length === 0;
-  }, [hand, isWinner, gameContext, scoringRuntime]);
+    const represented = layoutMode === 'sets' ? sets.filter((item) => item.tile && item.kind === 'kong').length : 0;
+    const physical = layoutMode === 'special' ? looseTiles.length : sets.filter((item) => item.tile).flatMap((item) => expandedTiles(item as HandSet)).length + (!isWinner ? remainingTiles.length : 0);
+    return scoringRuntime ? scoringRuntime.validateHand({ evidence: tempHand, context: gameContext }).length === 0 : physical - represented === 14;
+  }, [hand, isWinner, gameContext, scoringRuntime, layoutMode, sets, looseTiles, remainingTiles]);
 
   const score = useMemo(
-    () => mapCurrentClassicalScoreBreakdown(scoringRuntime.scoreHand({ evidence: hand, context: gameContext })),
+    () => scoringRuntime ? mapCurrentClassicalScoreBreakdown(scoringRuntime.scoreHand({ evidence: hand, context: gameContext })) : undefined,
     [gameContext, hand, scoringRuntime],
   );
-  const patterns = useMemo(() => detectedPatterns(score), [score]);
+  const mcrResult = useMemo(() => {
+    if (!isMcr || compiledRuntime.grammar !== 'pattern-accumulator' || !mcrWinSource || !mcrResolvedWinEvent) return undefined;
+    const adapted = toMcrScoringInput(hand, { winSource: mcrWinSource, resolvedWinEvent: mcrResolvedWinEvent, lastVisibleCopy: mcrLastVisibleCopy, seatWind: mcrSeatWind, prevailingWind: mcrPrevailingWind });
+    return adapted.kind === 'ready' ? presentMcrScore(compiledRuntime.runtime.scoreHand(adapted.input)) : undefined;
+  }, [compiledRuntime, hand, isMcr, mcrLastVisibleCopy, mcrPrevailingWind, mcrResolvedWinEvent, mcrSeatWind, mcrWinSource]);
+  const patterns = useMemo(() => score ? detectedPatterns(score) : [], [score]);
 
   const enteredSets = sets.filter((s): s is HandSet => s.tile !== null);
   const representedKongs =
@@ -739,16 +782,17 @@ function HandScorer({ context, onClose, standaloneHand, standaloneRulesProfile, 
     }
   }
   function copyScore() {
-    navigator.clipboard?.writeText(`${playerWind} Player: ${score.finalScore} points (${score.basePoints} base, ${score.doubles} doubles)`);
+    if (!score) return;
+    navigator.clipboard?.writeText(`${playerWind} Player: ${score!.finalScore} points (${score!.basePoints} base, ${score!.doubles} doubles)`);
     setCopied(true);
     window.setTimeout(() => setCopied(false), 1400);
   }
 
   function applyScore() {
-    if (!context || example || !score.valid) return;
+    if (isMcr || !context || example || !score?.valid) return;
     onClose({
       playerId: context.playerId,
-      score: score.finalScore,
+      score: score!.finalScore,
       isWinner,
       detailedHand: {
         source: 'detailed-scorer',
@@ -774,7 +818,7 @@ function HandScorer({ context, onClose, standaloneHand, standaloneRulesProfile, 
         },
         context: { ...gameContext },
         breakdown: score,
-        finalScore: score.finalScore,
+        finalScore: score!.finalScore,
       },
     });
   }
@@ -896,12 +940,12 @@ function HandScorer({ context, onClose, standaloneHand, standaloneRulesProfile, 
                     ? `Example: ${example.name}. This uses the normal scorer; change it to explore.`
                     : hasContext
                     ? `Calculating ${context.playerName}’s ${context.playerWind} hand during the ${context.prevailingWind} prevailing round.`
-                  : standaloneHand
-                      ? 'Enter your tiles visually as they sit on the table. The calculator shows supported points, doubles, special hands and fishing in a clear score breakdown. Playing a whole game? Use the full-game tracker for settlement and running totals.'
+                    : standaloneHand
+                      ? isMcr ? 'Enter a completed winning hand. The MCR scorer evaluates fan, the qualifying subtotal, Flowers and Basic Points.' : 'Enter your tiles visually as they sit on the table. The calculator shows supported points, doubles, special hands and fishing in a clear score breakdown. Playing a whole game? Use the full-game tracker for settlement and running totals.'
                       : 'Enter each set as it sits on the table. The score builds beside you, with every point and double accounted for.'}
                 </p>
                 {hasContext ? <ActiveRules profile={context.rulesProfile} inherited /> : <ActiveRules profile={standaloneRulesProfile} />}
-                {standaloneHand && !hasContext && <p className="mt-3 text-[15px] leading-6 text-[#66746e]">Need to see who pays whom after scoring? <a className="font-semibold underline decoration-[#ae6249] underline-offset-4" href="/mahjong-settlement">Understand settlement</a> or <a className="font-semibold underline decoration-[#ae6249] underline-offset-4" href="/game">track a full game</a>.</p>}
+                {standaloneHand && !hasContext && !isMcr && <p className="mt-3 text-[15px] leading-6 text-[#66746e]">Need to see who pays whom after scoring? <a className="font-semibold underline decoration-[#ae6249] underline-offset-4" href="/mahjong-settlement">Understand settlement</a> or <a className="font-semibold underline decoration-[#ae6249] underline-offset-4" href="/game">track a full game</a>.</p>}
                 {context?.requiresRecalculation && (
                   <div
                     data-testid="notice-recalculation-required"
@@ -922,8 +966,8 @@ function HandScorer({ context, onClose, standaloneHand, standaloneRulesProfile, 
           </div>
 
           {standaloneHand && !hasContext && !example && !practice && <div className="max-w-[900px]"><RulesProfilePicker surface="hand" prompt="Which rules are you scoring?" selectedProfile={standaloneRulesProfile} onSelect={onStandaloneRulesProfileChange} />
-            {getCurrentRulesRuntime(standaloneRulesProfile).supportedCapabilities().includes('hand.goulash') && <label className="mb-6 block rounded-lg border border-[#d8ceb8] bg-[#fbf8ed] p-4 text-[12px] text-[#284d45]"><span className="mb-2 block font-semibold">Hand mode</span><select data-testid="select-standalone-hand-mode" value={handMode} onChange={(event) => setHandMode(event.target.value as 'normal' | 'goulash')} className="w-full rounded-md border border-[#cfc3aa] bg-[#fdfbf5] px-3 py-2"><option value="normal">Normal hand</option><option value="goulash">Goulash hand (blank tiles; no chows)</option></select></label>}</div>}
-          {(() => { const capabilities = getCurrentRulesRuntime(context?.rulesProfile ?? standaloneRulesProfile).supportedCapabilities(); return (capabilities.includes('hand.standing-hand') || capabilities.includes('hand.only-possible-winning-tile') || capabilities.includes('context.east-thirteenth-consecutive-mahjong')) && <section data-testid="profile-hand-evidence" className="mx-auto mb-5 max-w-[900px] rounded-lg border border-[#d8ceb8] bg-[#fbf8ed] p-4 text-[12px] text-[#284d45]"><h2 className="font-serif text-[20px]">Scoring evidence</h2>{capabilities.includes('hand.standing-hand') && <label className="mt-3 flex gap-2"><input type="checkbox" checked={standingHand} onChange={(event) => setStandingHand(event.target.checked)} />Standing Hand (declared/locked table state)</label>}{capabilities.includes('hand.only-possible-winning-tile') && <label className="mt-2 flex gap-2"><input type="checkbox" checked={onlyPossibleWinningTile} onChange={(event) => setOnlyPossibleWinningTile(event.target.checked)} />Only possible winning tile</label>}{capabilities.includes('context.east-thirteenth-consecutive-mahjong') && <label className="mt-2 flex gap-2"><input type="checkbox" checked={eastThirteenthConsecutiveMahjong} onChange={(event) => setEastThirteenthConsecutiveMahjong(event.target.checked)} />East's thirteenth consecutive Mah Jong</label>}</section>; })()}
+            {compiledRuntime.grammar === 'classical-points-doubles' && compiledRuntime.runtime.supportedCapabilities().includes('hand.goulash') && <label className="mb-6 block rounded-lg border border-[#d8ceb8] bg-[#fbf8ed] p-4 text-[12px] text-[#284d45]"><span className="mb-2 block font-semibold">Hand mode</span><select data-testid="select-standalone-hand-mode" value={handMode} onChange={(event) => setHandMode(event.target.value as 'normal' | 'goulash')} className="w-full rounded-md border border-[#cfc3aa] bg-[#fdfbf5] px-3 py-2"><option value="normal">Normal hand</option><option value="goulash">Goulash hand (blank tiles; no chows)</option></select></label>}</div>}
+          {compiledRuntime.grammar === 'classical-points-doubles' && (() => { const capabilities = compiledRuntime.runtime.supportedCapabilities(); return (capabilities.includes('hand.standing-hand') || capabilities.includes('hand.only-possible-winning-tile') || capabilities.includes('context.east-thirteenth-consecutive-mahjong')) && <section data-testid="profile-hand-evidence" className="mx-auto mb-5 max-w-[900px] rounded-lg border border-[#d8ceb8] bg-[#fbf8ed] p-4 text-[12px] text-[#284d45]"><h2 className="font-serif text-[20px]">Scoring evidence</h2>{capabilities.includes('hand.standing-hand') && <label className="mt-3 flex gap-2"><input type="checkbox" checked={standingHand} onChange={(event) => setStandingHand(event.target.checked)} />Standing Hand (declared/locked table state)</label>}{capabilities.includes('hand.only-possible-winning-tile') && <label className="mt-2 flex gap-2"><input type="checkbox" checked={onlyPossibleWinningTile} onChange={(event) => setOnlyPossibleWinningTile(event.target.checked)} />Only possible winning tile</label>}{capabilities.includes('context.east-thirteenth-consecutive-mahjong') && <label className="mt-2 flex gap-2"><input type="checkbox" checked={eastThirteenthConsecutiveMahjong} onChange={(event) => setEastThirteenthConsecutiveMahjong(event.target.checked)} />East's thirteenth consecutive Mah Jong</label>}</section>; })()}
 
           <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-5 xl:grid-cols-[minmax(0,1.18fr)_minmax(280px,.82fr)]">
             <div className="min-w-0 space-y-5">
@@ -932,7 +976,7 @@ function HandScorer({ context, onClose, standaloneHand, standaloneRulesProfile, 
                 <p className="mt-1 text-[11px] leading-5 text-[#66746e]">{hasContext ? 'Your game has supplied these facts. Add the hand evidence below.' : 'Choose the outcome before entering tiles so the scorer shows the right hand flow.'}</p>
                 <div className="mt-3 space-y-3">
                   {hasContext && <p data-testid="mobile-inherited-context" className="rounded-md border border-[#cfc3aa] bg-[#f4eddf] px-3 py-2 text-[10px] leading-4 text-[#66746e]">{context.playerName} · {playerWind} player · {prevailingWind} prevailing · {limit} limit<br />{descriptorForRulesProfile(context.rulesProfile).compactLabel} · {isWinner ? 'Winner' : 'Non-winner'} · inherited from game</p>}
-                  {!hasContext && <label className="flex cursor-pointer items-center justify-between rounded-md bg-[#f4eddf] px-3 py-2.5 text-[12px] font-semibold text-[#284d45]">
+                  {!hasContext && !isMcr && <label className="flex cursor-pointer items-center justify-between rounded-md bg-[#f4eddf] px-3 py-2.5 text-[12px] font-semibold text-[#284d45]">
                     <span>Hand is winner{hasContext && <span className="ml-1 font-normal text-[#7a7769]">(Set on game screen)</span>}</span>
                     <input
                       type="checkbox"
@@ -950,7 +994,7 @@ function HandScorer({ context, onClose, standaloneHand, standaloneRulesProfile, 
                       className="h-4 w-4 accent-[#284d45] disabled:cursor-not-allowed"
                     />
                   </label>}
-                  {isWinner && (
+                  {isWinner && !isMcr && (
                     <label className="block min-w-0">
                       <span className="mb-1.5 block font-mono text-[10px] uppercase tracking-[.15em] text-[#7a7769]">Winning method</span>
                       <select data-testid="mobile-select-winning-method" value={winningMethod} onChange={(e) => setWinningMethod(e.target.value as WinningMethod)} className="w-full min-w-0 rounded-md border border-[#cfc3aa] bg-[#fdfbf5] px-3 py-2.5 text-[12px] font-semibold text-[#284d45] focus:ring-2">
@@ -1026,9 +1070,7 @@ function HandScorer({ context, onClose, standaloneHand, standaloneRulesProfile, 
                       )}
                     </div>
                     <p className="mt-3 text-[11px] leading-5 text-[#7a7769]">
-                      Use this for irregular layouts. When fishing, enter only
-                      the tiles currently held; the scorer finds every legal
-                      completing tile.
+                      {isMcr ? 'Use this workspace when the physical hand does not fit the normal group layout. The MCR runtime interprets the entered tiles.' : 'Use this for irregular layouts. When fishing, enter only the tiles currently held; the scorer finds every legal completing tile.'}
                     </p>
                     {renderMobileTilePicker('Special layout')}
                     <div className="mt-3 hidden rounded-md border border-[#d8ceb8] bg-[#f8f4e9] p-3 sm:block"><div className="mb-2 flex gap-1 overflow-x-auto">{suitOrder.map((suit) => <button type="button" key={suit} data-testid={`button-suit-${suit}`} onClick={() => { setActiveSuit(suit); setShowAllTiles(false); }} className={`shrink-0 rounded px-3 py-1.5 font-mono text-[10px] uppercase ${activeSuit === suit && !showAllTiles ? 'bg-[#284d45] text-[#f8f4e9]' : 'text-[#7a7769] hover:bg-[#eee6d5]'}`}>{suitNames[suit]}</button>)}</div><div className="flex flex-wrap gap-2">{visibleTiles.map((tile) => <button type="button" key={tileKey(tile)} data-testid={`button-add-tile-${tileKey(tile)}`} aria-label={`Add ${tileName(tile)}`} onClick={() => addTile(tile)} disabled={tileIsDisabled(tile)} className="rounded-[7px] disabled:cursor-not-allowed disabled:opacity-35"><TileFace tile={tile} compact /></button>)}</div></div>
@@ -1047,9 +1089,9 @@ function HandScorer({ context, onClose, standaloneHand, standaloneRulesProfile, 
                         {activeSet ? <><div className="grid grid-cols-2 gap-2"><label className="text-[10px] font-semibold text-[#66746e]">Family<select data-testid="select-working-family" value={structuredFamily} onChange={(e) => { const family = e.target.value as typeof structuredFamily; setStructuredFamily(family); setStructuredValue(family === 'wind' ? 'east' : family === 'dragon' ? 'red' : '1'); }} className="mt-1 w-full rounded border border-[#cfc3aa] bg-[#fdfbf5] px-2 py-2 text-[12px]"><option value="characters">Characters</option><option value="bamboo">Bamboo</option><option value="circles">Circles</option>{activeSet.kind !== 'chow' && <><option value="wind">Wind</option><option value="dragon">Dragon</option></>}</select></label><label className="text-[10px] font-semibold text-[#66746e]">Value<select data-testid="select-working-value" value={structuredValue} onChange={(e) => setStructuredValue(e.target.value)} className="mt-1 w-full rounded border border-[#cfc3aa] bg-[#fdfbf5] px-2 py-2 text-[12px]">{structuredValues.map((value) => <option key={value} value={value}>{value}</option>)}</select></label></div>{structuredTile && <div className="mt-3 flex items-center justify-between rounded-md border border-[#e2d9c7] bg-[#fdfbf5] p-2"><div className="flex items-center gap-2"><TileFace tile={structuredTile} compact /><span className="text-[11px] font-semibold text-[#284d45] capitalize">{activeSet.kind} · {tileName(structuredTile)}</span></div><button type="button" data-testid="button-add-working-group" disabled={tileIsDisabled(structuredTile)} onClick={() => addTile(structuredTile)} className="rounded-md bg-[#284d45] px-3 py-2 text-[11px] font-semibold text-[#f8f4e9] disabled:opacity-40">Add group</button></div>}<details className="mt-2"><summary className="cursor-pointer text-[11px] font-semibold text-[#66746e]">Pick visually instead</summary>{renderMobileTilePicker('Confirm this group')}</details></> : <div className="rounded-md border border-dashed border-[#d7cbb5] p-3 text-[11px] text-[#7a7769]">Choose a completed group to edit, or add another normal group.</div>}
                       </div>
                       <div className="mt-3 hidden sm:block"><div className="mb-2 flex gap-1 overflow-x-auto">{suitOrder.map((suit) => <button type="button" key={suit} data-testid={`button-suit-${suit}`} onClick={() => { setActiveSuit(suit); setShowAllTiles(false); }} className={`shrink-0 rounded px-3 py-1.5 font-mono text-[10px] uppercase ${activeSuit === suit && !showAllTiles ? 'bg-[#284d45] text-[#f8f4e9]' : 'text-[#7a7769] hover:bg-[#eee6d5]'}`}>{suitNames[suit]}</button>)}</div><div className="flex flex-wrap gap-2">{visibleTiles.map((tile) => <button type="button" key={tileKey(tile)} data-testid={`button-add-tile-${tileKey(tile)}`} aria-label={`Add ${tileName(tile)}`} onClick={() => addTile(tile)} disabled={tileIsDisabled(tile)} className="rounded-[7px] disabled:cursor-not-allowed disabled:opacity-35"><TileFace tile={tile} compact /></button>)}</div></div>
-                      <details data-testid="mobile-live-result" className="mt-3 rounded-md border border-[#b8cdbf] bg-[#edf3ed] px-3 py-2 sm:hidden"><summary className="cursor-pointer text-[11px] font-semibold text-[#284d45]">{score.valid ? `${score.finalScore} pts · ${score.basePoints} base · ${score.doubles} doubles${score.evidenceCompleteness === 'partial' ? ' · Partial evidence' : ''}` : structuralTileCount === structuralTarget && score.validationErrors[0] ? score.validationErrors[0] : tileProgressLabel}</summary><div className="mt-2 text-[10px] leading-4 text-[#66746e]">{score.valid ? score.evidenceCompleteness === 'partial' ? 'Score from entered evidence; add remaining tiles for whole-hand checks.' : 'Open for the full score breakdown below.' : 'Keep adding or correcting evidence; partial hands remain supported.'}</div>{hasContext && score.valid && <button type="button" data-testid="button-apply-score-compact" onClick={applyScore} className="mt-2 rounded bg-[#284d45] px-3 py-2 text-[11px] font-semibold text-[#f8f4e9]">Apply {score.finalScore} to {context.playerName}</button>}</details>
+                      {isMcr ? <details data-testid="mobile-live-result" className="mt-3 rounded-md border border-[#b8cdbf] bg-[#edf3ed] px-3 py-2 sm:hidden"><summary className="cursor-pointer text-[11px] font-semibold text-[#284d45]">{mcrResult?.kind === 'scored' ? `${mcrResult.basicPoints} Basic Points` : mcrResult?.kind === 'not-qualifying' ? 'Not qualifying' : 'MCR evidence needed'}</summary><div className="mt-2 text-[10px]">Fan · qualifying subtotal · Flowers · Basic Points</div></details> : score && <details data-testid="mobile-live-result" className="mt-3 rounded-md border border-[#b8cdbf] bg-[#edf3ed] px-3 py-2 sm:hidden"><summary className="cursor-pointer text-[11px] font-semibold text-[#284d45]">{score.valid ? `${score.finalScore} pts · ${score.basePoints} base · ${score.doubles} doubles${score.evidenceCompleteness === 'partial' ? ' · Partial evidence' : ''}` : structuralTileCount === structuralTarget && score.validationErrors[0] ? score.validationErrors[0] : tileProgressLabel}</summary><div className="mt-2 text-[10px] leading-4 text-[#66746e]">{score.valid ? score.evidenceCompleteness === 'partial' ? 'Score from entered evidence; add remaining tiles for whole-hand checks.' : 'Open for the full score breakdown below.' : 'Keep adding or correcting evidence; partial hands remain supported.'}</div>{hasContext && score.valid && <button type="button" data-testid="button-apply-score-compact" onClick={applyScore} className="mt-2 rounded bg-[#284d45] px-3 py-2 text-[11px] font-semibold text-[#f8f4e9]">Apply {score.finalScore} to {context.playerName}</button>}</details>}
                     </section>
-                    <section data-testid="hand-so-far" className="rounded-lg border border-[#e2d9c7] bg-[#fdfbf5] p-3 sm:p-4"><div className="mb-3 flex items-baseline justify-between"><div><div className="font-mono text-[10px] uppercase tracking-[.15em] text-[#ae6249]">Hand so far</div><h3 className="font-serif text-[20px] text-[#284d45]">Completed groups</h3></div><span className="font-mono text-[10px] text-[#66746e]">{enteredSets.length} entered</span></div><div className="space-y-2">{enteredSets.map((s) => <div key={s.id} data-testid={`card-set-${sets.findIndex((candidate) => candidate.id === s.id) + 1}`} className="flex items-center justify-between gap-2 rounded-md border border-[#e2d9c7] bg-[#fbf8ed] p-2"><button type="button" onClick={() => editSet(s.id)} className="flex min-w-0 flex-1 items-center gap-2 text-left"><div className="flex shrink-0 -space-x-3">{expandedTiles(s).map((tile, i) => <span key={i} className="first:ml-0"><TileFace tile={tile} compact /></span>)}</div><span className="min-w-0 text-[11px] font-semibold capitalize text-[#284d45]">{s.kind} · {s.visibility}<span className="block text-[10px] font-normal text-[#7a7769]">Tap to edit</span></span></button><button type="button" aria-label="Remove set" onClick={() => removeSet(s.id)} className="shrink-0 text-[#ae6249]"><X size={14}/></button></div>)}{enteredSets.length === 0 && <p className="rounded-md border border-dashed border-[#d7cbb5] p-3 text-[11px] text-[#7a7769]">Your confirmed groups will collect here. The picker stays ready above.</p>}</div>{!isWinner && <details data-testid="remaining-tiles-disclosure" open={remainingTilesExpanded} onToggle={(event) => setRemainingTilesExpanded(event.currentTarget.open)} className="mt-3 rounded-md border border-[#d8ceb8] bg-[#fbf8ed] px-3 py-2"><summary data-testid="button-select-remaining-tiles" className="flex cursor-pointer list-none items-center justify-between gap-2 text-[11px] font-semibold text-[#284d45]"><span>Remaining tiles <span className="font-normal text-[#66746e]">· {remainingTiles.length} entered</span></span><span className="flex min-w-0 items-center gap-1">{remainingTiles.slice(0, 5).map((tile, index) => { const isBlank = isUngroupedBlank("remaining", index); return <span key={tileKey(tile) + "-" + index} className="relative"><TileFace tile={tile} compact />{isBlank && <span className="absolute -right-1 -top-1 rounded bg-[#ae6249] px-1 text-[8px] font-bold text-white" aria-label={"Blank representing " + tileName(tile)}>B</span>}</span>; })}<span aria-hidden="true">▾</span></span></summary>{score.evidenceCompleteness === 'partial' && <p data-testid="notice-partial-hand" className="mt-2 text-[10px] leading-4 text-[#66746e]"><strong className="text-[#284d45]">Partial evidence</strong> — add Remaining tiles only for whole-hand pattern or fishing checks. <a href="/help#partial-losing-hand" className="font-semibold text-[#284d45] underline decoration-[#cfa58f] underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">Partial-hand help</a></p>}<div className="mt-3 border-t border-[#e2d9c7] pt-3"><p className="mb-2 text-[10px] font-semibold text-[#ae6249]">Tap an entered tile to remove it.</p><div className="flex flex-wrap gap-2">{remainingTiles.map((tile, index) => { const isBlank = isUngroupedBlank('remaining', index); return <div key={`${tileKey(tile)}-${index}`} className="flex flex-col items-center gap-1"><TileFace tile={tile} compact actionLabel={`Remove ${tileName(tile)} from the remaining tiles`} actionTestId={`button-remove-remaining-tile-${index}`} onActivate={() => removeUngroupedTile('remaining', index)} />{handMode === 'goulash' && <button type="button" data-testid={`button-toggle-remaining-blank-${index}`} aria-pressed={isBlank} onClick={() => toggleUngroupedBlank('remaining', index)} className={`rounded px-1.5 py-0.5 text-[9px] font-semibold ${isBlank ? 'bg-[#ae6249] text-white' : 'border border-[#cfc3aa] text-[#66746e]'}`}>{isBlank ? 'Blank' : 'Mark blank'}</button>}</div>; })}</div><div className="mt-3 sm:hidden"><div className="grid grid-cols-2 gap-2"><label className="text-[10px] font-semibold text-[#66746e]">Family<select data-testid="select-remaining-family" value={remainingStructuredFamily} onChange={(event) => { const family = event.target.value as typeof remainingStructuredFamily; setRemainingStructuredFamily(family); setRemainingStructuredValue(family === 'wind' ? 'east' : family === 'dragon' ? 'red' : '1'); }} className="mt-1 w-full rounded border border-[#cfc3aa] bg-[#fdfbf5] px-2 py-2 text-[12px]"><option value="characters">Characters</option><option value="bamboo">Bamboo</option><option value="circles">Circles</option><option value="wind">Winds</option><option value="dragon">Dragons</option></select></label><label className="text-[10px] font-semibold text-[#66746e]">Value<select data-testid="select-remaining-value" value={remainingStructuredValue} onChange={(event) => setRemainingStructuredValue(event.target.value)} className="mt-1 w-full rounded border border-[#cfc3aa] bg-[#fdfbf5] px-2 py-2 text-[12px]">{remainingStructuredValues.map((value) => <option key={value} value={value}>{value}</option>)}</select></label></div>{remainingStructuredTile && <div className="mt-3 flex items-center justify-between rounded-md border border-[#e2d9c7] bg-[#fdfbf5] p-2"><div className="flex items-center gap-2"><TileFace tile={remainingStructuredTile} compact /><span className="text-[11px] font-semibold text-[#284d45]">Loose · {tileName(remainingStructuredTile)}</span></div><button type="button" data-testid="button-add-remaining-tile" disabled={tileIsDisabled(remainingStructuredTile, 'remaining-tiles')} onClick={() => addTile(remainingStructuredTile, 'remaining-tiles')} className="rounded-md bg-[#284d45] px-3 py-2 text-[11px] font-semibold text-[#f8f4e9] disabled:opacity-40">Add tile</button></div>}<details className="mt-2"><summary className="cursor-pointer text-[11px] font-semibold text-[#66746e]">Pick visually instead</summary>{renderMobileTilePicker('Remaining tiles', 'remaining-tiles')}</details></div><div className="mt-3 hidden sm:block"><div className="mb-2 flex gap-1 overflow-x-auto">{suitOrder.map((suit) => <button type="button" key={suit} onClick={() => { setActiveSuit(suit); setShowAllTiles(false); }} className={`shrink-0 rounded px-3 py-1.5 font-mono text-[10px] uppercase ${activeSuit === suit && !showAllTiles ? 'bg-[#284d45] text-[#f8f4e9]' : 'text-[#7a7769] hover:bg-[#eee6d5]'}`}>{suitNames[suit]}</button>)}</div><div className="flex flex-wrap gap-2">{visibleTilesFor('remaining-tiles').map((tile) => <button type="button" key={tileKey(tile)} aria-label={`Add ${tileName(tile)}`} onClick={() => addTile(tile, 'remaining-tiles')} disabled={tileIsDisabled(tile, 'remaining-tiles')} className="rounded-[7px] disabled:opacity-35"><TileFace tile={tile} compact /></button>)}</div></div><button type="button" data-testid="button-return-normal-groups" onClick={() => setRemainingTilesExpanded(false)} className="mt-3 text-[11px] font-semibold text-[#66746e] underline decoration-[#cfc3aa] underline-offset-4">Return to normal group entry</button></div></details>}</section>
+                    <section data-testid="hand-so-far" className="rounded-lg border border-[#e2d9c7] bg-[#fdfbf5] p-3 sm:p-4"><div className="mb-3 flex items-baseline justify-between"><div><div className="font-mono text-[10px] uppercase tracking-[.15em] text-[#ae6249]">Hand so far</div><h3 className="font-serif text-[20px] text-[#284d45]">Completed groups</h3></div><span className="font-mono text-[10px] text-[#66746e]">{enteredSets.length} entered</span></div><div className="space-y-2">{enteredSets.map((s) => <div key={s.id} data-testid={`card-set-${sets.findIndex((candidate) => candidate.id === s.id) + 1}`} className="flex items-center justify-between gap-2 rounded-md border border-[#e2d9c7] bg-[#fbf8ed] p-2"><button type="button" onClick={() => editSet(s.id)} className="flex min-w-0 flex-1 items-center gap-2 text-left"><div className="flex shrink-0 -space-x-3">{expandedTiles(s).map((tile, i) => <span key={i} className="first:ml-0"><TileFace tile={tile} compact /></span>)}</div><span className="min-w-0 text-[11px] font-semibold capitalize text-[#284d45]">{s.kind} · {s.visibility}<span className="block text-[10px] font-normal text-[#7a7769]">Tap to edit</span></span></button><button type="button" aria-label="Remove set" onClick={() => removeSet(s.id)} className="shrink-0 text-[#ae6249]"><X size={14}/></button></div>)}{enteredSets.length === 0 && <p className="rounded-md border border-dashed border-[#d7cbb5] p-3 text-[11px] text-[#7a7769]">Your confirmed groups will collect here. The picker stays ready above.</p>}</div>{!isWinner && <details data-testid="remaining-tiles-disclosure" open={remainingTilesExpanded} onToggle={(event) => setRemainingTilesExpanded(event.currentTarget.open)} className="mt-3 rounded-md border border-[#d8ceb8] bg-[#fbf8ed] px-3 py-2"><summary data-testid="button-select-remaining-tiles" className="flex cursor-pointer list-none items-center justify-between gap-2 text-[11px] font-semibold text-[#284d45]"><span>Remaining tiles <span className="font-normal text-[#66746e]">· {remainingTiles.length} entered</span></span><span className="flex min-w-0 items-center gap-1">{remainingTiles.slice(0, 5).map((tile, index) => { const isBlank = isUngroupedBlank("remaining", index); return <span key={tileKey(tile) + "-" + index} className="relative"><TileFace tile={tile} compact />{isBlank && <span className="absolute -right-1 -top-1 rounded bg-[#ae6249] px-1 text-[8px] font-bold text-white" aria-label={"Blank representing " + tileName(tile)}>B</span>}</span>; })}<span aria-hidden="true">▾</span></span></summary>{score!.evidenceCompleteness === 'partial' && <p data-testid="notice-partial-hand" className="mt-2 text-[10px] leading-4 text-[#66746e]"><strong className="text-[#284d45]">Partial evidence</strong> — add Remaining tiles only for whole-hand pattern or fishing checks. <a href="/help#partial-losing-hand" className="font-semibold text-[#284d45] underline decoration-[#cfa58f] underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">Partial-hand help</a></p>}<div className="mt-3 border-t border-[#e2d9c7] pt-3"><p className="mb-2 text-[10px] font-semibold text-[#ae6249]">Tap an entered tile to remove it.</p><div className="flex flex-wrap gap-2">{remainingTiles.map((tile, index) => { const isBlank = isUngroupedBlank('remaining', index); return <div key={`${tileKey(tile)}-${index}`} className="flex flex-col items-center gap-1"><TileFace tile={tile} compact actionLabel={`Remove ${tileName(tile)} from the remaining tiles`} actionTestId={`button-remove-remaining-tile-${index}`} onActivate={() => removeUngroupedTile('remaining', index)} />{handMode === 'goulash' && <button type="button" data-testid={`button-toggle-remaining-blank-${index}`} aria-pressed={isBlank} onClick={() => toggleUngroupedBlank('remaining', index)} className={`rounded px-1.5 py-0.5 text-[9px] font-semibold ${isBlank ? 'bg-[#ae6249] text-white' : 'border border-[#cfc3aa] text-[#66746e]'}`}>{isBlank ? 'Blank' : 'Mark blank'}</button>}</div>; })}</div><div className="mt-3 sm:hidden"><div className="grid grid-cols-2 gap-2"><label className="text-[10px] font-semibold text-[#66746e]">Family<select data-testid="select-remaining-family" value={remainingStructuredFamily} onChange={(event) => { const family = event.target.value as typeof remainingStructuredFamily; setRemainingStructuredFamily(family); setRemainingStructuredValue(family === 'wind' ? 'east' : family === 'dragon' ? 'red' : '1'); }} className="mt-1 w-full rounded border border-[#cfc3aa] bg-[#fdfbf5] px-2 py-2 text-[12px]"><option value="characters">Characters</option><option value="bamboo">Bamboo</option><option value="circles">Circles</option><option value="wind">Winds</option><option value="dragon">Dragons</option></select></label><label className="text-[10px] font-semibold text-[#66746e]">Value<select data-testid="select-remaining-value" value={remainingStructuredValue} onChange={(event) => setRemainingStructuredValue(event.target.value)} className="mt-1 w-full rounded border border-[#cfc3aa] bg-[#fdfbf5] px-2 py-2 text-[12px]">{remainingStructuredValues.map((value) => <option key={value} value={value}>{value}</option>)}</select></label></div>{remainingStructuredTile && <div className="mt-3 flex items-center justify-between rounded-md border border-[#e2d9c7] bg-[#fdfbf5] p-2"><div className="flex items-center gap-2"><TileFace tile={remainingStructuredTile} compact /><span className="text-[11px] font-semibold text-[#284d45]">Loose · {tileName(remainingStructuredTile)}</span></div><button type="button" data-testid="button-add-remaining-tile" disabled={tileIsDisabled(remainingStructuredTile, 'remaining-tiles')} onClick={() => addTile(remainingStructuredTile, 'remaining-tiles')} className="rounded-md bg-[#284d45] px-3 py-2 text-[11px] font-semibold text-[#f8f4e9] disabled:opacity-40">Add tile</button></div>}<details className="mt-2"><summary className="cursor-pointer text-[11px] font-semibold text-[#66746e]">Pick visually instead</summary>{renderMobileTilePicker('Remaining tiles', 'remaining-tiles')}</details></div><div className="mt-3 hidden sm:block"><div className="mb-2 flex gap-1 overflow-x-auto">{suitOrder.map((suit) => <button type="button" key={suit} onClick={() => { setActiveSuit(suit); setShowAllTiles(false); }} className={`shrink-0 rounded px-3 py-1.5 font-mono text-[10px] uppercase ${activeSuit === suit && !showAllTiles ? 'bg-[#284d45] text-[#f8f4e9]' : 'text-[#7a7769] hover:bg-[#eee6d5]'}`}>{suitNames[suit]}</button>)}</div><div className="flex flex-wrap gap-2">{visibleTilesFor('remaining-tiles').map((tile) => <button type="button" key={tileKey(tile)} aria-label={`Add ${tileName(tile)}`} onClick={() => addTile(tile, 'remaining-tiles')} disabled={tileIsDisabled(tile, 'remaining-tiles')} className="rounded-[7px] disabled:opacity-35"><TileFace tile={tile} compact /></button>)}</div></div><button type="button" data-testid="button-return-normal-groups" onClick={() => setRemainingTilesExpanded(false)} className="mt-3 text-[11px] font-semibold text-[#66746e] underline decoration-[#cfc3aa] underline-offset-4">Return to normal group entry</button></div></details>}</section>
                   </div>
                   <button
                     type="button"
@@ -1066,7 +1108,7 @@ function HandScorer({ context, onClose, standaloneHand, standaloneRulesProfile, 
                 )}
               </section>
 
-              {isWinner && isStructureComplete && winningMethod !== 'initial-deal' && (
+              {isWinner && isStructureComplete && (isMcr || winningMethod !== 'initial-deal') && (
                 <section className="animate-rise rounded-xl border border-[#d8ceb8] bg-[#fbf8ed] p-5 shadow-[var(--shadow-sm)] sm:p-6">
                   <SectionLabel eyebrow="03 / completion" title="The winning tile" />
                   <p className="mb-4 text-[13px] text-[#66746e]">
@@ -1200,6 +1242,7 @@ function HandScorer({ context, onClose, standaloneHand, standaloneRulesProfile, 
                           number={tile.number}
                           selected={flowers.includes(tile.number)}
                           playerWind={playerWind}
+                          showOwn={!isMcr}
                           onToggle={() => toggleBonus(tile.family, tile.number)}
                         />
                       ))}
@@ -1215,6 +1258,7 @@ function HandScorer({ context, onClose, standaloneHand, standaloneRulesProfile, 
                           number={tile.number}
                           selected={seasons.includes(tile.number)}
                           playerWind={playerWind}
+                          showOwn={!isMcr}
                           onToggle={() => toggleBonus(tile.family, tile.number)}
                         />
                       ))}
@@ -1225,6 +1269,7 @@ function HandScorer({ context, onClose, standaloneHand, standaloneRulesProfile, 
             </div>
 
             <aside className="min-w-0 space-y-5">
+              {!isMcr && score && <>
               <section id="game-status-controls" className={`animate-rise animate-rise-delay-1 min-w-0 rounded-xl border border-[#d8ceb8] bg-[#e8e1d1] p-5 sm:p-6 ${hasContext ? 'hidden sm:block' : ''}`}>
                 <SectionLabel eyebrow="05 / context" title="Game status" />
                 <div className="space-y-4">
@@ -1275,7 +1320,7 @@ function HandScorer({ context, onClose, standaloneHand, standaloneRulesProfile, 
                         type="checkbox"
                         data-testid="checkbox-is-winner"
                         checked={isWinner}
-                        disabled={hasContext}
+                        disabled={hasContext || isMcr}
                         aria-readonly={hasContext}
                         onChange={(e) => {
                            if (!hasContext) {
@@ -1292,7 +1337,7 @@ function HandScorer({ context, onClose, standaloneHand, standaloneRulesProfile, 
                         className="h-4 w-4 accent-[#284d45] disabled:cursor-not-allowed"
                       />
                     </label>
-                    {isWinner && (
+                    {isWinner && !isMcr && (
                       <div className="mt-2 space-y-4">
                         <label className="block min-w-0">
                           <span className="mb-1.5 block font-mono text-[10px] uppercase tracking-[.15em] text-[#7a7769]">Winning method</span>
@@ -1409,7 +1454,7 @@ function HandScorer({ context, onClose, standaloneHand, standaloneRulesProfile, 
                       </div>
                     ) : (
                       <select data-testid="select-limit" value={limit} onChange={(e) => setLimit(Number(e.target.value))} className="w-full min-w-0 rounded-md border border-[#cfc3aa] bg-[#fdfbf5] px-3 py-2.5 text-[12px] font-semibold text-[#284d45] focus:ring-2">
-                        {[...new Set([300, 500, limit, 1000, 2000])].sort((a, b) => a - b).map((value) => <option key={value} value={value}>{value.toLocaleString()} points</option>)}
+                        {[...new Set([300, 500, ...(limit === undefined ? [] : [limit]), 1000, 2000])].sort((a, b) => a - b).map((value) => <option key={value} value={value}>{value.toLocaleString()} points</option>)}
                       </select>
                     )}
                   </label>
@@ -1421,38 +1466,38 @@ function HandScorer({ context, onClose, standaloneHand, standaloneRulesProfile, 
                   <div className="flex items-center justify-between">
                     <div>
                       <div className="font-mono text-[10px] uppercase tracking-[.2em] text-[#d7a287]">Current score</div>
-                      <div className="mt-2 font-serif text-[60px] leading-none">{score.finalScore}<span className="ml-2 text-[17px] text-[#b4c4bd]">pts</span></div>
+                      <div className="mt-2 font-serif text-[60px] leading-none">{score!.finalScore}<span className="ml-2 text-[17px] text-[#b4c4bd]">pts</span></div>
                     </div>
                     <div className="flex h-11 w-11 items-center justify-center rounded-full border border-[#6e8d84] text-[#d7a287]"><Check size={22} /></div>
                   </div>
                   <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 font-mono text-[10px] uppercase tracking-[.1em] text-[#b4c4bd]">
-                    {score.scoringMode === 'standard' ? (
+                    {score!.scoringMode === 'standard' ? (
                       <>
-                        <span><b className="text-[#f8f4e9]">{score.basePoints}</b> points</span>
-                        <span><b className="text-[#f8f4e9]">{score.doubles}</b> doubles</span>
+                        <span><b className="text-[#f8f4e9]">{score!.basePoints}</b> points</span>
+                        <span><b className="text-[#f8f4e9]">{score!.doubles}</b> doubles</span>
                       </>
                     ) : (
                       <span className="text-[#d7a287]">Special hand</span>
                     )}
-                    {score.limitApplied && <span className="text-[#d7a287]">Limit applied ({limit})</span>}
+                    {score!.limitApplied && <span className="text-[#d7a287]">Limit applied ({limit})</span>}
                   </div>
                 </div>
                 
                 <div className="p-5 sm:p-6">
                   <div className="mb-3 flex items-center justify-between"><span className="font-mono text-[10px] uppercase tracking-[.18em] text-[#b4c4bd]">Breakdown</span><button type="button" data-testid="button-copy-score" onClick={copyScore} className="flex items-center gap-1.5 text-[10px] font-semibold text-[#d7a287] transition hover:text-[#f8f4e9]">{copied ? <Check size={13} /> : <Copy size={13} />}{copied ? 'Copied' : 'Copy score'}</button></div>
                   
-                  {score.validationErrors.length > 0 && (
+                  {score!.validationErrors.length > 0 && (
                     <div className="mb-4 rounded-md border border-[#8a3c32] bg-[#3a201c] p-3 text-[11px] text-[#f0e9da]">
                       <div className="mb-2 flex items-center gap-1.5 font-semibold text-[#d7a287]"><AlertCircle size={14} /> Invalid hand</div>
                       <ul className="list-disc pl-4 space-y-1">
-                        {score.validationErrors.map((err, i) => <li key={i}>{err}</li>)}
+                        {score!.validationErrors.map((err, i) => <li key={i}>{err}</li>)}
                       </ul>
                     </div>
                   )}
 
                   <div className="space-y-1">
-                    {score.pointRules.length > 0 && <div className="mt-4 mb-2 font-mono text-[10px] uppercase tracking-[.18em] text-[#b4c4bd]">Points</div>}
-                    {score.pointRules.map((rule) => (
+                    {score!.pointRules.length > 0 && <div className="mt-4 mb-2 font-mono text-[10px] uppercase tracking-[.18em] text-[#b4c4bd]">Points</div>}
+                    {score!.pointRules.map((rule) => (
                       <div key={rule.id} className="border-b border-[#45665d] last:border-0">
                         <button type="button" data-testid={`button-rule-${rule.id}`} onClick={() => setExpandedRule(expandedRule === rule.id ? null : rule.id)} className="flex w-full items-center justify-between py-2 text-left text-[12px] text-[#f0e9da]">
                           <span>{rule.label}</span>
@@ -1462,8 +1507,8 @@ function HandScorer({ context, onClose, standaloneHand, standaloneRulesProfile, 
                       </div>
                     ))}
                     
-                    {score.doubleRules.length > 0 && <div className="mt-4 mb-2 font-mono text-[10px] uppercase tracking-[.18em] text-[#b4c4bd]">Doubles</div>}
-                    {score.doubleRules.map((rule) => (
+                    {score!.doubleRules.length > 0 && <div className="mt-4 mb-2 font-mono text-[10px] uppercase tracking-[.18em] text-[#b4c4bd]">Doubles</div>}
+                    {score!.doubleRules.map((rule) => (
                       <div key={rule.id} className="border-b border-[#45665d] last:border-0">
                         <button type="button" data-testid={`button-rule-${rule.id}`} onClick={() => setExpandedRule(expandedRule === rule.id ? null : rule.id)} className="flex w-full items-center justify-between py-2 text-left text-[12px] text-[#f0e9da]">
                           <span>{rule.label}</span>
@@ -1478,8 +1523,8 @@ function HandScorer({ context, onClose, standaloneHand, standaloneRulesProfile, 
                 <div className="border-t border-[#55756c] bg-[#1f3f38] p-5 sm:hidden">
                   {hasContext ? (
                     <>
-                      <button type="button" data-testid="button-apply-score-mobile" disabled={!score.valid} onClick={applyScore} className="flex w-full items-center justify-center rounded-md bg-[#f3e8d4] px-4 py-3 text-[13px] font-bold text-[#284d45] disabled:cursor-not-allowed disabled:opacity-40">
-                        Apply {score.finalScore} to {context.playerName}
+                      <button type="button" data-testid="button-apply-score-mobile" disabled={!score!.valid} onClick={applyScore} className="flex w-full items-center justify-center rounded-md bg-[#f3e8d4] px-4 py-3 text-[13px] font-bold text-[#284d45] disabled:cursor-not-allowed disabled:opacity-40">
+                        Apply {score!.finalScore} to {context.playerName}
                       </button>
                       <button type="button" onClick={leaveHand} className="mt-3 flex w-full items-center justify-center rounded-md border border-[#45665d] py-3 text-[13px] font-semibold text-[#c8d8d1]">
                         Back to game without applying a score
@@ -1507,6 +1552,18 @@ function HandScorer({ context, onClose, standaloneHand, standaloneRulesProfile, 
                   </div>
                 </section>
               )}
+              </>}
+              {isMcr && <>
+                <section data-testid="mcr-evidence-controls" className="rounded-xl border border-[#d8ceb8] bg-[#fbf8ed] p-5">
+                  <SectionLabel eyebrow="05 / MCR evidence" title="Win context" />
+                  <label className="mt-2 block text-sm">Win source<select data-testid="mcr-win-source" value={mcrWinSource ?? ''} onChange={(event) => { const next = (event.target.value || undefined) as McrWinSource | undefined; setMcrWinSource(next); if (mcrResolvedWinEvent && eventSource[mcrResolvedWinEvent] && eventSource[mcrResolvedWinEvent] !== next) setMcrResolvedWinEvent(undefined); }} className="mt-1 w-full rounded border p-2"><option value="">Choose source</option><option value="discard">Discard</option><option value="self-draw">Self-draw</option></select></label>
+                  <label className="mt-3 block text-sm">Resolved win event<select data-testid="mcr-win-event" value={mcrResolvedWinEvent ?? ''} onChange={(event) => setMcrResolvedWinEvent((event.target.value || undefined) as McrResolvedWinEvent | undefined)} className="mt-1 w-full rounded border p-2"><option value="">Choose event</option>{mcrEvents.filter((item) => !eventSource[item.value] || eventSource[item.value] === mcrWinSource).map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</select></label>
+                  <label className="mt-3 block text-sm">Last visible copy<select value={mcrLastVisibleCopy === undefined ? 'unknown' : String(mcrLastVisibleCopy)} onChange={(event) => setMcrLastVisibleCopy(event.target.value === 'unknown' ? undefined : event.target.value === 'true')} className="mt-1 w-full rounded border p-2"><option value="unknown">Unknown</option><option value="true">Yes</option><option value="false">No</option></select></label>
+                  <label className="mt-3 block text-sm">Seat wind<select value={mcrSeatWind ?? ''} onChange={(event) => setMcrSeatWind((event.target.value || undefined) as McrWind | undefined)} className="mt-1 w-full rounded border p-2"><option value="">Not entered</option>{mcrWinds.map((wind) => <option key={wind}>{wind}</option>)}</select></label>
+                  <label className="mt-3 block text-sm">Prevailing wind<select value={mcrPrevailingWind ?? ''} onChange={(event) => setMcrPrevailingWind((event.target.value || undefined) as McrWind | undefined)} className="mt-1 w-full rounded border p-2"><option value="">Not entered</option>{mcrWinds.map((wind) => <option key={wind}>{wind}</option>)}</select></label>
+                </section>
+                <section data-testid="mcr-score-result" className="rounded-xl border border-[#b8cdbf] bg-[#edf3ed] p-5"><h2 className="font-serif text-2xl text-[#284d45]">MCR result</h2>{!mcrWinSource || !mcrResolvedWinEvent ? <p className="mt-3 text-sm">Choose a win source and resolved win event before scoring.</p> : !winningTileProvenance ? <p className="mt-3 text-sm">Identify the winning tile in the shared hand workspace.</p> : !mcrResult ? <p className="mt-3 text-sm">This selected profile is not available for standalone scoring.</p> : mcrResult.kind === 'needs-evidence' ? <><p className="mt-3 font-semibold">More evidence is needed.</p><ul className="list-disc pl-5 text-sm">{mcrResult.prompts.map(({ id, prompt }) => <li key={id} data-evidence-id={id}>{prompt}</li>)}</ul></> : mcrResult.kind === 'not-qualifying' ? <p className="mt-3 text-sm">The hand is below the 8-point minimum before Flowers. Flowers cannot rescue a hand below the minimum.</p> : mcrResult.kind === 'invalid' ? <p className="mt-3 text-sm">Invalid / not scoreable ({mcrResult.reasonId}).</p> : <><p className="mt-3 text-sm">Qualifying subtotal: <strong>{mcrResult.qualifyingSubtotal}</strong></p><p className="text-sm">Flowers: <strong>{mcrResult.flowers}</strong></p><p className="mt-2 text-3xl">{mcrResult.basicPoints} Basic Points</p><h3 className="mt-4 font-semibold">Counted fan</h3><ul className="text-sm">{mcrResult.counted.map((fan) => <li key={`${fan.name}-${fan.sourceLocator}`}>{fan.name} · {fan.value} <small>{fan.sourceLocator}</small></li>)}</ul>{mcrResult.suppressed.length > 0 && <><h3 className="mt-4 font-semibold">Suppressed fan</h3><ul className="text-sm">{mcrResult.suppressed.map((fan) => <li key={`${fan.name}-${fan.reasonId}`}>{fan.name} · {fan.value} — {fan.reason} <small>{fan.sourceLocator} · {fan.reasonId}</small></li>)}</ul></>}</>}</section>
+              </>}
             </aside>
           </div>
         </section>
@@ -1559,8 +1616,7 @@ export default function App({ initialView = 'game', standaloneHand = false, init
           )}
           {(!prerenderOnly || view === 'hand') && (
             <div className={view === 'hand' ? 'block' : 'hidden'}>
-              {standaloneHand && !scorerContext && !example && !practice && <div className={getCurrentCompiledRulesRuntime(standaloneRulesProfile).grammar === 'pattern-accumulator' ? 'block' : 'hidden'}><McrStandaloneHandScorer selectedProfile={standaloneRulesProfile} onProfileChange={setStandaloneRulesProfile} onClose={handleCloseHandScorer} /></div>}
-              {!(standaloneHand && !scorerContext && !example && !practice && getCurrentCompiledRulesRuntime(standaloneRulesProfile).grammar === 'pattern-accumulator') && <HandScorer
+              <HandScorer
                 key={scorerSession}
                 context={scorerContext}
                 onClose={handleCloseHandScorer}
@@ -1569,7 +1625,7 @@ export default function App({ initialView = 'game', standaloneHand = false, init
                 onStandaloneRulesProfileChange={setStandaloneRulesProfile}
                 example={example}
                 practice={practice && !!example}
-              />}
+              />
             </div>
           )}
           <Toaster />
