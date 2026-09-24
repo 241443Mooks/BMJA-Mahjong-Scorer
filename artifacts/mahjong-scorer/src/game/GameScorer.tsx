@@ -11,6 +11,8 @@ import {
   X,
 } from 'lucide-react';
 import { HandRecord, settlementDescription } from './HandRecord';
+import { McrHandRecord, mcrSettlementDescription } from './McrPresentation';
+import { presentMcrScore } from './mcr-score-presentation';
 import { incidentDescription } from './outside-the-box-incidents';
 import { SiteHeader } from '../components/SiteHeader';
 import {
@@ -50,6 +52,7 @@ import type {
   RulesProfileRef,
   SeatAssignments,
   McrRoundInput,
+  McrConfirmedHand,
 } from '.';
 import { applyMcrScorerResult, buildMcrRoundInput, mcrTableProfile, transitionMcrRouting, type McrRoutingState } from './mcr-table-routing';
 import type { Wind } from '../scoring';
@@ -550,30 +553,31 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
   }
 
   if (!isClassicalGameState(game)) {
-    if (game.isComplete) return <div className="mahjong-shell"><main className="mx-auto max-w-[900px] space-y-4 px-5 py-10"><h1 className="font-serif text-3xl text-[#284d45]">MCR game complete</h1><p className="text-sm text-[#66746e]">The game has ended under the MCR progression rules.</p><button data-testid="mcr-undo" onClick={() => { const previous = undoLastHand(game); setGame(previous); setMcrRoute({ draft: { scores: {}, scoreRecords: {} } }); }} className="rounded border px-3 py-2">Undo last hand</button><button onClick={startOver} className="ml-3 rounded border px-3 py-2">Start over</button></main></div>;
     let roundInput: McrRoundInput | null = null;
     let prospective: GameState | null = null;
     let routeError = '';
-    try { roundInput = buildMcrRoundInput(game, mcrRoute); prospective = confirmHand(game, roundInput); }
+    try { if (!game.isComplete) { roundInput = buildMcrRoundInput(game, mcrRoute); prospective = confirmHand(game, roundInput); } }
     catch (caught) { routeError = caught instanceof Error ? caught.message : 'Complete the MCR round route.'; }
     const winnerRecord = mcrRoute.winnerId ? mcrRoute.draft.scoreRecords[mcrRoute.winnerId] : undefined;
-    const settlement = prospective?.handHistory.at(-1)?.settlement;
+    const previewHand = prospective?.handHistory.at(-1) as McrConfirmedHand | undefined;
+    const previewWin = previewHand?.outcome.type === 'mcr-win' ? previewHand.outcome : undefined;
+    const settlement = previewHand?.settlement;
+    const nextEast = prospective?.players.find((player) => prospective.seats[player.id] === 'east');
+    const acceptedView = winnerRecord && 'source' in winnerRecord && winnerRecord.source === 'mcr-detailed-scorer' ? presentMcrScore(winnerRecord.result) : null;
     const recordMcrHand = () => {
       if (!prospective) { setError(routeError); return; }
       setGame(prospective);
       setMcrRoute({ draft: { scores: {}, scoreRecords: {} } });
       setError('');
     };
-    const resetMcrRound = (nextGame: GameState) => {
-      const next = undoLastHand(nextGame);
-      setGame(next);
-      setMcrRoute({ draft: { scores: {}, scoreRecords: {} } });
-      setError('');
-    };
-    return <div className="mahjong-shell">
-      <div className="screen-only sticky top-0 z-20 border-b border-[#d8ceb8] bg-[#f5f1e6]/95 px-5 py-3 text-[#284d45]">Internal MCR table · Hand {game.handHistory.length + 1} · {windLabel(game.prevailingWind)} prevailing</div>
+    return <div className={`mahjong-shell ${printMode === 'summary' ? 'print-summary' : ''}`}>
+      <div className="screen-only"><SiteHeader /></div>
+      <div className="print-only game-print-heading"><h1>MCR / WMO 2006 game record</h1><p>Profile {game.setup.rulesProfile.id} · Version {game.setup.rulesProfile.version}</p><p>Runtime fingerprint: {game.runtimeFingerprint}</p><p>{game.isComplete ? 'Game complete' : 'Game in progress'} · {handCountLabel(game.handHistory.length)}</p></div>
+      <div className="screen-only sticky top-0 z-20 border-b border-[#d8ceb8] bg-[#f5f1e6]/95 px-5 py-3 text-[#284d45]">{game.isComplete ? 'Game complete' : `Hand ${game.handHistory.length + 1}`} · {windLabel(game.prevailingWind)} prevailing · {game.players.find((player) => game.seats[player.id] === 'east')?.name} is East</div>
+      <section className="screen-only mx-auto flex max-w-[900px] flex-wrap gap-2 px-5 pt-4"><a href="/rules/mcr" className="rounded border px-3 py-2 text-sm">Rules reference</a><a href="#game-ledger" className="rounded border px-3 py-2 text-sm">History / ledger</a><button data-testid="mcr-undo" disabled={!game.handHistory.length} onClick={() => { const previous = undoLastHand(game); setGame(previous); setMcrRoute({ draft: { scores: {}, scoreRecords: {} } }); }} className="rounded border px-3 py-2 text-sm">Undo last hand</button><button data-testid="mcr-start-over" onClick={startOver} className="rounded border px-3 py-2 text-sm">Start over</button><button data-testid="mcr-print-full" onClick={() => printGame('full')} className="rounded border px-3 py-2 text-sm">Print / Save full game record</button><button data-testid="mcr-print-summary" onClick={() => printGame('summary')} className="rounded border px-3 py-2 text-sm">Print / Save summary</button></section>
       <main className="mx-auto max-w-[900px] space-y-5 px-5 py-8">
         <section className="rounded-xl border border-[#d8ceb8] bg-[#fbf8ed] p-5 sm:p-7">
+          {game.isComplete ? <h1 className="font-serif text-3xl text-[#284d45]">Game complete</h1> : <>
           <h1 className="font-serif text-3xl text-[#284d45]">MCR round</h1>
           <p className="mt-2 text-sm text-[#66746e]">Choose the table outcome, then score the winner’s hand with the MCR scorer. A discard source identifies the discarder for settlement.</p>
           <div className="mt-5 flex gap-2">
@@ -592,10 +596,25 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
           </div>}
           {routeError && <p className="mt-4 text-sm text-[#9a4d3a]">{routeError}</p>}
           {error && <p role="alert" className="mt-3 text-sm text-[#9a4d3a]">{error}</p>}
-          {prospective && <section data-testid="mcr-domain-preview" className="mt-5 rounded-lg bg-[#284d45] p-4 text-white"><h2 className="font-serif text-xl">Domain preview</h2><p className="mt-1">{mcrRoute.outcomeType === 'draw' ? 'No payments. Dealer passes; seats rotate.' : 'MCR settlement from accepted Basic Points.'}</p><div className="mt-3 grid grid-cols-2 gap-2">{game.players.map((player) => <div key={player.id} className="rounded bg-white/10 p-2">{player.name}: {settlement?.changes[player.id] ?? 0}</div>)}</div><p className="mt-3 text-sm">Next: {windLabel(prospective.prevailingWind)} prevailing · East {prospective.players.find((p) => prospective.seats[p.id] === 'east')?.name}{prospective.isComplete ? ' · Game complete' : ''}</p></section>}
-          <button data-testid="mcr-record-hand" disabled={!prospective} onClick={recordMcrHand} className="mt-5 w-full rounded bg-[#ae6249] px-4 py-3 font-semibold text-white">Record hand / advance</button>
-          <div className="mt-4 flex gap-3"><button data-testid="mcr-undo" disabled={!game.handHistory.length} onClick={() => resetMcrRound(game)} className="rounded border px-3 py-2">Undo last hand</button><button onClick={startOver} className="rounded border px-3 py-2">Start over</button></div>
+          {prospective && previewHand && <section data-testid="mcr-settlement-preview" className="mt-5 rounded-lg bg-[#284d45] p-4 text-white"><h2 className="font-serif text-xl">Settlement preview</h2>{previewWin ? <p className="mt-1">{game.players.find((player) => player.id === previewWin.winnerId)?.name} wins by {previewWin.winSource === 'self-draw' ? 'self-draw' : `discard${previewWin.discarderId ? ` · ${game.players.find((player) => player.id === previewWin.discarderId)?.name} discarded` : ''}`} · {acceptedView?.kind === 'scored' ? `${acceptedView.basicPoints} Basic Points` : 'Accepted Basic Points unavailable'}</p> : <p className="mt-1">No payments. Dealer passes and seats rotate.</p>}<div className="mt-3 space-y-1 text-sm">{settlement && 'transactions' in settlement && settlement.transactions.map((transaction, index) => <p key={index}>{mcrSettlementDescription(transaction, game.players)}</p>)}{(!settlement || !('transactions' in settlement) || settlement.transactions.length === 0) && <p>No payments.</p>}</div><div className="mt-3 grid grid-cols-2 gap-2">{game.players.map((player) => <div key={player.id} className="rounded bg-white/10 p-2">{player.name}: net {formatChange(settlement?.changes[player.id] ?? 0)}</div>)}</div><p className="mt-3 text-sm">Next East: {nextEast?.name} · Next prevailing wind: {windLabel(prospective.prevailingWind)}{previewHand.progressionAfter.prevailingWind !== previewHand.prevailingWind ? ` (advanced from ${windLabel(previewHand.prevailingWind)})` : ''}{prospective.isComplete ? ' · Game complete' : ''}</p></section>}
+          {!game.isComplete && <button data-testid="mcr-record-hand" disabled={!prospective} onClick={recordMcrHand} className="mt-5 w-full rounded bg-[#ae6249] px-4 py-3 font-semibold text-white">Record hand / advance</button>}
+          </>}
         </section>
+        <section data-testid="mcr-balances" className="rounded-xl border border-[#d8ceb8] bg-[#fbf8ed] p-5"><h2 className="font-serif text-xl text-[#284d45]">{game.isComplete ? 'Final balances' : 'Current balances'}</h2><div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">{game.players.map((player) => <div key={player.id} className="rounded bg-[#f7f1e3] p-3"><b>{player.name}</b><div>{formatChange(game.balances[player.id])}</div></div>)}</div></section>
+        <details ref={gameLedgerRef} id="game-ledger" data-testid="mcr-ledger" className="rounded-xl border border-[#d8ceb8] bg-[#fbf8ed] p-5"><summary className="cursor-pointer font-serif text-2xl text-[#284d45]">Confirmed ledger · {game.handHistory.length} hands</summary>
+          {game.handHistory.length === 0 ? <p className="mt-3 text-sm text-[#66746e]">No confirmed hands.</p> : <div className="mt-4 space-y-3">{[...game.handHistory].reverse().map((hand) => {
+            if (hand.outcome.type !== 'mcr-win' && hand.outcome.type !== 'mcr-draw') return null;
+            const winnerId = hand.outcome.type === 'mcr-win' ? hand.outcome.winnerId : undefined;
+            const mcrHand = hand as McrConfirmedHand;
+            const accepted = winnerId ? mcrHand.scoreRecords[winnerId] : undefined;
+            const mcrAccepted = accepted?.source === 'mcr-detailed-scorer' ? accepted : undefined;
+            const mcrSettlement = mcrHand.settlement;
+            const resultingEast = game.players.find((player) => mcrHand.progressionAfter.seats[player.id] === 'east');
+            const mcrOutcome = mcrHand.outcome;
+            return <details key={hand.handNumber} ref={(element) => { if (element) ledgerDetailsRefs.current.set(hand.handNumber, element); else ledgerDetailsRefs.current.delete(hand.handNumber); }} className="rounded-lg border border-[#e2d9c7] bg-[#fdfbf5] p-4"><summary className="cursor-pointer font-serif text-lg text-[#284d45]">Hand {hand.handNumber} · {mcrOutcome.type === 'mcr-draw' ? 'Draw' : `${game.players.find((player) => player.id === winnerId)?.name} won (${mcrOutcome.winSource === 'self-draw' ? 'self-draw' : `discard · ${game.players.find((player) => player.id === mcrOutcome.discarderId)?.name} discarded`})`}</summary><p className="mt-1 text-xs text-[#7a7769]">{game.players.find((player) => player.id === mcrHand.eastPlayerId)?.name} was East · {windLabel(mcrHand.prevailingWind)} prevailing</p><p className="mt-2 text-sm">{mcrOutcome.type === 'mcr-draw' ? 'Dealer passed · no payment · ' : ''}Next East: {resultingEast?.name} · next prevailing wind: {windLabel(mcrHand.progressionAfter.prevailingWind)}{mcrHand.progressionAfter.prevailingWind !== mcrHand.prevailingWind ? ` (advanced from ${windLabel(mcrHand.prevailingWind)})` : ''}</p><div className="mt-3 grid gap-2 sm:grid-cols-2">{game.players.map((player) => <div key={player.id} className="flex justify-between text-sm"><span>{player.name}: net {formatChange(mcrSettlement.changes[player.id])} · balance {formatChange(mcrHand.runningTotals[player.id])}</span></div>)}</div>{mcrSettlement.transactions.length > 0 ? <div className="mt-3 border-t pt-2 text-xs leading-5">{mcrSettlement.transactions.map((transaction, index) => <p key={index}>{mcrSettlementDescription(transaction, game.players)}</p>)}</div> : <p className="mt-2 text-xs">No payment.</p>}{mcrAccepted && <McrHandRecord playerName={game.players.find((player) => player.id === winnerId)?.name ?? 'Winner'} record={mcrAccepted} />}</details>;
+          })}</div>}
+        </details>
+        <section className="print-only game-print-standings"><h2>{game.isComplete ? 'Final balances' : 'Balances'}</h2><div className="grid grid-cols-2 gap-2">{game.players.map((player) => <p key={player.id}>{player.name}: {formatChange(game.balances[player.id])}</p>)}</div></section>
       </main>
     </div>;
   }
