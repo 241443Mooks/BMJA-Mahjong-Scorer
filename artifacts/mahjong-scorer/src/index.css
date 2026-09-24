@@ -140,53 +140,6 @@ main:has([data-testid="button-start-game"]) [class~="text-[#7a7769]"] {
   color: #55655f;
 }
 
-/* New-game setup follows the table's mental model: seat players first, then choose rules,
-   then configure rules-specific options and session length. The existing form semantics and
-   state remain unchanged; only the visual layout is reordered. */
-section:has(> .game-rules-picker) {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 1rem;
-}
-section:has(> .game-rules-picker) > div:has(> label input[data-testid^="input-player-"]) {
-  display: contents;
-}
-section:has(> .game-rules-picker) label:has(input[data-testid^="input-player-"]) {
-  order: 1;
-}
-section:has(> .game-rules-picker) > .game-rules-picker {
-  order: 2;
-  margin-bottom: 0;
-  grid-column: 1 / -1;
-}
-section:has(> .game-rules-picker) > p:not([role="alert"]) {
-  order: 3;
-  margin-bottom: 0;
-  grid-column: 1 / -1;
-}
-section:has(> .game-rules-picker) label:has(input[data-testid="input-table-limit"]) {
-  order: 4;
-  grid-column: 1 / -1;
-}
-section:has(> .game-rules-picker) label:has(select[data-testid="select-game-length"]) {
-  order: 5;
-  grid-column: 1 / -1;
-}
-section:has(> .game-rules-picker) > p[role="alert"] {
-  order: 6;
-  grid-column: 1 / -1;
-}
-section:has(> .game-rules-picker) > button[data-testid="button-start-game"] {
-  order: 7;
-  margin-top: 0;
-  grid-column: 1 / -1;
-}
-@media (min-width: 640px) {
-  section:has(> .game-rules-picker) {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
 /* Hand scorer: include the darker #e8e1d1 context panels as well as cream cards. */
 .mahjong-shell:has([data-testid="mobile-hand-context"]) main [class~="text-[#66746e]"],
 .mahjong-shell:has([data-testid="mobile-hand-context"]) main [class~="text-[#7a7769]"] {
