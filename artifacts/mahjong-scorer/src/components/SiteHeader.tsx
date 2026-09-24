@@ -16,6 +16,8 @@ export const navigationGroups = [
       ['Rules hub', '/rules'],
       ['British / BMJA-style', '/rules/british'],
       ['Western — Thompson & Maloney', '/rules/western'],
+      ['Buzzard 2000', '/rules/buzzard'],
+      ['MCR / WMO 2006', '/rules/mcr'],
       ['Compare Mahjong rules', '/mahjong-rules-compared'],
     ],
   },
@@ -30,9 +32,8 @@ export const navigationGroups = [
   },
 ] as const;
 
-export const supportDestination = ['User Guide', '/help'] as const;
-
 export const secondaryDestinations = [
+  ['User Guide', '/help'],
   ['Features', '/features'],
   ['How it works', '/how-it-works'],
   ['About', '/about'],
@@ -108,7 +109,6 @@ export function SiteHeader({ onNavigate }: SiteHeaderProps) {
               )}
             </div>
           ))}
-          <a href={supportDestination[1]} onClick={(event) => navigate(event, supportDestination[1])} className="flex min-h-11 items-center rounded-md px-3 text-[15px] font-semibold text-[#284d45] transition hover:bg-[#efe8da] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">{supportDestination[0]}</a>
           <div className="relative">
             <button ref={(element) => { if (element) groupTriggerRefs.current.set('More', element); else groupTriggerRefs.current.delete('More'); }} type="button" aria-expanded={openGroup === 'More'} onClick={() => setOpenGroup((current) => current === 'More' ? null : 'More')} className="flex min-h-11 items-center gap-1 rounded-md px-3 text-[14px] font-semibold text-[#66746e] transition hover:bg-[#efe8da] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">
               More <ChevronDown size={15} aria-hidden="true" />
@@ -141,7 +141,6 @@ export function SiteHeader({ onNavigate }: SiteHeaderProps) {
                   ))}
                 </div>
               ))}
-              <a href={supportDestination[1]} onClick={(event) => navigate(event, supportDestination[1])} className="mt-1 flex min-h-11 items-center rounded-lg border-t border-[#e2d9c7] px-3 pt-2 text-[15px] font-semibold text-[#284d45] transition hover:bg-[#efe8da] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">{supportDestination[0]}</a>
               <div className="mt-1 border-t border-[#e2d9c7] pt-2">
                 <div className="px-3 pb-1 pt-1 font-mono text-[12px] uppercase tracking-[.14em] text-[#ae6249]">More</div>
                 {secondaryDestinations.map(([label, href]) => (
