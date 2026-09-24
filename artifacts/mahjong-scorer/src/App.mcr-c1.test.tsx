@@ -29,8 +29,8 @@ describe('C1 shared standalone scorer workspace', () => {
     const gamePicker = renderToStaticMarkup(<RulesProfilePicker surface="game" prompt="Game rules" selectedProfile={{ id: 'bmja', version: '1.0' }} onSelect={vi.fn()} />);
     expect(handPicker.match(/data-testid="rules-card-/g)).toHaveLength(5);
     expect(handPicker).toContain('rules-card-mcr');
-    expect(gamePicker.match(/data-testid="rules-card-/g)).toHaveLength(4);
-    expect(gamePicker).not.toContain('rules-card-mcr');
+    expect(gamePicker.match(/data-testid="rules-card-/g)).toHaveLength(5);
+    expect(gamePicker).toContain('rules-card-mcr');
   });
 
   it('locks table-owned MCR context while preserving editable scorer evidence', () => {

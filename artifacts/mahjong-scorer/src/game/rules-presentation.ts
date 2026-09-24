@@ -110,10 +110,10 @@ export const PUBLIC_RULES_DESCRIPTORS: readonly RulesDescriptor[] = Object.freez
   {
     profile: { id: 'mcr-wmo-2006', version: '0.1' }, slug: 'mcr',
     title: 'MCR / WMO 2006', compactLabel: 'MCR / WMO 2006', status: 'Provisional',
-    description: 'Mahjong Competition Rules / WMO 2006 fan scoring for completed winning hands.',
-    publiclySelectable: true, availability: { handScorer: true, gameTracker: false, rulesReference: true }, configuredClubProfile: false,
-    referenceKeys: ['source.mcr-ema-green-book-2006'], atAGlance: ['8-point qualifying minimum before Flowers', 'Flowers are post-qualification', 'Standalone winning-hand scorer'],
-    support: { scorer: 'Standalone hand scorer available', source: 'source.mcr-ema-green-book-2006 · 2006 MCR/EMA Green Book', implementation: 'Provisional', authority: 'Mahjong Competition Rules / WMO 2006' },
+    description: 'Provisional MCR / WMO 2006 fan scoring for completed winning hands and Table Companion game tracking.',
+    publiclySelectable: true, availability: { handScorer: true, gameTracker: true, rulesReference: true }, configuredClubProfile: false,
+    referenceKeys: ['source.mcr-ema-green-book-2006'], atAGlance: ['8-point qualifying minimum before Flowers', 'Flowers are post-qualification', 'Winning-hand scoring and Table Companion game tracking available'],
+    support: { scorer: 'Winning-hand scorer and Table Companion game tracking available', source: 'source.mcr-ema-green-book-2006 · 2006 MCR/EMA Green Book', implementation: 'Provisional', authority: 'Mahjong Competition Rules / WMO 2006' },
   },
 ]);
 
@@ -136,5 +136,17 @@ export const currentClassicalScorerDefaultLimit = (profile: RulesProfileRef) =>
 export const normaliseStandaloneHandMode = (profile: RulesProfileRef, handMode: HandMode): HandMode =>
   getCurrentRulesRuntime(profile).supportedCapabilities().includes('hand.goulash') ? handMode : 'normal';
 
-export const publicRulesSlugFromGamePath = (path: string): PublicRulesSlug | undefined =>
-  path === '/game' || path === '/game/british' ? 'british' : path === '/game/western' ? 'western' : path === '/game/club' ? 'club' : path === '/game/buzzard' ? 'buzzard' : undefined;
+export const publicRulesSlugFromGamePath = (path: string): PublicRulesSlug | undefined => {
+  if (path === '/game') return PUBLIC_RULES_DESCRIPTORS.find(({ slug, availability }) => slug === 'british' && availability.gameTracker)?.slug;
+  const match = /^\/game\/([^/]+)$/.exec(path);
+  if (!match) return undefined;
+  return PUBLIC_RULES_DESCRIPTORS.find(({ slug, availability }) => slug === match[1] && availability.gameTracker)?.slug;
+};
+
+export const canonicalPublicGamePath = (path: string): '/game' | undefined =>
+  publicRulesSlugFromGamePath(path) ? '/game' : undefined;
+
+export const publicGamePathForRulesProfile = (profile: RulesProfileRef): string | undefined => {
+  const descriptor = PUBLIC_RULES_DESCRIPTORS.find((candidate) => sameProfile(candidate.profile, profile) && candidate.availability.gameTracker);
+  return descriptor ? `/game/${descriptor.slug}` : undefined;
+};
