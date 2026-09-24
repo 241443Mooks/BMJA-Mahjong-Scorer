@@ -4,7 +4,7 @@ import type { HandScoreResult } from '../rules-platform/types';
 import type { McrScoringInput } from '../rules-platform/mcr-scoring-input';
 import type { GamePlayer, McrRoundInput, PlayerAmounts, PlayerScoreRecords, RulesProfileRef, SeatAssignments } from './types';
 import { confirmHand, createBmjaGame, createGame, replayGame, undoLastHand } from './game';
-import { saveGameRecovery, GAME_SNAPSHOT_STORAGE_KEY } from './persistence';
+import { loadGameRecovery, loadGameRecoveryCore, saveGameRecoveryV2, GAME_SNAPSHOT_STORAGE_KEY } from './persistence';
 
 const ref: RulesProfileRef = { id: 'mcr-wmo-2006', version: '0.1' };
 const fingerprint = '8044ee6ee883192bae97e83a67380f6c0bff999179df93229fc9daa4308a7ace';
@@ -166,17 +166,25 @@ describe('C2A profile-aware MCR game runtime', () => {
     expect(undone.handHistory[0]!.mcrReplay?.scoreRecords?.A).toMatchObject({ source: 'mcr-detailed-scorer', finalScore: 24 });
   });
 
-  it('does not serialize the C2A in-memory MCR replay payload in the v1 snapshot projection', () => {
+  it('persists exact MCR replay through v2 while Classical compatibility leaves it intact', () => {
     const storage = memoryStorage();
+    const accepted = actualRecord(sevenPairs, 'A', 'discard');
     const game = confirmHand(createGame(players, seats, undefined, 'full-game', ref), {
       mcrOutcome: { type: 'mcr-win', winnerId: 'A', winSource: 'discard', discarderId: 'B' },
-      scores: { ...zeroes, A: 24 }, scoreRecords: { A: actualRecord(sevenPairs, 'A', 'discard') },
+      scores: { ...zeroes, A: accepted.finalScore }, scoreRecords: { A: accepted },
     });
-    saveGameRecovery(storage, game, 'win', 'A', { scores: { A: 24 }, scoreRecords: { A: actualRecord(sevenPairs, 'A', 'discard') } });
+    saveGameRecoveryV2(storage, game, { grammar: 'pattern-accumulator', outcomeType: 'win', winnerId: 'A', winSource: 'discard', discarderId: 'B', draft: { scores: { A: accepted.finalScore }, scoreRecords: { A: accepted } } });
     const snapshot = JSON.parse(storage.values.get(GAME_SNAPSHOT_STORAGE_KEY)!);
-    expect(snapshot.version).toBe(1);
-    expect(snapshot.game.rounds).toEqual([]);
-    expect(JSON.stringify(snapshot)).not.toContain('mcrReplay');
-    expect(JSON.stringify(snapshot)).not.toContain('mcr-detailed-scorer');
+    expect(snapshot.version).toBe(2);
+    expect(snapshot.game.rounds[0].grammar).toBe('pattern-accumulator');
+    expect(snapshot.game.rounds[0].input).toEqual(game.handHistory[0]!.mcrReplay);
+    expect(snapshot.game.runtimeFingerprint).toBe(fingerprint);
+    expect(loadGameRecovery(storage)).toBeNull();
+    expect(storage.values.has(GAME_SNAPSHOT_STORAGE_KEY)).toBe(true);
+    const recovered = loadGameRecoveryCore(storage)!;
+    expect(recovered.game).toEqual(game);
+    expect(recovered.currentRound).toEqual({ grammar: 'pattern-accumulator', outcomeType: 'win', winnerId: 'A', winSource: 'discard', discarderId: 'B', draft: { scores: { A: accepted.finalScore }, scoreRecords: { A: accepted } } });
+    expect(recovered.game.handHistory[0]!.mcrReplay).toEqual(game.handHistory[0]!.mcrReplay);
+    expect(undoLastHand(recovered.game)).toEqual(createGame(players, seats, undefined, 'full-game', ref));
   });
 });

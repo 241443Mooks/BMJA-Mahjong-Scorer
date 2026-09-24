@@ -329,6 +329,8 @@ const applyMcrRound = (
     if (accepted.rulesProfile.id !== state.setup.rulesProfile.id || accepted.rulesProfile.version !== state.setup.rulesProfile.version || accepted.rulesProfile.id !== compiled.artifact.profile.identity.id || accepted.rulesProfile.version !== compiled.artifact.profile.identity.version || accepted.rulesFingerprint !== compiled.artifact.rulesFingerprint || accepted.rulesFingerprint !== state.runtimeFingerprint) throw new Error('Accepted MCR score profile/version/fingerprint does not match the active game.');
     const result = accepted.result;
     if (accepted.input.context.winSource !== outcome.winSource || result.grammar !== 'pattern-accumulator' || result.profile.id !== accepted.rulesProfile.id || result.profile.version !== accepted.rulesProfile.version || result.rulesFingerprint !== accepted.rulesFingerprint || result.legal !== true || result.disposition.kind !== 'scored' || result.result.unit !== 'points' || !Number.isFinite(result.result.total) || !Number.isInteger(result.result.total) || accepted.finalScore !== result.result.total) throw new Error('Accepted MCR result is invalid or inconsistent.');
+    const winnerWind = state.seats[outcome.winnerId];
+    if ((accepted.input.context.seatWind !== undefined && accepted.input.context.seatWind !== winnerWind) || (accepted.input.context.prevailingWind !== undefined && accepted.input.context.prevailingWind !== state.prevailingWind)) throw new Error('Accepted MCR score table context does not match the active game.');
     if (summary[outcome.winnerId] !== result.result.total || ids.some((id) => id !== outcome.winnerId && summary[id] !== 0)) throw new Error('MCR numeric summary does not match the accepted result.');
   }
   const resolved: McrRoundResolution = {
