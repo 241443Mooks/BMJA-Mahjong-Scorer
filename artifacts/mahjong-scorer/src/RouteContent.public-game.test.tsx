@@ -27,12 +27,12 @@ describe('public game route seam', () => {
     expect(html).toMatch(/data-testid="rules-card-mcr"[\s\S]*?checked=""/);
   });
 
-  it('renders the privacy and analytics route with its footer link', () => {
+  it('renders the privacy and analytics route with its current footer', () => {
     const html = renderToStaticMarkup(<RouteContent path="/privacy" />);
     expect(html).toContain('Privacy &amp; analytics.');
     expect(html).toContain('PostHog Cloud EU');
     expect(html).toContain('Privacy &amp; analytics');
-    expect(html).toContain('Source on GitHub');
+    expect(html).not.toContain('Source on GitHub');
   });
 
   it.each(['/game/foo', '/game/mcr/foo'])('%s is not a game route and does not fall back to British', (path) => {
