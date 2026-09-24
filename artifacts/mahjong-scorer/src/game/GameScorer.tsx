@@ -33,6 +33,7 @@ import { mapCurrentRuntimeSettlement } from '../rules-platform/current-runtime-c
 import { getCurrentCompiledRulesRuntime } from '../rules-platform/current-runtime-registry';
 import { gameScorerCurrentRound, gameScorerSetup, gameScorerSupports, isClassicalGameState } from './game-scorer-setup';
 import { RulesProfilePicker } from './RulesProfilePicker';
+import { preferredRulesProfileStorage, setPreferredRulesProfile } from './preferred-rules-profile';
 import { descriptorForRulesProfile, isBritishRulesProfile } from './rules-presentation';
 import { prepareFullPrintDisclosures, watchPrintLifecycle } from './print-disclosures';
 import type {
@@ -62,6 +63,7 @@ type GameScorerProps = {
   returnedScore?: HandScorerResult | null;
   onClearReturnedScore: () => void;
   initialRulesProfile: RulesProfileRef;
+  initialRulesProfileIsExplicit?: boolean;
 };
 
 const windLabel = (wind: Wind) =>
@@ -182,12 +184,11 @@ export const shouldKeepScoreEntryOpen = (stage: GameWorkspaceStage, editingHand:
 export const shouldShowEditCurrentHandSummary = (stage: GameWorkspaceStage, editingHand: boolean) =>
   stage === 'settlement' && !editingHand;
 
-export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedScore, initialRulesProfile }: GameScorerProps) {
-  const [recovered, setRecovered] = useState(() =>
-    typeof window === 'undefined'
-      ? null
-      : loadInProgressGameRecoveryCore(window.localStorage),
-  );
+export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedScore, initialRulesProfile, initialRulesProfileIsExplicit = false }: GameScorerProps) {
+  const [recovered, setRecovered] = useState(() => {
+    const storage = preferredRulesProfileStorage();
+    return storage ? loadInProgressGameRecoveryCore(storage) : null;
+  });
   const [names, setNames] = useState(['', '', '', '']);
   const [gameLength, setGameLength] = useState<GameLength>(recovered?.game.setup.gameLength ?? gameScorerSetup(initialRulesProfile, 'one-round').gameLength);
   const [game, setGame] = useState<GameState | null>(recovered?.game ?? null);
@@ -217,7 +218,7 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
   const currentEastId = game
     ? Object.entries(game.seats).find(([, seat]) => seat === 'east')?.[0]
     : undefined;
-  const recoveredProfileConflictsWithRoute = !!recovered && recoveredGameConflictsWithRoute(recovered.game, initialRulesProfile);
+  const recoveredProfileConflictsWithRoute = !!recovered && initialRulesProfileIsExplicit && recoveredGameConflictsWithRoute(recovered.game, initialRulesProfile);
 
   const outcome = useMemo<HandOutcome | null>(
     () =>
@@ -232,9 +233,10 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
   );
 
   useEffect(() => {
-    if (!game || typeof window === 'undefined') return;
+    const storage = preferredRulesProfileStorage();
+    if (!game || !storage) return;
     if (game.isComplete) {
-      clearGameRecovery(window.localStorage);
+      clearGameRecovery(storage);
       return;
     }
     const currentRound = gameScorerCurrentRound(
@@ -242,7 +244,7 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
       { scores, scoreRecords, incidents, buzzardIncidents, profileScoreResults },
       mcrTableProfile(game.setup.rulesProfile) ? mcrRoute : undefined,
     );
-    saveGameRecoveryV2(window.localStorage, game, currentRound);
+    saveGameRecoveryV2(storage, game, currentRound);
   }, [game, outcomeType, scoreRecords, scores, incidents, buzzardIncidents, profileScoreResults, winnerId, recovered, mcrRoute]);
 
   useEffect(() => {
@@ -379,7 +381,8 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
     const seats = Object.fromEntries(
       players.map((player, index) => [player.id, GAME_WINDS[index]]),
     ) as SeatAssignments;
-    if (typeof window !== 'undefined') clearGameRecovery(window.localStorage);
+    const storage = preferredRulesProfileStorage();
+    if (storage) clearGameRecovery(storage);
     setRecovered(null);
     const setup = gameScorerSetup(selectedRulesProfile, gameLength, tableLimit);
     if (setup.grammar === 'classical-points-doubles' && (!Number.isFinite(setup.tableLimit) || setup.tableLimit! <= 0)) { setError('Enter a positive table limit.'); return; }
@@ -399,7 +402,8 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
 
   const startOver = () => {
     if (typeof window !== 'undefined' && !window.confirm('Start over? Your current saved game will be discarded.')) return;
-    if (typeof window !== 'undefined') clearGameRecovery(window.localStorage);
+    const storage = preferredRulesProfileStorage();
+    if (storage) clearGameRecovery(storage);
     setRecovered(null);
     setGame(null);
     setSelectedRulesProfile(initialRulesProfile);
@@ -516,7 +520,7 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
                 </label>
               ))}
             </div>
-            <RulesProfilePicker prompt="What rules are we playing?" selectedProfile={selectedRulesProfile} onSelect={(profile) => { const setup = gameScorerSetup(profile, gameLength); setSelectedRulesProfile(profile); setGameLength(setup.gameLength); setTableLimit(setup.tableLimit); }} />
+            <RulesProfilePicker prompt="What rules are we playing?" selectedProfile={selectedRulesProfile} onSelect={(profile) => { const setup = gameScorerSetup(profile, gameLength); setSelectedRulesProfile(profile); setGameLength(setup.gameLength); setTableLimit(setup.tableLimit); setPreferredRulesProfile(profile); }} />
             {shouldShowBritishSetupHelper(selectedRulesProfile) ? <p className="mb-6 rounded-md bg-[#edf3ed] px-3 py-2 text-[14px] leading-6 text-[#284d45]">New to table setup? <a href="/gameplay-basics#wind-rotation" className="font-semibold underline decoration-[#ae6249] underline-offset-4">Starting Winds</a> set the first seats; <a href="/gameplay-basics#prevailing-wind" className="font-semibold underline decoration-[#ae6249] underline-offset-4">prevailing rounds</a> describe the game’s longer progress.</p> : null}
             {supports(selectedRulesProfile, 'table.configurable-limit') && <label className="mb-6 block"><span className="mb-1.5 block font-mono text-[10px] uppercase tracking-[.15em] text-[#7a7769]">Table limit</span><input data-testid="input-table-limit" type="number" min="1" value={tableLimit ?? ''} onChange={(event) => setTableLimit(Number(event.target.value))} className="w-full rounded-md border border-[#cfc3aa] bg-[#fdfbf5] px-3 py-2.5 text-[14px] text-[#284d45] focus:ring-2" /></label>}
             <h2 className="mb-3 font-serif text-2xl text-[#284d45]">How are we playing today?</h2>

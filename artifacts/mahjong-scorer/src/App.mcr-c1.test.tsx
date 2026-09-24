@@ -7,6 +7,8 @@ import { createGame } from './game/game';
 import { createHandScorerContext } from './game/hand-scorer-handoff';
 import { GameScorer } from './game/GameScorer';
 import { saveGameRecoveryV2, type PersistedCurrentRoundV2 } from './game/persistence';
+import { PREFERRED_RULES_PROFILE_STORAGE_KEY } from './game/preferred-rules-profile';
+import { BMJA_PROFILE_REF } from './game/ruleset';
 
 const mcrProfile = { id: 'mcr-wmo-2006', version: '0.1' };
 
@@ -36,7 +38,7 @@ describe('C1 shared standalone scorer workspace', () => {
   it('locks table-owned MCR context while preserving editable scorer evidence', () => {
     const game = createGame([{ id: 'A', name: 'A' }, { id: 'B', name: 'B' }, { id: 'C', name: 'C' }, { id: 'D', name: 'D' }], { A: 'east', B: 'south', C: 'west', D: 'north' }, undefined, 'full-game', mcrProfile);
     const context = createHandScorerContext(game, 'B', { type: 'mcr-win', winnerId: 'B', winSource: 'discard' });
-    const html = renderToStaticMarkup(<HandScorer context={context} onClose={vi.fn()} standaloneHand={false} standaloneRulesProfile={mcrProfile} onStandaloneRulesProfileChange={vi.fn()} />);
+    const html = renderToStaticMarkup(<HandScorer context={context} onClose={vi.fn()} standaloneHand={false} standaloneRulesProfile={BMJA_PROFILE_REF} onStandaloneRulesProfileChange={vi.fn()} />);
     expect(html).not.toContain('data-testid="mcr-win-source"');
     expect(html).not.toContain('data-testid="mcr-seat-wind"');
     expect(html).not.toContain('data-testid="mcr-prevailing-wind"');
@@ -53,11 +55,14 @@ describe('C1 shared standalone scorer workspace', () => {
     const storage = { getItem: (key: string) => data.get(key) ?? null, setItem: (key: string, value: string) => data.set(key, value), removeItem: (key: string) => data.delete(key) };
     const currentRound: PersistedCurrentRoundV2 = { grammar: 'pattern-accumulator', draft: { scores: {}, scoreRecords: {} } };
     saveGameRecoveryV2(storage, game, currentRound);
+    data.set(PREFERRED_RULES_PROFILE_STORAGE_KEY, JSON.stringify(BMJA_PROFILE_REF));
     vi.stubGlobal('window', { localStorage: storage });
     try {
-      const html = renderToStaticMarkup(<GameScorer initialRulesProfile={mcrProfile} onOpenHandScorer={vi.fn()} onClearReturnedScore={vi.fn()} />);
+      const html = renderToStaticMarkup(<GameScorer initialRulesProfile={BMJA_PROFILE_REF} initialRulesProfileIsExplicit={false} onOpenHandScorer={vi.fn()} onClearReturnedScore={vi.fn()} />);
       expect(html).toContain('data-testid="mcr-outcome-win"');
       expect(html).toContain('data-testid="mcr-outcome-draw"');
+      expect(html).toContain('MCR / WMO 2006');
+      expect(data.get(PREFERRED_RULES_PROFILE_STORAGE_KEY)).toBe(JSON.stringify(BMJA_PROFILE_REF));
       expect(html).not.toContain('data-testid="input-score-');
       expect(html).not.toContain('Who pays whom');
       expect(html).not.toContain('Round settlement');
