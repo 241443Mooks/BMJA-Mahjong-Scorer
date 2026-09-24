@@ -1,6 +1,11 @@
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
 import siteSeo from './site-seo.json';
 import { renderRoute } from './prerender';
+import { initialiseCurrentRulesRuntimes } from './rules-platform/current-runtime-registry';
+
+beforeAll(async () => {
+  await initialiseCurrentRulesRuntimes();
+});
 
 describe('canonical route prerendering', () => {
   for (const route of siteSeo.routes) {
