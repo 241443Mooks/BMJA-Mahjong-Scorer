@@ -10,6 +10,11 @@ export const SPECIAL_HAND_ANCHORS = {
 } as const;
 
 export const specialHandReferenceHref = (id: string): string | undefined => {
-  const anchor = SPECIAL_HAND_ANCHORS[id as keyof typeof SPECIAL_HAND_ANCHORS];
+  const publicId = id === 'gathering-plum-blossom'
+    ? 'gathering-the-plum-blossom-from-the-roof'
+    : id === 'plucking-moon'
+      ? 'plucking-the-moon-from-the-bottom-of-the-sea'
+      : id;
+  const anchor = SPECIAL_HAND_ANCHORS[publicId as keyof typeof SPECIAL_HAND_ANCHORS];
   return anchor ? `/special-hands#${anchor}` : undefined;
 };
