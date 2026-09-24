@@ -4,11 +4,17 @@ import { RulesProfilePicker, RulesProfilePickerScalabilityFixture } from './Rule
 import { BMJA_PROFILE_REF } from './ruleset';
 import { BUZZARD_2000_PROFILE_REF } from './buzzard-2000';
 
+function renderChoiceList(component: ReactElement<any>) {
+  if (typeof component.type !== 'function') throw new Error('Expected the compact choice-list component.');
+  const render = component.type as (props: any) => ReactElement<any>;
+  return render(component.props);
+}
+
 function profileRadio(profile: typeof BMJA_PROFILE_REF | typeof BUZZARD_2000_PROFILE_REF) {
   const section = RulesProfilePicker({ prompt: 'Choose rules', selectedProfile: BMJA_PROFILE_REF, onSelect: vi.fn() }) as ReactElement<any>;
   const layout = section.props.children[1] as ReactElement<any>;
   const list = layout.props.children[0] as ReactElement<any>;
-  const fieldset = list.type(list.props) as ReactElement<any>;
+  const fieldset = renderChoiceList(list);
   const label = Children.toArray(fieldset.props.children).find((child) => (child as ReactElement<any>).props['data-testid'] === `rules-card-${profile.id === 'bmja' ? 'british' : 'buzzard'}`) as ReactElement<any>;
   return label.props.children[0] as ReactElement<any>;
 }
@@ -36,7 +42,7 @@ describe('rules profile picker analytics', () => {
     const fixture = RulesProfilePickerScalabilityFixture() as ReactElement<any>;
     const section = fixture.props.children[2] as ReactElement<any>;
     const list = section.props.children as ReactElement<any>;
-    const fieldset = list.type(list.props) as ReactElement<any>;
+    const fieldset = renderChoiceList(list);
     const futureChoice = Children.toArray(fieldset.props.children)[5] as ReactElement<any>;
     const radio = futureChoice.props.children[0] as ReactElement<any>;
     expect(radio.props.disabled).toBe(true);

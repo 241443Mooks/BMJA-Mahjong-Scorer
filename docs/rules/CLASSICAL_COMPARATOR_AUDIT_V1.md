@@ -1,8 +1,8 @@
 # Classical rules comparator audit v1
 
-Status: **reviewed calibration audit; no public comparator implementation yet**  
-Date: 20 September 2026  
-Issue: #296  
+Status: **reviewed calibration audit; no public comparator implementation yet**\
+Date: 20 September 2026\
+Issue: #296\
 Profiles: `bmja@1.0`, `western-tm@0.1`, `outside-the-box@0.1`, `buzzard-2000@0.1`
 
 ## Purpose

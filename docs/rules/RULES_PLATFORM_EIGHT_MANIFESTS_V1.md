@@ -1,6 +1,6 @@
 # Rules platform — eight normalised architecture manifests v1
 
-Status: **exact architecture input for #227; not eight playable profiles**  
+Status: **exact architecture input for #227; not eight playable profiles**\
 Supersedes the loose field naming in `EIGHT_RULESET_PAPER_MANIFESTS.md` for implementation planning. The earlier document remains the research record.
 
 ## 1. Important distinction

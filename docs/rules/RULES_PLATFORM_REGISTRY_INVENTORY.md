@@ -1,6 +1,6 @@
 # Rules platform registry inventory
 
-Status: **pre-Codex registry contract for #227**  
+Status: **pre-Codex registry contract for #227**\
 Companion: `RULES_PLATFORM_ENVELOPE_V1.md`
 
 ## 1. Purpose

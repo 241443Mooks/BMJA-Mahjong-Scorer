@@ -1,7 +1,7 @@
 # Rules platform migration and Codex handoff
 
-Status: **pre-implementation delivery contract for #227**  
-Integration branch: `integration/rules-platform-v1`  
+Status: **pre-implementation delivery contract for #227**\
+Integration branch: `integration/rules-platform-v1`\
 Feature branch for this design packet: `docs/227-rules-platform-contract`
 
 ## 1. Objective

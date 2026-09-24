@@ -1,7 +1,7 @@
 # MCR 2006 detector cross-binding semantics
 
-Status: **authoritative source companion for #299**  
-Issue: #303  
+Status: **authoritative source companion for #299**\
+Issue: #303\
 Profile target: `mcr-wmo-2006@0.x`
 
 Authority: World Mahjong Organization, *Mahjong Competition Rules*, first edition / first printing July 2006 (“Green Book”).

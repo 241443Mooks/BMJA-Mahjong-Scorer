@@ -1,7 +1,7 @@
 # Rules platform envelope v1
 
-Status: **pre-Codex implementation contract for #227**  
-Branch target: `integration/rules-platform-v1`  
+Status: **pre-Codex implementation contract for #227**\
+Branch target: `integration/rules-platform-v1`\
 Derived from: `EIGHT_RULESET_ARCHITECTURE_STRESS_TEST.md`, `RULES_PLATFORM_EIGHT_MANIFESTS_V1.md`, `CLASSICAL_PROFILE_CONFIG_V1.md`, `MCR_PROFILE_CROSSWALK.md`, `riichi/EMA_2025_ARCHITECTURE_DECISIONS.md`, and `CROSS_PROFILE_CLOUD_GAME_CONTRACT.md`.
 
 ## 1. Purpose

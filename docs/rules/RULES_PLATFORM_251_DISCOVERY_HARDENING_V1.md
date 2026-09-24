@@ -1,9 +1,9 @@
 # Rules platform #251 discovery hardening v1
 
-Status: **normative pre-Codex amendment to #227**  
-Target branch: `integration/rules-platform-v1`  
-Issue: #267  
-Discovery input: #251 / PR #265  
+Status: **normative pre-Codex amendment to #227**\
+Target branch: `integration/rules-platform-v1`\
+Issue: #267\
+Discovery input: #251 / PR #265\
 Applies to: implementation slices #229–#236.
 
 ## 1. Purpose and precedence
