@@ -7,3 +7,4 @@ export * from './hand-scorer-handoff';
 export * from './table-navigation';
 export * from './persistence';
 export * from './game-scorer-setup';
+export * from './mcr-table-routing';

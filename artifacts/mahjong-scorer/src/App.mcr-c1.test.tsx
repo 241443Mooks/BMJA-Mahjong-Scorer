@@ -5,6 +5,8 @@ import { initialiseCurrentRulesRuntimes } from './rules-platform/current-runtime
 import { RulesProfilePicker } from './game/RulesProfilePicker';
 import { createGame } from './game/game';
 import { createHandScorerContext } from './game/hand-scorer-handoff';
+import { GameScorer } from './game/GameScorer';
+import { saveGameRecoveryV2, type PersistedCurrentRoundV2 } from './game/persistence';
 
 const mcrProfile = { id: 'mcr-wmo-2006', version: '0.1' };
 
@@ -43,5 +45,23 @@ describe('C1 shared standalone scorer workspace', () => {
     expect(html).toContain('data-testid="mcr-win-event"');
     expect(html).toContain('Last visible copy');
     expect(html).not.toContain('button-apply-mcr-score');
+  });
+
+  it('renders a bounded internal MCR table with no manual score inputs or Classical settlement copy', () => {
+    const game = createGame([{ id: 'A', name: 'A' }, { id: 'B', name: 'B' }, { id: 'C', name: 'C' }, { id: 'D', name: 'D' }], { A: 'east', B: 'south', C: 'west', D: 'north' }, undefined, 'full-game', mcrProfile);
+    const data = new Map<string, string>();
+    const storage = { getItem: (key: string) => data.get(key) ?? null, setItem: (key: string, value: string) => data.set(key, value), removeItem: (key: string) => data.delete(key) };
+    const currentRound: PersistedCurrentRoundV2 = { grammar: 'pattern-accumulator', draft: { scores: {}, scoreRecords: {} } };
+    saveGameRecoveryV2(storage, game, currentRound);
+    vi.stubGlobal('window', { localStorage: storage });
+    try {
+      const html = renderToStaticMarkup(<GameScorer initialRulesProfile={mcrProfile} onOpenHandScorer={vi.fn()} onClearReturnedScore={vi.fn()} />);
+      expect(html).toContain('data-testid="mcr-outcome-win"');
+      expect(html).toContain('data-testid="mcr-outcome-draw"');
+      expect(html).not.toContain('data-testid="input-score-');
+      expect(html).not.toContain('Who pays whom');
+      expect(html).not.toContain('Round settlement');
+      expect(html).not.toContain('Records this settlement');
+    } finally { vi.unstubAllGlobals(); }
   });
 });
