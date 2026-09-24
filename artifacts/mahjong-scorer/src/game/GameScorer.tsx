@@ -493,25 +493,8 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
           </div>
 
           <section className="rounded-xl border border-[#d8ceb8] bg-[#fbf8ed] p-5 shadow-[var(--shadow-sm)] sm:p-7">
-            <RulesProfilePicker prompt="Which rules are you playing?" selectedProfile={selectedRulesProfile} onSelect={(profile) => { const setup = gameScorerSetup(profile, gameLength); setSelectedRulesProfile(profile); setGameLength(setup.gameLength); setTableLimit(setup.tableLimit); }} />
-            {shouldShowBritishSetupHelper(selectedRulesProfile) ? <p className="mb-6 rounded-md bg-[#edf3ed] px-3 py-2 text-[14px] leading-6 text-[#284d45]">New to table setup? <a href="/gameplay-basics#wind-rotation" className="font-semibold underline decoration-[#ae6249] underline-offset-4">Starting Winds</a> set the first seats; <a href="/gameplay-basics#prevailing-wind" className="font-semibold underline decoration-[#ae6249] underline-offset-4">prevailing rounds</a> describe the game’s longer progress.</p> : null}
-            <div className="mb-6 grid gap-4 sm:grid-cols-2">
-              {supports(selectedRulesProfile, 'table.configurable-limit') && <label className="block sm:col-span-2"><span className="mb-1.5 block font-mono text-[10px] uppercase tracking-[.15em] text-[#7a7769]">Table limit</span><input data-testid="input-table-limit" type="number" min="1" value={tableLimit ?? ''} onChange={(event) => setTableLimit(Number(event.target.value))} className="w-full rounded-md border border-[#cfc3aa] bg-[#fdfbf5] px-3 py-2.5 text-[14px] text-[#284d45] focus:ring-2" /></label>}
-              <label className="block sm:col-span-2">
-                <span className="mb-1.5 block font-mono text-[10px] uppercase tracking-[.15em] text-[#7a7769]">
-                  Game length
-                </span>
-                <select
-                  data-testid="select-game-length"
-                  value={gameScorerSetup(selectedRulesProfile, gameLength, tableLimit).gameLength}
-                  onChange={(e) => setGameLength(gameScorerSetup(selectedRulesProfile, e.target.value as GameLength, tableLimit).gameLength)}
-                  className="w-full rounded-md border border-[#cfc3aa] bg-[#fdfbf5] px-3 py-3 text-[15px] font-semibold text-[#284d45] focus:ring-2 focus:ring-[#ae6249]"
-                >
-                  {gameScorerSetup(selectedRulesProfile, gameLength, tableLimit).grammar === 'classical-points-doubles' && <option value="one-round">One Prevailing Round (East only)</option>}
-                  <option value="full-game">Full Game (East, South, West, North)</option>
-                </select>
-              </label>
-
+            <h2 className="mb-4 font-serif text-2xl text-[#284d45]">Who is playing?</h2>
+            <div className="mb-8 grid gap-4 sm:grid-cols-2">
               {GAME_WINDS.map((wind, index) => (
                 <label key={wind} className="block">
                   <span className="mb-1.5 block font-mono text-[10px] uppercase tracking-[.15em] text-[#7a7769]">
@@ -533,6 +516,22 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
                 </label>
               ))}
             </div>
+            <RulesProfilePicker prompt="What rules are we playing?" selectedProfile={selectedRulesProfile} onSelect={(profile) => { const setup = gameScorerSetup(profile, gameLength); setSelectedRulesProfile(profile); setGameLength(setup.gameLength); setTableLimit(setup.tableLimit); }} />
+            {shouldShowBritishSetupHelper(selectedRulesProfile) ? <p className="mb-6 rounded-md bg-[#edf3ed] px-3 py-2 text-[14px] leading-6 text-[#284d45]">New to table setup? <a href="/gameplay-basics#wind-rotation" className="font-semibold underline decoration-[#ae6249] underline-offset-4">Starting Winds</a> set the first seats; <a href="/gameplay-basics#prevailing-wind" className="font-semibold underline decoration-[#ae6249] underline-offset-4">prevailing rounds</a> describe the game’s longer progress.</p> : null}
+            {supports(selectedRulesProfile, 'table.configurable-limit') && <label className="mb-6 block"><span className="mb-1.5 block font-mono text-[10px] uppercase tracking-[.15em] text-[#7a7769]">Table limit</span><input data-testid="input-table-limit" type="number" min="1" value={tableLimit ?? ''} onChange={(event) => setTableLimit(Number(event.target.value))} className="w-full rounded-md border border-[#cfc3aa] bg-[#fdfbf5] px-3 py-2.5 text-[14px] text-[#284d45] focus:ring-2" /></label>}
+            <h2 className="mb-3 font-serif text-2xl text-[#284d45]">How are we playing today?</h2>
+            <label className="mb-6 block">
+              <span className="mb-1.5 block font-mono text-[10px] uppercase tracking-[.15em] text-[#7a7769]">Game length</span>
+              <select
+                data-testid="select-game-length"
+                value={gameScorerSetup(selectedRulesProfile, gameLength, tableLimit).gameLength}
+                onChange={(e) => setGameLength(gameScorerSetup(selectedRulesProfile, e.target.value as GameLength, tableLimit).gameLength)}
+                className="w-full rounded-md border border-[#cfc3aa] bg-[#fdfbf5] px-3 py-3 text-[15px] font-semibold text-[#284d45] focus:ring-2 focus:ring-[#ae6249]"
+              >
+                {gameScorerSetup(selectedRulesProfile, gameLength, tableLimit).grammar === 'classical-points-doubles' && <option value="one-round">One Prevailing Round (East only)</option>}
+                <option value="full-game">Full Game (East, South, West, North)</option>
+              </select>
+            </label>
             {error && (
               <p role="alert" className="mt-4 text-[12px] font-semibold text-[#9a4d3a]">
                 {error}
