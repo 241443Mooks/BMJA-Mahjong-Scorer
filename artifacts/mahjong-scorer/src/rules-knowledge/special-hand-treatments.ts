@@ -1,10 +1,14 @@
 import type { RulesProfileRef } from '../game/types';
 import {
-  bmjaSpecialHandBindings,
   isFixedSpecialHandBinding,
   type SpecialHandPatternBinding,
 } from '../scoring/special-hands';
 import { specialHandReferenceHref } from '../guide/special-hand-references';
+import { specialHandBindingsForCurrentClassicalProfile } from './current-classical-special-hand-bindings';
+
+type ExposurePolicy =
+  | { scoreModel: 'fixed'; policy: NonNullable<Extract<SpecialHandPatternBinding, { value: number }>['exposure']> }
+  | { scoreModel: 'calculated'; policy: NonNullable<Extract<SpecialHandPatternBinding, { scoreModel: { kind: 'calculated' } }>['scoreModel']['exposure']> };
 
 export type ProfileLocalSpecialHandTreatment = {
   identity: { profile: RulesProfileRef; patternId: string };
@@ -15,6 +19,8 @@ export type ProfileLocalSpecialHandTreatment = {
   winnerValue?: number;
   fishingValue?: number;
   fishingUsesIntrinsicFloor?: boolean;
+  winningMethods?: NonNullable<SpecialHandPatternBinding['winningMethods']>;
+  exposurePolicy?: ExposurePolicy;
   href?: string;
 };
 
@@ -32,6 +38,13 @@ const treatmentFromBinding = (binding: SpecialHandPatternBinding): ProfileLocalS
   name: binding.name,
   description: binding.description,
   scoreModel: scoreModelFor(binding),
+  ...(binding.winningMethods === undefined ? {} : { winningMethods: [...binding.winningMethods] }),
+  ...(isFixedSpecialHandBinding(binding) && binding.exposure !== undefined
+    ? { exposurePolicy: { scoreModel: 'fixed' as const, policy: binding.exposure } }
+    : {}),
+  ...(binding.scoreModel?.kind === 'calculated' && binding.scoreModel.exposure !== undefined
+    ? { exposurePolicy: { scoreModel: 'calculated' as const, policy: binding.scoreModel.exposure } }
+    : {}),
   ...(isFixedSpecialHandBinding(binding)
     ? {
         winnerValue: binding.value,
@@ -39,21 +52,21 @@ const treatmentFromBinding = (binding: SpecialHandPatternBinding): ProfileLocalS
         ...(binding.fishingUsesIntrinsicFloor ? { fishingUsesIntrinsicFloor: true } : {}),
       }
     : {}),
-  ...(specialHandReferenceHref(binding.patternId) ? { href: specialHandReferenceHref(binding.patternId) } : {}),
+  ...(binding.profile.id === 'bmja' && binding.profile.version === '1.0' && specialHandReferenceHref(binding.patternId)
+    ? { href: specialHandReferenceHref(binding.patternId) }
+    : {}),
 });
 
 export const specialHandTreatmentsForProfile = (
   profile: RulesProfileRef,
-  bindings: readonly SpecialHandPatternBinding[] = bmjaSpecialHandBindings,
-): ProfileLocalSpecialHandTreatment[] => bindings
-  .filter((binding) => binding.profile.id === profile.id && binding.profile.version === profile.version)
+): ProfileLocalSpecialHandTreatment[] => specialHandBindingsForCurrentClassicalProfile(profile)
   .map(treatmentFromBinding);
 
 export const resolveSpecialHandTreatment = (
   profile: RulesProfileRef,
   patternId: string,
-  bindings: readonly SpecialHandPatternBinding[] = bmjaSpecialHandBindings,
 ): ProfileLocalSpecialHandTreatment | undefined => {
-  const binding = bindings.find((item) => item.profile.id === profile.id && item.profile.version === profile.version && item.patternId === patternId);
+  const binding = specialHandBindingsForCurrentClassicalProfile(profile)
+    .find((item) => item.profile.id === profile.id && item.profile.version === profile.version && item.patternId === patternId);
   return binding ? treatmentFromBinding(binding) : undefined;
 };
