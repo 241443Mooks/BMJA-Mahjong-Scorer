@@ -13,6 +13,7 @@ import { HowItWorksPage } from './home/HowItWorksPage';
 import { MahjongRulesComparedPage } from './home/MahjongRulesComparedPage';
 import { MahjongSettlementPage } from './home/MahjongSettlementPage';
 import { PrivacyPage } from './home/PrivacyPage';
+import { UnderTheHoodPage } from './home/UnderTheHoodPage';
 import NotFound from './pages/not-found';
 import { RulesHubPage, RulesProfilePage } from './rules/RulesReference';
 import { descriptorForSlug, publicRulesSlugFromGamePath } from './game/rules-presentation';
@@ -41,6 +42,7 @@ export function RouteContent({ path, prerender = false }: { path: string; preren
   if (path === '/features') return withFullFooter(<FeaturesPage />);
   if (path === '/help') return withFullFooter(<HelpPage />);
   if (path === '/how-it-works') return withFullFooter(<HowItWorksPage />);
+  if (path === '/under-the-hood') return withFullFooter(<UnderTheHoodPage />);
   if (path === '/mahjong-rules-compared') return withFullFooter(<MahjongRulesComparedPage />);
   if (path === '/mahjong-settlement') return withFullFooter(<MahjongSettlementPage />);
   if (path === '/rules') return withFullFooter(<RulesHubPage />);
