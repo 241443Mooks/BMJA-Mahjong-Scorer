@@ -24,7 +24,7 @@ export const buildMcrHandScorerResult = (
 ): HandScorerResult => {
   if (!context.mcr?.lockedTableContext || !context.isWinner || context.handMode !== 'normal') throw new Error('A game-owned MCR winner context is required.');
   const compiled = getCurrentCompiledRulesRuntime(context.rulesProfile);
-  if (compiled.grammar !== 'pattern-accumulator' || compiled.artifact.profile.identity.id !== context.rulesProfile.id || compiled.artifact.profile.identity.version !== context.rulesProfile.version || !compiled.artifact.profile.identity.id.startsWith('mcr-')) throw new Error('The compiled MCR profile does not match the scorer context.');
+  if (compiled.grammar !== 'pattern-accumulator' || compiled.artifact.profile.identity.familyId !== 'family.mcr' || compiled.artifact.profile.identity.id !== context.rulesProfile.id || compiled.artifact.profile.identity.version !== context.rulesProfile.version) throw new Error('The compiled MCR profile does not match the scorer context.');
   if (result.grammar !== 'pattern-accumulator' || result.profile.id !== compiled.artifact.profile.identity.id || result.profile.version !== compiled.artifact.profile.identity.version || result.rulesFingerprint !== compiled.artifact.rulesFingerprint || !result.legal || result.disposition.kind !== 'scored' || result.result.unit !== 'points' || !Number.isFinite(result.result.total) || !Number.isInteger(result.result.total)) throw new Error('Only an exact legal scored MCR points result can be accepted.');
   if (input.context.winSource !== context.mcr.winSource || input.context.seatWind !== context.playerWind || input.context.prevailingWind !== context.prevailingWind) throw new Error('Canonical MCR input conflicts with the locked table context.');
   const acceptedScore = { source: 'mcr-detailed-scorer' as const, playerId: context.playerId, rulesProfile: { id: compiled.artifact.profile.identity.id, version: compiled.artifact.profile.identity.version }, rulesFingerprint: compiled.artifact.rulesFingerprint, hand, input, result, finalScore: result.result.total };
@@ -43,6 +43,7 @@ export const createHandScorerContext = (
   }
   const compiled = getCurrentCompiledRulesRuntime(game.setup.rulesProfile);
   if (compiled.grammar === 'pattern-accumulator') {
+    if (compiled.artifact.profile.identity.familyId !== 'family.mcr') throw new Error('Unsupported profile: pattern-accumulator game handoff requires the MCR family.');
     if (outcome?.type !== 'mcr-win' || outcome.winnerId !== playerId || !['discard', 'self-draw'].includes(outcome.winSource)) throw new Error('A game-owned MCR scorer requires the selected MCR winner and locked win source.');
     const record = scoreRecord?.source === 'mcr-detailed-scorer' ? scoreRecord : undefined;
     if (scoreRecord && !record) throw new Error('Only an accepted MCR detailed score can be reopened.');
