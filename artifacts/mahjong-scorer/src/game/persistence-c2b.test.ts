@@ -143,6 +143,15 @@ describe('C2B MCR persistence/recovery v2', () => {
     expect(load(storage)).toBeNull(); expect(storage.getItem(GAME_SNAPSHOT_STORAGE_KEY)).toBeNull();
   });
 
+  it('rejects an otherwise-valid partial accepted record owned by a non-participant', () => {
+    const game = rotatedGame();
+    const record = accepted('X', 'self-draw');
+    const currentRound = { grammar: 'pattern-accumulator' as const, draft: { scores: {}, scoreRecords: { X: record } } };
+    const storage = memoryStorage(); save(storage, game, currentRound);
+    expect(game.players.map(({ id }) => id)).not.toContain('X');
+    expect(load(storage)).toBeNull(); expect(storage.getItem(GAME_SNAPSHOT_STORAGE_KEY)).toBeNull();
+  });
+
   it('rejects more than one accepted MCR record in an active draft', () => {
     const game = rotatedGame();
     const first = accepted('A', 'self-draw');

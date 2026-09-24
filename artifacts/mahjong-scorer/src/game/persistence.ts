@@ -200,9 +200,10 @@ const validMcrRecordMap = (
   value: unknown,
   profile: RulesProfileRef,
   fingerprint: string,
+  playerIds: Set<string>,
   owner?: string,
   source?: 'discard' | 'self-draw',
-): boolean => isRecord(value) && Object.entries(value).length <= 1 && Object.entries(value).every(([playerId, record]) => isRecord(record) && playerId === record.playerId && (!owner || playerId === owner) && validateMcrRecord(record, profile, fingerprint, playerId, source));
+): boolean => isRecord(value) && Object.entries(value).length <= 1 && Object.entries(value).every(([playerId, record]) => playerIds.has(playerId) && isRecord(record) && playerId === record.playerId && (!owner || playerId === owner) && validateMcrRecord(record, profile, fingerprint, playerId, source));
 
 const isValidMcrRoundInput = (value: unknown, setup: GameSetup, fingerprint: string): value is McrRoundInput => {
   if (!isRecord(value) || !isRecord(value.mcrOutcome) || !isFiniteAmountMap(value.scores, new Set(setup.players.map(({ id }) => id)))) return false;
@@ -252,7 +253,7 @@ const isValidV2SnapshotShape = (value: unknown): value is PersistedGameSnapshotV
     if (snapshot.currentRound.winSource === 'self-draw' && snapshot.currentRound.discarderId !== undefined) return false;
     const owner = snapshot.currentRound.winnerId;
     const source = snapshot.currentRound.winSource;
-    if (!validMcrRecordMap(snapshot.currentRound.draft.scoreRecords, setup.rulesProfile, snapshot.game.runtimeFingerprint, owner, source)) return false;
+    if (!validMcrRecordMap(snapshot.currentRound.draft.scoreRecords, setup.rulesProfile, snapshot.game.runtimeFingerprint, players, owner, source)) return false;
   }
   return snapshot.game.rounds.every((round) => isRecord(round) && (grammar === 'classical-points-doubles' ? round.grammar === grammar && isValidSnapshotShape({ version: 1, game: { setup, rounds: [round.input] }, currentRound: { outcomeType: 'draw', winnerId: setup.players[0]!.id, draft: { scores: {}, scoreRecords: {} } } }) : round.grammar === grammar && isValidMcrRoundInput(round.input, setup, snapshot.game.runtimeFingerprint)));
 };
