@@ -106,6 +106,7 @@ describe('C2C1c MCR table routing', () => {
 
     const { result } = scored('A', 'self-draw');
     const acceptedRoute = applyMcrScorerResult(game, selfDrawRoute, result);
+    expect(result.score).toBe(28);
     expect(result.score).toBe(result.acceptedScore.result.result.total);
     expect(acceptedRoute.draft.scores.A).toBe(result.score);
     const input = buildMcrRoundInput(game, acceptedRoute);
@@ -115,6 +116,7 @@ describe('C2C1c MCR table routing', () => {
 
     const confirmed = confirmHand(game, input);
     expect(confirmed.handHistory[0]?.mcrReplay).toEqual(input);
+    expect(confirmed.handHistory[0]?.settlement.transactions.map(({ amount }) => amount)).toEqual([36, 36, 36]);
     expect(confirmed.handHistory[0]?.settlement.transactions.map(({ amount }) => amount)).toEqual([result.score + 8, result.score + 8, result.score + 8]);
   });
 
