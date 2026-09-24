@@ -22,6 +22,7 @@ import { buildMcrHandScorerResult } from './game/hand-scorer-handoff';
 import type { McrResolvedWinEvent, McrWinSource, McrWind } from './rules-platform/mcr-scoring-input';
 import { handScorerInitialBaseline, hasHandScorerUnsavedWork } from './game/hand-scorer-dirty-state';
 import { transitionStandaloneHandProfile } from './game/hand-scorer-profile-transition';
+import { readPreferredRulesProfile, setPreferredRulesProfile } from './game/preferred-rules-profile';
 import { normaliseStructuredChoiceForGroup, recoverWorkingDraft } from './game/hand-entry-workspace';
 import { applicableUngroupedBlanks, hasUngroupedBlankAt, reindexUngroupedBlanksAfterRemoval, toggleUngroupedBlankAt } from './game/ungrouped-blank-state';
 import type {
@@ -1590,17 +1591,23 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
   );
 }
 
-export default function App({ initialView = 'game', standaloneHand = false, initialRulesProfile = BMJA_PROFILE_REF, prerenderOnly = false }: { initialView?: 'game' | 'hand'; standaloneHand?: boolean; initialRulesProfile?: import('./game').RulesProfileRef; prerenderOnly?: boolean }) {
+export default function App({ initialView = 'game', standaloneHand = false, initialRulesProfile, prerenderOnly = false }: { initialView?: 'game' | 'hand'; standaloneHand?: boolean; initialRulesProfile?: import('./game').RulesProfileRef; prerenderOnly?: boolean }) {
   const search = standaloneHand && typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : undefined;
   const practice = !!search?.get('practice');
   const example = search ? resolveScorerExample(search.get('example') ?? search.get('practice')) : undefined;
+  const resolvedInitialRulesProfile = example ? BMJA_PROFILE_REF : initialRulesProfile ?? readPreferredRulesProfile() ?? BMJA_PROFILE_REF;
   const [view, setView] = useState<'game' | 'hand'>(initialView);
   const [scorerContext, setScorerContext] = useState<HandScorerContext | null>(null);
   const [returnedScore, setReturnedScore] = useState<
     HandScorerResult | null | undefined
   >(undefined);
   const [scorerSession, setScorerSession] = useState(0);
-  const [standaloneRulesProfile, setStandaloneRulesProfile] = useState(initialRulesProfile);
+  const [standaloneRulesProfile, setStandaloneRulesProfile] = useState(resolvedInitialRulesProfile);
+
+  const changeStandaloneRulesProfile = (profile: import('./game').RulesProfileRef) => {
+    setStandaloneRulesProfile(profile);
+    setPreferredRulesProfile(profile);
+  };
 
   const handleOpenHandScorer = (ctx?: HandScorerContext) => {
     setScorerContext(ctx ?? null);
@@ -1627,7 +1634,8 @@ export default function App({ initialView = 'game', standaloneHand = false, init
                 onOpenHandScorer={handleOpenHandScorer}
                 returnedScore={returnedScore}
                 onClearReturnedScore={() => setReturnedScore(undefined)}
-                initialRulesProfile={initialRulesProfile}
+                initialRulesProfile={resolvedInitialRulesProfile}
+                initialRulesProfileIsExplicit={initialRulesProfile !== undefined}
               />
             </div>
           )}
@@ -1639,7 +1647,7 @@ export default function App({ initialView = 'game', standaloneHand = false, init
                 onClose={handleCloseHandScorer}
                 standaloneHand={standaloneHand}
                 standaloneRulesProfile={standaloneRulesProfile}
-                onStandaloneRulesProfileChange={setStandaloneRulesProfile}
+                onStandaloneRulesProfileChange={changeStandaloneRulesProfile}
                 example={example}
                 practice={practice && !!example}
               />

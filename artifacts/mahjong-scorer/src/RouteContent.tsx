@@ -33,7 +33,8 @@ export function RouteContent({ path, prerender = false }: { path: string; preren
   if (path === '/') return withFullFooter(<HomePage />);
   if (path === '/game' || path.startsWith('/game/')) {
     const slug = publicRulesSlugFromGamePath(path);
-    return slug ? <App initialRulesProfile={descriptorForSlug(slug).profile} prerenderOnly={prerender} /> : <NotFound />;
+    const explicitProfile = path === '/game' ? undefined : slug ? descriptorForSlug(slug).profile : undefined;
+    return slug ? <App initialRulesProfile={explicitProfile} prerenderOnly={prerender} /> : <NotFound />;
   }
   if (path === '/hand') return <App initialView="hand" standaloneHand prerenderOnly={prerender} />;
   if (path === '/scoring-examples') return withFullFooter(<ScoringExamplesPage />);

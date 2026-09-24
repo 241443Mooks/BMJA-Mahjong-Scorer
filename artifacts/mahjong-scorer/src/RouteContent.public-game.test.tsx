@@ -1,10 +1,22 @@
-import { beforeAll, describe, expect, it } from 'vitest';
+import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { RouteContent } from './RouteContent';
 import { initialiseCurrentRulesRuntimes } from './rules-platform/current-runtime-registry';
+import { PREFERRED_RULES_PROFILE_STORAGE_KEY } from './game/preferred-rules-profile';
 
 describe('public game route seam', () => {
   beforeAll(() => initialiseCurrentRulesRuntimes());
+  afterEach(() => vi.unstubAllGlobals());
+
+  const browserStorage = (preferred: string | null) => {
+    const values = new Map<string, string>();
+    if (preferred !== null) values.set(PREFERRED_RULES_PROFILE_STORAGE_KEY, preferred);
+    return {
+      getItem: (key: string) => values.get(key) ?? null,
+      setItem: (key: string, value: string) => values.set(key, value),
+      removeItem: (key: string) => values.delete(key),
+    };
+  };
 
   it.each([
     ['/game', 'british'],
@@ -25,6 +37,27 @@ describe('public game route seam', () => {
     expect(html).not.toMatch(/table limit/i);
     expect(html).not.toMatch(/1000 points|600 points|one-round/i);
     expect(html).toMatch(/data-testid="rules-card-mcr"[\s\S]*?checked=""/);
+  });
+
+  it('uses a valid preference on plain /game and /hand while explicit game routes win', () => {
+    vi.stubGlobal('window', { localStorage: browserStorage(JSON.stringify({ id: 'mcr-wmo-2006', version: '0.1' })), location: { search: '' } });
+    const plainGame = renderToStaticMarkup(<RouteContent path="/game" />);
+    const hand = renderToStaticMarkup(<RouteContent path="/hand" />);
+    const explicitGame = renderToStaticMarkup(<RouteContent path="/game/club" />);
+    expect(plainGame).toMatch(/data-testid="rules-card-mcr"[\s\S]*?checked=""/);
+    expect(hand).toMatch(/data-testid="rules-card-mcr"[\s\S]*?checked=""/);
+    expect(explicitGame).toMatch(/data-testid="rules-card-club"[\s\S]*?checked=""/);
+  });
+
+  it('retains the British first-visit default when no preference exists', () => {
+    vi.stubGlobal('window', { localStorage: browserStorage(null), location: { search: '' } });
+    expect(renderToStaticMarkup(<RouteContent path="/game" />)).toMatch(/data-testid="rules-card-british"[\s\S]*?checked=""/);
+    expect(renderToStaticMarkup(<RouteContent path="/hand" />)).toMatch(/data-testid="rules-card-british"[\s\S]*?checked=""/);
+  });
+
+  it('loads the scorer when the browser storage getter itself throws', () => {
+    vi.stubGlobal('window', { get localStorage() { throw new Error('blocked'); }, location: { search: '' } });
+    expect(() => renderToStaticMarkup(<RouteContent path="/hand" />)).not.toThrow();
   });
 
   it('renders the privacy and analytics route with its current footer', () => {
