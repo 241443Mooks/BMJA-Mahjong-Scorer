@@ -43,6 +43,14 @@ describe('current runtime registry', () => {
     expect(currentPlayableProfiles.map(({ identity }) => identity.id)).toEqual(['bmja', 'western-tm', 'outside-the-box', 'buzzard-2000']);
     expect(PUBLIC_RULES_DESCRIPTORS).toHaveLength(5);
     expect(PUBLIC_RULES_DESCRIPTORS.some(({ profile }) => profile.id === MCR_WMO_2006_PROFILE.identity.id)).toBe(true);
+    expect(() =>
+      getCurrentRulesRuntime({
+        id: 'mcr-wmo-2006',
+        version: '0.1',
+      })
+    ).toThrow(
+      'CURRENT_RULES_RUNTIME_GRAMMAR_MISMATCH:mcr-wmo-2006@0.1:pattern-accumulator'
+    );
     const compiled = getCurrentCompiledRulesRuntime({ id: 'mcr-wmo-2006', version: '0.1' });
     expect(compiled.grammar).toBe('pattern-accumulator');
     expect(compiled.artifact.profile.identity).toMatchObject({ id: 'mcr-wmo-2006', version: '0.1' });
