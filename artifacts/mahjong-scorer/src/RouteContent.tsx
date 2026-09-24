@@ -15,6 +15,7 @@ import { MahjongSettlementPage } from './home/MahjongSettlementPage';
 import { PrivacyPage } from './home/PrivacyPage';
 import { UnderTheHoodPage } from './home/UnderTheHoodPage';
 import NotFound from './pages/not-found';
+import { ClubRulesPage } from './rules/ClubRulesPage';
 import { RulesHubPage, RulesProfilePage } from './rules/RulesReference';
 import { descriptorForSlug, publicRulesSlugFromGamePath } from './game/rules-presentation';
 import { RulesProfilePickerScalabilityFixture } from './game/RulesProfilePicker';
@@ -48,6 +49,7 @@ export function RouteContent({ path, prerender = false }: { path: string; preren
   if (path === '/rules') return withFullFooter(<RulesHubPage />);
   if (path === '/rules/british') return withFullFooter(<RulesProfilePage slug="british" />);
   if (path === '/rules/western') return withFullFooter(<RulesProfilePage slug="western" />);
+  if (path === '/rules/club') return withFullFooter(<ClubRulesPage />);
   if (path === '/rules/buzzard') return withFullFooter(<RulesProfilePage slug="buzzard" />);
   if (path === '/rules/mcr') return withFullFooter(<RulesProfilePage slug="mcr" />);
   if (path === '/about') return withFullFooter(<AboutPage />);
