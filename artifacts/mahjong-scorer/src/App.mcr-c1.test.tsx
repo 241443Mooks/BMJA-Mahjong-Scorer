@@ -35,6 +35,17 @@ describe('C1 shared standalone scorer workspace', () => {
     expect(gamePicker).toContain('rules-card-mcr');
   });
 
+  it('places the standalone hand, bonuses, rules, MCR context and result in hand-first order', () => {
+    const html = renderToStaticMarkup(<HandScorer context={null} onClose={vi.fn()} standaloneHand standaloneRulesProfile={mcrProfile} onStandaloneRulesProfileChange={vi.fn()} />);
+    const order = ['working-picker', 'hand-so-far', 'bonus-tiles', 'rules-profile-picker', 'mobile-hand-context', 'mcr-evidence-controls', 'mobile-live-result', 'mcr-score-result'];
+    const positions = order.map((testId) => html.indexOf(`data-testid="${testId}"`));
+    expect(positions.every((position) => position >= 0)).toBe(true);
+    expect(positions).toEqual([...positions].sort((left, right) => left - right));
+
+    const workingPickerEnd = html.indexOf('</section>', positions[0]);
+    expect(positions[6]).toBeGreaterThan(workingPickerEnd);
+  });
+
   it('locks table-owned MCR context while preserving editable scorer evidence', () => {
     const game = createGame([{ id: 'A', name: 'A' }, { id: 'B', name: 'B' }, { id: 'C', name: 'C' }, { id: 'D', name: 'D' }], { A: 'east', B: 'south', C: 'west', D: 'north' }, undefined, 'full-game', mcrProfile);
     const context = createHandScorerContext(game, 'B', { type: 'mcr-win', winnerId: 'B', winSource: 'discard' });
