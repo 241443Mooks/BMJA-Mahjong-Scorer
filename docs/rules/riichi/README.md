@@ -1,42 +1,69 @@
 # Riichi / EMA 2025 rules programme
 
+Status: **pre-code correctness research complete; runtime implementation pending under #244**  
+Programme issue: #202  
+Initial executable target: `riichi-ema-2025@0.x`
+
 This directory is the implementation-facing evidence base for adding **Japanese Riichi Mahjong** to Mahjong Reference / Table Companion.
 
-The initial target profile is the **European Mahjong Association (EMA) 2025 rules edition**. It is intentionally named and versioned rather than exposed as generic `Riichi`, because formal Riichi traditions differ in scoring details, etiquette and optional rules.
+The target profile is deliberately the **European Mahjong Association (EMA) 2025 rules edition**, not generic unversioned `Riichi`, because Riichi traditions and formal profiles differ in scoring details, procedure and optional rules.
 
-Primary source:
+Primary authority:
 
-- European Mahjong Association, *Riichi: Rules for Japanese Mahjong*, 2025 edition, August 2025
-- Source: http://mahjong-europe.org/portal/images/docs/Riichi-rules-2025-EN.pdf
-- Source authority: governing/competition body (`A` in the repo provenance model)
-- Licence stated in the rulebook: Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International
+- European Mahjong Association, *Riichi: Rules for Japanese Mahjong*, 2025 edition, August 2025;
+- source ID `ema-riichi-2025`;
+- formal source URL recorded in `SOURCES.md`.
 
-The supplied one-page `Riichi-Yakulist.pdf` is a useful learning/check aid but is labelled as a 2023 update and is **not** normative for the 2025 profile.
+The supplied 2023 one-page yaku sheet is a secondary learning aid only and never overrides EMA 2025.
 
-## Why EMA 2025 is the right first Riichi target
+## Current handoff — 17 September 2026
 
-The EMA rulebook explicitly exists to make Riichi play and teaching consistent across Europe for both competition and social club play. It therefore gives the project a named, formal, current and geographically relevant target rather than asking the implementation to guess what `standard Riichi` means.
+The architecture and pre-code scoring/settlement/progression research gates are complete.
 
-Working profile identity should preserve the source edition, conceptually:
+Future engineering should begin from this corpus rather than re-reading the rulebook ad hoc:
 
-`riichi-ema-2025@0.x` while provisional → `riichi-ema-2025@1.0` only after the executable source audit is complete.
+1. `EMA_2025_SCORE_EVIDENCE_CONTRACT.md` — minimum hand/table facts the product actually needs;
+2. `EMA_2025_YAKU_CATALOGUE.md` — source-bound yaku/yakuman values, open reductions and interactions;
+3. `EMA_2025_SCORING_AND_SETTLEMENT_CONTRACT.md` — fu, dora/value formulae, payments, honba, riichi pot, liability, draw settlement, progression and uma;
+4. `EMA_2025_GOLDEN_FIXTURES.md` — ten official EMA examples plus focused edge-case oracles;
+5. `EMA_2025_CORPUS_COMPLETENESS_AUDIT.md` — proof that the rules research gate is closed rather than merely paused;
+6. `EMA_2025_ARCHITECTURE_DECISIONS.md` — existing profile/platform boundary decisions;
+7. `EMA_2025_IMPLEMENTATION_MATRIX.md` — original domain/source map and research record;
+8. `SOURCES.md` — exact authority/version/source policy.
 
-Exact registry naming should follow the existing code conventions when implementation begins.
+Runtime implementation is #244 and is deliberately blocked on the relevant #227 rules-platform prerequisites. Codex should implement the pinned contract; it should not perform Riichi research while changing production code.
 
-## Mental model for non-Riichi maintainers
+## Product boundary
 
-Riichi shares ordinary Mahjong tile/set concepts but has a materially different rules and scoring lifecycle from BMJA/Western play.
+Mahjong Reference is a physical-table scoring/bookkeeping companion.
 
-A useful first mental model is:
+For Riichi it needs to:
 
 ```text
-physical hand/table context
-        ↓
+record a resolved hand/round + minimum score-relevant context
+→ score it
+→ settle it
+→ update balances / honba / riichi pot
+→ retain or advance dealer/round
+→ finalise the game when appropriate
+```
+
+It does **not** need to simulate the wall, run turns, police claim timing, recommend discards, automatically referee fouls or require continuous discard logging merely to score a resolved physical game.
+
+Where a scoring fact cannot be derived without intrusive live tracking, the table may supply a finite source-defined resolved fact at scoring time. Unknown material evidence must remain unknown/fail closed rather than be guessed.
+
+## Why Riichi is a separate scoring grammar
+
+A useful mental model is:
+
+```text
 complete winning shape?
         ↓
-has at least one yaku?
+legal yaku / ron legality?
         ↓
-yaku + dora evidence → han
+enumerate all lawful interpretations
+        ↓
+yaku + dora → han
         +
 hand/win structure → fu
         ↓
@@ -44,161 +71,88 @@ limit tier / base value
         ↓
 ron or tsumo payment route
         +
-East/dealer status
-        +
-counters / riichi deposits / liability
+honba / riichi pot / liability
         ↓
 settlement
         ↓
-dealer repeat/rotation + next-hand state
+renchan / dealer rotation / next round / finalisation
 ```
 
-This means Riichi cannot be represented as British base points + doubles with more switches.
+Riichi therefore uses the `riichi-han-fu` grammar and must not be stretched into British/Western points × doubles.
 
-## Core rules concepts we must understand before coding
+## EMA 2025 profile choices now pinned
 
-### Tile set and setup
+The correctness corpus includes, among other source-specific decisions:
 
-EMA 2025 uses the 136 basic suited/honour tiles. Flowers, Seasons and Jokers are not used. Japanese sets may contain red fives, but **EMA 2025 does not use them**.
-
-The game uses a 14-tile dead wall containing replacement tiles plus dora / kan-dora / ura-dora indicator positions.
-
-### Winning grammar
-
-The ordinary complete form is four sets and a pair. EMA also recognises Seven Pairs and Thirteen Orphans as complete special structures.
-
-A complete hand is not automatically a legal win: it must have at least one **yaku**. Dora add han/value but do not replace the yaku eligibility requirement.
-
-### Open and concealed state
-
-Calling `chii`, `pon` or a claimed `kan` opens the hand. Some yaku require a concealed hand; some lose han when open; some are unaffected.
-
-Winning by ron does not itself make the whole hand open, although the set completed by the winning discard may be treated differently for fu/concealed-triplet evaluation.
-
-### Tenpai, furiten and riichi
-
-`tenpai` means the hand is waiting on at least one tile. It is **not** British/Western fishing and must not reuse fishing semantics.
-
-`furiten` restricts winning by discard (`ron`). It can arise from the player's own discarded waiting tiles, from passing a possible winning discard temporarily, or persist to the end of the hand after passing a win following a riichi declaration.
-
-A concealed tenpai player can declare `riichi`, rotate the discard and place a 1,000-point bet. Riichi then constrains future hand changes and enables ura dora if the player later wins.
-
-### Win sources
-
-`tsumo` = win by self-draw.
-
-`ron` = win on another player's discard.
-
-Other event-sensitive yaku include winning after a quad replacement tile, robbing an extended quad, and winning on the last tile/last discard.
-
-### Scoring
-
-Scoring is layered:
-
-1. determine yaku and han;
-2. add dora / kan dora / ura dora where applicable;
-3. calculate fu for non-limit hands;
-4. apply mangan/haneman/baiman/sanbaiman/yakuman limits;
-5. route payments according to East/Non-East and ron/tsumo;
-6. add counters and allocate riichi deposits;
-7. apply any specific liability rule.
-
-Important EMA-2025 choices include:
-
-- 4 han 30 fu and 3 han 60 fu are treated as mangan;
-- a pair that is both seat and round wind receives 2 fu, not 4;
+- 136 basic tiles; no Flowers, Seasons or Jokers;
+- no red fives for EMA 2025;
+- ordinary four-sets-plus-pair plus Seven Pairs and Thirteen Orphans;
+- at least one yaku required; dora do not create yaku eligibility;
+- furiten prevents ron but not tsumo;
+- maximum lawful decomposition/winning-tile interpretation must be selected;
+- Seven Pairs fixed at 25 fu;
+- pair that is both seat and round wind scores only 2 fu;
+- EMA kiriage Mangan for 4 han 30+ fu and 3 han 60+ fu;
+- ordinary 11+ han = Sanbaiman; yakuman is a separate tier;
 - yakuman are not cumulative;
-- red fives are not used.
+- multiple ron is allowed;
+- honba and riichi deposits are settlement layers rather than hand-value arithmetic;
+- source-defined Daisangen/Daisuushii liability routing;
+- exhaustive-draw 3,000-point tenpai/noten settlement;
+- East retains after East win or East tenpai at exhaustive draw;
+- East + South full-game lifecycle;
+- no bankruptcy/end-on-negative-score rule;
+- final 30,000 baseline + uma + tie handling.
 
-### Exhaustive draw
+## Minimum score evidence
 
-When no one wins after the final discard, tenpai/noten is declared. The total noten penalty is 3,000 points and is redistributed according to how many players are tenpai.
+Most scoring information should be derived from entered tiles/groups and trusted active-game state.
 
-Riichi deposits remain on the table. Dealer/counter state then changes according to whether East was tenpai.
+The small external/derived evidence set includes only facts such as:
 
-### Dealer / counters / progression
+- winning tile and source/event;
+- riichi/double-riichi state;
+- ippatsu eligibility where relevant;
+- furiten status for ron when it cannot be safely derived;
+- dora / kan-dora / ura-dora indicators;
+- resolved liability player where applicable;
+- declared tenpai/noten players on exhaustive draw.
 
-A full EMA game uses East and South rounds. East remains East after an East win or when East is tenpai at an exhaustive draw; otherwise the dealer rotates.
+The UI must not turn the yaku catalogue into a checkbox scorer.
 
-Counters increase winning payments and persist/reset according to the result of the hand.
+## Mandatory executable correctness gates
 
-### Multiple winners and liability
+When #244 is implemented:
 
-More than one player may win from the same discard. The discarder settles with each winner.
+- reproduce all ten official EMA worked scoring examples on pp. 26–28;
+- generate and match the official scoring table on p. 43 from the formula/policies;
+- positive detector coverage for every yaku/yakuman;
+- open-reduction and source-owned non-stacking coverage;
+- all fu categories;
+- maximum-decomposition tests;
+- dora indicator cycles and eligibility;
+- dealer/non-dealer ron/tsumo;
+- multi-ron, honba and riichi pot;
+- liability;
+- exhaustive draw 0–4 tenpai;
+- renchan/round/game progression;
+- final uma/ties;
+- fail-closed missing-evidence cases.
 
-EMA also defines specific payment liability when a player feeds the final called set for Big Three Dragons or Big Four Winds.
+## Procedure / tournament boundary
 
-### End of game
+EMA 2025 also contains etiquette, live-play procedure, errors/penalties and tournament administration.
 
-Players begin at 30,000 points. EMA 2025 has no bankruptcy rule: play does not automatically stop because a score becomes negative.
+Those are not automatically part of the deterministic hand scorer.
 
-At the end, scores are measured relative to 30,000 and the winner bonus (`uma`) is applied: +15,000 / +5,000 / -5,000 / -15,000, with tie handling defined by the source.
+If a future Table Companion feature records a **resolved** chombo/procedure outcome, the selected procedure mode must be explicit and replayable. The app does not need to infer offences from every physical action.
 
-## Source-reading map
+## Real-player validation gate
 
-Use `EMA_2025_IMPLEMENTATION_MATRIX.md` for implementation domains and source locators.
+Because the maintainer does not currently play Riichi, stable/public `1.0` still requires experienced EMA/European Riichi-player review of terminology, evidence entry, scoring explanations and physical-table flow.
 
-High-value rulebook sections:
-
-- pp. 6–9 — tiles, setup, dead wall, dora, deal
-- pp. 10–15 — winning grammar, claims, kan, tenpai, furiten, riichi, ron/tsumo
-- pp. 16–19 — exhaustive draw, settlement events, counters, dealer rotation, game end, uma
-- pp. 20–22 — han/fu/value/payment calculation
-- pp. 23–26 — yaku and yakuman definitions
-- pp. 26–28 — ten official scoring examples
-- pp. 32–38 — errors and penalties
-- pp. 39–40 — tournament overlay
-- p. 42 — compact yaku list
-- p. 43 — scoring tables
-
-## Implementation gates
-
-### Gate A — comprehension
-
-Before broad scoring implementation, maintainers must be able to describe from source:
-
-- normal turn/claim flow;
-- legal winning conditions;
-- riichi declaration and post-riichi restrictions;
-- furiten;
-- ron versus tsumo;
-- kan/dead-wall/dora flow;
-- exhaustive draw;
-- dealer repeat/rotation;
-- full East/South progression;
-- final settlement.
-
-### Gate B — architecture
-
-Every Riichi-specific concept must have an explicit home in the domain model. Do not overload BMJA concepts merely because names seem related.
-
-### Gate C — deterministic scoring
-
-The engine must reproduce the ten official examples on pp. 26–28 and the p. 43 scoring table/formula before it is treated as trustworthy.
-
-### Gate D — full table play
-
-A selectable full-game profile requires progression, counters, riichi deposits, tenpai/noten draws, dealer rotation and end-game settlement — not only a winning-hand calculator.
-
-### Gate E — real-player validation
-
-Because the maintainer does not currently play Riichi, experienced EMA/European Riichi players must validate terminology, evidence-entry flow and real-table usefulness before broad release.
-
-## Product boundary
-
-Riichi rules correctness must remain deterministic and local-first.
-
-Voice, photography or other AI capture may later populate structured evidence, but they do not define Riichi truth and must never become required for scoring or table progression.
-
-## Related work
-
-- #202 — active Riichi / EMA 2025 development programme
-- #51 — rules-profile architecture
-- #83 — versioned rules profiles
-- #84 — canonical hand-pattern model
-- #89 — cross-profile golden validation
-- #105 — Table Companion product direction
+That validation is a release gate, not a reason for Codex to invent rules during implementation.
 
 ## Principle
 
-> **Learn the game first; then build the smallest transparent rules engine that can explain every result.**
+> **The language/UI may explain the rules. The deterministic EMA 2025 profile creates the score.**
