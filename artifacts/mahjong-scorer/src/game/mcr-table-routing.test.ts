@@ -90,10 +90,9 @@ describe('C2C1c MCR table routing', () => {
     const accepted = applyMcrScorerResult(game, { outcomeType: 'win', winnerId: 'A', winSource: 'discard', draft: empty.draft }, result);
     const discard = confirmHand(game, buildMcrRoundInput(game, { ...accepted, discarderId: 'B' }));
     expect(discard.handHistory[0]?.settlement.transactions.map(({ fromPlayerId, amount }) => [fromPlayerId, amount])).toEqual([['B', 32], ['C', 8], ['D', 8]]);
-    const selfDrawResult = scored('A', 'self-draw').result;
-    const selfAccepted = applyMcrScorerResult(game, transitionMcrRouting({ ...accepted, discarderId: 'B' }, { winSource: 'self-draw' }), selfDrawResult);
-    const selfRoute = { ...selfAccepted, discarderId: undefined };
-    const selfDraw = confirmHand(game, buildMcrRoundInput(game, selfRoute));
-    expect(selfDraw.handHistory[0]?.settlement.transactions.map(({ fromPlayerId, amount }) => [fromPlayerId, amount])).toEqual([['B', 32], ['C', 32], ['D', 32]]);
+    const compiled = getCurrentCompiledRulesRuntime(profile);
+    if (compiled.grammar !== 'pattern-accumulator') throw new Error('Expected MCR runtime.');
+    const selfDraw = compiled.runtime.settleRound({ participants: ['A', 'B', 'C', 'D'], round: { outcome: { kind: 'mcr-win', payload: { winnerId: 'B', winSource: 'self-draw' } }, acceptedScores: [{ playerId: 'B', score: result.acceptedScore.result }] } });
+    expect(selfDraw.map(({ from, amount }) => [from, amount])).toEqual([['A', 32], ['C', 32], ['D', 32]]);
   });
 });
