@@ -153,16 +153,9 @@ export function HomePage() {
           <h1 className="font-serif text-[clamp(38px,6vw,58px)] leading-[1.02] text-[#284d45]">
             Your Mahjong table companion.
           </h1>
-          <p className="mt-4 max-w-[620px] text-[15px] leading-7 text-[#66746e]">
-            Score a hand, track the whole game, see who pays whom and use the rules your table actually plays.
-          </p>
-          <p className="mt-4 inline-flex rounded-full border border-[#cfc3aa] bg-[#fbf8ed] px-4 py-2 text-[14px] font-semibold text-[#284d45]">Free · No signup required · Works in your browser</p>
-          <p className="mt-3 max-w-[620px] text-[14px] leading-6 text-[#66746e]">
-            If you refresh or close the browser, you can usually pick up your game again on this device. It is saved in this browser, not to an account.
-          </p>
         </section>
 
-        <section className="mt-8 grid gap-4 md:grid-cols-2" aria-label="Scoring actions">
+        <section className="mt-6 grid gap-4 md:grid-cols-2" aria-label="Scoring actions">
           {recovered ? (
             <div className="rounded-2xl border border-[#284d45] bg-[#284d45] p-6 text-[#f8f4e9] shadow-[var(--shadow-sm)] sm:p-7">
               <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#3b5e55] text-[#f3d8c7]">
@@ -205,12 +198,21 @@ export function HomePage() {
           />
         </section>
 
-        <a
-          href="/features"
-          className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-md px-1 text-[15px] font-semibold text-[#284d45] underline decoration-[#ae6249] decoration-2 underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]"
-        >
-          See what the Table Companion can do <ArrowRight size={16} />
-        </a>
+        <section className="mt-6 max-w-[760px]" aria-label="About the Table Companion">
+          <p className="max-w-[620px] text-[15px] leading-7 text-[#66746e]">
+            Score a hand, track the whole game, see who pays whom and use the rules your table actually plays.
+          </p>
+          <p className="mt-4 inline-flex rounded-full border border-[#cfc3aa] bg-[#fbf8ed] px-4 py-2 text-[14px] font-semibold text-[#284d45]">Free · No signup required · Works in your browser</p>
+          <p className="mt-3 max-w-[620px] text-[14px] leading-6 text-[#66746e]">
+            If you refresh or close the browser, you can usually pick up your game again on this device. It is saved in this browser, not to an account.
+          </p>
+          <a
+            href="/features"
+            className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-md px-1 text-[15px] font-semibold text-[#284d45] underline decoration-[#ae6249] decoration-2 underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]"
+          >
+            See what the Table Companion can do <ArrowRight size={16} />
+          </a>
+        </section>
 
         <section className="mt-11" aria-labelledby="home-rules-heading">
           <div className="mb-4 flex items-center gap-3">
