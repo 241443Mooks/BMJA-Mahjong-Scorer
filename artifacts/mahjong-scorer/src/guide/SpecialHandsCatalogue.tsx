@@ -4,14 +4,17 @@ import { SiteHeader } from '../components/SiteHeader';
 import { ReturnToGame } from '../components/ReturnToGame';
 import { SPECIAL_HAND_ANCHORS } from './special-hand-references';
 import { exampleVisualTiles, specialHandExampleById, specialHandExampleHref } from './special-hand-examples';
+import { BMJA_PROFILE_REF } from '../game/ruleset';
+import { resolveSpecialHandTreatment } from '../rules-knowledge/special-hand-treatments';
 
 import { TileStrip, type TileAssetKey, type TileDefinition } from './MahjongTileGallery';
 
 type SpecialCardData = {
   id: keyof typeof SPECIAL_HAND_ANCHORS;
-  name: string;
-  description: string;
-  winner: string;
+  treatmentId?: string;
+  name?: string;
+  description?: string;
+  winner?: string;
   fishing?: string;
   entry: string;
   detection: string;
@@ -52,10 +55,6 @@ const normalSetSpecials: SpecialCardData[] = [
   },
   {
     id: 'all-pair-honours',
-    name: 'All Pair Honours',
-    description: 'Seven pairs made only from major tiles: suited 1s and 9s, Winds and Dragons.',
-    winner: '500',
-    fishing: '200',
     entry: 'Standard sets · seven pairs',
     detection: 'Detected automatically from your tiles',
     tiles: combine(repeat(sou(1), 2), repeat(pin(9), 2), repeat(man(1), 2), repeat(east, 2), repeat(south, 2), repeat(red, 2), repeat(green, 2)),
@@ -63,20 +62,12 @@ const normalSetSpecials: SpecialCardData[] = [
   },
   {
     id: 'all-winds-and-dragons',
-    name: 'All Winds and Dragons',
-    description: 'A complete hand made only from Winds and Dragons: four Pungs/Kongs and a pair.',
-    winner: '1,000',
-    fishing: '400 or intrinsic if greater',
     entry: 'Standard sets',
     detection: 'Detected automatically from your tiles',
     tiles: combine(repeat(east, 3), repeat(south, 3), repeat(west, 3), repeat(north, 3), repeat(red, 2)),
   },
   {
     id: 'heads-and-tails',
-    name: 'Heads and Tails',
-    description: 'A normal grouped hand made only from suited 1s and 9s. No Winds or Dragons.',
-    winner: '1,000',
-    fishing: '400',
     entry: 'Standard sets',
     detection: 'Detected automatically from your tiles',
     tiles: combine(repeat(sou(1), 3), repeat(pin(9), 3), repeat(man(1), 3), repeat(sou(9), 3), repeat(man(9), 2)),
@@ -84,10 +75,6 @@ const normalSetSpecials: SpecialCardData[] = [
   },
   {
     id: 'fourfold-plenty',
-    name: 'Fourfold Plenty',
-    description: 'Four Kongs and a pair.',
-    winner: '1,000',
-    fishing: '400',
     entry: 'Standard sets',
     detection: 'Detected automatically from your sets',
     tiles: combine(repeat(pin(2), 4), repeat(sou(4), 4), repeat(red, 4), repeat(east, 4), repeat(man(7), 2)),
@@ -95,30 +82,18 @@ const normalSetSpecials: SpecialCardData[] = [
   },
   {
     id: 'three-great-scholars',
-    name: 'Three Great Scholars',
-    description: 'Pungs or Kongs of all three Dragons, plus one more Pung/Kong and a pair.',
-    winner: '1,000',
-    fishing: '400 or intrinsic if greater',
     entry: 'Standard sets',
     detection: 'Detected automatically from your tiles',
     tiles: combine(repeat(red, 3), repeat(green, 3), repeat(white, 3), repeat(east, 3), repeat(pin(5), 2)),
   },
   {
     id: 'four-blessings',
-    name: 'Four Blessings Hovering over the Door',
-    description: 'Pungs or Kongs of all four Winds, plus a pair.',
-    winner: '1,000',
-    fishing: '400 or intrinsic if greater',
     entry: 'Standard sets',
     detection: 'Detected automatically from your tiles',
     tiles: combine(repeat(east, 3), repeat(south, 3), repeat(west, 3), repeat(north, 3), repeat(green, 2)),
   },
   {
     id: 'buried-treasure',
-    name: 'Buried Treasure',
-    description: 'A concealed hand of Pungs and a pair in one suit, with honours allowed. No Chow and no Kong.',
-    winner: '1,000',
-    fishing: '400',
     entry: 'Standard sets',
     detection: 'Automatic; the winning tile can matter',
     tiles: combine(repeat(pin(2), 3), repeat(pin(4), 3), repeat(pin(6), 3), repeat(pin(8), 3), repeat(pin(5), 2)),
@@ -127,10 +102,6 @@ const normalSetSpecials: SpecialCardData[] = [
   },
   {
     id: 'imperial-jade',
-    name: 'Imperial Jade',
-    description: 'Only traditional green tiles: Green Dragon and Bamboo 2, 3, 4, 6 and 8.',
-    winner: '1,000',
-    fishing: '400',
     entry: 'Standard sets',
     detection: 'Detected automatically from your tiles',
     tiles: combine(repeat(green, 3), repeat(sou(2), 3), repeat(sou(3), 3), repeat(sou(6), 3), repeat(sou(8), 2)),
@@ -141,10 +112,6 @@ const normalSetSpecials: SpecialCardData[] = [
 const irregularSpecials: SpecialCardData[] = [
   {
     id: 'knitting',
-    name: 'Knitting',
-    description: 'Seven pairs. Each pair uses the same number in two different suits.',
-    winner: '500',
-    fishing: '200',
     entry: 'My hand doesn’t fit normal sets',
     detection: 'Detected automatically from your tiles',
     tiles: [sou(1), pin(1), man(2), sou(2), pin(3), man(3), sou(4), pin(4), man(5), sou(5), pin(6), man(6), sou(7), pin(7)],
@@ -152,10 +119,6 @@ const irregularSpecials: SpecialCardData[] = [
   },
   {
     id: 'triple-knitting',
-    name: 'Triple Knitting',
-    description: 'Four same-number groups containing one tile from each suit, plus one cross-suit same-number pair.',
-    winner: '500',
-    fishing: '200',
     entry: 'My hand doesn’t fit normal sets',
     detection: 'Detected automatically from your tiles',
     tiles: [sou(2), man(2), pin(2), sou(4), man(4), pin(4), sou(6), man(6), pin(6), sou(8), man(8), pin(8), sou(5), pin(5)],
@@ -163,10 +126,6 @@ const irregularSpecials: SpecialCardData[] = [
   },
   {
     id: 'thirteen-unique-wonders',
-    name: 'Thirteen Unique Wonders',
-    description: 'One of each of the 13 major/honour tile types, plus one duplicate to make the pair.',
-    winner: '1,000',
-    fishing: '400',
     entry: 'My hand doesn’t fit normal sets',
     detection: 'Detected automatically from your tiles',
     tiles: [sou(1), sou(9), pin(1), pin(9), man(1), man(9), east, south, west, north, red, green, white, east],
@@ -174,10 +133,6 @@ const irregularSpecials: SpecialCardData[] = [
   },
   {
     id: 'gates-of-heaven',
-    name: 'Gates of Heaven',
-    description: 'One suit: three 1s, three 9s, one each of 2–8, with one of 2–8 duplicated.',
-    winner: '1,000',
-    fishing: '400',
     entry: 'My hand doesn’t fit normal sets',
     detection: 'Automatic; the winning tile can matter',
     tiles: [pin(1), pin(1), pin(1), pin(2), pin(3), pin(4), pin(5), pin(5), pin(6), pin(7), pin(8), pin(9), pin(9), pin(9)],
@@ -186,10 +141,6 @@ const irregularSpecials: SpecialCardData[] = [
   },
   {
     id: 'wriggling-snake',
-    name: 'Wriggling Snake',
-    description: 'A pair of 1s, the sequence 2 through 9 in the same suit, plus one of each Wind.',
-    winner: '1,000',
-    fishing: '400',
     entry: 'My hand doesn’t fit normal sets',
     detection: 'Detected automatically from your tiles',
     tiles: [pin(1), pin(1), pin(2), pin(3), pin(4), pin(5), pin(6), pin(7), pin(8), pin(9), east, south, west, north],
@@ -217,6 +168,13 @@ function EventTimeline({ steps, tile }: { steps: string[]; tile?: TileDefinition
 }
 
 function SpecialCard({ hand }: { hand: SpecialCardData }) {
+  const treatment = resolveSpecialHandTreatment(BMJA_PROFILE_REF, hand.treatmentId ?? hand.id);
+  const name = treatment?.name ?? hand.name ?? hand.id;
+  const description = treatment?.description ?? hand.description ?? '';
+  const winner = treatment?.winnerValue === undefined ? hand.winner : new Intl.NumberFormat('en-GB').format(treatment.winnerValue);
+  const fishing = treatment?.fishingValue === undefined
+    ? hand.fishing
+    : `${new Intl.NumberFormat('en-GB').format(treatment.fishingValue)}${treatment.fishingUsesIntrinsicFloor ? ' or intrinsic if greater' : ''}`;
   const example = specialHandExampleById(hand.id);
   const visualTiles = hand.visualPolicy === 'event-timeline'
     ? undefined
@@ -225,18 +183,18 @@ function SpecialCard({ hand }: { hand: SpecialCardData }) {
     <article id={SPECIAL_HAND_ANCHORS[hand.id]} className="scroll-mt-6 rounded-2xl border border-[#d8ceb8] bg-[#fbf8ed] p-5 shadow-[var(--shadow-sm)] sm:p-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
-          <h3 className="font-serif text-[25px] leading-tight text-[#284d45]">{hand.name}</h3>
-          <p className="mt-2 max-w-[760px] text-[13px] leading-6 text-[#596b65]">{hand.description}</p>
+          <h3 className="font-serif text-[25px] leading-tight text-[#284d45]">{name}</h3>
+          <p className="mt-2 max-w-[760px] text-[13px] leading-6 text-[#596b65]">{description}</p>
         </div>
         <div className="flex shrink-0 gap-2 text-center">
           <div className="rounded-lg bg-[#284d45] px-3 py-2 text-[#f8f4e9]">
             <div className="font-mono text-[8px] uppercase tracking-[.14em] text-[#c8d8d1]">Winner</div>
-            <div className="mt-0.5 font-serif text-[18px]">{hand.winner}</div>
+            <div className="mt-0.5 font-serif text-[18px]">{winner}</div>
           </div>
-          {hand.fishing && (
+          {fishing && (
             <div className="rounded-lg border border-[#cfbfa4] bg-[#f5eadb] px-3 py-2 text-[#284d45]">
               <div className="font-mono text-[8px] uppercase tracking-[.14em] text-[#8c776d]">Fishing</div>
-              <div className="mt-0.5 font-serif text-[16px]">{hand.fishing}</div>
+              <div className="mt-0.5 font-serif text-[16px]">{fishing}</div>
             </div>
           )}
         </div>
@@ -244,7 +202,7 @@ function SpecialCard({ hand }: { hand: SpecialCardData }) {
 
       {visualTiles && (
         <div className="mt-5">
-          <TileStrip tiles={visualTiles} ariaLabel={`${hand.name} example: ${visualTiles.map((tile) => tile.label).join(', ')}`} />
+          <TileStrip tiles={visualTiles} ariaLabel={`${name} example: ${visualTiles.map((tile) => tile.label).join(', ')}`} />
           {hand.visualNote && <p className="mt-1 text-[10px] leading-4 text-[#8c8a7f]">{hand.visualNote}</p>}
         </div>
       )}
@@ -322,19 +280,19 @@ export function SpecialHandsCatalogue() {
           </div>
 
           <div className="space-y-4">
-            <SpecialCard hand={{ id: 'heavens-blessing', name: 'Heaven’s Blessing', description: 'East has Mah Jong immediately from the original dealt hand.', winner: '1,000', entry: 'Normal winner flow', detection: 'Detected automatically from “Mah Jong in original deal”', visualPolicy: 'event-timeline' }} />
+            <SpecialCard hand={{ id: 'heavens-blessing', entry: 'Normal winner flow', detection: 'Detected automatically from “Mah Jong in original deal”', visualPolicy: 'event-timeline' }} />
             <div className="-mt-2 mb-4"><EventTimeline steps={["East’s original deal", 'Already complete', 'Mah Jong']} /></div>
 
-            <SpecialCard hand={{ id: 'earths-blessing', name: 'Earth’s Blessing', description: 'A non-East player goes Mah Jong using East’s very first discard.', winner: '1,000', entry: 'Normal winner flow · from discard', detection: 'The scorer may ask one short factual question', detail: 'Only when the circumstances make it possible, the scorer asks: “Was this East’s very first discard?” If you are not sure, it scores conservatively.', visualPolicy: 'event-timeline' }} />
+            <SpecialCard hand={{ id: 'earths-blessing', entry: 'Normal winner flow · from discard', detection: 'The scorer may ask one short factual question', detail: 'Only when the circumstances make it possible, the scorer asks: “Was this East’s very first discard?” If you are not sure, it scores conservatively.', visualPolicy: 'event-timeline' }} />
             <div className="-mt-2 mb-4"><EventTimeline steps={["East’s first discard", 'Another player claims it', 'Mah Jong']} /></div>
 
-            <SpecialCard hand={{ id: 'gathering-the-plum-blossom-from-the-roof', name: 'Gathering the Plum Blossom from the Roof', description: 'Mah Jong is completed by drawing 5 Circles as a replacement tile.', winner: '1,000', entry: 'Normal winner flow · replacement tile', detection: 'Detected automatically from how you won + winning tile', visualPolicy: 'event-timeline' }} />
+            <SpecialCard hand={{ id: 'gathering-the-plum-blossom-from-the-roof', treatmentId: 'gathering-plum-blossom', entry: 'Normal winner flow · replacement tile', detection: 'Detected automatically from how you won + winning tile', visualPolicy: 'event-timeline' }} />
             <div className="-mt-2 mb-4"><EventTimeline steps={['Replacement draw', '5 Circles', 'Mah Jong']} tile={pin(5)} /></div>
 
-            <SpecialCard hand={{ id: 'plucking-the-moon-from-the-bottom-of-the-sea', name: 'Plucking the Moon from the Bottom of the Sea', description: 'Mah Jong is completed with 1 Circles drawn as the final tile from the live wall.', winner: '1,000', entry: 'Normal winner flow · last wall tile', detection: 'Detected automatically from how you won + winning tile', visualPolicy: 'event-timeline' }} />
+            <SpecialCard hand={{ id: 'plucking-the-moon-from-the-bottom-of-the-sea', treatmentId: 'plucking-moon', entry: 'Normal winner flow · last wall tile', detection: 'Detected automatically from how you won + winning tile', visualPolicy: 'event-timeline' }} />
             <div className="-mt-2 mb-4"><EventTimeline steps={['Last tile in live wall', '1 Circles', 'Mah Jong']} tile={pin(1)} /></div>
 
-            <SpecialCard hand={{ id: 'twofold-fortune', name: 'Twofold Fortune', description: 'A Kong is made, its replacement tile completes another Kong, and the next replacement tile completes Mah Jong.', winner: '1,000', entry: 'Normal winner flow · replacement tile', detection: 'The scorer may ask one short factual question', detail: 'The final hand can show that two Kongs exist, but it cannot reconstruct the exact replacement sequence. “I’m not sure” therefore scores conservatively.', visualPolicy: 'event-timeline' }} />
+            <SpecialCard hand={{ id: 'twofold-fortune', entry: 'Normal winner flow · replacement tile', detection: 'The scorer may ask one short factual question', detail: 'The final hand can show that two Kongs exist, but it cannot reconstruct the exact replacement sequence. “I’m not sure” therefore scores conservatively.', visualPolicy: 'event-timeline' }} />
             <div className="-mt-2"><EventTimeline steps={['Kong', 'Replacement tile', 'Second Kong', 'Replacement tile', 'Mah Jong']} /></div>
           </div>
         </section>

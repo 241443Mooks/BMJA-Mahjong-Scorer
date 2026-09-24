@@ -43,47 +43,19 @@ const playingTiles: PlayingTile[] = [
   ...DRAGONS.map((dragon): PlayingTile => ({ family: 'dragon', dragon })),
 ];
 
-const names: Record<LegacyFishingSpecialId, string> = {
-  purity: 'Purity',
-  'all-pair-honours': 'All pair honours',
-  knitting: 'Knitting',
-  'triple-knitting': 'Triple Knitting',
-  'buried-treasure': 'Buried treasure',
-  'imperial-jade': 'Imperial Jade',
-  'heads-and-tails': 'Heads and Tails',
-  'three-great-scholars': 'Three great scholars',
-  'all-winds-and-dragons': 'All Winds and Dragons',
-  'four-blessings': 'Four Blessings Hovering over the Door',
-  'fourfold-plenty': 'Fourfold Plenty',
-  'gates-of-heaven': 'The Gates of Heaven',
-  'wriggling-snake': 'The Wriggling Snake',
-  'thirteen-unique-wonders': 'Thirteen unique wonders',
-};
-
-const fishingValues: Record<LegacyFishingSpecialId, number | 'three-doubles'> = {
-  purity: 'three-doubles',
-  'all-pair-honours': 200,
-  knitting: 200,
-  'triple-knitting': 200,
-  'buried-treasure': 400,
-  'imperial-jade': 400,
-  'heads-and-tails': 400,
-  'three-great-scholars': 400,
-  'all-winds-and-dragons': 400,
-  'four-blessings': 400,
-  'fourfold-plenty': 400,
-  'gates-of-heaven': 400,
-  'wriggling-snake': 400,
-  'thirteen-unique-wonders': 400,
-};
-
-export const FISHING_SPECIALS = [
-  ...(Object.keys(names) as LegacyFishingSpecialId[]).map((id) => ({
-    id,
-    name: names[id]!,
-    fishingValue: fishingValues[id],
-  })),
+const purityFishing = { id: 'purity' as const, name: 'Purity', fishingValue: 'three-doubles' as const };
+const bmjaFishingOrder: LegacyFishingSpecialId[] = [
+  'all-pair-honours', 'knitting', 'triple-knitting', 'buried-treasure', 'imperial-jade',
+  'heads-and-tails', 'three-great-scholars', 'all-winds-and-dragons', 'four-blessings',
+  'fourfold-plenty', 'gates-of-heaven', 'wriggling-snake', 'thirteen-unique-wonders',
 ];
+const bmjaFishingSpecials = bmjaFishingOrder.flatMap((id) => {
+  const binding = bmjaSpecialHandBindings.find((item) => item.patternId === id);
+  return binding && isFixedSpecialHandBinding(binding) && binding.fishingValue !== undefined
+    ? [{ id, name: binding.name, fishingValue: binding.fishingValue, intrinsicIfGreater: binding.fishingUsesIntrinsicFloor === true }]
+    : [];
+});
+export const FISHING_SPECIALS = [purityFishing, ...bmjaFishingSpecials];
 
 const currentTiles = (hand: MahjongHand) => [...handPlayingTiles(hand)];
 
@@ -372,11 +344,19 @@ export const detectSpecialFishing = (
     const key = tileKey(tile);
     tally.set(key, (tally.get(key) ?? 0) + 1);
   }
-  const candidates: Array<{ id: string; name: string; binding?: import('./special-hands').FixedSpecialHandPatternBinding }> = usesExplicitBindings
+  const candidates: Array<{ id: string; name: string; fishingValue?: number | 'three-doubles'; binding?: import('./special-hands').FixedSpecialHandPatternBinding }> = usesExplicitBindings
     ? effectiveBindings.flatMap((binding) => isFixedSpecialHandBinding(binding) && binding.fishingValue !== undefined ? [{ id: binding.patternId, name: binding.name, binding }] : [])
-    : FISHING_SPECIALS.map(({ id, name }) => ({ id, name }));
+    : [
+        purityFishing,
+        ...FISHING_SPECIALS.filter(({ id }) => id !== 'purity').flatMap(({ id }) => {
+          const binding = effectiveBindings.find((item) => item.patternId === id);
+          return binding && isFixedSpecialHandBinding(binding) && binding.fishingValue !== undefined
+            ? [{ id, name: binding.name, fishingValue: binding.fishingValue, binding }]
+            : [];
+        }),
+      ];
   return candidates.flatMap(({ id, name, binding }) => {
-    const fishingValue = binding ? specialHandFishingValueFor(hand, binding) : fishingValues[id as LegacyFishingSpecialId];
+    const fishingValue = binding ? specialHandFishingValueFor(hand, binding) : FISHING_SPECIALS.find((special) => special.id === id)?.fishingValue;
     if (fishingValue === undefined) return [];
     const completingTiles = playingTiles.filter(
       (tile) =>
@@ -492,11 +472,7 @@ export const fishingScoreOptions = (
 
   const fixedValue = fishing.fishingValue as number;
   const specialSubtotal = fixedValue + bonusSubtotal;
-  const intrinsicEligible = new Set<string>([
-    'three-great-scholars',
-    'all-winds-and-dragons',
-    'four-blessings',
-  ]).has(fishing.id);
+  const intrinsicEligible = bmjaSpecialHandBindings.find((binding) => binding.patternId === fishing.id)?.fishingUsesIntrinsicFloor === true;
   const intrinsicPlayingSubtotal = playingBase * 2 ** playingDoubles;
   const intrinsicSubtotal = intrinsicPlayingSubtotal + bonusSubtotal;
   const intrinsicApplied =

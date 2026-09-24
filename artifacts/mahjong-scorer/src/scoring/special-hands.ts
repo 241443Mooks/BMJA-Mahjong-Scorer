@@ -35,6 +35,8 @@ export type FixedSpecialHandPatternBinding =
   value: number;
   /** Fixed value while one tile away, when this profile has published one. */
   fishingValue?: number;
+  /** Whether intrinsic playing-tile value can replace this fixed fishing value when higher. */
+  fishingUsesIntrinsicFloor?: boolean;
   /** Profile-local treatment for represented exposed Pung/Kong groups. */
   exposure?:
     | { allowed: false }
@@ -1582,85 +1584,107 @@ const bmjaBinding = (
   name: string,
   description: string,
   value: number,
-) => bindingFor(BMJA_SPECIAL_HAND_PROFILE, patternId, name, description, value);
+  fishingValue?: number,
+  fishingUsesIntrinsicFloor?: boolean,
+) => ({
+  ...bindingFor(BMJA_SPECIAL_HAND_PROFILE, patternId, name, description, value),
+  ...(fishingValue === undefined ? {} : { fishingValue }),
+  ...(fishingUsesIntrinsicFloor ? { fishingUsesIntrinsicFloor: true } : {}),
+});
 export const bmjaSpecialHandBindings = [
   bmjaBinding(
     'knitting',
     'Knitting',
     'Seven pairs, each pairing the same number across two different suits; pairs may repeat.',
     500,
+    200,
   ),
   bmjaBinding(
     'triple-knitting',
     'Triple Knitting',
     'Four same-number groups across all three suits, plus a same-number pair across two suits.',
     500,
+    200,
   ),
   bmjaBinding(
     'all-pair-honours',
     'All pair honours',
     'Seven pairs of major tiles: 1s, 9s, winds and dragons; repeated pairs are allowed.',
     500,
+    200,
   ),
   bmjaBinding(
     'imperial-jade',
     'Imperial Jade',
     'Four pungs/kongs and a pair using only Green Dragon or Bamboo 2, 3, 4, 6 and 8.',
     1000,
+    400,
   ),
   bmjaBinding(
     'thirteen-unique-wonders',
     'Thirteen unique wonders',
     'One of every terminal, wind and dragon, plus a pair of any one.',
     1000,
+    400,
   ),
   bmjaBinding(
     'gates-of-heaven',
     'The Gates of Heaven',
     'A concealed one-suit layout with three 1s, three 9s, 2 through 8, and one of 2 through 8 paired.',
     1000,
+    400,
   ),
   bmjaBinding(
     'wriggling-snake',
     'The Wriggling Snake',
     'A pair of suited 1s, suited 2 through 9 in that suit, and one of each Wind.',
     1000,
+    400,
   ),
   bmjaBinding(
     'all-winds-and-dragons',
     'All Winds and Dragons',
     'Four pungs/kongs and a pair, all made from winds and dragons.',
     1000,
+    400,
+    true,
   ),
   bmjaBinding(
     'heads-and-tails',
     'Heads and Tails',
     'Four pungs/kongs and a pair, all made from suited 1s and 9s.',
     1000,
+    400,
   ),
   bmjaBinding(
     'fourfold-plenty',
     'Fourfold Plenty',
     'Four kongs and a pair.',
     1000,
+    400,
   ),
   bmjaBinding(
     'three-great-scholars',
     'Three great scholars',
     'A pung or kong of each of the three dragons.',
     1000,
+    400,
+    true,
   ),
   bmjaBinding(
     'four-blessings',
     'Four Blessings Hovering over the Door',
     'A pung or kong of each wind, plus any pair.',
     1000,
+    400,
+    true,
   ),
   bmjaBinding(
     'buried-treasure',
     'Buried treasure',
     'Four concealed pungs and a concealed pair, using one suit with optional winds/dragons.',
     1000,
+    400,
   ),
   bmjaBinding(
     'heavens-blessing',

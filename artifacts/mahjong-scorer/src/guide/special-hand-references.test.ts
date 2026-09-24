@@ -8,6 +8,8 @@ describe('special-hand public references', () => {
   });
   it('links recognised scoring identities only when a catalogue target exists', () => {
     expect(specialHandReferenceHref('thirteen-unique-wonders')).toBe('/special-hands#thirteen-unique-wonders');
+    expect(specialHandReferenceHref('gathering-plum-blossom')).toBe('/special-hands#gathering-the-plum-blossom-from-the-roof');
+    expect(specialHandReferenceHref('plucking-moon')).toBe('/special-hands#plucking-the-moon-from-the-bottom-of-the-sea');
     expect(specialHandReferenceHref('not-a-special')).toBeUndefined();
   });
 });
