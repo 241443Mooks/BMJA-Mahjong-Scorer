@@ -2,7 +2,7 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import { initialiseCurrentRulesRuntimes } from '../rules-platform/current-runtime-registry';
 import { bmjaSpecialHandBindings } from '../scoring';
 import { outsideTheBoxSpecialHandBindings } from './outside-the-box-catalogue';
-import { currentClassicalScorerDefaultLimit, descriptorForRulesProfile, descriptorForSlug, isBritishRulesProfile, normaliseStandaloneHandMode, PUBLIC_RULES_DESCRIPTORS, publicRulesSlugFromGamePath } from './rules-presentation';
+import { canonicalPublicGamePath, currentClassicalScorerDefaultLimit, descriptorForRulesProfile, descriptorForSlug, isBritishRulesProfile, normaliseStandaloneHandMode, PUBLIC_RULES_DESCRIPTORS, publicGamePathForRulesProfile, publicRulesSlugFromGamePath } from './rules-presentation';
 import { descriptorsForPickerSurface, rulesCardStatus } from './RulesProfilePicker';
 import { BMJA_PROFILE_REF, OUTSIDE_THE_BOX_PROFILE_REF, WESTERN_TM_PROFILE_REF } from './ruleset';
 import { westernTmSpecialHandBindings } from './western-tm-catalogue';
@@ -18,9 +18,9 @@ describe('public rules presentation', () => {
     expect(descriptorForSlug('buzzard').profile).toEqual(BUZZARD_2000_PROFILE_REF);
     expect(descriptorForSlug('mcr').profile).toEqual({ id: 'mcr-wmo-2006', version: '0.1' });
     expect(descriptorsForPickerSurface('hand')).toHaveLength(5);
-    expect(descriptorsForPickerSurface('game')).toHaveLength(4);
-    expect(descriptorsForPickerSurface('game').some(({ slug }) => slug === 'mcr')).toBe(false);
-    expect(descriptorForSlug('mcr').availability).toEqual({ handScorer: true, gameTracker: false, rulesReference: true });
+    expect(descriptorsForPickerSurface('game')).toHaveLength(5);
+    expect(descriptorsForPickerSurface('game').map(({ slug }) => slug)).toEqual(['british', 'western', 'club', 'buzzard', 'mcr']);
+    expect(descriptorForSlug('mcr').availability).toEqual({ handScorer: true, gameTracker: true, rulesReference: true });
     expect(descriptorForSlug('mcr')).toMatchObject({ status: 'Provisional', profile: { id: 'mcr-wmo-2006', version: '0.1' }, support: { source: expect.stringContaining('source.mcr-ema-green-book-2006') } });
     expect(JSON.stringify(descriptorForRulesProfile(OUTSIDE_THE_BOX_PROFILE_REF))).not.toContain('Outside the Box');
   });
@@ -31,7 +31,16 @@ describe('public rules presentation', () => {
     expect(publicRulesSlugFromGamePath('/game/western')).toBe('western');
     expect(publicRulesSlugFromGamePath('/game/club')).toBe('club');
     expect(publicRulesSlugFromGamePath('/game/buzzard')).toBe('buzzard');
-    expect(publicRulesSlugFromGamePath('/game/mcr')).toBeUndefined();
+    expect(publicRulesSlugFromGamePath('/game/mcr')).toBe('mcr');
+    expect(publicRulesSlugFromGamePath('/game/foo')).toBeUndefined();
+    expect(publicRulesSlugFromGamePath('/game/mcr/foo')).toBeUndefined();
+    for (const path of ['/game', '/game/british', '/game/western', '/game/club', '/game/buzzard', '/game/mcr']) expect(canonicalPublicGamePath(path)).toBe('/game');
+    expect(canonicalPublicGamePath('/game/foo')).toBeUndefined();
+    expect(publicGamePathForRulesProfile(BMJA_PROFILE_REF)).toBe('/game/british');
+    expect(publicGamePathForRulesProfile(WESTERN_TM_PROFILE_REF)).toBe('/game/western');
+    expect(publicGamePathForRulesProfile(OUTSIDE_THE_BOX_PROFILE_REF)).toBe('/game/club');
+    expect(publicGamePathForRulesProfile(BUZZARD_2000_PROFILE_REF)).toBe('/game/buzzard');
+    expect(publicGamePathForRulesProfile({ id: 'mcr-wmo-2006', version: '0.1' })).toBe('/game/mcr');
   });
 
   it('derives catalogue claims from the executable binding collections', () => {

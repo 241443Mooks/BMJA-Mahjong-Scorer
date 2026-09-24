@@ -4,6 +4,7 @@ import { ErrorBoundary } from '@/components/error-boundary';
 import { RouteContent } from './RouteContent';
 import { initialiseCurrentRulesRuntimes } from './rules-platform/current-runtime-registry';
 import siteSeo from './site-seo.json';
+import { canonicalPublicGamePath } from './game/rules-presentation';
 
 import './index.css';
 
@@ -17,7 +18,7 @@ function setMeta(selector: string, attribute: string, value: string) {
 }
 
 function canonicalPathFor(currentPath: string) {
-  if (currentPath === '/game/british' || currentPath === '/game/western' || currentPath === '/game/club' || currentPath === '/game/buzzard') return '/game';
+  if (canonicalPublicGamePath(currentPath)) return '/game';
   return aliases.find((alias) => alias.path === currentPath)?.target ?? currentPath;
 }
 

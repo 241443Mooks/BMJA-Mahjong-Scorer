@@ -28,7 +28,7 @@ function withFullFooter(content: ReactNode) {
 export function RouteContent({ path, prerender = false }: { path: string; prerender?: boolean }) {
   if (import.meta.env.DEV && path === '/__fixtures/rules-profile-picker') return <RulesProfilePickerScalabilityFixture />;
   if (path === '/') return withFullFooter(<HomePage />);
-  if (path === '/game' || path === '/game/british' || path === '/game/western' || path === '/game/club' || path === '/game/buzzard') {
+  if (path === '/game' || path.startsWith('/game/')) {
     const slug = publicRulesSlugFromGamePath(path);
     return slug ? <App initialRulesProfile={descriptorForSlug(slug).profile} prerenderOnly={prerender} /> : <NotFound />;
   }

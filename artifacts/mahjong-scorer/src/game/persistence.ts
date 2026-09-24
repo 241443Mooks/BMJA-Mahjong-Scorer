@@ -374,8 +374,8 @@ export const loadInProgressGameRecovery = (
 };
 
 /** The sole eligibility check for recovery actions outside the game screen. */
-export const recoverableGameForReturn = (storage: StorageLike): RecoveredGame | null =>
-  loadInProgressGameRecovery(storage);
+export const recoverableGameForReturn = (storage: StorageLike): RecoveredGameV2 | null =>
+  loadInProgressGameRecoveryCore(storage);
 
 const windRoundNumber: Record<Wind, number> = {
   east: 1,

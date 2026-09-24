@@ -67,14 +67,14 @@ const pageCopy: Record<Exclude<PublicRulesSlug, 'club'>, { eyebrow: string; intr
     links: [['Track a Buzzard game', '/game/buzzard'], ['Score a hand', '/hand']],
   },
   mcr: {
-    eyebrow: 'Rules reference', intro: 'Mahjong Competition Rules / WMO 2006 profile 0.1. Provisional standalone scoring for completed winning hands.',
+    eyebrow: 'Rules reference', intro: 'Mahjong Competition Rules / WMO 2006 profile 0.1 remains Provisional. Winning-hand scoring and Table Companion game tracking are available.',
     identity: <>This profile represents the Mahjong Competition Rules / WMO 2006 source context.</>,
-    table: <>The standalone scorer evaluates completed winning hands using fan.</>,
+    table: <>The scorer evaluates completed winning hands using fan. The Table Companion records resolved table and end-of-hand facts; it does not arbitrate physical play.</>,
     scoring: <>A hand must reach the 8-point qualifying minimum before Flowers. Flowers are added after qualification.</>,
-    after: <>Standalone hand scoring is available. Table Companion game integration is not yet exposed.</>,
-    distinctive: <>This profile remains provisional at version 0.1.</>,
+    after: <>Accepted Basic Points drive settlement. The dealer passes after every completed hand, while seats and prevailing-wind progression are tracked under the MCR progression profile.</>,
+    distinctive: <>This profile remains version 0.1 and Provisional. Table tracking records the table's resolved result rather than deciding what happened during physical play.</>,
     provenance: <>Source context: the existing 2006 MCR/EMA Green Book evidence record. This source context does not imply affiliation or endorsement.</>,
-    links: [['Score a hand', '/hand'], ['About these rules', '/rules/mcr']],
+    links: [['Track an MCR game', '/game/mcr'], ['Score a hand', '/hand'], ['About these rules', '/rules/mcr']],
   },
 };
 
