@@ -104,10 +104,10 @@ export function FeaturesPage() {
               <strong className="font-semibold text-[#284d45]">Mahjong Reference is a free, browser-based Table Companion for supported Mahjong rules profiles.</strong> It stays with the table from scoring a hand to seeing who pays whom, updating totals, advancing East and the Winds, and keeping the final record.
             </p>
             <p className="mt-3 font-mono text-[10px] uppercase tracking-[.14em] text-[#66746e]">Free · no account required</p>
-            <p className="mt-3 max-w-[760px] text-[12px] leading-6 text-[#66746e]">British / BMJA-style support is stable. Western — Thompson &amp; Maloney scoring is available provisionally; its ordinary play, scoring, settlement and progression are still under source review. Club rules use a configured local profile. <a href="/rules" className="font-semibold text-[#284d45] underline decoration-[#cfa58f] underline-offset-4">See supported rules</a>.</p>
+            <p className="mt-3 max-w-[760px] text-[12px] leading-6 text-[#66746e]">British / BMJA-style support is stable. Western — Thompson &amp; Maloney is provisional while ordinary play, scoring, settlement and progression remain under source review. Club uses a configured local profile. Buzzard 2000 is source-specific, and MCR / WMO 2006 profile 0.1 remains provisional. <a href="/rules" className="font-semibold text-[#284d45] underline decoration-[#cfa58f] underline-offset-4">See supported rules</a>.</p>
             <div className="mt-7 flex flex-wrap gap-3">
               <a href="/game" className="inline-flex items-center gap-2 rounded-md bg-[#284d45] px-4 py-2.5 text-[11px] font-semibold text-[#f8f4e9] transition hover:bg-[#23443d] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249] focus-visible:ring-offset-2">
-                Score a game <ArrowRight size={14} />
+                Track a game <ArrowRight size={14} />
               </a>
               <a href="/hand" className="inline-flex items-center gap-2 rounded-md border border-[#c9b99d] bg-[#fdfbf5] px-4 py-2.5 text-[11px] font-semibold text-[#284d45] transition hover:bg-[#fffaf0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249] focus-visible:ring-offset-2">
                 Score a hand <ArrowRight size={14} />
@@ -139,7 +139,7 @@ export function FeaturesPage() {
             </div>
             <div className="mt-6 rounded-xl bg-[#284d45] p-5 text-[#f8f4e9] sm:p-6">
               <p className="font-serif text-[24px] leading-snug">The rules are part of the game, not a calculator switch.</p>
-              <p className="mt-3 max-w-[760px] text-[12px] leading-6 text-[#c8d5d0]">British is stable. Western — Thompson &amp; Maloney is provisional while ordinary play, scoring, settlement and progression remain under source review. Club is a configured generic profile. Detailed provenance belongs in <a href="/rules" className="font-semibold underline decoration-[#d7a287] underline-offset-4">the rules reference</a>.</p>
+              <p className="mt-3 max-w-[760px] text-[12px] leading-6 text-[#c8d5d0]">The five selectable profiles do not all have the same maturity or source boundary. Mahjong Reference keeps those distinctions visible rather than presenting one generic Mahjong ruleset. Detailed provenance belongs in <a href="/rules" className="font-semibold underline decoration-[#d7a287] underline-offset-4">the rules reference</a>.</p>
             </div>
           </section>
 
@@ -163,17 +163,17 @@ export function FeaturesPage() {
             <div className="mt-7 grid gap-3 md:grid-cols-3">
               {recordFeatures.map((feature) => <FeatureCard key={feature.title} {...feature} />)}
             </div>
-            <p className="mt-6 text-[12px] leading-6 text-[#596b65]"><BookOpen size={15} className="mr-2 inline align-text-bottom text-[#477562]" />British gameplay basics, scoring and the special-hand catalogue sit alongside the table companion as explicitly British-specific learning material.</p>
+            <p className="mt-6 text-[12px] leading-6 text-[#596b65]"><BookOpen size={15} className="mr-2 inline align-text-bottom text-[#477562]" />British gameplay basics, scoring and the special-hand catalogue sit alongside the table companion as explicitly British-specific learning material while profile-aware learning is expanded.</p>
           </section>
 
           <section className="px-5 py-9 sm:px-8 sm:py-11 lg:px-12">
             <div className="rounded-xl border border-[#cfbfa4] bg-[#f5eadb] p-5 sm:flex sm:items-center sm:justify-between sm:gap-8 sm:p-6">
               <div className="max-w-[650px]">
                 <h2 className="font-serif text-[27px] text-[#284d45]">Want the reasoning, not just the feature list?</h2>
-                <p className="mt-2 text-[12px] leading-6 text-[#596b65]">See how the scorer moves from context to evidence to calculation, explanation, settlement and record.</p>
+                <p className="mt-2 text-[12px] leading-6 text-[#596b65]">See where the rules come from, what evidence the scorer uses, why scoring is separate from settlement and progression, and how the record stays consistent.</p>
               </div>
-              <a href="/how-it-works" className="mt-4 inline-flex shrink-0 items-center gap-2 rounded-md bg-[#284d45] px-4 py-2.5 text-[11px] font-semibold text-[#f8f4e9] transition hover:bg-[#23443d] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249] focus-visible:ring-offset-2 sm:mt-0">
-                How it works <ArrowRight size={14} />
+              <a href="/under-the-hood" className="mt-4 inline-flex shrink-0 items-center gap-2 rounded-md bg-[#284d45] px-4 py-2.5 text-[11px] font-semibold text-[#f8f4e9] transition hover:bg-[#23443d] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249] focus-visible:ring-offset-2 sm:mt-0">
+                Under the hood <ArrowRight size={14} />
               </a>
             </div>
           </section>
