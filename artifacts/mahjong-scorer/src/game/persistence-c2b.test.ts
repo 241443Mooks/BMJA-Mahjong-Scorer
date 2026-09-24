@@ -4,7 +4,7 @@ import type { McrScoreContext, McrScoringInput } from '../rules-platform/mcr-sco
 import type { HandScoreResult } from '../rules-platform/types';
 import { confirmHand, createGame, replayGame, undoLastHand } from './game';
 import type { GamePlayer, GameState, McrAcceptedScoreRecord, McrRoundInput, PlayerAmounts, RulesProfileRef, SeatAssignments } from './types';
-import { GAME_SNAPSHOT_STORAGE_KEY, loadGameRecoveryCore, saveGameRecoveryV2, type PersistedCurrentRoundV2 } from './persistence';
+import { GAME_SNAPSHOT_STORAGE_KEY, loadGameRecoveryCore, loadInProgressGameRecoveryCore, saveGameRecoveryV2, type PersistedCurrentRoundV2 } from './persistence';
 
 const ref: RulesProfileRef = { id: 'mcr-wmo-2006', version: '0.1' };
 const fingerprint = '8044ee6ee883192bae97e83a67380f6c0bff999179df93229fc9daa4308a7ace';
@@ -103,6 +103,17 @@ describe('C2B MCR persistence/recovery v2', () => {
     const routedPartial = { grammar: 'pattern-accumulator' as const, outcomeType: 'win' as const, winSource: 'discard' as const, discarderId: 'B', draft: { scores: {}, scoreRecords: {} } };
     save(storage, game, routedPartial);
     expect(load(storage)?.currentRound).toEqual(routedPartial);
+  });
+
+  it('loads a valid C2B MCR recovery through the in-progress generic shell seam unchanged', () => {
+    const storage = memoryStorage();
+    const game = createGame(players, seats, undefined, 'full-game', ref);
+    const currentRound = { grammar: 'pattern-accumulator' as const, draft: { scores: { C: 7 }, scoreRecords: {} } };
+    save(storage, game, currentRound);
+    const recovered = loadInProgressGameRecoveryCore(storage);
+    expect(recovered?.game).toEqual(game);
+    expect(recovered?.currentRound).toEqual(currentRound);
+    expect(storage.getItem(GAME_SNAPSHOT_STORAGE_KEY)).not.toBeNull();
   });
 
   it('validates active trusted winds against the post-replay table state', () => {

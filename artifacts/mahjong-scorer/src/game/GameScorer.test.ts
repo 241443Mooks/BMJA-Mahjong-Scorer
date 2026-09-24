@@ -1,6 +1,8 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import { initialiseCurrentRulesRuntimes } from '../rules-platform/current-runtime-registry';
 import { confirmHand, createBmjaGame } from './game';
+import { createGameScorerGame, gameScorerCurrentRound, gameScorerSetup, gameScorerSupports } from './game-scorer-setup';
+import { getCurrentCompiledRulesRuntime } from '../rules-platform/current-runtime-registry';
 import { gameRecordRulesLabel, gameWorkspaceStage, getRoundSettlementPreview, previewRoundSettlement, recoveredGameConflictsWithRoute, selectProfileScoreResult, settlementPreviewPresentation, shouldKeepScoreEntryOpen, shouldShowBritishSetupHelper, shouldShowEditCurrentHandSummary } from './GameScorer';
 import { BMJA_PROFILE_REF, OUTSIDE_THE_BOX_PROFILE_REF, resolveRulesProfile, WESTERN_TM_PROFILE_REF } from './ruleset';
 import { BUZZARD_2000_PROFILE_REF } from './buzzard-2000';
@@ -9,6 +11,32 @@ import type { PlayerAmounts, PlayerScoreRecords } from './types';
 beforeAll(() => initialiseCurrentRulesRuntimes());
 
 describe('game settlement preview', () => {
+  it('uses grammar-aware setup for exact MCR while preserving Classical setup across current profiles', () => {
+    const mcr = { id: 'mcr-wmo-2006', version: '0.1' } as const;
+    const compiled = getCurrentCompiledRulesRuntime(mcr);
+    expect(compiled.grammar).toBe('pattern-accumulator');
+    if (compiled.grammar !== 'pattern-accumulator') throw new Error('Expected MCR compiled runtime');
+    expect(gameScorerSetup(mcr, 'one-round')).toMatchObject({ grammar: 'pattern-accumulator', gameLength: 'full-game', tableLimit: undefined, compiled });
+    expect(gameScorerSupports(mcr, 'table.configurable-limit')).toBe(false);
+    const mcrGame = createGameScorerGame(['A', 'B', 'C', 'D'].map((id) => ({ id, name: id })), { A: 'east', B: 'south', C: 'west', D: 'north' }, 'one-round', mcr, 725);
+    expect(mcrGame.setup).toMatchObject({ rulesProfile: mcr, gameLength: 'full-game' });
+    expect(mcrGame.setup).not.toHaveProperty('tableLimit');
+    expect(mcrGame.runtimeFingerprint).toBe('8044ee6ee883192bae97e83a67380f6c0bff999179df93229fc9daa4308a7ace');
+
+    for (const [profile, configuredLimit] of [
+      [BMJA_PROFILE_REF, undefined], [WESTERN_TM_PROFILE_REF, undefined], [OUTSIDE_THE_BOX_PROFILE_REF, undefined], [BUZZARD_2000_PROFILE_REF, 725],
+    ] as const) {
+      const setup = gameScorerSetup(profile, 'one-round', configuredLimit);
+      expect(setup).toMatchObject({ grammar: 'classical-points-doubles', gameLength: 'one-round' });
+      const state = createGameScorerGame(['A', 'B', 'C', 'D'].map((id) => ({ id, name: id })), { A: 'east', B: 'south', C: 'west', D: 'north' }, 'one-round', profile, setup.tableLimit);
+      expect(state.setup).toMatchObject({ rulesProfile: profile, gameLength: 'one-round', tableLimit: setup.tableLimit });
+    }
+    const classical = createBmjaGame(['A', 'B', 'C', 'D'].map((id) => ({ id, name: id })), { A: 'east', B: 'south', C: 'west', D: 'north' });
+    const draft = { scores: { A: 20 }, scoreRecords: { A: { source: 'manual' as const, finalScore: 20 } } };
+    const current = gameScorerCurrentRound(classical, null, 'win', 'A', draft);
+    expect(current).toEqual({ grammar: 'classical-points-doubles', outcomeType: 'win', winnerId: 'A', draft });
+    expect(gameScorerCurrentRound(mcrGame, { grammar: 'pattern-accumulator', draft: { scores: { C: 7 }, scoreRecords: {} } }, 'win', 'A', draft)).toEqual({ grammar: 'pattern-accumulator', draft: { scores: { C: 7 }, scoreRecords: {} } });
+  });
   it('keeps a selected non-winner profile result, forced score, and score record as one transition', () => {
     const records = { east: { source: 'manual', finalScore: 100 }, south: { source: 'detailed-scorer', finalScore: 30 } } as unknown as PlayerScoreRecords;
     const first = selectProfileScoreResult({ east: 100, south: 30 }, records, {}, 'south', 'buzzard.incomplete-four-wind-limit', 725);

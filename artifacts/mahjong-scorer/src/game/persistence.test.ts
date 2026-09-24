@@ -7,6 +7,7 @@ import {
   gameProgressSummary,
   loadGameRecovery,
   loadInProgressGameRecovery,
+  loadInProgressGameRecoveryCore,
   recoverableGameForReturn,
   saveGameRecovery,
 } from "./persistence";
@@ -38,6 +39,16 @@ const newGame = () =>
   );
 
 describe("game recovery persistence", () => {
+  it('recovers the same Classical game and current draft through the grammar-neutral core seam', () => {
+    const storage = memoryStorage();
+    const game = newGame();
+    const draft = { scores: { east: 12 }, scoreRecords: { east: { source: 'manual' as const, finalScore: 12 } } };
+    saveGameRecovery(storage, game, 'win', 'east', draft);
+    const legacyView = loadInProgressGameRecovery(storage)!;
+    const core = loadInProgressGameRecoveryCore(storage)!;
+    expect(core.game).toEqual(legacyView.game);
+    expect(core.currentRound).toEqual({ grammar: 'classical-points-doubles', outcomeType: 'win', winnerId: 'east', draft });
+  });
   it('migrates a missing Buzzard limit to 600 and rejects an explicit invalid limit', () => {
     const storage = memoryStorage();
     const buzzard = createBmjaGame(newGame().players, newGame().seats, undefined, 'full-game', BUZZARD_2000_PROFILE_REF);
