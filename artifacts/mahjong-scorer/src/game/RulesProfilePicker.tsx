@@ -56,7 +56,7 @@ export function RulesProfilePicker({ prompt, selectedProfile, onSelect, surface 
     selected: sameProfile(descriptor.profile, selectedProfile),
     profile: descriptor.profile,
   }));
-  return <section data-testid="rules-profile-picker" className="mb-6 border-y border-[#d8ceb8] py-5">
+  return <section data-testid="rules-profile-picker" className={`${surface === 'game' ? 'game-rules-picker ' : ''}mb-6 border-y border-[#d8ceb8] py-5`}>
     <h2 className="font-serif text-[24px] text-[#284d45]">{prompt}</h2>
     <div className="mt-3 grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(260px,1fr)]">
       <CompactRulesChoiceList prompt={prompt} choices={choices} onSelect={(profile) => {
