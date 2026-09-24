@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { navigationGroups, secondaryDestinations, supportDestination } from './SiteHeader';
+import { navigationGroups, secondaryDestinations } from './SiteHeader';
 
 describe('site navigation', () => {
   it('organises current user jobs as Play, Rules and Learn', () => {
@@ -12,6 +12,8 @@ describe('site navigation', () => {
           ['Rules hub', '/rules'],
           ['British / BMJA-style', '/rules/british'],
           ['Western — Thompson & Maloney', '/rules/western'],
+          ['Buzzard 2000', '/rules/buzzard'],
+          ['MCR / WMO 2006', '/rules/mcr'],
           ['Compare Mahjong rules', '/mahjong-rules-compared'],
         ],
       },
@@ -27,9 +29,9 @@ describe('site navigation', () => {
     ]);
   });
 
-  it('promotes the User Guide while keeping lower-priority pages in More', () => {
-    expect(supportDestination).toEqual(['User Guide', '/help']);
+  it('keeps support and lower-priority pages in More', () => {
     expect(secondaryDestinations).toEqual([
+      ['User Guide', '/help'],
       ['Features', '/features'],
       ['How it works', '/how-it-works'],
       ['About', '/about'],
