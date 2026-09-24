@@ -1,10 +1,15 @@
 import { beforeAll, describe, expect, it } from 'vitest';
-import { BMJA_PROFILE_REF } from '../game/ruleset';
+import { BMJA_PROFILE_REF, OUTSIDE_THE_BOX_PROFILE_REF, WESTERN_TM_PROFILE_REF } from '../game/ruleset';
+import { BUZZARD_2000_PROFILE_REF, buzzard2000SpecialHandBindings } from '../game/buzzard-2000';
+import { outsideTheBoxSpecialHandBindings } from '../game/outside-the-box-catalogue';
+import { westernTmSpecialHandBindings } from '../game/western-tm-catalogue';
 import { initialiseCurrentRulesRuntimes } from '../rules-platform/current-runtime-registry';
 import { scoreHand } from '../scoring';
 import { specialHandExampleById, exampleHandScorerContext } from './special-hand-examples';
 import { scoringExamples, resolveScoringExampleReferences } from './scoring-examples';
 import { resolveSpecialHandTreatment, specialHandTreatmentsForProfile } from '../rules-knowledge/special-hand-treatments';
+import { specialHandBindingsForCurrentClassicalProfile } from '../rules-knowledge/current-classical-special-hand-bindings';
+import { bmjaSpecialHandBindings } from '../scoring/special-hands';
 
 beforeAll(() => initialiseCurrentRulesRuntimes());
 
@@ -33,6 +38,63 @@ describe('profile-local special-hand treatments', () => {
     expect(wonders.references.some((reference) => !('treatment' in reference) && reference.href === '/special-hands#thirteen-unique-wonders')).toBe(false);
     expect(resolveScoringExampleReferences(wonders)).toContainEqual({ label: 'Thirteen unique wonders', href: '/special-hands#thirteen-unique-wonders' });
     expect(resolveScoringExampleReferences(honours)).toContainEqual({ label: 'All pair honours', href: '/special-hands#all-pair-honours' });
+  });
+
+  it('resolves Western treatments from Western bindings without borrowing BMJA identity or anchors', () => {
+    const treatment = resolveSpecialHandTreatment(WESTERN_TM_PROFILE_REF, 'all-pair-honours');
+    expect(treatment).toMatchObject({
+      identity: { profile: WESTERN_TM_PROFILE_REF, patternId: 'all-pair-honours' },
+      referenceId: 'western-tm@0.1:all-pair-honours',
+      name: 'All Pair Honours',
+      scoreModel: 'fixed',
+      winnerValue: 1000,
+      fishingValue: 400,
+    });
+    expect(treatment?.href).toBeUndefined();
+    expect(resolveSpecialHandTreatment(BMJA_PROFILE_REF, 'seven-pairs-all-from-wall')).toBeUndefined();
+    expect(resolveSpecialHandTreatment(WESTERN_TM_PROFILE_REF, 'seven-pairs-all-from-wall')).toMatchObject({
+      referenceId: 'western-tm@0.1:seven-pairs-all-from-wall',
+      name: 'Seven Twins',
+      winningMethods: ['wall', 'last-wall-tile'],
+    });
+    expect(resolveSpecialHandTreatment(WESTERN_TM_PROFILE_REF, 'wind-pair-with-three-suit-rank-one-melds')?.exposurePolicy).toEqual({
+      scoreModel: 'fixed',
+      policy: { allowed: true, exposedValue: 500, exposedFishingValue: 200 },
+    });
+    expect(resolveSpecialHandTreatment(WESTERN_TM_PROFILE_REF, 'purity-one-chow')).toMatchObject({
+      scoreModel: 'calculated',
+      exposurePolicy: {
+        scoreModel: 'calculated',
+        policy: { multiplier: 0.5, triggerSetKinds: ['pung', 'kong'], forbiddenSetKinds: ['chow'] },
+      },
+    });
+  });
+
+  it('projects Club fixed exposure policy and Buzzard configured limits without numeric values', () => {
+    expect(resolveSpecialHandTreatment(OUTSIDE_THE_BOX_PROFILE_REF, 'buried-treasure')).toMatchObject({
+      identity: { profile: OUTSIDE_THE_BOX_PROFILE_REF, patternId: 'buried-treasure' },
+      referenceId: 'outside-the-box@0.1:buried-treasure',
+      scoreModel: 'fixed',
+      winnerValue: 1000,
+      exposurePolicy: { scoreModel: 'fixed', policy: { allowed: false } },
+    });
+    expect(resolveSpecialHandTreatment(BUZZARD_2000_PROFILE_REF, 'all-winds-and-dragons')).toMatchObject({
+      identity: { profile: BUZZARD_2000_PROFILE_REF, patternId: 'all-winds-and-dragons' },
+      referenceId: 'buzzard-2000@0.1:all-winds-and-dragons',
+      scoreModel: 'configured-limit',
+    });
+    const buzzard = resolveSpecialHandTreatment(BUZZARD_2000_PROFILE_REF, 'all-winds-and-dragons');
+    expect(buzzard).not.toHaveProperty('winnerValue');
+    expect(buzzard).not.toHaveProperty('fishingValue');
+  });
+
+  it('fails closed for non-current profiles and returns the authoritative binding arrays unchanged', () => {
+    expect(specialHandTreatmentsForProfile({ id: 'western-tm', version: '0.2' })).toEqual([]);
+    expect(specialHandTreatmentsForProfile({ id: 'mcr-wmo-2006', version: '0.1' })).toEqual([]);
+    expect(specialHandBindingsForCurrentClassicalProfile(BMJA_PROFILE_REF)).toBe(bmjaSpecialHandBindings);
+    expect(specialHandBindingsForCurrentClassicalProfile(WESTERN_TM_PROFILE_REF)).toBe(westernTmSpecialHandBindings);
+    expect(specialHandBindingsForCurrentClassicalProfile(OUTSIDE_THE_BOX_PROFILE_REF)).toBe(outsideTheBoxSpecialHandBindings);
+    expect(specialHandBindingsForCurrentClassicalProfile(BUZZARD_2000_PROFILE_REF)).toBe(buzzard2000SpecialHandBindings);
   });
 
   it('resolves a real scorer-produced result to the same treatment identity', () => {
