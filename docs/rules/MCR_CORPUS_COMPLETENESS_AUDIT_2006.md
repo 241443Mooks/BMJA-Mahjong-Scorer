@@ -1,8 +1,8 @@
 # MCR 2006 correctness corpus — completion audit
 
-Status: **research-complete / executable-predicate handoff ready**  
-Original research issue: #176  
-Predicate-correction issue: #303  
+Status: **research-complete / executable-predicate handoff ready**\
+Original research issue: #176\
+Predicate-correction issue: #303\
 Profile target: `mcr-wmo-2006@0.x`
 
 Authority: World Mahjong Organization, *Mahjong Competition Rules*, first edition / first printing July 2006 (“Green Book”), English edition. The English edition states that a translation/different-understanding dispute is settled against the original Chinese edition; implementation must stop for source review rather than guess if such an ambiguity remains material.

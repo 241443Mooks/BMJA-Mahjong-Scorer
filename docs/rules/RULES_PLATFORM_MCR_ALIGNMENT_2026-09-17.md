@@ -1,8 +1,8 @@
 # Rules platform — MCR 2006 alignment amendment
 
-Status: **normative narrow amendment for #230 and future #241 implementation**  
-Date: 2026-09-17  
-Applies to: `RULES_PLATFORM_EIGHT_MANIFESTS_V1.md`, `RULES_PLATFORM_REGISTRY_INVENTORY.md`, #230 and #241.  
+Status: **normative narrow amendment for #230 and future #241 implementation**\
+Date: 2026-09-17\
+Applies to: `RULES_PLATFORM_EIGHT_MANIFESTS_V1.md`, `RULES_PLATFORM_REGISTRY_INVENTORY.md`, #230 and #241.\
 Source corpus: merged PR #242 / completed #176.
 
 ## Purpose

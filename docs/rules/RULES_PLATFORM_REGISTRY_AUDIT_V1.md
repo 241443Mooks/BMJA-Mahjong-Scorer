@@ -1,7 +1,7 @@
 # Rules platform registry audit v1
 
-Status: **pre-implementation audit for #230 / 227-B**  
-Branch target: `integration/rules-platform-v1`  
+Status: **pre-implementation audit for #230 / 227-B**\
+Branch target: `integration/rules-platform-v1`\
 Inputs: `RULES_PLATFORM_EIGHT_MANIFESTS_V1.md`, `RULES_PLATFORM_REGISTRY_INVENTORY.md`, `RULES_PLATFORM_SENIOR_REVIEW_HARDENING_V1.md`, `CLASSICAL_PROFILE_CONFIG_MATRIX.md`.
 
 ## 1. Purpose

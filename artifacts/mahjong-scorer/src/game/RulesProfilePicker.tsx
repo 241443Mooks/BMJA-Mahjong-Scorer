@@ -1,3 +1,4 @@
+import { captureProductEvent } from '../lib/analytics';
 import { descriptorForRulesProfile, PUBLIC_RULES_DESCRIPTORS } from './rules-presentation';
 import type { RulesProfileRef } from './types';
 
@@ -58,7 +59,12 @@ export function RulesProfilePicker({ prompt, selectedProfile, onSelect, surface 
   return <section data-testid="rules-profile-picker" className="mb-6 border-y border-[#d8ceb8] py-5">
     <h2 className="font-serif text-[24px] text-[#284d45]">{prompt}</h2>
     <div className="mt-3 grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(260px,1fr)]">
-      <CompactRulesChoiceList prompt={prompt} choices={choices} onSelect={onSelect} />
+      <CompactRulesChoiceList prompt={prompt} choices={choices} onSelect={(profile) => {
+        if (!sameProfile(profile, selectedProfile)) {
+          captureProductEvent('ruleset_selected', { ruleset: descriptorForRulesProfile(profile).slug });
+        }
+        onSelect(profile);
+      }} />
     <div data-testid="rules-at-a-glance" className="rounded-lg border border-[#b8cdbf] bg-[#edf3ed] p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="font-mono text-[10px] uppercase tracking-[.16em] text-[#477562]">Rules at a glance</div>

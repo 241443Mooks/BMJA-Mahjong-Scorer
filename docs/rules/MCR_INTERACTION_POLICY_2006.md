@@ -1,7 +1,7 @@
 # MCR 2006 interaction policy — complete source contract
 
-Status: **authoritative interaction contract for #300 Pass 1**  
-Profile: `mcr-wmo-2006@0.x`  
+Status: **authoritative interaction contract for #300 Pass 1**\
+Profile: `mcr-wmo-2006@0.x`\
 Runtime target: `interaction.mcr-2006-non-combination`
 
 Authority: World Mahjong Organization, *Mahjong Competition Rules*, first edition / first printing July 2006 ("Green Book"), English edition. As the Green Book itself states, unresolved translation or interpretation disputes must be escalated to the original Chinese edition rather than guessed.

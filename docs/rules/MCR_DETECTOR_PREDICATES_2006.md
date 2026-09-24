@@ -1,10 +1,10 @@
 # MCR 2006 executable detector predicates
 
-Status: **source-complete implementation contract for #299**  
-Issue: #303  
-Parent: #259  
-Profile target: `mcr-wmo-2006@0.x`  
-Catalogue identity: `catalogue.pattern.mcr-wmo-2006`  
+Status: **source-complete implementation contract for #299**\
+Issue: #303\
+Parent: #259\
+Profile target: `mcr-wmo-2006@0.x`\
+Catalogue identity: `catalogue.pattern.mcr-wmo-2006`\
 Evidence policy: `evidence-policy.mcr-wmo-2006`
 
 Authority: World Mahjong Organization, *Mahjong Competition Rules*, first edition / first printing July 2006 (“Green Book”), English edition. The English book states that disputes caused by translation/different understanding are settled against the original Chinese edition. This contract therefore preserves an escalation rule: an unresolved English ambiguity is not guessed in code.

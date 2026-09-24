@@ -1,6 +1,6 @@
 # MCR 2006 detector fixture bases
 
-Status: **authoritative companion to `MCR_DETECTOR_PREDICATES_2006.md` for #299**  
+Status: **authoritative companion to `MCR_DETECTOR_PREDICATES_2006.md` for #299**\
 Issue: #303
 
 ## Purpose

@@ -1,7 +1,7 @@
 # Rules platform senior-review hardening v1
 
-Status: **normative amendment to #227 before implementation**  
-Target branch: `integration/rules-platform-v1`  
+Status: **normative amendment to #227 before implementation**\
+Target branch: `integration/rules-platform-v1`\
 Applies to: `RULES_PLATFORM_ENVELOPE_V1.md`, `RULES_PLATFORM_REGISTRY_INVENTORY.md`, `RULES_PLATFORM_ARCHITECTURE_FIXTURES.md`, `RULES_PLATFORM_MIGRATION_AND_CODEX_HANDOFF.md`, `CLASSICAL_PROFILE_CONFIG_V1.md`, and implementation slices 227-A through 227-H.
 
 ## 1. Precedence

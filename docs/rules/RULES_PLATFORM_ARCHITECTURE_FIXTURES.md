@@ -1,6 +1,6 @@
 # Rules platform architecture fixtures
 
-Status: **acceptance specification for #227**  
+Status: **acceptance specification for #227**\
 These are architecture fixtures, not full scoring corpora.
 
 ## 1. Purpose

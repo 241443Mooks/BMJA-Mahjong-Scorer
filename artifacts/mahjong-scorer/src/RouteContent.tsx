@@ -12,6 +12,7 @@ import { HomePage } from './home/HomePage';
 import { HowItWorksPage } from './home/HowItWorksPage';
 import { MahjongRulesComparedPage } from './home/MahjongRulesComparedPage';
 import { MahjongSettlementPage } from './home/MahjongSettlementPage';
+import { PrivacyPage } from './home/PrivacyPage';
 import NotFound from './pages/not-found';
 import { RulesHubPage, RulesProfilePage } from './rules/RulesReference';
 import { descriptorForSlug, publicRulesSlugFromGamePath } from './game/rules-presentation';
@@ -48,5 +49,6 @@ export function RouteContent({ path, prerender = false }: { path: string; preren
   if (path === '/rules/buzzard') return withFullFooter(<RulesProfilePage slug="buzzard" />);
   if (path === '/rules/mcr') return withFullFooter(<RulesProfilePage slug="mcr" />);
   if (path === '/about') return withFullFooter(<AboutPage />);
+  if (path === '/privacy') return withFullFooter(<PrivacyPage />);
   return <NotFound />;
 }
