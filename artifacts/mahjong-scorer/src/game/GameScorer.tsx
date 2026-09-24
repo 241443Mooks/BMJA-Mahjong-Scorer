@@ -49,7 +49,9 @@ import type {
   ProfileScoreResult,
   RulesProfileRef,
   SeatAssignments,
+  McrRoundInput,
 } from '.';
+import { applyMcrScorerResult, buildMcrRoundInput, mcrTableProfile, transitionMcrRouting, type McrRoutingState } from './mcr-table-routing';
 import type { Wind } from '../scoring';
 
 type GameScorerProps = {
@@ -96,7 +98,7 @@ export const previewRoundSettlement = (
     game.players.map((player) => [player.id, scores[player.id] ?? 0]),
   ) as PlayerAmounts;
   const compiled = getCurrentCompiledRulesRuntime(game.setup.rulesProfile);
-  if (compiled.grammar !== 'classical-points-doubles') throw new Error('MCR round entry is not available in this GameScorer slice.');
+  if (compiled.grammar !== 'classical-points-doubles') throw new Error('Classical settlement preview cannot be used for an MCR round.');
   const runtime = compiled.runtime;
   if (!runtime.prepareRound && incidents.length > 0) throw new Error('This rules profile does not support round incidents.');
   const round = { outcome, scores: fullScores, incidents, buzzardIncidents, profileScoreResults };
@@ -193,6 +195,9 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
   const recoveredDraft = recovered?.currentRound.draft;
   const [scores, setScores] = useState<RoundScoreDraft>(recoveredDraft?.scores ?? {});
   const [scoreRecords, setScoreRecords] = useState<PlayerScoreRecords>(recoveredDraft?.scoreRecords ?? {});
+  const [mcrRoute, setMcrRoute] = useState<McrRoutingState>(() => recovered?.currentRound.grammar === 'pattern-accumulator'
+    ? { outcomeType: recovered.currentRound.outcomeType, winnerId: recovered.currentRound.winnerId, winSource: recovered.currentRound.winSource, discarderId: recovered.currentRound.discarderId, draft: structuredClone(recovered.currentRound.draft) }
+    : { draft: { scores: {}, scoreRecords: {} } });
   const [incidents, setIncidents] = useState<RoundIncident[]>(recoveredDraft && 'incidents' in recoveredDraft ? recoveredDraft.incidents ?? [] : []);
   const [buzzardIncidents, setBuzzardIncidents] = useState<BuzzardIncident[]>(recoveredDraft && 'buzzardIncidents' in recoveredDraft ? recoveredDraft.buzzardIncidents ?? [] : []);
   const [profileScoreResults, setProfileScoreResults] = useState<Partial<Record<string, ProfileScoreResult>>>(recoveredDraft && 'profileScoreResults' in recoveredDraft ? recoveredDraft.profileScoreResults ?? {} : {});
@@ -229,11 +234,13 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
       clearGameRecovery(window.localStorage);
       return;
     }
-    saveGameRecoveryV2(window.localStorage, game, gameScorerCurrentRound(
+    const currentRound = gameScorerCurrentRound(
       game, recovered?.currentRound ?? null, outcomeType, winnerId,
       { scores, scoreRecords, incidents, buzzardIncidents, profileScoreResults },
-    ));
-  }, [game, outcomeType, scoreRecords, scores, incidents, buzzardIncidents, profileScoreResults, winnerId, recovered]);
+      mcrTableProfile(game.setup.rulesProfile) ? mcrRoute : undefined,
+    );
+    saveGameRecoveryV2(window.localStorage, game, currentRound);
+  }, [game, outcomeType, scoreRecords, scores, incidents, buzzardIncidents, profileScoreResults, winnerId, recovered, mcrRoute]);
 
   useEffect(() => {
     if (!printMode || typeof window === 'undefined') return;
@@ -259,7 +266,19 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
   }, [printMode]);
 
   useEffect(() => {
-    if (returnedScore === undefined || !game || !outcome) return;
+    if (returnedScore === undefined || !game) return;
+    if (mcrTableProfile(game.setup.rulesProfile)) {
+      if (returnedScore === null) { onClearReturnedScore(); return; }
+      try {
+        if (!returnedScore || returnedScore.grammar !== 'pattern-accumulator') throw new Error('Only a canonical MCR hand score can be applied here.');
+        setMcrRoute((current) => applyMcrScorerResult(game, current, returnedScore));
+        setError('');
+      } catch (caught) {
+        setError(caught instanceof Error ? caught.message : 'The MCR hand score could not be applied.');
+      } finally { onClearReturnedScore(); }
+      return;
+    }
+    if (!outcome) return;
     if (getCurrentCompiledRulesRuntime(game.setup.rulesProfile).grammar !== 'classical-points-doubles') {
       onClearReturnedScore();
       return;
@@ -294,6 +313,7 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
     returnedScore,
     scoreRecords,
     scores,
+    mcrRoute,
   ]);
 
   const changeRoundOutcome = (nextOutcome: HandOutcome) => {
@@ -370,6 +390,7 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
     setEditingHand(false);
     setSettlementReviewRequested(false);
     setWinnerId(players[0].id);
+    setMcrRoute({ draft: { scores: {}, scoreRecords: {} } });
     setError('');
   };
 
@@ -386,6 +407,7 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
     setBuzzardIncidents([]);
     setProfileScoreResults({});
     setWinnerId('');
+    setMcrRoute({ draft: { scores: {}, scoreRecords: {} } });
     setOutcomeType('win');
     setEditingHand(false);
     setSettlementReviewRequested(false);
@@ -528,7 +550,54 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
   }
 
   if (!isClassicalGameState(game)) {
-    return <div className="mahjong-shell"><SiteHeader /><main className="mx-auto max-w-[900px] px-5 py-10"><h1 className="font-serif text-3xl text-[#284d45]">Saved game recovered</h1><p className="mt-3 text-[#66746e]">This game uses a scoring grammar whose round entry is not available in this GameScorer slice. Its saved state is preserved.</p></main></div>;
+    if (game.isComplete) return <div className="mahjong-shell"><main className="mx-auto max-w-[900px] space-y-4 px-5 py-10"><h1 className="font-serif text-3xl text-[#284d45]">MCR game complete</h1><p className="text-sm text-[#66746e]">The game has ended under the MCR progression rules.</p><button data-testid="mcr-undo" onClick={() => { const previous = undoLastHand(game); setGame(previous); setMcrRoute({ draft: { scores: {}, scoreRecords: {} } }); }} className="rounded border px-3 py-2">Undo last hand</button><button onClick={startOver} className="ml-3 rounded border px-3 py-2">Start over</button></main></div>;
+    let roundInput: McrRoundInput | null = null;
+    let prospective: GameState | null = null;
+    let routeError = '';
+    try { roundInput = buildMcrRoundInput(game, mcrRoute); prospective = confirmHand(game, roundInput); }
+    catch (caught) { routeError = caught instanceof Error ? caught.message : 'Complete the MCR round route.'; }
+    const winnerRecord = mcrRoute.winnerId ? mcrRoute.draft.scoreRecords[mcrRoute.winnerId] : undefined;
+    const settlement = prospective?.handHistory.at(-1)?.settlement;
+    const recordMcrHand = () => {
+      if (!prospective) { setError(routeError); return; }
+      setGame(prospective);
+      setMcrRoute({ draft: { scores: {}, scoreRecords: {} } });
+      setError('');
+    };
+    const resetMcrRound = (nextGame: GameState) => {
+      const next = undoLastHand(nextGame);
+      setGame(next);
+      setMcrRoute({ draft: { scores: {}, scoreRecords: {} } });
+      setError('');
+    };
+    return <div className="mahjong-shell">
+      <div className="screen-only sticky top-0 z-20 border-b border-[#d8ceb8] bg-[#f5f1e6]/95 px-5 py-3 text-[#284d45]">Internal MCR table · Hand {game.handHistory.length + 1} · {windLabel(game.prevailingWind)} prevailing</div>
+      <main className="mx-auto max-w-[900px] space-y-5 px-5 py-8">
+        <section className="rounded-xl border border-[#d8ceb8] bg-[#fbf8ed] p-5 sm:p-7">
+          <h1 className="font-serif text-3xl text-[#284d45]">MCR round</h1>
+          <p className="mt-2 text-sm text-[#66746e]">Choose the table outcome, then score the winner’s hand with the MCR scorer. A discard source identifies the discarder for settlement.</p>
+          <div className="mt-5 flex gap-2">
+            <button data-testid="mcr-outcome-win" aria-pressed={mcrRoute.outcomeType === 'win'} onClick={() => setMcrRoute((route) => transitionMcrRouting(route, { outcomeType: 'win' }))} className="rounded bg-[#284d45] px-4 py-2 text-white">Win</button>
+            <button data-testid="mcr-outcome-draw" aria-pressed={mcrRoute.outcomeType === 'draw'} onClick={() => setMcrRoute((route) => transitionMcrRouting(route, { outcomeType: 'draw' }))} className="rounded border px-4 py-2">Draw</button>
+          </div>
+          {mcrRoute.outcomeType === 'win' && <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            <label className="text-sm">Winner<select data-testid="mcr-winner" value={mcrRoute.winnerId ?? ''} onChange={(event) => setMcrRoute((route) => transitionMcrRouting(route, { winnerId: event.target.value || undefined }))} className="mt-1 block w-full rounded border p-2"><option value="">Choose winner</option>{game.players.map((player) => <option key={player.id} value={player.id}>{player.name} · {windLabel(game.seats[player.id])}</option>)}</select></label>
+            <label className="text-sm">Win source<select data-testid="mcr-win-source" value={mcrRoute.winSource ?? ''} onChange={(event) => setMcrRoute((route) => transitionMcrRouting(route, { winSource: (event.target.value || undefined) as McrRoutingState['winSource'], ...(event.target.value === 'self-draw' ? { discarderId: undefined } : {}) }))} className="mt-1 block w-full rounded border p-2"><option value="">Choose source</option><option value="discard">Discard</option><option value="self-draw">Self-draw</option></select></label>
+            {mcrRoute.winSource === 'discard' && <label className="text-sm sm:col-span-2">Discarder<select data-testid="mcr-discarder" value={mcrRoute.discarderId ?? ''} onChange={(event) => setMcrRoute((route) => transitionMcrRouting(route, { discarderId: event.target.value || undefined }))} className="mt-1 block w-full rounded border p-2"><option value="">Choose discarder</option>{game.players.filter(({ id }) => id !== mcrRoute.winnerId).map((player) => <option key={player.id} value={player.id}>{player.name} · {windLabel(game.seats[player.id])}</option>)}</select></label>}
+          </div>}
+          {mcrRoute.outcomeType === 'draw' && <p className="mt-4 rounded bg-[#f7f1e3] p-3 text-sm">Draw: no payments; the dealer passes and seats rotate.</p>}
+          {mcrRoute.outcomeType === 'win' && mcrRoute.winnerId && mcrRoute.winSource && <div className="mt-5 flex flex-wrap gap-2">
+            <button data-testid="mcr-score-winner" onClick={() => onOpenHandScorer(createHandScorerContext(game, mcrRoute.winnerId!, { type: 'mcr-win', winnerId: mcrRoute.winnerId!, winSource: mcrRoute.winSource! }, winnerRecord))} className="rounded bg-[#284d45] px-4 py-2 text-white">{winnerRecord ? 'Reopen winner score' : 'Score winner hand'}</button>
+            {winnerRecord && <span data-testid="mcr-basic-points" className="self-center text-sm">Accepted Basic Points: {winnerRecord.finalScore}</span>}
+          </div>}
+          {routeError && <p className="mt-4 text-sm text-[#9a4d3a]">{routeError}</p>}
+          {error && <p role="alert" className="mt-3 text-sm text-[#9a4d3a]">{error}</p>}
+          {prospective && <section data-testid="mcr-domain-preview" className="mt-5 rounded-lg bg-[#284d45] p-4 text-white"><h2 className="font-serif text-xl">Domain preview</h2><p className="mt-1">{mcrRoute.outcomeType === 'draw' ? 'No payments. Dealer passes; seats rotate.' : 'MCR settlement from accepted Basic Points.'}</p><div className="mt-3 grid grid-cols-2 gap-2">{game.players.map((player) => <div key={player.id} className="rounded bg-white/10 p-2">{player.name}: {settlement?.changes[player.id] ?? 0}</div>)}</div><p className="mt-3 text-sm">Next: {windLabel(prospective.prevailingWind)} prevailing · East {prospective.players.find((p) => prospective.seats[p.id] === 'east')?.name}{prospective.isComplete ? ' · Game complete' : ''}</p></section>}
+          <button data-testid="mcr-record-hand" disabled={!prospective} onClick={recordMcrHand} className="mt-5 w-full rounded bg-[#ae6249] px-4 py-3 font-semibold text-white">Record hand / advance</button>
+          <div className="mt-4 flex gap-3"><button data-testid="mcr-undo" disabled={!game.handHistory.length} onClick={() => resetMcrRound(game)} className="rounded border px-3 py-2">Undo last hand</button><button onClick={startOver} className="rounded border px-3 py-2">Start over</button></div>
+        </section>
+      </main>
+    </div>;
   }
 
   return (

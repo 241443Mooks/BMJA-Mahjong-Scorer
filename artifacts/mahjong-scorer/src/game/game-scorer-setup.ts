@@ -3,6 +3,7 @@ import type { CurrentCapabilityId } from '../rules-platform/capabilities';
 import type { ClassicalGameState, GameLength, GamePlayer, GameState, RoundScoringDraft, RulesProfileRef, SeatAssignments } from './types';
 import { createGame } from './game';
 import type { PersistedCurrentRoundV2 } from './persistence';
+import type { McrRoutingState } from './mcr-table-routing';
 
 export const gameScorerSetup = (profile: RulesProfileRef, requestedLength: GameLength, tableLimit?: number) => {
   const compiled = getCurrentCompiledRulesRuntime(profile);
@@ -28,13 +29,19 @@ export const createGameScorerGame = (
 };
 
 export const gameScorerCurrentRound = (
-  game: GameState, existing: PersistedCurrentRoundV2 | null, outcomeType: 'win' | 'draw', winnerId: string, draft: RoundScoringDraft,
+  game: GameState, existing: PersistedCurrentRoundV2 | null, outcomeType: 'win' | 'draw', winnerId: string, draft: RoundScoringDraft, mcrRoute?: McrRoutingState,
 ): PersistedCurrentRoundV2 => {
   const compiled = getCurrentCompiledRulesRuntime(game.setup.rulesProfile);
   if (compiled.grammar === 'classical-points-doubles') {
     return { grammar: compiled.grammar, outcomeType, winnerId, draft: structuredClone(draft) };
   }
-  return existing?.grammar === 'pattern-accumulator'
-    ? structuredClone(existing)
-    : { grammar: 'pattern-accumulator', draft: { scores: {}, scoreRecords: {} } };
+  if (mcrRoute) return {
+    grammar: 'pattern-accumulator',
+    ...(mcrRoute.outcomeType ? { outcomeType: mcrRoute.outcomeType } : {}),
+    ...(mcrRoute.winnerId ? { winnerId: mcrRoute.winnerId } : {}),
+    ...(mcrRoute.winSource ? { winSource: mcrRoute.winSource } : {}),
+    ...(mcrRoute.discarderId ? { discarderId: mcrRoute.discarderId } : {}),
+    draft: structuredClone(mcrRoute.draft),
+  };
+  return existing?.grammar === 'pattern-accumulator' ? structuredClone(existing) : { grammar: 'pattern-accumulator', draft: { scores: {}, scoreRecords: {} } };
 };
