@@ -6,6 +6,7 @@ Current product/platform decision records live here. The named issue/PR still ow
 
 - `TABLE_COMPANION_TRANSFORMATION.md` — durable Table Companion product direction.
 - `SEO_GROWTH_STRATEGY.md` — evidence-led search/acquisition strategy and sequencing.
+- `SEARCH_VISIBILITY_LOG.md` — dated Search Console, manual SERP, indexing and generated-search/AI discovery observations; evidence log rather than strategy authority.
 - `ANALYTICS_MEASUREMENT_PLAN.md` — privacy boundary, event taxonomy and reporting caveats.
 - `SCREENSHOT_LIBRARY.md` — deterministic reusable product screenshot system.
 - `TILE_ASSET_DECISION.md` — tile-artwork source, pinning and implementation decision.
