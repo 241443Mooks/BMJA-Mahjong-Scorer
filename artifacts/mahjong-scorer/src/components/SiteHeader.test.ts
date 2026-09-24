@@ -12,6 +12,7 @@ describe('site navigation', () => {
           ['Rules hub', '/rules'],
           ['British / BMJA-style', '/rules/british'],
           ['Western — Thompson & Maloney', '/rules/western'],
+          ['Club rules', '/rules/club'],
           ['Buzzard 2000', '/rules/buzzard'],
           ['MCR / WMO 2006', '/rules/mcr'],
           ['Compare Mahjong rules', '/mahjong-rules-compared'],
