@@ -17,26 +17,26 @@ import {
   applyManualScore,
   applyHandScorerSession,
   confirmHand,
-  createBmjaGame,
+  createGameScorerGame,
   createHandScorerContext,
   GAME_WINDS,
   reconcileDetailedHandsForOutcome,
   returnAppliedScoreToTable,
   undoLastHand,
   clearGameRecovery,
-  loadInProgressGameRecovery,
-  saveGameRecovery,
+  loadInProgressGameRecoveryCore,
+  saveGameRecoveryV2,
 } from '.';
 import { mapCurrentRuntimeSettlement } from '../rules-platform/current-runtime-compat';
-import { getCurrentRulesRuntime } from '../rules-platform/current-runtime-registry';
-import type { CurrentCapabilityId } from '../rules-platform/capabilities';
+import { getCurrentCompiledRulesRuntime } from '../rules-platform/current-runtime-registry';
+import { gameScorerCurrentRound, gameScorerSetup, gameScorerSupports, isClassicalGameState } from './game-scorer-setup';
 import { RulesProfilePicker } from './RulesProfilePicker';
 import { descriptorForRulesProfile, isBritishRulesProfile } from './rules-presentation';
 import { prepareFullPrintDisclosures, watchPrintLifecycle } from './print-disclosures';
 import type {
   GameLength,
   GamePlayer,
-  ClassicalGameState as GameState,
+  GameState,
   HandOutcome,
   HandScorerContext,
   HandScorerResult,
@@ -84,8 +84,7 @@ export const recoveredGameConflictsWithRoute = (game: GameState, routeProfile: R
 export const shouldShowBritishSetupHelper = (profile: RulesProfileRef) =>
   isBritishRulesProfile(profile);
 
-const supports = (profile: RulesProfileRef, capability: CurrentCapabilityId) =>
-  getCurrentRulesRuntime(profile).supportedCapabilities().includes(capability);
+const supports = gameScorerSupports;
 
 export const previewRoundSettlement = (
   game: GameState,
@@ -96,7 +95,9 @@ export const previewRoundSettlement = (
   const fullScores = Object.fromEntries(
     game.players.map((player) => [player.id, scores[player.id] ?? 0]),
   ) as PlayerAmounts;
-  const runtime = getCurrentRulesRuntime(game.setup.rulesProfile);
+  const compiled = getCurrentCompiledRulesRuntime(game.setup.rulesProfile);
+  if (compiled.grammar !== 'classical-points-doubles') throw new Error('MCR round entry is not available in this GameScorer slice.');
+  const runtime = compiled.runtime;
   if (!runtime.prepareRound && incidents.length > 0) throw new Error('This rules profile does not support round incidents.');
   const round = { outcome, scores: fullScores, incidents, buzzardIncidents, profileScoreResults };
   const prepared = runtime.prepareRound
@@ -180,20 +181,22 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
   const [recovered, setRecovered] = useState(() =>
     typeof window === 'undefined'
       ? null
-      : loadInProgressGameRecovery(window.localStorage),
+      : loadInProgressGameRecoveryCore(window.localStorage),
   );
   const [names, setNames] = useState(['', '', '', '']);
-  const [gameLength, setGameLength] = useState<GameLength>(recovered?.game.setup.gameLength ?? 'one-round');
+  const [gameLength, setGameLength] = useState<GameLength>(recovered?.game.setup.gameLength ?? gameScorerSetup(initialRulesProfile, 'one-round').gameLength);
   const [game, setGame] = useState<GameState | null>(recovered?.game ?? null);
   const [selectedRulesProfile, setSelectedRulesProfile] = useState<RulesProfileRef>(() => recovered?.game.setup.rulesProfile ?? initialRulesProfile);
-  const [outcomeType, setOutcomeType] = useState<'win' | 'draw'>(recovered?.outcomeType ?? 'win');
-  const [winnerId, setWinnerId] = useState(recovered?.winnerId ?? '');
-  const [scores, setScores] = useState<RoundScoreDraft>(recovered?.draft.scores ?? {});
-  const [scoreRecords, setScoreRecords] = useState<PlayerScoreRecords>(recovered?.draft.scoreRecords ?? {});
-  const [incidents, setIncidents] = useState<RoundIncident[]>(recovered?.draft.incidents ?? []);
-  const [buzzardIncidents, setBuzzardIncidents] = useState<BuzzardIncident[]>(recovered?.draft.buzzardIncidents ?? []);
-  const [profileScoreResults, setProfileScoreResults] = useState<Partial<Record<string, ProfileScoreResult>>>(recovered?.draft.profileScoreResults ?? {});
-  const [tableLimit, setTableLimit] = useState(() => recovered?.game.setup.tableLimit ?? getCurrentRulesRuntime(initialRulesProfile).defaultTableLimit);
+  const recoveredClassical = recovered?.currentRound.grammar === 'classical-points-doubles' ? recovered.currentRound : null;
+  const [outcomeType, setOutcomeType] = useState<'win' | 'draw'>(recoveredClassical?.outcomeType ?? (recovered?.currentRound.grammar === 'pattern-accumulator' ? recovered.currentRound.outcomeType ?? 'win' : 'win'));
+  const [winnerId, setWinnerId] = useState(recoveredClassical?.winnerId ?? (recovered?.currentRound.grammar === 'pattern-accumulator' ? recovered.currentRound.winnerId ?? '' : ''));
+  const recoveredDraft = recovered?.currentRound.draft;
+  const [scores, setScores] = useState<RoundScoreDraft>(recoveredDraft?.scores ?? {});
+  const [scoreRecords, setScoreRecords] = useState<PlayerScoreRecords>(recoveredDraft?.scoreRecords ?? {});
+  const [incidents, setIncidents] = useState<RoundIncident[]>(recoveredDraft && 'incidents' in recoveredDraft ? recoveredDraft.incidents ?? [] : []);
+  const [buzzardIncidents, setBuzzardIncidents] = useState<BuzzardIncident[]>(recoveredDraft && 'buzzardIncidents' in recoveredDraft ? recoveredDraft.buzzardIncidents ?? [] : []);
+  const [profileScoreResults, setProfileScoreResults] = useState<Partial<Record<string, ProfileScoreResult>>>(recoveredDraft && 'profileScoreResults' in recoveredDraft ? recoveredDraft.profileScoreResults ?? {} : {});
+  const [tableLimit, setTableLimit] = useState<number | undefined>(() => recovered?.game.setup.tableLimit ?? gameScorerSetup(initialRulesProfile, 'one-round').tableLimit);
   const [error, setError] = useState('');
   const [printMode, setPrintMode] = useState<'summary' | 'full' | null>(null);
   const [editingHand, setEditingHand] = useState(false);
@@ -226,14 +229,11 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
       clearGameRecovery(window.localStorage);
       return;
     }
-    saveGameRecovery(
-      window.localStorage,
-      game,
-      outcomeType,
-      winnerId,
+    saveGameRecoveryV2(window.localStorage, game, gameScorerCurrentRound(
+      game, recovered?.currentRound ?? null, outcomeType, winnerId,
       { scores, scoreRecords, incidents, buzzardIncidents, profileScoreResults },
-    );
-  }, [game, outcomeType, scoreRecords, scores, incidents, buzzardIncidents, profileScoreResults, winnerId]);
+    ));
+  }, [game, outcomeType, scoreRecords, scores, incidents, buzzardIncidents, profileScoreResults, winnerId, recovered]);
 
   useEffect(() => {
     if (!printMode || typeof window === 'undefined') return;
@@ -260,6 +260,10 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
 
   useEffect(() => {
     if (returnedScore === undefined || !game || !outcome) return;
+    if (getCurrentCompiledRulesRuntime(game.setup.rulesProfile).grammar !== 'classical-points-doubles') {
+      onClearReturnedScore();
+      return;
+    }
 
     try {
       const returned = applyHandScorerSession(
@@ -354,8 +358,9 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
     ) as SeatAssignments;
     if (typeof window !== 'undefined') clearGameRecovery(window.localStorage);
     setRecovered(null);
-    if (!Number.isFinite(tableLimit) || tableLimit <= 0) { setError('Enter a positive table limit.'); return; }
-    const started = createBmjaGame(players, seats, undefined, gameLength, selectedRulesProfile, tableLimit);
+    const setup = gameScorerSetup(selectedRulesProfile, gameLength, tableLimit);
+    if (setup.grammar === 'classical-points-doubles' && (!Number.isFinite(setup.tableLimit) || setup.tableLimit! <= 0)) { setError('Enter a positive table limit.'); return; }
+    const started = createGameScorerGame(players, seats, gameLength, selectedRulesProfile, setup.tableLimit);
     setGame(started);
     setScores({});
     setScoreRecords({});
@@ -374,7 +379,7 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
     setRecovered(null);
     setGame(null);
     setSelectedRulesProfile(initialRulesProfile);
-    setTableLimit(getCurrentRulesRuntime(initialRulesProfile).defaultTableLimit);
+    setTableLimit(gameScorerSetup(initialRulesProfile, 'one-round').tableLimit);
     setScores({});
     setScoreRecords({});
     setIncidents([]);
@@ -463,21 +468,21 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
           </div>
 
           <section className="rounded-xl border border-[#d8ceb8] bg-[#fbf8ed] p-5 shadow-[var(--shadow-sm)] sm:p-7">
-            <RulesProfilePicker prompt="Which rules are you playing?" selectedProfile={selectedRulesProfile} onSelect={(profile) => { setSelectedRulesProfile(profile); setTableLimit(getCurrentRulesRuntime(profile).defaultTableLimit); }} />
+            <RulesProfilePicker prompt="Which rules are you playing?" selectedProfile={selectedRulesProfile} onSelect={(profile) => { const setup = gameScorerSetup(profile, gameLength); setSelectedRulesProfile(profile); setGameLength(setup.gameLength); setTableLimit(setup.tableLimit); }} />
             {shouldShowBritishSetupHelper(selectedRulesProfile) ? <p className="mb-6 rounded-md bg-[#edf3ed] px-3 py-2 text-[14px] leading-6 text-[#284d45]">New to table setup? <a href="/gameplay-basics#wind-rotation" className="font-semibold underline decoration-[#ae6249] underline-offset-4">Starting Winds</a> set the first seats; <a href="/gameplay-basics#prevailing-wind" className="font-semibold underline decoration-[#ae6249] underline-offset-4">prevailing rounds</a> describe the game’s longer progress.</p> : null}
             <div className="mb-6 grid gap-4 sm:grid-cols-2">
-              {supports(selectedRulesProfile, 'table.configurable-limit') && <label className="block sm:col-span-2"><span className="mb-1.5 block font-mono text-[10px] uppercase tracking-[.15em] text-[#7a7769]">Table limit</span><input data-testid="input-table-limit" type="number" min="1" value={tableLimit} onChange={(event) => setTableLimit(Number(event.target.value))} className="w-full rounded-md border border-[#cfc3aa] bg-[#fdfbf5] px-3 py-2.5 text-[14px] text-[#284d45] focus:ring-2" /></label>}
+              {supports(selectedRulesProfile, 'table.configurable-limit') && <label className="block sm:col-span-2"><span className="mb-1.5 block font-mono text-[10px] uppercase tracking-[.15em] text-[#7a7769]">Table limit</span><input data-testid="input-table-limit" type="number" min="1" value={tableLimit ?? ''} onChange={(event) => setTableLimit(Number(event.target.value))} className="w-full rounded-md border border-[#cfc3aa] bg-[#fdfbf5] px-3 py-2.5 text-[14px] text-[#284d45] focus:ring-2" /></label>}
               <label className="block sm:col-span-2">
                 <span className="mb-1.5 block font-mono text-[10px] uppercase tracking-[.15em] text-[#7a7769]">
                   Game length
                 </span>
                 <select
                   data-testid="select-game-length"
-                  value={gameLength}
-                  onChange={(e) => setGameLength(e.target.value as GameLength)}
+                  value={gameScorerSetup(selectedRulesProfile, gameLength, tableLimit).gameLength}
+                  onChange={(e) => setGameLength(gameScorerSetup(selectedRulesProfile, e.target.value as GameLength, tableLimit).gameLength)}
                   className="w-full rounded-md border border-[#cfc3aa] bg-[#fdfbf5] px-3 py-3 text-[15px] font-semibold text-[#284d45] focus:ring-2 focus:ring-[#ae6249]"
                 >
-                  <option value="one-round">One Prevailing Round (East only)</option>
+                  {gameScorerSetup(selectedRulesProfile, gameLength, tableLimit).grammar === 'classical-points-doubles' && <option value="one-round">One Prevailing Round (East only)</option>}
                   <option value="full-game">Full Game (East, South, West, North)</option>
                 </select>
               </label>
@@ -520,6 +525,10 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
         </main>
       </div>
     );
+  }
+
+  if (!isClassicalGameState(game)) {
+    return <div className="mahjong-shell"><SiteHeader /><main className="mx-auto max-w-[900px] px-5 py-10"><h1 className="font-serif text-3xl text-[#284d45]">Saved game recovered</h1><p className="mt-3 text-[#66746e]">This game uses a scoring grammar whose round entry is not available in this GameScorer slice. Its saved state is preserved.</p></main></div>;
   }
 
   return (
@@ -792,11 +801,11 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
                   <div className="font-mono text-[10px] uppercase tracking-[.15em] text-[#ae6249]">Buzzard round facts</div>
                   <p className="mt-1 text-[11px] text-[#7a7769]">Record table-resolved incidents and non-winner results; the runtime remains the settlement authority.</p>
                   <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                    {supports(game.setup.rulesProfile, 'table.buzzard-profile-results') && <><label className="text-[11px]">Non-winner<select value={selectedProfileResult?.[0] ?? ''} onChange={(event) => { const next = selectProfileScoreResult(scores, scoreRecords, profileScoreResults, event.target.value, event.target.value ? selectedProfileResult?.[1]?.resultId ?? 'buzzard.incomplete-four-wind-limit' : '', game.setup.tableLimit); setProfileScoreResults(next.profileScoreResults); setScores(next.scores); setScoreRecords(next.scoreRecords); if (Object.keys(next.profileScoreResults).length > 0) { setBuzzardIncidents([]); setIncidents([]); } }} className="mt-1 block w-full rounded border p-2"><option value="">Choose player</option>{game.players.filter((player) => player.id !== winnerId).map((player) => <option key={player.id} value={player.id}>{player.name}</option>)}</select></label>
-                    <label className="text-[11px]">Non-winner limit result<select data-testid="select-buzzard-profile-result" value={selectedProfileResult?.[1]?.resultId ?? ''} onChange={(event) => { const next = selectProfileScoreResult(scores, scoreRecords, profileScoreResults, selectedProfileResult?.[0] ?? '', event.target.value as ProfileScoreResult['resultId'] | '', game.setup.tableLimit); setProfileScoreResults(next.profileScoreResults); setScores(next.scores); setScoreRecords(next.scoreRecords); if (next.profileScoreResults && Object.keys(next.profileScoreResults).length > 0) { setBuzzardIncidents([]); setIncidents([]); } }} className="mt-1 block w-full rounded border p-2"><option value="">None</option><option value="buzzard.incomplete-four-wind-limit">Incomplete Four-Wind</option><option value="buzzard.incomplete-three-dragon-limit">Incomplete Three-Dragon</option></select></label></>}
-                    {supports(game.setup.rulesProfile, 'table.buzzard-dangerous-discard') && <button type="button" className="min-h-10 rounded border px-3 text-[11px]" onClick={() => { const next = selectProfileScoreResult(scores, scoreRecords, profileScoreResults, '', '', game.setup.tableLimit); setBuzzardIncidents([{ type: 'buzzard-dangerous-discard', liablePlayerId: game.players.find((player) => player.id !== winnerId)?.id ?? game.players[0].id, reason: 'one-suit' }]); setProfileScoreResults(next.profileScoreResults); setScores(next.scores); setScoreRecords(next.scoreRecords); setIncidents([]); }}>Add dangerous discard</button>}
-                    {supports(game.setup.rulesProfile, 'table.buzzard-false-mah-jong') && <button type="button" className="min-h-10 rounded border px-3 text-[11px]" onClick={() => { const next = selectProfileScoreResult(scores, scoreRecords, profileScoreResults, '', '', game.setup.tableLimit); setBuzzardIncidents([{ type: 'buzzard-false-mah-jong', declarerId: game.players[0].id, exposure: 'not-fully-exposed' }]); setProfileScoreResults(next.profileScoreResults); setScores(next.scores); setScoreRecords(next.scoreRecords); setIncidents([]); }}>Add false Mah Jong</button>}
-                    {supports(game.setup.rulesProfile, 'table.incorrect-hand') && <button type="button" className="min-h-10 rounded border px-3 text-[11px]" onClick={() => { const next = selectProfileScoreResult(scores, scoreRecords, profileScoreResults, '', '', game.setup.tableLimit); setIncidents([{ type: 'incorrect-hand', playerId: game.players.find((player) => player.id !== winnerId)?.id ?? game.players[0].id, condition: 'too-few' }]); setBuzzardIncidents([]); setProfileScoreResults(next.profileScoreResults); setScores(next.scores); setScoreRecords(next.scoreRecords); }}>Add incorrect hand</button>}
+                    {supports(game.setup.rulesProfile, 'table.buzzard-profile-results') && <><label className="text-[11px]">Non-winner<select value={selectedProfileResult?.[0] ?? ''} onChange={(event) => { const next = selectProfileScoreResult(scores, scoreRecords, profileScoreResults, event.target.value, event.target.value ? selectedProfileResult?.[1]?.resultId ?? 'buzzard.incomplete-four-wind-limit' : '', game.setup.tableLimit!); setProfileScoreResults(next.profileScoreResults); setScores(next.scores); setScoreRecords(next.scoreRecords); if (Object.keys(next.profileScoreResults).length > 0) { setBuzzardIncidents([]); setIncidents([]); } }} className="mt-1 block w-full rounded border p-2"><option value="">Choose player</option>{game.players.filter((player) => player.id !== winnerId).map((player) => <option key={player.id} value={player.id}>{player.name}</option>)}</select></label>
+                    <label className="text-[11px]">Non-winner limit result<select data-testid="select-buzzard-profile-result" value={selectedProfileResult?.[1]?.resultId ?? ''} onChange={(event) => { const next = selectProfileScoreResult(scores, scoreRecords, profileScoreResults, selectedProfileResult?.[0] ?? '', event.target.value as ProfileScoreResult['resultId'] | '', game.setup.tableLimit!); setProfileScoreResults(next.profileScoreResults); setScores(next.scores); setScoreRecords(next.scoreRecords); if (next.profileScoreResults && Object.keys(next.profileScoreResults).length > 0) { setBuzzardIncidents([]); setIncidents([]); } }} className="mt-1 block w-full rounded border p-2"><option value="">None</option><option value="buzzard.incomplete-four-wind-limit">Incomplete Four-Wind</option><option value="buzzard.incomplete-three-dragon-limit">Incomplete Three-Dragon</option></select></label></>}
+                    {supports(game.setup.rulesProfile, 'table.buzzard-dangerous-discard') && <button type="button" className="min-h-10 rounded border px-3 text-[11px]" onClick={() => { const next = selectProfileScoreResult(scores, scoreRecords, profileScoreResults, '', '', game.setup.tableLimit!); setBuzzardIncidents([{ type: 'buzzard-dangerous-discard', liablePlayerId: game.players.find((player) => player.id !== winnerId)?.id ?? game.players[0].id, reason: 'one-suit' }]); setProfileScoreResults(next.profileScoreResults); setScores(next.scores); setScoreRecords(next.scoreRecords); setIncidents([]); }}>Add dangerous discard</button>}
+                    {supports(game.setup.rulesProfile, 'table.buzzard-false-mah-jong') && <button type="button" className="min-h-10 rounded border px-3" onClick={() => { const next = selectProfileScoreResult(scores, scoreRecords, profileScoreResults, '', '', game.setup.tableLimit!); setBuzzardIncidents([{ type: 'buzzard-false-mah-jong', declarerId: game.players[0].id, exposure: 'not-fully-exposed' }]); setProfileScoreResults(next.profileScoreResults); setScores(next.scores); setScoreRecords(next.scoreRecords); setIncidents([]); }}>Add false Mah Jong</button>}
+                    {supports(game.setup.rulesProfile, 'table.incorrect-hand') && <button type="button" className="min-h-10 rounded border px-3" onClick={() => { const next = selectProfileScoreResult(scores, scoreRecords, profileScoreResults, '', '', game.setup.tableLimit!); setIncidents([{ type: 'incorrect-hand', playerId: game.players.find((player) => player.id !== winnerId)?.id ?? game.players[0].id, condition: 'too-few' }]); setBuzzardIncidents([]); setProfileScoreResults(next.profileScoreResults); setScores(next.scores); setScoreRecords(next.scoreRecords); }}>Add incorrect hand</button>}
                   </div>
                   {buzzardIncidents.map((incident, index) => <div key={index} className="mt-2 flex flex-wrap gap-2 rounded bg-[#f7f1e3] p-2 text-[11px]"><span>{incident.type === 'buzzard-dangerous-discard' ? 'Dangerous discard' : 'False Mah Jong'}</span><select value={'liablePlayerId' in incident ? incident.liablePlayerId : incident.declarerId} onChange={(event) => setBuzzardIncidents((current) => current.map((item, itemIndex) => itemIndex !== index ? item : 'liablePlayerId' in item ? { ...item, liablePlayerId: event.target.value } : { ...item, declarerId: event.target.value }))}>{game.players.map((player) => <option key={player.id} value={player.id}>{player.name}</option>)}</select>{incident.type === 'buzzard-dangerous-discard' ? <select value={incident.reason} onChange={(event) => setBuzzardIncidents((current) => current.map((item, itemIndex) => itemIndex === index && item.type === 'buzzard-dangerous-discard' ? { ...item, reason: event.target.value as typeof item.reason } : item))}><option value="one-suit">one suit</option><option value="three-dragons">three dragons</option><option value="all-winds">all winds</option><option value="ones-and-nines">ones and nines</option></select> : <select value={incident.exposure} onChange={(event) => setBuzzardIncidents((current) => current.map((item, itemIndex) => itemIndex === index && item.type === 'buzzard-false-mah-jong' ? { ...item, exposure: event.target.value as typeof item.exposure } : item))}><option value="not-fully-exposed">not fully exposed</option><option value="fully-exposed">fully exposed</option></select>}<button type="button" onClick={() => setBuzzardIncidents((current) => current.filter((_, itemIndex) => itemIndex !== index))}>Remove</button></div>)}
                   {incidents.filter((incident) => incident.type === 'incorrect-hand').map((incident) => <div key={incident.playerId} className="mt-2 flex flex-wrap gap-2 rounded bg-[#f7f1e3] p-2 text-[11px]"><span>Incorrect hand</span><select value={incident.playerId} onChange={(event) => setIncidents([{ ...incident, playerId: event.target.value }])}>{game.players.filter((player) => player.id !== winnerId).map((player) => <option key={player.id} value={player.id}>{player.name}</option>)}</select><select value={incident.condition} onChange={(event) => setIncidents([{ ...incident, condition: event.target.value as 'too-few' | 'too-many' }])}><option value="too-few">too few</option><option value="too-many">too many</option></select><button type="button" onClick={() => setIncidents([])}>Remove</button></div>)}
