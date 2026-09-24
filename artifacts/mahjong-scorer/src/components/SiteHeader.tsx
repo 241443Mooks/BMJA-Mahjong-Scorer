@@ -27,7 +27,7 @@ export const navigationGroups = [
     destinations: [
       ['British gameplay basics', '/gameplay-basics'],
       ['British scoring guide', '/guide#ordinary-scoring'],
-      ['British special hands', '/special-hands'],
+      ['Special Hands Atlas', '/special-hands'],
       ['British scoring examples', '/scoring-examples'],
     ],
   },

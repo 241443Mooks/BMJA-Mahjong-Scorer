@@ -1,21 +1,19 @@
-import { ChevronRight, CircleHelp, Sparkles } from 'lucide-react';
-import { useEffect } from 'react';
+import { ChevronRight, CircleHelp } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
 import { SiteHeader } from '../components/SiteHeader';
 import { ReturnToGame } from '../components/ReturnToGame';
 import { SPECIAL_HAND_ANCHORS } from './special-hand-references';
 import { exampleVisualTiles, specialHandExampleById, specialHandExampleHref } from './special-hand-examples';
 import { BMJA_PROFILE_REF } from '../game/ruleset';
-import { resolveSpecialHandTreatment } from '../rules-knowledge/special-hand-treatments';
+import { descriptorForRulesProfile } from '../game/rules-presentation';
+import { readPreferredRulesProfile } from '../game/preferred-rules-profile';
+import { CLASSICAL_ATLAS_PROFILES, SPECIAL_HANDS_ATLAS, atlasBrowseRecords, atlasScoreLabel, searchSpecialHandsAtlas, type SpecialHandsAtlasRecord } from './special-hands-atlas';
 
 import { TileStrip, type TileAssetKey, type TileDefinition } from './MahjongTileGallery';
 
 type SpecialCardData = {
   id: keyof typeof SPECIAL_HAND_ANCHORS;
   treatmentId?: string;
-  name?: string;
-  description?: string;
-  winner?: string;
-  fishing?: string;
   entry: string;
   detection: string;
   tiles?: TileDefinition[];
@@ -43,15 +41,10 @@ const white = t('Haku', 'White Dragon');
 const normalSetSpecials: SpecialCardData[] = [
   {
     id: 'purity',
-    name: 'Purity',
-    description: 'One numbered suit only, using Pungs and/or Kongs plus a pair. No Winds, Dragons or Chow.',
-    winner: '3 doubles',
-    fishing: '3 doubles',
     entry: 'Standard sets',
     detection: 'Detected automatically from your tiles and sets',
     tiles: combine(repeat(pin(1), 3), repeat(pin(3), 3), repeat(pin(6), 3), repeat(pin(9), 3), repeat(pin(5), 2)),
     visualNote: 'One possible all-Circles example.',
-    detail: 'Purity is unusual because it is scored through doubles rather than as a fixed 500- or 1,000-point hand.',
   },
   {
     id: 'all-pair-honours',
@@ -167,47 +160,45 @@ function EventTimeline({ steps, tile }: { steps: string[]; tile?: TileDefinition
   );
 }
 
-function SpecialCard({ hand }: { hand: SpecialCardData }) {
-  const treatment = resolveSpecialHandTreatment(BMJA_PROFILE_REF, hand.treatmentId ?? hand.id);
-  const name = treatment?.name ?? hand.name ?? hand.id;
-  const description = treatment?.description ?? hand.description ?? '';
-  const winner = treatment?.winnerValue === undefined ? hand.winner : new Intl.NumberFormat('en-GB').format(treatment.winnerValue);
-  const fishing = treatment?.fishingValue === undefined
-    ? hand.fishing
-    : `${new Intl.NumberFormat('en-GB').format(treatment.fishingValue)}${treatment.fishingUsesIntrinsicFloor ? ' or intrinsic if greater' : ''}`;
+const legacyIdForPattern = (patternId: string): keyof typeof SPECIAL_HAND_ANCHORS | undefined => {
+  if (patternId === 'gathering-plum-blossom') return 'gathering-the-plum-blossom-from-the-roof';
+  if (patternId === 'plucking-moon') return 'plucking-the-moon-from-the-bottom-of-the-sea';
+  return patternId in SPECIAL_HAND_ANCHORS ? patternId as keyof typeof SPECIAL_HAND_ANCHORS : undefined;
+};
+
+const bmjaEditorial = new Map<string, SpecialCardData>([
+  ...normalSetSpecials.map((hand) => [hand.id, hand] as const),
+  ...irregularSpecials.map((hand) => [hand.id, hand] as const),
+  ['heavens-blessing', { id: 'heavens-blessing', entry: 'Normal winner flow', detection: 'Detected automatically from “Mah Jong in original deal”', visualPolicy: 'event-timeline' }],
+  ['earths-blessing', { id: 'earths-blessing', entry: 'Normal winner flow · from discard', detection: 'The scorer may ask one short factual question', detail: 'Only when the circumstances make it possible, the scorer asks: “Was this East’s very first discard?” If you are not sure, it scores conservatively.', visualPolicy: 'event-timeline' }],
+  ['gathering-plum-blossom', { id: 'gathering-the-plum-blossom-from-the-roof', treatmentId: 'gathering-plum-blossom', entry: 'Normal winner flow · replacement tile', detection: 'Detected automatically from how you won + winning tile', visualPolicy: 'event-timeline' }],
+  ['plucking-moon', { id: 'plucking-the-moon-from-the-bottom-of-the-sea', treatmentId: 'plucking-moon', entry: 'Normal winner flow · last wall tile', detection: 'Detected automatically from how you won + winning tile', visualPolicy: 'event-timeline' }],
+  ['twofold-fortune', { id: 'twofold-fortune', entry: 'Normal winner flow · replacement tile', detection: 'The scorer may ask one short factual question', detail: 'The final hand can show that two Kongs exist, but it cannot reconstruct the exact replacement sequence. “I’m not sure” therefore scores conservatively.', visualPolicy: 'event-timeline' }],
+]);
+
+function EditorialDetails({ hand, name }: { hand: SpecialCardData; name: string }) {
   const example = specialHandExampleById(hand.id);
   const visualTiles = hand.visualPolicy === 'event-timeline'
     ? undefined
     : example ? exampleVisualTiles(example) : hand.tiles;
-  return (
-    <article id={SPECIAL_HAND_ANCHORS[hand.id]} className="scroll-mt-6 rounded-2xl border border-[#d8ceb8] bg-[#fbf8ed] p-5 shadow-[var(--shadow-sm)] sm:p-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="min-w-0">
-          <h3 className="font-serif text-[25px] leading-tight text-[#284d45]">{name}</h3>
-          <p className="mt-2 max-w-[760px] text-[13px] leading-6 text-[#596b65]">{description}</p>
-        </div>
-        <div className="flex shrink-0 gap-2 text-center">
-          <div className="rounded-lg bg-[#284d45] px-3 py-2 text-[#f8f4e9]">
-            <div className="font-mono text-[8px] uppercase tracking-[.14em] text-[#c8d8d1]">Winner</div>
-            <div className="mt-0.5 font-serif text-[18px]">{winner}</div>
-          </div>
-          {fishing && (
-            <div className="rounded-lg border border-[#cfbfa4] bg-[#f5eadb] px-3 py-2 text-[#284d45]">
-              <div className="font-mono text-[8px] uppercase tracking-[.14em] text-[#8c776d]">Fishing</div>
-              <div className="mt-0.5 font-serif text-[16px]">{fishing}</div>
-            </div>
-          )}
-        </div>
-      </div>
-
+  const timelines: Record<string, { steps: string[]; tile?: TileDefinition }> = {
+    'heavens-blessing': { steps: ["East’s original deal", 'Already complete', 'Mah Jong'] },
+    'earths-blessing': { steps: ["East’s first discard", 'Another player claims it', 'Mah Jong'] },
+    'gathering-plum-blossom': { steps: ['Replacement draw', '5 Circles', 'Mah Jong'], tile: pin(5) },
+    'plucking-moon': { steps: ['Last tile in live wall', '1 Circles', 'Mah Jong'], tile: pin(1) },
+    'twofold-fortune': { steps: ['Kong', 'Replacement tile', 'Second Kong', 'Replacement tile', 'Mah Jong'] },
+  };
+  return <details className="mt-3 rounded-lg border border-[#dfd5c2] bg-[#fdfbf5] p-3">
+    <summary className="cursor-pointer text-[12px] font-semibold text-[#284d45] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">British examples and teaching</summary>
       {visualTiles && (
         <div className="mt-5">
           <TileStrip tiles={visualTiles} ariaLabel={`${name} example: ${visualTiles.map((tile) => tile.label).join(', ')}`} />
           {hand.visualNote && <p className="mt-1 text-[10px] leading-4 text-[#8c8a7f]">{hand.visualNote}</p>}
         </div>
       )}
+      {timelines[hand.treatmentId ?? hand.id] && <div className="mt-4"><EventTimeline {...timelines[hand.treatmentId ?? hand.id]} /></div>}
 
-      <div className="mt-5 grid gap-2 sm:grid-cols-2">
+      <div className="mt-4 grid gap-2 sm:grid-cols-2">
         <div className="rounded-lg border border-[#e0d7c6] bg-[#fdfbf5] p-3">
           <div className="font-mono text-[8px] uppercase tracking-[.15em] text-[#ae6249]">How to enter it</div>
           <div className="mt-1 text-[11px] font-semibold text-[#284d45]">{hand.entry}</div>
@@ -225,29 +216,49 @@ function SpecialCard({ hand }: { hand: SpecialCardData }) {
         </details>
       )}
       {example && <a href={specialHandExampleHref(example.id)} className="mt-4 inline-flex min-h-10 items-center rounded-md border border-[#b8cdbf] bg-[#edf3ed] px-3 text-[11px] font-semibold text-[#284d45] transition hover:border-[#477562] hover:bg-[#dceade] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">Try this hand in the scorer <ChevronRight className="ml-1" size={14} aria-hidden="true" /></a>}
-    </article>
-  );
+  </details>;
 }
 
-function CatalogueSection({ id, eyebrow, title, intro, hands }: { id: string; eyebrow: string; title: string; intro: string; hands: SpecialCardData[] }) {
-  return (
-    <section id={id} className="scroll-mt-6 py-10 sm:py-12">
-      <div className="mb-6">
-        <div className="font-mono text-[9px] uppercase tracking-[.2em] text-[#ae6249]">{eyebrow}</div>
-        <h2 className="mt-2 font-serif text-[32px] leading-tight text-[#284d45] sm:text-[38px]">{title}</h2>
-        <p className="mt-3 max-w-[760px] text-[13px] leading-6 text-[#66746e]">{intro}</p>
-      </div>
-      <div className="space-y-4">{hands.map((hand) => <SpecialCard key={hand.name} hand={hand} />)}</div>
-    </section>
-  );
+function AtlasRecord({ record }: { record: SpecialHandsAtlasRecord }) {
+  const hand = record.identity.profile.id === BMJA_PROFILE_REF.id ? bmjaEditorial.get(record.identity.patternId) : undefined;
+  const anchorId = record.identity.profile.id === BMJA_PROFILE_REF.id ? legacyIdForPattern(record.identity.patternId) : undefined;
+  return <article id={anchorId ? SPECIAL_HAND_ANCHORS[anchorId] : undefined} className="scroll-mt-24 rounded-xl border border-[#d8ceb8] bg-[#fbf8ed] p-4 sm:p-5">
+    <div className="flex flex-wrap items-start justify-between gap-2">
+      <h2 className="font-serif text-[21px] leading-tight text-[#284d45]">{record.name}</h2>
+      <span className="rounded-md bg-[#edf3ed] px-2 py-1 text-[11px] font-semibold text-[#284d45]">{record.profileTitle} · {record.identity.profile.version}</span>
+    </div>
+    <p className="mt-2 text-[13px] leading-6 text-[#596b65]">{record.description}</p>
+    <p className="mt-3 text-[12px] font-semibold text-[#284d45]">Scoring: {atlasScoreLabel(record)}</p>
+    {hand && <EditorialDetails hand={hand} name={record.name} />}
+  </article>;
 }
 
 export function SpecialHandsCatalogue() {
+  const [preferred] = useState(() => readPreferredRulesProfile());
+  const preferredClassical = preferred && CLASSICAL_ATLAS_PROFILES.some(({ id, version }) => id === preferred.id && version === preferred.version) ? preferred : null;
+  const [myRules, setMyRules] = useState(Boolean(preferredClassical));
+  const [profileFilter, setProfileFilter] = useState<string>('all');
+  const [query, setQuery] = useState('');
+  const filteredRecords = useMemo(() => {
+    const scoped = atlasBrowseRecords(
+      SPECIAL_HANDS_ATLAS,
+      preferredClassical,
+      myRules ? 'my-rules' : 'all-rules',
+      profileFilter === 'all' ? null : CLASSICAL_ATLAS_PROFILES.find(({ id, version }) => `${id}@${version}` === profileFilter) ?? null,
+    );
+    return searchSpecialHandsAtlas(scoped, query);
+  }, [myRules, preferredClassical, profileFilter, query]);
+
   useEffect(() => {
     const anchor = window.location.hash.slice(1);
     if (!anchor) return;
+    setMyRules(false);
+    setProfileFilter('all');
+    setQuery('');
     requestAnimationFrame(() => document.getElementById(anchor)?.scrollIntoView({ block: 'start' }));
   }, []);
+
+  const mcrPreference = preferred?.id === 'mcr-wmo-2006' && preferred.version === '0.1';
 
   return (
     <div className="mahjong-shell">
@@ -256,52 +267,51 @@ export function SpecialHandsCatalogue() {
       <main className="mx-auto max-w-[1180px] px-5 py-8 lg:px-8 lg:py-12">
         <ReturnToGame />
         <section className="rounded-2xl border border-[#d8ceb8] bg-[#fbf8ed] px-5 py-9 shadow-[var(--shadow-sm)] sm:px-8 sm:py-11 lg:px-10">
-          <div className="mb-4 flex items-center gap-3"><div className="fine-rule w-10" /><span className="font-mono text-[10px] uppercase tracking-[.2em] text-[#ae6249]">Visual catalogue</span></div>
-          <h1 className="max-w-[800px] font-serif text-[clamp(38px,6vw,62px)] leading-[.98] text-[#284d45]">Special hands, made visual.</h1>
-          <p className="mt-5 max-w-[760px] text-[15px] leading-7 text-[#596b65]">You do not need to memorise these before you play. This page is here for the moment when the scorer recognises something unusual and you want to see what it means.</p>
-          <p className="mt-3 text-[12px] leading-6 text-[#66746e]">For a guided breakdown of points, doubles, bonus tiles and fishing, <a href="/scoring-examples" className="font-semibold underline decoration-[#ae6249] underline-offset-4">see worked British Mahjong scoring examples</a>.</p>
-          <div className="mt-6 grid gap-3 sm:grid-cols-3">
-            <a href="#normal-sets" className="rounded-xl border border-[#dfd5c2] bg-[#fdfbf5] p-4 transition hover:bg-[#f5eadb]"><div className="font-serif text-[19px] text-[#284d45]">Built from normal sets</div><p className="mt-1 text-[11px] leading-5 text-[#6d746f]">Pungs, Kongs, pairs and familiar grouped hands.</p></a>
-            <a href="#irregular" className="rounded-xl border border-[#dfd5c2] bg-[#fdfbf5] p-4 transition hover:bg-[#f5eadb]"><div className="font-serif text-[19px] text-[#284d45]">Irregular patterns</div><p className="mt-1 text-[11px] leading-5 text-[#6d746f]">Hands that do not fit four ordinary sets and a pair.</p></a>
-            <a href="#events" className="rounded-xl border border-[#dfd5c2] bg-[#fdfbf5] p-4 transition hover:bg-[#f5eadb]"><div className="font-serif text-[19px] text-[#284d45]">How the hand was won</div><p className="mt-1 text-[11px] leading-5 text-[#6d746f]">Specials defined by the winning event rather than tile pattern alone.</p></a>
+          <div className="mb-4 flex items-center gap-3"><div className="fine-rule w-10" /><span className="font-mono text-[10px] uppercase tracking-[.2em] text-[#ae6249]">Special Hands Atlas</span></div>
+          <h1 className="max-w-[800px] font-serif text-[clamp(38px,6vw,62px)] leading-[.98] text-[#284d45]">Find a special hand.</h1>
+          <p className="mt-5 max-w-[760px] text-[15px] leading-7 text-[#596b65]">Search the current executable special-hand treatments for four Classical rules profiles. Each result names the exact profile and version that owns it.</p>
+          <p className="mt-3 text-[12px] leading-6 text-[#66746e]">British examples and teaching remain available within relevant results. For worked British scoring examples, <a href="/scoring-examples" className="font-semibold underline decoration-[#ae6249] underline-offset-4">visit the scoring guide</a>.</p>
+          {mcrPreference && <p role="status" className="mt-4 rounded-lg bg-[#edf3ed] p-3 text-[12px] leading-5 text-[#284d45]">Your remembered rules are MCR. This Atlas currently covers supported Classical profiles; browse All rules to see them.</p>}
+          {preferred && !preferredClassical && !mcrPreference && <p role="status" className="mt-4 rounded-lg bg-[#edf3ed] p-3 text-[12px] leading-5 text-[#284d45]">Your remembered profile has no Classical special-hand catalogue. Browse All rules to explore the supported Classical profiles.</p>}
+          <div className="mt-6 flex flex-wrap gap-2" role="group" aria-label="Atlas browse mode">
+            {preferredClassical && <button type="button" aria-pressed={myRules} onClick={() => { setMyRules(true); setProfileFilter('all'); }} className="min-h-10 rounded-lg border px-4 text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">My rules</button>}
+            <button type="button" aria-pressed={!myRules} onClick={() => setMyRules(false)} className="min-h-10 rounded-lg border px-4 text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">All rules</button>
           </div>
-          <div className="mt-6 flex gap-3 rounded-xl bg-[#284d45] p-5 text-[#f8f4e9]"><CircleHelp size={18} className="mt-1 shrink-0 text-[#d7a287]" /><p className="text-[12px] leading-6 text-[#d8e3df]">Each tile row is one clear example, not the only possible valid arrangement. The scorer still works from the hand you actually enter.</p></div>
-          <p className="mt-5 text-[11px] leading-5 text-[#8c8a7f]">Independent learner catalogue · not an official BMJA publication.</p>
+          {myRules && preferredClassical && <p className="mt-3 text-sm font-semibold text-[#284d45]">My rules: {descriptorForRulesProfile(preferredClassical).title} · profile version {preferredClassical.version}</p>}
+          {!myRules && <div className="mt-3 flex flex-wrap gap-2" role="group" aria-label="Filter by exact rules profile">
+            <button type="button" aria-pressed={profileFilter === 'all'} onClick={() => setProfileFilter('all')} className="min-h-10 rounded-lg border px-3 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">All profiles</button>
+            {CLASSICAL_ATLAS_PROFILES.map((profile) => {
+              const descriptor = descriptorForRulesProfile(profile);
+              const key = `${profile.id}@${profile.version}`;
+              return <button key={key} type="button" aria-pressed={profileFilter === key} onClick={() => setProfileFilter(key)} className="min-h-10 rounded-lg border px-3 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">{descriptor.compactLabel}</button>;
+            })}
+          </div>}
+          <label className="mt-5 block text-sm font-semibold text-[#284d45]" htmlFor="special-hands-search">Search special hands</label>
+          <div className="mt-2 flex flex-wrap gap-2">
+            <input id="special-hands-search" type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Name, rules profile or description" className="min-h-12 min-w-0 flex-1 rounded-lg border border-[#b8cdbf] bg-white px-4 text-base text-[#284d45] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]" />
+            {(query || profileFilter !== 'all') && <button type="button" onClick={() => { setQuery(''); setProfileFilter('all'); setMyRules(false); }} className="min-h-12 rounded-lg border border-[#b8cdbf] px-4 text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">Clear search and filters</button>}
+          </div>
+          <p className="mt-3 text-sm text-[#596b65]" aria-live="polite">{filteredRecords.length} {filteredRecords.length === 1 ? 'result' : 'results'}</p>
+          <div className="mt-3 flex gap-3 rounded-xl bg-[#284d45] p-4 text-[#f8f4e9]"><CircleHelp size={18} className="mt-1 shrink-0 text-[#d7a287]" /><p className="text-[12px] leading-6 text-[#d8e3df]">A shared pattern ID does not make treatments equivalent. Read each result with its exact profile and version.</p></div>
         </section>
 
-        <CatalogueSection id="normal-sets" eyebrow="01" title="Specials built from normal sets" intro="These usually use the Standard sets builder. The pictures show the pattern that matters; exposed/concealed status and the exact winning tile can still matter for a small number of hands." hands={normalSetSpecials} />
-        <CatalogueSection id="irregular" eyebrow="02" title="Irregular tile-pattern specials" intro="These are the hands where the ordinary four-sets-and-a-pair shape is the wrong mental model. Enter the individual tiles and let the scorer recognise the pattern." hands={irregularSpecials} />
+        <section className="py-6" aria-label="Atlas results">
+          {filteredRecords.length ? <div className="space-y-3">{filteredRecords.map((record) => <AtlasRecord key={record.referenceId} record={record} />)}</div> : <div className="rounded-xl border border-[#d8ceb8] bg-[#fbf8ed] p-6 text-center"><h2 className="font-serif text-2xl text-[#284d45]">No matching treatments</h2><p className="mt-2 text-sm text-[#596b65]">Try a different search or clear the search and profile filter.</p><button type="button" onClick={() => { setQuery(''); setProfileFilter('all'); setMyRules(false); }} className="mt-4 min-h-10 rounded-lg border border-[#b8cdbf] px-4 text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">Show all treatments</button></div>}
+        </section>
 
-        <section id="events" className="scroll-mt-6 py-10 sm:py-12">
-          <div className="mb-6">
-            <div className="font-mono text-[9px] uppercase tracking-[.2em] text-[#ae6249]">03</div>
-            <h2 className="mt-2 font-serif text-[32px] leading-tight text-[#284d45] sm:text-[38px]">Specials based on how the hand was won</h2>
-            <p className="mt-3 max-w-[760px] text-[13px] leading-6 text-[#66746e]">A final tile row cannot explain these. Small event timelines are more useful, and the scorer only asks an extra question when the event cannot be inferred safely.</p>
-          </div>
-
-          <div className="space-y-4">
-            <SpecialCard hand={{ id: 'heavens-blessing', entry: 'Normal winner flow', detection: 'Detected automatically from “Mah Jong in original deal”', visualPolicy: 'event-timeline' }} />
-            <div className="-mt-2 mb-4"><EventTimeline steps={["East’s original deal", 'Already complete', 'Mah Jong']} /></div>
-
-            <SpecialCard hand={{ id: 'earths-blessing', entry: 'Normal winner flow · from discard', detection: 'The scorer may ask one short factual question', detail: 'Only when the circumstances make it possible, the scorer asks: “Was this East’s very first discard?” If you are not sure, it scores conservatively.', visualPolicy: 'event-timeline' }} />
-            <div className="-mt-2 mb-4"><EventTimeline steps={["East’s first discard", 'Another player claims it', 'Mah Jong']} /></div>
-
-            <SpecialCard hand={{ id: 'gathering-the-plum-blossom-from-the-roof', treatmentId: 'gathering-plum-blossom', entry: 'Normal winner flow · replacement tile', detection: 'Detected automatically from how you won + winning tile', visualPolicy: 'event-timeline' }} />
-            <div className="-mt-2 mb-4"><EventTimeline steps={['Replacement draw', '5 Circles', 'Mah Jong']} tile={pin(5)} /></div>
-
-            <SpecialCard hand={{ id: 'plucking-the-moon-from-the-bottom-of-the-sea', treatmentId: 'plucking-moon', entry: 'Normal winner flow · last wall tile', detection: 'Detected automatically from how you won + winning tile', visualPolicy: 'event-timeline' }} />
-            <div className="-mt-2 mb-4"><EventTimeline steps={['Last tile in live wall', '1 Circles', 'Mah Jong']} tile={pin(1)} /></div>
-
-            <SpecialCard hand={{ id: 'twofold-fortune', entry: 'Normal winner flow · replacement tile', detection: 'The scorer may ask one short factual question', detail: 'The final hand can show that two Kongs exist, but it cannot reconstruct the exact replacement sequence. “I’m not sure” therefore scores conservatively.', visualPolicy: 'event-timeline' }} />
-            <div className="-mt-2"><EventTimeline steps={['Kong', 'Replacement tile', 'Second Kong', 'Replacement tile', 'Mah Jong']} /></div>
-          </div>
+        <section className="mb-8 rounded-xl border border-[#d8ceb8] bg-[#fbf8ed] p-5" id="purity">
+          <div className="font-mono text-[9px] uppercase tracking-[.2em] text-[#ae6249]">British authored guidance</div>
+          <h2 className="mt-2 font-serif text-2xl text-[#284d45]">Purity</h2>
+          <p className="mt-2 text-sm leading-6 text-[#596b65]">One numbered suit only, using Pungs and/or Kongs plus a pair. No Winds, Dragons or Chow. In British scoring this authored guide describes three doubles; Purity is not an executable fixed special-hand treatment in this Atlas.</p>
+          <div className="mt-4 max-w-max"><TileStrip tiles={normalSetSpecials[0].tiles!} ariaLabel="Purity example using Circles" /></div>
+          <p className="mt-2 text-xs text-[#66746e]">One possible all-Circles example; scoring depends on the British doubles model.</p>
         </section>
 
         <section className="pb-12 pt-4">
           <div className="rounded-xl bg-[#284d45] p-6 text-[#f8f4e9] sm:p-7">
             <div className="font-mono text-[9px] uppercase tracking-[.2em] text-[#d7a287]">The important bit</div>
-            <h2 className="mt-2 font-serif text-[28px]">Recognition, not memorisation.</h2>
-            <p className="mt-3 max-w-[700px] text-[12px] leading-6 text-[#c8d8d1]">Use this catalogue to understand a pattern after you encounter it. During play, enter the tiles and what happened; the scorer should do the recognition work for you.</p>
+            <h2 className="mt-2 font-serif text-[28px]">Rules belong to profiles.</h2>
+            <p className="mt-3 max-w-[700px] text-[12px] leading-6 text-[#c8d8d1]">These are profile-specific reference entries. Consult the rules in use at your table when you need to understand a treatment.</p>
             <a href="/hand" className="mt-4 inline-flex min-h-10 items-center rounded-md border border-[#6e8d84] px-3 text-[11px] font-semibold text-[#f8f4e9] transition hover:bg-[#31594f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f3d8c7]">Try a special hand in the hand scorer</a>
           </div>
         </section>
@@ -309,7 +319,7 @@ export function SpecialHandsCatalogue() {
 
       <footer className="mx-auto flex max-w-[1180px] flex-wrap items-center justify-between gap-3 border-t border-[#d8ceb8] px-5 py-5 lg:px-8">
         <div className="space-y-1 text-[10px] leading-4 text-[#8c8a7f]">
-          <p>Independent British Mahjong learner catalogue · not an official BMJA publication.</p>
+          <p>Independent Mahjong learner reference · British teaching material is labelled where included.</p>
           <p>Mahjong tile artwork: xhokir/riichi-mahjong-tiles, based on FluffyStuff/riichi-mahjong-tiles, used under CC BY 4.0.</p>
         </div>
         <div className="flex gap-4"><a href="/guide" className="text-[11px] font-semibold text-[#284d45] underline decoration-[#ae6249] underline-offset-4">Beginner guide</a><a href="/" className="text-[11px] font-semibold text-[#284d45] underline decoration-[#ae6249] underline-offset-4">Return to scorer</a></div>
