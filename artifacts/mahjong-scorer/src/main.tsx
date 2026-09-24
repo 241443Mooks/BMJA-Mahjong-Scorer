@@ -2,7 +2,9 @@ import { createRoot } from 'react-dom/client';
 
 import { ErrorBoundary } from '@/components/error-boundary';
 import { RouteContent } from './RouteContent';
+import { initialiseCurrentRulesRuntimes } from './rules-platform/current-runtime-registry';
 import siteSeo from './site-seo.json';
+import { canonicalPublicGamePath } from './game/rules-presentation';
 
 import './index.css';
 
@@ -16,7 +18,7 @@ function setMeta(selector: string, attribute: string, value: string) {
 }
 
 function canonicalPathFor(currentPath: string) {
-  if (currentPath === '/game/british' || currentPath === '/game/western' || currentPath === '/game/club') return '/game';
+  if (canonicalPublicGamePath(currentPath)) return '/game';
   return aliases.find((alias) => alias.path === currentPath)?.target ?? currentPath;
 }
 
@@ -106,7 +108,7 @@ window.addEventListener('beforeprint', updatePrintGeneratedDate);
 const rootElement = document.getElementById('root')!;
 if (rootElement.hasChildNodes()) rootElement.replaceChildren();
 
-createRoot(rootElement, {
+const renderApplication = () => createRoot(rootElement, {
   // Keeps caught errors off reportError(), which would raise the dev overlay.
   onCaughtError: (error, errorInfo) => {
     console.error(error, errorInfo.componentStack);
@@ -116,3 +118,8 @@ createRoot(rootElement, {
     <RouteContent path={path} />
   </ErrorBoundary>,
 );
+
+void initialiseCurrentRulesRuntimes().then(renderApplication, (error) => {
+  console.error('Unable to initialise current rules runtimes.', error);
+  rootElement.textContent = 'Unable to initialise game rules. Please reload and try again.';
+});

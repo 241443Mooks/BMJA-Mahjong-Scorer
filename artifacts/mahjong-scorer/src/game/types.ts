@@ -4,6 +4,8 @@ import type {
   ScoreBreakdown,
   Wind,
 } from '../scoring';
+import type { McrScoringInput } from '../rules-platform/mcr-scoring-input';
+import type { HandScoreResult } from '../rules-platform/types';
 
 export const GAME_WINDS: Wind[] = ['east', 'south', 'west', 'north'];
 
@@ -25,6 +27,9 @@ export type PlayerAmounts = Record<PlayerId, number>;
 export type HandOutcome =
   | { type: 'win'; winnerId: PlayerId }
   | { type: 'draw' };
+export type McrHandOutcome =
+  | { type: 'mcr-win'; winnerId: PlayerId; winSource: 'discard' | 'self-draw'; discarderId?: PlayerId }
+  | { type: 'mcr-draw' };
 
 export type HandMode = 'normal' | 'goulash';
 
@@ -34,13 +39,35 @@ export type RoundIncident =
   | { type: 'false-mah-jong'; declarerId: PlayerId; anyHandExposed: boolean }
   | { type: 'wrong-tile-claim'; playerId: PlayerId; correctedBeforeNextDraw: boolean }
   | { type: 'cannon'; liablePlayerId: PlayerId; danger?: 'third-dragon' | 'fourth-wind' | 'honours' | 'majors' | 'one-suit'; noChoiceAccepted: boolean };
+export type BuzzardIncident =
+  | { type: 'buzzard-dangerous-discard'; liablePlayerId: PlayerId; reason: 'one-suit' | 'three-dragons' | 'all-winds' | 'ones-and-nines' }
+  | { type: 'buzzard-false-mah-jong'; declarerId: PlayerId; exposure: 'fully-exposed' | 'not-fully-exposed' };
+export type ProfileScoreResult = { resultId: 'buzzard.incomplete-four-wind-limit' | 'buzzard.incomplete-three-dragon-limit' };
 
 export type RoundInput = {
   outcome: HandOutcome;
   scores: PlayerAmounts;
   scoreRecords?: PlayerScoreRecords;
   incidents?: RoundIncident[];
+  buzzardIncidents?: BuzzardIncident[];
+  profileScoreResults?: Partial<Record<PlayerId, ProfileScoreResult>>;
 };
+export type McrAcceptedScoreRecord = {
+  source: 'mcr-detailed-scorer';
+  playerId: PlayerId;
+  rulesProfile: RulesProfileRef;
+  rulesFingerprint: string;
+  hand: MahjongHand;
+  input: McrScoringInput;
+  result: Extract<HandScoreResult, { grammar: 'pattern-accumulator' }>;
+  finalScore: number;
+};
+export type McrRoundInput = {
+  mcrOutcome: McrHandOutcome;
+  scores: PlayerAmounts;
+  scoreRecords?: PlayerScoreRecords;
+};
+export type GameRoundInput = RoundInput | McrRoundInput;
 
 export type SettlementTransaction = {
   fromPlayerId: PlayerId;
@@ -48,7 +75,7 @@ export type SettlementTransaction = {
   amount: number;
   baseAmount: number;
   eastMultiplier: 1 | 2;
-  reason: 'winner-payment' | 'score-difference' | 'false-discard-name-penalty' | 'false-mah-jong-penalty' | 'false-name-mah-jong-liability' | 'cannon-liability';
+  reason: 'winner-payment' | 'score-difference' | 'false-discard-name-penalty' | 'false-mah-jong-penalty' | 'false-name-mah-jong-liability' | 'cannon-liability' | 'buzzard-dangerous-discard-liability' | 'buzzard-false-mah-jong-penalty';
 };
 
 export type SettlementResult = {
@@ -56,6 +83,17 @@ export type SettlementResult = {
   changes: PlayerAmounts;
   zeroSum: boolean;
 };
+export type McrSettlementTransaction = {
+  fromPlayerId: PlayerId;
+  toPlayerId: PlayerId;
+  amount: number;
+  reasonId: string;
+  basicPoints: number;
+  fixedComponent: 8;
+  winSource: 'discard' | 'self-draw';
+  payerRole: 'discarder' | 'other-player' | 'non-winner';
+};
+export type McrSettlementResult = { transactions: McrSettlementTransaction[]; changes: PlayerAmounts; zeroSum: boolean };
 
 export type ProgressionState = {
   seats: SeatAssignments;
@@ -70,18 +108,34 @@ export type ProgressionResult = ProgressionState & {
 
 export type ConfirmedHand = {
   handNumber: number;
-  outcome: HandOutcome;
+  outcome: HandOutcome | McrHandOutcome;
+  /** Full replay input retained only in memory; persistence projection deliberately omits it. */
+  mcrReplay?: McrRoundInput;
   handMode: HandMode;
+  eastThirteenthConsecutiveMahjong?: boolean;
   nextHandMode: HandMode;
   scores: PlayerAmounts;
   scoreRecords: PlayerScoreRecords;
   incidents: RoundIncident[];
+  buzzardIncidents?: BuzzardIncident[];
+  profileScoreResults?: Partial<Record<PlayerId, ProfileScoreResult>>;
   eastPlayerId: PlayerId;
   prevailingWind: Wind;
   seats: SeatAssignments;
-  settlement: SettlementResult;
+  settlement: SettlementResult | McrSettlementResult;
   runningTotals: PlayerAmounts;
   progressionAfter: ProgressionState;
+};
+
+export type ClassicalConfirmedHand = Omit<ConfirmedHand, 'outcome' | 'mcrReplay' | 'settlement'> & {
+  outcome: HandOutcome;
+  settlement: SettlementResult;
+  mcrReplay?: never;
+};
+export type McrConfirmedHand = Omit<ConfirmedHand, 'outcome' | 'settlement'> & {
+  outcome: McrHandOutcome;
+  settlement: McrSettlementResult;
+  mcrReplay: McrRoundInput;
 };
 
 export type GameLength = 'one-round' | 'full-game';
@@ -93,12 +147,14 @@ export type GameSetup = {
   startingPrevailingWind: Wind;
   startingBalances: PlayerAmounts;
   gameLength: GameLength;
+  tableLimit?: number;
 };
 
 export type GameState = {
   /** @deprecated Use setup.rulesProfile.id; retained for compatibility. */
   rulesetId: string;
   setup: GameSetup;
+  runtimeFingerprint: string;
   players: GamePlayer[];
   seats: SeatAssignments;
   prevailingWind: Wind;
@@ -107,6 +163,10 @@ export type GameState = {
   handHistory: ConfirmedHand[];
   currentHandMode: HandMode;
   isComplete: boolean;
+};
+export type ClassicalGameState = Omit<GameState, 'setup' | 'handHistory'> & {
+  setup: GameSetup & { tableLimit: number };
+  handHistory: ClassicalConfirmedHand[];
 };
 
 export type HandScoreInput = {
@@ -148,8 +208,10 @@ export type HandScorerContext = {
   playerWind: Wind;
   prevailingWind: Wind;
   isWinner: boolean;
-  limit: number;
+  limit?: number;
   handMode: HandMode;
+  mcr?: { winSource: 'discard' | 'self-draw'; lockedTableContext: true; acceptedScore?: McrAcceptedScoreRecord };
+  eastThirteenthConsecutiveMahjong?: boolean;
   detailedHand?: DetailedHandRecord;
   requiresRecalculation?: boolean;
 };
@@ -159,12 +221,21 @@ export type HandScorerExampleContext = Omit<
   'rulesProfile'
 >;
 
-export type HandScorerResult = {
+export type ClassicalHandScorerResult = {
+  grammar: 'classical-points-doubles';
   playerId: string;
   score: number;
   isWinner: boolean;
   detailedHand: DetailedHandRecord;
 };
+export type McrHandScorerResult = {
+  grammar: 'pattern-accumulator';
+  playerId: string;
+  score: number;
+  isWinner: true;
+  acceptedScore: McrAcceptedScoreRecord;
+};
+export type HandScorerResult = ClassicalHandScorerResult | McrHandScorerResult;
 
 export type RoundScoreDraft = Partial<PlayerAmounts>;
 
@@ -183,19 +254,22 @@ export type DetailedHandRecord = {
   requiresRecalculation?: boolean;
 };
 
-export type PlayerScoreRecord = ManualScoreRecord | DetailedHandRecord;
+export type PlayerScoreRecord = ManualScoreRecord | DetailedHandRecord | McrAcceptedScoreRecord;
 export type PlayerScoreRecords = Partial<Record<PlayerId, PlayerScoreRecord>>;
 
 export type RoundScoringDraft = {
   scores: RoundScoreDraft;
   scoreRecords: PlayerScoreRecords;
   incidents?: RoundIncident[];
+  buzzardIncidents?: BuzzardIncident[];
+  profileScoreResults?: Partial<Record<PlayerId, ProfileScoreResult>>;
 };
 
 export type HandScorerLocalContext = {
   playerWind: Wind;
   prevailingWind: Wind;
-  limit: number;
+  limit?: number;
   isWinner: boolean;
   handMode: HandMode;
+  eastThirteenthConsecutiveMahjong?: boolean;
 };

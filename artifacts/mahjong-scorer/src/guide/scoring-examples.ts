@@ -89,7 +89,7 @@ export const resolveScorerExample = (id: string | null | undefined): ResolvedSco
 
 /** Practice has the same target/context but must never preload the learner's hand. */
 export const initialHandForExampleMode = (example: ResolvedScorerExample | undefined, practice: boolean) => practice ? undefined : example?.hand;
-export const handForScorerMode = (context: HandScorerContext | HandScorerExampleContext | null, example: ResolvedScorerExample | undefined, practice: boolean) => example ? initialHandForExampleMode(example, practice) : context?.detailedHand?.hand;
+export const handForScorerMode = (context: HandScorerContext | HandScorerExampleContext | null, example: ResolvedScorerExample | undefined, practice: boolean) => example ? initialHandForExampleMode(example, practice) : context?.mcr?.acceptedScore?.hand ?? context?.detailedHand?.hand;
 
 /** Fixed facts that must survive practice without preloading a learner tile, set or bonus selection. */
 export const practiceScorerContext = (example: ResolvedScorerExample | undefined) => ({

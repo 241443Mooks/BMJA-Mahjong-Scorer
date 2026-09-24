@@ -26,6 +26,7 @@ describe('site footer', () => {
         links: [
           ['About', '/about'],
           ['Privacy & analytics', '/privacy'],
+          ['Source on GitHub', 'https://github.com/241443Mooks/BMJA-Mahjong-Scorer'],
           ['Support the project', 'https://buymeacoffee.com/sharronmo'],
         ],
       },
@@ -44,5 +45,8 @@ describe('site footer', () => {
     const markup = renderToStaticMarkup(SiteFooter({}));
     expect(markup).toContain('© 2026 SMooks');
     expect(markup).not.toContain('not an official BMJA publication');
+    expect(markup).toContain('Privacy &amp; analytics');
+    expect(markup).toContain('Source on GitHub');
+    expect(markup).toContain('Support the project');
   });
 });

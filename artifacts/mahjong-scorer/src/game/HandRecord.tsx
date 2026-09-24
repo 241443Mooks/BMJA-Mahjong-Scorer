@@ -45,7 +45,7 @@ export const detailedHandStatus = (record: DetailedHandRecord) =>
     ? "Partial recorded hand"
     : "Recorded hand";
 
-function RecordedTile({
+export function RecordedTile({
   tile,
   winning = false,
 }: {
@@ -108,6 +108,17 @@ function RecordedGroup({ group, hand }: { group: HandSet; hand: MahjongHand }) {
   );
 }
 
+/** Shared read-only physical hand rendering for saved Mahjong hand evidence. */
+export function RecordedMahjongHand({ hand }: { hand: MahjongHand }) {
+  const looseWinning = resolveWinningTileProvenance(hand)?.target.type === "loose-layout";
+  return <>
+    {hand.sets.length > 0 && <div className="mt-2 flex flex-wrap gap-2">{hand.sets.map((group) => <RecordedGroup key={group.id} group={group} hand={hand} />)}</div>}
+    {(hand.looseTiles?.length ?? 0) > 0 && <div className="mt-2"><div className="mb-1 font-mono text-[8px] uppercase tracking-[.12em] text-[#7a7769]">Loose tiles{hand.sets.length === 0 ? " / special layout" : ""}</div><div className="flex flex-wrap gap-1">{hand.looseTiles?.map((tile, index) => <RecordedTile key={`${tileKey(tile)}-${index}`} tile={tile} />)}</div>{looseWinning && <div className="mt-1 text-[9px] text-[#ae6249]">Winning tile: {playingTileDefinition(hand.winningTileProvenance!.tile).label}</div>}</div>}
+    {(hand.remainingTiles?.length ?? 0) > 0 && <div className="mt-2"><div className="mb-1 font-mono text-[8px] uppercase tracking-[.12em] text-[#7a7769]">Remaining tiles recorded</div><div className="flex flex-wrap gap-1">{hand.remainingTiles?.map((tile, index) => <RecordedTile key={`${tileKey(tile)}-${index}`} tile={tile} />)}</div></div>}
+    {hand.bonusTiles.length > 0 && <div className="mt-2"><div className="mb-1 font-mono text-[8px] uppercase tracking-[.12em] text-[#7a7769]">Flowers and Seasons</div><div className="flex flex-wrap gap-1">{hand.bonusTiles.map((tile, index) => { const artwork = bonusTileDefinition(tile.family, tile.number); return <img key={`${tile.family}-${tile.number}-${index}`} src={tileAssetUrl(artwork.asset)} alt={artwork.label} className="h-12 w-9 rounded-[5px] bg-[#fffdf7] object-contain tile-shadow sm:h-[60px] sm:w-[45px]" />; })}</div></div>}
+  </>;
+}
+
 function ScoreEvidence({ record }: { record: DetailedHandRecord }) {
   const { breakdown } = record;
   const points = breakdown.pointRules.filter((rule) => rule.amount > 0);
@@ -164,8 +175,6 @@ export function HandRecord({
   record: DetailedHandRecord;
 }) {
   const { hand } = record;
-  const looseWinning =
-    resolveWinningTileProvenance(hand)?.target.type === "loose-layout";
   return (
     <section
       className="recorded-hand mt-3 rounded-lg border border-[#e2d9c7] bg-[#fbf8ed] p-3"
@@ -181,65 +190,7 @@ export function HandRecord({
           </div>
         )}
       </div>
-      {hand.sets.length > 0 && (
-        <div className="mt-2 flex flex-wrap gap-2">
-          {hand.sets.map((group) => (
-            <RecordedGroup key={group.id} group={group} hand={hand} />
-          ))}
-        </div>
-      )}
-      {(hand.looseTiles?.length ?? 0) > 0 && (
-        <div className="mt-2">
-          <div className="mb-1 font-mono text-[8px] uppercase tracking-[.12em] text-[#7a7769]">
-            Loose tiles{hand.sets.length === 0 ? " / special layout" : ""}
-          </div>
-          <div className="flex flex-wrap gap-1">
-            {hand.looseTiles?.map((tile, index) => (
-              <RecordedTile
-                key={`${tileKey(tile)}-${index}`}
-                tile={tile}
-              />
-            ))}
-          </div>
-          {looseWinning && (
-            <div className="mt-1 text-[9px] text-[#ae6249]">
-              Winning tile: {playingTileDefinition(hand.winningTileProvenance!.tile).label}
-            </div>
-          )}
-        </div>
-      )}
-      {(hand.remainingTiles?.length ?? 0) > 0 && (
-        <div className="mt-2">
-          <div className="mb-1 font-mono text-[8px] uppercase tracking-[.12em] text-[#7a7769]">
-            Remaining tiles recorded
-          </div>
-          <div className="flex flex-wrap gap-1">
-            {hand.remainingTiles?.map((tile, index) => (
-              <RecordedTile key={`${tileKey(tile)}-${index}`} tile={tile} />
-            ))}
-          </div>
-        </div>
-      )}
-      {hand.bonusTiles.length > 0 && (
-        <div className="mt-2">
-          <div className="mb-1 font-mono text-[8px] uppercase tracking-[.12em] text-[#7a7769]">
-            Flowers and Seasons
-          </div>
-          <div className="flex flex-wrap gap-1">
-            {hand.bonusTiles.map((tile, index) => {
-              const artwork = bonusTileDefinition(tile.family, tile.number);
-              return (
-                <img
-                  key={`${tile.family}-${tile.number}-${index}`}
-                  src={tileAssetUrl(artwork.asset)}
-                  alt={artwork.label}
-                  className="h-12 w-9 rounded-[5px] bg-[#fffdf7] object-contain tile-shadow sm:h-[60px] sm:w-[45px]"
-                />
-              );
-            })}
-          </div>
-        </div>
-      )}
+      <RecordedMahjongHand hand={hand} />
       {record.breakdown.evidenceCompleteness === "partial" && (
         <p className="mt-2 text-[10px] text-[#7a7769]">
           Only the tiles recorded while scoring are shown.

@@ -16,6 +16,7 @@ import { PrivacyPage } from './home/PrivacyPage';
 import NotFound from './pages/not-found';
 import { RulesHubPage, RulesProfilePage } from './rules/RulesReference';
 import { descriptorForSlug, publicRulesSlugFromGamePath } from './game/rules-presentation';
+import { RulesProfilePickerScalabilityFixture } from './game/RulesProfilePicker';
 
 function returnHome() {
   if (typeof window !== 'undefined') window.location.assign('/');
@@ -26,9 +27,11 @@ function withFullFooter(content: ReactNode) {
 }
 
 export function RouteContent({ path, prerender = false }: { path: string; prerender?: boolean }) {
+  if (import.meta.env.DEV && path === '/__fixtures/rules-profile-picker') return <RulesProfilePickerScalabilityFixture />;
   if (path === '/') return withFullFooter(<HomePage />);
-  if (path === '/game' || path === '/game/british' || path === '/game/western' || path === '/game/club') {
-    return <App initialRulesProfile={descriptorForSlug(publicRulesSlugFromGamePath(path)).profile} prerenderOnly={prerender} />;
+  if (path === '/game' || path.startsWith('/game/')) {
+    const slug = publicRulesSlugFromGamePath(path);
+    return slug ? <App initialRulesProfile={descriptorForSlug(slug).profile} prerenderOnly={prerender} /> : <NotFound />;
   }
   if (path === '/hand') return <App initialView="hand" standaloneHand prerenderOnly={prerender} />;
   if (path === '/scoring-examples') return withFullFooter(<ScoringExamplesPage />);
@@ -43,6 +46,8 @@ export function RouteContent({ path, prerender = false }: { path: string; preren
   if (path === '/rules') return withFullFooter(<RulesHubPage />);
   if (path === '/rules/british') return withFullFooter(<RulesProfilePage slug="british" />);
   if (path === '/rules/western') return withFullFooter(<RulesProfilePage slug="western" />);
+  if (path === '/rules/buzzard') return withFullFooter(<RulesProfilePage slug="buzzard" />);
+  if (path === '/rules/mcr') return withFullFooter(<RulesProfilePage slug="mcr" />);
   if (path === '/about') return withFullFooter(<AboutPage />);
   if (path === '/privacy') return withFullFooter(<PrivacyPage />);
   return <NotFound />;

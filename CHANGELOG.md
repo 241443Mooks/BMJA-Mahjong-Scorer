@@ -6,6 +6,9 @@ This file records meaningful changes to **Mahjong Reference** at product-milesto
 
 ### Added
 
+- Completed the shared rules-platform runtime/caller cutover with permanent parity and replay regression coverage; released-train reconciliation is tracked by #323.
+- Added Buzzard 2000 as a public selectable Classical profile and MCR/WMO 2006 `0.1` Provisional hand scoring and Table Companion, including settlement, progression, persistence, history and print.
+
 - Expanded the source-local reference inventory to **626 entries across 18 rules/source corpora before cross-family de-duplication**, while deliberately keeping equivalence/canonical-concept work held until executable profile identities exist. [#265](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/pull/265)
 - Defined the structured-reference architecture for #251: human pages are views over a source/runtime-backed concept, profile-treatment, relationship and evidence layer rather than a wiki or second prose rules database. The same verified records are intended to support future scorer links, comparisons and grounded AI/voice explanations. [#281](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/pull/281)
 
@@ -42,6 +45,8 @@ This file records meaningful changes to **Mahjong Reference** at product-milesto
 - Checkpointed repository authority so `main` remains the production line while the cross-family rules-platform migration is staged behind #227 on `integration/rules-platform-v1` until parity/cutover gates pass.
 
 ### Fixed
+
+- Kept the mounted game workspace stable when switching between Classical and MCR profiles.
 
 - Kept manual table-score entry calm while typing or editing multi-digit values by requiring an explicit **Review settlement** action before the settlement workspace appears; progression still requires **Record hand and advance**. [#191](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/191)
 - Closed the bounded manual WCAG audit findings around Escape focus restoration, recovered-game status contrast, recorded-tile semantics, live error announcements, outcome selected state and confirmation before discarding a recoverable game. [#194](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/194) [#195](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/195) [#196](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/196) [#197](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/197) [#198](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/198) [#199](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/199)

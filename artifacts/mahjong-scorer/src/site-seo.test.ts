@@ -6,7 +6,17 @@ describe('public SEO configuration', () => {
     const paths = siteSeo.routes.map((route) => route.path);
     const titles = siteSeo.routes.map((route) => route.title);
 
-    expect(siteSeo.routes).toHaveLength(16);
+    expect(siteSeo.routes).toHaveLength(19);
+    expect(siteSeo.routes.find((route) => route.path === '/privacy')?.title).toContain('Privacy & Analytics');
+    for (const path of ['/rules/buzzard', '/rules/mcr']) {
+      const route = siteSeo.routes.find((candidate) => candidate.path === path);
+      expect(route).toBeDefined();
+      expect(route?.title).toContain('Mahjong Reference');
+      expect(route?.title).not.toContain('Page not found');
+    }
+    expect(siteSeo.routes.find((route) => route.path === '/rules/buzzard')?.title).toContain('Buzzard 2000');
+    expect(siteSeo.routes.find((route) => route.path === '/rules/mcr')?.title).toContain('MCR / WMO 2006');
+    expect(siteSeo.routes.find((route) => route.path === '/rules/mcr')?.description).toContain('provisional');
     expect(new Set(paths).size).toBe(paths.length);
     expect(new Set(titles).size).toBe(titles.length);
     expect(siteSeo.routes.every((route) => route.indexable)).toBe(true);
@@ -18,7 +28,11 @@ describe('public SEO configuration', () => {
     expect(siteSeo.webSite.name).toBe('Mahjong Reference');
     expect(siteSeo.webSite.url).toBe(siteSeo.siteUrl);
     expect(siteSeo.webApplication.name).toBe('Mahjong Reference Table Companion');
-    expect(siteSeo.webApplication.featureList).toContain('Supported rules profiles for British, Western and club Mahjong contexts');
+    const supportedProfilesFeature = siteSeo.webApplication.featureList.find((feature) => feature.startsWith('Five selectable rules profiles:'));
+    expect(supportedProfilesFeature).toBeDefined();
+    for (const profile of ['British/BMJA-style', 'Thompson & Maloney Western', 'Club', 'Buzzard 2000', 'MCR/WMO 2006']) {
+      expect(supportedProfilesFeature).toContain(profile);
+    }
     expect(siteSeo.routes.find((route) => route.path === '/guide')?.title).toContain('British Mahjong Scoring Guide');
     expect(siteSeo.routes.find((route) => route.path === '/gameplay-basics')?.title).toContain('British Mahjong Gameplay Basics');
     expect(siteSeo.routes.find((route) => route.path === '/rules')?.title).toContain('Mahjong Rules We Support');

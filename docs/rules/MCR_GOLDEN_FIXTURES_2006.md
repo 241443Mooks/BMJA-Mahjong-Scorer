@@ -134,28 +134,53 @@ Must not count Concealed Hand or Single Wait. `Fully Concealed Hand` applies onl
 Type: `SOURCE-BOUND COMBINATION`
 
 ```text
-WEWEWE WSWSWS WWWWWW WNWNWN pair DRDR
-win: discard
+fixed / melded:
+  WEWEWE WSWSWS WWWWWW
+free final tiles:
+  WNWNWN DRDR
+win: discard North, completing the North Pung
 ```
 
-Expected counted high fan:
+Pre-win free tiles are `WNWN DRDR`. Both North and Red Dragon can legally complete an ordinary hand, so this is not a Single Wait. The three melded Wind Pungs also rule out Concealed Pungs.
+
+Expected exact counted result:
 
 ```text
-Big Four Winds 88
-All Honors     64
+Big Four Winds           88
+All Honors               64
+---------------------------
+subtotal                 152
 ```
-
-Expected subtotal: `152` unless the exact submitted context creates another non-suppressed fan.
 
 Must not additionally count:
 
 - Big Three Winds;
 - All Pungs;
+- All Terminals and Honors (Non-Repeat from All Honors);
 - Prevalent Wind;
 - Seat Wind;
 - Pung of Terminals or Honors.
 
 The Dragon pair does not create Dragon Pung.
+
+## MCR-F004b — Big Four Winds with independent concealment and wait fans
+
+Type: `SOURCE EXAMPLE PRINCIPLE`
+
+Use the former all-free shape: four concealed Wind Pungs and a Red Dragon pair, won by discard on the pair. This context legitimately adds Four Concealed Pungs and Single Wait to Big Four Winds + All Honors.
+
+Expected exact counted subtotal:
+
+```text
+Big Four Winds           88
+All Honors               64
+Four Concealed Pungs     64
+Single Wait               1
+---------------------------
+subtotal                 217
+```
+
+All Terminals and Honors must not additionally count; suppress it by Non-Repeat from All Honors. Do not suppress Four Concealed Pungs or Single Wait to force the subtotal from MCR-F004.
 
 ## MCR-F005 — All Terminals allows two Double Pung instances
 
@@ -196,21 +221,28 @@ Acceptance:
 Type: `CONSTRUCTED NEGATIVE`
 
 ```text
-C222 D333 B444 C555 pair WEWE
-all Pungs; at least one set melded
-win: self-draw
+Fixed / melded:
+- C222 Pung
+- D555 Pung
+- B888 Pung
+
+Free / concealed:
+- C444 Pung
+- pair WEWE
+
+Win: self-draw C4 completing C444
 Flowers: 2
 ```
 
-Choose exposure so no concealed-hand fan applies and the hand has no other composition fan.
+The non-consecutive Pung ranks and the three melded groups avoid Mixed Shifted Pungs, concealed-Pung fans, and wait fans.
 
-Expected non-Flower fan:
+Expected ordinary fan exactly:
 
 ```text
 All Pungs   6
 Self-Drawn  1
--------------
-qualifying  7
+-----------------
+subtotal    7
 ```
 
 Flowers would be `+2` **only after qualification**, therefore:
@@ -228,21 +260,29 @@ This is directly protected by §3.11.6.6: the 8-point minimum excludes Flower po
 Type: `CONSTRUCTED POSITIVE`
 
 ```text
-C222 D333 B444 C5555(km) pair WEWE
-win: self-draw
+Fixed / melded:
+- C2222 melded Kong
+- D555 Pung
+- B888 Pung
+
+Free / concealed:
+- C444 Pung
+- pair WEWE
+
+Win: self-draw C4 completing C444
 Flowers: 2
 ```
 
-Choose exposure/context to avoid any other fan.
+The non-consecutive Pung ranks and the three melded groups avoid Mixed Shifted Pungs, concealed-Pung fans, and wait fans.
 
-Expected:
+Expected ordinary fan exactly:
 
 ```text
 All Pungs    6
 Melded Kong  1
 Self-Drawn   1
---------------
-qualifying   8  -> legal Hu
+-----------------
+subtotal     8  -> legal Hu
 Flowers      2  -> post-qualification
 Basic Points 10
 ```

@@ -56,6 +56,26 @@ const pageCopy: Record<Exclude<PublicRulesSlug, 'club'>, { eyebrow: string; intr
     provenance: <>The 1997 <em>Mah Jong Player's Companion</em> is the source-certified catalogue reference. <em>The Game of Mah Jong Illustrated</em> is the intended ordinary-rules source, but its executable domains have not yet all been checked. Until that work is complete, ordinary play remains provisional rather than fully verified.</>,
     links: [['Track a Western game', '/game/western'], ['Score a hand', '/hand'], ['Compare Mahjong rules', '/mahjong-rules-compared']],
   },
+  buzzard: {
+    eyebrow: 'Rules reference', intro: 'British/Western Classical — Buzzard 2000 is a source-specific profile with a configurable table limit.',
+    identity: <>This profile identifies Buzzard 2000 exactly; it is not a claim about all Classical or Western Mahjong.</>,
+    table: <>Standing Hand is declared and locked at the physical table; this app records the resolved scoring fact, not later physical actions. Dead-hand/final-14, claim priority and Kong replacement or rob-Kong remain table procedures, not wall simulation or arbitration.</>,
+    scoring: <>The scorer records existing winning-method evidence such as last-wall, Loose Tile and rob-Kong. The configured table limit is a table setting: 600 is the source-backed Buzzard default/example, not a universal Mahjong constant.</>,
+    after: <>Dangerous discard is entered as an already-resolved table incident and liability, never inferred from discard history.</>,
+    distinctive: <>Use the game tracker to record the established incident and incomplete-hand facts; it does not police physical play.</>,
+    provenance: <>Copy follows the profile evidence record and stays deliberately concise.</>,
+    links: [['Track a Buzzard game', '/game/buzzard'], ['Score a hand', '/hand']],
+  },
+  mcr: {
+    eyebrow: 'Rules reference', intro: 'Mahjong Competition Rules / WMO 2006 profile 0.1 remains Provisional. Winning-hand scoring and Table Companion game tracking are available.',
+    identity: <>This profile represents the Mahjong Competition Rules / WMO 2006 source context.</>,
+    table: <>The scorer evaluates completed winning hands using fan. The Table Companion records resolved table and end-of-hand facts; it does not arbitrate physical play.</>,
+    scoring: <>A hand must reach the 8-point qualifying minimum before Flowers. Flowers are added after qualification.</>,
+    after: <>Accepted Basic Points drive settlement. The dealer passes after every completed hand, while seats and prevailing-wind progression are tracked under the MCR progression profile.</>,
+    distinctive: <>This profile remains version 0.1 and Provisional. Table tracking records the table's resolved result rather than deciding what happened during physical play.</>,
+    provenance: <>Source context: the existing 2006 MCR/EMA Green Book evidence record. This source context does not imply affiliation or endorsement.</>,
+    links: [['Track an MCR game', '/game/mcr'], ['Score a hand', '/hand'], ['About these rules', '/rules/mcr']],
+  },
 };
 
 export function RulesProfilePage({ slug }: { slug: Exclude<PublicRulesSlug, 'club'> }) {
@@ -75,7 +95,7 @@ export function RulesProfilePage({ slug }: { slug: Exclude<PublicRulesSlug, 'clu
 
 export function RulesHubPage() {
   return <PageFrame eyebrow="Rules" title="Find the rules your table uses" intro="Mahjong rules vary. Start with the supported rules contexts Mahjong Reference can score today, then choose a scorer, a fuller reference page or a broad comparison.">
-    <section className="border-b border-[#ddd3bf] px-5 py-9 sm:px-8 sm:py-11 lg:px-12"><div className="grid gap-5 lg:grid-cols-3">{PUBLIC_RULES_DESCRIPTORS.map((descriptor) => <article key={descriptor.slug} className="flex flex-col rounded-xl border border-[#d8ceb8] bg-[#fdfbf5] p-5 sm:p-6"><div className="flex items-start justify-between gap-3"><h2 className="font-serif text-[27px] leading-tight text-[#284d45]">{descriptor.title}</h2>{descriptor.slug === 'western' ? <CircleAlert className="shrink-0 text-[#a65b3d]" aria-label="Provisional" /> : <CheckCircle2 className="shrink-0 text-[#477562]" aria-label="Available" />}</div><p className="mt-3 text-[16px] leading-7 text-[#405650]">{descriptor.description}</p><div className="mt-5"><RulesSupportStatus descriptor={descriptor} /></div><div className="mt-5 flex flex-wrap gap-3">{descriptor.slug === 'club' ? <a href="/game/club" className={actionClass}>Use Club rules <Gamepad2 size={16} /></a> : <><a href={`/rules/${descriptor.slug}`} className={secondaryActionClass}>About these rules <BookOpen size={16} /></a><a href={`/game/${descriptor.slug}`} className={actionClass}>Track a game <ArrowRight size={16} /></a></>}</div></article>)}</div></section>
+    <section className="border-b border-[#ddd3bf] px-5 py-9 sm:px-8 sm:py-11 lg:px-12"><div className="grid gap-5 lg:grid-cols-3">{PUBLIC_RULES_DESCRIPTORS.filter(({ availability }) => availability.rulesReference).map((descriptor) => <article key={descriptor.slug} className="flex flex-col rounded-xl border border-[#d8ceb8] bg-[#fdfbf5] p-5 sm:p-6"><div className="flex items-start justify-between gap-3"><h2 className="font-serif text-[27px] leading-tight text-[#284d45]">{descriptor.title}</h2>{descriptor.support.implementation === 'Provisional' ? <CircleAlert className="shrink-0 text-[#a65b3d]" aria-label="Provisional" /> : <CheckCircle2 className="shrink-0 text-[#477562]" aria-label="Available" />}</div><p className="mt-3 text-[16px] leading-7 text-[#405650]">{descriptor.description}</p><div className="mt-5"><RulesSupportStatus descriptor={descriptor} /></div><div className="mt-5 flex flex-wrap gap-3"><a href={`/rules/${descriptor.slug}`} className={secondaryActionClass}>About these rules <BookOpen size={16} /></a>{descriptor.availability.handScorer && <a href="/hand" className={secondaryActionClass}>Score a hand <ArrowRight size={16} /></a>}{descriptor.availability.gameTracker && <a href={`/game/${descriptor.slug}`} className={actionClass}>Track a game <ArrowRight size={16} /></a>}</div></article>)}</div></section>
     <section className="px-5 py-9 sm:px-8 sm:py-11 lg:px-12"><div className="rounded-xl border border-[#cfbfa4] bg-[#f5eadb] p-5 sm:flex sm:items-center sm:justify-between sm:gap-8 sm:p-6"><div><div className="flex items-center gap-3 text-[#477562]"><Compass size={19} /><p className="font-mono text-[12px] font-semibold uppercase tracking-[.14em] text-[#ae6249]">Compare first</p></div><h2 className="mt-3 font-serif text-[29px] text-[#284d45]">Not sure which Mahjong rules you use?</h2><p className="mt-2 max-w-[680px] text-[16px] leading-7 text-[#405650]">See the broad differences between major Mahjong traditions without assuming they share one rulebook.</p></div><a href="/mahjong-rules-compared" className={`${actionClass} mt-5 shrink-0 sm:mt-0`}>Compare Mahjong rules <ArrowRight size={16} /></a></div></section>
   </PageFrame>;
 }

@@ -32,6 +32,8 @@ Current public profiles are:
 | British / BMJA-style | Stable |
 | Western — Thompson & Maloney | Provisional ordinary rules; source-certified Companion special-hand catalogue |
 | Club rules | Configured profile |
+| Buzzard 2000 | Executable and publicly selectable Classical profile |
+| MCR / WMO 2006 | 0.1 Provisional hand scorer and Table Companion; 1.0 awaits experienced-player review |
 
 The project is independent and does not claim BMJA endorsement.
 
@@ -57,15 +59,15 @@ The rules platform therefore uses one profile envelope above a small number of s
 3. **Riichi han + fu** — Riichi-family profiles;
 4. **Target catalogue** — American/NMJL-style versioned catalogue matching.
 
-Rules research is deliberately separated from implementation. Buzzard 2000 is source-ready as a Classical configuration proof; the MCR 2006 81-fan correctness corpus and EMA Riichi 2025 yaku/fu/payment corpus are source-pinned for later executable profiles.
+Buzzard 2000 is an executable public profile. MCR/WMO 2006 is available for hand scoring and whole-game tracking at version 0.1 Provisional; experienced-player review remains the gate for 1.0. The complete EMA Riichi 2025 source/correctness corpus is ready, but Riichi runtime is not implemented.
 
-Cross-family migration work is isolated on `integration/rules-platform-v1` until its parity and caller-cutover gates pass. The durable programme authority is issue [#227](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/227) and the rollout tracker [#275](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/275). For the live priority map, use [#105](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/105) rather than treating this README as a roadmap.
+The shared rules-platform implementation, permanent parity/replay harness and caller cutover are complete on `integration/rules-platform-v1`; #323 is reconciling that train with production before a separate promotion. Public game routes include `/game/buzzard` and `/game/mcr`. The durable programme authority is issue [#227](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/227) and the rollout tracker [#275](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/275). For the live priority map, use [#105](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/105) rather than treating this README as a roadmap.
 
 ## Structured Mahjong knowledge
 
 The longer-term reference direction is not a wiki or a second prose rules database. Issue [#251](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/251) is building toward a **machine-readable, source/runtime-backed Mahjong knowledge layer** whose human-readable reference pages are views over the same verified concepts, profile treatments, relationships and evidence.
 
-The source-local inventory currently contains **626 entries across 18 corpora** before any cross-family de-duplication or canonical concept matching. Cross-family matching deliberately waits for executable Buzzard, MCR and Riichi identities so similar names are not treated as equivalent without proof.
+The source-local inventory currently contains **626 entries across 18 corpora** before any cross-family de-duplication or canonical concept matching. Buzzard and MCR now have executable identities; Riichi remains future runtime work, so similar names are not treated as equivalent without proof.
 
 That same structured layer is intended to support future search/reference pages, scorer links, comparison tools and grounded AI/voice explanations. See `docs/product/REFERENCE_KNOWLEDGE_ARCHITECTURE.md`.
 
@@ -89,7 +91,7 @@ That same structured layer is intended to support future search/reference pages,
 - `CHANGELOG.md` — durable product milestones
 - `Agents.md` — bounded implementation guardrails
 
-`main` is the production line. The rules-platform migration remains isolated on `integration/rules-platform-v1` until its parity/cutover gates pass.
+`main` is the production line. The completed rules-platform, Buzzard and MCR train is being reconciled from `integration/rules-platform-v1` through #323; production promotion is a separate next step.
 
 ## Stack
 

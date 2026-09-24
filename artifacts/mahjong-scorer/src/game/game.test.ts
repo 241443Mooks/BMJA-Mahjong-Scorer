@@ -1,4 +1,5 @@
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
+import { initialiseCurrentRulesRuntimes } from '../rules-platform/current-runtime-registry';
 import { suited } from '../scoring';
 import { confirmHand, createBmjaGame, undoLastHand } from './game';
 import type {
@@ -6,6 +7,8 @@ import type {
   GamePlayer,
   SeatAssignments,
 } from './types';
+
+beforeAll(() => initialiseCurrentRulesRuntimes());
 
 const players: GamePlayer[] = [
   { id: 'bill', name: 'Bill' },

@@ -24,28 +24,28 @@ For a bounded task, start with the named issue or PR. Then use only the relevant
 - **Analytics/privacy measurement:** `product/ANALYTICS_MEASUREMENT_PLAN.md` and #246.
 - **Plus/accounts/cloud:** `product/MAHJONG_REFERENCE_PLUS_ARCHITECTURE.md`, supporting `PLUS_*` docs and #206.
 - **Rules/scoring:** relevant `rules/` source/evidence files, `BMJA_RULES_REFERENCE.md`, executable tests and the named profile issue.
-- **Reference research staging:** `rules/encyclopaedia/` and #251. 251A1 is a source-local inventory; cross-family concept matching remains held until executable Buzzard/MCR/Riichi identities exist.
+- **Reference research staging:** `rules/encyclopaedia/` and #251. 251A1 is a source-local inventory; cross-family concept matching remains held until Riichi also has an executable identity.
 - **Rules-platform migration:** #227 is the architecture umbrella and #275 is the rollout tracker. Exact child-issue contracts on `integration/rules-platform-v1` govern implementation.
 - **Durable product history:** root `CHANGELOG.md`.
 
-## Branch boundary
+## Branch and release boundary
 
 `main` is the production line.
 
-The cross-family rules-platform migration is staged on `integration/rules-platform-v1`. Its design, implementation and hardening documents remain branch-specific until the migration passes its parity and caller-cutover gates. Do not reconstruct or override those contracts from older `main` planning notes.
+The cross-family rules-platform implementation, permanent parity/replay harness and caller cutover are complete on `integration/rules-platform-v1`. Buzzard and MCR public profiles are implemented there. Issue #323 owns reconciliation with production `main` and the later deliberate promotion. Do not treat implementation-complete staging as already released.
 
 The durable migration shape is:
 
 ```text
-rules-platform contracts and executable foundation
-→ #236 parity / replay gate
-→ #274 caller cutover
-→ merge only after the migration gates are satisfied
+completed platform and profile implementation on integration
+→ #323 reconcile production main into integration
+→ certify combined tree
+→ separate production promotion PR
 ```
 
-For the exact current state and next child issue, use #275 rather than freezing a step-by-step roadmap into this file.
+For programme state, use #275 and #105 rather than freezing a child-issue roadmap into this file.
 
-MCR and Riichi correctness research is already source-pinned. Their implementation belongs to their named profile issues after the shared platform migration is ready for new-family execution.
+MCR 0.1 Provisional is implemented for hand scoring and Table Companion; experienced-player review remains its 1.0 gate. Riichi correctness research is complete, while runtime implementation remains future work.
 
 ## Decision hierarchy
 

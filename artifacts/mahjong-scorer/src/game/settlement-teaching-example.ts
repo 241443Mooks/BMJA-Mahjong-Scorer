@@ -1,5 +1,6 @@
-import { createBmjaGame } from './game';
-import { BMJA_PROFILE_REF, resolveRulesProfile } from './ruleset';
+import { BMJA_PROFILE_REF } from './ruleset';
+import { mapCurrentRuntimeSettlement } from '../rules-platform/current-runtime-compat';
+import { getCurrentRulesRuntime } from '../rules-platform/current-runtime-registry';
 
 /** The established #70 example, resolved by the production settlement engine. */
 export const canonicalSettlementExample = () => {
@@ -9,9 +10,17 @@ export const canonicalSettlementExample = () => {
     { id: 'west', name: 'West' },
     { id: 'north', name: 'North' },
   ];
-  const game = createBmjaGame(players, { east: 'east', south: 'south', west: 'west', north: 'north' }, undefined, 'full-game', BMJA_PROFILE_REF);
-  return resolveRulesProfile(game.setup.rulesProfile).settleRound(game.players, game.seats, {
-    outcome: { type: 'win', winnerId: 'south' },
-    scores: { east: 56, south: 60, west: 40, north: 44 },
-  });
+  const seats = { east: 'east', south: 'south', west: 'west', north: 'north' } as const;
+  const runtime = getCurrentRulesRuntime(BMJA_PROFILE_REF);
+  return mapCurrentRuntimeSettlement(
+    players.map(({ id }) => id),
+    runtime.settleRound({
+      players,
+      seats,
+      round: {
+        outcome: { type: 'win', winnerId: 'south' },
+        scores: { east: 56, south: 60, west: 40, north: 44 },
+      },
+    }),
+  );
 };

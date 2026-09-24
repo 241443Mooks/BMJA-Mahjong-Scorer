@@ -1,9 +1,12 @@
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
+import { initialiseCurrentRulesRuntimes } from '../rules-platform/current-runtime-registry';
 import { scoreHand } from '../scoring';
 import { createBmjaGame } from '../game/game';
 import { GAME_SNAPSHOT_STORAGE_KEY, recoverableGameForReturn, saveGameRecovery } from '../game/persistence';
 import { exampleHandScorerContext, specialHandExampleById, specialHandExamples, specialHandExampleHref } from './special-hand-examples';
 import { specialHandReferenceHref } from './special-hand-references';
+
+beforeAll(() => initialiseCurrentRulesRuntimes());
 
 describe('catalogue scorer examples', () => {
   it('uses valid, complete scorer hands for every catalogue action', () => {
