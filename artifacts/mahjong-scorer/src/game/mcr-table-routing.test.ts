@@ -6,6 +6,7 @@ import { buildMcrHandScorerResult, createHandScorerContext } from './hand-scorer
 import { buildMcrRoundInput, applyMcrScorerResult, transitionMcrRouting, type McrRoutingState } from './mcr-table-routing';
 import { gameScorerCurrentRound } from './game-scorer-setup';
 import { toMcrScoringInput } from './mcr-hand-input';
+import { loadInProgressGameRecoveryCore, saveGameRecoveryV2 } from './persistence';
 
 const profile = { id: 'mcr-wmo-2006', version: '0.1' } as const;
 const players = ['A', 'B', 'C', 'D'].map((id) => ({ id, name: id }));
@@ -94,5 +95,52 @@ describe('C2C1c MCR table routing', () => {
     if (compiled.grammar !== 'pattern-accumulator') throw new Error('Expected MCR runtime.');
     const selfDraw = compiled.runtime.settleRound({ participants: ['A', 'B', 'C', 'D'], round: { outcome: { kind: 'mcr-win', payload: { winnerId: 'B', winSource: 'self-draw' } }, acceptedScores: [{ playerId: 'B', score: result.acceptedScore.result }] } });
     expect(selfDraw.map(({ from, amount }) => [from, amount])).toEqual([['A', 32], ['C', 32], ['D', 32]]);
+  });
+
+  it('takes a real self-draw scorer result through routing, exact round input, and confirmation', () => {
+    const { game } = scored();
+    const discardRoute = transitionMcrRouting(empty, { outcomeType: 'win', winnerId: 'A', winSource: 'discard', discarderId: 'B' });
+    const selfDrawRoute = transitionMcrRouting(discardRoute, { winSource: 'self-draw' });
+    expect(selfDrawRoute.discarderId).toBeUndefined();
+    expect(Object.keys(selfDrawRoute.draft.scoreRecords)).toHaveLength(0);
+
+    const { result } = scored('A', 'self-draw');
+    const acceptedRoute = applyMcrScorerResult(game, selfDrawRoute, result);
+    expect(result.score).toBe(result.acceptedScore.result.result.total);
+    expect(acceptedRoute.draft.scores.A).toBe(result.score);
+    const input = buildMcrRoundInput(game, acceptedRoute);
+    expect(input.mcrOutcome).toEqual({ type: 'mcr-win', winnerId: 'A', winSource: 'self-draw' });
+    expect(input.mcrOutcome).not.toHaveProperty('discarderId');
+    expect(input.scoreRecords).toEqual({ A: result.acceptedScore });
+
+    const confirmed = confirmHand(game, input);
+    expect(confirmed.handHistory[0]?.mcrReplay).toEqual(input);
+    expect(confirmed.handHistory[0]?.settlement.transactions.map(({ amount }) => amount)).toEqual([result.score + 8, result.score + 8, result.score + 8]);
+  });
+
+  it('projects a populated route and recovers its exact accepted record through v2 persistence', () => {
+    const { game, result } = scored('A', 'discard');
+    const routed = transitionMcrRouting(empty, { outcomeType: 'win', winnerId: 'A', winSource: 'discard', discarderId: 'B' });
+    const accepted = applyMcrScorerResult(game, routed, result);
+    const projected = gameScorerCurrentRound(game, null, 'win', 'A', { scores: {}, scoreRecords: {} }, accepted);
+    const stored = new Map<string, string>();
+    const storage = {
+      getItem: (key: string) => stored.get(key) ?? null,
+      setItem: (key: string, value: string) => { stored.set(key, value); },
+      removeItem: (key: string) => { stored.delete(key); },
+    };
+
+    saveGameRecoveryV2(storage, game, projected);
+    const recovered = loadInProgressGameRecoveryCore(storage);
+    expect(recovered?.currentRound).toEqual(projected);
+    if (recovered?.currentRound.grammar !== 'pattern-accumulator') throw new Error('Expected recovered MCR route.');
+    expect(recovered.currentRound).toMatchObject({ grammar: 'pattern-accumulator', outcomeType: 'win', winnerId: 'A', winSource: 'discard', discarderId: 'B', draft: { scores: { A: result.score }, scoreRecords: { A: result.acceptedScore } } });
+    const recoveredRecord = recovered.currentRound.draft.scoreRecords.A;
+    if (!recoveredRecord || recoveredRecord.source !== 'mcr-detailed-scorer') throw new Error('Expected recovered accepted MCR score.');
+    expect(recoveredRecord).toEqual(result.acceptedScore);
+    expect(recoveredRecord.rulesProfile).toEqual(profile);
+    expect(recoveredRecord.rulesFingerprint).toBe(game.runtimeFingerprint);
+    expect(recoveredRecord.input).toEqual(result.acceptedScore.input);
+    expect(recoveredRecord.result).toEqual(result.acceptedScore.result);
   });
 });
