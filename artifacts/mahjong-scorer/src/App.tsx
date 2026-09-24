@@ -18,6 +18,7 @@ import { getCurrentCompiledRulesRuntime } from './rules-platform/current-runtime
 import { mapCurrentClassicalScoreBreakdown } from './rules-platform/current-runtime-compat';
 import { toMcrScoringInput } from './game/mcr-hand-input';
 import { presentMcrScore } from './game/mcr-score-presentation';
+import { buildMcrHandScorerResult } from './game/hand-scorer-handoff';
 import type { McrResolvedWinEvent, McrWinSource, McrWind } from './rules-platform/mcr-scoring-input';
 import { handScorerInitialBaseline, hasHandScorerUnsavedWork } from './game/hand-scorer-dirty-state';
 import { transitionStandaloneHandProfile } from './game/hand-scorer-profile-transition';
@@ -283,11 +284,12 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
   const [replacementAnswer, setReplacementAnswer] = useState<'yes' | 'no' | 'unsure' | null>(
     initialHand?.winningEventEvidence?.type === 'replacement-chain' ? 'yes' : null
   );
-  const [mcrWinSource, setMcrWinSource] = useState<McrWinSource>();
-  const [mcrResolvedWinEvent, setMcrResolvedWinEvent] = useState<McrResolvedWinEvent>();
-  const [mcrLastVisibleCopy, setMcrLastVisibleCopy] = useState<boolean>();
-  const [mcrSeatWind, setMcrSeatWind] = useState<McrWind>();
-  const [mcrPrevailingWind, setMcrPrevailingWind] = useState<McrWind>();
+  const [mcrWinSource, setMcrWinSource] = useState<McrWinSource | undefined>(context?.mcr?.winSource);
+  const [mcrResolvedWinEvent, setMcrResolvedWinEvent] = useState<McrResolvedWinEvent | undefined>(context?.mcr?.acceptedScore?.input.context.resolvedWinEvent);
+  const [mcrLastVisibleCopy, setMcrLastVisibleCopy] = useState<boolean | undefined>(context?.mcr?.acceptedScore?.input.context.lastVisibleCopy);
+  const [mcrSeatWind, setMcrSeatWind] = useState<McrWind | undefined>(context?.mcr?.lockedTableContext ? context.playerWind : undefined);
+  const [mcrPrevailingWind, setMcrPrevailingWind] = useState<McrWind | undefined>(context?.mcr?.lockedTableContext ? context.prevailingWind : undefined);
+  const lockedMcrContext = !!context?.mcr?.lockedTableContext;
   const classicalWinnerRef = useRef(initialContext.isWinner);
   const standaloneWasMcrRef = useRef(initialIsMcr);
 
@@ -451,7 +453,7 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
     setWinningEventEvidence(transition.classical.winningEventEvidence);
     setDiscardAnswer(transition.classical.discardAnswer);
     setReplacementAnswer(transition.classical.replacementAnswer);
-    setMcrWinSource(transition.mcr.winSource); setMcrResolvedWinEvent(transition.mcr.resolvedWinEvent); setMcrLastVisibleCopy(transition.mcr.lastVisibleCopy); setMcrSeatWind(transition.mcr.seatWind); setMcrPrevailingWind(transition.mcr.prevailingWind);
+    setMcrWinSource(context?.mcr?.winSource ?? transition.mcr.winSource); setMcrResolvedWinEvent(context?.mcr?.acceptedScore ? context.mcr.acceptedScore.input.context.resolvedWinEvent : transition.mcr.resolvedWinEvent); setMcrLastVisibleCopy(context?.mcr?.acceptedScore ? context.mcr.acceptedScore.input.context.lastVisibleCopy : transition.mcr.lastVisibleCopy); setMcrSeatWind(context?.mcr?.lockedTableContext ? context.playerWind : transition.mcr.seatWind); setMcrPrevailingWind(context?.mcr?.lockedTableContext ? context.prevailingWind : transition.mcr.prevailingWind);
     if (compiled.grammar === 'classical-points-doubles') setLimit(compiled.runtime.defaultTableLimit);
   }, [hasContext, practice, standaloneRulesProfile]);
 
@@ -565,11 +567,15 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
     () => scoringRuntime ? mapCurrentClassicalScoreBreakdown(scoringRuntime.scoreHand({ evidence: hand, context: gameContext })) : undefined,
     [gameContext, hand, scoringRuntime],
   );
-  const mcrResult = useMemo(() => {
+  const mcrPass = useMemo(() => {
     if (!isMcr || compiledRuntime.grammar !== 'pattern-accumulator' || !mcrWinSource || !mcrResolvedWinEvent) return undefined;
     const adapted = toMcrScoringInput(hand, { winSource: mcrWinSource, resolvedWinEvent: mcrResolvedWinEvent, lastVisibleCopy: mcrLastVisibleCopy, seatWind: mcrSeatWind, prevailingWind: mcrPrevailingWind });
-    return adapted.kind === 'ready' ? presentMcrScore(compiledRuntime.runtime.scoreHand(adapted.input)) : undefined;
+    if (adapted.kind !== 'ready') return undefined;
+    const result = compiledRuntime.runtime.scoreHand(adapted.input);
+    return { input: adapted.input, result, view: presentMcrScore(result) };
   }, [compiledRuntime, hand, isMcr, mcrLastVisibleCopy, mcrPrevailingWind, mcrResolvedWinEvent, mcrSeatWind, mcrWinSource]);
+  const mcrResult = mcrPass?.view;
+  const mcrCanApply = !!(lockedMcrContext && context && mcrPass && mcrPass.view.kind === 'scored' && mcrPass.result.grammar === 'pattern-accumulator' && mcrPass.result.legal && mcrPass.result.disposition.kind === 'scored' && mcrPass.result.result.unit === 'points' && Number.isInteger(mcrPass.result.result.total) && mcrPass.result.result.total === mcrPass.view.basicPoints && mcrPass.input.context.winSource === context.mcr?.winSource && mcrPass.input.context.seatWind === context.playerWind && mcrPass.input.context.prevailingWind === context.prevailingWind);
   const patterns = useMemo(() => score ? detectedPatterns(score) : [], [score]);
 
   const enteredSets = sets.filter((s): s is HandSet => s.tile !== null);
@@ -797,7 +803,8 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
 
   function applyScore() {
     if (isMcr || !context || example || !score?.valid) return;
-    onClose({
+      onClose({
+      grammar: 'classical-points-doubles',
       playerId: context.playerId,
       score: score!.finalScore,
       isWinner,
@@ -828,6 +835,10 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
         finalScore: score!.finalScore,
       },
     });
+  }
+  function applyMcrScore() {
+    if (!context || !lockedMcrContext || !mcrPass || mcrPass.view.kind !== 'scored' || mcrPass.result.disposition.kind !== 'scored' || mcrPass.result.result.total !== mcrPass.view.basicPoints) return;
+    onClose(buildMcrHandScorerResult(context, hand, mcrPass.input, mcrPass.result));
   }
 
   const visibleTilesFor = (destination = selectedSet) => allPlayingTiles.filter(tile => {
@@ -1563,13 +1574,12 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
               {isMcr && <>
                 <section data-testid="mcr-evidence-controls" className="rounded-xl border border-[#d8ceb8] bg-[#fbf8ed] p-5">
                   <SectionLabel eyebrow="05 / MCR evidence" title="Win context" />
-                  <label className="mt-2 block text-sm">Win source<select data-testid="mcr-win-source" value={mcrWinSource ?? ''} onChange={(event) => { const next = (event.target.value || undefined) as McrWinSource | undefined; setMcrWinSource(next); if (mcrResolvedWinEvent && eventSource[mcrResolvedWinEvent] && eventSource[mcrResolvedWinEvent] !== next) setMcrResolvedWinEvent(undefined); }} className="mt-1 w-full rounded border p-2"><option value="">Choose source</option><option value="discard">Discard</option><option value="self-draw">Self-draw</option></select></label>
+                  {lockedMcrContext ? <div data-testid="mcr-locked-table-context" className="mt-2 space-y-1 text-sm"><p>Win source <strong>{mcrWinSource === 'discard' ? 'Discard' : 'Self-draw'}</strong> <span className="text-xs">(from table)</span></p><p>Seat wind <strong>{context!.playerWind}</strong> <span className="text-xs">(from table)</span></p><p>Prevailing wind <strong>{context!.prevailingWind}</strong> <span className="text-xs">(from table)</span></p></div> : <label className="mt-2 block text-sm">Win source<select data-testid="mcr-win-source" value={mcrWinSource ?? ''} onChange={(event) => { const next = (event.target.value || undefined) as McrWinSource | undefined; setMcrWinSource(next); if (mcrResolvedWinEvent && eventSource[mcrResolvedWinEvent] && eventSource[mcrResolvedWinEvent] !== next) setMcrResolvedWinEvent(undefined); }} className="mt-1 w-full rounded border p-2"><option value="">Choose source</option><option value="discard">Discard</option><option value="self-draw">Self-draw</option></select></label>}
                   <label className="mt-3 block text-sm">Resolved win event<select data-testid="mcr-win-event" value={mcrResolvedWinEvent ?? ''} onChange={(event) => setMcrResolvedWinEvent((event.target.value || undefined) as McrResolvedWinEvent | undefined)} className="mt-1 w-full rounded border p-2"><option value="">Choose event</option>{mcrEvents.filter((item) => !eventSource[item.value] || eventSource[item.value] === mcrWinSource).map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</select></label>
                   <label className="mt-3 block text-sm">Last visible copy<select value={mcrLastVisibleCopy === undefined ? 'unknown' : String(mcrLastVisibleCopy)} onChange={(event) => setMcrLastVisibleCopy(event.target.value === 'unknown' ? undefined : event.target.value === 'true')} className="mt-1 w-full rounded border p-2"><option value="unknown">Unknown</option><option value="true">Yes</option><option value="false">No</option></select></label>
-                  <label className="mt-3 block text-sm">Seat wind<select value={mcrSeatWind ?? ''} onChange={(event) => setMcrSeatWind((event.target.value || undefined) as McrWind | undefined)} className="mt-1 w-full rounded border p-2"><option value="">Not entered</option>{mcrWinds.map((wind) => <option key={wind}>{wind}</option>)}</select></label>
-                  <label className="mt-3 block text-sm">Prevailing wind<select value={mcrPrevailingWind ?? ''} onChange={(event) => setMcrPrevailingWind((event.target.value || undefined) as McrWind | undefined)} className="mt-1 w-full rounded border p-2"><option value="">Not entered</option>{mcrWinds.map((wind) => <option key={wind}>{wind}</option>)}</select></label>
+                  {!lockedMcrContext && <><label className="mt-3 block text-sm">Seat wind<select data-testid="mcr-seat-wind" value={mcrSeatWind ?? ''} onChange={(event) => setMcrSeatWind((event.target.value || undefined) as McrWind | undefined)} className="mt-1 w-full rounded border p-2"><option value="">Not entered</option>{mcrWinds.map((wind) => <option key={wind}>{wind}</option>)}</select></label><label className="mt-3 block text-sm">Prevailing wind<select data-testid="mcr-prevailing-wind" value={mcrPrevailingWind ?? ''} onChange={(event) => setMcrPrevailingWind((event.target.value || undefined) as McrWind | undefined)} className="mt-1 w-full rounded border p-2"><option value="">Not entered</option>{mcrWinds.map((wind) => <option key={wind}>{wind}</option>)}</select></label></>}
                 </section>
-                <section data-testid="mcr-score-result" className="rounded-xl border border-[#b8cdbf] bg-[#edf3ed] p-5"><h2 className="font-serif text-2xl text-[#284d45]">MCR result</h2>{!mcrWinSource || !mcrResolvedWinEvent ? <p className="mt-3 text-sm">Choose a win source and resolved win event before scoring.</p> : !winningTileProvenance ? <p className="mt-3 text-sm">Identify the winning tile in the shared hand workspace.</p> : !mcrResult ? <p className="mt-3 text-sm">This selected profile is not available for standalone scoring.</p> : mcrResult.kind === 'needs-evidence' ? <><p className="mt-3 font-semibold">More evidence is needed.</p><ul className="list-disc pl-5 text-sm">{mcrResult.prompts.map(({ id, prompt }) => <li key={id} data-evidence-id={id}>{prompt}</li>)}</ul></> : mcrResult.kind === 'not-qualifying' ? <p className="mt-3 text-sm">The hand is below the 8-point minimum before Flowers. Flowers cannot rescue a hand below the minimum.</p> : mcrResult.kind === 'invalid' ? <p className="mt-3 text-sm">Invalid / not scoreable ({mcrResult.reasonId}).</p> : <><p className="mt-3 text-sm">Qualifying subtotal: <strong>{mcrResult.qualifyingSubtotal}</strong></p><p className="text-sm">Flowers: <strong>{mcrResult.flowers}</strong></p><p className="mt-2 text-3xl">{mcrResult.basicPoints} Basic Points</p><h3 className="mt-4 font-semibold">Counted fan</h3><ul className="text-sm">{mcrResult.counted.map((fan) => <li key={`${fan.name}-${fan.sourceLocator}`}>{fan.name} · {fan.value} <small>{fan.sourceLocator}</small></li>)}</ul>{mcrResult.suppressed.length > 0 && <><h3 className="mt-4 font-semibold">Suppressed fan</h3><ul className="text-sm">{mcrResult.suppressed.map((fan) => <li key={`${fan.name}-${fan.reasonId}`}>{fan.name} · {fan.value} — {fan.reason} <small>{fan.sourceLocator} · {fan.reasonId}</small></li>)}</ul></>}</>}</section>
+                <section data-testid="mcr-score-result" className="rounded-xl border border-[#b8cdbf] bg-[#edf3ed] p-5"><h2 className="font-serif text-2xl text-[#284d45]">MCR result</h2>{!mcrWinSource || !mcrResolvedWinEvent ? <p className="mt-3 text-sm">Choose a win source and resolved win event before scoring.</p> : !winningTileProvenance ? <p className="mt-3 text-sm">Identify the winning tile in the shared hand workspace.</p> : !mcrResult ? <p className="mt-3 text-sm">This selected profile is not available for standalone scoring.</p> : mcrResult.kind === 'needs-evidence' ? <><p className="mt-3 font-semibold">More evidence is needed.</p><ul className="list-disc pl-5 text-sm">{mcrResult.prompts.map(({ id, prompt }) => <li key={id} data-evidence-id={id}>{prompt}</li>)}</ul></> : mcrResult.kind === 'not-qualifying' ? <p className="mt-3 text-sm">The hand is below the 8-point minimum before Flowers. Flowers cannot rescue a hand below the minimum.</p> : mcrResult.kind === 'invalid' ? <p className="mt-3 text-sm">Invalid / not scoreable ({mcrResult.reasonId}).</p> : <><p className="mt-3 text-sm">Qualifying subtotal: <strong>{mcrResult.qualifyingSubtotal}</strong></p><p className="text-sm">Flowers: <strong>{mcrResult.flowers}</strong></p><p className="mt-2 text-3xl">{mcrResult.basicPoints} Basic Points</p><h3 className="mt-4 font-semibold">Counted fan</h3><ul className="text-sm">{mcrResult.counted.map((fan) => <li key={`${fan.name}-${fan.sourceLocator}`}>{fan.name} · {fan.value} <small>{fan.sourceLocator}</small></li>)}</ul>{mcrResult.suppressed.length > 0 && <><h3 className="mt-4 font-semibold">Suppressed fan</h3><ul className="text-sm">{mcrResult.suppressed.map((fan) => <li key={`${fan.name}-${fan.reasonId}`}>{fan.name} · {fan.value} — {fan.reason} <small>{fan.sourceLocator} · {fan.reasonId}</small></li>)}</ul></>}{mcrCanApply && <button type="button" data-testid="button-apply-mcr-score" onClick={applyMcrScore} className="mt-5 w-full rounded-md bg-[#284d45] px-4 py-3 text-sm font-bold text-[#f8f4e9]">Apply {mcrResult.basicPoints} Basic Points to {context!.playerName}</button>}</>}</section>
               </>}
             </aside>
           </div>

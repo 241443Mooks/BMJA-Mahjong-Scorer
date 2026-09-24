@@ -1,9 +1,13 @@
 import { BMJA_PROFILE_REF } from './ruleset';
 import { getCurrentCompiledRulesRuntime } from '../rules-platform/current-runtime-registry';
+import type { McrScoringInput } from '../rules-platform/mcr-scoring-input';
+import type { HandScoreResult } from '../rules-platform/types';
+import type { MahjongHand } from '../scoring';
 import type {
   GameState,
   HandScorerLocalContext,
   HandOutcome,
+  McrHandOutcome,
   HandScorerContext,
   HandScorerResult,
   PlayerScoreRecord,
@@ -12,16 +16,40 @@ import type {
   RoundScoringDraft,
 } from './types';
 
+export const buildMcrHandScorerResult = (
+  context: HandScorerContext,
+  hand: MahjongHand,
+  input: McrScoringInput,
+  result: Extract<HandScoreResult, { grammar: 'pattern-accumulator' }>,
+): HandScorerResult => {
+  if (!context.mcr?.lockedTableContext || !context.isWinner || context.handMode !== 'normal') throw new Error('A game-owned MCR winner context is required.');
+  const compiled = getCurrentCompiledRulesRuntime(context.rulesProfile);
+  if (compiled.grammar !== 'pattern-accumulator' || compiled.artifact.profile.identity.id !== context.rulesProfile.id || compiled.artifact.profile.identity.version !== context.rulesProfile.version || !compiled.artifact.profile.identity.id.startsWith('mcr-')) throw new Error('The compiled MCR profile does not match the scorer context.');
+  if (result.grammar !== 'pattern-accumulator' || result.profile.id !== compiled.artifact.profile.identity.id || result.profile.version !== compiled.artifact.profile.identity.version || result.rulesFingerprint !== compiled.artifact.rulesFingerprint || !result.legal || result.disposition.kind !== 'scored' || result.result.unit !== 'points' || !Number.isFinite(result.result.total) || !Number.isInteger(result.result.total)) throw new Error('Only an exact legal scored MCR points result can be accepted.');
+  if (input.context.winSource !== context.mcr.winSource || input.context.seatWind !== context.playerWind || input.context.prevailingWind !== context.prevailingWind) throw new Error('Canonical MCR input conflicts with the locked table context.');
+  const acceptedScore = { source: 'mcr-detailed-scorer' as const, playerId: context.playerId, rulesProfile: { id: compiled.artifact.profile.identity.id, version: compiled.artifact.profile.identity.version }, rulesFingerprint: compiled.artifact.rulesFingerprint, hand, input, result, finalScore: result.result.total };
+  return { grammar: 'pattern-accumulator', playerId: context.playerId, score: result.result.total, isWinner: true, acceptedScore };
+};
+
 export const createHandScorerContext = (
   game: GameState,
   playerId: PlayerId,
-  outcome: HandOutcome | null,
+  outcome: HandOutcome | McrHandOutcome | null,
   scoreRecord?: PlayerScoreRecord,
 ): HandScorerContext => {
   const player = game.players.find((candidate) => candidate.id === playerId);
   if (!player || !game.seats[playerId]) {
     throw new Error('The selected player must belong to the current game.');
   }
+  const compiled = getCurrentCompiledRulesRuntime(game.setup.rulesProfile);
+  if (compiled.grammar === 'pattern-accumulator') {
+    if (outcome?.type !== 'mcr-win' || outcome.winnerId !== playerId || !['discard', 'self-draw'].includes(outcome.winSource)) throw new Error('A game-owned MCR scorer requires the selected MCR winner and locked win source.');
+    const record = scoreRecord?.source === 'mcr-detailed-scorer' ? scoreRecord : undefined;
+    if (scoreRecord && !record) throw new Error('Only an accepted MCR detailed score can be reopened.');
+    if (record && (record.playerId !== playerId || record.rulesProfile.id !== compiled.artifact.profile.identity.id || record.rulesProfile.version !== compiled.artifact.profile.identity.version || record.rulesFingerprint !== compiled.artifact.rulesFingerprint || record.input.context.winSource !== outcome.winSource || record.input.context.seatWind !== game.seats[playerId] || record.input.context.prevailingWind !== game.prevailingWind || record.result.grammar !== 'pattern-accumulator' || record.result.profile.id !== compiled.artifact.profile.identity.id || record.result.profile.version !== compiled.artifact.profile.identity.version || record.result.rulesFingerprint !== compiled.artifact.rulesFingerprint || !record.result.legal || record.result.disposition.kind !== 'scored' || record.result.result.unit !== 'points' || record.result.result.total !== record.finalScore || !Number.isFinite(record.finalScore) || !Number.isInteger(record.finalScore))) throw new Error('The accepted MCR score conflicts with the current game context.');
+    return { rulesProfile: game.setup.rulesProfile, playerId, playerName: player.name, playerWind: game.seats[playerId], prevailingWind: game.prevailingWind, isWinner: true, handMode: 'normal', mcr: { winSource: outcome.winSource, lockedTableContext: true, ...(record ? { acceptedScore: record } : {}) } };
+  }
+  if (outcome?.type === 'mcr-win' || outcome?.type === 'mcr-draw') throw new Error('An MCR outcome cannot be routed to a Classical hand scorer.');
   if (game.setup.tableLimit === undefined) throw new Error('A Classical hand scorer requires a table limit.');
 
   return {
@@ -83,6 +111,8 @@ export const applyHandScorerResult = (
   if (!game.players.some((player) => player.id === result.playerId)) {
     throw new Error('A returned hand score must belong to the current game.');
   }
+  if (result.grammar === 'pattern-accumulator') throw new Error('The Classical game draft cannot accept a pattern-accumulator hand score yet.');
+  if (result.grammar !== 'classical-points-doubles') throw new Error('A Classical hand score must carry its grammar tag.');
   if (!Number.isFinite(result.score) || result.score < 0) {
     throw new Error('A returned hand score must be a non-negative number.');
   }

@@ -208,8 +208,9 @@ export type HandScorerContext = {
   playerWind: Wind;
   prevailingWind: Wind;
   isWinner: boolean;
-  limit: number;
+  limit?: number;
   handMode: HandMode;
+  mcr?: { winSource: 'discard' | 'self-draw'; lockedTableContext: true; acceptedScore?: McrAcceptedScoreRecord };
   eastThirteenthConsecutiveMahjong?: boolean;
   detailedHand?: DetailedHandRecord;
   requiresRecalculation?: boolean;
@@ -220,12 +221,21 @@ export type HandScorerExampleContext = Omit<
   'rulesProfile'
 >;
 
-export type HandScorerResult = {
+export type ClassicalHandScorerResult = {
+  grammar: 'classical-points-doubles';
   playerId: string;
   score: number;
   isWinner: boolean;
   detailedHand: DetailedHandRecord;
 };
+export type McrHandScorerResult = {
+  grammar: 'pattern-accumulator';
+  playerId: string;
+  score: number;
+  isWinner: true;
+  acceptedScore: McrAcceptedScoreRecord;
+};
+export type HandScorerResult = ClassicalHandScorerResult | McrHandScorerResult;
 
 export type RoundScoreDraft = Partial<PlayerAmounts>;
 
