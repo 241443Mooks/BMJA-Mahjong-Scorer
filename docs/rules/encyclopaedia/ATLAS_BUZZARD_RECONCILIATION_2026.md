@@ -49,8 +49,8 @@ Evidence binding:
 ```json
 {
   "kind": "repo-evidence",
-  "path": "docs/rules/BUZZARD_2000_RULE_EVIDENCE.md",
-  "locator": "§D Limit hands / retained PDF p.11 — Thirteen Odd Majors",
+  "path": "docs/rules/encyclopaedia/ATLAS_BUZZARD_RECONCILIATION_2026.md",
+  "locator": "§1 Thirteen Odd Majors — source/runtime finding; retained PDF p.11",
   "supports": ["exact-tile-qualification", "local-name", "configured-limit-membership", "concept-membership"],
   "status": "source-verified"
 }
@@ -95,8 +95,8 @@ Buzzard evidence binding:
 ```json
 {
   "kind": "repo-evidence",
-  "path": "docs/rules/BUZZARD_2000_RULE_EVIDENCE.md",
-  "locator": "§D Limit hands / retained PDF p.11 — Original Hand",
+  "path": "docs/rules/encyclopaedia/ATLAS_BUZZARD_RECONCILIATION_2026.md",
+  "locator": "§2 Original Hand — source/runtime finding; retained PDF p.11",
   "supports": ["east-seat", "original-deal-event", "already-complete-hand", "local-names", "configured-limit-membership"],
   "status": "source-verified"
 }
