@@ -152,6 +152,44 @@ describe('Special Hands Atlas directory projection', () => {
     }
   });
 
+  it('groups Knitting and Triple Knitting with the exact profile treatments and resolves only their four open items', () => {
+    const knittingRefs = [
+      'bmja@1.0:knitting',
+      'western-tm@0.1:two-suit-knitting',
+      'outside-the-box@0.1:knitting',
+    ];
+    const tripleKnittingRefs = [
+      'bmja@1.0:triple-knitting',
+      'western-tm@0.1:three-suit-knitting-with-pair',
+      'outside-the-box@0.1:triple-knitting',
+    ];
+    for (const [entryId, referenceIds] of [
+      ['knitting-reviewed', knittingRefs],
+      ['triple-knitting-reviewed', tripleKnittingRefs],
+    ] as const) {
+      const entry = ATLAS_LEARNER_ENTRIES.find(({ id }) => id === entryId)!;
+      expect(entry.state).toBe('reviewed-concept');
+      expect([...entry.treatmentReferenceIds].sort()).toEqual([...referenceIds].sort());
+      expect([...(entry.variants?.[0].treatmentReferenceIds ?? [])].sort()).toEqual([...referenceIds].sort());
+      expect(atlasTreatmentsForEntry(entry).map(({ referenceId }) => referenceId).sort()).toEqual([...referenceIds].sort());
+    }
+    const resolvedRefs = [
+      'bmja@1.0:knitting',
+      'outside-the-box@0.1:knitting',
+      'bmja@1.0:triple-knitting',
+      'outside-the-box@0.1:triple-knitting',
+    ];
+    expect(ATLAS_UNRESOLVED_TREATMENTS.size).toBe(5);
+    expect(resolvedRefs.filter((referenceId) => ATLAS_UNRESOLVED_TREATMENTS.has(referenceId))).toEqual([]);
+    expect([...ATLAS_UNRESOLVED_TREATMENTS].sort()).toEqual([
+      'buzzard-2000@0.1:heavens-blessing',
+      'buzzard-2000@0.1:thirteen-unique-wonders',
+      'buzzard-2000@0.1:three-great-scholars',
+      'buzzard-2000@0.1:three-winds-and-fourth-wind-pair',
+      'outside-the-box@0.1:three-great-scholars',
+    ]);
+  });
+
   it('resolves reviewed concept aliases, profile-local names and exact treatment IDs', () => {
     expect(searchAtlasLearnerEntries(ATLAS_LEARNER_ENTRIES, 'Unique Wonder').map(({ id }) => id)).toContain('thirteen-unique-wonders');
     expect(searchAtlasLearnerEntries(ATLAS_LEARNER_ENTRIES, '13 Unique Wonders').map(({ id }) => id)).toContain('thirteen-unique-wonders');

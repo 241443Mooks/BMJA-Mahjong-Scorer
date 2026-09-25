@@ -87,43 +87,19 @@
       ]
     },
     {
-      "entryId": "knitting-bmja-unresolved",
+      "entryId": "knitting-reviewed",
       "evidenceBindings": [
-        { "kind": "reviewed-audit", "path": "docs/rules/encyclopaedia/CLASSICAL_ATLAS_CONCEPT_AUDIT_V1.md", "locator": "§3 Knitting / Triple Knitting", "supports": ["source-runtime-suit-count-discrepancy", "do-not-group-yet"], "status": "reviewed-unresolved" }
+        { "kind": "reviewed-audit", "path": "docs/rules/encyclopaedia/CLASSICAL_ATLAS_CONCEPT_AUDIT_V1.md", "locator": "§3 Knitting / Triple Knitting", "supports": ["two-suit-seven-cross-pair-runtime-equivalence", "exact-profile-treatment-ownership"], "status": "reviewed" },
+        { "kind": "repo-evidence", "path": "docs/rules/TM_COMPANION_CATALOGUE_INDEX.md", "locator": "Knitting / p.20 / synopsis pp.57-59", "supports": ["exactly-two-suits", "seven-cross-suit-pairs"], "status": "source-certified" },
+        { "kind": "repo-evidence", "path": "docs/rules/OUTSIDE_THE_BOX_PROFILE_CROSSWALK.md", "locator": "§2 Knitting", "supports": ["Club-two-suit-source-wording", "shared-canonical-qualification"], "status": "verified-club" }
       ]
     },
     {
-      "entryId": "knitting-western",
+      "entryId": "triple-knitting-reviewed",
       "evidenceBindings": [
-        { "kind": "reviewed-audit", "path": "docs/rules/encyclopaedia/CLASSICAL_ATLAS_CONCEPT_AUDIT_V1.md", "locator": "§3 Knitting / Triple Knitting", "supports": ["western-separate-predicate-rationale"], "status": "reviewed" },
-        { "kind": "repo-evidence", "path": "docs/rules/TM_COMPANION_CATALOGUE_INDEX.md", "locator": "Knitting / p.20 / synopsis pp.57-59", "supports": ["exactly-two-suits", "seven-cross-suit-pairs"], "status": "source-certified" }
-      ]
-    },
-    {
-      "entryId": "knitting-otb-unresolved",
-      "evidenceBindings": [
-        { "kind": "reviewed-audit", "path": "docs/rules/encyclopaedia/CLASSICAL_ATLAS_CONCEPT_AUDIT_V1.md", "locator": "§3 Knitting / Triple Knitting", "supports": ["source-runtime-suit-count-discrepancy", "do-not-group-yet"], "status": "reviewed-unresolved" },
-        { "kind": "repo-evidence", "path": "docs/rules/OUTSIDE_THE_BOX_PROFILE_CROSSWALK.md", "locator": "§2 Knitting", "supports": ["two-suit-source-wording", "bmja-detector-reuse-caveat"], "status": "verified-club-with-runtime-caveat" }
-      ]
-    },
-    {
-      "entryId": "triple-knitting-bmja-unresolved",
-      "evidenceBindings": [
-        { "kind": "reviewed-audit", "path": "docs/rules/encyclopaedia/CLASSICAL_ATLAS_CONCEPT_AUDIT_V1.md", "locator": "§3 Knitting / Triple Knitting", "supports": ["completeness-guard-difference", "do-not-group-yet"], "status": "reviewed-unresolved" }
-      ]
-    },
-    {
-      "entryId": "triple-knitting-western",
-      "evidenceBindings": [
-        { "kind": "reviewed-audit", "path": "docs/rules/encyclopaedia/CLASSICAL_ATLAS_CONCEPT_AUDIT_V1.md", "locator": "§3 Knitting / Triple Knitting", "supports": ["western-separate-predicate-rationale"], "status": "reviewed" },
-        { "kind": "repo-evidence", "path": "docs/rules/TM_COMPANION_CATALOGUE_INDEX.md", "locator": "Triple Knitting / p.20 / synopsis p.57", "supports": ["four-three-suit-rank-groups", "cross-suit-pair", "strict-complete-layout"], "status": "source-certified" }
-      ]
-    },
-    {
-      "entryId": "triple-knitting-otb-unresolved",
-      "evidenceBindings": [
-        { "kind": "reviewed-audit", "path": "docs/rules/encyclopaedia/CLASSICAL_ATLAS_CONCEPT_AUDIT_V1.md", "locator": "§3 Knitting / Triple Knitting", "supports": ["completeness-guard-difference", "do-not-group-yet"], "status": "reviewed-unresolved" },
-        { "kind": "repo-evidence", "path": "docs/rules/OUTSIDE_THE_BOX_PROFILE_CROSSWALK.md", "locator": "§2 Triple Knitting", "supports": ["outside-the-box-guide-shape", "bmja-predicate-reuse"], "status": "verified-club-with-runtime-caveat" }
+        { "kind": "reviewed-audit", "path": "docs/rules/encyclopaedia/CLASSICAL_ATLAS_CONCEPT_AUDIT_V1.md", "locator": "§3 Knitting / Triple Knitting", "supports": ["strict-complete-layout-runtime-equivalence", "exact-profile-treatment-ownership"], "status": "reviewed" },
+        { "kind": "repo-evidence", "path": "docs/rules/TM_COMPANION_CATALOGUE_INDEX.md", "locator": "Triple Knitting / p.20 / synopsis p.57", "supports": ["four-three-suit-rank-groups", "cross-suit-pair", "strict-complete-layout"], "status": "source-certified" },
+        { "kind": "repo-evidence", "path": "docs/rules/OUTSIDE_THE_BOX_PROFILE_CROSSWALK.md", "locator": "§2 Triple Knitting", "supports": ["Club-guide-shape", "shared-canonical-qualification"], "status": "verified-club" }
       ]
     },
     {

@@ -46,6 +46,43 @@ describe('outside-the-box@0.1 special-hand profile', () => {
     for (const patternId of ['green-dragon-pung-with-bamboo-melds', 'red-dragon-pung-with-character-melds', 'white-dragon-pung-with-circle-melds']) expect(outsideTheBoxSpecialHandBindings.find((binding) => binding.patternId === patternId)).toMatchObject({ exposure: { allowed: true, exposedValue: 500, exposedFishingValue: 200 } });
   });
 
+  it('uses the corrected canonical Knitting and Triple Knitting predicates with Club-local bindings', () => {
+    const knitting: MahjongHand = {
+      sets: [],
+      looseTiles: [1, 2, 3, 4, 5, 6, 7].flatMap((rank) => [
+        suited('bamboo', rank as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9),
+        suited('characters', rank as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9),
+      ]),
+      bonusTiles: [],
+      isWinner: true,
+    };
+    const threeSuitKnitting: MahjongHand = {
+      ...knitting,
+      looseTiles: [1, 2, 3, 4, 5, 6, 7].flatMap((rank) => [
+        suited('bamboo', rank as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9),
+        suited('characters', rank as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9),
+      ]).map((tile, index) => index === 13 ? suited('circles', 7) : tile),
+    };
+    const tripleKnitting: MahjongHand = {
+      ...knitting,
+      looseTiles: [1, 3, 5, 7].flatMap((rank) => [
+        suited('bamboo', rank as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9),
+        suited('characters', rank as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9),
+        suited('circles', rank as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9),
+      ]).concat([suited('bamboo', 9), suited('characters', 9)]),
+    };
+    expect(score(OUTSIDE_THE_BOX_RULESET, knitting).specialHands).toContainEqual(expect.objectContaining({ id: 'knitting', matched: true, value: 500 }));
+    expect(score(OUTSIDE_THE_BOX_RULESET, threeSuitKnitting).specialHands).toContainEqual(expect.objectContaining({ id: 'knitting', matched: false }));
+    expect(score(OUTSIDE_THE_BOX_RULESET, tripleKnitting).specialHands).toContainEqual(expect.objectContaining({ id: 'triple-knitting', matched: true, value: 500 }));
+    for (const patternId of ['knitting', 'triple-knitting']) {
+      expect(outsideTheBoxSpecialHandBindings.find(({ patternId: id }) => id === patternId)).toMatchObject({
+        value: 500,
+        fishingValue: 200,
+        exposure: { allowed: false },
+      });
+    }
+  });
+
   it('uses any Bamboo ranks for Ruby Jade without changing the Western canonical pattern', () => {
     const pattern = canonicalSpecialHandPatterns.find(({ id }) => id === 'all-pair-ruby-jade')!;
     expect(pattern.detect(rubyJade)).toBe(true);

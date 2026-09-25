@@ -131,17 +131,16 @@ relationship. Facets: `tile-defined`, `one-suit`, `honours`, `winds`,
 
 | Exact treatments | Predicate comparison | Evidence and outcome |
 |---|---|---|
-| `bmja@1.0:knitting`; `outside-the-box@0.1:knitting`; `western-tm@0.1:two-suit-knitting` | BMJA canonical `knitting` requires 14 winning tiles, no represented sets, suited-rank counts pairable across suits and physical copy limits, but does not require exactly two suits overall. Both BMJA's approved source (“Knitting”) and T&M p.20/synopsis pp.57/59 specify same-number pairs in any two suits; the T&M detector also explicitly requires exactly two suits and seven cross-suit pairs. OTB §2 likewise specifies two suits while reusing BMJA's broader detector. | BMJA and OTB binding memberships in the shared runtime detector are real, but their **effective source/runtime concept qualification is unresolved**: the predicate can accept distributions over three suits that both sources' wording excludes. T&M's predicate matches its own source record. Do not assert a narrower-than relation between profile concepts until the BMJA/OTB mismatch is reviewed. |
-| `bmja@1.0:triple-knitting`; `outside-the-box@0.1:triple-knitting`; `western-tm@0.1:three-suit-knitting-with-pair` | All encode four same-rank three-suit units plus a same-rank pair across two suits. T&M requires a strict complete loose layout; the older BMJA predicate lacks that explicit completeness guard. | `TM_COMPANION_CATALOGUE_INDEX.md` “Triple Knitting” (p.20, synopsis p.57) documents four three-suit sets plus a Knitting pair, and explicitly records why its exact detector is separate from BMJA. `OUTSIDE_THE_BOX_PROFILE_CROSSWALK.md` §2 reports OTB reuse of the BMJA predicate. Relationship: **unresolved** whether BMJA/OTB and T&M are one reviewed concept with equivalent effective qualification; exact completeness difference remains in runtime/source comparison. |
+| `bmja@1.0:knitting`; `outside-the-box@0.1:knitting`; `western-tm@0.1:two-suit-knitting` | The corrected shared qualification requires a winning hand, no represented sets, exactly 14 loose playing tiles, no remaining slots, physical copy limits, suited tiles only, exactly two numbered suits, and seven same-rank cross-suit pairs. | BMJA approved source (“Knitting”), T&M p.20/synopsis pp.57/59, and OTB §2 support the same structure. The former three-suit BMJA fixture is rejected; standard two-suit and duplicate-pair fixtures pass. **Reviewed shared concept.** Exact profile names, values, and exposure remain treatment-local. |
+| `bmja@1.0:triple-knitting`; `outside-the-box@0.1:triple-knitting`; `western-tm@0.1:three-suit-knitting-with-pair` | All require a complete 14-tile loose layout with no normal sets or remaining slots, then four same-rank three-suit groups plus a same-rank pair across two suits. | BMJA and OTB retain the existing structural partition and now use the same strict layout guard as T&M. Positive, duplicate-triplet, malformed-group, and 14-total loose/remaining boundary fixtures prove the qualification. **Reviewed shared concept.** Exact profile names, values, and exposure remain treatment-local. |
 
-Knitting facets for the source-described candidate shape: `tile-defined`,
-`multiple-suits`, `pair-structure`, `knitted-interleave`, `irregular-layout`.
-The BMJA/OTB Knitting source/runtime conflict prevents attaching these as a
-reviewed shared concept's facets until that conflict is resolved. Triple
-Knitting adds explicit three-suit rank units; its BMJA/T&M exact completeness
-boundary remains unresolved as above. No exposure or score facets are
-asserted. Concealed/loose requirements remain treatment-local unless and until
-the runtime/source comparison proves invariance.
+Knitting facets: `tile-defined`, `multiple-suits`, `pair-structure`,
+`knitted-interleave`, `irregular-layout`. Triple Knitting adds explicit
+three-suit rank units and a cross-suit pair. The learner generator represents
+each reviewed concept with exact treatment references and a shared structural
+variant; profile score and exposure are still projected from each treatment.
+The Club public label is **Club - Bramhall 2026**; `outside-the-box@0.1`
+remains the internal profile identity.
 
 ### 4. Three Great Scholars / Three Dragons
 
@@ -283,11 +282,10 @@ the facet layer.
 
 * Do not attach Buzzard Thirteen Odd Majors to the Thirteen Unique Wonders
   group yet: the source ledger names it but lacks an exact tile predicate.
-* Do not treat Knitting's same name as exact cross-profile identity. Its
-  current detectors differ in suit-count/completeness constraints; compare the
-  exact predicates, not the English label.
-* Do not treat all Triple Knitting runtime predicates as equivalent until the
-  explicit completeness guard difference is resolved against source authority.
+* Knitting and Triple Knitting now have reviewed shared concepts across BMJA,
+  Western, and Club - Bramhall 2026 after the canonical boundary predicates
+  were corrected and covered by focused fixtures. Their exact treatments
+  remain profile-local.
 * Do not call OTB Three Great Scholars equivalent to the other three profiles
   until the source's remaining-shape restriction and the runtime are reconciled.
 * Do not call Buzzard Three Dragons equivalent to Three Great Scholars: its
