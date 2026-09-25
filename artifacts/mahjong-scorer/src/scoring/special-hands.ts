@@ -1565,10 +1565,12 @@ export const canonicalSpecialHandPatterns: CanonicalSpecialHandPattern[] = [
     return (tally.get(1) ?? 0) >= 3 && (tally.get(9) ?? 0) >= 3 && [2,3,4,5,6,7,8].every((rank) => (tally.get(rank) ?? 0) >= 1) && [...tally.values()].reduce((sum, count) => sum + count, 0) === 14;
   } },
   { id: 'three-winds-and-fourth-wind-pair', detect: (hand) => {
-    const winds = hand.sets.filter((set) => (set.kind === 'pung' || set.kind === 'kong') && set.tile.family === 'wind');
-    const pair = hand.sets.find((set) => set.kind === 'pair' && set.tile.family === 'wind');
+    const shape = groupedShape(hand, 4, 1, ['chow', 'pung', 'kong']);
+    if (shape === undefined) return false;
+    const winds = shape.melds.filter((set) => (set.kind === 'pung' || set.kind === 'kong') && set.tile.family === 'wind');
+    const pair = shape.pairs[0];
     const pairWind = pair?.tile.family === 'wind' ? pair.tile.wind : undefined;
-    return hand.isWinner && winds.length === 3 && new Set(winds.map((set) => set.tile.family === 'wind' ? set.tile.wind : '')).size === 3 && pairWind !== undefined && !winds.some((set) => set.tile.family === 'wind' && set.tile.wind === pairWind);
+    return winds.length === 3 && new Set(winds.map((set) => set.tile.family === 'wind' ? set.tile.wind : '')).size === 3 && pairWind !== undefined && !winds.some((set) => set.tile.family === 'wind' && set.tile.wind === pairWind);
   } },
   { id: 'four-concealed-pung-kong-hand', detect: (hand) => hand.isWinner && hand.sets.length === 5 && hand.sets.filter((set) => set.kind === 'pung' || set.kind === 'kong').length === 4 && hand.sets.every((set) => set.visibility === 'concealed') },
   { id: 'east-thirteenth-consecutive-mahjong', eventBased: true, detect: (hand, context) => hand.isWinner && context?.playerWind === 'east' && context.eastThirteenthConsecutiveMahjong === true },
