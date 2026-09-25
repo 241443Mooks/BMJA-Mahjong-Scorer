@@ -1,0 +1,403 @@
+{
+  "schemaVersion": "0.1-proof-batch4b",
+  "status": "docs-scoped source-certified Western learner content; completes the remaining Western-only treatment identities",
+  "base": "efe2cec955f973a28a5e982160f3b6e39593606a",
+  "sourceAuthority": { "path": "docs/rules/TM_COMPANION_CATALOGUE_INDEX.md", "status": "catalogue-complete-source-certified-for-implemented-companion-facts" },
+  "scoreAuthority": "derive from exact western-tm@0.1 treatment referenceId",
+  "examples": [
+    {
+      "id": "example-blue-mountains",
+      "kind": "tile-hand",
+      "source": { "type": "structured-proof", "groups": [{ "kind": "pung", "tile": "green-dragon" }, { "kind": "pung", "tile": "2-circles" }, { "kind": "pung", "tile": "4-circles" }, { "kind": "pung", "tile": "8-circles" }, { "kind": "pair", "tile": "9-circles" }] },
+      "scope": "one-valid-example",
+      "visibleExplanation": "A Green Dragon Pung with three blue-rank Circle Pungs/Kongs and a blue-rank Circle pair.",
+      "accessibleDescription": "Example Blue Mountains hand: a Pung of Green Dragons, Pungs of 2, 4 and 8 Circles, and a pair of 9 Circles. The executable blue Circle set is 2, 3, 4, 5, 8 and 9."
+    },
+    {
+      "id": "example-white-elephant",
+      "kind": "tile-hand",
+      "source": { "type": "structured-proof", "groups": [{ "kind": "pung", "tile": "white-dragon" }, { "kind": "pung", "tile": "2-circles" }, { "kind": "pung", "tile": "4-circles" }, { "kind": "pung", "tile": "6-circles" }, { "kind": "pair", "tile": "8-circles" }] },
+      "scope": "one-valid-example",
+      "visibleExplanation": "White Dragon Pung/Kong with even Circle Pungs/Kongs and pair.",
+      "accessibleDescription": "Example White Elephant hand: a Pung of White Dragons, Pungs of 2, 4 and 6 Circles, and a pair of 8 Circles."
+    },
+    {
+      "id": "example-driven-snow",
+      "kind": "tile-hand",
+      "source": { "type": "structured-proof", "groups": [{ "kind": "pung", "tile": "white-dragon" }, { "kind": "pung", "tile": "1-characters" }, { "kind": "pung", "tile": "3-characters" }, { "kind": "pung", "tile": "5-characters" }, { "kind": "pair", "tile": "7-characters" }] },
+      "scope": "one-valid-example",
+      "visibleExplanation": "White Dragon Pung with odd-rank Character Pungs/Kongs and pair.",
+      "accessibleDescription": "Example Driven Snow hand: a Pung of White Dragons, Pungs of 1, 3 and 5 Characters, and a pair of 7 Characters."
+    },
+    {
+      "id": "example-dragons-scales",
+      "kind": "tile-hand",
+      "source": { "type": "structured-proof", "groups": [{ "kind": "pung", "tile": "red-dragon" }, { "kind": "pung", "tile": "2-characters" }, { "kind": "pung", "tile": "4-characters" }, { "kind": "pung", "tile": "6-characters" }, { "kind": "pair", "tile": "8-characters" }] },
+      "scope": "one-valid-example",
+      "visibleExplanation": "Red Dragon Pung with even-rank Character Pungs/Kongs and pair.",
+      "accessibleDescription": "Example Dragon's Scales hand: a Pung of Red Dragons, Pungs of 2, 4 and 6 Characters, and a pair of 8 Characters."
+    },
+    {
+      "id": "example-lily-valley",
+      "kind": "tile-hand",
+      "source": { "type": "structured-proof", "groups": [{ "kind": "pung", "tile": "green-dragon" }, { "kind": "pung", "tile": "white-dragon" }, { "kind": "pung", "tile": "2-bamboo" }, { "kind": "pung", "tile": "4-bamboo" }, { "kind": "pair", "tile": "6-bamboo" }] },
+      "scope": "one-valid-example",
+      "visibleExplanation": "Green and White Dragon Pungs/Kongs with green Bamboo Pungs/Kongs and a green Bamboo pair.",
+      "accessibleDescription": "Example Lily of the Valley hand: Pungs of Green and White Dragons, Pungs of 2 and 4 Bamboo, and a pair of 6 Bamboo."
+    },
+    {
+      "id": "example-red-waratah",
+      "kind": "tile-hand",
+      "source": { "type": "structured-proof", "groups": [{ "kind": "pung", "tile": "red-dragon" }, { "kind": "pung", "tile": "1-bamboo" }, { "kind": "pung", "tile": "4-circles" }, { "kind": "pung", "tile": "6-characters" }, { "kind": "pair", "tile": "green-dragon" }] },
+      "scope": "one-valid-example",
+      "visibleExplanation": "Red Dragon plus Bamboo, Circle and Character Pungs, with a Green Dragon pair; the Bamboo Pung uses a red Bamboo rank.",
+      "accessibleDescription": "Example Red Waratah hand: Pungs of Red Dragons, 1 Bamboo, 4 Circles and 6 Characters, plus a pair of Green Dragons."
+    },
+    {
+      "id": "example-royal-ruby",
+      "kind": "tile-hand",
+      "source": { "type": "structured-proof", "groups": [{ "kind": "pung", "tile": "red-dragon" }, { "kind": "pung", "tile": "1-bamboo" }, { "kind": "pung", "tile": "5-bamboo" }, { "kind": "pung", "tile": "7-bamboo" }, { "kind": "pair", "tile": "9-bamboo" }] },
+      "scope": "one-valid-example",
+      "visibleExplanation": "Red Dragon Pung/Kong with red Bamboo Pungs/Kongs and a red Bamboo pair.",
+      "accessibleDescription": "Example Royal Ruby hand: a Pung of Red Dragons, Pungs of 1, 5 and 7 Bamboo, and a pair of 9 Bamboo."
+    },
+    {
+      "id": "example-red-lily",
+      "kind": "tile-hand",
+      "source": { "type": "structured-proof", "groups": [{ "kind": "pung", "tile": "red-dragon" }, { "kind": "pung", "tile": "white-dragon" }, { "kind": "pung", "tile": "1-bamboo" }, { "kind": "pung", "tile": "5-bamboo" }, { "kind": "pair", "tile": "7-bamboo" }] },
+      "scope": "one-valid-example",
+      "visibleExplanation": "Red and White Dragon Pungs/Kongs with red Bamboo Pungs/Kongs and pair.",
+      "accessibleDescription": "Example Red Lily hand: Pungs of Red and White Dragons, Pungs of 1 and 5 Bamboo, and a pair of 7 Bamboo."
+    },
+    {
+      "id": "example-ruby-jade",
+      "kind": "tile-hand",
+      "source": { "type": "structured-proof", "groups": [{ "kind": "pung", "tile": "red-dragon" }, { "kind": "pung", "tile": "green-dragon" }, { "kind": "pung", "tile": "2-bamboo" }, { "kind": "pung", "tile": "7-bamboo" }, { "kind": "pair", "tile": "5-bamboo" }] },
+      "scope": "one-valid-example",
+      "visibleExplanation": "Red and Green Dragon Pungs/Kongs with Bamboo Pungs/Kongs and pair.",
+      "accessibleDescription": "Example Ruby Jade hand: Pungs of Red and Green Dragons, Pungs of 2 and 7 Bamboo, and a pair of 5 Bamboo."
+    },
+    {
+      "id": "example-lillypilly",
+      "kind": "tile-hand",
+      "source": { "type": "structured-proof", "groups": [{ "kind": "pung", "tile": "green-dragon" }, { "kind": "pung", "tile": "2-circles" }, { "kind": "pung", "tile": "4-circles" }, { "kind": "pung", "tile": "6-circles" }, { "kind": "pair", "tile": "white-dragon" }] },
+      "scope": "one-valid-example",
+      "visibleExplanation": "Green Dragon Pung, White Dragon pair, and three Circle Pungs/Kongs.",
+      "accessibleDescription": "Example Lillypilly hand: a Pung of Green Dragons, a pair of White Dragons, and Pungs of 2, 4 and 6 Circles."
+    },
+    {
+      "id": "example-windvane",
+      "kind": "tile-hand",
+      "source": { "type": "structured-proof", "groups": [{ "kind": "pung", "tile": "2-bamboo" }, { "kind": "pung", "tile": "4-circles" }, { "kind": "pung", "tile": "6-characters" }], "looseTiles": ["east-wind", "east-wind", "south-wind", "west-wind", "north-wind"] },
+      "scope": "one-valid-example",
+      "visibleExplanation": "A Pung/Kong in each suit, plus all four Winds with one Wind paired.",
+      "accessibleDescription": "Example Windvane hand: Pungs of 2 Bamboo, 4 Circles and 6 Characters, plus East, South, West and North Winds with East duplicated as the pair."
+    },
+    {
+      "id": "example-three-sisters",
+      "kind": "tile-hand",
+      "source": { "type": "structured-proof", "groups": [{ "kind": "pung", "tile": "3-bamboo" }, { "kind": "pung", "tile": "3-circles" }, { "kind": "pung", "tile": "3-characters" }], "looseTiles": ["south-wind", "east-wind", "south-wind", "west-wind", "north-wind"] },
+      "scope": "one-valid-example",
+      "visibleExplanation": "Pungs/Kongs of 3s in all three suits, plus all four Winds with one Wind paired.",
+      "accessibleDescription": "Example Three Sisters hand: Pungs of 3 Bamboo, 3 Circles and 3 Characters, plus all four Winds with South Wind duplicated as the pair."
+    },
+    {
+      "id": "example-seven-brothers",
+      "kind": "tile-hand",
+      "source": { "type": "structured-proof", "groups": [{ "kind": "pung", "tile": "7-bamboo" }, { "kind": "pung", "tile": "7-circles" }, { "kind": "pung", "tile": "7-characters" }], "looseTiles": ["west-wind", "east-wind", "south-wind", "west-wind", "north-wind"] },
+      "scope": "one-valid-example",
+      "visibleExplanation": "Pungs/Kongs of 7s in all three suits, plus all four Winds with one Wind paired.",
+      "accessibleDescription": "Example Seven Brothers hand: Pungs of 7 Bamboo, 7 Circles and 7 Characters, plus all four Winds with West Wind duplicated as the pair."
+    },
+    {
+      "id": "example-dragons-teeth",
+      "kind": "tile-hand",
+      "source": { "type": "structured-proof", "groups": [{ "kind": "pung", "tile": "red-dragon" }, { "kind": "pung", "tile": "white-dragon" }], "looseTiles": ["1-characters", "2-characters", "3-characters", "4-characters", "5-characters", "6-characters", "7-characters", "4-characters"] },
+      "scope": "one-valid-example",
+      "visibleExplanation": "Red and White Dragon Pungs plus a seven-tile Character or Circle run with one run rank duplicated.",
+      "accessibleDescription": "Example Dragon's Teeth hand: Pungs of Red and White Dragons, Characters 1 through 7, and a second 4 Characters."
+    },
+    {
+      "id": "example-little-brother",
+      "kind": "tile-hand",
+      "source": { "type": "structured-proof", "context": { "playerWind": "east" }, "groups": [{ "kind": "chow", "tiles": ["1-bamboo", "2-bamboo", "3-bamboo"] }, { "kind": "chow", "tiles": ["3-bamboo", "4-bamboo", "5-bamboo"] }, { "kind": "chow", "tiles": ["4-circles", "5-circles", "6-circles"] }, { "kind": "chow", "tiles": ["7-characters", "8-characters", "9-characters"] }, { "kind": "pair", "tile": "east-wind" }] },
+      "scope": "one-valid-example",
+      "visibleExplanation": "Four Chows spanning all three suits, plus a pair of the player's own Wind.",
+      "accessibleDescription": "Example Little Brother for an East-seat player: two Bamboo Chows, one Circles Chow, one Characters Chow, and a pair of East Winds."
+    },
+    {
+      "id": "example-gerties-garter",
+      "kind": "tile-hand",
+      "source": { "type": "structured-proof", "looseTiles": ["1-bamboo", "2-bamboo", "3-bamboo", "4-bamboo", "5-bamboo", "6-bamboo", "7-bamboo", "1-circles", "2-circles", "3-circles", "4-circles", "5-circles", "6-circles", "7-circles"] },
+      "scope": "fixed-structure-example",
+      "visibleExplanation": "One copy of every rank 1-7 in each of exactly two suits.",
+      "accessibleDescription": "Example Gertie's Garter hand: 1 through 7 Bamboo and 1 through 7 Circles."
+    },
+    {
+      "id": "example-numbers-doubled",
+      "kind": "tile-hand",
+      "source": { "type": "structured-proof", "groups": [{ "kind": "pung", "tile": "3-bamboo" }, { "kind": "pung", "tile": "5-bamboo" }, { "kind": "pung", "tile": "3-circles" }, { "kind": "pung", "tile": "5-circles" }, { "kind": "pair", "tile": "east-wind" }] },
+      "scope": "one-valid-example",
+      "visibleExplanation": "Two non-terminal ranks repeated as Pungs/Kongs in each of two suits, plus an honour pair.",
+      "accessibleDescription": "Example Numbers Doubled hand: Pungs of 3 and 5 Bamboo, Pungs of 3 and 5 Circles, and a pair of East Winds."
+    },
+    {
+      "id": "example-civil-war",
+      "kind": "tile-hand",
+      "source": { "type": "structured-proof", "groups": [{ "kind": "pung", "tile": "north-wind" }, { "kind": "pung", "tile": "south-wind" }], "looseGroups": [["1-bamboo", "8-bamboo", "6-bamboo", "1-bamboo"], ["1-circles", "8-circles", "6-circles", "5-circles"]] },
+      "scope": "one-valid-example",
+      "visibleExplanation": "North and South Pungs/Kongs plus the loose 1861 and 1865 patterns in two different suits.",
+      "accessibleDescription": "Example Civil War hand: Pungs of North and South Winds, loose Bamboo tiles 1, 8, 6, 1, and loose Circles tiles 1, 8, 6, 5."
+    },
+    {
+      "id": "example-red-lantern",
+      "kind": "tile-hand",
+      "source": { "type": "structured-proof", "context": { "playerWind": "east" }, "groups": [{ "kind": "pung", "tile": "red-dragon" }, { "kind": "pung", "tile": "east-wind" }], "looseTiles": ["1-circles", "2-circles", "3-circles", "4-circles", "5-circles", "6-circles", "7-circles", "5-circles"] },
+      "scope": "one-valid-example",
+      "visibleExplanation": "A 1-7 run with one run tile paired, plus Red Dragon and own-Wind Pungs/Kongs.",
+      "accessibleDescription": "Example Red Lantern for an East-seat player: Circles 1 through 7 with a second 5 Circles, a Pung of Red Dragons, and a Pung of East Winds."
+    },
+    {
+      "id": "example-three-philosophers",
+      "kind": "tile-hand",
+      "source": { "type": "structured-proof", "groups": [{ "kind": "chow", "tiles": ["1-bamboo", "2-bamboo", "3-bamboo"] }, { "kind": "chow", "tiles": ["4-circles", "5-circles", "6-circles"] }, { "kind": "chow", "tiles": ["7-characters", "8-characters", "9-characters"] }, { "kind": "pair", "tile": "5-bamboo" }], "looseGroups": [["2-bamboo", "3-characters", "4-circles"]] },
+      "scope": "one-valid-example",
+      "visibleExplanation": "One ordinary Chow in each suit, one Mixed Chow, and a suited pair.",
+      "accessibleDescription": "Example Three Philosophers hand: one ordinary Chow in each suit, a Mixed Chow formed by 2 Bamboo, 3 Characters and 4 Circles, and a pair of 5 Bamboo."
+    },
+    {
+      "id": "example-crazy-chows",
+      "kind": "tile-hand",
+      "source": { "type": "structured-proof", "mixedChows": [["1-bamboo", "2-circles", "3-characters"], ["2-bamboo", "3-circles", "4-characters"], ["4-bamboo", "5-circles", "6-characters"], ["6-bamboo", "7-circles", "8-characters"]], "mixedPair": ["9-bamboo", "9-circles"] },
+      "scope": "one-valid-example",
+      "visibleExplanation": "Four Mixed Chows plus a Mixed Pair.",
+      "accessibleDescription": "Example Crazy Chows hand: four three-suit consecutive Mixed Chows and a Mixed Pair of 9 Bamboo and 9 Circles."
+    },
+    {
+      "id": "example-apple-blossom",
+      "kind": "tile-hand",
+      "source": { "type": "structured-proof", "groups": [{ "kind": "pung", "tile": "white-dragon", "visibility": "concealed" }, { "kind": "pair", "tile": "green-dragon" }], "mixedChows": [["1-bamboo", "2-circles", "3-characters"], ["3-bamboo", "4-circles", "5-characters"], ["6-bamboo", "7-circles", "8-characters"]] },
+      "scope": "one-valid-example",
+      "visibleExplanation": "A concealed White Dragon Pung/Kong, Green Dragon pair and three Mixed Chows.",
+      "accessibleDescription": "Example Apple Blossom hand: a concealed Pung of White Dragons, a pair of Green Dragons, and three Mixed Chows using one tile from each suit in consecutive ranks."
+    },
+    {
+      "id": "example-professors",
+      "kind": "tile-hand",
+      "source": { "type": "structured-proof", "context": { "playerWind": "east" }, "mixedChows": [["1-bamboo", "2-circles", "3-characters"], ["3-bamboo", "4-circles", "5-characters"], ["6-bamboo", "7-circles", "8-characters"]], "looseTiles": ["red-dragon", "green-dragon", "white-dragon", "east-wind", "east-wind"] },
+      "scope": "one-valid-example",
+      "visibleExplanation": "Three Mixed Chows, one of each Dragon, and a pair of your own Wind.",
+      "accessibleDescription": "Example The Professors for an East-seat player: three Mixed Chows, single Red, Green and White Dragons, and a pair of East Winds."
+    },
+    {
+      "id": "example-chow-chow",
+      "kind": "tile-hand",
+      "source": { "type": "structured-proof", "groups": [{ "kind": "chow", "tiles": ["1-bamboo", "2-bamboo", "3-bamboo"], "visibility": "concealed" }, { "kind": "chow", "tiles": ["2-bamboo", "3-bamboo", "4-bamboo"], "visibility": "concealed" }, { "kind": "chow", "tiles": ["5-bamboo", "6-bamboo", "7-bamboo"], "visibility": "concealed" }, { "kind": "chow", "tiles": ["7-bamboo", "8-bamboo", "9-bamboo"], "visibility": "concealed" }, { "kind": "pair", "tile": "5-bamboo", "visibility": "concealed" }], "winningMethod": "wall" },
+      "scope": "one-valid-example",
+      "visibleExplanation": "Four concealed Chows and a pair in one suit, with the winning tile drawn from the wall.",
+      "accessibleDescription": "Example Chow Chow hand: four concealed Bamboo Chows and a Bamboo pair, completed by a wall draw."
+    },
+    {
+      "id": "example-up-you-go",
+      "kind": "tile-hand",
+      "source": { "type": "structured-proof", "looseTiles": ["east-wind", "south-wind", "west-wind", "north-wind", "2-circles", "4-circles", "4-circles", "6-circles", "6-circles", "6-circles", "8-circles", "8-circles", "8-circles", "8-circles"] },
+      "scope": "fixed-layout-example",
+      "visibleExplanation": "All four Winds plus 2, 44, 666 and 8888 in one suit.",
+      "accessibleDescription": "Up You Go hand: East, South, West and North Winds plus one 2 Circles, two 4 Circles, three 6 Circles and four 8 Circles."
+    },
+    {
+      "id": "example-down-you-go",
+      "kind": "tile-hand",
+      "source": { "type": "structured-proof", "looseTiles": ["east-wind", "south-wind", "west-wind", "north-wind", "2-circles", "2-circles", "2-circles", "2-circles", "4-circles", "4-circles", "4-circles", "6-circles", "6-circles", "8-circles"] },
+      "scope": "fixed-layout-example",
+      "visibleExplanation": "All four Winds plus 2222, 444, 66 and 8 in one suit.",
+      "accessibleDescription": "Down You Go hand: East, South, West and North Winds plus four 2 Circles, three 4 Circles, two 6 Circles and one 8 Circles."
+    }
+  ],
+  "entries": [
+    {
+      "id": "dragon-suit-colour-topic-western",
+      "state": "reviewed-family-topic",
+      "displayName": "Dragon and suit-colour hands",
+      "treatmentReferenceIds": [
+        "western-tm@0.1:green-dragon-pung-with-blue-circle-melds",
+        "western-tm@0.1:white-dragon-meld-with-even-circle-melds",
+        "western-tm@0.1:white-dragon-pung-with-odd-character-melds",
+        "western-tm@0.1:red-dragon-pung-with-even-character-melds",
+        "western-tm@0.1:green-and-white-dragon-melds-with-green-bamboo",
+        "western-tm@0.1:red-and-green-dragon-pungs-with-three-suits",
+        "western-tm@0.1:red-dragon-meld-with-red-bamboo-melds",
+        "western-tm@0.1:red-and-white-dragon-melds-with-red-bamboo",
+        "western-tm@0.1:red-and-green-dragon-melds-with-bamboo",
+        "western-tm@0.1:green-dragon-pung-white-dragon-pair-three-circle-melds"
+      ],
+      "facets": ["dragons", "pungs-kongs", "pairs"],
+      "summary": "A browse topic for Western hands that pair particular Dragon colours with specific suits, rank-colour subsets or honour roles.",
+      "whatItIs": "A learner/discovery topic connecting ten distinct T&M hands whose names and structures use Dragon colours together with suit/rank colour patterns.",
+      "whatItMeans": "These are not one equivalent hand. The useful common idea is that a named Dragon requirement is paired with a tightly constrained suited component, making colour/rank vocabulary a key recognition clue.",
+      "whySpecial": "Without a topic-level link, the names are hard to infer from structure and the relationships between red/green/white Dragon and suit-colour patterns are difficult for beginners to browse.",
+      "variants": [
+        { "id": "blue-mountains", "label": "Blue Mountains", "treatmentReferenceIds": ["western-tm@0.1:green-dragon-pung-with-blue-circle-melds"], "exampleIds": ["example-blue-mountains"], "definition": "Green Dragon Pung with three Pungs/Kongs and a pair from the blue Circle ranks 2,3,4,5,8,9." },
+        { "id": "white-elephant", "label": "White Elephant", "treatmentReferenceIds": ["western-tm@0.1:white-dragon-meld-with-even-circle-melds"], "exampleIds": ["example-white-elephant"], "definition": "White Dragon Pung/Kong with even Circle Pungs/Kongs and pair." },
+        { "id": "driven-snow", "label": "Driven Snow", "treatmentReferenceIds": ["western-tm@0.1:white-dragon-pung-with-odd-character-melds"], "exampleIds": ["example-driven-snow"], "definition": "White Dragon Pung with odd Character Pungs/Kongs and pair." },
+        { "id": "dragons-scales", "label": "Dragon's Scales", "treatmentReferenceIds": ["western-tm@0.1:red-dragon-pung-with-even-character-melds"], "exampleIds": ["example-dragons-scales"], "definition": "Red Dragon Pung with even Character Pungs/Kongs and pair." },
+        { "id": "lily-of-the-valley", "label": "Lily of the Valley", "treatmentReferenceIds": ["western-tm@0.1:green-and-white-dragon-melds-with-green-bamboo"], "exampleIds": ["example-lily-valley"], "definition": "Green and White Dragon Pungs/Kongs with green Bamboo Pungs/Kongs and pair." },
+        { "id": "red-waratah", "label": "Red Waratah", "treatmentReferenceIds": ["western-tm@0.1:red-and-green-dragon-pungs-with-three-suits"], "exampleIds": ["example-red-waratah"], "definition": "Red Dragon Pung, one Pung in each suit with the Bamboo rank from the red Bamboo set, and a Green Dragon pair." },
+        { "id": "royal-ruby", "label": "Royal Ruby", "treatmentReferenceIds": ["western-tm@0.1:red-dragon-meld-with-red-bamboo-melds"], "exampleIds": ["example-royal-ruby"], "definition": "Red Dragon Pung/Kong with red Bamboo-rank Pungs/Kongs and pair; red Bamboo ranks are 1,5,7,9." },
+        { "id": "red-lily", "label": "Red Lily", "treatmentReferenceIds": ["western-tm@0.1:red-and-white-dragon-melds-with-red-bamboo"], "exampleIds": ["example-red-lily"], "definition": "Red and White Dragon Pungs/Kongs with red Bamboo Pungs/Kongs and pair." },
+        { "id": "ruby-jade", "label": "Ruby Jade", "treatmentReferenceIds": ["western-tm@0.1:red-and-green-dragon-melds-with-bamboo"], "exampleIds": ["example-ruby-jade"], "definition": "Red and Green Dragon Pungs/Kongs with Bamboo Pungs/Kongs and pair; the source/runtime does not impose a stronger red/green Bamboo distribution." },
+        { "id": "lillypilly", "label": "Lillypilly", "treatmentReferenceIds": ["western-tm@0.1:green-dragon-pung-white-dragon-pair-three-circle-melds"], "exampleIds": ["example-lillypilly"], "definition": "Green Dragon Pung, White Dragon pair, and three Circle Pungs/Kongs." }
+      ],
+      "evidenceBindings": [
+        { "kind": "repo-evidence", "path": "docs/rules/TM_COMPANION_CATALOGUE_INDEX.md", "locator": "Pass 4D — Blue Mountains, White Elephant, Driven Snow, Dragon's Scales, Lily of the Valley, Red Waratah, Royal Ruby, Red Lily, Ruby Jade", "supports": ["nine-treatment-qualifications", "rank-colour-sets", "exposure-markers"], "status": "source-certified" },
+        { "kind": "repo-evidence", "path": "docs/rules/TM_COMPANION_CATALOGUE_INDEX.md", "locator": "Pass 4J — Lillypilly pp.36,60", "supports": ["lillypilly-qualification", "exposure-marker"], "status": "source-certified" }
+      ]
+    },
+    {
+      "id": "wind-pair-three-suit-meld-topic-western",
+      "state": "reviewed-family-topic",
+      "displayName": "Wind-pair three-suit Pung/Kong hands",
+      "treatmentReferenceIds": ["western-tm@0.1:wind-pair-with-one-meld-in-each-suit", "western-tm@0.1:wind-pair-with-three-suit-rank-three-melds", "western-tm@0.1:wind-pair-with-three-suit-rank-seven-melds"],
+      "facets": ["hybrid-layout", "multiple-suits", "winds", "pungs-kongs", "pairs"],
+      "summary": "Three suited Pungs/Kongs plus all four Winds with one Wind paired; the named variants fix or free the suited ranks.",
+      "whatItIs": "A Western family extension related to the already-authored Windy Ones and Windy Nines pattern area.",
+      "whatItMeans": "Windvane allows independent suited meld ranks; Three Sisters fixes all three melds to rank 3; Seven Brothers fixes them to rank 7.",
+      "whySpecial": "The same Wind-pair/singles skeleton supports several named hands through a simple rank constraint on the three suited melds.",
+      "relatedEntryIds": ["windy-ones", "windy-nines"],
+      "variants": [
+        { "id": "windvane", "label": "Windvane", "treatmentReferenceIds": ["western-tm@0.1:wind-pair-with-one-meld-in-each-suit"], "exampleIds": ["example-windvane"], "definition": "One Pung/Kong in each suit plus all four Winds with one Wind paired." },
+        { "id": "three-sisters", "label": "Three Sisters", "treatmentReferenceIds": ["western-tm@0.1:wind-pair-with-three-suit-rank-three-melds"], "exampleIds": ["example-three-sisters"], "definition": "A Pung/Kong of 3s in each suit plus all four Winds with one paired." },
+        { "id": "seven-brothers", "label": "Seven Brothers", "treatmentReferenceIds": ["western-tm@0.1:wind-pair-with-three-suit-rank-seven-melds"], "exampleIds": ["example-seven-brothers"], "definition": "A Pung/Kong of 7s in each suit plus all four Winds with one paired." }
+      ],
+      "evidenceBindings": [{ "kind": "repo-evidence", "path": "docs/rules/TM_COMPANION_CATALOGUE_INDEX.md", "locator": "Pass 4F Wind-family hybrid wave — Windvane p.28; Three Sisters p.29; Seven Brothers p.29", "supports": ["three-treatment-memberships", "shared-hybrid-structure", "rank-variant-differences"], "status": "source-certified" }]
+    },
+    {
+      "id": "dragons-teeth-western",
+      "state": "standalone-verified-treatment",
+      "displayName": "Dragon's Teeth",
+      "treatmentReferenceIds": ["western-tm@0.1:red-white-dragon-pungs-with-seven-tile-character-or-circle-run-pair"],
+      "facets": ["hybrid-layout", "dragons", "one-suit", "pungs-kongs", "pairs"],
+      "summary": "Red and White Dragon Pungs plus a seven-tile Character or Circle run with one run tile duplicated.",
+      "whatItIs": "A hybrid Western hand combining two Dragon Pungs with an eight-tile suited loose section based on 1-7 or 2-8.",
+      "whatItMeans": "The suited section contains every rank in a seven-tile run plus one duplicate to make its pair; the two represented Dragon groups are specifically Red and White Pungs.",
+      "whySpecial": "It joins a compact irregular run-and-pair block to two fixed Dragon Pungs.",
+      "exampleIds": ["example-dragons-teeth"],
+      "evidenceBindings": [{ "kind": "repo-evidence", "path": "docs/rules/TM_COMPANION_CATALOGUE_INDEX.md", "locator": "Pass 4G — Dragon's Teeth pp.12,33 / synopsis pp.56,58", "supports": ["treatment-qualification", "pung-only-dragons", "seven-tile-run-pair"], "status": "source-certified" }]
+    },
+    {
+      "id": "little-brother-western",
+      "state": "standalone-verified-treatment",
+      "displayName": "Little Brother",
+      "treatmentReferenceIds": ["western-tm@0.1:four-chows-three-suits-with-own-wind-pair"],
+      "facets": ["ordinary-grouped", "multiple-suits", "chow-involving", "winds", "pairs"],
+      "summary": "Four Chows spanning all three suits plus a pair of the player's own Wind.",
+      "whatItIs": "A grouped four-Chow Western hand whose pair must match the player's seat Wind.",
+      "whatItMeans": "All three suits must appear among the Chows, and player context determines whether the Wind pair qualifies.",
+      "whySpecial": "The tile shape and the player's seat identity both matter to qualification.",
+      "exampleIds": ["example-little-brother"],
+      "evidenceBindings": [{ "kind": "repo-evidence", "path": "docs/rules/TM_COMPANION_CATALOGUE_INDEX.md", "locator": "Pass 4G / Pass 4J — Little Brother p.17 / synopsis p.56", "supports": ["treatment-qualification", "own-wind-context", "corrected-value-owned-by-binding"], "status": "source-certified" }]
+    },
+    {
+      "id": "gerties-garter-western",
+      "state": "standalone-verified-treatment",
+      "displayName": "Gertie's Garter",
+      "treatmentReferenceIds": ["western-tm@0.1:two-suit-runs-one-to-seven"],
+      "facets": ["irregular-hand", "multiple-suits"],
+      "summary": "One copy of ranks 1 through 7 in each of exactly two suits.",
+      "whatItIs": "A complete loose fourteen-tile Western hand made from parallel 1-7 runs in two suits.",
+      "whatItMeans": "There are no normal melds or pair; each chosen suit contributes the seven single tiles 1 through 7.",
+      "whySpecial": "The hand is two perfectly parallel seven-tile suit runs rather than an ordinary Mahjong decomposition.",
+      "exampleIds": ["example-gerties-garter"],
+      "evidenceBindings": [{ "kind": "repo-evidence", "path": "docs/rules/TM_COMPANION_CATALOGUE_INDEX.md", "locator": "Pass 4J — Gertie's Garter p.14", "supports": ["treatment-qualification", "concealed-treatment"], "status": "source-certified" }]
+    },
+    {
+      "id": "numbers-doubled-western",
+      "state": "standalone-verified-treatment",
+      "displayName": "Numbers Doubled",
+      "treatmentReferenceIds": ["western-tm@0.1:two-ranks-doubled-across-two-suits-with-honour-pair"],
+      "facets": ["ordinary-grouped", "multiple-suits", "parallel-ranks", "honours", "pungs-kongs", "pairs"],
+      "summary": "Two non-terminal ranks repeated as Pungs/Kongs in each of two suits, plus an honour pair.",
+      "whatItIs": "A grouped Western hand forming a two-rank by two-suit rectangle of melds.",
+      "whatItMeans": "Choose two non-terminal ranks and two suits; each rank appears as a Pung/Kong in both suits, giving four melds, then add an honour pair.",
+      "whySpecial": "It creates a deliberate cross-suit numerical symmetry across all four melds.",
+      "exampleIds": ["example-numbers-doubled"],
+      "evidenceBindings": [{ "kind": "repo-evidence", "path": "docs/rules/TM_COMPANION_CATALOGUE_INDEX.md", "locator": "Pass 4J — Numbers Doubled pp.43,59", "supports": ["treatment-qualification", "two-rank-two-suit-rectangle"], "status": "source-certified" }]
+    },
+    {
+      "id": "civil-war-western",
+      "state": "standalone-verified-treatment",
+      "displayName": "Civil War",
+      "treatmentReferenceIds": ["western-tm@0.1:north-south-wind-melds-with-1861-and-1865-two-suit-layout"],
+      "facets": ["hybrid-layout", "multiple-suits", "winds", "pungs-kongs"],
+      "summary": "North and South Wind Pungs/Kongs plus the loose 1861 and 1865 patterns in different suits.",
+      "whatItIs": "A source-specific hybrid Western hand combining two Wind melds with two four-tile numeric signatures.",
+      "whatItMeans": "The grouped part is North and South; the remaining eight tiles form 1-8-6-1 in one suit and 1-8-6-5 in another.",
+      "whySpecial": "Its qualification is a named, highly specific numeric layout rather than a general set family.",
+      "exampleIds": ["example-civil-war"],
+      "evidenceBindings": [{ "kind": "repo-evidence", "path": "docs/rules/TM_COMPANION_CATALOGUE_INDEX.md", "locator": "Pass 4J — Civil War p.30", "supports": ["treatment-qualification", "north-south-melds", "1861-1865-layout"], "status": "source-certified" }]
+    },
+    {
+      "id": "red-lantern-western",
+      "state": "standalone-verified-treatment",
+      "displayName": "Red Lantern",
+      "treatmentReferenceIds": ["western-tm@0.1:one-to-seven-run-pair-with-red-dragon-and-own-wind-melds"],
+      "facets": ["hybrid-layout", "one-suit", "winds", "dragons", "pungs-kongs", "pairs"],
+      "summary": "A 1-7 run with one run tile paired, plus Red Dragon and own-Wind Pungs/Kongs.",
+      "whatItIs": "A hybrid Western hand whose suited component is a seven-tile run/pair and whose two melds are Red Dragon and the player's seat Wind.",
+      "whatItMeans": "Player context matters: the Wind meld must be the player's own Wind, while the suited loose section contains 1 through 7 and one duplicate.",
+      "whySpecial": "It combines an irregular run-and-pair block with both a fixed Dragon and a player-specific Wind meld.",
+      "exampleIds": ["example-red-lantern"],
+      "evidenceBindings": [{ "kind": "repo-evidence", "path": "docs/rules/TM_COMPANION_CATALOGUE_INDEX.md", "locator": "Pass 4J — Red Lantern pp.13,40", "supports": ["treatment-qualification", "own-wind-context", "run-pair-structure"], "status": "source-certified" }]
+    },
+    {
+      "id": "mixed-chow-family-western",
+      "state": "reviewed-family-topic",
+      "displayName": "Mixed Chow hands",
+      "treatmentReferenceIds": ["western-tm@0.1:three-suit-chows-with-mixed-chow-and-suited-pair", "western-tm@0.1:four-mixed-chows-with-mixed-pair", "western-tm@0.1:white-dragon-meld-green-dragon-pair-with-three-mixed-chows", "western-tm@0.1:three-mixed-chows-three-dragon-singles-own-wind-pair"],
+      "facets": ["multiple-suits", "mixed-chow", "pairs"],
+      "summary": "Four Western specials use Mixed Chows: three consecutive ranks spread one per suit rather than a normal same-suit Chow.",
+      "whatItIs": "A source/runtime-backed family around the T&M Mixed Chow structure.",
+      "whatItMeans": "A Mixed Chow is three suited tiles, one from each suit, whose ranks form a consecutive sequence. The four hands differ in how many Mixed Chows they use and what other groups/honours complete the hand.",
+      "whySpecial": "Mixed Chows break the familiar same-suit Chow rule, so teaching the reusable structure once makes four otherwise unusual hands much easier to understand.",
+      "variants": [
+        { "id": "three-philosophers", "label": "Three Philosophers", "treatmentReferenceIds": ["western-tm@0.1:three-suit-chows-with-mixed-chow-and-suited-pair"], "exampleIds": ["example-three-philosophers"], "definition": "One ordinary Chow in each suit, one Mixed Chow and a suited pair." },
+        { "id": "crazy-chows", "label": "Crazy Chows", "treatmentReferenceIds": ["western-tm@0.1:four-mixed-chows-with-mixed-pair"], "exampleIds": ["example-crazy-chows"], "definition": "Four Mixed Chows plus a Mixed Pair." },
+        { "id": "apple-blossom", "label": "Apple Blossom", "treatmentReferenceIds": ["western-tm@0.1:white-dragon-meld-green-dragon-pair-with-three-mixed-chows"], "exampleIds": ["example-apple-blossom"], "definition": "Concealed White Dragon Pung/Kong, Green Dragon pair and three Mixed Chows." },
+        { "id": "the-professors", "label": "The Professors", "treatmentReferenceIds": ["western-tm@0.1:three-mixed-chows-three-dragon-singles-own-wind-pair"], "exampleIds": ["example-professors"], "definition": "Three Mixed Chows, one of each Dragon and the player's own-Wind pair." }
+      ],
+      "evidenceBindings": [{ "kind": "repo-evidence", "path": "docs/rules/TM_COMPANION_CATALOGUE_INDEX.md", "locator": "Pass 4K Mixed Chow family — Three Philosophers p.15/p.56; Crazy Chows p.16/p.56; Apple Blossom p.19/pp.56,58; The Professors p.19/p.56", "supports": ["mixed-chow-definition", "four-treatment-qualifications", "mixed-pair-definition"], "status": "source-certified" }]
+    },
+    {
+      "id": "chow-chow-western",
+      "state": "standalone-verified-treatment",
+      "displayName": "Chow Chow",
+      "treatmentReferenceIds": ["western-tm@0.1:four-concealed-chows-one-suit-from-wall"],
+      "facets": ["ordinary-grouped", "one-suit", "chow-involving", "pairs"],
+      "summary": "Four concealed Chows and a pair in one suit, with the winning tile drawn from the wall.",
+      "whatItIs": "A one-suit all-Chow Western treatment with a wall-based winning-method requirement.",
+      "whatItMeans": "The visible hand shape is not sufficient on its own: all four Chows are concealed and the winning tile must come from the wall or last wall tile as represented by the exact treatment.",
+      "whySpecial": "It combines a pure Chow structure with concealment and winning-method conditions.",
+      "exampleIds": ["example-chow-chow"],
+      "evidenceBindings": [{ "kind": "repo-evidence", "path": "docs/rules/TM_COMPANION_CATALOGUE_INDEX.md", "locator": "Pass 4L — Chow Chow detail p.15; synopsis pp.56,59", "supports": ["treatment-qualification", "wall-winning-method", "concealed-chows"], "status": "source-certified" }]
+    },
+    {
+      "id": "up-down-you-go-family-western",
+      "state": "reviewed-family-topic",
+      "displayName": "Up You Go / Down You Go",
+      "treatmentReferenceIds": ["western-tm@0.1:four-winds-with-one-two-two-fours-three-sixes-four-eights", "western-tm@0.1:four-winds-with-four-twos-three-fours-two-sixes-one-eight"],
+      "facets": ["irregular-hand", "one-suit", "winds"],
+      "summary": "Both are fixed loose layouts with all four Winds and a 1-2-3-4 multiplicity pattern across the even ranks 2,4,6,8 in one suit, in opposite directions.",
+      "whatItIs": "A mirrored pair of T&M irregular hands.",
+      "whatItMeans": "Up You Go increases the count as the even rank rises: 2, 44, 666, 8888. Down You Go reverses it: 2222, 444, 66, 8. Both also contain one of each Wind.",
+      "whySpecial": "The pair is easiest to learn as two mirror-image multiplicity patterns rather than as unrelated names.",
+      "variants": [
+        { "id": "up-you-go", "label": "Up You Go", "treatmentReferenceIds": ["western-tm@0.1:four-winds-with-one-two-two-fours-three-sixes-four-eights"], "exampleIds": ["example-up-you-go"], "definition": "ESWN plus one 2, two 4s, three 6s and four 8s in one suit." },
+        { "id": "down-you-go", "label": "Down You Go", "treatmentReferenceIds": ["western-tm@0.1:four-winds-with-four-twos-three-fours-two-sixes-one-eight"], "exampleIds": ["example-down-you-go"], "definition": "ESWN plus four 2s, three 4s, two 6s and one 8 in one suit." }
+      ],
+      "evidenceBindings": [{ "kind": "repo-evidence", "path": "docs/rules/TM_COMPANION_CATALOGUE_INDEX.md", "locator": "Pass 4L — Up You Go / Down You Go, Full Synopsis p.57", "supports": ["two-fixed-loose-layouts", "mirrored-multiplicity-relationship"], "status": "source-certified" }]
+    }
+  ],
+  "facetDefinitionAdditions": {
+    "mixed-chow": "A three-tile group with one tile from each suit whose ranks form one consecutive three-rank run; unlike an ordinary Chow, the tiles do not share a suit."
+  }
+}
