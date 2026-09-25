@@ -27,15 +27,27 @@ describe('Special Hands Catalogue rendering', () => {
     expect(html).not.toContain('Outside the Box');
     expect(html).not.toContain('outside-the-box');
     expect(html).not.toContain('Calculated British guidance');
+    expect(html).toContain('Special Hands Guide');
+    expect(html).toContain('Why it is special');
+    expect([...html.matchAll(/Special Hands Atlas|Atlas currently|Atlas learner|predicate|runtime|executable|qualification|provenance|reviewed concept|learner entr(?:y|ies)|exact treatment|exact profile treatment|Outside the Box|outside-the-box/gi)].map(([copy]) => copy)).toEqual([]);
   });
 
   it('scopes supplemental Purity guidance to British and All rules, excluding Buzzard and Western', () => {
     for (const profile of [{ id: 'buzzard-2000', version: '0.1' }, { id: 'western-tm', version: '0.1' }]) {
       preference.profile = profile;
-      expect(renderToStaticMarkup(<SpecialHandsCatalogue />)).not.toContain('Calculated British guidance');
+    expect(renderToStaticMarkup(<SpecialHandsCatalogue />)).not.toContain('British scoring note');
     }
     preference.profile = { id: 'bmja', version: '1.0' };
-    expect(renderToStaticMarkup(<SpecialHandsCatalogue />)).toContain('Calculated British guidance');
+    expect(renderToStaticMarkup(<SpecialHandsCatalogue />)).toContain('British scoring note');
+    preference.profile = { id: 'western-tm', version: '0.1' };
+  });
+
+  it('explains the MCR catalogue limit in player-facing language', () => {
+    preference.profile = { id: 'mcr-wmo-2006', version: '0.1' };
+    const html = renderToStaticMarkup(<SpecialHandsCatalogue />);
+    expect(html).toContain('Your remembered rules are MCR. This guide currently covers the supported Classical rules');
+    expect(html).not.toContain('Your remembered profile');
+    expect(html).not.toContain('supported Classical profiles');
     preference.profile = { id: 'western-tm', version: '0.1' };
   });
 });

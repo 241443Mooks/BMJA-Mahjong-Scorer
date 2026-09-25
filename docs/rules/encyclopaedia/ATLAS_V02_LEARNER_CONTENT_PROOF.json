@@ -66,7 +66,7 @@
       "scope": "variant-example",
       "supportsVariant": "imperial-jade-no-chow",
       "presentation": "preserve grouped melds and pair",
-      "visibleExplanation": "British/Outside the Box example using Green Dragon and green Bamboo tiles, with Pungs and a pair only.",
+      "visibleExplanation": "Club - Bramhall 2026 example using Green Dragons and green Bamboo tiles, with Pungs and a pair only.",
       "accessibleDescription": "Example British-style Imperial Jade hand: a Pung of Green Dragons, Pungs of 2 Bamboo, 3 Bamboo and 6 Bamboo, and a pair of 8 Bamboo."
     },
     {
@@ -210,8 +210,8 @@
         ]
       },
       "scope": "one-valid-example",
-      "visibleExplanation": "Seven distinct pairs; the exact Western treatment also depends on how the hand is won.",
-      "accessibleDescription": "Example Seven Twins tile pattern: pairs of 1, 3, 5 and 7 Bamboo, 2 Circles, East Winds and Red Dragons. The rules treatment also requires a qualifying wall-based winning method."
+      "visibleExplanation": "Seven distinct pairs. Under Western — T&M, you must win from the wall.",
+      "accessibleDescription": "Example Seven Twins hand: pairs of 1, 3, 5 and 7 Bamboo, 2 Circles, East Winds and Red Dragons. Under these rules, you must win from the wall."
     },
     {
       "id": "example-heavens-blessing-existing",
@@ -254,7 +254,7 @@
         "id": "three-great-scholars"
       },
       "scope": "one-valid-example",
-      "visibleExplanation": "Pungs or Kongs of all three Dragons, plus another set and a pair in the reviewed BMJA/T&M concept.",
+      "visibleExplanation": "Pungs or Kongs of all three Dragons, plus another set and a pair under BMJA and Western — T&M.",
       "accessibleDescription": "Example Three Great Scholars hand: Pungs of Red, Green and White Dragons, a Pung of East Winds, and a pair of 5 Circles."
     },
     {
@@ -288,7 +288,7 @@
       },
       "scope": "variant-example",
       "visibleExplanation": "One suit with three 1s, three 9s, one each 2 through 8, and one extra middle tile in this example.",
-      "accessibleDescription": "Example Gates of Heaven tile skeleton in Circles: 11123455678999. Exact completion rules differ by profile."
+      "accessibleDescription": "Gates of Heaven tile pattern in Circles: 11123455678999. The extra tile rule depends on the rules you use."
     }
   ],
   "entries": [
@@ -314,10 +314,10 @@
         "honours",
         "pairs"
       ],
-      "summary": "Every suited 1 and 9, every Wind and Dragon, plus one duplicate.",
-      "whatItIs": "A 14-tile special hand containing one of each of the thirteen terminal and honour tile types, with one of those thirteen tiles duplicated.",
-      "whatItMeans": "Instead of building four normal melds and a pair, you complete a fixed collection of thirteen different terminal/honour tiles and then pair one of them.",
-      "whySpecial": "It qualifies through a complete non-standard collection rather than the ordinary four-melds-plus-pair structure.",
+      "summary": "All 13 terminal and honour tile types, plus one extra matching tile.",
+      "whatItIs": "You need the 1 and 9 from each suit, all four Winds, all three Dragons, and one extra copy of any of those tiles.",
+      "whatItMeans": "This hand does not use the usual four sets and a pair. It is a fixed group of terminal and honour tiles.",
+      "whySpecial": "You must collect all 13 required tile types, then pair one of them.",
       "howItWorks": [
         "Keep the 1 and 9 of all three suits.",
         "Keep all four Winds and all three Dragons.",
@@ -330,24 +330,24 @@
       "treatmentTeaching": [
         {
           "referenceId": "bmja@1.0:thirteen-unique-wonders",
-          "difference": "Shared tile structure; exact BMJA score is derived from the treatment."
+          "difference": "The tile pattern is the same; BMJA scores it under its own rules."
         },
         {
           "referenceId": "western-tm@0.1:thirteen-unique-wonders",
-          "difference": "Same reviewed tile structure; Thompson & Maloney assigns a different fixed value."
+          "difference": "The tile pattern is the same; Western — T&M gives it a different fixed score."
         },
         {
           "referenceId": "outside-the-box@0.1:thirteen-unique-wonders",
-          "difference": "Same reviewed tile structure; the current Outside the Box treatment additionally requires concealment."
+          "difference": "The tile pattern is the same; Club - Bramhall 2026 also requires a concealed hand."
         },
         {
           "referenceId": "buzzard-2000@0.1:thirteen-unique-wonders",
-          "difference": "Buzzard local name Thirteen Odd Majors; exact structural membership is source/runtime verified and its configured-limit score remains treatment-local."
+          "difference": "Buzzard calls this hand Thirteen Odd Majors and scores it at the table limit."
         }
       ],
       "watchOutFor": [
         "Do not try to split the hand into ordinary Chows and Pungs.",
-        "The duplicate may be any one of the thirteen required tile types in the reviewed shared concept."
+        "The extra tile can match any one of the 13 required tile types."
       ],
       "evidenceRefs": [
         "CLASSICAL_ATLAS_CONCEPT_AUDIT_V1.md §1",
@@ -368,10 +368,10 @@
         "winds",
         "pungs-kongs"
       ],
-      "summary": "Pungs or Kongs of all four Winds, plus a pair.",
-      "whatItIs": "A normal grouped Mahjong hand in which all four melds are Wind Pungs or Kongs, with one pair completing the hand.",
-      "whatItMeans": "All four Wind families are represented as complete triplet/quad sets rather than merely appearing somewhere in the hand.",
-      "whySpecial": "The entire four-meld structure is occupied by the four Winds, making the hand structurally distinctive while still using an ordinary grouped hand shape.",
+      "summary": "Pungs or Kongs of East, South, West and North, plus a pair.",
+      "whatItIs": "All four sets are Wind Pungs or Kongs. Add any legal pair.",
+      "whatItMeans": "Every Wind must make a complete set. Simply having all four Winds in the hand is not enough.",
+      "whySpecial": "All four sets are Winds.",
       "howItWorks": [
         "Make a Pung or Kong of East Wind.",
         "Do the same for South, West and North.",
@@ -383,7 +383,7 @@
       "treatmentTeaching": [
         {
           "referenceId": "bmja@1.0:four-blessings",
-          "difference": "Shared structure; BMJA score and intrinsic fishing-floor behaviour remain treatment-local."
+          "difference": "The hand shape is the same. BMJA uses its own score, with a minimum of 400 or the normal hand score if that is higher."
         },
         {
           "referenceId": "western-tm@0.1:four-blessings",
@@ -391,7 +391,7 @@
         },
         {
           "referenceId": "outside-the-box@0.1:four-blessings",
-          "difference": "Shared structure; Outside the Box retains its own exposure treatment."
+          "difference": "The hand shape is the same; exposed sets score differently under Club - Bramhall 2026."
         }
       ],
       "evidenceRefs": [
@@ -412,14 +412,14 @@
         "dragons",
         "green-tiles"
       ],
-      "summary": "A green-tile special built from Green Dragon and the green Bamboo tiles; the exact allowed meld structure differs by rules.",
-      "whatItIs": "A family of special-hand treatments restricted to Green Dragon and Bamboo 2, 3, 4, 6 and 8.",
-      "whatItMeans": "The shared idea is the restricted green tile set. British/BMJA and Outside the Box use a no-Chow Pung/Kong form; Thompson & Maloney permits one specific 2-3-4 Bamboo Chow.",
-      "whySpecial": "Almost the whole hand is constrained by tile identity and colour family, so a small rules difference about whether a Chow is allowed materially changes which hands qualify.",
+      "summary": "A hand made from Green Dragons and the green Bamboo tiles. The Chow rule depends on your rules.",
+      "whatItIs": "Use Green Dragons and Bamboo 2, 3, 4, 6 and 8.",
+      "whatItMeans": "British / BMJA and Club - Bramhall 2026 do not allow a Chow. Western — T&M allows one 2-3-4 Bamboo Chow.",
+      "whySpecial": "Only a small set of green tiles may be used, so the Chow rule changes which hands count.",
       "variants": [
         {
           "id": "imperial-jade-no-chow",
-          "label": "British / Outside the Box form",
+          "label": "British / Club - Bramhall 2026 form",
           "relation": "narrower",
           "treatmentReferenceIds": [
             "bmja@1.0:imperial-jade",
@@ -433,7 +433,7 @@
           "exampleIds": [
             "example-imperial-jade-narrow-existing"
           ],
-          "definition": "Four Pung/Kong groups and a pair, all drawn from Green Dragon and Bamboo 2, 3, 4, 6 and 8; no Chow in the reviewed structure."
+          "definition": "Four Pung or Kong groups and a pair, all from Green Dragons and Bamboo 2, 3, 4, 6 and 8. No Chow is allowed."
         },
         {
           "id": "imperial-jade-western-broader",
@@ -451,7 +451,7 @@
           "exampleIds": [
             "example-imperial-jade-western-chow"
           ],
-          "definition": "Uses the same green tile family but may contain one 2-3-4 Bamboo Chow."
+          "definition": "Use the same green tiles. One 2-3-4 Bamboo Chow is allowed."
         }
       ],
       "evidenceRefs": [
@@ -475,10 +475,10 @@
         "winds",
         "pairs"
       ],
-      "summary": "One suit from 1 through 9 plus all four Winds and one duplicate; the narrower version fixes the duplicate as the suited 1.",
-      "whatItIs": "A reviewed family of irregular Snake hands built from a complete 1-9 run in one suit and all four Winds.",
-      "whatItMeans": "The two reviewed variants share the same thirteen-tile base. The narrower Wriggling Snake pairs the suited 1; the broader Wriggly Snake allows any tile in the base to be duplicated.",
-      "whySpecial": "The entire hand is a fixed loose-tile pattern rather than normal melds, and one apparently small pairing difference changes the valid set of hands.",
+      "summary": "1 to 9 in one suit, all four Winds, and one extra matching tile.",
+      "whatItIs": "Both Snake hands use the same 13-tile base: 1 to 9 in one suit plus all four Winds.",
+      "whatItMeans": "Wriggling Snake pairs the suited 1. Wriggly Snake may pair any tile from the 13-tile base.",
+      "whySpecial": "The whole hand is a fixed tile pattern, not normal sets.",
       "variants": [
         {
           "id": "wriggling-snake-narrow",
@@ -526,10 +526,10 @@
       "facets": [
         "pairs"
       ],
-      "summary": "Several special hands use seven pairs, but similar names do not mean the same qualification.",
-      "whatItIs": "A browse family connecting reviewed pair-based special hands while keeping their distinct predicates and names.",
-      "whatItMeans": "All Pair Honours, All Pair, Heavenly Twins and Seven Twins are useful to compare because all are pair-based, but they impose different tile and winning-method conditions.",
-      "whySpecial": "Seven-pair structures depart from the ordinary four-melds-plus-pair shape, and each named treatment adds its own restrictions.",
+      "summary": "Several special hands use seven pairs, but the tile and winning rules differ.",
+      "whatItIs": "Compare All Pair Honours, All Pair, Heavenly Twins and Seven Twins.",
+      "whatItMeans": "All four use pairs. They differ in which tiles may be paired and, for Seven Twins, how the hand is won.",
+      "whySpecial": "Seven-pair hands do not use the usual four sets and a pair.",
       "variants": [
         {
           "id": "all-pair-honours",
@@ -600,7 +600,7 @@
           "exampleIds": [
             "example-seven-twins"
           ],
-          "definition": "Seven distinct loose pairs plus the treatment's wall-based winning-method requirement."
+          "definition": "Seven distinct loose pairs. You must win from the wall under these rules."
         }
       ],
       "evidenceRefs": [
@@ -618,10 +618,10 @@
       "facets": [
         "event-defined"
       ],
-      "summary": "An East player's already complete initial deal, named Heaven's Blessing in BMJA and Original Hand in Buzzard.",
-      "whatItIs": "A reviewed event family for a winning hand already complete in East’s original deal.",
-      "whatItMeans": "The shared current event predicate is East, initial deal, and a complete winning hand; Buzzard’s local names and source-verified provenance remain distinct from BMJA’s inferred source mapping.",
-      "whySpecial": "Mahjong is complete before ordinary play has begun.",
+      "summary": "East is dealt a complete winning hand before play starts.",
+      "whatItIs": "East’s original 14 tiles already make Mahjong.",
+      "whatItMeans": "BMJA calls this Heaven’s Blessing. Buzzard calls it Original Hand and also records the historical names Hand from Heaven and Natural Winning.",
+      "whySpecial": "East wins from the original deal, before any ordinary draw or discard.",
       "howItWorks": [
         "East receives the initial hand.",
         "The hand is already a legal Mahjong.",
@@ -630,7 +630,7 @@
       "exampleIds": [
         "example-heavens-blessing-existing"
       ],
-      "referenceNote": "Buzzard source verifies East, original deal and already-complete hand. BMJA’s mapping remains inferred from “Mah Jong in original deal”; shared current predicate does not make the historical names universally equivalent.",
+      "referenceNote": "The Buzzard source says East wins with a complete hand from the original deal. BMJA uses the phrase “Mah Jong in original deal”; the historical names do not prove that all rules use the same event.",
       "evidenceRefs": [
         "CLASSICAL_ATLAS_CONCEPT_AUDIT_V1.md §8",
         "BMJA_RULES_REFERENCE.md Event-dependent specials",
@@ -653,10 +653,10 @@
       "facets": [
         "event-defined"
       ],
-      "summary": "A two-Kong replacement-tile sequence in which the second replacement completes Mahjong.",
-      "whatItIs": "A BMJA event-defined special based on two consecutive Kong/replacement events ending in Mahjong.",
-      "whatItMeans": "The final tiles alone are not enough; the order of Kong declarations and replacement draws is part of what qualifies the special.",
-      "whySpecial": "Qualification depends on an exact chain of events rather than only the completed hand shape.",
+      "summary": "Two linked Kong replacement draws end with Mahjong.",
+      "whatItIs": "A replacement tile completes a second Kong, then the next replacement tile completes Mahjong.",
+      "whatItMeans": "The order of the two Kongs and replacement draws matters. The final hand shape alone is not enough.",
+      "whySpecial": "The win depends on a specific sequence of events.",
       "howItWorks": [
         "A first Kong is declared.",
         "Its replacement tile completes a second Kong.",
@@ -687,10 +687,10 @@
         "pungs-kongs",
         "pairs"
       ],
-      "summary": "A reviewed family of Dragon-set specials with distinct BMJA/T&M, Club - Bramhall 2026, and Buzzard winner predicates.",
-      "whatItIs": "A family connecting four exact profile treatments that require Pung or Kong sets of all three Dragons but differ in their remaining-set qualifications.",
-      "whatItMeans": "BMJA and T&M require a fourth Pung/Kong; Club - Bramhall 2026 allows a Chow, Pung or Kong when its fourth set and pair share one numbered suit; Buzzard allows any otherwise lawful ordinary fourth set and pair. These are related variants, not equivalent treatments.",
-      "whySpecial": "All variants centre on all three Dragon sets while their exact profile predicates remain distinct.",
+      "summary": "All versions use Pungs or Kongs of all three Dragons. The fourth set and pair rules differ.",
+      "whatItIs": "Make a set of Red, Green and White Dragons, then complete the hand under the selected rules.",
+      "whatItMeans": "BMJA and Western — T&M require another Pung or Kong. Club - Bramhall 2026 also allows a Chow when the fourth set and pair use the same numbered suit. Buzzard allows any legal fourth set and pair.",
+      "whySpecial": "The three Dragon sets are shared; the rest of the hand decides which version you have.",
       "exampleIds": [
         "example-three-great-scholars-existing"
       ],
@@ -732,7 +732,7 @@
             "buzzard-2000@0.1:buzzard-three-dragons-winner"
           ],
           "relation": "related-broader-winner",
-          "definition": "All three Dragon Pung/Kongs plus any otherwise lawful ordinary fourth set and pair."
+          "definition": "Pungs or Kongs of all three Dragons, plus a legal fourth set and pair."
         }
       ],
       "knowledgeLinks": [
@@ -744,7 +744,7 @@
           "authority": "issue-220-runtime"
         }
       ],
-      "referenceNote": "The Buzzard incomplete Three-Dragon consequence is a structured profile-score-result link, not a special-hand detector or treatment ID."
+      "referenceNote": "Under Buzzard 2000, a hand that misses this win condition may still affect the table score."
     },
     {
       "id": "knitting-reviewed",
@@ -761,10 +761,10 @@
         "pairs",
         "knitted-interleave"
       ],
-      "summary": "Seven same-number pairs across exactly two suits; duplicate pairs are allowed where physical tile copies permit them.",
-      "whatItIs": "A pair-based irregular hand built by matching the same numbers across two different suits rather than making normal melds.",
-      "whatItMeans": "The hand has seven cross-suit same-number pairs and uses exactly two numbered suits throughout.",
-      "whySpecial": "The hand replaces the ordinary meld structure with a complete two-suit pairing pattern.",
+      "summary": "Seven same-number pairs made across exactly two suits.",
+      "whatItIs": "Match the same number across two different suits to make seven pairs.",
+      "whatItMeans": "Only two numbered suits may be used. You do not make normal Chows, Pungs or Kongs.",
+      "whySpecial": "The whole hand is built from cross-suit pairs.",
       "exampleIds": [
         "example-knitting-existing"
       ],
@@ -780,7 +780,7 @@
           "exampleIds": [
             "example-knitting-existing"
           ],
-          "definition": "Seven same-number cross-suit pairs across exactly two numbered suits; exact score and exposure rules remain attached to each profile treatment."
+          "definition": "Seven pairs of matching numbers across exactly two suits. The score and exposure rules depend on the rules you use."
         }
       ],
       "evidenceRefs": [
@@ -804,10 +804,10 @@
         "knitted-interleave",
         "pairs"
       ],
-      "summary": "Four same-number groups across all three suits, plus a same-number pair across two suits.",
-      "whatItIs": "An irregular knitted hand built from four three-suit same-number groups and one cross-suit pair.",
-      "whatItMeans": "Each three-tile unit uses the same number once in each suit, and the final pair uses the same number in two suits.",
-      "whySpecial": "The whole hand follows a three-suit interleaving pattern rather than ordinary melds.",
+      "summary": "Four same-number groups using all three suits, plus one same-number pair across two suits.",
+      "whatItIs": "Each three-tile group uses the same number once in Bamboo, Circles and Characters. Add one same-number pair using two suits.",
+      "whatItMeans": "The hand is a 14-tile pattern, not normal melds.",
+      "whySpecial": "Every group follows the same cross-suit knitting idea.",
       "exampleIds": [
         "example-triple-knitting-existing"
       ],
@@ -823,7 +823,7 @@
           "exampleIds": [
             "example-triple-knitting-existing"
           ],
-          "definition": "Four three-suit same-number groups plus one same-number pair across two suits in a complete 14-tile loose layout; exact score and exposure rules remain attached to each profile treatment."
+          "definition": "Four groups with the same number in all three suits, plus a same-number pair across two suits. The score and exposure rules depend on your rules."
         }
       ],
       "evidenceRefs": [
@@ -846,10 +846,10 @@
         "one-suit",
         "terminals"
       ],
-      "summary": "A one-suit 1112345678999-style family whose permitted completion differs materially by rules.",
-      "whatItIs": "A reviewed family of one-suit irregular hands built around three 1s, three 9s and one each of 2 through 8, with rules-specific completion requirements.",
-      "whatItMeans": "The tile skeleton is closely related across profiles, but BMJA, Thompson & Maloney and Buzzard do not use identical completion/provenance semantics.",
-      "whySpecial": "A tightly constrained one-suit tile skeleton leaves only a small set of possible completions, so the exact allowed winning tile matters.",
+      "summary": "A one-suit 1112345678999 base. The allowed extra tile depends on the rules.",
+      "whatItIs": "Start with three 1s, three 9s and one each of 2 to 8, all in one suit.",
+      "whatItMeans": "BMJA, Western — T&M and Buzzard use different rules for the extra tile and how the hand is completed.",
+      "whySpecial": "The base is tightly fixed, so the exact winning tile matters.",
       "exampleIds": [
         "example-gates-existing"
       ],
@@ -861,7 +861,7 @@
           "treatmentReferenceIds": [
             "bmja@1.0:gates-of-heaven"
           ],
-          "definition": "Uses the middle-rank duplicate skeleton and BMJA-specific completion/provenance logic."
+          "definition": "Uses the middle-rank duplicate skeleton and BMJA-specific completion/how the hand was won logic."
         },
         {
           "id": "gates-western",
@@ -870,7 +870,7 @@
           "treatmentReferenceIds": [
             "western-tm@0.1:western-gates-of-heaven"
           ],
-          "definition": "Uses the one-suit 1112345678999 skeleton with a duplicated 2-8 tile; the treatment is concealed-only."
+          "definition": "Use one suit: 1112345678999, with one extra tile from 2 to 8. Keep the hand concealed."
         },
         {
           "id": "calling-nine-tile-hand",
