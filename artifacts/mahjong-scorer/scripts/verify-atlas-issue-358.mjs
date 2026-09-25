@@ -32,6 +32,8 @@ async function playwright() {
     if (!(await exists(packageJson))) await writeFile(packageJson, JSON.stringify({ private: true }));
     run('npm', ['install', '--prefix', TOOL_DIR, '--no-save', '--no-package-lock', `playwright@${VERSION}`]);
   }
+  const playwrightCli = path.join(TOOL_DIR, 'node_modules', 'playwright', 'cli.js');
+  run(process.execPath, [playwrightCli, 'install', ...(process.env.CI ? ['--with-deps'] : []), 'chromium']);
   const requireTools = createRequire(packageJson);
   return requireTools('playwright');
 }
@@ -95,6 +97,7 @@ try {
   await page.getByRole('searchbox', { name: 'Search names, aliases, exact treatment or pattern' }).fill('Special pair-based hands');
   const pairEntry = page.locator('#atlas-entry-pair-hand-family');
   const exact = pairEntry.getByRole('combobox', { name: 'Exact treatment for Special pair-based hands' });
+  assert((await pairEntry.locator('figure figcaption').first().innerText()).includes('All Pair Honours'), 'Default Western lead example was not the first treatment example.');
   const heavenlyTwins = await exact.locator('option').evaluateAll((options) => options.find((option) => option.textContent.includes('Heavenly Twins'))?.value);
   assert(heavenlyTwins, 'Pair-hand family did not offer Heavenly Twins.');
   await exact.focus();
@@ -102,6 +105,7 @@ try {
   assert(await exact.evaluate((element) => document.activeElement === element), 'Focus left the exact treatment selector after changing treatments.');
   const selectedSummary = pairEntry.locator('section[aria-label$="exact treatment"]').first();
   assert((await selectedSummary.getByRole('heading').innerText()).includes('Heavenly Twins'), 'Heavenly Twins did not become the prominent exact treatment.');
+  assert((await pairEntry.locator('figure figcaption').first().innerText()).includes('Heavenly Twins'), 'Lead example did not follow Heavenly Twins exact treatment selection.');
   const selectedProfilePill = pairEntry.getByRole('button', { name: 'Western — T&M' });
   assert(await selectedProfilePill.getAttribute('aria-pressed') === 'true', 'Western profile was not selected.');
 
@@ -120,11 +124,13 @@ try {
   const clubSnake = page.locator('#atlas-entry-wriggling-snake-family');
   const clubPills = clubSnake.locator('[role="group"][aria-label^="Choose exact rules treatment"] button');
   assert(await clubPills.count() === 1 && (await clubPills.first().innerText()).includes('Club - Bramhall 2026'), 'Club filter did not constrain treatment visibility.');
+  assert((await clubSnake.locator('figure figcaption').first().innerText()).includes('Wriggling Snake'), 'Default Club lead example was not the first treatment example.');
   const clubChoice = clubSnake.getByRole('combobox', { name: 'Exact treatment for Wriggling / Wriggly Snake' });
   const wrigglySnake = await clubChoice.locator('option').evaluateAll((options) => options.find((option) => option.textContent.includes('Wriggly Snake'))?.value);
   assert(wrigglySnake, 'Club Wriggling/Wriggly Snake did not offer the Wriggly Snake treatment.');
   await clubChoice.selectOption(wrigglySnake);
   assert(await clubSnake.locator('section[aria-label$="exact treatment"]').first().getByRole('heading', { name: 'Wriggly Snake' }).isVisible(), 'Club Wriggly Snake exact treatment was not selectable.');
+  assert((await clubSnake.locator('figure figcaption').first().innerText()).includes('Wriggly Snake'), 'Lead example did not follow Club Wriggly Snake exact treatment selection.');
   assert(await page.evaluate(() => localStorage.getItem('mahjong-reference:preferred-rules-profile')) === originalPreference, 'Atlas browsing mutated My Rules preference.');
 
   await page.goto(`${BASE_URL}/special-hands`);

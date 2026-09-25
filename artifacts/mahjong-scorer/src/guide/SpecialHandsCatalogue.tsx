@@ -22,6 +22,7 @@ import {
   atlasEntriesForProfile,
   searchAtlasLearnerEntries,
   selectAtlasLeadExample,
+  selectAtlasLeadExampleForTreatment,
   type AtlasExample,
   type AtlasLearnerEntry,
   type SpecialHandsAtlasRecord,
@@ -130,7 +131,7 @@ function EntryCard({
   const prominentTreatment = localForScope ?? globallySelected ?? (myRules ? ownTreatment : undefined) ?? legacyTreatment ?? treatments[0];
   const prominentProfileKey = prominentTreatment ? `${prominentTreatment.identity.profile.id}@${prominentTreatment.identity.profile.version}` : null;
   const sameProfileTreatments = prominentProfileKey ? treatments.filter(({ identity }) => `${identity.profile.id}@${identity.profile.version}` === prominentProfileKey) : [];
-  const leadExample = prominentTreatment ? selectAtlasLeadExample(entry, prominentTreatment.identity.profile) : selectAtlasLeadExample(entry, myRules ? preferredProfile : null);
+  const leadExample = prominentTreatment ? selectAtlasLeadExampleForTreatment(entry, prominentTreatment.referenceId) : selectAtlasLeadExample(entry, myRules ? preferredProfile : null);
   const remainingTreatments = prominentTreatment ? treatments.filter(({ referenceId, identity }) => referenceId !== prominentTreatment.referenceId && (!explicitProfile || `${identity.profile.id}@${identity.profile.version}` === explicitProfile)) : treatments;
   const linkedEntries = (entry.relatedEntryIds ?? []).flatMap((id) => {
     const related = ATLAS_LEARNER_ENTRIES.find((item) => item.id === id);
