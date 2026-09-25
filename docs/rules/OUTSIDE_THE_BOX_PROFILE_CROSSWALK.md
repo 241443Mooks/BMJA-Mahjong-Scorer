@@ -24,7 +24,7 @@ The transcription has 35 table rows but **33 unique OTB hands**: Hachi Ban and A
 | Imperial Jade | yes | Green Dragon plus green Bamboo 2,3,4,6,8 P/K and pair | 1000/400 | half | `imperial-jade` | BMJA / reuse-identical | verified-club; distinct from Western one-Chow, 2000/800 form |
 | Heads & Tails | yes | 1/9 P/K and pair only; no honours | 1000/400 | half | `heads-and-tails` | BMJA / reuse-identical | verified-club; same pattern also Western at 1000/400, but OTB exposure is local/British |
 | All Winds & Dragons | yes | honour P/K and pair only | 1000/400 | full | `all-winds-and-dragons` | BMJA / reuse-identical | verified-club; same Western pattern/value |
-| Three Great Scholars | yes | three Dragon P/K plus same-suit remaining P/K or Chow and pair | 1000/400 | full | `three-great-scholars` | BMJA / reuse-pattern-override-binding | guide’s remaining-shape wording needs fixture audit before binding; OTB/BMJA 1000/400, Western 1500/600 |
+| Three Great Scholars | yes | three Dragon P/K plus a remaining P/K or Chow and pair, with that set and pair in the same numbered suit | 1000/400 | full | `club-three-great-scholars` | related Club variant | verified-club; Club/BMJA 1000/400, Western 1500/600 |
 | Four Blessings | yes | four Wind P/K plus pair | 1000/400 | full | `four-blessings` | BMJA / reuse-pattern-override-binding | verified-club structure/value/exposure; Western is 1500/600 |
 | Fourfold Plenty | yes | four Kongs plus pair | 1000/400 | half | `fourfold-plenty` | BMJA / reuse-identical | verified-club |
 | Knitting | yes | seven same-rank pairs across two suits | 500/200 | X | `knitting` | BMJA / reuse-identical | British binding follows guide; do not substitute Western `two-suit-knitting` without a predicate fixture audit |

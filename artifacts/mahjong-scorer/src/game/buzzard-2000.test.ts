@@ -62,6 +62,14 @@ describe('Buzzard 2000 ordinary profile policy', () => {
     expect(matched(nineGates(5))).toMatchObject({ value: 600 });
     expect(detectSpecialHands(nineGates(5), { ...context, limit: 777 }, buzzard2000SpecialHandBindings).find((result) => result.id === 'one-suit-nine-gates-any-completion')).toMatchObject({ value: 777 });
   });
+  it('qualifies only completed Three Dragons winners, including a Chow as the fourth set', () => {
+    const pattern = 'buzzard-three-dragons-winner';
+    const threeDragons = [p('r', dragon('red')), p('g', dragon('green')), p('w', dragon('white'))];
+    const result = (hand: MahjongHand) => detectSpecialHands(hand, context, buzzard2000SpecialHandBindings).find(({ id }) => id === pattern);
+    expect(result(normal([...threeDragons, set('chow', 'chow', suited('bamboo', 1)), pair(suited('circles', 5))]))).toMatchObject({ matched: true, value: 600 });
+    expect(result(normal([...threeDragons, p('fourth', suited('bamboo', 4)), pair(suited('circles', 5))]))).toMatchObject({ matched: true, value: 600 });
+    expect(result(normal([threeDragons[0]!, threeDragons[1]!, p('fourth', suited('bamboo', 4)), p('fifth', suited('circles', 5)), pair(wind('east'))]))).toMatchObject({ matched: false });
+  });
 });
 
 const p = (id: string, tile: MahjongHand['sets'][number]['tile']) => set(id, 'pung', tile);

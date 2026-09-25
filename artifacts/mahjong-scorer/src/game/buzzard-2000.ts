@@ -8,7 +8,7 @@ const configured = (patternId: string, name: string): SpecialHandPatternBinding 
 export const buzzard2000SpecialHandBindings: SpecialHandPatternBinding[] = [
   configured('all-winds-and-dragons', 'All Winds and Dragons'), configured('three-winds-and-fourth-wind-pair', 'Three Winds and a Pair'),
   configured('heavens-blessing', 'Original Hand'), configured('earths-blessing', "East's First Discard"), configured('heads-and-tails', 'All Ones and Nines'),
-  configured('three-great-scholars', 'Three Dragons'), configured('four-concealed-pung-kong-hand', 'Concealed Pungs/Kongs'),
+  configured('buzzard-three-dragons-winner', 'Three Dragons'), configured('four-concealed-pung-kong-hand', 'Concealed Pungs/Kongs'),
   configured('thirteen-unique-wonders', 'Thirteen Odd Majors'), configured('one-suit-nine-gates-any-completion', 'Calling Nine Tile Hand'), configured('east-thirteenth-consecutive-mahjong', "East's Thirteenth Consecutive Mahjong"),
 ];
 

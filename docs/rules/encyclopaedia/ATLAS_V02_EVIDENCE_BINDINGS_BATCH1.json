@@ -73,17 +73,16 @@
       ]
     },
     {
-      "entryId": "three-great-scholars-otb-unresolved",
+      "entryId": "three-great-scholars-club-verified",
       "evidenceBindings": [
-        { "kind": "reviewed-audit", "path": "docs/rules/encyclopaedia/CLASSICAL_ATLAS_CONCEPT_AUDIT_V1.md", "locator": "§4 Three Great Scholars / Three Dragons family", "supports": ["unresolved-membership", "source-runtime-two-way-difference"], "status": "reviewed" },
-        { "kind": "repo-evidence", "path": "docs/rules/OUTSIDE_THE_BOX_PROFILE_CROSSWALK.md", "locator": "§2 Three Great Scholars", "supports": ["same-suit-remaining-shape", "chow-permission", "fixture-audit-caveat"], "status": "verified-club-with-runtime-caveat" }
+        { "kind": "repo-evidence", "path": "docs/rules/OUTSIDE_THE_BOX_PROFILE_CROSSWALK.md", "locator": "§2 Three Great Scholars", "supports": ["same-suit-remaining-set-and-pair", "chow-permission", "full-exposure-value"], "status": "verified-club" }
       ]
     },
     {
-      "entryId": "three-dragons-buzzard-unresolved",
+      "entryId": "three-dragons-buzzard-winner-verified",
       "evidenceBindings": [
-        { "kind": "reviewed-audit", "path": "docs/rules/encyclopaedia/CLASSICAL_ATLAS_CONCEPT_AUDIT_V1.md", "locator": "§4 Three Great Scholars / Three Dragons family", "supports": ["unresolved-membership", "winning-only-runtime-conflict"], "status": "reviewed" },
-        { "kind": "repo-evidence", "path": "docs/rules/BUZZARD_2000_RULE_EVIDENCE.md", "locator": "§D Limit hands; §E non-winner limits", "supports": ["three-dragon-limit", "incomplete-non-winner-qualification"], "status": "source-complete" }
+        { "kind": "repo-evidence", "path": "docs/rules/BUZZARD_2000_RULE_EVIDENCE.md", "locator": "§D Limit hands", "supports": ["three-dragon-winning-limit", "chow-permitted-as-fourth-set"], "status": "source-verified" },
+        { "kind": "repo-evidence", "path": "docs/rules/BUZZARD_2000_RULE_EVIDENCE.md", "locator": "§E non-winner limits", "supports": ["separate-incomplete-three-dragon-table-result", "unchanged-from-issue-220"], "status": "existing-runtime-path" }
       ]
     },
     {

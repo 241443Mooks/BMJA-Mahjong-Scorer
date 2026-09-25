@@ -1,7 +1,7 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import { initialiseCurrentRulesRuntimes } from '../rules-platform/current-runtime-registry';
 import { dragon, set, suited, wind, type MahjongHand } from '../scoring';
-import { canonicalSpecialHandPatterns } from '../scoring/special-hands';
+import { canonicalSpecialHandPatterns, detectSpecialHands } from '../scoring/special-hands';
 import { createBmjaGame } from './game';
 import { loadGameRecovery, saveGameRecovery } from './persistence';
 import {
@@ -40,10 +40,23 @@ describe('outside-the-box@0.1 special-hand profile', () => {
   });
 
   it('keeps cross-profile values and local overrides isolated', () => {
-    expect(score(OUTSIDE_THE_BOX_RULESET, scholars).specialHands.find(({ id }) => id === 'three-great-scholars')).toMatchObject({ value: 1000, matched: true });
+    expect(score(OUTSIDE_THE_BOX_RULESET, scholars).specialHands.find(({ id }) => id === 'club-three-great-scholars')).toMatchObject({ value: 1000, matched: false });
     expect(score(WESTERN_TM_RULESET, scholars).specialHands.find(({ id }) => id === 'three-great-scholars')).toMatchObject({ value: 1500, matched: true });
     expect(outsideTheBoxSpecialHandBindings.find(({ patternId }) => patternId === 'four-bamboo-one-and-five-green-bamboo-pairs')).toMatchObject({ value: 1000, fishingValue: 400, exposure: { allowed: false } });
     for (const patternId of ['green-dragon-pung-with-bamboo-melds', 'red-dragon-pung-with-character-melds', 'white-dragon-pung-with-circle-melds']) expect(outsideTheBoxSpecialHandBindings.find((binding) => binding.patternId === patternId)).toMatchObject({ exposure: { allowed: true, exposedValue: 500, exposedFishingValue: 200 } });
+  });
+
+  it('matches Club Three Great Scholars only when the remaining set and pair share a numbered suit', () => {
+    const club = (sets: MahjongHand['sets']) => detectSpecialHands({ sets, bonusTiles: [], isWinner: true }, undefined, outsideTheBoxSpecialHandBindings)
+      .find(({ id }) => id === 'club-three-great-scholars');
+    const dragons = [set('red', 'pung', dragon('red')), set('green', 'pung', dragon('green')), set('white', 'pung', dragon('white'))];
+    expect(club([...dragons, set('fourth', 'pung', suited('circles', 4)), set('pair', 'pair', suited('circles', 2))])).toMatchObject({ matched: true, value: 1000 });
+    expect(club([...dragons, set('fourth', 'chow', suited('circles', 4)), set('pair', 'pair', suited('circles', 2))])).toMatchObject({ matched: true, value: 1000 });
+    expect(club([...dragons.map((set) => ({ ...set, kind: 'kong' as const })), set('fourth', 'kong', suited('circles', 4)), set('pair', 'pair', suited('circles', 2))])).toMatchObject({ matched: true, value: 1000 });
+    expect(club([...dragons, set('fourth', 'pung', suited('circles', 4)), set('pair', 'pair', suited('bamboo', 2))])).toMatchObject({ matched: false });
+    expect(club([...dragons, set('fourth', 'chow', suited('circles', 4)), set('pair', 'pair', dragon('red'))])).toMatchObject({ matched: false });
+    expect(club([dragons[0]!, dragons[1]!, set('fourth', 'pung', suited('circles', 4)), set('pair', 'pair', suited('circles', 2))])).toMatchObject({ matched: false });
+    expect(club([...dragons, set('fourth', 'pung', suited('circles', 4)), set('pair', 'pair', suited('circles', 2)), set('extra', 'pung', wind('east'))])).toMatchObject({ matched: false });
   });
 
   it('uses the corrected canonical Knitting and Triple Knitting predicates with Club-local bindings', () => {
