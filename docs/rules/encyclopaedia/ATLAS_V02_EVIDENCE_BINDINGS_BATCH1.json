@@ -19,8 +19,8 @@
         },
         {
           "kind": "repo-evidence",
-          "path": "docs/rules/BUZZARD_2000_RULE_EVIDENCE.md",
-          "locator": "§D Limit hands / retained PDF p.11 — Thirteen Odd Majors",
+          "path": "docs/rules/encyclopaedia/ATLAS_BUZZARD_RECONCILIATION_2026.md",
+          "locator": "§1 Thirteen Odd Majors — source/runtime finding; retained PDF p.11",
           "supports": [
             "exact-tile-qualification",
             "local-name",
@@ -161,6 +161,29 @@
             "bmja-event-source-mapping"
           ],
           "status": "inferred-mapping-retained"
+        },
+        {
+          "kind": "reviewed-audit",
+          "path": "docs/rules/encyclopaedia/CLASSICAL_ATLAS_CONCEPT_AUDIT_V1.md",
+          "locator": "§8 Heaven’s/Earth’s Blessing and event-defined treatments; superseded for Buzzard Original Hand by ATLAS_BUZZARD_RECONCILIATION_2026.md",
+          "supports": [
+            "reviewed-current-event-family",
+            "bmja-provenance-remains-inferred"
+          ],
+          "status": "reviewed"
+        },
+        {
+          "kind": "repo-evidence",
+          "path": "docs/rules/encyclopaedia/ATLAS_BUZZARD_RECONCILIATION_2026.md",
+          "locator": "§2 Original Hand — source/runtime finding; retained PDF p.11",
+          "supports": [
+            "east-seat",
+            "original-deal-event",
+            "already-complete-hand",
+            "local-names",
+            "configured-limit-membership"
+          ],
+          "status": "source-verified"
         }
       ]
     },
@@ -202,15 +225,6 @@
           "status": "reviewed"
         },
         {
-          "kind": "repo-evidence",
-          "path": "docs/rules/TM_COMPANION_CATALOGUE_INDEX.md",
-          "locator": "Three Great Scholars / synopsis p.58 / detail p.33",
-          "supports": [
-            "western-treatment-qualification"
-          ],
-          "status": "source-certified"
-        },
-        {
           "kind": "reviewed-audit",
           "path": "docs/rules/encyclopaedia/CLASSICAL_ATLAS_CONCEPT_AUDIT_V1.md",
           "locator": "§4 Three Great Scholars / Three Dragons family; superseded for Buzzard winner and non-winner conclusions by ATLAS_BUZZARD_RECONCILIATION_2026.md",
@@ -221,6 +235,15 @@
             "structured-non-winner-result-link"
           ],
           "status": "reviewed"
+        },
+        {
+          "kind": "runtime-binding",
+          "path": "artifacts/mahjong-scorer/src/game/types.ts",
+          "locator": "ProfileScoreResult resultId union",
+          "supports": [
+            "profile-score-result-ids-not-special-hand-treatments"
+          ],
+          "status": "existing-runtime-contract"
         },
         {
           "kind": "repo-evidence",
@@ -248,49 +271,13 @@
           "locator": "§D Limit hands / retained PDF p.11 — Three Dragons; §E non-winner limits / retained PDF pp.11–12",
           "supports": [
             "broader-winning-three-dragon-predicate",
-            "separate-incomplete-non-winner-consequence"
-          ],
-          "status": "source-verified"
-        },
-        {
-          "kind": "runtime-binding",
-          "path": "artifacts/mahjong-scorer/src/game/types.ts",
-          "locator": "ProfileScoreResult resultId union",
-          "supports": [
-            "profile-score-result-ids-not-special-hand-treatments"
-          ],
-          "status": "existing-runtime-contract"
-        },
-        {
-          "kind": "repo-evidence",
-          "path": "docs/rules/OUTSIDE_THE_BOX_PROFILE_CROSSWALK.md",
-          "locator": "§2 Three Great Scholars",
-          "supports": [
-            "same-suit-remaining-set-and-pair",
-            "chow-permission",
-            "full-exposure-value"
-          ],
-          "status": "verified-club"
-        },
-        {
-          "kind": "repo-evidence",
-          "path": "docs/rules/BUZZARD_2000_RULE_EVIDENCE.md",
-          "locator": "§D Limit hands",
-          "supports": [
+            "separate-incomplete-non-winner-consequence",
             "three-dragon-winning-limit",
-            "chow-permitted-as-fourth-set"
-          ],
-          "status": "source-verified"
-        },
-        {
-          "kind": "repo-evidence",
-          "path": "docs/rules/BUZZARD_2000_RULE_EVIDENCE.md",
-          "locator": "§E non-winner limits",
-          "supports": [
+            "chow-permitted-as-fourth-set",
             "separate-incomplete-three-dragon-table-result",
             "unchanged-from-issue-220"
           ],
-          "status": "existing-runtime-path"
+          "status": "source-verified"
         }
       ]
     },
@@ -399,43 +386,6 @@
             "not-identical-to-bmja-western"
           ],
           "status": "source-complete"
-        }
-      ]
-    },
-    {
-      "entryId": "heavens-blessing-original-hand",
-      "evidenceBindings": [
-        {
-          "kind": "reviewed-audit",
-          "path": "docs/rules/encyclopaedia/CLASSICAL_ATLAS_CONCEPT_AUDIT_V1.md",
-          "locator": "§8 Heaven’s/Earth’s Blessing and event-defined treatments; superseded for Buzzard Original Hand by ATLAS_BUZZARD_RECONCILIATION_2026.md",
-          "supports": [
-            "reviewed-current-event-family",
-            "bmja-provenance-remains-inferred"
-          ],
-          "status": "reviewed"
-        },
-        {
-          "kind": "repo-evidence",
-          "path": "docs/rules/BMJA_RULES_REFERENCE.md",
-          "locator": "Event-dependent specials — Heaven’s Blessing / Mah Jong in original deal",
-          "supports": [
-            "bmja-event-source-mapping"
-          ],
-          "status": "inferred-mapping-retained"
-        },
-        {
-          "kind": "repo-evidence",
-          "path": "docs/rules/BUZZARD_2000_RULE_EVIDENCE.md",
-          "locator": "§D Limit hands / retained PDF p.11 — Original Hand",
-          "supports": [
-            "east-seat",
-            "original-deal-event",
-            "already-complete-hand",
-            "local-names",
-            "configured-limit-membership"
-          ],
-          "status": "source-verified"
         }
       ]
     }

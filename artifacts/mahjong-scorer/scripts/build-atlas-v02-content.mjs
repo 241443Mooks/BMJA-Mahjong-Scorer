@@ -25,7 +25,10 @@ for (const path of contentFiles) {
 }
 
 const batchOneEvidence = readJson(manifest.contentSources.batch1Evidence.split('/').at(-1));
+const evidenceEntryIds = new Set();
 for (const evidence of batchOneEvidence.entries) {
+  if (evidenceEntryIds.has(evidence.entryId)) throw new Error(`Duplicate batch-one evidence entry id: ${evidence.entryId}`);
+  evidenceEntryIds.add(evidence.entryId);
   const entry = entries.get(evidence.entryId);
   if (!entry) throw new Error(`Batch-one evidence has no learner entry: ${evidence.entryId}`);
   entry.evidenceBindings = evidence.evidenceBindings;
