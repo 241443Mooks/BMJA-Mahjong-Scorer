@@ -5,10 +5,12 @@
   "type": "module",
   "scripts": {
     "dev": "vite --config vite.config.ts --host 0.0.0.0",
-    "build": "vite build --config vite.config.ts && node scripts/prerender-seo.mjs",
+    "build": "node scripts/build-atlas-v02-content.mjs --check && vite build --config vite.config.ts && node scripts/prerender-seo.mjs",
     "serve": "vite preview --config vite.config.ts --host 0.0.0.0",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "vitest run --config vitest.config.ts",
+    "test": "node scripts/build-atlas-v02-content.mjs --check && vitest run --config vitest.config.ts",
+    "atlas:generate": "node scripts/build-atlas-v02-content.mjs",
+    "atlas:check": "node scripts/build-atlas-v02-content.mjs --check",
     "screenshots:help": "git submodule update --init --recursive --depth 1 && node scripts/capture-help-screenshots.mjs"
   },
   "devDependencies": {

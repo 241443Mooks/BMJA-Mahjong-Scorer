@@ -1,4 +1,4 @@
-import { dragon, expandedTiles, suited, wind } from '../scoring';
+import { detectSpecialHands, dragon, expandedTiles, suited, wind } from '../scoring';
 import type { MahjongHand, PlayingTile, Wind, WinningMethod } from '../scoring';
 import type { HandScorerExampleContext } from '../game';
 import { SPECIAL_HAND_ANCHORS } from './special-hand-references';
@@ -46,6 +46,18 @@ const examples: SpecialHandExample[] = [
 export const specialHandExamples = examples;
 export const specialHandExampleById = (id: string | null | undefined) => examples.find((example) => example.id === id);
 export const specialHandExampleHref = (id: SpecialHandExample['id']) => `/hand?example=${id}`;
+const patternForExample = (id: string) => id === 'gathering-the-plum-blossom-from-the-roof' ? 'gathering-plum-blossom'
+  : id === 'plucking-the-moon-from-the-bottom-of-the-sea' ? 'plucking-moon' : id;
+
+/** Existing example routes load the BMJA scorer. Only expose an action for an exact BMJA treatment the runtime accepts. */
+export const specialHandExampleProvesBmjaTreatment = (exampleId: string, referenceId: string): boolean => {
+  const match = /^bmja@1\.0:(.+)$/.exec(referenceId);
+  if (!match || patternForExample(exampleId) !== match[1]) return false;
+  const example = specialHandExampleById(exampleId);
+  if (!example) return false;
+  return detectSpecialHands(example.hand, { playerWind: example.playerWind ?? 'east', prevailingWind: 'east', limit: 1000 })
+    .some(({ id }) => id === match[1]);
+};
 export const exampleVisualTiles = ({ hand }: Pick<SpecialHandExample, 'hand'>): TileDefinition[] => {
   const tiles = [...hand.sets.flatMap(expandedTiles), ...(hand.looseTiles ?? []), ...(hand.remainingTiles ?? [])];
   return tiles.map((tile) => {
