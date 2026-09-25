@@ -5,6 +5,14 @@ Base: `575ad69db43008137c71a7ba3509d9c9c17589e5`
 Scope: the 146 exact treatments in `bmja@1.0`, `western-tm@0.1`, `outside-the-box@0.1`, and `buzzard-2000@0.1`.
 Purpose: #351, following the authoritative Sol preflight addendum.
 
+## Supersession pointer
+
+For Buzzard Thirteen Odd Majors, Original Hand, Three Dragons, and Three Winds,
+the final evidence and relationship decisions in
+[`ATLAS_BUZZARD_RECONCILIATION_2026.md`](ATLAS_BUZZARD_RECONCILIATION_2026.md)
+supersede conflicting conservative conclusions below. This pointer does not
+change exact treatment identity or any scoring/runtime semantics.
+
 This is a research/model document. Existing exact treatment identity remains
 `profile id + profile version + executable pattern id`. Nothing here edits
 detectors, bindings, values, or production presentation. Classical groupings

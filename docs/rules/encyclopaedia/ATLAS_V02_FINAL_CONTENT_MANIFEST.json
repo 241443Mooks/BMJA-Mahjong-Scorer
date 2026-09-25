@@ -2,7 +2,13 @@
   "schemaVersion": "1.0-handoff",
   "status": "authoritative #354 content ownership/index; implementation must use this manifest to resolve research-batch ownership without semantic inference",
   "base": "efe2cec955f973a28a5e982160f3b6e39593606a",
-  "corpus": { "bmja": 18, "western-tm": 85, "outside-the-box": 33, "buzzard-2000": 10, "total": 146 },
+  "corpus": {
+    "bmja": 18,
+    "western-tm": 85,
+    "outside-the-box": 33,
+    "buzzard-2000": 10,
+    "total": 146
+  },
   "contentSources": {
     "batch1": "docs/rules/encyclopaedia/ATLAS_V02_LEARNER_CONTENT_PROOF.json",
     "batch1Evidence": "docs/rules/encyclopaedia/ATLAS_V02_EVIDENCE_BINDINGS_BATCH1.json",
@@ -32,18 +38,62 @@
         "western-tm@0.1:seven-pairs-all-from-wall"
       ],
       "variantTreatmentReferenceIds": {
-        "all-pair-honours": ["bmja@1.0:all-pair-honours", "western-tm@0.1:all-pair-honours", "outside-the-box@0.1:all-pair-honours"],
-        "all-pair-western": ["western-tm@0.1:seven-pairs-one-suit-with-honours", "outside-the-box@0.1:seven-pairs-one-suit-with-honours"],
-        "heavenly-twins": ["western-tm@0.1:seven-pairs-one-suit", "outside-the-box@0.1:seven-pairs-one-suit"],
-        "seven-twins": ["western-tm@0.1:seven-pairs-all-from-wall"]
+        "all-pair-honours": [
+          "bmja@1.0:all-pair-honours",
+          "western-tm@0.1:all-pair-honours",
+          "outside-the-box@0.1:all-pair-honours"
+        ],
+        "all-pair-western": [
+          "western-tm@0.1:seven-pairs-one-suit-with-honours",
+          "outside-the-box@0.1:seven-pairs-one-suit-with-honours"
+        ],
+        "heavenly-twins": [
+          "western-tm@0.1:seven-pairs-one-suit",
+          "outside-the-box@0.1:seven-pairs-one-suit"
+        ],
+        "seven-twins": [
+          "western-tm@0.1:seven-pairs-all-from-wall"
+        ]
       }
     },
-    "hovering-angel": { "facets": ["ordinary-grouped", "multiple-suits", "chow-involving", "winds", "dragons", "pairs"] },
-    "windy-ones": { "addFacets": ["hybrid-layout"] },
-    "windy-nines": { "addFacets": ["hybrid-layout"] },
-    "windy-chow": { "addFacets": ["hybrid-layout"] },
-    "dragonfly": { "removeFacets": ["ordinary-grouped"], "addFacets": ["hybrid-layout"] },
-    "wriggly-dragon": { "addFacets": ["pairs"] }
+    "hovering-angel": {
+      "facets": [
+        "ordinary-grouped",
+        "multiple-suits",
+        "chow-involving",
+        "winds",
+        "dragons",
+        "pairs"
+      ]
+    },
+    "windy-ones": {
+      "addFacets": [
+        "hybrid-layout"
+      ]
+    },
+    "windy-nines": {
+      "addFacets": [
+        "hybrid-layout"
+      ]
+    },
+    "windy-chow": {
+      "addFacets": [
+        "hybrid-layout"
+      ]
+    },
+    "dragonfly": {
+      "removeFacets": [
+        "ordinary-grouped"
+      ],
+      "addFacets": [
+        "hybrid-layout"
+      ]
+    },
+    "wriggly-dragon": {
+      "addFacets": [
+        "pairs"
+      ]
+    }
   },
   "treatmentOwnership": {
     "bmja@1.0:knitting": "knitting-reviewed",
@@ -56,20 +106,19 @@
     "bmja@1.0:all-winds-and-dragons": "all-winds-and-dragons",
     "bmja@1.0:heads-and-tails": "heads-and-tails",
     "bmja@1.0:fourfold-plenty": "fourfold-plenty",
-    "bmja@1.0:three-great-scholars": "three-great-scholars-reviewed",
+    "bmja@1.0:three-great-scholars": "three-dragon-specials-family",
     "bmja@1.0:four-blessings": "four-blessings",
     "bmja@1.0:buried-treasure": "buried-treasure",
-    "bmja@1.0:heavens-blessing": "heavens-blessing-bmja",
+    "bmja@1.0:heavens-blessing": "heavens-blessing-original-hand",
     "bmja@1.0:earths-blessing": "earths-blessing-bmja",
     "bmja@1.0:gathering-plum-blossom": "gathering-plum-blossom-bmja",
     "bmja@1.0:plucking-moon": "plucking-moon-bmja",
     "bmja@1.0:twofold-fortune": "twofold-fortune-bmja",
-
     "outside-the-box@0.1:buried-treasure": "buried-treasure",
     "outside-the-box@0.1:imperial-jade": "imperial-jade",
     "outside-the-box@0.1:heads-and-tails": "heads-and-tails",
     "outside-the-box@0.1:all-winds-and-dragons": "all-winds-and-dragons",
-    "outside-the-box@0.1:club-three-great-scholars": "three-great-scholars-club-verified",
+    "outside-the-box@0.1:club-three-great-scholars": "three-dragon-specials-family",
     "outside-the-box@0.1:four-blessings": "four-blessings",
     "outside-the-box@0.1:fourfold-plenty": "fourfold-plenty",
     "outside-the-box@0.1:knitting": "knitting-reviewed",
@@ -98,19 +147,17 @@
     "outside-the-box@0.1:white-dragon-pung-with-circle-melds": "white-opal",
     "outside-the-box@0.1:run-one-to-nine-with-same-suit-pung-and-pair": "run-pung-pair",
     "outside-the-box@0.1:run-one-to-nine-with-honour-pung-and-suited-pair": "grand-sequence-family",
-
     "buzzard-2000@0.1:all-winds-and-dragons": "buzzard-all-winds-dragons",
     "buzzard-2000@0.1:three-winds-and-fourth-wind-pair": "buzzard-three-winds-pair",
-    "buzzard-2000@0.1:heavens-blessing": "original-hand-buzzard",
+    "buzzard-2000@0.1:heavens-blessing": "heavens-blessing-original-hand",
     "buzzard-2000@0.1:earths-blessing": "buzzard-east-first-discard",
     "buzzard-2000@0.1:heads-and-tails": "buzzard-all-ones-nines",
-    "buzzard-2000@0.1:buzzard-three-dragons-winner": "three-dragons-buzzard-winner-verified",
+    "buzzard-2000@0.1:buzzard-three-dragons-winner": "three-dragon-specials-family",
     "buzzard-2000@0.1:four-concealed-pung-kong-hand": "buzzard-concealed-pungs-kongs",
-    "buzzard-2000@0.1:thirteen-unique-wonders": "thirteen-odd-majors-buzzard",
+    "buzzard-2000@0.1:thirteen-unique-wonders": "thirteen-unique-wonders",
     "buzzard-2000@0.1:one-suit-nine-gates-any-completion": "gates-family",
     "buzzard-2000@0.1:east-thirteenth-consecutive-mahjong": "buzzard-east-thirteenth-consecutive-mahjong",
-
-    "western-tm@0.1:three-great-scholars": "three-great-scholars-reviewed",
+    "western-tm@0.1:three-great-scholars": "three-dragon-specials-family",
     "western-tm@0.1:thirteen-unique-wonders": "thirteen-unique-wonders",
     "western-tm@0.1:all-pair-honours": "pair-hand-family",
     "western-tm@0.1:four-blessings": "four-blessings",
@@ -142,7 +189,6 @@
     "western-tm@0.1:white-dragon-pung-with-circle-melds": "white-opal",
     "western-tm@0.1:run-one-to-nine-with-same-suit-pung-and-pair": "run-pung-pair",
     "western-tm@0.1:run-one-to-nine-with-honour-pung-and-any-pair": "grand-sequence-family",
-
     "western-tm@0.1:suit-run-one-to-seven-with-winds-and-dragon-pung": "gretas-run-family",
     "western-tm@0.1:full-suit-run-with-dragon-singles-and-wind-pair": "dragons-run-western",
     "western-tm@0.1:two-suit-pairs-and-chows-one-two-five-six-nine": "yin-yang-western",
@@ -199,14 +245,27 @@
   },
   "exampleClassifications": {
     "existingScorerExampleIds": [
-      "all-pair-honours", "all-winds-and-dragons", "heads-and-tails", "fourfold-plenty", "three-great-scholars", "four-blessings", "buried-treasure", "imperial-jade", "knitting", "triple-knitting", "thirteen-unique-wonders", "gates-of-heaven", "wriggling-snake", "heavens-blessing", "earths-blessing", "gathering-the-plum-blossom-from-the-roof", "plucking-the-moon-from-the-bottom-of-the-sea", "twofold-fortune"
+      "all-pair-honours",
+      "all-winds-and-dragons",
+      "heads-and-tails",
+      "fourfold-plenty",
+      "three-great-scholars",
+      "four-blessings",
+      "buried-treasure",
+      "imperial-jade",
+      "knitting",
+      "triple-knitting",
+      "thirteen-unique-wonders",
+      "gates-of-heaven",
+      "wriggling-snake",
+      "heavens-blessing",
+      "earths-blessing",
+      "gathering-the-plum-blossom-from-the-roof",
+      "plucking-the-moon-from-the-bottom-of-the-sea",
+      "twofold-fortune"
     ],
     "proofExamplePolicy": "All other authored examples are knowledge assets only until the implementation slice promotes them into the runtime example registry and proves that the exact target profile accepts them.",
     "generatorPolicy": "tile-hand-generator examples must be materialised from the referenced canonical predicate/source constraint; do not manually substitute a guessed tile mapping."
   },
-  "unresolvedTreatmentReferenceIds": [
-    "buzzard-2000@0.1:thirteen-unique-wonders",
-    "buzzard-2000@0.1:heavens-blessing",
-    "buzzard-2000@0.1:three-winds-and-fourth-wind-pair"
-  ]
+  "unresolvedTreatmentReferenceIds": []
 }

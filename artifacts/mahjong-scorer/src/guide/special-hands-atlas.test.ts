@@ -157,8 +157,8 @@ describe('Special Hands Atlas directory projection', () => {
     expect(new Set(Object.keys(ATLAS_TREATMENT_OWNERSHIP)).size).toBe(146);
     expect(ownerIds).toHaveLength(146);
     expect(new Set(SPECIAL_HANDS_ATLAS.map(({ referenceId }) => referenceId))).toEqual(new Set(Object.keys(ATLAS_TREATMENT_OWNERSHIP)));
-    expect(ATLAS_TREATMENT_OWNERSHIP['outside-the-box@0.1:club-three-great-scholars']).toBe('three-great-scholars-club-verified');
-    expect(ATLAS_TREATMENT_OWNERSHIP['buzzard-2000@0.1:buzzard-three-dragons-winner']).toBe('three-dragons-buzzard-winner-verified');
+    expect(ATLAS_TREATMENT_OWNERSHIP['outside-the-box@0.1:club-three-great-scholars']).toBe('three-dragon-specials-family');
+    expect(ATLAS_TREATMENT_OWNERSHIP['buzzard-2000@0.1:buzzard-three-dragons-winner']).toBe('three-dragon-specials-family');
     for (const record of SPECIAL_HANDS_ATLAS) {
       const owner = ATLAS_LEARNER_ENTRIES.find(({ id }) => id === ATLAS_TREATMENT_OWNERSHIP[record.referenceId]);
       expect(owner, record.referenceId).toBeDefined();
@@ -193,22 +193,40 @@ describe('Special Hands Atlas directory projection', () => {
       'bmja@1.0:triple-knitting',
       'outside-the-box@0.1:triple-knitting',
     ];
-    expect(ATLAS_UNRESOLVED_TREATMENTS.size).toBe(3);
+    expect(ATLAS_UNRESOLVED_TREATMENTS.size).toBe(0);
     expect(resolvedRefs.filter((referenceId) => ATLAS_UNRESOLVED_TREATMENTS.has(referenceId))).toEqual([]);
-    expect([...ATLAS_UNRESOLVED_TREATMENTS].sort()).toEqual([
-      'buzzard-2000@0.1:heavens-blessing',
-      'buzzard-2000@0.1:thirteen-unique-wonders',
-      'buzzard-2000@0.1:three-winds-and-fourth-wind-pair',
-    ]);
+    expect([...ATLAS_UNRESOLVED_TREATMENTS]).toEqual([]);
   });
 
   it('resolves reviewed concept aliases, profile-local names and exact treatment IDs', () => {
     expect(searchAtlasLearnerEntries(ATLAS_LEARNER_ENTRIES, 'Unique Wonder').map(({ id }) => id)).toContain('thirteen-unique-wonders');
     expect(searchAtlasLearnerEntries(ATLAS_LEARNER_ENTRIES, '13 Unique Wonders').map(({ id }) => id)).toContain('thirteen-unique-wonders');
     expect(searchAtlasLearnerEntries(ATLAS_LEARNER_ENTRIES, 'Imperial Jade').map(({ id }) => id)).toContain('imperial-jade');
-    expect(searchAtlasLearnerEntries(ATLAS_LEARNER_ENTRIES, 'Three Dragons').map(({ id }) => id)).toEqual(['three-dragons-buzzard-winner-verified']);
+    expect(searchAtlasLearnerEntries(ATLAS_LEARNER_ENTRIES, 'Three Dragons').map(({ id }) => id)).toEqual(['three-dragon-specials-family']);
+    expect(searchAtlasLearnerEntries(ATLAS_LEARNER_ENTRIES, 'Thirteen Odd Majors').map(({ id }) => id)).toContain('thirteen-unique-wonders');
+    for (const alias of ['Original Hand', 'Hand from Heaven', 'Natural Winning']) {
+      expect(searchAtlasLearnerEntries(ATLAS_LEARNER_ENTRIES, alias).map(({ id }) => id)).toContain('heavens-blessing-original-hand');
+    }
+    expect(searchAtlasLearnerEntries(ATLAS_LEARNER_ENTRIES, 'Three Winds').map(({ id }) => id)).toContain('buzzard-three-winds-pair');
     expect(searchAtlasLearnerEntries(ATLAS_LEARNER_ENTRIES, 'western-tm@0.1:purity-one-chow').map(({ id }) => id)).toContain('purity-western-calculated');
     expect(searchAtlasLearnerEntries(ATLAS_LEARNER_ENTRIES, 'Golden Gates').map(({ id }) => id)).toContain('western-gates-named-topic');
+  });
+
+  it('keeps Buzzard non-winner consequences as profile-score-result knowledge links', () => {
+    const expected = [
+      ['three-dragon-specials-family', 'buzzard.incomplete-three-dragon-limit'],
+      ['buzzard-three-winds-pair', 'buzzard.incomplete-four-wind-limit'],
+    ] as const;
+    for (const [entryId, resultId] of expected) {
+      const learnerEntry = ATLAS_LEARNER_ENTRIES.find(({ id }) => id === entryId)!;
+      expect(learnerEntry.knowledgeLinks).toContainEqual(expect.objectContaining({
+        kind: 'profile-score-result', profile: 'buzzard-2000@0.1', resultId,
+        relationship: 'same-source-family-non-winner-consequence', authority: 'issue-220-runtime',
+      }));
+      expect(learnerEntry.treatmentReferenceIds).not.toContain(resultId);
+      expect(ATLAS_TREATMENT_OWNERSHIP).not.toHaveProperty(resultId);
+      expect(SPECIAL_HANDS_ATLAS.some(({ referenceId, identity }) => referenceId === resultId || identity.patternId === resultId)).toBe(false);
+    }
   });
 
   it('keeps overlapping facet results de-duplicated and applies facets as filters', () => {
@@ -276,8 +294,8 @@ describe('Special Hands Atlas directory projection', () => {
     expect(atlasTreatmentsForEntry(entry('twofold-fortune-bmja')).map(({ referenceId }) => referenceId)).toEqual(['bmja@1.0:twofold-fortune']);
     expect(ATLAS_UNRESOLVED_TREATMENTS.has('outside-the-box@0.1:club-three-great-scholars')).toBe(false);
     expect(ATLAS_UNRESOLVED_TREATMENTS.has('buzzard-2000@0.1:buzzard-three-dragons-winner')).toBe(false);
-    expect(entry('three-great-scholars-club-verified').state).toBe('standalone-verified-treatment');
-    expect(entry('three-dragons-buzzard-winner-verified').state).toBe('standalone-verified-treatment');
+    expect(entry('three-dragon-specials-family').state).toBe('reviewed-family-topic');
+    expect(entry('three-dragon-specials-family').variants?.map(({ relation }) => relation)).toEqual(expect.arrayContaining(['shared-narrower-concept', 'related-materially-different', 'related-broader-winner']));
     expect(entry('wriggling-snake-family').variants?.map(({ label }) => label)).toEqual(expect.arrayContaining(['Wriggling Snake', 'Wriggly Snake']));
     expect(entry('pair-hand-family').variants?.map(({ label }) => label)).toEqual(expect.arrayContaining(['All Pair Honours', 'All Pair', 'Heavenly Twins', 'Seven Twins']));
     expect(entry('windy-ones').facets).toContain('hybrid-layout');
