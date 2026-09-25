@@ -385,7 +385,8 @@
           "label": "All Pair",
           "relation": "name-collision with All Pair Honours; neither predicate contains the other",
           "treatmentReferenceIds": [
-            "western-tm@0.1:seven-pairs-one-suit-with-honours"
+            "western-tm@0.1:seven-pairs-one-suit-with-honours",
+            "outside-the-box@0.1:seven-pairs-one-suit-with-honours"
           ],
           "facets": [
             "irregular-hand",
@@ -403,7 +404,8 @@
           "label": "Heavenly Twins",
           "relation": "narrower-than All Pair",
           "treatmentReferenceIds": [
-            "western-tm@0.1:seven-pairs-one-suit"
+            "western-tm@0.1:seven-pairs-one-suit",
+            "outside-the-box@0.1:seven-pairs-one-suit"
           ],
           "facets": [
             "irregular-hand",
@@ -460,25 +462,7 @@
           ],
           "status": "verified-club"
         }
-      ],
-      "variantTreatmentReferenceIds": {
-        "all-pair-honours": [
-          "bmja@1.0:all-pair-honours",
-          "western-tm@0.1:all-pair-honours",
-          "outside-the-box@0.1:all-pair-honours"
-        ],
-        "all-pair-western": [
-          "western-tm@0.1:seven-pairs-one-suit-with-honours",
-          "outside-the-box@0.1:seven-pairs-one-suit-with-honours"
-        ],
-        "heavenly-twins": [
-          "western-tm@0.1:seven-pairs-one-suit",
-          "outside-the-box@0.1:seven-pairs-one-suit"
-        ],
-        "seven-twins": [
-          "western-tm@0.1:seven-pairs-all-from-wall"
-        ]
-      }
+      ]
     },
     {
       "id": "heavens-blessing-bmja",

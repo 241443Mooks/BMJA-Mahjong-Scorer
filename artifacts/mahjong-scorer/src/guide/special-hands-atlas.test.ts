@@ -5,7 +5,7 @@ import { initialiseCurrentRulesRuntimes } from '../rules-platform/current-runtim
 import { readPreferredRulesProfile, PREFERRED_RULES_PROFILE_STORAGE_KEY } from '../game/preferred-rules-profile';
 import { specialHandBindingsForCurrentClassicalProfile } from '../rules-knowledge/current-classical-special-hand-bindings';
 import { specialHandTreatmentsForProfile } from '../rules-knowledge/special-hand-treatments';
-import { ATLAS_EXAMPLE_BY_ID, ATLAS_FACET_DEFINITIONS, ATLAS_LEARNER_ENTRIES, ATLAS_TREATMENT_OWNERSHIP, ATLAS_UNRESOLVED_TREATMENTS, SPECIAL_HANDS_ATLAS, atlasBrowseRecords, atlasScoreLabel, atlasTreatmentsForEntry, clearAtlasSearchAndProfileFilter, filterAtlasEntriesByFacets, filterSpecialHandsAtlasByProfile, searchAtlasLearnerEntries, searchSpecialHandsAtlas } from './special-hands-atlas';
+import { ATLAS_EXAMPLE_BY_ID, ATLAS_FACET_DEFINITIONS, ATLAS_LEARNER_ENTRIES, ATLAS_TREATMENT_OWNERSHIP, ATLAS_UNRESOLVED_TREATMENTS, SPECIAL_HANDS_ATLAS, atlasBrowseRecords, atlasExamplesForTreatment, atlasScoreLabel, atlasTreatmentsForEntry, clearAtlasSearchAndProfileFilter, filterAtlasEntriesByFacets, filterSpecialHandsAtlasByProfile, searchAtlasLearnerEntries, searchSpecialHandsAtlas, selectAtlasLeadExample } from './special-hands-atlas';
 import { specialHandExampleProvesBmjaTreatment } from './special-hand-examples';
 import { materializeAtlasGenerator } from './AtlasExampleVisual';
 import { detectSpecialHands } from '../scoring';
@@ -169,6 +169,36 @@ describe('Special Hands Atlas directory projection', () => {
     expect(new Set(results.map(({ id }) => id)).size).toBe(results.length);
     expect(ATLAS_FACET_DEFINITIONS['hybrid-layout']).toBeTruthy();
     expect(filterAtlasEntriesByFacets(ATLAS_LEARNER_ENTRIES, ['hybrid-layout']).map(({ id }) => id)).toContain('windy-ones');
+  });
+
+  it('applies final pair-family variant memberships from the authoritative manifest', () => {
+    const pairFamily = ATLAS_LEARNER_ENTRIES.find(({ id }) => id === 'pair-hand-family')!;
+    const variants = new Map(pairFamily.variants?.map(({ id, treatmentReferenceIds }) => [id, treatmentReferenceIds]));
+    expect(variants.get('all-pair-western')).toEqual([
+      'western-tm@0.1:seven-pairs-one-suit-with-honours',
+      'outside-the-box@0.1:seven-pairs-one-suit-with-honours',
+    ]);
+    expect(variants.get('heavenly-twins')).toEqual([
+      'western-tm@0.1:seven-pairs-one-suit',
+      'outside-the-box@0.1:seven-pairs-one-suit',
+    ]);
+    expect(atlasExamplesForTreatment(pairFamily, 'outside-the-box@0.1:seven-pairs-one-suit-with-honours').map(({ id }) => id)).toEqual(['example-all-pair-western']);
+    expect(atlasExamplesForTreatment(pairFamily, 'outside-the-box@0.1:seven-pairs-one-suit').map(({ id }) => id)).toEqual(['example-heavenly-twins']);
+  });
+
+  it('leads Imperial Jade with the preferred treatment variant example', () => {
+    const imperialJade = ATLAS_LEARNER_ENTRIES.find(({ id }) => id === 'imperial-jade')!;
+    expect(selectAtlasLeadExample(imperialJade, WESTERN_TM_PROFILE_REF)).toMatchObject({
+      example: { id: 'example-imperial-jade-western-chow' },
+      variantLabel: 'Thompson & Maloney Western form',
+    });
+    expect(selectAtlasLeadExample(imperialJade, BMJA_PROFILE_REF)).toMatchObject({
+      example: { id: 'example-imperial-jade-narrow-existing' },
+      variantLabel: 'British / Outside the Box form',
+    });
+    expect(selectAtlasLeadExample(imperialJade, OUTSIDE_THE_BOX_PROFILE_REF)).toMatchObject({
+      example: { id: 'example-imperial-jade-narrow-existing' },
+    });
   });
 
   it('keeps preference reads and All rules browsing free of writes', () => {

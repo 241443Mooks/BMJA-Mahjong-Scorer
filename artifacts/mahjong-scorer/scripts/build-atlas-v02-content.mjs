@@ -46,7 +46,13 @@ for (const [entryId, override] of Object.entries(manifest.finalEntryOverrides)) 
   const entry = entries.get(entryId);
   if (!entry) throw new Error(`Final override has no learner entry: ${entryId}`);
   if (override.treatmentReferenceIds) entry.treatmentReferenceIds = override.treatmentReferenceIds;
-  if (override.variantTreatmentReferenceIds) entry.variantTreatmentReferenceIds = override.variantTreatmentReferenceIds;
+  if (override.variantTreatmentReferenceIds) {
+    for (const [variantId, treatmentReferenceIds] of Object.entries(override.variantTreatmentReferenceIds)) {
+      const variant = entry.variants?.find(({ id }) => id === variantId);
+      if (!variant) throw new Error(`Final variant override has no matching variant: ${entryId}/${variantId}`);
+      variant.treatmentReferenceIds = treatmentReferenceIds;
+    }
+  }
   if (override.facets) entry.facets = override.facets;
   if (override.addFacets) entry.facets = [...new Set([...(entry.facets ?? []), ...override.addFacets])];
   if (override.removeFacets) entry.facets = (entry.facets ?? []).filter((facet) => !override.removeFacets.includes(facet));
@@ -77,5 +83,16 @@ const model = {
   existingScorerExampleIds: manifest.exampleClassifications.existingScorerExampleIds,
 };
 const output = resolve(packageRoot, 'src/guide/atlas-v02-content.json');
-writeFileSync(output, `${JSON.stringify(model, null, 2)}\n`);
-console.log(`Wrote ${model.entries.length} learner entries, ${model.examples.length} examples and ${ownedRefs.length} treatment owners.`);
+const expected = `${JSON.stringify(model, null, 2)}\n`;
+if (process.argv.includes('--check')) {
+  const actual = readFileSync(output, 'utf8');
+  if (actual !== expected) {
+    console.error('Atlas v0.2 runtime content is stale. Run `pnpm --filter @workspace/mahjong-scorer atlas:generate` and commit the updated snapshot.');
+    process.exitCode = 1;
+  } else {
+    console.log(`Atlas v0.2 runtime content is current (${model.entries.length} learner entries, ${model.examples.length} examples, ${ownedRefs.length} treatment owners).`);
+  }
+} else {
+  writeFileSync(output, expected);
+  console.log(`Wrote ${model.entries.length} learner entries, ${model.examples.length} examples and ${ownedRefs.length} treatment owners.`);
+}

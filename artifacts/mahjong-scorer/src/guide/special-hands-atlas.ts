@@ -84,6 +84,38 @@ export const atlasTreatmentsForEntry = (entry: AtlasLearnerEntry): SpecialHandsA
     return record ? [record] : [];
   });
 
+export function atlasExamplesForTreatment(entry: AtlasLearnerEntry, referenceId: string): AtlasExample[] {
+  const matchingVariants = (entry.variants ?? []).filter(({ treatmentReferenceIds }) => treatmentReferenceIds?.includes(referenceId));
+  const ids = matchingVariants.length ? matchingVariants.flatMap(({ exampleIds }) => exampleIds ?? []) : entry.exampleIds ?? [];
+  return [...new Set(ids)].flatMap((id) => {
+    const example = ATLAS_EXAMPLE_BY_ID.get(id);
+    return example ? [example] : [];
+  });
+}
+
+export function selectAtlasLeadExample(
+  entry: AtlasLearnerEntry,
+  preferredProfile: RulesProfileRef | null,
+): { example: AtlasExample; variantLabel?: string } | undefined {
+  const variants = entry.variants ?? [];
+  if (preferredProfile) {
+    const treatment = atlasTreatmentsForEntry(entry).find(({ identity }) =>
+      identity.profile.id === preferredProfile.id && identity.profile.version === preferredProfile.version);
+    const variant = treatment && variants.find(({ treatmentReferenceIds }) => treatmentReferenceIds?.includes(treatment.referenceId));
+    const treatmentExample = variant?.exampleIds?.map((id) => ATLAS_EXAMPLE_BY_ID.get(id)).find((example) => !!example);
+    if (treatmentExample) return { example: treatmentExample, variantLabel: variant?.label };
+  }
+
+  const sharedExample = entry.exampleIds?.map((id) => ATLAS_EXAMPLE_BY_ID.get(id)).find((example) => !!example);
+  if (sharedExample) return { example: sharedExample };
+
+  for (const variant of variants) {
+    const example = variant.exampleIds?.map((id) => ATLAS_EXAMPLE_BY_ID.get(id)).find((item) => !!item);
+    if (example) return { example, variantLabel: variant.label };
+  }
+  return undefined;
+}
+
 export function atlasScoreLabel(record: SpecialHandsAtlasRecord): string {
   if (record.scoreModel === 'calculated') return 'Calculated under this profile';
   if (record.scoreModel === 'configured-limit') return 'Configured/table limit';

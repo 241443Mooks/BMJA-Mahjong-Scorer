@@ -15,10 +15,12 @@ import {
   CLASSICAL_ATLAS_PROFILES,
   SPECIAL_HANDS_ATLAS,
   atlasScoreLabel,
+  atlasExamplesForTreatment,
   atlasTreatmentsForEntry,
   clearAtlasSearchAndProfileFilter,
   filterAtlasEntriesByFacets,
   searchAtlasLearnerEntries,
+  selectAtlasLeadExample,
   type AtlasExample,
   type AtlasLearnerEntry,
   type SpecialHandsAtlasRecord,
@@ -33,14 +35,6 @@ const examplesForEntry = (entry: AtlasLearnerEntry) => {
     return example ? [example] : [];
   });
 };
-const examplesForTreatment = (entry: AtlasLearnerEntry, record: SpecialHandsAtlasRecord) => {
-  const matchingVariants = (entry.variants ?? []).filter((variant) => variant.treatmentReferenceIds?.includes(record.referenceId));
-  const ids = matchingVariants.length
-    ? matchingVariants.flatMap((variant) => variant.exampleIds ?? [])
-    : entry.exampleIds ?? [];
-  return [...new Set(ids)].flatMap((id) => { const example = ATLAS_EXAMPLE_BY_ID.get(id); return example ? [example] : []; });
-};
-
 function treatmentAnchor(record: SpecialHandsAtlasRecord) {
   if (!record.href) return undefined;
   const raw = record.href.split('#')[1];
@@ -80,7 +74,7 @@ function TreatmentDetails({
   const localTeaching = record.referenceId;
   const unresolved = ATLAS_UNRESOLVED_TREATMENTS.has(record.referenceId);
   return <details className="rounded-lg border border-[#dfd5c2] bg-white/70 p-3">
-    <summary className="cursor-pointer rounded text-sm font-semibold text-[#284d45] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">
+    <summary id={treatmentAnchor(record)} className="cursor-pointer rounded text-sm font-semibold text-[#284d45] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">
       <span>{record.name}</span><span className="ml-2 text-xs font-normal text-[#596b65]">{record.profileLabel} · {record.identity.profile.version} · {atlasScoreLabel(record)}</span>
       {preferredProfile?.id === record.identity.profile.id && preferredProfile.version === record.identity.profile.version && <span className="ml-2 rounded-full bg-[#284d45] px-2 py-1 text-[11px] font-semibold text-white">My rules</span>}
     </summary>
@@ -122,9 +116,8 @@ function EntryCard({
 }) {
   const treatments = atlasTreatmentsForEntry(entry);
   const allExamples = examplesForEntry(entry);
-  const teaserExample = allExamples[0];
-  const teaserVariant = teaserExample && entry.variants?.find((variant) => variant.exampleIds?.includes(teaserExample.id));
   const ownTreatment = preferredProfile && treatments.find(({ identity }) => identity.profile.id === preferredProfile.id && identity.profile.version === preferredProfile.version);
+  const leadExample = selectAtlasLeadExample(entry, myRules ? preferredProfile : null);
   const legacyTreatment = treatments.find((record) => !!record.href);
   const prominentTreatment = myRules && ownTreatment ? ownTreatment : legacyTreatment;
   const remainingTreatments = prominentTreatment ? treatments.filter(({ referenceId }) => referenceId !== prominentTreatment.referenceId) : treatments;
@@ -148,7 +141,7 @@ function EntryCard({
       </div>
     </div>
 
-    {teaserExample && <AtlasExampleVisual example={teaserExample} title={teaserVariant ? `Example variant: ${teaserVariant.label}` : undefined} />}
+    {leadExample && <AtlasExampleVisual example={leadExample.example} title={leadExample.variantLabel ? `Example variant: ${leadExample.variantLabel}` : undefined} />}
     {entry.facets?.length ? <ul className="mt-3 flex flex-wrap gap-2" aria-label="Structural facets">{entry.facets.map((facet) => <li key={facet} className="rounded-full border border-[#b8cdbf] bg-[#edf3ed] px-2.5 py-1 text-xs font-medium text-[#284d45]">{facetName(facet)}</li>)}</ul> : null}
 
     {prominentTreatment && <TreatmentQuickSummary record={prominentTreatment} examples={allExamples.filter((example) => example.source.type === 'existing-example')} preferredProfile={preferredProfile} />}
@@ -169,7 +162,7 @@ function EntryCard({
         return <div key={variant.id} className="rounded-lg border border-[#dfd5c2] bg-[#fdfbf5] p-3"><h4 className="font-semibold text-[#284d45]">{variant.label}</h4>{variant.definition && <p className="mt-1 text-sm leading-6 text-[#596b65]">{variant.definition}</p>}{variantExamples.map((example) => <AtlasExampleVisual key={example.id} example={example} />)}</div>;
       })}</div></section> : null}
       {linkedEntries.length ? <section className="mt-4"><h3 className="font-serif text-lg text-[#284d45]">Related hands</h3><ul className="mt-2 flex flex-wrap gap-2">{linkedEntries.map((related) => <li key={related.id}><a className="inline-flex min-h-10 items-center rounded-full border border-[#b8cdbf] bg-white px-3 text-sm font-semibold text-[#284d45] underline decoration-[#ae6249] underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]" href={`#atlas-entry-${related.id}`}>{related.displayName}</a></li>)}</ul></section> : null}
-      {remainingTreatments.length > 0 && <section className="mt-4"><h3 className="mb-2 font-serif text-lg text-[#284d45]">{myRules && ownTreatment ? 'Other rules' : 'How each exact treatment scores'}</h3><div className="space-y-2">{remainingTreatments.map((record) => <TreatmentDetails key={record.referenceId} record={record} examples={examplesForTreatment(entry, record)} preferredProfile={preferredProfile} />)}</div></section>}
+      {remainingTreatments.length > 0 && <section className="mt-4"><h3 className="mb-2 font-serif text-lg text-[#284d45]">{myRules && ownTreatment ? 'Other rules' : 'How each exact treatment scores'}</h3><div className="space-y-2">{remainingTreatments.map((record) => <TreatmentDetails key={record.referenceId} record={record} examples={atlasExamplesForTreatment(entry, record.referenceId)} preferredProfile={preferredProfile} />)}</div></section>}
       {entry.evidenceBindings?.length ? <details className="mt-4 rounded-lg border border-[#dfd5c2] p-3"><summary className="cursor-pointer text-sm font-semibold text-[#596b65] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">Sources and evidence</summary><ul className="mt-2 space-y-2 text-xs leading-5 text-[#66746e]">{entry.evidenceBindings.map((binding, index) => <li key={`${binding.path}-${binding.locator}-${index}`}><span className="font-semibold">{binding.status} · {binding.supports.join(', ')}</span><br />{binding.path} · {binding.locator}</li>)}</ul></details> : null}
     </details>
   </article>;
