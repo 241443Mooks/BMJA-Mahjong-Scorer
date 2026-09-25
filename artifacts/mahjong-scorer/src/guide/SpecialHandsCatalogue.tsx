@@ -7,7 +7,7 @@ import { exampleVisualTiles, specialHandExampleById, specialHandExampleHref } fr
 import { BMJA_PROFILE_REF } from '../game/ruleset';
 import { descriptorForRulesProfile } from '../game/rules-presentation';
 import { readPreferredRulesProfile } from '../game/preferred-rules-profile';
-import { CLASSICAL_ATLAS_PROFILES, SPECIAL_HANDS_ATLAS, atlasBrowseRecords, atlasScoreLabel, searchSpecialHandsAtlas, type SpecialHandsAtlasRecord } from './special-hands-atlas';
+import { CLASSICAL_ATLAS_PROFILES, SPECIAL_HANDS_ATLAS, atlasBrowseRecords, atlasScoreLabel, clearAtlasSearchAndProfileFilter, searchSpecialHandsAtlas, type SpecialHandsAtlasRecord } from './special-hands-atlas';
 
 import { TileStrip, type TileAssetKey, type TileDefinition } from './MahjongTileGallery';
 
@@ -248,6 +248,11 @@ export function SpecialHandsCatalogue() {
     );
     return searchSpecialHandsAtlas(scoped, query);
   }, [myRules, preferredClassical, profileFilter, query]);
+  const clearSearchAndFilter = () => {
+    const cleared = clearAtlasSearchAndProfileFilter({ mode: myRules ? 'my-rules' : 'all-rules', query, profileFilter });
+    setQuery(cleared.query);
+    setProfileFilter(cleared.profileFilter);
+  };
 
   useEffect(() => {
     const anchor = window.location.hash.slice(1);
@@ -289,14 +294,14 @@ export function SpecialHandsCatalogue() {
           <label className="mt-5 block text-sm font-semibold text-[#284d45]" htmlFor="special-hands-search">Search special hands</label>
           <div className="mt-2 flex flex-wrap gap-2">
             <input id="special-hands-search" type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Name, rules profile or description" className="min-h-12 min-w-0 flex-1 rounded-lg border border-[#b8cdbf] bg-white px-4 text-base text-[#284d45] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]" />
-            {(query || profileFilter !== 'all') && <button type="button" onClick={() => { setQuery(''); setProfileFilter('all'); setMyRules(false); }} className="min-h-12 rounded-lg border border-[#b8cdbf] px-4 text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">Clear search and filters</button>}
+            {(query || profileFilter !== 'all') && <button type="button" onClick={clearSearchAndFilter} className="min-h-12 rounded-lg border border-[#b8cdbf] px-4 text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">Clear search and filters</button>}
           </div>
           <p className="mt-3 text-sm text-[#596b65]" aria-live="polite">{filteredRecords.length} {filteredRecords.length === 1 ? 'result' : 'results'}</p>
           <div className="mt-3 flex gap-3 rounded-xl bg-[#284d45] p-4 text-[#f8f4e9]"><CircleHelp size={18} className="mt-1 shrink-0 text-[#d7a287]" /><p className="text-[12px] leading-6 text-[#d8e3df]">A shared pattern ID does not make treatments equivalent. Read each result with its exact profile and version.</p></div>
         </section>
 
         <section className="py-6" aria-label="Atlas results">
-          {filteredRecords.length ? <div className="space-y-3">{filteredRecords.map((record) => <AtlasRecord key={record.referenceId} record={record} />)}</div> : <div className="rounded-xl border border-[#d8ceb8] bg-[#fbf8ed] p-6 text-center"><h2 className="font-serif text-2xl text-[#284d45]">No matching treatments</h2><p className="mt-2 text-sm text-[#596b65]">Try a different search or clear the search and profile filter.</p><button type="button" onClick={() => { setQuery(''); setProfileFilter('all'); setMyRules(false); }} className="mt-4 min-h-10 rounded-lg border border-[#b8cdbf] px-4 text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">Show all treatments</button></div>}
+          {filteredRecords.length ? <div className="space-y-3">{filteredRecords.map((record) => <AtlasRecord key={record.referenceId} record={record} />)}</div> : <div className="rounded-xl border border-[#d8ceb8] bg-[#fbf8ed] p-6 text-center"><h2 className="font-serif text-2xl text-[#284d45]">No matching treatments</h2><p className="mt-2 text-sm text-[#596b65]">Try a different search or clear the search and profile filter.</p><button type="button" onClick={clearSearchAndFilter} className="mt-4 min-h-10 rounded-lg border border-[#b8cdbf] px-4 text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">Show all treatments</button></div>}
         </section>
 
         <section className="mb-8 rounded-xl border border-[#d8ceb8] bg-[#fbf8ed] p-5" id="purity">

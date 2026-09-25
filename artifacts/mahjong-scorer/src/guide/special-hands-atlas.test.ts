@@ -5,7 +5,7 @@ import { initialiseCurrentRulesRuntimes } from '../rules-platform/current-runtim
 import { readPreferredRulesProfile, PREFERRED_RULES_PROFILE_STORAGE_KEY } from '../game/preferred-rules-profile';
 import { specialHandBindingsForCurrentClassicalProfile } from '../rules-knowledge/current-classical-special-hand-bindings';
 import { specialHandTreatmentsForProfile } from '../rules-knowledge/special-hand-treatments';
-import { SPECIAL_HANDS_ATLAS, atlasBrowseRecords, atlasScoreLabel, filterSpecialHandsAtlasByProfile, searchSpecialHandsAtlas } from './special-hands-atlas';
+import { SPECIAL_HANDS_ATLAS, atlasBrowseRecords, atlasScoreLabel, clearAtlasSearchAndProfileFilter, filterSpecialHandsAtlasByProfile, searchSpecialHandsAtlas } from './special-hands-atlas';
 import { SPECIAL_HAND_ANCHORS, specialHandReferenceHref } from './special-hand-references';
 
 const profiles = [BMJA_PROFILE_REF, WESTERN_TM_PROFILE_REF, OUTSIDE_THE_BOX_PROFILE_REF, BUZZARD_2000_PROFILE_REF];
@@ -81,6 +81,31 @@ describe('Special Hands Atlas directory projection', () => {
     expect(atlasBrowseRecords(SPECIAL_HANDS_ATLAS, preferred, 'all-rules', OUTSIDE_THE_BOX_PROFILE_REF).every(({ identity }) => identity.profile.id === 'outside-the-box')).toBe(true);
     expect(atlasBrowseRecords(SPECIAL_HANDS_ATLAS, preferred, 'all-rules', null).length).toBe(SPECIAL_HANDS_ATLAS.length);
     expect(writes).toBe(0);
+    expect(state.get(PREFERRED_RULES_PROFILE_STORAGE_KEY)).toBe(JSON.stringify(WESTERN_TM_PROFILE_REF));
+  });
+
+  it('clears search and profile filters without leaving remembered Western My rules', () => {
+    const state = new Map([[PREFERRED_RULES_PROFILE_STORAGE_KEY, JSON.stringify(WESTERN_TM_PROFILE_REF)]]);
+    const storage = {
+      getItem: (key: string) => state.get(key) ?? null,
+      setItem: (key: string, value: string) => { state.set(key, value); },
+      removeItem: (key: string) => { state.delete(key); },
+    };
+    const preferred = readPreferredRulesProfile(storage);
+    const mode = 'my-rules' as const;
+    const searchState = { mode, query: 'all pair honours', profileFilter: 'all' };
+    const myRulesResults = atlasBrowseRecords(SPECIAL_HANDS_ATLAS, preferred, searchState.mode, null);
+    expect(searchSpecialHandsAtlas(myRulesResults, searchState.query)).toHaveLength(1);
+
+    const clearedSearch = clearAtlasSearchAndProfileFilter(searchState);
+    expect(clearedSearch).toEqual({ mode: 'my-rules', query: '', profileFilter: 'all' });
+    expect(atlasBrowseRecords(SPECIAL_HANDS_ATLAS, preferred, clearedSearch.mode, null)).toHaveLength(85);
+
+    const noResults = { mode, query: 'no matching treatment', profileFilter: 'all' };
+    expect(searchSpecialHandsAtlas(myRulesResults, noResults.query)).toEqual([]);
+    const clearedNoResults = clearAtlasSearchAndProfileFilter(noResults);
+    expect(clearedNoResults.mode).toBe('my-rules');
+    expect(atlasBrowseRecords(SPECIAL_HANDS_ATLAS, preferred, clearedNoResults.mode, null)).toHaveLength(85);
     expect(state.get(PREFERRED_RULES_PROFILE_STORAGE_KEY)).toBe(JSON.stringify(WESTERN_TM_PROFILE_REF));
   });
 

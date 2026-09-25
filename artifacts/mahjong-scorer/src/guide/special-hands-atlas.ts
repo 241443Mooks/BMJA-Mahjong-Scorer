@@ -68,3 +68,14 @@ export function atlasBrowseRecords(
   ) ? preferredProfile : null;
   return filterSpecialHandsAtlasByProfile(records, myRulesProfile ?? (mode === 'all-rules' ? profileFilter : null));
 }
+
+export type AtlasSearchFilterState<Mode extends string = 'my-rules' | 'all-rules'> = {
+  mode: Mode;
+  query: string;
+  profileFilter: string;
+};
+
+/** Reset search and exact-profile filtering while retaining the selected browse mode. */
+export function clearAtlasSearchAndProfileFilter<Mode extends string>(state: AtlasSearchFilterState<Mode>): AtlasSearchFilterState<Mode> {
+  return { ...state, query: '', profileFilter: 'all' };
+}
