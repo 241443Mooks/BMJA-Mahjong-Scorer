@@ -88,6 +88,40 @@ describe('profile-local special-hand treatments', () => {
     expect(buzzard).not.toHaveProperty('fishingValue');
   });
 
+  it('keeps Knitting and Triple Knitting scores and Club exposure profile-local', () => {
+    for (const patternId of ['knitting', 'triple-knitting']) {
+      expect(resolveSpecialHandTreatment(BMJA_PROFILE_REF, patternId)).toMatchObject({
+        referenceId: `bmja@1.0:${patternId}`,
+        scoreModel: 'fixed',
+        winnerValue: 500,
+        fishingValue: 200,
+      });
+    }
+    expect(resolveSpecialHandTreatment(WESTERN_TM_PROFILE_REF, 'two-suit-knitting')).toMatchObject({
+      referenceId: 'western-tm@0.1:two-suit-knitting',
+      name: 'Knitting',
+      scoreModel: 'fixed',
+      winnerValue: 500,
+      fishingValue: 200,
+    });
+    expect(resolveSpecialHandTreatment(WESTERN_TM_PROFILE_REF, 'three-suit-knitting-with-pair')).toMatchObject({
+      referenceId: 'western-tm@0.1:three-suit-knitting-with-pair',
+      name: 'Triple Knitting',
+      scoreModel: 'fixed',
+      winnerValue: 500,
+      fishingValue: 200,
+    });
+    for (const patternId of ['knitting', 'triple-knitting']) {
+      expect(resolveSpecialHandTreatment(OUTSIDE_THE_BOX_PROFILE_REF, patternId)).toMatchObject({
+        referenceId: `outside-the-box@0.1:${patternId}`,
+        scoreModel: 'fixed',
+        winnerValue: 500,
+        fishingValue: 200,
+        exposurePolicy: { scoreModel: 'fixed', policy: { allowed: false } },
+      });
+    }
+  });
+
   it('fails closed for non-current profiles and returns the authoritative binding arrays unchanged', () => {
     expect(specialHandTreatmentsForProfile({ id: 'western-tm', version: '0.2' })).toEqual([]);
     expect(specialHandTreatmentsForProfile({ id: 'mcr-wmo-2006', version: '0.1' })).toEqual([]);

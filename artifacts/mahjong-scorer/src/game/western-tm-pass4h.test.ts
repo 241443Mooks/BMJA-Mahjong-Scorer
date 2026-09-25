@@ -20,7 +20,7 @@ const tripleKnittingTiles = [1, 3, 5, 7].flatMap((rank) => [suited('bamboo', ran
 const imperialJade: MahjongHand = { sets: [p('dragon', dragon('green')), p('two', suited('bamboo', 2)), p('six', suited('bamboo', 6)), p('eight', suited('bamboo', 8)), q('pair', suited('bamboo', 4))], bonusTiles: [], isWinner: true };
 
 describe('western-tm@0.1 Pass 4H Knitting audits and Imperial Jade', () => {
-  it('uses a strict two-suit knitting pattern without changing the broader BMJA detector', () => {
+  it('uses the strict two-suit knitting pattern under its profile-local binding', () => {
     const hand = loose(knittingTiles);
     expect(detect('two-suit-knitting', hand)).toBe(true);
     expect(score(hand).specialHands).toContainEqual(expect.objectContaining({ id: 'two-suit-knitting', name: 'Knitting', value: 500 }));

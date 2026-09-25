@@ -46,8 +46,8 @@
     "wriggly-dragon": { "addFacets": ["pairs"] }
   },
   "treatmentOwnership": {
-    "bmja@1.0:knitting": "knitting-bmja-unresolved",
-    "bmja@1.0:triple-knitting": "triple-knitting-bmja-unresolved",
+    "bmja@1.0:knitting": "knitting-reviewed",
+    "bmja@1.0:triple-knitting": "triple-knitting-reviewed",
     "bmja@1.0:all-pair-honours": "pair-hand-family",
     "bmja@1.0:imperial-jade": "imperial-jade",
     "bmja@1.0:thirteen-unique-wonders": "thirteen-unique-wonders",
@@ -72,8 +72,8 @@
     "outside-the-box@0.1:three-great-scholars": "three-great-scholars-otb-unresolved",
     "outside-the-box@0.1:four-blessings": "four-blessings",
     "outside-the-box@0.1:fourfold-plenty": "fourfold-plenty",
-    "outside-the-box@0.1:knitting": "knitting-otb-unresolved",
-    "outside-the-box@0.1:triple-knitting": "triple-knitting-otb-unresolved",
+    "outside-the-box@0.1:knitting": "knitting-reviewed",
+    "outside-the-box@0.1:triple-knitting": "triple-knitting-reviewed",
     "outside-the-box@0.1:all-pair-honours": "pair-hand-family",
     "outside-the-box@0.1:thirteen-unique-wonders": "thirteen-unique-wonders",
     "outside-the-box@0.1:wriggling-snake": "wriggling-snake-family",
@@ -116,8 +116,8 @@
     "western-tm@0.1:four-blessings": "four-blessings",
     "western-tm@0.1:all-winds-and-dragons": "all-winds-and-dragons",
     "western-tm@0.1:heads-and-tails": "heads-and-tails",
-    "western-tm@0.1:two-suit-knitting": "knitting-western",
-    "western-tm@0.1:three-suit-knitting-with-pair": "triple-knitting-western",
+    "western-tm@0.1:two-suit-knitting": "knitting-reviewed",
+    "western-tm@0.1:three-suit-knitting-with-pair": "triple-knitting-reviewed",
     "western-tm@0.1:green-dragon-meld-with-green-bamboo-melds-and-pair-one-chow": "imperial-jade",
     "western-tm@0.1:wriggling-snake-any-pair": "wriggling-snake-family",
     "western-tm@0.1:western-gates-of-heaven": "gates-family",
@@ -205,10 +205,6 @@
     "generatorPolicy": "tile-hand-generator examples must be materialised from the referenced canonical predicate/source constraint; do not manually substitute a guessed tile mapping."
   },
   "unresolvedTreatmentReferenceIds": [
-    "bmja@1.0:knitting",
-    "outside-the-box@0.1:knitting",
-    "bmja@1.0:triple-knitting",
-    "outside-the-box@0.1:triple-knitting",
     "outside-the-box@0.1:three-great-scholars",
     "buzzard-2000@0.1:three-great-scholars",
     "buzzard-2000@0.1:thirteen-unique-wonders",

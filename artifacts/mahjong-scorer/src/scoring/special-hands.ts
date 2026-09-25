@@ -421,10 +421,18 @@ const suitedRankCounts = (values: PlayingTile[]) => {
   return tally;
 };
 
-const canPairAcrossSuits = (rankCounts: Map<string, number>) => {
-  const values = [...rankCounts.values()];
-  const total = values.reduce((sum, value) => sum + value, 0);
-  return total % 2 === 0 && Math.max(...values, 0) <= total / 2;
+const isTwoSuitKnittingLayout = (hand: MahjongHand) => {
+  if (!isCompleteLooseLayout(hand)) return false;
+  const all = tiles(hand);
+  const tally = suitedRankCounts(all);
+  if (tally === null) return false;
+  const suits = new Set(all.map((tile) => tile.family === 'suit' ? tile.suit : undefined));
+  if (suits.size !== 2 || suits.has(undefined)) return false;
+  return [...tally.values()].every((rankCounts) => {
+    const values = [...rankCounts.values()];
+    return rankCounts.size === 2 && values[0] === values[1];
+  }) && [...tally.values()].reduce((sum, rankCounts) =>
+    sum + [...rankCounts.values()].reduce((rankSum, count) => rankSum + count, 0) / 2, 0) === 7;
 };
 
 const isGreenTile = (tile: PlayingTile) =>
@@ -1110,47 +1118,19 @@ export const canonicalSpecialHandPatterns: CanonicalSpecialHandPattern[] = [
   },
   {
     id: 'knitting',
-    detect: (hand) => {
-      const all = tiles(hand);
-      const tally = suitedRankCounts(all);
-      return (
-        hand.isWinner &&
-        hand.sets.length === 0 &&
-        all.length === 14 &&
-        hasAtMostFourCopies(all) &&
-        tally !== null &&
-        [...tally.values()].every(canPairAcrossSuits)
-      );
-    },
+    detect: isTwoSuitKnittingLayout,
   },
   {
     id: 'two-suit-knitting',
-    detect: (hand) => {
-      if (!isCompleteLooseLayout(hand)) return false;
-      const tally = suitedRankCounts(tiles(hand));
-      if (tally === null) return false;
-      const suits = new Set(tiles(hand).map((tile) => tile.family === 'suit' ? tile.suit : undefined));
-      if (suits.size !== 2 || suits.has(undefined)) return false;
-      return [...tally.values()].every((rankCounts) => {
-        const values = [...rankCounts.values()];
-        return rankCounts.size === 2 && values[0] === values[1];
-      }) && [...tally.values()].reduce((sum, rankCounts) => sum + [...rankCounts.values()].reduce((rankSum, count) => rankSum + count, 0) / 2, 0) === 7;
-    },
+    detect: isTwoSuitKnittingLayout,
   },
   {
     id: 'triple-knitting',
     detect: (hand) => {
+      if (!isCompleteLooseLayout(hand)) return false;
       const all = tiles(hand);
       const tally = suitedRankCounts(all);
-      if (
-        !hand.isWinner ||
-        hand.sets.length !== 0 ||
-        all.length !== 14 ||
-        !hasAtMostFourCopies(all) ||
-        tally === null
-      ) {
-        return false;
-      }
+      if (tally === null) return false;
       const suits = ['bamboo', 'characters', 'circles'] as const;
       return [...tally.entries()].some(([pairRank, rankCounts]) =>
         suits.some((firstSuit, firstIndex) =>
@@ -1595,7 +1575,7 @@ export const bmjaSpecialHandBindings = [
   bmjaBinding(
     'knitting',
     'Knitting',
-    'Seven pairs, each pairing the same number across two different suits; pairs may repeat.',
+    'Seven same-number pairs across exactly two suits; pairs may repeat where physical tile copies permit them.',
     500,
     200,
   ),

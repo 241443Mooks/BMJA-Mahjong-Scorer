@@ -738,47 +738,12 @@
       ]
     },
     {
-      "id": "knitting-bmja-unresolved",
-      "state": "standalone-unresolved",
+      "id": "knitting-reviewed",
+      "state": "reviewed-concept",
       "displayName": "Knitting",
       "treatmentReferenceIds": [
-        "bmja@1.0:knitting"
-      ],
-      "facets": [
-        "irregular-hand",
-        "multiple-suits",
-        "pairs",
-        "knitted-interleave"
-      ],
-      "summary": "Seven same-number cross-suit pairs; the BMJA source describes two suits, while the current runtime detector can accept some three-suit distributions.",
-      "whatItIs": "A pair-based irregular hand built by matching the same numbers across different suits rather than making normal melds.",
-      "whatItMeans": "Think in seven cross-suit same-number pairs, not Chows and Pungs.",
-      "whySpecial": "The hand is built from cross-suit pairing logic instead of the ordinary meld structure.",
-      "exampleIds": [
-        "example-knitting-existing"
-      ],
-      "referenceNote": "Source/runtime suit-count discrepancy: do not claim the current detector exactly matches the BMJA two-suit wording until repaired.",
-      "evidenceRefs": [
-        "CLASSICAL_ATLAS_CONCEPT_AUDIT_V1.md §3"
-      ],
-      "evidenceBindings": [
-        {
-          "kind": "reviewed-audit",
-          "path": "docs/rules/encyclopaedia/CLASSICAL_ATLAS_CONCEPT_AUDIT_V1.md",
-          "locator": "§3 Knitting / Triple Knitting",
-          "supports": [
-            "source-runtime-suit-count-discrepancy",
-            "do-not-group-yet"
-          ],
-          "status": "reviewed-unresolved"
-        }
-      ]
-    },
-    {
-      "id": "knitting-western",
-      "state": "standalone-verified-treatment",
-      "displayName": "Knitting",
-      "treatmentReferenceIds": [
+        "bmja@1.0:knitting",
+        "outside-the-box@0.1:knitting",
         "western-tm@0.1:two-suit-knitting"
       ],
       "facets": [
@@ -787,16 +752,32 @@
         "pairs",
         "knitted-interleave"
       ],
-      "summary": "Seven same-number pairs across exactly two suits.",
-      "whatItIs": "A Western irregular hand made from seven pairs, with each pair matching the same number across two different suits.",
-      "whatItMeans": "The pair relationship is cross-suit and same-rank; the hand is not assembled as normal melds.",
-      "whySpecial": "It replaces the ordinary meld structure with a complete two-suit pairing pattern.",
+      "summary": "Seven same-number pairs across exactly two suits; duplicate pairs are allowed where physical tile copies permit them.",
+      "whatItIs": "A pair-based irregular hand built by matching the same numbers across two different suits rather than making normal melds.",
+      "whatItMeans": "The hand has seven cross-suit same-number pairs and uses exactly two numbered suits throughout.",
+      "whySpecial": "The hand replaces the ordinary meld structure with a complete two-suit pairing pattern.",
       "exampleIds": [
         "example-knitting-existing"
       ],
+      "variants": [
+        {
+          "id": "two-suit-knitting",
+          "label": "Two-suit Knitting",
+          "treatmentReferenceIds": [
+            "bmja@1.0:knitting",
+            "western-tm@0.1:two-suit-knitting",
+            "outside-the-box@0.1:knitting"
+          ],
+          "exampleIds": [
+            "example-knitting-existing"
+          ],
+          "definition": "Seven same-number cross-suit pairs across exactly two numbered suits; exact score and exposure rules remain attached to each profile treatment."
+        }
+      ],
       "evidenceRefs": [
         "CLASSICAL_ATLAS_CONCEPT_AUDIT_V1.md §3",
-        "TM_COMPANION_CATALOGUE_INDEX.md Knitting"
+        "TM_COMPANION_CATALOGUE_INDEX.md Knitting",
+        "OUTSIDE_THE_BOX_PROFILE_CROSSWALK.md §2"
       ],
       "evidenceBindings": [
         {
@@ -804,7 +785,8 @@
           "path": "docs/rules/encyclopaedia/CLASSICAL_ATLAS_CONCEPT_AUDIT_V1.md",
           "locator": "§3 Knitting / Triple Knitting",
           "supports": [
-            "western-separate-predicate-rationale"
+            "two-suit-seven-cross-pair-runtime-equivalence",
+            "exact-profile-treatment-ownership"
           ],
           "status": "reviewed"
         },
@@ -817,99 +799,26 @@
             "seven-cross-suit-pairs"
           ],
           "status": "source-certified"
-        }
-      ]
-    },
-    {
-      "id": "knitting-otb-unresolved",
-      "state": "standalone-unresolved",
-      "displayName": "Knitting",
-      "treatmentReferenceIds": [
-        "outside-the-box@0.1:knitting"
-      ],
-      "facets": [
-        "irregular-hand",
-        "multiple-suits",
-        "pairs",
-        "knitted-interleave"
-      ],
-      "summary": "Outside the Box describes two-suit Knitting but currently reuses the broader BMJA detector.",
-      "whatItIs": "An Outside the Box cross-suit pair hand using the local guide's Knitting definition.",
-      "whatItMeans": "The intended teaching is seven same-number pairs across two suits, but current runtime qualification is broader than that wording.",
-      "whySpecial": "It uses cross-suit pairing instead of ordinary melds.",
-      "exampleIds": [
-        "example-knitting-existing"
-      ],
-      "referenceNote": "Keep the source/runtime mismatch visible to the knowledge layer; do not describe current runtime acceptance as exact source compliance.",
-      "evidenceRefs": [
-        "CLASSICAL_ATLAS_CONCEPT_AUDIT_V1.md §3",
-        "OUTSIDE_THE_BOX_PROFILE_CROSSWALK.md §2"
-      ],
-      "evidenceBindings": [
-        {
-          "kind": "reviewed-audit",
-          "path": "docs/rules/encyclopaedia/CLASSICAL_ATLAS_CONCEPT_AUDIT_V1.md",
-          "locator": "§3 Knitting / Triple Knitting",
-          "supports": [
-            "source-runtime-suit-count-discrepancy",
-            "do-not-group-yet"
-          ],
-          "status": "reviewed-unresolved"
         },
         {
           "kind": "repo-evidence",
           "path": "docs/rules/OUTSIDE_THE_BOX_PROFILE_CROSSWALK.md",
           "locator": "§2 Knitting",
           "supports": [
-            "two-suit-source-wording",
-            "bmja-detector-reuse-caveat"
+            "Club-two-suit-source-wording",
+            "shared-canonical-qualification"
           ],
-          "status": "verified-club-with-runtime-caveat"
+          "status": "verified-club"
         }
       ]
     },
     {
-      "id": "triple-knitting-bmja-unresolved",
-      "state": "standalone-unresolved",
+      "id": "triple-knitting-reviewed",
+      "state": "reviewed-concept",
       "displayName": "Triple Knitting",
       "treatmentReferenceIds": [
-        "bmja@1.0:triple-knitting"
-      ],
-      "facets": [
-        "irregular-hand",
-        "multiple-suits",
-        "knitted-interleave",
-        "pairs"
-      ],
-      "summary": "Four same-number groups across all three suits, plus a same-number pair across two suits; completeness semantics remain under runtime review.",
-      "whatItIs": "An irregular knitted hand built from four three-suit same-number groups and one cross-suit pair.",
-      "whatItMeans": "Each three-tile unit uses the same number once in each suit, then the final pair uses the same number in two suits.",
-      "whySpecial": "It uses interleaved same-rank suit groups rather than ordinary melds.",
-      "exampleIds": [
-        "example-triple-knitting-existing"
-      ],
-      "referenceNote": "The BMJA predicate lacks the explicit completeness guard used by the T&M detector; keep equivalence unresolved.",
-      "evidenceRefs": [
-        "CLASSICAL_ATLAS_CONCEPT_AUDIT_V1.md §3"
-      ],
-      "evidenceBindings": [
-        {
-          "kind": "reviewed-audit",
-          "path": "docs/rules/encyclopaedia/CLASSICAL_ATLAS_CONCEPT_AUDIT_V1.md",
-          "locator": "§3 Knitting / Triple Knitting",
-          "supports": [
-            "completeness-guard-difference",
-            "do-not-group-yet"
-          ],
-          "status": "reviewed-unresolved"
-        }
-      ]
-    },
-    {
-      "id": "triple-knitting-western",
-      "state": "standalone-verified-treatment",
-      "displayName": "Triple Knitting",
-      "treatmentReferenceIds": [
+        "bmja@1.0:triple-knitting",
+        "outside-the-box@0.1:triple-knitting",
         "western-tm@0.1:three-suit-knitting-with-pair"
       ],
       "facets": [
@@ -919,15 +828,31 @@
         "pairs"
       ],
       "summary": "Four same-number groups across all three suits, plus a same-number pair across two suits.",
-      "whatItIs": "A strict complete loose-layout Western Triple Knitting hand.",
-      "whatItMeans": "Four ranks appear once in each of the three suits, and one additional rank forms a same-number pair across two suits.",
+      "whatItIs": "An irregular knitted hand built from four three-suit same-number groups and one cross-suit pair.",
+      "whatItMeans": "Each three-tile unit uses the same number once in each suit, and the final pair uses the same number in two suits.",
       "whySpecial": "The whole hand follows a three-suit interleaving pattern rather than ordinary melds.",
       "exampleIds": [
         "example-triple-knitting-existing"
       ],
+      "variants": [
+        {
+          "id": "three-suit-knitting-with-pair",
+          "label": "Triple Knitting",
+          "treatmentReferenceIds": [
+            "bmja@1.0:triple-knitting",
+            "western-tm@0.1:three-suit-knitting-with-pair",
+            "outside-the-box@0.1:triple-knitting"
+          ],
+          "exampleIds": [
+            "example-triple-knitting-existing"
+          ],
+          "definition": "Four three-suit same-number groups plus one same-number pair across two suits in a complete 14-tile loose layout; exact score and exposure rules remain attached to each profile treatment."
+        }
+      ],
       "evidenceRefs": [
         "CLASSICAL_ATLAS_CONCEPT_AUDIT_V1.md §3",
-        "TM_COMPANION_CATALOGUE_INDEX.md Triple Knitting"
+        "TM_COMPANION_CATALOGUE_INDEX.md Triple Knitting",
+        "OUTSIDE_THE_BOX_PROFILE_CROSSWALK.md §2"
       ],
       "evidenceBindings": [
         {
@@ -935,7 +860,8 @@
           "path": "docs/rules/encyclopaedia/CLASSICAL_ATLAS_CONCEPT_AUDIT_V1.md",
           "locator": "§3 Knitting / Triple Knitting",
           "supports": [
-            "western-separate-predicate-rationale"
+            "strict-complete-layout-runtime-equivalence",
+            "exact-profile-treatment-ownership"
           ],
           "status": "reviewed"
         },
@@ -949,54 +875,16 @@
             "strict-complete-layout"
           ],
           "status": "source-certified"
-        }
-      ]
-    },
-    {
-      "id": "triple-knitting-otb-unresolved",
-      "state": "standalone-unresolved",
-      "displayName": "Triple Knitting",
-      "treatmentReferenceIds": [
-        "outside-the-box@0.1:triple-knitting"
-      ],
-      "facets": [
-        "irregular-hand",
-        "multiple-suits",
-        "knitted-interleave",
-        "pairs"
-      ],
-      "summary": "Outside the Box reuses the BMJA Triple Knitting predicate; exact equivalence to the stricter complete-layout formulation remains unresolved.",
-      "whatItIs": "An Outside the Box Triple Knitting treatment using four three-suit same-number groups plus a cross-suit pair in the guide description.",
-      "whatItMeans": "The intended pattern is a fully interleaved three-suit hand, but the shared current detector does not encode the same explicit completeness guard as T&M.",
-      "whySpecial": "The hand is defined by same-rank three-suit interleaving rather than ordinary melds.",
-      "exampleIds": [
-        "example-triple-knitting-existing"
-      ],
-      "referenceNote": "Keep grouping unresolved until runtime/source completeness is reconciled.",
-      "evidenceRefs": [
-        "CLASSICAL_ATLAS_CONCEPT_AUDIT_V1.md §3",
-        "OUTSIDE_THE_BOX_PROFILE_CROSSWALK.md §2"
-      ],
-      "evidenceBindings": [
-        {
-          "kind": "reviewed-audit",
-          "path": "docs/rules/encyclopaedia/CLASSICAL_ATLAS_CONCEPT_AUDIT_V1.md",
-          "locator": "§3 Knitting / Triple Knitting",
-          "supports": [
-            "completeness-guard-difference",
-            "do-not-group-yet"
-          ],
-          "status": "reviewed-unresolved"
         },
         {
           "kind": "repo-evidence",
           "path": "docs/rules/OUTSIDE_THE_BOX_PROFILE_CROSSWALK.md",
           "locator": "§2 Triple Knitting",
           "supports": [
-            "outside-the-box-guide-shape",
-            "bmja-predicate-reuse"
+            "Club-guide-shape",
+            "shared-canonical-qualification"
           ],
-          "status": "verified-club-with-runtime-caveat"
+          "status": "verified-club"
         }
       ]
     },
@@ -4038,8 +3926,8 @@
         "type": "existing-example",
         "id": "knitting"
       },
-      "scope": "profile-specific",
-      "visibleExplanation": "Seven same-number cross-suit pairs; source/runtime qualification is still under review for BMJA and Outside the Box.",
+      "scope": "shared-qualification",
+      "visibleExplanation": "Seven same-number pairs across exactly two suits; duplicate pairs are allowed where physical tile copies permit them.",
       "accessibleDescription": "Example Knitting arrangement showing seven pairs formed from matching numbers across different suits."
     },
     {
@@ -6579,8 +6467,8 @@
     "hybrid-layout": "Represented melds and a separate loose structural component share one hand example."
   },
   "treatmentOwnership": {
-    "bmja@1.0:knitting": "knitting-bmja-unresolved",
-    "bmja@1.0:triple-knitting": "triple-knitting-bmja-unresolved",
+    "bmja@1.0:knitting": "knitting-reviewed",
+    "bmja@1.0:triple-knitting": "triple-knitting-reviewed",
     "bmja@1.0:all-pair-honours": "pair-hand-family",
     "bmja@1.0:imperial-jade": "imperial-jade",
     "bmja@1.0:thirteen-unique-wonders": "thirteen-unique-wonders",
@@ -6604,8 +6492,8 @@
     "outside-the-box@0.1:three-great-scholars": "three-great-scholars-otb-unresolved",
     "outside-the-box@0.1:four-blessings": "four-blessings",
     "outside-the-box@0.1:fourfold-plenty": "fourfold-plenty",
-    "outside-the-box@0.1:knitting": "knitting-otb-unresolved",
-    "outside-the-box@0.1:triple-knitting": "triple-knitting-otb-unresolved",
+    "outside-the-box@0.1:knitting": "knitting-reviewed",
+    "outside-the-box@0.1:triple-knitting": "triple-knitting-reviewed",
     "outside-the-box@0.1:all-pair-honours": "pair-hand-family",
     "outside-the-box@0.1:thirteen-unique-wonders": "thirteen-unique-wonders",
     "outside-the-box@0.1:wriggling-snake": "wriggling-snake-family",
@@ -6646,8 +6534,8 @@
     "western-tm@0.1:four-blessings": "four-blessings",
     "western-tm@0.1:all-winds-and-dragons": "all-winds-and-dragons",
     "western-tm@0.1:heads-and-tails": "heads-and-tails",
-    "western-tm@0.1:two-suit-knitting": "knitting-western",
-    "western-tm@0.1:three-suit-knitting-with-pair": "triple-knitting-western",
+    "western-tm@0.1:two-suit-knitting": "knitting-reviewed",
+    "western-tm@0.1:three-suit-knitting-with-pair": "triple-knitting-reviewed",
     "western-tm@0.1:green-dragon-meld-with-green-bamboo-melds-and-pair-one-chow": "imperial-jade",
     "western-tm@0.1:wriggling-snake-any-pair": "wriggling-snake-family",
     "western-tm@0.1:western-gates-of-heaven": "gates-family",
@@ -6727,10 +6615,6 @@
     "western-tm@0.1:four-winds-with-four-twos-three-fours-two-sixes-one-eight": "up-down-you-go-family-western"
   },
   "unresolvedTreatmentReferenceIds": [
-    "bmja@1.0:knitting",
-    "outside-the-box@0.1:knitting",
-    "bmja@1.0:triple-knitting",
-    "outside-the-box@0.1:triple-knitting",
     "outside-the-box@0.1:three-great-scholars",
     "buzzard-2000@0.1:three-great-scholars",
     "buzzard-2000@0.1:thirteen-unique-wonders",
