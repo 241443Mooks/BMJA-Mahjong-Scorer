@@ -16,6 +16,18 @@ const profiles = [BMJA_PROFILE_REF, WESTERN_TM_PROFILE_REF, OUTSIDE_THE_BOX_PROF
 beforeAll(() => initialiseCurrentRulesRuntimes());
 
 describe('Special Hands Atlas directory projection', () => {
+  it('uses only defined facet IDs on every learner entry and variant', () => {
+    const facetIds = ATLAS_LEARNER_ENTRIES.flatMap((entry) => [
+      ...(entry.facets ?? []),
+      ...(entry.variants ?? []).flatMap((variant) =>
+        Array.isArray(variant.facets)
+          ? variant.facets.filter((facet): facet is string => typeof facet === 'string')
+          : [],
+      ),
+    ]);
+    expect(facetIds.filter((facetId) => !Object.hasOwn(ATLAS_FACET_DEFINITIONS, facetId))).toEqual([]);
+  });
+
   it('contains every current Classical authoritative treatment identity exactly once', () => {
     const expected = profiles.flatMap((profile) => specialHandTreatmentsForProfile(profile).map(({ referenceId }) => referenceId)).sort();
     const actual = SPECIAL_HANDS_ATLAS.map(({ referenceId }) => referenceId).sort();
