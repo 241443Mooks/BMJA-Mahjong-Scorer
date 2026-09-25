@@ -14,6 +14,9 @@ import { handScorerLocalContext } from './game';
 import { BMJA_PROFILE_REF } from './game/ruleset';
 import { ActiveRules, RulesProfilePicker } from './game/RulesProfilePicker';
 import { descriptorForRulesProfile, isBritishRulesProfile } from './game/rules-presentation';
+import { PUBLIC_RULES_DESCRIPTORS } from './game/rules-presentation';
+import { specialHandExampleProvesTreatment } from './guide/special-hand-examples';
+import { resolveAtlasScorerExample } from './guide/atlas-scorer-handoff';
 import { getCurrentCompiledRulesRuntime } from './rules-platform/current-runtime-registry';
 import { mapCurrentClassicalScoreBreakdown } from './rules-platform/current-runtime-compat';
 import { toMcrScoringInput } from './game/mcr-hand-input';
@@ -1572,8 +1575,13 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
 export default function App({ initialView = 'game', standaloneHand = false, initialRulesProfile, prerenderOnly = false }: { initialView?: 'game' | 'hand'; standaloneHand?: boolean; initialRulesProfile?: import('./game').RulesProfileRef; prerenderOnly?: boolean }) {
   const search = standaloneHand && typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : undefined;
   const practice = !!search?.get('practice');
-  const example = search ? resolveScorerExample(search.get('example') ?? search.get('practice')) : undefined;
-  const resolvedInitialRulesProfile = example ? BMJA_PROFILE_REF : initialRulesProfile ?? readPreferredRulesProfile() ?? BMJA_PROFILE_REF;
+  const requestedDescriptor = search?.get('rules') ? PUBLIC_RULES_DESCRIPTORS.find(({ slug }) => slug === search.get('rules')) : undefined;
+  const exampleId = search?.get('example') ?? search?.get('practice');
+  const treatmentPatternId = search?.get('treatment');
+  const atlasExample = search?.get('atlasExample') && search.get('rules') && treatmentPatternId ? resolveAtlasScorerExample(search.get('atlasExample')!, search.get('rules')!, treatmentPatternId) : undefined;
+  const example = atlasExample ?? (search ? resolveScorerExample(exampleId) : undefined);
+  const validatedExampleProfile = atlasExample && requestedDescriptor ? requestedDescriptor.profile : example && requestedDescriptor && treatmentPatternId && specialHandExampleProvesTreatment(exampleId ?? '', `${requestedDescriptor.profile.id}@${requestedDescriptor.profile.version}:${treatmentPatternId}`) ? requestedDescriptor.profile : undefined;
+  const resolvedInitialRulesProfile = example ? validatedExampleProfile ?? BMJA_PROFILE_REF : initialRulesProfile ?? readPreferredRulesProfile() ?? BMJA_PROFILE_REF;
   const [view, setView] = useState<'game' | 'hand'>(initialView);
   const [scorerContext, setScorerContext] = useState<HandScorerContext | null>(null);
   const [returnedScore, setReturnedScore] = useState<

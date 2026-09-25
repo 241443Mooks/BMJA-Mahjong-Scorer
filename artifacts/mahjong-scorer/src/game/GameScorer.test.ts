@@ -62,7 +62,7 @@ describe('game settlement preview', () => {
   });
 
   it('uses a truthful human-facing rules label and exact version in printable records', () => {
-    expect(gameRecordRulesLabel(OUTSIDE_THE_BOX_PROFILE_REF)).toBe('Club rules · Profile version: 0.1');
+    expect(gameRecordRulesLabel(OUTSIDE_THE_BOX_PROFILE_REF)).toBe('Club - Bramhall 2026 · Profile version: 0.1');
     expect(gameRecordRulesLabel(BMJA_PROFILE_REF)).toBe('British / BMJA-style · Profile version: 1.0');
     expect(gameRecordRulesLabel(WESTERN_TM_PROFILE_REF)).toBe('Western — Thompson & Maloney · Profile version: 0.1');
   });

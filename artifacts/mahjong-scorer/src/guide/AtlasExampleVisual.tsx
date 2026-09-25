@@ -84,6 +84,7 @@ export function materializeAtlasGenerator(patternId: string): MahjongHand | unde
 }
 
 const kindLabel = (kind: string) => kind === 'kong' ? 'Kong · four tiles' : kind === 'pung' ? 'Pung · three tiles' : kind === 'pair' ? 'Pair · two tiles' : kind === 'chow' ? 'Chow · three in a row' : kind;
+const publicClubCopy = (value: string) => value.replaceAll('Outside the Box', 'Club - Bramhall 2026').replaceAll('outside-the-box', 'Club - Bramhall 2026');
 
 function visualFor(example: AtlasExample): AtlasVisual | undefined {
   if (example.kind === 'event-sequence' || example.kind === 'tile-hand-generator') return undefined;
@@ -121,13 +122,13 @@ export function AtlasExampleVisual({ example, title }: { example: AtlasExample; 
   } : example.kind === 'tile-hand-generator' ? undefined : visualFor(example);
 
   return <figure className="mt-4 rounded-xl border border-[#dfd5c2] bg-[#fdfbf5] p-3 sm:p-4">
-    <figcaption className="font-semibold text-[#284d45]">{title ?? 'What it looks like'}</figcaption>
-    <p className="mt-1 text-sm leading-5 text-[#596b65]">{example.visibleExplanation}</p>
-    {example.kind === 'event-sequence' && <ol className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4" aria-label={example.accessibleDescription}>{(example.steps ?? []).map((step, index) => <li key={`${step}-${index}`} className="flex min-h-12 items-center gap-2 rounded-lg bg-[#efe8da] p-3 text-sm font-semibold text-[#284d45]"><span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-[#284d45] text-xs text-white">{index + 1}</span>{step}</li>)}</ol>}
-    {generatedVisual && <div className="mt-3 flex flex-wrap items-start gap-2" aria-label={example.accessibleDescription}>{generatedVisual.groups.map((group, index) => <div key={`${group.label}-${index}`} className={`max-w-full rounded-lg border p-2 ${group.style === 'pair' ? 'border-[#b8cdbf] bg-[#edf3ed]' : 'border-[#dfd5c2] bg-white'}`}><div className="mb-1 text-xs font-semibold text-[#596b65]">{group.label}</div><TileRow tiles={group.tiles} /></div>)}{generatedVisual.loose.length > 0 && <div className="min-w-0 flex-1 rounded-lg border border-dashed border-[#ae6249] bg-white p-2"><div className="mb-1 text-xs font-semibold text-[#596b65]">Loose tiles · no meld boundary</div><TileRow tiles={generatedVisual.loose} /></div>}</div>}
+    <figcaption className="font-semibold text-[#284d45]">{publicClubCopy(title ?? 'What it looks like')}</figcaption>
+    <p className="mt-1 text-sm leading-5 text-[#596b65]">{publicClubCopy(example.visibleExplanation)}</p>
+    {example.kind === 'event-sequence' && <ol className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4" aria-label={publicClubCopy(example.accessibleDescription)}>{(example.steps ?? []).map((step, index) => <li key={`${step}-${index}`} className="flex min-h-12 items-center gap-2 rounded-lg bg-[#efe8da] p-3 text-sm font-semibold text-[#284d45]"><span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-[#284d45] text-xs text-white">{index + 1}</span>{publicClubCopy(step)}</li>)}</ol>}
+    {generatedVisual && <div className="mt-3 flex flex-wrap items-start gap-2" aria-label={publicClubCopy(example.accessibleDescription)}>{generatedVisual.groups.map((group, index) => <div key={`${group.label}-${index}`} className={`max-w-full rounded-lg border p-2 ${group.style === 'pair' ? 'border-[#b8cdbf] bg-[#edf3ed]' : 'border-[#dfd5c2] bg-white'}`}><div className="mb-1 text-xs font-semibold text-[#596b65]">{group.label}</div><TileRow tiles={group.tiles} /></div>)}{generatedVisual.loose.length > 0 && <div className="min-w-0 flex-1 rounded-lg border border-dashed border-[#ae6249] bg-white p-2"><div className="mb-1 text-xs font-semibold text-[#596b65]">Loose tiles · no meld boundary</div><TileRow tiles={generatedVisual.loose} /></div>}</div>}
     {example.kind === 'tile-hand-generator' && !generatedVisual && <p className="mt-3 rounded-lg bg-[#efe8da] p-3 text-sm text-[#284d45]">This example is generated from the exact current pattern predicate. A concrete arrangement is not available for this profile.</p>}
-    {!generatedVisual && example.kind === 'tile-hand' && <p className="mt-3 rounded-lg bg-[#efe8da] p-3 text-sm text-[#284d45]">{example.accessibleDescription}</p>}
-    {generatedVisual && <p className="mt-3 text-sm leading-5 text-[#596b65]">{example.accessibleDescription}</p>}
+    {!generatedVisual && example.kind === 'tile-hand' && <p className="mt-3 rounded-lg bg-[#efe8da] p-3 text-sm text-[#284d45]">{publicClubCopy(example.accessibleDescription)}</p>}
+    {generatedVisual && <p className="mt-3 text-sm leading-5 text-[#596b65]">{publicClubCopy(example.accessibleDescription)}</p>}
     {example.referenceNote && <p className="mt-3 text-sm leading-5 text-[#66746e]">{example.referenceNote}</p>}
   </figure>;
 }

@@ -116,6 +116,33 @@ export function selectAtlasLeadExample(
   return undefined;
 }
 
+/** Resolve the lead visual from the exact selected treatment so same-profile variants cannot borrow one another's examples. */
+export function selectAtlasLeadExampleForTreatment(
+  entry: AtlasLearnerEntry,
+  referenceId: string,
+): { example: AtlasExample; variantLabel?: string } | undefined {
+  const exactVariant = entry.variants?.find(({ treatmentReferenceIds }) => treatmentReferenceIds?.includes(referenceId));
+  if (exactVariant) {
+    const example = exactVariant.exampleIds?.map((id) => ATLAS_EXAMPLE_BY_ID.get(id)).find((item) => !!item);
+    if (example) return { example, variantLabel: exactVariant.label };
+    const sharedExample = entry.exampleIds?.map((id) => ATLAS_EXAMPLE_BY_ID.get(id)).find((item) => !!item);
+    return sharedExample ? { example: sharedExample } : undefined;
+  }
+
+  const selected = treatmentByReference.get(referenceId);
+  if (entry.variants?.some(({ treatmentReferenceIds }) => treatmentReferenceIds?.some((id) => {
+    const variantTreatment = treatmentByReference.get(id);
+    return !!selected && !!variantTreatment &&
+      variantTreatment.identity.profile.id === selected.identity.profile.id &&
+      variantTreatment.identity.profile.version === selected.identity.profile.version;
+  }))) {
+    const sharedExample = entry.exampleIds?.map((id) => ATLAS_EXAMPLE_BY_ID.get(id)).find((item) => !!item);
+    return sharedExample ? { example: sharedExample } : undefined;
+  }
+
+  return selectAtlasLeadExample(entry, selected?.identity.profile ?? null);
+}
+
 export function atlasScoreLabel(record: SpecialHandsAtlasRecord): string {
   if (record.scoreModel === 'calculated') return 'Calculated under this profile';
   if (record.scoreModel === 'configured-limit') return 'Configured/table limit';
