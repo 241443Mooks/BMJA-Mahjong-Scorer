@@ -5,7 +5,7 @@ import { initialiseCurrentRulesRuntimes } from '../rules-platform/current-runtim
 import { readPreferredRulesProfile, PREFERRED_RULES_PROFILE_STORAGE_KEY } from '../game/preferred-rules-profile';
 import { specialHandBindingsForCurrentClassicalProfile } from '../rules-knowledge/current-classical-special-hand-bindings';
 import { specialHandTreatmentsForProfile } from '../rules-knowledge/special-hand-treatments';
-import { ATLAS_EXAMPLE_BY_ID, ATLAS_FACET_DEFINITIONS, ATLAS_LEARNER_ENTRIES, ATLAS_TREATMENT_OWNERSHIP, ATLAS_UNRESOLVED_TREATMENTS, SPECIAL_HANDS_ATLAS, atlasBrowseRecords, atlasExamplesForTreatment, atlasScoreLabel, atlasTreatmentsForEntry, clearAtlasSearchAndProfileFilter, filterAtlasEntriesByFacets, filterSpecialHandsAtlasByProfile, searchAtlasLearnerEntries, searchSpecialHandsAtlas, selectAtlasLeadExample } from './special-hands-atlas';
+import { ATLAS_EXAMPLE_BY_ID, ATLAS_FACET_DEFINITIONS, ATLAS_LEARNER_ENTRIES, ATLAS_LEARNER_EXAMPLES, ATLAS_TREATMENT_OWNERSHIP, ATLAS_UNRESOLVED_TREATMENTS, SPECIAL_HANDS_ATLAS, atlasBrowseRecords, atlasExamplesForTreatment, atlasScoreLabel, atlasTreatmentsForEntry, clearAtlasSearchAndProfileFilter, filterAtlasEntriesByFacets, filterSpecialHandsAtlasByProfile, searchAtlasLearnerEntries, searchSpecialHandsAtlas, selectAtlasLeadExample } from './special-hands-atlas';
 import { specialHandExampleProvesBmjaTreatment } from './special-hand-examples';
 import { materializeAtlasGenerator } from './AtlasExampleVisual';
 import { detectSpecialHands } from '../scoring';
@@ -16,6 +16,20 @@ const profiles = [BMJA_PROFILE_REF, WESTERN_TM_PROFILE_REF, OUTSIDE_THE_BOX_PROF
 beforeAll(() => initialiseCurrentRulesRuntimes());
 
 describe('Special Hands Atlas directory projection', () => {
+  it('keeps internal project and research language out of learner copy', () => {
+    const learnerCopy = ATLAS_LEARNER_ENTRIES.flatMap((entry) => [
+      entry.summary, entry.whatItIs, entry.whatItMeans, entry.whySpecial,
+      ...(entry.howItWorks ?? []), ...(entry.watchOutFor ?? []), entry.referenceNote ?? '',
+      ...(entry.variants ?? []).flatMap((variant) => [variant.label, variant.definition ?? '']),
+      ...(entry.treatmentTeaching ?? []).map(({ difference }) => difference),
+    ]).concat(ATLAS_LEARNER_EXAMPLES.flatMap((example) => [example.visibleExplanation, example.accessibleDescription, example.referenceNote ?? '']));
+    const internalLanguage = /\bAtlas\b|Outside the Box|outside-the-box|predicate|runtime|executable|qualification|provenance|reviewed (?:family|concept)|structural membership|ordinary four-melds-plus-pair|non-standard collection|intrinsic fishing-floor|source\/runtime|narrower-than|broader-than/i;
+
+    expect(ATLAS_LEARNER_ENTRIES).toHaveLength(71);
+    expect(learnerCopy.filter((copy) => internalLanguage.test(copy))).toEqual([]);
+    expect(learnerCopy.filter((copy) => /\b(?:treatment|profile|facets?)\b/i.test(copy))).toEqual([]);
+  });
+
   it('uses only defined facet IDs on every learner entry and variant', () => {
     const facetIds = ATLAS_LEARNER_ENTRIES.flatMap((entry) => [
       ...(entry.facets ?? []),
@@ -262,7 +276,7 @@ describe('Special Hands Atlas directory projection', () => {
     });
     expect(selectAtlasLeadExample(imperialJade, BMJA_PROFILE_REF)).toMatchObject({
       example: { id: 'example-imperial-jade-narrow-existing' },
-      variantLabel: 'British / Outside the Box form',
+      variantLabel: 'British / Club - Bramhall 2026 form',
     });
     expect(selectAtlasLeadExample(imperialJade, OUTSIDE_THE_BOX_PROFILE_REF)).toMatchObject({
       example: { id: 'example-imperial-jade-narrow-existing' },

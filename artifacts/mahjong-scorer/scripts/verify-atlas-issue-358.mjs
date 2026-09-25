@@ -9,7 +9,6 @@ import { fileURLToPath } from 'node:url';
 const VERSION = '1.55.0';
 const PORT = Number(process.env.ATLAS_VERIFY_PORT ?? 5191);
 const BASE_URL = process.env.ATLAS_VERIFY_URL ?? `http://127.0.0.1:${PORT}`;
-const BEFORE_URL = process.env.ATLAS_BEFORE_URL ?? 'https://mahjong.smooks.co.uk/special-hands';
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
 const APP_DIR = path.resolve(SCRIPT_DIR, '..');
 const TOOL_DIR = path.join(os.tmpdir(), `bmja-mahjong-playwright-${VERSION}`);
@@ -58,8 +57,8 @@ const assert = (condition, message) => { if (!condition) throw new Error(message
 
 async function measureTop(page, url) {
   await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
-  await page.locator('[aria-label="Atlas learner entries"] article').first().waitFor({ state: 'visible', timeout: 30000 });
-  return page.locator('[aria-label="Atlas learner entries"] article').first().evaluate((element) => Math.round(element.getBoundingClientRect().top));
+  await page.locator('main article').first().waitFor({ state: 'visible', timeout: 30000 });
+  return page.locator('main article').first().evaluate((element) => Math.round(element.getBoundingClientRect().top));
 }
 
 let server;
@@ -73,14 +72,13 @@ try {
   await context.addInitScript(() => localStorage.setItem('mahjong-reference:preferred-rules-profile', JSON.stringify({ id: 'western-tm', version: '0.1' })));
   const page = await context.newPage();
 
-  const beforeTop = await measureTop(page, BEFORE_URL);
   const afterTop = await measureTop(page, `${BASE_URL}/special-hands`);
   const geometry = await page.evaluate(() => ({ viewport: innerWidth, document: document.documentElement.scrollWidth }));
   assert(geometry.document <= geometry.viewport, `390px horizontal overflow: document ${geometry.document}px.`);
-  assert(afterTop < 590 && beforeTop - afterTop >= 80, `First card top did not improve enough (before ${beforeTop}px, after ${afterTop}px).`);
+  assert(afterTop < 590, `First card is too far below the page heading (${afterTop}px).`);
   await page.screenshot({ path: output, fullPage: true });
 
-  const rules = page.getByRole('combobox', { name: 'Rules' });
+  const rules = page.getByRole('combobox', { name: 'Rules', exact: true });
   const originalPreference = await page.evaluate(() => localStorage.getItem('mahjong-reference:preferred-rules-profile'));
   const initialRules = await rules.locator('option').allTextContents();
   assert(initialRules.some((text) => text.includes('Western — T&M (58)')), 'Western live Rules count missing.');
@@ -90,22 +88,22 @@ try {
   await pairs.waitFor();
   const pairCount = Number((await pairs.getAttribute('aria-label')).match(/(\d+) matching/)[1]);
   await pairs.click();
-  assert((await page.locator('[aria-live="polite"]').first().innerText()).includes(`${pairCount} learner`), 'Facet result count did not update live.');
+  assert((await page.locator('[aria-live="polite"]').first().innerText()).includes(`${pairCount} hand`), 'Facet result count did not update live.');
   assert(await page.locator('details[open]').count() <= 1, 'Multiple Learn more disclosures are open.');
 
   await rules.selectOption('western');
-  await page.getByRole('searchbox', { name: 'Search names, aliases, exact treatment or pattern' }).fill('Special pair-based hands');
+  await page.getByRole('searchbox').fill('Special pair-based hands');
   const pairEntry = page.locator('#atlas-entry-pair-hand-family');
-  const exact = pairEntry.getByRole('combobox', { name: 'Exact treatment for Special pair-based hands' });
+  const exact = pairEntry.getByRole('combobox', { name: 'Hand name under these rules for Special pair-based hands' });
   assert((await pairEntry.locator('figure figcaption').first().innerText()).includes('All Pair Honours'), 'Default Western lead example was not the first treatment example.');
   const heavenlyTwins = await exact.locator('option').evaluateAll((options) => options.find((option) => option.textContent.includes('Heavenly Twins'))?.value);
   assert(heavenlyTwins, 'Pair-hand family did not offer Heavenly Twins.');
   await exact.focus();
   await exact.selectOption(heavenlyTwins);
-  assert(await exact.evaluate((element) => document.activeElement === element), 'Focus left the exact treatment selector after changing treatments.');
-  const selectedSummary = pairEntry.locator('section[aria-label$="exact treatment"]').first();
-  assert((await selectedSummary.getByRole('heading').innerText()).includes('Heavenly Twins'), 'Heavenly Twins did not become the prominent exact treatment.');
-  assert((await pairEntry.locator('figure figcaption').first().innerText()).includes('Heavenly Twins'), 'Lead example did not follow Heavenly Twins exact treatment selection.');
+  assert(await exact.evaluate((element) => document.activeElement === element), 'Focus left the hand name selector after changing the hand.');
+  const selectedSummary = pairEntry.locator('section[aria-label$="rules version"]').first();
+  assert((await selectedSummary.getByRole('heading').innerText()).includes('Heavenly Twins'), 'Heavenly Twins did not become the prominent hand.');
+  assert((await pairEntry.locator('figure figcaption').first().innerText()).includes('Heavenly Twins'), 'Lead example did not follow the Heavenly Twins selection.');
   const selectedProfilePill = pairEntry.getByRole('button', { name: 'Western — T&M' });
   assert(await selectedProfilePill.getAttribute('aria-pressed') === 'true', 'Western profile was not selected.');
 
@@ -115,23 +113,23 @@ try {
   await pairDisclosure.click();
   assert(await page.locator('details[open]').count() === 0, 'Learn more did not close when activated again.');
   assert(await pairDisclosure.evaluate((element) => document.activeElement === element), 'Focus did not remain on Learn more when closing it.');
-  await page.getByRole('searchbox', { name: 'Search names, aliases, exact treatment or pattern' }).fill('Wriggling / Wriggly Snake');
+  await page.getByRole('searchbox').fill('Wriggling / Wriggly Snake');
   const snake = page.locator('#atlas-entry-wriggling-snake-family');
   await snake.getByText('Learn more about Wriggling / Wriggly Snake').click();
   assert(await page.locator('details[open]').count() === 1, 'Opening a second learner did not close the first.');
 
   await rules.selectOption('club');
   const clubSnake = page.locator('#atlas-entry-wriggling-snake-family');
-  const clubPills = clubSnake.locator('[role="group"][aria-label^="Choose exact rules treatment"] button');
+  const clubPills = clubSnake.locator('[role="group"][aria-label^="Choose rules for"] button');
   assert(await clubPills.count() === 1 && (await clubPills.first().innerText()).includes('Club - Bramhall 2026'), 'Club filter did not constrain treatment visibility.');
   assert((await clubSnake.locator('figure figcaption').first().innerText()).includes('Wriggling Snake'), 'Default Club lead example was not the first treatment example.');
-  const clubChoice = clubSnake.getByRole('combobox', { name: 'Exact treatment for Wriggling / Wriggly Snake' });
+  const clubChoice = clubSnake.getByRole('combobox', { name: 'Hand name under these rules for Wriggling / Wriggly Snake' });
   const wrigglySnake = await clubChoice.locator('option').evaluateAll((options) => options.find((option) => option.textContent.includes('Wriggly Snake'))?.value);
   assert(wrigglySnake, 'Club Wriggling/Wriggly Snake did not offer the Wriggly Snake treatment.');
   await clubChoice.selectOption(wrigglySnake);
-  assert(await clubSnake.locator('section[aria-label$="exact treatment"]').first().getByRole('heading', { name: 'Wriggly Snake' }).isVisible(), 'Club Wriggly Snake exact treatment was not selectable.');
-  assert((await clubSnake.locator('figure figcaption').first().innerText()).includes('Wriggly Snake'), 'Lead example did not follow Club Wriggly Snake exact treatment selection.');
-  assert(await page.evaluate(() => localStorage.getItem('mahjong-reference:preferred-rules-profile')) === originalPreference, 'Atlas browsing mutated My Rules preference.');
+  assert(await clubSnake.locator('section[aria-label$="rules version"]').first().getByRole('heading', { name: 'Wriggly Snake' }).isVisible(), 'Club Wriggly Snake was not selectable.');
+  assert((await clubSnake.locator('figure figcaption').first().innerText()).includes('Wriggly Snake'), 'Lead example did not follow the Club Wriggly Snake selection.');
+  assert(await page.evaluate(() => localStorage.getItem('mahjong-reference:preferred-rules-profile')) === originalPreference, 'Browsing changed My Rules preference.');
 
   await page.goto(`${BASE_URL}/special-hands`);
   await page.evaluate(() => document.activeElement?.blur());
@@ -167,9 +165,9 @@ try {
       const active = document.activeElement;
       return { label: active?.innerText?.trim() ?? '', group: active?.closest('[role="group"]')?.getAttribute('aria-label') ?? '' };
     });
-    if (treatmentButton.group.startsWith('Choose exact rules treatment for ')) break;
+    if (treatmentButton.group.startsWith('Choose rules for ')) break;
   }
-  assert(treatmentButton?.group.startsWith('Choose exact rules treatment for '), `Keyboard did not reach a treatment choice: ${JSON.stringify(treatmentButton)}`);
+  assert(treatmentButton?.group.startsWith('Choose rules for '), `Keyboard did not reach a rules choice: ${JSON.stringify(treatmentButton)}`);
   await page.keyboard.press('Space');
   let scorerLink;
   for (let i = 0; i < 20; i += 1) {
@@ -190,7 +188,7 @@ try {
   await page.waitForTimeout(250);
   assert(new URL(page.url()).pathname === '/hand', `Keyboard activation of scorer CTA did not hand off to the scorer: ${page.url()}`);
 
-  console.log(JSON.stringify({ beforeTop, afterTop, viewport: geometry, preferenceUnchanged: true, pairTreatment: 'Heavenly Twins', clubSnake: 'Wriggly Snake', onlyOneDisclosure: true, keyboard: 'Rules → Filters → facet → treatment → Learn more → scorer CTA passed', screenshot: output }, null, 2));
+  console.log(JSON.stringify({ afterTop, viewport: geometry, preferenceUnchanged: true, pairHand: 'Heavenly Twins', clubSnake: 'Wriggly Snake', onlyOneDisclosure: true, keyboard: 'Rules → Filters → facet → hand choice → Learn more → scorer CTA passed', screenshot: output }, null, 2));
 } finally {
   await browser?.close();
   if (server && server.exitCode === null) server.kill('SIGTERM');

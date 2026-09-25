@@ -68,6 +68,6 @@ export function resolveAtlasScorerExample(exampleId: string, rulesSlug: string, 
     hand,
     context: existing ? exampleHandScorerContext(existing) : handScorerContextForAtlasExample(name, hand),
     returnHref: `/special-hands#atlas-entry-${ATLAS_LEARNER_ENTRIES.find((entry) => entry.exampleIds?.includes(exampleId) || entry.variants?.some((variant) => variant.exampleIds?.includes(exampleId)) )?.id ?? ''}`,
-    returnLabel: 'Back to Special Hands Atlas',
+    returnLabel: 'Back to Special Hands',
   };
 }

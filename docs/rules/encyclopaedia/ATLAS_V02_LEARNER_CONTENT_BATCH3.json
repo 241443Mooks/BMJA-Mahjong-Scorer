@@ -13,7 +13,7 @@
       },
       "scope": "one-valid-example",
       "presentation": "preserve four concealed Pung groups and pair",
-      "visibleExplanation": "Four concealed Pungs and a concealed pair in one suit, with the exact winning/provenance conditions kept in the rules treatment.",
+      "visibleExplanation": "Four concealed Pungs and a concealed pair in one suit. The way you must win depends on the rules.",
       "accessibleDescription": "Example Buried Treasure hand: concealed Pungs of 2, 4, 6 and 8 Circles, plus a concealed pair of 5 Circles."
     },
     {
@@ -72,8 +72,8 @@
         "id": "all-winds-and-dragons"
       },
       "scope": "runtime-treatment-example",
-      "visibleExplanation": "Current executable Buzzard example: four Pungs/Kongs and a pair using only Winds and Dragons.",
-      "accessibleDescription": "Current executable Buzzard All Winds and Dragons example: Pungs of East, South, West and North Winds, plus a pair of Red Dragons."
+      "visibleExplanation": "Buzzard example: four Pungs or Kongs and a pair using only Winds and Dragons.",
+      "accessibleDescription": "current rules Buzzard All Winds and Dragons example: Pungs of East, South, West and North Winds, plus a pair of Red Dragons."
     },
     {
       "id": "example-buzzard-three-winds-pair-runtime",
@@ -104,8 +104,8 @@
         ]
       },
       "scope": "runtime-treatment-example-not-exhaustive-source-qualification",
-      "visibleExplanation": "Current executable winning example: three Wind Pungs/Kongs, the fourth Wind as the pair, plus another set.",
-      "accessibleDescription": "Current executable Buzzard Three Winds and a Pair example: Pungs of East, South and West Winds, a pair of North Winds, and a Pung of 5 Circles. Buzzard source evidence also permits a non-winning limit case not represented by this example."
+      "visibleExplanation": "Winning example: three Wind Pungs or Kongs, the fourth Wind as the pair, plus another set.",
+      "accessibleDescription": "current rules Buzzard Three Winds and a Pair example: Pungs of East, South and West Winds, a pair of North Winds, and a Pung of 5 Circles. Buzzard source evidence also permits a non-winning limit case not represented by this example."
     },
     {
       "id": "example-buzzard-east-first-discard",
@@ -129,8 +129,8 @@
         "id": "heads-and-tails"
       },
       "scope": "runtime-treatment-example",
-      "visibleExplanation": "Current executable Buzzard example: four Pungs/Kongs and a pair made from suited 1s and 9s.",
-      "accessibleDescription": "Current executable Buzzard All Ones and Nines example: Pungs of 1 Bamboo, 9 Circles, 1 Character and 9 Bamboo, plus a pair of 9 Characters."
+      "visibleExplanation": "Buzzard example: four Pungs or Kongs and a pair made from suited 1s and 9s.",
+      "accessibleDescription": "current rules Buzzard All Ones and Nines example: Pungs of 1 Bamboo, 9 Circles, 1 Character and 9 Bamboo, plus a pair of 9 Characters."
     },
     {
       "id": "example-buzzard-concealed-pungs-kongs",
@@ -199,10 +199,10 @@
         "pungs-kongs",
         "pairs"
       ],
-      "summary": "A concealed Pung-based hand in one suit, with the exact winning/provenance conditions owned by the rules treatment.",
-      "whatItIs": "A reviewed BMJA/Outside-the-Box special built from four concealed Pungs and a concealed pair in one numbered suit, with optional honours where the shared predicate permits them.",
-      "whatItMeans": "The hand uses ordinary grouped sets, but concealment and how the hand is completed are part of the special's qualification rather than just its visible tile composition.",
-      "whySpecial": "All four melds are concealed Pungs and the hand is constrained to one suited family with the shared Buried Treasure provenance rules.",
+      "summary": "Four concealed Pungs and a concealed pair in one suit. The winning rules depend on the version you play.",
+      "whatItIs": "Make four concealed Pungs and a concealed pair in one numbered suit.",
+      "whatItMeans": "Keep the hand concealed. The rules also set how you must win.",
+      "whySpecial": "The concealed Pungs and the way you win make this hand unusual.",
       "exampleIds": [
         "example-buried-treasure-existing"
       ],
@@ -246,14 +246,14 @@
       "facets": [
         "event-defined"
       ],
-      "summary": "A non-East player wins with East's first discard.",
-      "whatItIs": "A BMJA event-defined special tied to the first discard made by East.",
+      "summary": "A non-East player wins from East’s first discard.",
+      "whatItIs": "Win with East’s first discard.",
       "whatItMeans": "The hand shape can be ordinary; the special comes from the exact moment and discarder that provide the winning tile.",
-      "whySpecial": "Mahjong is completed immediately from East's first discard before normal play has developed.",
+      "whySpecial": "East’s first discard ends the hand before normal play develops.",
       "exampleIds": [
         "example-earths-blessing-existing"
       ],
-      "referenceNote": "Keep the current BMJA event-evidence mapping and provenance status attached; do not generalise this definition to other profiles from name similarity alone.",
+      "referenceNote": "This BMJA hand is won from East’s first discard.",
       "evidenceBindings": [
         {
           "kind": "reviewed-audit",
@@ -293,10 +293,10 @@
       "facets": [
         "event-defined"
       ],
-      "summary": "A replacement draw produces 5 Circles and that tile completes Mahjong.",
-      "whatItIs": "A BMJA event-defined special where the winning replacement tile is specifically 5 Circles.",
+      "summary": "A replacement draw gives you the 5 Circles that completes Mahjong.",
+      "whatItIs": "Draw the 5 Circles as a replacement tile, and use it to win.",
       "whatItMeans": "The final hand shape alone is not enough; the scorer needs to know that 5 Circles arrived as the qualifying replacement draw.",
-      "whySpecial": "Both the winning tile identity and the replacement-draw event are part of qualification.",
+      "whySpecial": "The winning tile must be the 5 Circles drawn as a replacement tile.",
       "exampleIds": [
         "example-gathering-plum-existing"
       ],
@@ -339,10 +339,10 @@
       "facets": [
         "event-defined"
       ],
-      "summary": "The last drawable live-wall tile is 1 Circles and it completes Mahjong.",
-      "whatItIs": "A BMJA event-defined special where the winning tile is specifically 1 Circles drawn as the last live-wall tile.",
-      "whatItMeans": "Qualification depends on both tile identity and wall position; an identical final hand reached another way is not this event treatment.",
-      "whySpecial": "The hand wins on a named tile at the final live-wall draw.",
+      "summary": "The last drawable tile is 1 Circle, and it completes Mahjong.",
+      "whatItIs": "Draw the last live-wall tile, the 1 Circle, and use it to win.",
+      "whatItMeans": "The winning tile and its place in the wall both matter. The same final tiles won another way do not make this hand.",
+      "whySpecial": "The hand must win on the 1 Circle from the last live-wall draw.",
       "exampleIds": [
         "example-plucking-moon-existing"
       ],
@@ -390,14 +390,14 @@
         "pungs-kongs",
         "pairs"
       ],
-      "summary": "Buzzard 2000 treats All Winds and Dragons as a configured limit hand; the current executable treatment uses only honour Pungs/Kongs and a pair.",
-      "whatItIs": "A Buzzard 2000 named limit treatment using the current canonical All Winds and Dragons predicate.",
-      "whatItMeans": "Under the executable treatment, every set and the pair are Winds or Dragons; no suited tiles appear.",
+      "summary": "Four Pungs or Kongs and a pair made only from Winds and Dragons.",
+      "whatItIs": "Make four honour Pungs or Kongs and a pair. Buzzard scores this named hand at the table limit.",
+      "whatItMeans": "Every set and the pair are Winds or Dragons. No suited tiles appear.",
       "whySpecial": "Buzzard lists All Winds and Dragons among its ten limit hands, irrespective of ordinary score value.",
       "exampleIds": [
         "example-buzzard-all-winds-dragons-runtime"
       ],
-      "referenceNote": "This is presented as the current executable Buzzard treatment. Do not use this learner entry as independent historical proof that every other ruleset's All Winds and Dragons is equivalent.",
+      "referenceNote": "This describes the Buzzard 2000 hand. Other rules may define a hand with the same name differently.",
       "evidenceBindings": [
         {
           "kind": "repo-evidence",
@@ -432,14 +432,14 @@
         "pungs-kongs",
         "pairs"
       ],
-      "summary": "Three distinct Wind Pung/Kongs, the fourth Wind as the pair, and a final ordinary set in a complete winning hand.",
-      "whatItIs": "A source-verified Buzzard Four-Wind-family winner with an exact complete grouped-hand predicate.",
+      "summary": "Three Wind Pungs or Kongs, a pair of the fourth Wind, and one more set.",
+      "whatItIs": "A Buzzard hand with Pungs or Kongs of three Winds and a pair of the fourth Wind.",
       "whatItMeans": "The winning form has Pung/Kongs of three distinct Winds, a pair of the fourth Wind, and one ordinary Chow, Pung or Kong. It is materially different from Four Blessings, which requires four Wind Pung/Kongs.",
-      "whySpecial": "The completed hand combines three Wind sets, the fourth Wind pair, and one final ordinary set.",
+      "whySpecial": "Buzzard requires three Wind sets, the fourth Wind as a pair, and one other set.",
       "exampleIds": [
         "example-buzzard-three-winds-pair-runtime"
       ],
-      "referenceNote": "Buzzard’s incomplete non-winner consequence is represented by a separate profile-score-result knowledge link. This entry owns only the winning special-hand treatment.",
+      "referenceNote": "Buzzard also has a separate table-score rule for some hands that do not win as this special hand.",
       "evidenceBindings": [
         {
           "kind": "repo-evidence",
@@ -507,13 +507,13 @@
         "event-defined"
       ],
       "summary": "Mahjong is made with East Wind's first discard.",
-      "whatItIs": "A Buzzard configured-limit event treatment tied to East's first discard.",
+      "whatItIs": "A special win from East’s first discard. Buzzard scores it at the table limit.",
       "whatItMeans": "The completed hand does not define the special by itself; the winning tile must be East's first discard.",
       "whySpecial": "Buzzard lists this immediate first-discard win among its ten limit hands.",
       "exampleIds": [
         "example-buzzard-east-first-discard"
       ],
-      "referenceNote": "Keep this as Buzzard-local teaching; #351 did not prove full cross-profile equivalence with BMJA Earth's Blessing from the shared pattern ID alone.",
+      "referenceNote": "This describes the Buzzard 2000 rule. It does not establish that every ruleset uses the same rule as BMJA Earth’s Blessing.",
       "evidenceBindings": [
         {
           "kind": "repo-evidence",
@@ -548,14 +548,14 @@
         "pungs-kongs",
         "pairs"
       ],
-      "summary": "Buzzard's current executable limit treatment is a grouped hand made only from suited 1s and 9s.",
-      "whatItIs": "A Buzzard configured-limit treatment bound to the current all-terminal suited Pung/Kong-and-pair predicate.",
-      "whatItMeans": "Only suited 1s and 9s appear in the executable hand shape; Winds and Dragons are not part of this treatment.",
+      "summary": "Four Pungs or Kongs and a pair made only from suited 1s and 9s.",
+      "whatItIs": "Use only the 1 and 9 tiles from Bamboo, Circles and Characters.",
+      "whatItMeans": "Winds and Dragons are not part of this hand.",
       "whySpecial": "Buzzard lists All Ones and Nines among its ten limit hands.",
       "exampleIds": [
         "example-buzzard-all-ones-nines-runtime"
       ],
-      "referenceNote": "Keep the Buzzard local name and configured-limit treatment distinct from the score/value treatments used by other profiles even where the executable structure matches.",
+      "referenceNote": "Buzzard scores this hand at the table limit. Other rules may score similar tile patterns differently.",
       "evidenceBindings": [
         {
           "kind": "repo-evidence",
@@ -589,10 +589,10 @@
         "pungs-kongs",
         "pairs"
       ],
-      "summary": "Four concealed Pungs/Kongs plus a pair.",
-      "whatItIs": "A Buzzard limit hand whose four melds are concealed Pungs or Kongs.",
+      "summary": "Four concealed Pungs or Kongs and a pair.",
+      "whatItIs": "Make four concealed Pungs or Kongs and a pair. Buzzard scores this named hand at the table limit.",
       "whatItMeans": "The grouped structure is ordinary, but every meld must satisfy the concealed Pung/Kong condition represented by the current detector.",
-      "whySpecial": "Buzzard does not use a generic concealed-hand ordinary double here; concealed Pungs/Kongs are one of its named limit hands.",
+      "whySpecial": "Buzzard scores concealed Pungs and Kongs as a named limit hand.",
       "exampleIds": [
         "example-buzzard-concealed-pungs-kongs"
       ],
@@ -628,10 +628,10 @@
       "facets": [
         "event-defined"
       ],
-      "summary": "East wins a thirteenth consecutive Mahjong while remaining East.",
-      "whatItIs": "A Buzzard configured-limit event treatment based on a long consecutive sequence of East wins.",
-      "whatItMeans": "Qualification is table-history context, not a particular final tile pattern; the scorer needs the fact that this is East's thirteenth consecutive Mahjong.",
-      "whySpecial": "It rewards an exceptional sequence across many hands rather than a single hand composition.",
+      "summary": "East wins a thirteenth consecutive hand while remaining East.",
+      "whatItIs": "East wins the thirteenth hand in a row.",
+      "whatItMeans": "This depends on the game history, not on a particular tile pattern.",
+      "whySpecial": "Buzzard rewards the thirteenth consecutive East win as a limit event.",
       "exampleIds": [
         "example-buzzard-east-thirteenth"
       ],
