@@ -27,6 +27,7 @@ describe('Special Hands Atlas directory projection', () => {
 
     expect(ATLAS_LEARNER_ENTRIES).toHaveLength(71);
     expect(learnerCopy.filter((copy) => internalLanguage.test(copy))).toEqual([]);
+    expect(learnerCopy.filter((copy) => /\b(?:treatment|profile|facets?)\b/i.test(copy))).toEqual([]);
   });
 
   it('uses only defined facet IDs on every learner entry and variant', () => {

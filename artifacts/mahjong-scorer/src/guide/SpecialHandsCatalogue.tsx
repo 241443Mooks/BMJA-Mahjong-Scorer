@@ -43,7 +43,7 @@ function qualifierText(record: SpecialHandsAtlasRecord) {
   if (exposure?.allowed === false) facts.push('Exposed Pung/Kong sets are not allowed.');
   else if (exposure?.allowed === true && exposure.exposedValue !== undefined) {
     facts.push(`With exposed sets: ${new Intl.NumberFormat('en-GB').format(exposure.exposedValue)} winner${exposure.exposedFishingValue === undefined ? '' : ` · ${new Intl.NumberFormat('en-GB').format(exposure.exposedFishingValue)} fishing`}.`);
-  } else if (exposure?.allowed === true) facts.push('Exposed sets are allowed under this treatment.');
+  } else if (exposure?.allowed === true) facts.push('Exposed sets are allowed under these rules.');
   else if (exposure?.multiplier !== undefined) facts.push(`Exposed sets multiply the score by ${exposure.multiplier}.`);
   if (record.winningMethods?.length) facts.push(`Winning method: ${record.winningMethods.join(' or ')}.`);
   return facts;
@@ -84,7 +84,7 @@ function TreatmentDetails({
       <p>{publicClubCopy(record.description)}</p>
       <p className="font-semibold text-[#284d45]">{atlasScoreLabel(record)}</p>
       {qualifierText(record).map((fact) => <p key={fact}>{fact}</p>)}
-      {record.winningMethods?.length === 0 && <p>Winning method: any method accepted by this profile.</p>}
+      {record.winningMethods?.length === 0 && <p>Winning method: any method accepted by these rules.</p>}
       {unresolved && <p className="rounded-lg border-l-4 border-[#ae6249] bg-[#f5f1e6] p-3">{examples.find((example) => example.referenceNote)?.referenceNote ?? 'The available reference does not give the full hand rule. The scorer follows the rules shown here.'}</p>}
       {examples.map((example) => <AtlasExampleVisual key={example.id} example={example} />)}
       {!compact && <SafeScorerAction record={record} examples={examples} />}
@@ -258,7 +258,6 @@ export function SpecialHandsCatalogue() {
         </div>
         {filtersOpen && <section className="mt-4" aria-labelledby="atlas-facets-heading">
           <h2 id="atlas-facets-heading" className="text-sm font-semibold text-[#284d45]">More ways to find a hand</h2>
-          <p className="mt-1 text-xs leading-5 text-[#66746e]">Facets overlap; entries matching several still count once.</p>
           <div className="mt-2 flex flex-wrap gap-2">{displayFacets.filter(([facet]) => ATLAS_LEARNER_ENTRIES.some((entry) => entry.facets?.includes(facet))).map(([facet, description]) => { const next = selectedFacets.includes(facet) ? selectedFacets : [...selectedFacets, facet]; const count = selectedFacets.includes(facet) ? results.length : entriesForScope(myRules && preferredClassical ? 'my-rules' : profileForFilter ?? 'all', next).length; return <button key={facet} type="button" aria-label={`${facetName(facet)}, ${count} matching hands`} aria-pressed={selectedFacets.includes(facet)} title={description} onClick={() => setSelectedFacets((current) => current.includes(facet) ? current.filter((item) => item !== facet) : [...current, facet])} className={`min-h-10 rounded-full border px-3 text-xs font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249] ${selectedFacets.includes(facet) ? 'border-[#284d45] bg-[#284d45] text-white' : 'border-[#b8cdbf] bg-white text-[#284d45]'}`}>{facetName(facet)} ({count})</button>; })}</div>
         </section>
         }

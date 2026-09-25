@@ -29,7 +29,7 @@ describe('Special Hands Catalogue rendering', () => {
     expect(html).not.toContain('Calculated British guidance');
     expect(html).toContain('Special Hands Guide');
     expect(html).toContain('Why it is special');
-    expect([...html.matchAll(/Special Hands Atlas|Atlas currently|Atlas learner|predicate|runtime|executable|qualification|provenance|reviewed concept|learner entr(?:y|ies)|exact treatment|exact profile treatment|Outside the Box|outside-the-box/gi)].map(([copy]) => copy)).toEqual([]);
+    expect([...html.matchAll(/Special Hands Atlas|Atlas currently|Atlas learner|predicate|runtime|executable|qualification|provenance|reviewed concept|learner entr(?:y|ies)|exact treatment|exact profile treatment|under this treatment|accepted by this profile|Facets overlap|Outside the Box|outside-the-box/gi)].map(([copy]) => copy)).toEqual([]);
   });
 
   it('scopes supplemental Purity guidance to British and All rules, excluding Buzzard and Western', () => {

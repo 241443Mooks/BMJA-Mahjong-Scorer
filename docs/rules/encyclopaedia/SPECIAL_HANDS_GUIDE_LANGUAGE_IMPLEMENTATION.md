@@ -2,7 +2,7 @@
 
 Issue: #368
 Base: `b3e18c2a4cc612911b76344b51827f5e3877eca0`
-Status: implementation queued
+Status: implemented in PR #370; awaiting review
 
 ## Public naming
 

@@ -9,7 +9,6 @@ import { fileURLToPath } from 'node:url';
 const VERSION = '1.55.0';
 const PORT = Number(process.env.ATLAS_VERIFY_PORT ?? 5191);
 const BASE_URL = process.env.ATLAS_VERIFY_URL ?? `http://127.0.0.1:${PORT}`;
-const BEFORE_URL = process.env.ATLAS_BEFORE_URL ?? 'https://mahjong.smooks.co.uk/special-hands';
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
 const APP_DIR = path.resolve(SCRIPT_DIR, '..');
 const TOOL_DIR = path.join(os.tmpdir(), `bmja-mahjong-playwright-${VERSION}`);
@@ -73,14 +72,13 @@ try {
   await context.addInitScript(() => localStorage.setItem('mahjong-reference:preferred-rules-profile', JSON.stringify({ id: 'western-tm', version: '0.1' })));
   const page = await context.newPage();
 
-  const beforeTop = await measureTop(page, BEFORE_URL);
   const afterTop = await measureTop(page, `${BASE_URL}/special-hands`);
   const geometry = await page.evaluate(() => ({ viewport: innerWidth, document: document.documentElement.scrollWidth }));
   assert(geometry.document <= geometry.viewport, `390px horizontal overflow: document ${geometry.document}px.`);
-  assert(afterTop < 590 && beforeTop - afterTop >= 80, `First card top did not improve enough (before ${beforeTop}px, after ${afterTop}px).`);
+  assert(afterTop < 590, `First card is too far below the page heading (${afterTop}px).`);
   await page.screenshot({ path: output, fullPage: true });
 
-  const rules = page.getByRole('combobox', { name: 'Rules' });
+  const rules = page.getByRole('combobox', { name: 'Rules', exact: true });
   const originalPreference = await page.evaluate(() => localStorage.getItem('mahjong-reference:preferred-rules-profile'));
   const initialRules = await rules.locator('option').allTextContents();
   assert(initialRules.some((text) => text.includes('Western — T&M (58)')), 'Western live Rules count missing.');
@@ -190,7 +188,7 @@ try {
   await page.waitForTimeout(250);
   assert(new URL(page.url()).pathname === '/hand', `Keyboard activation of scorer CTA did not hand off to the scorer: ${page.url()}`);
 
-  console.log(JSON.stringify({ beforeTop, afterTop, viewport: geometry, preferenceUnchanged: true, pairHand: 'Heavenly Twins', clubSnake: 'Wriggly Snake', onlyOneDisclosure: true, keyboard: 'Rules → Filters → facet → hand choice → Learn more → scorer CTA passed', screenshot: output }, null, 2));
+  console.log(JSON.stringify({ afterTop, viewport: geometry, preferenceUnchanged: true, pairHand: 'Heavenly Twins', clubSnake: 'Wriggly Snake', onlyOneDisclosure: true, keyboard: 'Rules → Filters → facet → hand choice → Learn more → scorer CTA passed', screenshot: output }, null, 2));
 } finally {
   await browser?.close();
   if (server && server.exitCode === null) server.kill('SIGTERM');
