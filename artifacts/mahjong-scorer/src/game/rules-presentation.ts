@@ -77,8 +77,8 @@ export const PUBLIC_RULES_DESCRIPTORS: readonly RulesDescriptor[] = Object.freez
   {
     profile: OUTSIDE_THE_BOX_PROFILE_REF,
     slug: 'club',
-    title: 'Club rules',
-    compactLabel: 'Club rules',
+    title: 'Club - Bramhall 2026',
+    compactLabel: 'Club - Bramhall 2026',
     status: 'Configured club profile',
     description: 'A configured club profile with its own specials, Goulash and incident handling.',
     publiclySelectable: true,

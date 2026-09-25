@@ -1,6 +1,8 @@
 import { detectSpecialHands, dragon, expandedTiles, suited, wind } from '../scoring';
 import type { MahjongHand, PlayingTile, Wind, WinningMethod } from '../scoring';
 import type { HandScorerExampleContext } from '../game';
+import { PUBLIC_RULES_DESCRIPTORS } from '../game/rules-presentation';
+import { specialHandBindingsForCurrentClassicalProfile } from '../rules-knowledge/current-classical-special-hand-bindings';
 import { SPECIAL_HAND_ANCHORS } from './special-hand-references';
 import type { TileAssetKey, TileDefinition } from './MahjongTileGallery';
 
@@ -51,12 +53,26 @@ const patternForExample = (id: string) => id === 'gathering-the-plum-blossom-fro
 
 /** Existing example routes load the BMJA scorer. Only expose an action for an exact BMJA treatment the runtime accepts. */
 export const specialHandExampleProvesBmjaTreatment = (exampleId: string, referenceId: string): boolean => {
-  const match = /^bmja@1\.0:(.+)$/.exec(referenceId);
-  if (!match || patternForExample(exampleId) !== match[1]) return false;
+  return referenceId.startsWith('bmja@1.0:') && specialHandExampleProvesTreatment(exampleId, referenceId);
+};
+
+/** A catalogue example may be handed to a profile scorer only when its exact current predicate accepts it. */
+export const specialHandExampleProvesTreatment = (exampleId: string, referenceId: string): boolean => {
+  const match = /^([^@]+)@([^:]+):(.+)$/.exec(referenceId);
+  if (!match || patternForExample(exampleId) !== match[3]) return false;
   const example = specialHandExampleById(exampleId);
   if (!example) return false;
-  return detectSpecialHands(example.hand, { playerWind: example.playerWind ?? 'east', prevailingWind: 'east', limit: 1000 })
-    .some(({ id }) => id === match[1]);
+  const descriptor = PUBLIC_RULES_DESCRIPTORS.find(({ profile }) => profile.id === match[1] && profile.version === match[2]);
+  if (!descriptor) return false;
+  return detectSpecialHands(example.hand, { playerWind: example.playerWind ?? 'east', prevailingWind: 'east', limit: 1000 }, [...specialHandBindingsForCurrentClassicalProfile(descriptor.profile)])
+    .some(({ id }) => id === match[3]);
+};
+
+export const specialHandExampleTreatmentForProfile = (exampleId: string, profile: import('../game/types').RulesProfileRef): string | undefined => {
+  const example = specialHandExampleById(exampleId);
+  if (!example) return undefined;
+  const binding = detectSpecialHands(example.hand, { playerWind: example.playerWind ?? 'east', prevailingWind: 'east', limit: 1000 }, [...specialHandBindingsForCurrentClassicalProfile(profile)])[0];
+  return binding ? `${profile.id}@${profile.version}:${binding.id}` : undefined;
 };
 export const exampleVisualTiles = ({ hand }: Pick<SpecialHandExample, 'hand'>): TileDefinition[] => {
   const tiles = [...hand.sets.flatMap(expandedTiles), ...(hand.looseTiles ?? []), ...(hand.remainingTiles ?? [])];
@@ -71,3 +87,5 @@ export const exampleVisualTiles = ({ hand }: Pick<SpecialHandExample, 'hand'>): 
   });
 };
 export const exampleHandScorerContext = (example: SpecialHandExample): HandScorerExampleContext => ({ playerId: 'catalogue-example', playerName: example.name, playerWind: example.playerWind ?? 'east', prevailingWind: 'east', isWinner: true, limit: 1000, handMode: 'normal', detailedHand: { source: 'detailed-scorer', hand: example.hand, context: { playerWind: example.playerWind ?? 'east', prevailingWind: 'east', limit: 1000 }, breakdown: { valid: false, evidenceCompleteness: 'invalid', validationErrors: [], pointRules: [], doubleRules: [], specialHands: [], basePoints: 0, doubles: 0, uncappedScore: 0, finalScore: 0, limitApplied: false, scoringMode: 'standard', calculationComponents: [] }, finalScore: 0 } });
+export const handScorerContextForAtlasExample = (name: string, hand: MahjongHand, playerWind: Wind = 'east'): HandScorerExampleContext =>
+  exampleHandScorerContext({ id: 'imperial-jade', name, hand, playerWind });

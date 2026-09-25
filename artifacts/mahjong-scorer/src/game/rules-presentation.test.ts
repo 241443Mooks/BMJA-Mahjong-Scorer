@@ -11,7 +11,7 @@ import { BUZZARD_2000_PROFILE_REF } from './buzzard-2000';
 describe('public rules presentation', () => {
   beforeAll(() => initialiseCurrentRulesRuntimes());
   it('maps five public descriptors while retaining surface-specific availability', () => {
-    expect(PUBLIC_RULES_DESCRIPTORS.map((descriptor) => descriptor.title)).toEqual(['British / BMJA-style', 'Western — Thompson & Maloney', 'Club rules', 'British/Western Classical — Buzzard 2000', 'MCR / WMO 2006']);
+    expect(PUBLIC_RULES_DESCRIPTORS.map((descriptor) => descriptor.title)).toEqual(['British / BMJA-style', 'Western — Thompson & Maloney', 'Club - Bramhall 2026', 'British/Western Classical — Buzzard 2000', 'MCR / WMO 2006']);
     expect(descriptorForSlug('british').profile).toEqual(BMJA_PROFILE_REF);
     expect(descriptorForSlug('western').profile).toEqual(WESTERN_TM_PROFILE_REF);
     expect(descriptorForSlug('club').profile).toEqual(OUTSIDE_THE_BOX_PROFILE_REF);

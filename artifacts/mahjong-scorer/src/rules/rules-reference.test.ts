@@ -14,7 +14,7 @@ describe('public rules reference model', () => {
     expect(western.support).toMatchObject({ scorer: 'Available', implementation: 'Provisional' });
     expect(western.support.source).toContain('source-verified');
     expect(western.support.source).toContain('under source review');
-    expect(club.title).toBe('Club rules');
+    expect(club.title).toBe('Club - Bramhall 2026');
     expect(club.configuredClubProfile).toBe(true);
     const mcr = PUBLIC_RULES_DESCRIPTORS.find((descriptor) => descriptor.slug === 'mcr')!;
     expect(mcr).toMatchObject({ profile: { id: 'mcr-wmo-2006', version: '0.1' }, status: 'Provisional', availability: { gameTracker: true } });
