@@ -6,6 +6,7 @@ This file records meaningful changes to **Mahjong Reference** at product-milesto
 
 ### Added
 
+- Added a concept-first Classical special-hands Atlas with all 146 exact treatments, reviewed learner families, profile-aware search and facets, structured examples, and runtime-derived treatment facts. [#356](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/356)
 - Completed the shared rules-platform runtime/caller cutover with permanent parity and replay regression coverage; released-train reconciliation is tracked by #323.
 - Added Buzzard 2000 as a public selectable Classical profile and MCR/WMO 2006 `0.1` Provisional hand scoring and Table Companion, including settlement, progression, persistence, history and print.
 

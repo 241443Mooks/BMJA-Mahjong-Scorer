@@ -1,5 +1,6 @@
 import { PUBLIC_RULES_DESCRIPTORS, descriptorForRulesProfile } from '../game/rules-presentation';
 import type { RulesProfileRef } from '../game/types';
+import content from './atlas-v02-content.json';
 import { specialHandBindingsForCurrentClassicalProfile } from '../rules-knowledge/current-classical-special-hand-bindings';
 import { specialHandTreatmentsForProfile, type ProfileLocalSpecialHandTreatment } from '../rules-knowledge/special-hand-treatments';
 
@@ -12,6 +13,59 @@ export type SpecialHandsAtlasRecord = ProfileLocalSpecialHandTreatment & {
   profileLabel: string;
 };
 
+export type AtlasLearnerEntry = {
+  id: string;
+  state: 'reviewed-concept' | 'reviewed-family-topic' | 'standalone-verified-treatment' | 'standalone-unresolved';
+  displayName: string;
+  treatmentReferenceIds: string[];
+  facets?: string[];
+  summary: string;
+  whatItIs: string;
+  whatItMeans: string;
+  whySpecial: string;
+  howItWorks?: string[];
+  exampleIds?: string[];
+  localNames?: string[];
+  variants?: Array<{ id: string; label: string; treatmentReferenceIds?: string[]; exampleIds?: string[]; definition?: string; [key: string]: unknown }>;
+  treatmentTeaching?: Array<{ referenceId: string; difference: string }>;
+  relatedEntryIds?: string[];
+  referenceNote?: string;
+  watchOutFor?: string[];
+  evidenceBindings?: Array<{ kind: string; path: string; locator: string; supports: string[]; status: string }>;
+  [key: string]: unknown;
+};
+
+export type AtlasExample = {
+  id: string;
+  kind: 'tile-hand' | 'event-sequence' | 'tile-hand-generator';
+  source: { type: string; id?: string; patternId?: string; constraints?: string[]; groups?: Array<{ kind: string; tile?: string; tiles?: string[] }>; looseTiles?: string[]; looseGroups?: string[][]; pairs?: string[]; [key: string]: unknown };
+  scope: string;
+  visibleExplanation: string;
+  accessibleDescription: string;
+  steps?: string[];
+  referenceNote?: string;
+  [key: string]: unknown;
+};
+
+type AtlasRuntimeContent = {
+  entries: AtlasLearnerEntry[];
+  examples: AtlasExample[];
+  facetDefinitions: Record<string, string>;
+  treatmentOwnership: Record<string, string>;
+  unresolvedTreatmentReferenceIds: string[];
+  existingScorerExampleIds: string[];
+};
+
+const atlasContent = content as AtlasRuntimeContent;
+
+export const ATLAS_LEARNER_ENTRIES: readonly AtlasLearnerEntry[] = Object.freeze(atlasContent.entries);
+export const ATLAS_LEARNER_EXAMPLES: readonly AtlasExample[] = Object.freeze(atlasContent.examples);
+export const ATLAS_FACET_DEFINITIONS = atlasContent.facetDefinitions;
+export const ATLAS_TREATMENT_OWNERSHIP = atlasContent.treatmentOwnership;
+export const ATLAS_UNRESOLVED_TREATMENTS = new Set(atlasContent.unresolvedTreatmentReferenceIds);
+export const ATLAS_EXISTING_SCORER_EXAMPLES = new Set(atlasContent.existingScorerExampleIds);
+export const ATLAS_EXAMPLE_BY_ID = new Map(ATLAS_LEARNER_EXAMPLES.map((example) => [example.id, example]));
+
 export const SPECIAL_HANDS_ATLAS: readonly SpecialHandsAtlasRecord[] = Object.freeze(
   CLASSICAL_ATLAS_PROFILES.flatMap((profile) => {
     const descriptor = descriptorForRulesProfile(profile);
@@ -22,6 +76,13 @@ export const SPECIAL_HANDS_ATLAS: readonly SpecialHandsAtlasRecord[] = Object.fr
     }));
   }),
 );
+
+const treatmentByReference = new Map(SPECIAL_HANDS_ATLAS.map((record) => [record.referenceId, record]));
+export const atlasTreatmentsForEntry = (entry: AtlasLearnerEntry): SpecialHandsAtlasRecord[] =>
+  entry.treatmentReferenceIds.flatMap((referenceId) => {
+    const record = treatmentByReference.get(referenceId);
+    return record ? [record] : [];
+  });
 
 export function atlasScoreLabel(record: SpecialHandsAtlasRecord): string {
   if (record.scoreModel === 'calculated') return 'Calculated under this profile';
@@ -37,24 +98,27 @@ export function searchSpecialHandsAtlas(records: readonly SpecialHandsAtlasRecor
     const name = record.name.toLocaleLowerCase('en-GB');
     const title = `${record.profileTitle} ${record.profileLabel}`.toLocaleLowerCase('en-GB');
     const description = record.description.toLocaleLowerCase('en-GB');
-    const pattern = record.identity.patternId.toLocaleLowerCase('en-GB');
+    const pattern = `${record.identity.profile.id}@${record.identity.profile.version}:${record.identity.patternId}`.toLocaleLowerCase('en-GB');
     const rank = name === normalized ? 0
       : name.startsWith(normalized) ? 1
         : name.includes(normalized) ? 2
           : title.includes(normalized) ? 3
-            : description.includes(normalized) ? 4
-              : pattern.includes(normalized) ? 5
+            : pattern.includes(normalized) ? 4
+              : description.includes(normalized) ? 5
                 : -1;
     return rank < 0 ? [] : [{ record, rank, index }];
   });
   return ranked.sort((a, b) => a.rank - b.rank || a.index - b.index).map(({ record }) => record);
 }
 
+const exactProfileMatches = (record: SpecialHandsAtlasRecord, profile: RulesProfileRef) =>
+  record.identity.profile.id === profile.id && record.identity.profile.version === profile.version;
+
 export function filterSpecialHandsAtlasByProfile(
   records: readonly SpecialHandsAtlasRecord[],
   profile: RulesProfileRef | null,
 ): SpecialHandsAtlasRecord[] {
-  return profile ? records.filter(({ identity }) => identity.profile.id === profile.id && identity.profile.version === profile.version) : [...records];
+  return profile ? records.filter((record) => exactProfileMatches(record, profile)) : [...records];
 }
 
 export function atlasBrowseRecords(
@@ -67,6 +131,45 @@ export function atlasBrowseRecords(
     ({ id, version }) => id === preferredProfile.id && version === preferredProfile.version,
   ) ? preferredProfile : null;
   return filterSpecialHandsAtlasByProfile(records, myRulesProfile ?? (mode === 'all-rules' ? profileFilter : null));
+}
+
+export function searchAtlasLearnerEntries(entries: readonly AtlasLearnerEntry[], query: string): AtlasLearnerEntry[] {
+  const normalized = query.trim().toLocaleLowerCase('en-GB');
+  if (!normalized) return [...entries];
+  const ranked = entries.flatMap((entry, index) => {
+    const treatments = atlasTreatmentsForEntry(entry);
+    const names = [entry.displayName, ...(entry.localNames ?? []), ...(entry.variants ?? []).flatMap((variant) => [variant.label, ...((variant.localNames as string[] | undefined) ?? [])])];
+    const aliases = names.map((name) => name.toLocaleLowerCase('en-GB'));
+    const localTreatmentNames = treatments.map(({ name, referenceId, profileTitle, profileLabel }) => `${name} ${referenceId} ${profileTitle} ${profileLabel}`.toLocaleLowerCase('en-GB'));
+    const descriptions = [entry.summary, entry.whatItIs, entry.whatItMeans, entry.whySpecial, ...(entry.facets ?? [])]
+      .map((value) => value.toLocaleLowerCase('en-GB'));
+    const examples = (entry.exampleIds ?? []).flatMap((id) => {
+      const example = ATLAS_EXAMPLE_BY_ID.get(id);
+      return example ? [example.visibleExplanation, example.accessibleDescription].map((value) => value.toLocaleLowerCase('en-GB')) : [];
+    });
+    const exactName = aliases.includes(normalized) || treatments.some(({ name }) => name.toLocaleLowerCase('en-GB') === normalized);
+    const startsName = aliases.some((name) => name.startsWith(normalized)) || treatments.some(({ name }) => name.toLocaleLowerCase('en-GB').startsWith(normalized));
+    const rank = exactName ? 0
+      : startsName ? 1
+        : aliases.some((name) => name.includes(normalized)) ? 2
+          : localTreatmentNames.some((name) => name.includes(normalized)) ? 3
+            : descriptions.some((value) => value.includes(normalized)) || examples.some((value) => value.includes(normalized)) ? 4
+              : -1;
+    return rank < 0 ? [] : [{ entry, rank, index }];
+  });
+  const exactMatches = ranked.filter(({ rank }) => rank === 0);
+  return (exactMatches.length ? exactMatches : ranked).sort((a, b) => a.rank - b.rank || a.index - b.index).map(({ entry }) => entry);
+}
+
+export function filterAtlasEntriesByFacets(entries: readonly AtlasLearnerEntry[], selectedFacets: readonly string[]): AtlasLearnerEntry[] {
+  if (selectedFacets.length === 0) return [...entries];
+  const selected = new Set(selectedFacets);
+  return entries.filter((entry) => (entry.facets ?? []).some((facet) => selected.has(facet)));
+}
+
+export function atlasEntriesForProfile(entries: readonly AtlasLearnerEntry[], profile: RulesProfileRef | null): AtlasLearnerEntry[] {
+  if (!profile) return [...entries];
+  return entries.filter((entry) => atlasTreatmentsForEntry(entry).some((record) => exactProfileMatches(record, profile)));
 }
 
 export type AtlasSearchFilterState<Mode extends string = 'my-rules' | 'all-rules'> = {
