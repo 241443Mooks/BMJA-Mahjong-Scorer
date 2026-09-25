@@ -2,7 +2,7 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import { initialiseCurrentRulesRuntimes } from '../rules-platform/current-runtime-registry';
 import { bmjaSpecialHandBindings } from '../scoring';
 import { outsideTheBoxSpecialHandBindings } from './outside-the-box-catalogue';
-import { canonicalPublicGamePath, currentClassicalScorerDefaultLimit, descriptorForRulesProfile, descriptorForSlug, isBritishRulesProfile, normaliseStandaloneHandMode, PUBLIC_RULES_DESCRIPTORS, publicGamePathForRulesProfile, publicRulesSlugFromGamePath } from './rules-presentation';
+import { canonicalPublicGamePath, currentClassicalScorerDefaultLimit, descriptorForRulesProfile, descriptorForSlug, isBritishRulesProfile, normaliseStandaloneHandMode, PUBLIC_RULES_DESCRIPTORS, publicGamePathForRulesProfile, publicRulesDescriptorsNewestFirst, publicRulesEditionLabel, publicRulesSlugFromGamePath } from './rules-presentation';
 import { descriptorsForPickerSurface, rulesCardStatus } from './RulesProfilePicker';
 import { BMJA_PROFILE_REF, OUTSIDE_THE_BOX_PROFILE_REF, WESTERN_TM_PROFILE_REF } from './ruleset';
 import { westernTmSpecialHandBindings } from './western-tm-catalogue';
@@ -23,6 +23,18 @@ describe('public rules presentation', () => {
     expect(descriptorForSlug('mcr').availability).toEqual({ handScorer: true, gameTracker: true, rulesReference: true });
     expect(descriptorForSlug('mcr')).toMatchObject({ status: 'Provisional', profile: { id: 'mcr-wmo-2006', version: '0.1' }, support: { source: expect.stringContaining('source.mcr-ema-green-book-2006') } });
     expect(JSON.stringify(descriptorForRulesProfile(OUTSIDE_THE_BOX_PROFILE_REF))).not.toContain('Outside the Box');
+  });
+
+  it('provides consistent public edition labels and newest-first ordering from descriptor metadata', () => {
+    const newestFirst = publicRulesDescriptorsNewestFirst();
+    expect(newestFirst.map(publicRulesEditionLabel)).toEqual([
+      'Club - Bramhall · 2026',
+      'British / BMJA-style · 2008',
+      'MCR · 2006',
+      'Buzzard · 2000',
+      'Western — T&M · 1997',
+    ]);
+    expect(newestFirst.map(({ editionYear }) => editionYear)).toEqual([2026, 2008, 2006, 2000, 1997]);
   });
 
   it('keeps entry routes as public intent, with British as the safe default', () => {

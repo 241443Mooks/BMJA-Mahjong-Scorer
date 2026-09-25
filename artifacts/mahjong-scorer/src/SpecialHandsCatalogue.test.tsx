@@ -23,7 +23,12 @@ describe('Special Hands Catalogue rendering', () => {
     expect(html).not.toMatch(/aria-label="[^"]+ rules version"/);
     expect(html).toContain('Rules');
     expect(html).toContain('Filters');
-    expect(html).toMatch(/Western — T&amp;M \(\d+\)/);
+    expect(html).toMatch(/Western — T&amp;M · 1997 \(\d+\)/);
+    for (const label of ['Club - Bramhall · 2026', 'British / BMJA-style · 2008', 'Buzzard · 2000', 'Western — T&amp;M · 1997']) expect(html).toContain(label);
+    const options = html.slice(html.indexOf('<select aria-label="Rules"'), html.indexOf('</select>', html.indexOf('<select aria-label="Rules"')));
+    const orderedLabels = ['Club - Bramhall · 2026', 'British / BMJA-style · 2008', 'Buzzard · 2000', 'Western — T&amp;M · 1997'];
+    const optionLabels = [...options.matchAll(/<option value="(club|british|buzzard|western)">([^<]+)/g)].map(([, , label]) => label.replace(/ \(\d+\)$/, ''));
+    expect(optionLabels).toEqual(orderedLabels);
     expect(html).not.toContain('docs/rules/');
     expect(html).not.toContain('concept-membership');
     expect(html).not.toContain('Outside the Box');

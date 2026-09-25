@@ -1,4 +1,4 @@
-import { PUBLIC_RULES_DESCRIPTORS, descriptorForRulesProfile } from '../game/rules-presentation';
+import { PUBLIC_RULES_DESCRIPTORS, descriptorForRulesProfile, publicRulesDescriptorsNewestFirst } from '../game/rules-presentation';
 import type { RulesProfileRef } from '../game/types';
 import content from './atlas-v02-content.json';
 import { specialHandBindingsForCurrentClassicalProfile } from '../rules-knowledge/current-classical-special-hand-bindings';
@@ -8,13 +8,8 @@ export const CLASSICAL_ATLAS_PROFILES = PUBLIC_RULES_DESCRIPTORS
   .filter(({ profile }) => specialHandBindingsForCurrentClassicalProfile(profile).length > 0)
   .map(({ profile }) => profile);
 
-export const CLASSICAL_ATLAS_DISPLAY_PROFILES = PUBLIC_RULES_DESCRIPTORS
+export const CLASSICAL_ATLAS_DISPLAY_PROFILES = publicRulesDescriptorsNewestFirst()
   .filter(({ profile }) => specialHandBindingsForCurrentClassicalProfile(profile).length > 0)
-  .map(({ profile, slug }) => ({ profile, slug }))
-  .sort((left, right) => {
-    const year = (slug: string) => ({ club: 2026, british: 2008, mcr: 2006, buzzard: 2000, western: 1997 }[slug] ?? 0);
-    return year(right.slug) - year(left.slug);
-  })
   .map(({ profile }) => profile);
 
 export type SpecialHandsAtlasRecord = ProfileLocalSpecialHandTreatment & {
