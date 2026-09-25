@@ -86,6 +86,18 @@ describe('profile-local special-hand treatments', () => {
     const buzzard = resolveSpecialHandTreatment(BUZZARD_2000_PROFILE_REF, 'all-winds-and-dragons');
     expect(buzzard).not.toHaveProperty('winnerValue');
     expect(buzzard).not.toHaveProperty('fishingValue');
+    expect(resolveSpecialHandTreatment(OUTSIDE_THE_BOX_PROFILE_REF, 'club-three-great-scholars')).toMatchObject({
+      referenceId: 'outside-the-box@0.1:club-three-great-scholars',
+      name: 'Three Great Scholars',
+      winnerValue: 1000,
+      fishingValue: 400,
+      exposurePolicy: { scoreModel: 'fixed', policy: { allowed: true } },
+    });
+    expect(resolveSpecialHandTreatment(BUZZARD_2000_PROFILE_REF, 'buzzard-three-dragons-winner')).toMatchObject({
+      referenceId: 'buzzard-2000@0.1:buzzard-three-dragons-winner',
+      name: 'Three Dragons',
+      scoreModel: 'configured-limit',
+    });
   });
 
   it('keeps Knitting and Triple Knitting scores and Club exposure profile-local', () => {

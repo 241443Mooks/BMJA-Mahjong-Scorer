@@ -225,9 +225,14 @@ const groupedRunShape = (hand: MahjongHand) => {
 };
 
 /** A complete ordinary grouped hand, keeping structure and physical tiles separate. */
-const groupedShape = (hand: MahjongHand, meldCount: number, pairCount = 1) => {
+const groupedShape = (
+  hand: MahjongHand,
+  meldCount: number,
+  pairCount = 1,
+  meldKinds: readonly SetKind[] = ['pung', 'kong'],
+) => {
   const all = tiles(hand);
-  const melds = hand.sets.filter((set) => set.kind === 'pung' || set.kind === 'kong');
+  const melds = hand.sets.filter((set) => meldKinds.includes(set.kind));
   const pairs = hand.sets.filter((set) => set.kind === 'pair');
   return hand.isWinner &&
     hand.sets.length === meldCount + pairCount &&
@@ -1409,6 +1414,33 @@ export const canonicalSpecialHandPatterns: CanonicalSpecialHandPattern[] = [
           .length === 4 &&
         dragons.size === 3
       );
+    },
+  },
+  {
+    id: 'club-three-great-scholars',
+    detect: (hand) => {
+      const shape = groupedShape(hand, 4, 1, ['chow', 'pung', 'kong']);
+      if (!shape) return false;
+      const dragons = new Set(shape.melds.filter((set) =>
+        (set.kind === 'pung' || set.kind === 'kong') && set.tile.family === 'dragon'
+      ).map((set) => set.tile.family === 'dragon' ? set.tile.dragon : ''));
+      const ordinary = shape.melds.filter((set) => set.tile.family !== 'dragon');
+      const remainingSet = ordinary.length === 1 ? ordinary[0] : undefined;
+      return dragons.size === 3 && remainingSet !== undefined &&
+        (remainingSet.kind === 'chow' || remainingSet.kind === 'pung' || remainingSet.kind === 'kong') &&
+        remainingSet.tile.family === 'suit' && shape.pairs[0]!.tile.family === 'suit' &&
+        remainingSet.tile.suit === shape.pairs[0]!.tile.suit;
+    },
+  },
+  {
+    id: 'buzzard-three-dragons-winner',
+    detect: (hand) => {
+      const shape = groupedShape(hand, 4, 1, ['chow', 'pung', 'kong']);
+      if (!shape) return false;
+      const dragons = new Set(shape.melds.filter((set) =>
+        (set.kind === 'pung' || set.kind === 'kong') && set.tile.family === 'dragon'
+      ).map((set) => set.tile.family === 'dragon' ? set.tile.dragon : ''));
+      return dragons.size === 3;
     },
   },
   {

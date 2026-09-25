@@ -651,89 +651,86 @@
       ]
     },
     {
-      "id": "three-great-scholars-otb-unresolved",
-      "state": "standalone-unresolved",
+      "id": "three-great-scholars-club-verified",
+      "state": "standalone-verified-treatment",
       "displayName": "Three Great Scholars",
       "treatmentReferenceIds": [
-        "outside-the-box@0.1:three-great-scholars"
+        "outside-the-box@0.1:club-three-great-scholars"
       ],
       "facets": [
-        "dragons"
+        "ordinary-grouped",
+        "dragons",
+        "pungs-kongs",
+        "chow-involving",
+        "pairs",
+        "single-suit"
       ],
-      "summary": "Outside the Box has a Three Great Scholars treatment, but its guide and current runtime do not express the same remaining-shape qualification.",
-      "whatItIs": "An Outside the Box Dragon-set special whose exact effective qualification needs source/runtime reconciliation.",
-      "whatItMeans": "The guide adds a same-suit condition and permits a Chow for the remaining set, while the current shared detector requires four Pung/Kong sets.",
-      "whySpecial": "All three Dragon sets are central, but the unresolved remaining-shape rule can change whether a hand qualifies.",
+      "summary": "Club Three Great Scholars combines all three Dragon sets with a same-suit remaining meld and pair; that meld may be a Chow, Pung or Kong.",
+      "whatItIs": "A Club Dragon-set special with a same-suit qualification for its remaining meld and pair.",
+      "whatItMeans": "Each Dragon is a Pung or Kong. The fourth meld may be a Chow, Pung or Kong, and it and the pair must use the same numbered suit.",
+      "whySpecial": "The hand dedicates three melds to the Dragons and constrains its final meld and pair to one numbered suit.",
       "exampleIds": [],
-      "referenceNote": "Do not borrow the BMJA/T&M example as a complete OTB definition until the source/runtime mismatch is resolved.",
+      "referenceNote": "Exposed Dragon Pungs and Kongs retain Club's full current treatment value.",
       "evidenceRefs": [
-        "CLASSICAL_ATLAS_CONCEPT_AUDIT_V1.md §4",
         "OUTSIDE_THE_BOX_PROFILE_CROSSWALK.md §2"
       ],
       "evidenceBindings": [
-        {
-          "kind": "reviewed-audit",
-          "path": "docs/rules/encyclopaedia/CLASSICAL_ATLAS_CONCEPT_AUDIT_V1.md",
-          "locator": "§4 Three Great Scholars / Three Dragons family",
-          "supports": [
-            "unresolved-membership",
-            "source-runtime-two-way-difference"
-          ],
-          "status": "reviewed"
-        },
         {
           "kind": "repo-evidence",
           "path": "docs/rules/OUTSIDE_THE_BOX_PROFILE_CROSSWALK.md",
           "locator": "§2 Three Great Scholars",
           "supports": [
-            "same-suit-remaining-shape",
+            "same-suit-remaining-set-and-pair",
             "chow-permission",
-            "fixture-audit-caveat"
+            "full-exposure-value"
           ],
-          "status": "verified-club-with-runtime-caveat"
+          "status": "verified-club"
         }
       ]
     },
     {
-      "id": "three-dragons-buzzard-unresolved",
-      "state": "standalone-unresolved",
+      "id": "three-dragons-buzzard-winner-verified",
+      "state": "standalone-verified-treatment",
       "displayName": "Three Dragons",
       "treatmentReferenceIds": [
-        "buzzard-2000@0.1:three-great-scholars"
+        "buzzard-2000@0.1:buzzard-three-dragons-winner"
       ],
       "facets": [
-        "dragons"
+        "ordinary-grouped",
+        "dragons",
+        "pungs-kongs",
+        "chow-involving",
+        "pairs"
       ],
-      "summary": "Buzzard 2000 names Three Dragons as a configured limit treatment; its source also describes non-winning/incomplete qualification that the current winning-only detector cannot represent.",
-      "whatItIs": "A Buzzard Dragon limit treatment with a known source/runtime qualification gap.",
-      "whatItMeans": "The exact treatment identity is valid, but the current scorer detector is narrower than the source-described situations in which the Buzzard limit may apply.",
-      "whySpecial": "The source treats the three-Dragon condition as limit-worthy even in circumstances beyond a completed winning hand.",
+      "summary": "Buzzard Three Dragons is a configured limit for a completed ordinary hand with Pung or Kong sets of all three Dragons.",
+      "whatItIs": "A Buzzard configured-limit treatment for a winning Three Dragons hand.",
+      "whatItMeans": "The remaining ordinary set may be a Chow, Pung or Kong, with one pair completing the hand.",
+      "whySpecial": "All three Dragon sets earn the configured limit while preserving the normal winning-hand structure.",
       "exampleIds": [],
-      "referenceNote": "Do not present a normal winning-hand example as exhaustive Buzzard qualification while the non-winning provision is unrepresented.",
+      "referenceNote": "Buzzard's incomplete non-winner Three-Dragon limit remains a separate #220 table result.",
       "evidenceRefs": [
-        "CLASSICAL_ATLAS_CONCEPT_AUDIT_V1.md §4",
-        "BUZZARD_2000_RULE_EVIDENCE.md §D-§E"
+        "BUZZARD_2000_RULE_EVIDENCE.md §D"
       ],
       "evidenceBindings": [
         {
-          "kind": "reviewed-audit",
-          "path": "docs/rules/encyclopaedia/CLASSICAL_ATLAS_CONCEPT_AUDIT_V1.md",
-          "locator": "§4 Three Great Scholars / Three Dragons family",
+          "kind": "repo-evidence",
+          "path": "docs/rules/BUZZARD_2000_RULE_EVIDENCE.md",
+          "locator": "§D Limit hands",
           "supports": [
-            "unresolved-membership",
-            "winning-only-runtime-conflict"
+            "three-dragon-winning-limit",
+            "chow-permitted-as-fourth-set"
           ],
-          "status": "reviewed"
+          "status": "source-verified"
         },
         {
           "kind": "repo-evidence",
           "path": "docs/rules/BUZZARD_2000_RULE_EVIDENCE.md",
-          "locator": "§D Limit hands; §E non-winner limits",
+          "locator": "§E non-winner limits",
           "supports": [
-            "three-dragon-limit",
-            "incomplete-non-winner-qualification"
+            "separate-incomplete-three-dragon-table-result",
+            "unchanged-from-issue-220"
           ],
-          "status": "source-complete"
+          "status": "existing-runtime-path"
         }
       ]
     },
@@ -6489,7 +6486,7 @@
     "outside-the-box@0.1:imperial-jade": "imperial-jade",
     "outside-the-box@0.1:heads-and-tails": "heads-and-tails",
     "outside-the-box@0.1:all-winds-and-dragons": "all-winds-and-dragons",
-    "outside-the-box@0.1:three-great-scholars": "three-great-scholars-otb-unresolved",
+    "outside-the-box@0.1:club-three-great-scholars": "three-great-scholars-club-verified",
     "outside-the-box@0.1:four-blessings": "four-blessings",
     "outside-the-box@0.1:fourfold-plenty": "fourfold-plenty",
     "outside-the-box@0.1:knitting": "knitting-reviewed",
@@ -6523,7 +6520,7 @@
     "buzzard-2000@0.1:heavens-blessing": "original-hand-buzzard",
     "buzzard-2000@0.1:earths-blessing": "buzzard-east-first-discard",
     "buzzard-2000@0.1:heads-and-tails": "buzzard-all-ones-nines",
-    "buzzard-2000@0.1:three-great-scholars": "three-dragons-buzzard-unresolved",
+    "buzzard-2000@0.1:buzzard-three-dragons-winner": "three-dragons-buzzard-winner-verified",
     "buzzard-2000@0.1:four-concealed-pung-kong-hand": "buzzard-concealed-pungs-kongs",
     "buzzard-2000@0.1:thirteen-unique-wonders": "thirteen-odd-majors-buzzard",
     "buzzard-2000@0.1:one-suit-nine-gates-any-completion": "gates-family",
@@ -6615,8 +6612,6 @@
     "western-tm@0.1:four-winds-with-four-twos-three-fours-two-sixes-one-eight": "up-down-you-go-family-western"
   },
   "unresolvedTreatmentReferenceIds": [
-    "outside-the-box@0.1:three-great-scholars",
-    "buzzard-2000@0.1:three-great-scholars",
     "buzzard-2000@0.1:thirteen-unique-wonders",
     "buzzard-2000@0.1:heavens-blessing",
     "buzzard-2000@0.1:three-winds-and-fourth-wind-pair"

@@ -50,6 +50,8 @@ export type LegacyFishingSpecialId =
   | 'imperial-jade'
   | 'heads-and-tails'
   | 'three-great-scholars'
+  | 'club-three-great-scholars'
+  | 'buzzard-three-dragons-winner'
   | 'all-winds-and-dragons'
   | 'four-blessings'
   | 'fourfold-plenty'

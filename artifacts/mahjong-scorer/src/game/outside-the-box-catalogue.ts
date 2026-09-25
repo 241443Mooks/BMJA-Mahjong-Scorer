@@ -36,7 +36,7 @@ export const outsideTheBoxSpecialHandBindings: SpecialHandPatternBinding[] = [
   fixed('imperial-jade', 'Imperial Jade', 1000, 400, half(1000, 400)),
   fixed('heads-and-tails', 'Heads & Tails', 1000, 400, half(1000, 400)),
   fixed('all-winds-and-dragons', 'All Winds & Dragons', 1000, 400, { allowed: true }),
-  fixed('three-great-scholars', 'Three Great Scholars', 1000, 400, { allowed: true }),
+  fixed('club-three-great-scholars', 'Three Great Scholars', 1000, 400, { allowed: true }),
   fixed('four-blessings', 'Four Blessings', 1000, 400, { allowed: true }),
   fixed('fourfold-plenty', 'Fourfold Plenty', 1000, 400, half(1000, 400)),
   fixed('knitting', 'Knitting', 500, 200, concealed),

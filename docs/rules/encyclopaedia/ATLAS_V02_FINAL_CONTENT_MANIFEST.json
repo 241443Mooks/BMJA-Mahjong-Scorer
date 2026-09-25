@@ -69,7 +69,7 @@
     "outside-the-box@0.1:imperial-jade": "imperial-jade",
     "outside-the-box@0.1:heads-and-tails": "heads-and-tails",
     "outside-the-box@0.1:all-winds-and-dragons": "all-winds-and-dragons",
-    "outside-the-box@0.1:three-great-scholars": "three-great-scholars-otb-unresolved",
+    "outside-the-box@0.1:club-three-great-scholars": "three-great-scholars-club-verified",
     "outside-the-box@0.1:four-blessings": "four-blessings",
     "outside-the-box@0.1:fourfold-plenty": "fourfold-plenty",
     "outside-the-box@0.1:knitting": "knitting-reviewed",
@@ -104,7 +104,7 @@
     "buzzard-2000@0.1:heavens-blessing": "original-hand-buzzard",
     "buzzard-2000@0.1:earths-blessing": "buzzard-east-first-discard",
     "buzzard-2000@0.1:heads-and-tails": "buzzard-all-ones-nines",
-    "buzzard-2000@0.1:three-great-scholars": "three-dragons-buzzard-unresolved",
+    "buzzard-2000@0.1:buzzard-three-dragons-winner": "three-dragons-buzzard-winner-verified",
     "buzzard-2000@0.1:four-concealed-pung-kong-hand": "buzzard-concealed-pungs-kongs",
     "buzzard-2000@0.1:thirteen-unique-wonders": "thirteen-odd-majors-buzzard",
     "buzzard-2000@0.1:one-suit-nine-gates-any-completion": "gates-family",
@@ -205,8 +205,6 @@
     "generatorPolicy": "tile-hand-generator examples must be materialised from the referenced canonical predicate/source constraint; do not manually substitute a guessed tile mapping."
   },
   "unresolvedTreatmentReferenceIds": [
-    "outside-the-box@0.1:three-great-scholars",
-    "buzzard-2000@0.1:three-great-scholars",
     "buzzard-2000@0.1:thirteen-unique-wonders",
     "buzzard-2000@0.1:heavens-blessing",
     "buzzard-2000@0.1:three-winds-and-fourth-wind-pair"
