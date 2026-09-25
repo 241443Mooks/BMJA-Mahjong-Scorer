@@ -75,6 +75,11 @@ try {
   const afterTop = await measureTop(page, `${BASE_URL}/special-hands`);
   const geometry = await page.evaluate(() => ({ viewport: innerWidth, document: document.documentElement.scrollWidth }));
   assert(geometry.document <= geometry.viewport, `390px horizontal overflow: document ${geometry.document}px.`);
+  const searchBox = page.getByRole('searchbox');
+  const searchBounds = await searchBox.evaluate((element) => ({ search: element.parentElement.getBoundingClientRect().width, rulesTop: document.querySelector('select[aria-label="Rules"]').getBoundingClientRect().top }));
+  searchBounds.filtersTop = await page.getByRole('button', { name: /^Filters/ }).evaluate((element) => element.getBoundingClientRect().top);
+  assert(searchBounds.search > geometry.viewport * 0.8, `Search is not using a full-width row: ${JSON.stringify(searchBounds)}.`);
+  assert(Math.abs(searchBounds.filtersTop - searchBounds.rulesTop) < 1, `Rules and Filters do not share their row: ${JSON.stringify(searchBounds)}.`);
   assert(afterTop < 590, `First card is too far below the page heading (${afterTop}px).`);
   await page.screenshot({ path: output, fullPage: true });
 
@@ -82,6 +87,7 @@ try {
   const originalPreference = await page.evaluate(() => localStorage.getItem('mahjong-reference:preferred-rules-profile'));
   const initialRules = await rules.locator('option').allTextContents();
   assert(initialRules.some((text) => text.includes('Western — T&M (58)')), 'Western live Rules count missing.');
+  assert(initialRules.indexOf(initialRules.find((text) => text.includes('Club - Bramhall 2026')) ?? '') < initialRules.indexOf(initialRules.find((text) => text.includes('British / BMJA-style')) ?? ''), 'Rules options are not ordered newest first.');
   await rules.selectOption('all');
   await page.getByRole('button', { name: /^Filters/ }).click();
   const pairs = page.getByRole('button', { name: /^Pairs,/ });
@@ -101,9 +107,9 @@ try {
   await exact.focus();
   await exact.selectOption(heavenlyTwins);
   assert(await exact.evaluate((element) => document.activeElement === element), 'Focus left the hand name selector after changing the hand.');
-  const selectedSummary = pairEntry.locator('section[aria-label$="rules version"]').first();
-  assert((await selectedSummary.getByRole('heading').innerText()).includes('Heavenly Twins'), 'Heavenly Twins did not become the prominent hand.');
+  const selectedSummary = pairEntry.locator('section[aria-label$="score and action"]').first();
   assert((await pairEntry.locator('figure figcaption').first().innerText()).includes('Heavenly Twins'), 'Lead example did not follow the Heavenly Twins selection.');
+  assert(await selectedSummary.getByRole('link', { name: 'Score this hand →' }).getAttribute('href') === '/hand?atlasExample=example-heavenly-twins&rules=western&treatment=seven-pairs-one-suit', 'Scorer handoff did not follow the exact hand choice.');
   const selectedProfilePill = pairEntry.getByRole('button', { name: 'Western — T&M' });
   assert(await selectedProfilePill.getAttribute('aria-pressed') === 'true', 'Western profile was not selected.');
 
@@ -127,7 +133,7 @@ try {
   const wrigglySnake = await clubChoice.locator('option').evaluateAll((options) => options.find((option) => option.textContent.includes('Wriggly Snake'))?.value);
   assert(wrigglySnake, 'Club Wriggling/Wriggly Snake did not offer the Wriggly Snake treatment.');
   await clubChoice.selectOption(wrigglySnake);
-  assert(await clubSnake.locator('section[aria-label$="rules version"]').first().getByRole('heading', { name: 'Wriggly Snake' }).isVisible(), 'Club Wriggly Snake was not selectable.');
+  assert(await clubSnake.locator('section[aria-label$="score and action"]').first().getByRole('link', { name: 'Score this hand →' }).getAttribute('href') === '/hand?atlasExample=example-wriggly-snake-any-pair&rules=club&treatment=wriggling-snake-any-pair', 'Club Wriggly Snake scorer handoff did not follow the exact hand choice.');
   assert((await clubSnake.locator('figure figcaption').first().innerText()).includes('Wriggly Snake'), 'Lead example did not follow the Club Wriggly Snake selection.');
   assert(await page.evaluate(() => localStorage.getItem('mahjong-reference:preferred-rules-profile')) === originalPreference, 'Browsing changed My Rules preference.');
 
@@ -173,9 +179,9 @@ try {
   for (let i = 0; i < 20; i += 1) {
     await page.keyboard.press('Tab');
     scorerLink = await page.evaluate(() => ({ label: document.activeElement?.innerText?.trim() ?? '', tag: document.activeElement?.tagName ?? '' }));
-    if (scorerLink.tag === 'A' && scorerLink.label.startsWith('Try this hand in')) break;
+    if (scorerLink.tag === 'A' && scorerLink.label.startsWith('Score this hand')) break;
   }
-  assert(scorerLink?.tag === 'A' && scorerLink.label.startsWith('Try this hand in'), `Keyboard did not reach the exact scorer action: ${JSON.stringify(scorerLink)}`);
+  assert(scorerLink?.tag === 'A' && scorerLink.label.startsWith('Score this hand'), `Keyboard did not reach the exact scorer action: ${JSON.stringify(scorerLink)}`);
   await page.keyboard.press('Tab');
   const learnMore = await page.evaluate(() => ({ label: document.activeElement?.innerText?.trim() ?? '', tag: document.activeElement?.tagName ?? '' }));
   assert(learnMore.tag === 'SUMMARY' && learnMore.label.startsWith('Learn more about'), `Focus did not continue from scorer action to Learn more: ${JSON.stringify(learnMore)}`);
@@ -188,7 +194,7 @@ try {
   await page.waitForTimeout(250);
   assert(new URL(page.url()).pathname === '/hand', `Keyboard activation of scorer CTA did not hand off to the scorer: ${page.url()}`);
 
-  console.log(JSON.stringify({ afterTop, viewport: geometry, preferenceUnchanged: true, pairHand: 'Heavenly Twins', clubSnake: 'Wriggly Snake', onlyOneDisclosure: true, keyboard: 'Rules → Filters → facet → hand choice → Learn more → scorer CTA passed', screenshot: output }, null, 2));
+  console.log(JSON.stringify({ afterTop, viewport: geometry, searchBounds, preferenceUnchanged: true, pairHand: 'Heavenly Twins', clubSnake: 'Wriggly Snake', onlyOneDisclosure: true, keyboard: 'Rules → Filters → facet → hand choice → Learn more → scorer CTA passed', screenshot: output }, null, 2));
 } finally {
   await browser?.close();
   if (server && server.exitCode === null) server.kill('SIGTERM');

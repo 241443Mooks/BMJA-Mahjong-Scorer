@@ -18,7 +18,9 @@ describe('Special Hands Catalogue rendering', () => {
     const html = renderToStaticMarkup(<SpecialHandsCatalogue />);
     expect(html.match(/id="thirteen-unique-wonders"/g)).toHaveLength(1);
     expect(html).toMatch(/<summary id="thirteen-unique-wonders"[^>]*>[\s\S]*?Thirteen Unique Wonders/);
-    expect(html).toContain('Your rules');
+    expect(html).toContain('aria-pressed="true"');
+    expect(html).toContain('Score this hand');
+    expect(html).not.toMatch(/aria-label="[^"]+ rules version"/);
     expect(html).toContain('Rules');
     expect(html).toContain('Filters');
     expect(html).toMatch(/Western — T&amp;M \(\d+\)/);

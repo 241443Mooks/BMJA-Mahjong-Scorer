@@ -8,6 +8,15 @@ export const CLASSICAL_ATLAS_PROFILES = PUBLIC_RULES_DESCRIPTORS
   .filter(({ profile }) => specialHandBindingsForCurrentClassicalProfile(profile).length > 0)
   .map(({ profile }) => profile);
 
+export const CLASSICAL_ATLAS_DISPLAY_PROFILES = PUBLIC_RULES_DESCRIPTORS
+  .filter(({ profile }) => specialHandBindingsForCurrentClassicalProfile(profile).length > 0)
+  .map(({ profile, slug }) => ({ profile, slug }))
+  .sort((left, right) => {
+    const year = (slug: string) => ({ club: 2026, british: 2008, mcr: 2006, buzzard: 2000, western: 1997 }[slug] ?? 0);
+    return year(right.slug) - year(left.slug);
+  })
+  .map(({ profile }) => profile);
+
 export type SpecialHandsAtlasRecord = ProfileLocalSpecialHandTreatment & {
   profileTitle: string;
   profileLabel: string;
