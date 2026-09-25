@@ -48,6 +48,11 @@ function qualifierText(record: SpecialHandsAtlasRecord) {
   return facts;
 }
 
+function treatmentChoiceLabel(entry: AtlasLearnerEntry, record: SpecialHandsAtlasRecord) {
+  const variant = entry.variants?.find(({ treatmentReferenceIds }) => treatmentReferenceIds?.includes(record.referenceId));
+  return publicClubCopy(variant?.label ?? record.name);
+}
+
 function SafeScorerAction({ record, examples }: { record: SpecialHandsAtlasRecord; examples: AtlasExample[] }) {
   const example = examples.find((item) => atlasExampleProvesTreatment(item.id, record.referenceId));
   if (!example) return null;
@@ -86,12 +91,12 @@ function TreatmentDetails({
   </details>;
 }
 
-function TreatmentQuickSummary({ record, examples, preferredProfile }: { record: SpecialHandsAtlasRecord; examples: AtlasExample[]; preferredProfile: { id: string; version: string } | null }) {
+function TreatmentQuickSummary({ record, examples, preferredProfile, displayName }: { record: SpecialHandsAtlasRecord; examples: AtlasExample[]; preferredProfile: { id: string; version: string } | null; displayName?: string }) {
   const anchorId = treatmentAnchor(record);
   const unresolved = ATLAS_UNRESOLVED_TREATMENTS.has(record.referenceId);
   return <section id={anchorId} className="scroll-mt-24 mt-4 rounded-xl border-2 border-[#284d45] bg-[#edf3ed] p-4" aria-label={`${publicClubCopy(record.profileTitle)} exact treatment`}>
     <div className="font-mono text-xs font-semibold uppercase tracking-[.14em] text-[#477562]">{preferredProfile?.id === record.identity.profile.id && preferredProfile.version === record.identity.profile.version ? 'Your rules' : 'Exact treatment'} · {publicClubCopy(record.profileTitle)} {record.identity.profile.version}</div>
-    <h3 className="mt-1 font-serif text-xl text-[#284d45]">{publicClubCopy(record.name)}</h3>
+    <h3 className="mt-1 font-serif text-xl text-[#284d45]">{publicClubCopy(displayName ?? record.name)}</h3>
     <p className="mt-1 text-sm leading-6 text-[#284d45]">{publicClubCopy(record.description)}</p>
     <p className="mt-2 text-sm font-semibold text-[#284d45]">{atlasScoreLabel(record)}</p>
     {qualifierText(record).map((fact) => <p key={fact} className="mt-1 text-sm leading-6 text-[#596b65]">{fact}</p>)}
@@ -121,7 +126,10 @@ function EntryCard({
   const legacyTreatment = treatments.find((record) => !!record.href);
   const globallySelected = explicitProfile ? treatments.find(({ identity }) => `${identity.profile.id}@${identity.profile.version}` === explicitProfile) : undefined;
   const locallySelected = localTreatment ? treatments.find(({ referenceId }) => referenceId === localTreatment) : undefined;
-  const prominentTreatment = globallySelected ?? locallySelected ?? (myRules ? ownTreatment : undefined) ?? legacyTreatment ?? treatments[0];
+  const localForScope = locallySelected && (!explicitProfile || `${locallySelected.identity.profile.id}@${locallySelected.identity.profile.version}` === explicitProfile) ? locallySelected : undefined;
+  const prominentTreatment = localForScope ?? globallySelected ?? (myRules ? ownTreatment : undefined) ?? legacyTreatment ?? treatments[0];
+  const prominentProfileKey = prominentTreatment ? `${prominentTreatment.identity.profile.id}@${prominentTreatment.identity.profile.version}` : null;
+  const sameProfileTreatments = prominentProfileKey ? treatments.filter(({ identity }) => `${identity.profile.id}@${identity.profile.version}` === prominentProfileKey) : [];
   const leadExample = prominentTreatment ? selectAtlasLeadExample(entry, prominentTreatment.identity.profile) : selectAtlasLeadExample(entry, myRules ? preferredProfile : null);
   const remainingTreatments = prominentTreatment ? treatments.filter(({ referenceId, identity }) => referenceId !== prominentTreatment.referenceId && (!explicitProfile || `${identity.profile.id}@${identity.profile.version}` === explicitProfile)) : treatments;
   const linkedEntries = (entry.relatedEntryIds ?? []).flatMap((id) => {
@@ -139,15 +147,20 @@ function EntryCard({
         <p className="mt-2 text-sm font-semibold leading-6 text-[#284d45]">{publicClubCopy(entry.summary)}</p>
         <p className="mt-1 text-sm leading-6 text-[#596b65]">{publicClubCopy(entry.whatItIs)}</p>
       </div>
-      <div className="flex w-full max-w-full flex-wrap gap-2 sm:w-auto" role="group" aria-label={`Choose exact rules treatment for ${publicClubCopy(entry.displayName)}`}>
-        {[...new Map(treatments.map((record) => [`${record.identity.profile.id}@${record.identity.profile.version}`, record])).values()].filter((record) => !explicitProfile || `${record.identity.profile.id}@${record.identity.profile.version}` === explicitProfile).map((record) => { const selected = prominentTreatment?.referenceId === record.referenceId; const key = `${record.identity.profile.id}@${record.identity.profile.version}`; return <button key={key} type="button" aria-pressed={selected} onClick={() => setLocalTreatment(record.referenceId)} className={`inline-flex min-h-11 items-center gap-1.5 rounded-md border px-3 py-2 text-xs font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249] ${selected ? 'border-[#284d45] bg-[#284d45] text-white ring-2 ring-[#284d45] ring-offset-1' : 'border-[#b8cdbf] bg-white text-[#284d45]'}`}><span>{record.profileLabel}</span>{selected && <Check size={14} aria-hidden="true" />}</button>; })}
+      <div className="flex w-full max-w-full flex-col items-start gap-2 sm:w-auto" role="group" aria-label={`Choose exact rules treatment for ${publicClubCopy(entry.displayName)}`}>
+        <div className="flex max-w-full flex-wrap gap-2">{[...new Map(treatments.map((record) => [`${record.identity.profile.id}@${record.identity.profile.version}`, record])).values()].filter((record) => !explicitProfile || `${record.identity.profile.id}@${record.identity.profile.version}` === explicitProfile).map((record) => { const selected = prominentProfileKey === `${record.identity.profile.id}@${record.identity.profile.version}`; const key = `${record.identity.profile.id}@${record.identity.profile.version}`; return <button key={key} type="button" aria-pressed={selected} onClick={() => setLocalTreatment(record.referenceId)} className={`inline-flex min-h-11 items-center gap-1.5 rounded-md border px-3 py-2 text-xs font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249] ${selected ? 'border-[#284d45] bg-[#284d45] text-white ring-2 ring-[#284d45] ring-offset-1' : 'border-[#b8cdbf] bg-white text-[#284d45]'}`}><span>{record.profileLabel}</span>{selected && <Check size={14} aria-hidden="true" />}</button>; })}</div>
+        {sameProfileTreatments.length > 1 && <label className="block max-w-full text-xs font-semibold text-[#284d45]">Exact treatment
+          <select aria-label={`Exact treatment for ${publicClubCopy(entry.displayName)}`} value={prominentTreatment?.referenceId ?? ''} onChange={(event) => setLocalTreatment(event.target.value)} className="mt-1 block min-h-11 max-w-full rounded-md border border-[#b8cdbf] bg-white px-3 py-2 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">
+            {sameProfileTreatments.map((record) => <option key={record.referenceId} value={record.referenceId}>{treatmentChoiceLabel(entry, record)}</option>)}
+          </select>
+        </label>}
       </div>
     </div>
 
     {leadExample && <AtlasExampleVisual example={leadExample.example} title={leadExample.variantLabel ? `Example variant: ${leadExample.variantLabel}` : undefined} />}
     {entry.facets?.length ? <ul className="mt-3 flex flex-wrap gap-2" aria-label="Structural facets">{entry.facets.map((facet) => <li key={facet} className="rounded-full border border-[#b8cdbf] bg-[#edf3ed] px-2.5 py-1 text-xs font-medium text-[#284d45]">{facetName(facet)}</li>)}</ul> : null}
 
-    {prominentTreatment && <TreatmentQuickSummary record={prominentTreatment} examples={atlasExamplesForTreatment(entry, prominentTreatment.referenceId)} preferredProfile={preferredProfile} />}
+    {prominentTreatment && <TreatmentQuickSummary record={prominentTreatment} examples={atlasExamplesForTreatment(entry, prominentTreatment.referenceId)} preferredProfile={preferredProfile} displayName={treatmentChoiceLabel(entry, prominentTreatment)} />}
     {myRules && preferredProfile && !ownTreatment ? <p className="mt-4 rounded-xl border border-[#dfd5c2] bg-white/70 p-3 text-sm leading-6 text-[#596b65]">This entry has no exact treatment in your remembered rules ({descriptorForRulesProfile(preferredProfile).title}). The general reference is still available here.</p> : null}
 
     <details open={expanded} onToggle={(event) => onExpandedChange(event.currentTarget.open)} className="mt-4 rounded-xl border border-[#dfd5c2] bg-white/55 p-3">
