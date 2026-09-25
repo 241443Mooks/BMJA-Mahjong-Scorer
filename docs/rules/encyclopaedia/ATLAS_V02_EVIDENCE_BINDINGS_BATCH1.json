@@ -6,107 +6,387 @@
     {
       "entryId": "thirteen-unique-wonders",
       "evidenceBindings": [
-        { "kind": "reviewed-audit", "path": "docs/rules/encyclopaedia/CLASSICAL_ATLAS_CONCEPT_AUDIT_V1.md", "locator": "§1 Thirteen Unique Wonders / Unique Wonder / Thirteen Odd Majors", "supports": ["concept-membership", "local-name-differences", "structural-facets"], "status": "reviewed" }
-      ]
-    },
-    {
-      "entryId": "thirteen-odd-majors-buzzard",
-      "evidenceBindings": [
-        { "kind": "reviewed-audit", "path": "docs/rules/encyclopaedia/CLASSICAL_ATLAS_CONCEPT_AUDIT_V1.md", "locator": "§1 Thirteen Unique Wonders / Unique Wonder / Thirteen Odd Majors", "supports": ["unresolved-membership", "do-not-borrow-shared-predicate"], "status": "reviewed" },
-        { "kind": "repo-evidence", "path": "docs/rules/BUZZARD_2000_RULE_EVIDENCE.md", "locator": "§D Limit hands — Thirteen Odd Majors", "supports": ["local-name", "configured-limit-membership"], "status": "source-complete-name-and-limit; exact-tile-predicate-insufficient-for-cross-profile-membership" }
+        {
+          "kind": "reviewed-audit",
+          "path": "docs/rules/encyclopaedia/CLASSICAL_ATLAS_CONCEPT_AUDIT_V1.md",
+          "locator": "§1 Thirteen Unique Wonders / Unique Wonder / Thirteen Odd Majors",
+          "supports": [
+            "concept-membership",
+            "local-name-differences",
+            "structural-facets"
+          ],
+          "status": "reviewed"
+        },
+        {
+          "kind": "repo-evidence",
+          "path": "docs/rules/encyclopaedia/ATLAS_BUZZARD_RECONCILIATION_2026.md",
+          "locator": "§1 Thirteen Odd Majors — source/runtime finding; retained PDF p.11",
+          "supports": [
+            "exact-tile-qualification",
+            "local-name",
+            "configured-limit-membership",
+            "concept-membership"
+          ],
+          "status": "source-verified"
+        }
       ]
     },
     {
       "entryId": "four-blessings",
       "evidenceBindings": [
-        { "kind": "reviewed-audit", "path": "docs/rules/encyclopaedia/CLASSICAL_ATLAS_CONCEPT_AUDIT_V1.md", "locator": "§9 Four Blessings / four-Winds family", "supports": ["concept-membership", "shared-structure", "treatment-local-differences"], "status": "reviewed" }
+        {
+          "kind": "reviewed-audit",
+          "path": "docs/rules/encyclopaedia/CLASSICAL_ATLAS_CONCEPT_AUDIT_V1.md",
+          "locator": "§9 Four Blessings / four-Winds family",
+          "supports": [
+            "concept-membership",
+            "shared-structure",
+            "treatment-local-differences"
+          ],
+          "status": "reviewed"
+        }
       ]
     },
     {
       "entryId": "imperial-jade",
       "evidenceBindings": [
-        { "kind": "reviewed-audit", "path": "docs/rules/encyclopaedia/CLASSICAL_ATLAS_CONCEPT_AUDIT_V1.md", "locator": "§6 Imperial Jade / All Green family", "supports": ["family-membership", "bmja-otb-shared-narrow-concept", "western-broader-than"], "status": "reviewed" },
-        { "kind": "repo-evidence", "path": "docs/rules/OUTSIDE_THE_BOX_PROFILE_CROSSWALK.md", "locator": "§2 Imperial Jade", "supports": ["outside-the-box-treatment-qualification", "bmja-reuse-identical", "western-structural-difference"], "status": "verified-club" },
-        { "kind": "repo-evidence", "path": "docs/rules/TM_COMPANION_CATALOGUE_INDEX.md", "locator": "Imperial Jade / Pass 4H", "supports": ["western-treatment-qualification", "one-chow-permission"], "status": "source-certified" }
+        {
+          "kind": "reviewed-audit",
+          "path": "docs/rules/encyclopaedia/CLASSICAL_ATLAS_CONCEPT_AUDIT_V1.md",
+          "locator": "§6 Imperial Jade / All Green family",
+          "supports": [
+            "family-membership",
+            "bmja-otb-shared-narrow-concept",
+            "western-broader-than"
+          ],
+          "status": "reviewed"
+        },
+        {
+          "kind": "repo-evidence",
+          "path": "docs/rules/OUTSIDE_THE_BOX_PROFILE_CROSSWALK.md",
+          "locator": "§2 Imperial Jade",
+          "supports": [
+            "outside-the-box-treatment-qualification",
+            "bmja-reuse-identical",
+            "western-structural-difference"
+          ],
+          "status": "verified-club"
+        },
+        {
+          "kind": "repo-evidence",
+          "path": "docs/rules/TM_COMPANION_CATALOGUE_INDEX.md",
+          "locator": "Imperial Jade / Pass 4H",
+          "supports": [
+            "western-treatment-qualification",
+            "one-chow-permission"
+          ],
+          "status": "source-certified"
+        }
       ]
     },
     {
       "entryId": "wriggling-snake-family",
       "evidenceBindings": [
-        { "kind": "reviewed-audit", "path": "docs/rules/encyclopaedia/CLASSICAL_ATLAS_CONCEPT_AUDIT_V1.md", "locator": "§2 Wriggling Snake / Wriggly Snake", "supports": ["family-membership", "narrower-than", "broader-than", "structural-facets"], "status": "reviewed" },
-        { "kind": "repo-evidence", "path": "docs/rules/OUTSIDE_THE_BOX_PROFILE_CROSSWALK.md", "locator": "§2 Wriggling Snake; Wriggly Snake", "supports": ["two-distinct-outside-the-box-memberships", "duplicate-rule-difference"], "status": "verified-club" }
+        {
+          "kind": "reviewed-audit",
+          "path": "docs/rules/encyclopaedia/CLASSICAL_ATLAS_CONCEPT_AUDIT_V1.md",
+          "locator": "§2 Wriggling Snake / Wriggly Snake",
+          "supports": [
+            "family-membership",
+            "narrower-than",
+            "broader-than",
+            "structural-facets"
+          ],
+          "status": "reviewed"
+        },
+        {
+          "kind": "repo-evidence",
+          "path": "docs/rules/OUTSIDE_THE_BOX_PROFILE_CROSSWALK.md",
+          "locator": "§2 Wriggling Snake; Wriggly Snake",
+          "supports": [
+            "two-distinct-outside-the-box-memberships",
+            "duplicate-rule-difference"
+          ],
+          "status": "verified-club"
+        }
       ]
     },
     {
       "entryId": "pair-hand-family",
       "evidenceBindings": [
-        { "kind": "reviewed-audit", "path": "docs/rules/encyclopaedia/CLASSICAL_ATLAS_CONCEPT_AUDIT_V1.md", "locator": "§7 Seven Pairs / All Pair family", "supports": ["family-membership", "all-pair-honours-shared-concept", "name-collision", "narrower-than", "winning-method-distinction"], "status": "reviewed" },
-        { "kind": "repo-evidence", "path": "docs/rules/OUTSIDE_THE_BOX_PROFILE_CROSSWALK.md", "locator": "§2 All Pair; Heavenly Twins", "supports": ["outside-the-box-all-pair-membership", "outside-the-box-heavenly-twins-membership", "reuse-identical"], "status": "verified-club" }
+        {
+          "kind": "reviewed-audit",
+          "path": "docs/rules/encyclopaedia/CLASSICAL_ATLAS_CONCEPT_AUDIT_V1.md",
+          "locator": "§7 Seven Pairs / All Pair family",
+          "supports": [
+            "family-membership",
+            "all-pair-honours-shared-concept",
+            "name-collision",
+            "narrower-than",
+            "winning-method-distinction"
+          ],
+          "status": "reviewed"
+        },
+        {
+          "kind": "repo-evidence",
+          "path": "docs/rules/OUTSIDE_THE_BOX_PROFILE_CROSSWALK.md",
+          "locator": "§2 All Pair; Heavenly Twins",
+          "supports": [
+            "outside-the-box-all-pair-membership",
+            "outside-the-box-heavenly-twins-membership",
+            "reuse-identical"
+          ],
+          "status": "verified-club"
+        }
       ]
     },
     {
-      "entryId": "heavens-blessing-bmja",
+      "entryId": "heavens-blessing-original-hand",
       "evidenceBindings": [
-        { "kind": "reviewed-audit", "path": "docs/rules/encyclopaedia/CLASSICAL_ATLAS_CONCEPT_AUDIT_V1.md", "locator": "§8 Heaven's/Earth's Blessing and event-defined treatments", "supports": ["event-definition", "bmja-evidence-caveat"], "status": "reviewed" },
-        { "kind": "repo-evidence", "path": "docs/rules/BMJA_RULES_REFERENCE.md", "locator": "Event-dependent specials — Heaven's Blessing / Mah Jong in original deal", "supports": ["bmja-event-source-mapping"], "status": "inferred-mapping-retained" }
-      ]
-    },
-    {
-      "entryId": "original-hand-buzzard",
-      "evidenceBindings": [
-        { "kind": "reviewed-audit", "path": "docs/rules/encyclopaedia/CLASSICAL_ATLAS_CONCEPT_AUDIT_V1.md", "locator": "§8 Heaven's/Earth's Blessing and event-defined treatments", "supports": ["unresolved-equivalence"], "status": "reviewed" },
-        { "kind": "repo-evidence", "path": "docs/rules/BUZZARD_2000_RULE_EVIDENCE.md", "locator": "§D Limit hands — Original Hand", "supports": ["buzzard-local-name", "configured-limit-membership"], "status": "source-complete-name-and-limit; exact-shared-event-qualification-not-established" }
+        {
+          "kind": "reviewed-audit",
+          "path": "docs/rules/encyclopaedia/CLASSICAL_ATLAS_CONCEPT_AUDIT_V1.md",
+          "locator": "§8 Heaven's/Earth's Blessing and event-defined treatments",
+          "supports": [
+            "event-definition",
+            "bmja-evidence-caveat"
+          ],
+          "status": "reviewed"
+        },
+        {
+          "kind": "repo-evidence",
+          "path": "docs/rules/BMJA_RULES_REFERENCE.md",
+          "locator": "Event-dependent specials — Heaven's Blessing / Mah Jong in original deal",
+          "supports": [
+            "bmja-event-source-mapping"
+          ],
+          "status": "inferred-mapping-retained"
+        },
+        {
+          "kind": "reviewed-audit",
+          "path": "docs/rules/encyclopaedia/CLASSICAL_ATLAS_CONCEPT_AUDIT_V1.md",
+          "locator": "§8 Heaven’s/Earth’s Blessing and event-defined treatments; superseded for Buzzard Original Hand by ATLAS_BUZZARD_RECONCILIATION_2026.md",
+          "supports": [
+            "reviewed-current-event-family",
+            "bmja-provenance-remains-inferred"
+          ],
+          "status": "reviewed"
+        },
+        {
+          "kind": "repo-evidence",
+          "path": "docs/rules/encyclopaedia/ATLAS_BUZZARD_RECONCILIATION_2026.md",
+          "locator": "§2 Original Hand — source/runtime finding; retained PDF p.11",
+          "supports": [
+            "east-seat",
+            "original-deal-event",
+            "already-complete-hand",
+            "local-names",
+            "configured-limit-membership"
+          ],
+          "status": "source-verified"
+        }
       ]
     },
     {
       "entryId": "twofold-fortune-bmja",
       "evidenceBindings": [
-        { "kind": "reviewed-audit", "path": "docs/rules/encyclopaedia/CLASSICAL_ATLAS_CONCEPT_AUDIT_V1.md", "locator": "§10 Profile-specific treatment with no forced partner", "supports": ["profile-specific-current-classical", "event-definition"], "status": "reviewed" },
-        { "kind": "repo-evidence", "path": "docs/rules/BMJA_RULES_REFERENCE.md", "locator": "Event-dependent specials — Twofold Fortune", "supports": ["replacement-chain-event-qualification"], "status": "current-reference" }
+        {
+          "kind": "reviewed-audit",
+          "path": "docs/rules/encyclopaedia/CLASSICAL_ATLAS_CONCEPT_AUDIT_V1.md",
+          "locator": "§10 Profile-specific treatment with no forced partner",
+          "supports": [
+            "profile-specific-current-classical",
+            "event-definition"
+          ],
+          "status": "reviewed"
+        },
+        {
+          "kind": "repo-evidence",
+          "path": "docs/rules/BMJA_RULES_REFERENCE.md",
+          "locator": "Event-dependent specials — Twofold Fortune",
+          "supports": [
+            "replacement-chain-event-qualification"
+          ],
+          "status": "current-reference"
+        }
       ]
     },
     {
-      "entryId": "three-great-scholars-reviewed",
+      "entryId": "three-dragon-specials-family",
       "evidenceBindings": [
-        { "kind": "reviewed-audit", "path": "docs/rules/encyclopaedia/CLASSICAL_ATLAS_CONCEPT_AUDIT_V1.md", "locator": "§4 Three Great Scholars / Three Dragons family", "supports": ["bmja-western-concept-membership", "structural-core"], "status": "reviewed" },
-        { "kind": "repo-evidence", "path": "docs/rules/TM_COMPANION_CATALOGUE_INDEX.md", "locator": "Three Great Scholars / synopsis p.58 / detail p.33", "supports": ["western-treatment-qualification"], "status": "source-certified" }
-      ]
-    },
-    {
-      "entryId": "three-great-scholars-club-verified",
-      "evidenceBindings": [
-        { "kind": "repo-evidence", "path": "docs/rules/OUTSIDE_THE_BOX_PROFILE_CROSSWALK.md", "locator": "§2 Three Great Scholars", "supports": ["same-suit-remaining-set-and-pair", "chow-permission", "full-exposure-value"], "status": "verified-club" }
-      ]
-    },
-    {
-      "entryId": "three-dragons-buzzard-winner-verified",
-      "evidenceBindings": [
-        { "kind": "repo-evidence", "path": "docs/rules/BUZZARD_2000_RULE_EVIDENCE.md", "locator": "§D Limit hands", "supports": ["three-dragon-winning-limit", "chow-permitted-as-fourth-set"], "status": "source-verified" },
-        { "kind": "repo-evidence", "path": "docs/rules/BUZZARD_2000_RULE_EVIDENCE.md", "locator": "§E non-winner limits", "supports": ["separate-incomplete-three-dragon-table-result", "unchanged-from-issue-220"], "status": "existing-runtime-path" }
+        {
+          "kind": "reviewed-audit",
+          "path": "docs/rules/encyclopaedia/CLASSICAL_ATLAS_CONCEPT_AUDIT_V1.md",
+          "locator": "§4 Three Great Scholars / Three Dragons family",
+          "supports": [
+            "bmja-western-concept-membership",
+            "structural-core"
+          ],
+          "status": "reviewed"
+        },
+        {
+          "kind": "reviewed-audit",
+          "path": "docs/rules/encyclopaedia/CLASSICAL_ATLAS_CONCEPT_AUDIT_V1.md",
+          "locator": "§4 Three Great Scholars / Three Dragons family; superseded for Buzzard winner and non-winner conclusions by ATLAS_BUZZARD_RECONCILIATION_2026.md",
+          "supports": [
+            "bmja-tm-shared-narrower-concept",
+            "club-related-materially-different",
+            "buzzard-broader-winner",
+            "structured-non-winner-result-link"
+          ],
+          "status": "reviewed"
+        },
+        {
+          "kind": "runtime-binding",
+          "path": "artifacts/mahjong-scorer/src/game/types.ts",
+          "locator": "ProfileScoreResult resultId union",
+          "supports": [
+            "profile-score-result-ids-not-special-hand-treatments"
+          ],
+          "status": "existing-runtime-contract"
+        },
+        {
+          "kind": "repo-evidence",
+          "path": "docs/rules/TM_COMPANION_CATALOGUE_INDEX.md",
+          "locator": "Three Great Scholars / synopsis p.58 / detail p.33",
+          "supports": [
+            "western-treatment-qualification"
+          ],
+          "status": "source-certified"
+        },
+        {
+          "kind": "repo-evidence",
+          "path": "docs/rules/OUTSIDE_THE_BOX_PROFILE_CROSSWALK.md",
+          "locator": "§2 Three Great Scholars",
+          "supports": [
+            "same-suit-remaining-set-and-pair",
+            "chow-permission",
+            "full-exposure-value"
+          ],
+          "status": "verified-club"
+        },
+        {
+          "kind": "repo-evidence",
+          "path": "docs/rules/BUZZARD_2000_RULE_EVIDENCE.md",
+          "locator": "§D Limit hands / retained PDF p.11 — Three Dragons; §E non-winner limits / retained PDF pp.11–12",
+          "supports": [
+            "broader-winning-three-dragon-predicate",
+            "separate-incomplete-non-winner-consequence",
+            "three-dragon-winning-limit",
+            "chow-permitted-as-fourth-set",
+            "separate-incomplete-three-dragon-table-result",
+            "unchanged-from-issue-220"
+          ],
+          "status": "source-verified"
+        }
       ]
     },
     {
       "entryId": "knitting-reviewed",
       "evidenceBindings": [
-        { "kind": "reviewed-audit", "path": "docs/rules/encyclopaedia/CLASSICAL_ATLAS_CONCEPT_AUDIT_V1.md", "locator": "§3 Knitting / Triple Knitting", "supports": ["two-suit-seven-cross-pair-runtime-equivalence", "exact-profile-treatment-ownership"], "status": "reviewed" },
-        { "kind": "repo-evidence", "path": "docs/rules/TM_COMPANION_CATALOGUE_INDEX.md", "locator": "Knitting / p.20 / synopsis pp.57-59", "supports": ["exactly-two-suits", "seven-cross-suit-pairs"], "status": "source-certified" },
-        { "kind": "repo-evidence", "path": "docs/rules/OUTSIDE_THE_BOX_PROFILE_CROSSWALK.md", "locator": "§2 Knitting", "supports": ["Club-two-suit-source-wording", "shared-canonical-qualification"], "status": "verified-club" }
+        {
+          "kind": "reviewed-audit",
+          "path": "docs/rules/encyclopaedia/CLASSICAL_ATLAS_CONCEPT_AUDIT_V1.md",
+          "locator": "§3 Knitting / Triple Knitting",
+          "supports": [
+            "two-suit-seven-cross-pair-runtime-equivalence",
+            "exact-profile-treatment-ownership"
+          ],
+          "status": "reviewed"
+        },
+        {
+          "kind": "repo-evidence",
+          "path": "docs/rules/TM_COMPANION_CATALOGUE_INDEX.md",
+          "locator": "Knitting / p.20 / synopsis pp.57-59",
+          "supports": [
+            "exactly-two-suits",
+            "seven-cross-suit-pairs"
+          ],
+          "status": "source-certified"
+        },
+        {
+          "kind": "repo-evidence",
+          "path": "docs/rules/OUTSIDE_THE_BOX_PROFILE_CROSSWALK.md",
+          "locator": "§2 Knitting",
+          "supports": [
+            "Club-two-suit-source-wording",
+            "shared-canonical-qualification"
+          ],
+          "status": "verified-club"
+        }
       ]
     },
     {
       "entryId": "triple-knitting-reviewed",
       "evidenceBindings": [
-        { "kind": "reviewed-audit", "path": "docs/rules/encyclopaedia/CLASSICAL_ATLAS_CONCEPT_AUDIT_V1.md", "locator": "§3 Knitting / Triple Knitting", "supports": ["strict-complete-layout-runtime-equivalence", "exact-profile-treatment-ownership"], "status": "reviewed" },
-        { "kind": "repo-evidence", "path": "docs/rules/TM_COMPANION_CATALOGUE_INDEX.md", "locator": "Triple Knitting / p.20 / synopsis p.57", "supports": ["four-three-suit-rank-groups", "cross-suit-pair", "strict-complete-layout"], "status": "source-certified" },
-        { "kind": "repo-evidence", "path": "docs/rules/OUTSIDE_THE_BOX_PROFILE_CROSSWALK.md", "locator": "§2 Triple Knitting", "supports": ["Club-guide-shape", "shared-canonical-qualification"], "status": "verified-club" }
+        {
+          "kind": "reviewed-audit",
+          "path": "docs/rules/encyclopaedia/CLASSICAL_ATLAS_CONCEPT_AUDIT_V1.md",
+          "locator": "§3 Knitting / Triple Knitting",
+          "supports": [
+            "strict-complete-layout-runtime-equivalence",
+            "exact-profile-treatment-ownership"
+          ],
+          "status": "reviewed"
+        },
+        {
+          "kind": "repo-evidence",
+          "path": "docs/rules/TM_COMPANION_CATALOGUE_INDEX.md",
+          "locator": "Triple Knitting / p.20 / synopsis p.57",
+          "supports": [
+            "four-three-suit-rank-groups",
+            "cross-suit-pair",
+            "strict-complete-layout"
+          ],
+          "status": "source-certified"
+        },
+        {
+          "kind": "repo-evidence",
+          "path": "docs/rules/OUTSIDE_THE_BOX_PROFILE_CROSSWALK.md",
+          "locator": "§2 Triple Knitting",
+          "supports": [
+            "Club-guide-shape",
+            "shared-canonical-qualification"
+          ],
+          "status": "verified-club"
+        }
       ]
     },
     {
       "entryId": "gates-family",
       "evidenceBindings": [
-        { "kind": "reviewed-audit", "path": "docs/rules/encyclopaedia/CLASSICAL_ATLAS_CONCEPT_AUDIT_V1.md", "locator": "§5 Gates of Heaven / Nine Gates family", "supports": ["family-membership", "partial-analogue", "buzzard-broader-completion"], "status": "reviewed" },
-        { "kind": "repo-evidence", "path": "docs/rules/TM_COMPANION_CATALOGUE_INDEX.md", "locator": "Gates of Heaven / Pass 4J / pp.9,47", "supports": ["western-middle-rank-duplicate", "separate-predicate-rationale"], "status": "source-certified" },
-        { "kind": "repo-evidence", "path": "docs/rules/BUZZARD_2000_RULE_EVIDENCE.md", "locator": "§D Calling Nine Tile Hand clarification", "supports": ["1112345678999-base", "any-rank-1-to-9-completion", "not-identical-to-bmja-western"], "status": "source-complete" }
+        {
+          "kind": "reviewed-audit",
+          "path": "docs/rules/encyclopaedia/CLASSICAL_ATLAS_CONCEPT_AUDIT_V1.md",
+          "locator": "§5 Gates of Heaven / Nine Gates family",
+          "supports": [
+            "family-membership",
+            "partial-analogue",
+            "buzzard-broader-completion"
+          ],
+          "status": "reviewed"
+        },
+        {
+          "kind": "repo-evidence",
+          "path": "docs/rules/TM_COMPANION_CATALOGUE_INDEX.md",
+          "locator": "Gates of Heaven / Pass 4J / pp.9,47",
+          "supports": [
+            "western-middle-rank-duplicate",
+            "separate-predicate-rationale"
+          ],
+          "status": "source-certified"
+        },
+        {
+          "kind": "repo-evidence",
+          "path": "docs/rules/BUZZARD_2000_RULE_EVIDENCE.md",
+          "locator": "§D Calling Nine Tile Hand clarification",
+          "supports": [
+            "1112345678999-base",
+            "any-rank-1-to-9-completion",
+            "not-identical-to-bmja-western"
+          ],
+          "status": "source-complete"
+        }
       ]
     }
   ]

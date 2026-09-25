@@ -8,12 +8,14 @@
       "treatmentReferenceIds": [
         "bmja@1.0:thirteen-unique-wonders",
         "outside-the-box@0.1:thirteen-unique-wonders",
+        "buzzard-2000@0.1:thirteen-unique-wonders",
         "western-tm@0.1:thirteen-unique-wonders"
       ],
       "localNames": [
         "Thirteen unique wonders",
         "Unique Wonder",
-        "13 Unique Wonders"
+        "13 Unique Wonders",
+        "Thirteen Odd Majors"
       ],
       "facets": [
         "irregular-hand",
@@ -46,6 +48,10 @@
         {
           "referenceId": "outside-the-box@0.1:thirteen-unique-wonders",
           "difference": "Same reviewed tile structure; the current Outside the Box treatment additionally requires concealment."
+        },
+        {
+          "referenceId": "buzzard-2000@0.1:thirteen-unique-wonders",
+          "difference": "Buzzard local name Thirteen Odd Majors; exact structural membership is source/runtime verified and its configured-limit score remains treatment-local."
         }
       ],
       "watchOutFor": [
@@ -53,7 +59,8 @@
         "The duplicate may be any one of the thirteen required tile types in the reviewed shared concept."
       ],
       "evidenceRefs": [
-        "CLASSICAL_ATLAS_CONCEPT_AUDIT_V1.md §1"
+        "CLASSICAL_ATLAS_CONCEPT_AUDIT_V1.md §1",
+        "BUZZARD_2000_RULE_EVIDENCE.md §D retained PDF p.11"
       ],
       "evidenceBindings": [
         {
@@ -66,47 +73,18 @@
             "structural-facets"
           ],
           "status": "reviewed"
-        }
-      ]
-    },
-    {
-      "id": "thirteen-odd-majors-buzzard",
-      "state": "standalone-unresolved",
-      "displayName": "Thirteen Odd Majors",
-      "treatmentReferenceIds": [
-        "buzzard-2000@0.1:thirteen-unique-wonders"
-      ],
-      "facets": [],
-      "summary": "Buzzard 2000 names this as a configured limit treatment, but the repo-held source evidence does not yet establish its exact tile qualification.",
-      "whatItIs": "A named Buzzard 2000 limit treatment whose exact relationship to the reviewed Thirteen Unique Wonders concept is still under evidence review.",
-      "whatItMeans": "Mahjong Reference can preserve the exact Buzzard treatment identity without borrowing the BMJA/T&M/OTB definition as though it were proved for Buzzard.",
-      "whySpecial": "It is listed by the Buzzard source as a limit hand.",
-      "exampleIds": [],
-      "referenceNote": "Do not reuse the Thirteen Unique Wonders visual as a Buzzard definition until the exact Buzzard tile predicate is source-verified.",
-      "evidenceRefs": [
-        "CLASSICAL_ATLAS_CONCEPT_AUDIT_V1.md §1",
-        "BUZZARD_2000_RULE_EVIDENCE.md §D"
-      ],
-      "evidenceBindings": [
-        {
-          "kind": "reviewed-audit",
-          "path": "docs/rules/encyclopaedia/CLASSICAL_ATLAS_CONCEPT_AUDIT_V1.md",
-          "locator": "§1 Thirteen Unique Wonders / Unique Wonder / Thirteen Odd Majors",
-          "supports": [
-            "unresolved-membership",
-            "do-not-borrow-shared-predicate"
-          ],
-          "status": "reviewed"
         },
         {
           "kind": "repo-evidence",
-          "path": "docs/rules/BUZZARD_2000_RULE_EVIDENCE.md",
-          "locator": "§D Limit hands — Thirteen Odd Majors",
+          "path": "docs/rules/encyclopaedia/ATLAS_BUZZARD_RECONCILIATION_2026.md",
+          "locator": "§1 Thirteen Odd Majors — source/runtime finding; retained PDF p.11",
           "supports": [
+            "exact-tile-qualification",
             "local-name",
-            "configured-limit-membership"
+            "configured-limit-membership",
+            "concept-membership"
           ],
-          "status": "source-complete-name-and-limit; exact-tile-predicate-insufficient-for-cross-profile-membership"
+          "status": "source-verified"
         }
       ]
     },
@@ -465,18 +443,19 @@
       ]
     },
     {
-      "id": "heavens-blessing-bmja",
-      "state": "standalone-verified-treatment",
-      "displayName": "Heaven's Blessing",
+      "id": "heavens-blessing-original-hand",
+      "state": "reviewed-family-topic",
+      "displayName": "Heaven's Blessing / Original Hand",
       "treatmentReferenceIds": [
-        "bmja@1.0:heavens-blessing"
+        "bmja@1.0:heavens-blessing",
+        "buzzard-2000@0.1:heavens-blessing"
       ],
       "facets": [
         "event-defined"
       ],
-      "summary": "East's hand is already complete in the original deal.",
-      "whatItIs": "An event-defined special for East beginning with a complete Mahjong hand in the initial deal.",
-      "whatItMeans": "The defining fact is when and how the win exists, not a particular tile pattern.",
+      "summary": "An East player's already complete initial deal, named Heaven's Blessing in BMJA and Original Hand in Buzzard.",
+      "whatItIs": "A reviewed event family for a winning hand already complete in East’s original deal.",
+      "whatItMeans": "The shared current event predicate is East, initial deal, and a complete winning hand; Buzzard’s local names and source-verified provenance remain distinct from BMJA’s inferred source mapping.",
       "whySpecial": "Mahjong is complete before ordinary play has begun.",
       "howItWorks": [
         "East receives the initial hand.",
@@ -486,10 +465,17 @@
       "exampleIds": [
         "example-heavens-blessing-existing"
       ],
-      "referenceNote": "The current BMJA event mapping is documented in the repo as inferred from the source phrase 'Mah Jong in original deal'; keep that evidence status available through provenance rather than presenting inference as stronger source wording.",
+      "referenceNote": "Buzzard source verifies East, original deal and already-complete hand. BMJA’s mapping remains inferred from “Mah Jong in original deal”; shared current predicate does not make the historical names universally equivalent.",
       "evidenceRefs": [
         "CLASSICAL_ATLAS_CONCEPT_AUDIT_V1.md §8",
-        "BMJA_RULES_REFERENCE.md Event-dependent specials"
+        "BMJA_RULES_REFERENCE.md Event-dependent specials",
+        "BUZZARD_2000_RULE_EVIDENCE.md §D retained PDF p.11"
+      ],
+      "localNames": [
+        "Heaven's Blessing",
+        "Original Hand",
+        "Hand from Heaven",
+        "Natural Winning"
       ],
       "evidenceBindings": [
         {
@@ -510,48 +496,29 @@
             "bmja-event-source-mapping"
           ],
           "status": "inferred-mapping-retained"
-        }
-      ]
-    },
-    {
-      "id": "original-hand-buzzard",
-      "state": "standalone-unresolved",
-      "displayName": "Original Hand",
-      "treatmentReferenceIds": [
-        "buzzard-2000@0.1:heavens-blessing"
-      ],
-      "facets": [
-        "event-defined"
-      ],
-      "summary": "Buzzard 2000 names Original Hand as a configured limit treatment; exact equivalence to the current shared Heaven's Blessing detector is not yet source-proved.",
-      "whatItIs": "A Buzzard 2000 named limit event treatment.",
-      "whatItMeans": "The local treatment remains useful under Buzzard rules without being silently folded into the BMJA event definition.",
-      "whySpecial": "The Buzzard source lists it as a limit hand tied to the original hand/deal.",
-      "exampleIds": [],
-      "referenceNote": "Do not reuse the full BMJA event qualification as Buzzard truth until the source establishes the same East/bonus/event conditions.",
-      "evidenceRefs": [
-        "CLASSICAL_ATLAS_CONCEPT_AUDIT_V1.md §8",
-        "BUZZARD_2000_RULE_EVIDENCE.md §D"
-      ],
-      "evidenceBindings": [
+        },
         {
           "kind": "reviewed-audit",
           "path": "docs/rules/encyclopaedia/CLASSICAL_ATLAS_CONCEPT_AUDIT_V1.md",
-          "locator": "§8 Heaven's/Earth's Blessing and event-defined treatments",
+          "locator": "§8 Heaven’s/Earth’s Blessing and event-defined treatments; superseded for Buzzard Original Hand by ATLAS_BUZZARD_RECONCILIATION_2026.md",
           "supports": [
-            "unresolved-equivalence"
+            "reviewed-current-event-family",
+            "bmja-provenance-remains-inferred"
           ],
           "status": "reviewed"
         },
         {
           "kind": "repo-evidence",
-          "path": "docs/rules/BUZZARD_2000_RULE_EVIDENCE.md",
-          "locator": "§D Limit hands — Original Hand",
+          "path": "docs/rules/encyclopaedia/ATLAS_BUZZARD_RECONCILIATION_2026.md",
+          "locator": "§2 Original Hand — source/runtime finding; retained PDF p.11",
           "supports": [
-            "buzzard-local-name",
+            "east-seat",
+            "original-deal-event",
+            "already-complete-hand",
+            "local-names",
             "configured-limit-membership"
           ],
-          "status": "source-complete-name-and-limit; exact-shared-event-qualification-not-established"
+          "status": "source-verified"
         }
       ]
     },
@@ -605,11 +572,13 @@
       ]
     },
     {
-      "id": "three-great-scholars-reviewed",
-      "state": "reviewed-concept",
-      "displayName": "Three Great Scholars",
+      "id": "three-dragon-specials-family",
+      "state": "reviewed-family-topic",
+      "displayName": "Three Dragons",
       "treatmentReferenceIds": [
         "bmja@1.0:three-great-scholars",
+        "outside-the-box@0.1:club-three-great-scholars",
+        "buzzard-2000@0.1:buzzard-three-dragons-winner",
         "western-tm@0.1:three-great-scholars"
       ],
       "facets": [
@@ -618,16 +587,64 @@
         "pungs-kongs",
         "pairs"
       ],
-      "summary": "Pungs or Kongs of all three Dragons, plus another set and a pair.",
-      "whatItIs": "A grouped special hand centred on complete sets of Red, Green and White Dragons.",
-      "whatItMeans": "All three Dragon families must appear as Pungs or Kongs; the remaining set and pair complete the ordinary hand structure in the reviewed BMJA/T&M concept.",
-      "whySpecial": "The hand dedicates three of its four melds to the three Dragon sets.",
+      "summary": "A reviewed family of Dragon-set specials with distinct BMJA/T&M, Club - Bramhall 2026, and Buzzard winner predicates.",
+      "whatItIs": "A family connecting four exact profile treatments that require Pung or Kong sets of all three Dragons but differ in their remaining-set qualifications.",
+      "whatItMeans": "BMJA and T&M require a fourth Pung/Kong; Club - Bramhall 2026 allows a Chow, Pung or Kong when its fourth set and pair share one numbered suit; Buzzard allows any otherwise lawful ordinary fourth set and pair. These are related variants, not equivalent treatments.",
+      "whySpecial": "All variants centre on all three Dragon sets while their exact profile predicates remain distinct.",
       "exampleIds": [
         "example-three-great-scholars-existing"
       ],
       "evidenceRefs": [
-        "CLASSICAL_ATLAS_CONCEPT_AUDIT_V1.md §4"
+        "CLASSICAL_ATLAS_CONCEPT_AUDIT_V1.md §4",
+        "OUTSIDE_THE_BOX_PROFILE_CROSSWALK.md §2 Three Great Scholars",
+        "BUZZARD_2000_RULE_EVIDENCE.md §D–§E retained PDF pp.11–12",
+        "TM_COMPANION_CATALOGUE_INDEX.md Three Great Scholars"
       ],
+      "localNames": [
+        "Three Great Scholars",
+        "Club - Bramhall 2026 Three Great Scholars",
+        "Buzzard Three Dragons"
+      ],
+      "variants": [
+        {
+          "id": "bmja-tm-three-great-scholars",
+          "label": "Three Great Scholars — BMJA / Thompson & Maloney",
+          "treatmentReferenceIds": [
+            "bmja@1.0:three-great-scholars",
+            "western-tm@0.1:three-great-scholars"
+          ],
+          "relation": "shared-narrower-concept",
+          "definition": "All three Dragon Pung/Kongs plus a fourth Pung/Kong and a pair."
+        },
+        {
+          "id": "club-three-great-scholars",
+          "label": "Three Great Scholars — Club - Bramhall 2026",
+          "treatmentReferenceIds": [
+            "outside-the-box@0.1:club-three-great-scholars"
+          ],
+          "relation": "related-materially-different",
+          "definition": "All three Dragon Pung/Kongs; the fourth meld may be a Chow, Pung or Kong, and it and the pair use the same numbered suit."
+        },
+        {
+          "id": "buzzard-three-dragons-winner",
+          "label": "Three Dragons — Buzzard 2000",
+          "treatmentReferenceIds": [
+            "buzzard-2000@0.1:buzzard-three-dragons-winner"
+          ],
+          "relation": "related-broader-winner",
+          "definition": "All three Dragon Pung/Kongs plus any otherwise lawful ordinary fourth set and pair."
+        }
+      ],
+      "knowledgeLinks": [
+        {
+          "kind": "profile-score-result",
+          "profile": "buzzard-2000@0.1",
+          "resultId": "buzzard.incomplete-three-dragon-limit",
+          "relationship": "same-source-family-non-winner-consequence",
+          "authority": "issue-220-runtime"
+        }
+      ],
+      "referenceNote": "The Buzzard incomplete Three-Dragon consequence is a structured profile-score-result link, not a special-hand detector or treatment ID.",
       "evidenceBindings": [
         {
           "kind": "reviewed-audit",
@@ -640,6 +657,27 @@
           "status": "reviewed"
         },
         {
+          "kind": "reviewed-audit",
+          "path": "docs/rules/encyclopaedia/CLASSICAL_ATLAS_CONCEPT_AUDIT_V1.md",
+          "locator": "§4 Three Great Scholars / Three Dragons family; superseded for Buzzard winner and non-winner conclusions by ATLAS_BUZZARD_RECONCILIATION_2026.md",
+          "supports": [
+            "bmja-tm-shared-narrower-concept",
+            "club-related-materially-different",
+            "buzzard-broader-winner",
+            "structured-non-winner-result-link"
+          ],
+          "status": "reviewed"
+        },
+        {
+          "kind": "runtime-binding",
+          "path": "artifacts/mahjong-scorer/src/game/types.ts",
+          "locator": "ProfileScoreResult resultId union",
+          "supports": [
+            "profile-score-result-ids-not-special-hand-treatments"
+          ],
+          "status": "existing-runtime-contract"
+        },
+        {
           "kind": "repo-evidence",
           "path": "docs/rules/TM_COMPANION_CATALOGUE_INDEX.md",
           "locator": "Three Great Scholars / synopsis p.58 / detail p.33",
@@ -647,34 +685,7 @@
             "western-treatment-qualification"
           ],
           "status": "source-certified"
-        }
-      ]
-    },
-    {
-      "id": "three-great-scholars-club-verified",
-      "state": "standalone-verified-treatment",
-      "displayName": "Three Great Scholars",
-      "treatmentReferenceIds": [
-        "outside-the-box@0.1:club-three-great-scholars"
-      ],
-      "facets": [
-        "ordinary-grouped",
-        "dragons",
-        "pungs-kongs",
-        "chow-involving",
-        "pairs",
-        "one-suit"
-      ],
-      "summary": "Club Three Great Scholars combines all three Dragon sets with a same-suit remaining meld and pair; that meld may be a Chow, Pung or Kong.",
-      "whatItIs": "A Club Dragon-set special with a same-suit qualification for its remaining meld and pair.",
-      "whatItMeans": "Each Dragon is a Pung or Kong. The fourth meld may be a Chow, Pung or Kong, and it and the pair must use the same numbered suit.",
-      "whySpecial": "The hand dedicates three melds to the Dragons and constrains its final meld and pair to one numbered suit.",
-      "exampleIds": [],
-      "referenceNote": "Exposed Dragon Pungs and Kongs retain Club's full current treatment value.",
-      "evidenceRefs": [
-        "OUTSIDE_THE_BOX_PROFILE_CROSSWALK.md §2"
-      ],
-      "evidenceBindings": [
+        },
         {
           "kind": "repo-evidence",
           "path": "docs/rules/OUTSIDE_THE_BOX_PROFILE_CROSSWALK.md",
@@ -685,52 +696,20 @@
             "full-exposure-value"
           ],
           "status": "verified-club"
-        }
-      ]
-    },
-    {
-      "id": "three-dragons-buzzard-winner-verified",
-      "state": "standalone-verified-treatment",
-      "displayName": "Three Dragons",
-      "treatmentReferenceIds": [
-        "buzzard-2000@0.1:buzzard-three-dragons-winner"
-      ],
-      "facets": [
-        "ordinary-grouped",
-        "dragons",
-        "pungs-kongs",
-        "chow-involving",
-        "pairs"
-      ],
-      "summary": "Buzzard Three Dragons is a configured limit for a completed ordinary hand with Pung or Kong sets of all three Dragons.",
-      "whatItIs": "A Buzzard configured-limit treatment for a winning Three Dragons hand.",
-      "whatItMeans": "The remaining ordinary set may be a Chow, Pung or Kong, with one pair completing the hand.",
-      "whySpecial": "All three Dragon sets earn the configured limit while preserving the normal winning-hand structure.",
-      "exampleIds": [],
-      "referenceNote": "Buzzard's incomplete non-winner Three-Dragon limit remains a separate #220 table result.",
-      "evidenceRefs": [
-        "BUZZARD_2000_RULE_EVIDENCE.md §D"
-      ],
-      "evidenceBindings": [
-        {
-          "kind": "repo-evidence",
-          "path": "docs/rules/BUZZARD_2000_RULE_EVIDENCE.md",
-          "locator": "§D Limit hands",
-          "supports": [
-            "three-dragon-winning-limit",
-            "chow-permitted-as-fourth-set"
-          ],
-          "status": "source-verified"
         },
         {
           "kind": "repo-evidence",
           "path": "docs/rules/BUZZARD_2000_RULE_EVIDENCE.md",
-          "locator": "§E non-winner limits",
+          "locator": "§D Limit hands / retained PDF p.11 — Three Dragons; §E non-winner limits / retained PDF pp.11–12",
           "supports": [
+            "broader-winning-three-dragon-predicate",
+            "separate-incomplete-non-winner-consequence",
+            "three-dragon-winning-limit",
+            "chow-permitted-as-fourth-set",
             "separate-incomplete-three-dragon-table-result",
             "unchanged-from-issue-220"
           ],
-          "status": "existing-runtime-path"
+          "status": "source-verified"
         }
       ]
     },
@@ -2067,7 +2046,7 @@
     },
     {
       "id": "buzzard-three-winds-pair",
-      "state": "standalone-unresolved",
+      "state": "standalone-verified-treatment",
       "displayName": "Three Winds and a Pair",
       "treatmentReferenceIds": [
         "buzzard-2000@0.1:three-winds-and-fourth-wind-pair"
@@ -2077,33 +2056,67 @@
         "pungs-kongs",
         "pairs"
       ],
-      "summary": "Three Wind Pungs/Kongs with the fourth Wind as the pair plus another set; Buzzard also allows a related non-winning limit case that the current winning-only detector cannot represent.",
-      "whatItIs": "A Buzzard Four-Wind-family limit treatment with a known source/runtime boundary.",
-      "whatItMeans": "The current executable detector recognises a complete winning form, but Buzzard's source also allows this Wind-family limit to score against other losers while incomplete/non-winning.",
-      "whySpecial": "The hand centres all four Wind identities and has an exceptional Buzzard settlement rule beyond ordinary winner-only special-hand scoring.",
+      "summary": "Three distinct Wind Pung/Kongs, the fourth Wind as the pair, and a final ordinary set in a complete winning hand.",
+      "whatItIs": "A source-verified Buzzard Four-Wind-family winner with an exact complete grouped-hand predicate.",
+      "whatItMeans": "The winning form has Pung/Kongs of three distinct Winds, a pair of the fourth Wind, and one ordinary Chow, Pung or Kong. It is materially different from Four Blessings, which requires four Wind Pung/Kongs.",
+      "whySpecial": "The completed hand combines three Wind sets, the fourth Wind pair, and one final ordinary set.",
       "exampleIds": [
         "example-buzzard-three-winds-pair-runtime"
       ],
-      "referenceNote": "The example is a current-runtime winning form only. It is not exhaustive source qualification until the non-winner limit seam is represented in the knowledge/runtime model.",
+      "referenceNote": "Buzzard’s incomplete non-winner consequence is represented by a separate profile-score-result knowledge link. This entry owns only the winning special-hand treatment.",
       "evidenceBindings": [
         {
           "kind": "repo-evidence",
           "path": "docs/rules/BUZZARD_2000_RULE_EVIDENCE.md",
-          "locator": "§D Limit hands item 2; §E non-winner limits",
+          "locator": "§D Limit hands / retained PDF p.11 — completed Four-Wind hand",
           "supports": [
-            "three-winds-fourth-pair-limit",
-            "non-winning-qualification"
+            "three-distinct-wind-pung-kongs",
+            "fourth-wind-pair",
+            "complete-winning-hand",
+            "local-name",
+            "configured-limit-membership"
           ],
-          "status": "source-complete"
+          "status": "source-verified"
         },
         {
           "kind": "runtime-binding",
           "path": "artifacts/mahjong-scorer/src/game/buzzard-2000.ts",
           "locator": "three-winds-and-fourth-wind-pair",
           "supports": [
-            "current-winning-detector-binding"
+            "complete-five-group-winning-predicate",
+            "chow-pung-kong-final-set"
           ],
-          "status": "current-executable-with-known-source-gap"
+          "status": "current-executable-after-issue-365"
+        },
+        {
+          "kind": "repo-evidence",
+          "path": "docs/rules/BUZZARD_2000_RULE_EVIDENCE.md",
+          "locator": "§E non-winner limits / retained PDF pp.11–12",
+          "supports": [
+            "separate-incomplete-four-wind-profile-score-result"
+          ],
+          "status": "source-verified"
+        },
+        {
+          "kind": "runtime-binding",
+          "path": "artifacts/mahjong-scorer/src/game/types.ts",
+          "locator": "ProfileScoreResult resultId union",
+          "supports": [
+            "profile-score-result-link-is-not-a-special-hand-treatment"
+          ],
+          "status": "existing-runtime-contract"
+        }
+      ],
+      "localNames": [
+        "Three Winds"
+      ],
+      "knowledgeLinks": [
+        {
+          "kind": "profile-score-result",
+          "profile": "buzzard-2000@0.1",
+          "resultId": "buzzard.incomplete-four-wind-limit",
+          "relationship": "same-source-family-non-winner-consequence",
+          "authority": "issue-220-runtime"
         }
       ]
     },
@@ -6474,10 +6487,10 @@
     "bmja@1.0:all-winds-and-dragons": "all-winds-and-dragons",
     "bmja@1.0:heads-and-tails": "heads-and-tails",
     "bmja@1.0:fourfold-plenty": "fourfold-plenty",
-    "bmja@1.0:three-great-scholars": "three-great-scholars-reviewed",
+    "bmja@1.0:three-great-scholars": "three-dragon-specials-family",
     "bmja@1.0:four-blessings": "four-blessings",
     "bmja@1.0:buried-treasure": "buried-treasure",
-    "bmja@1.0:heavens-blessing": "heavens-blessing-bmja",
+    "bmja@1.0:heavens-blessing": "heavens-blessing-original-hand",
     "bmja@1.0:earths-blessing": "earths-blessing-bmja",
     "bmja@1.0:gathering-plum-blossom": "gathering-plum-blossom-bmja",
     "bmja@1.0:plucking-moon": "plucking-moon-bmja",
@@ -6486,7 +6499,7 @@
     "outside-the-box@0.1:imperial-jade": "imperial-jade",
     "outside-the-box@0.1:heads-and-tails": "heads-and-tails",
     "outside-the-box@0.1:all-winds-and-dragons": "all-winds-and-dragons",
-    "outside-the-box@0.1:club-three-great-scholars": "three-great-scholars-club-verified",
+    "outside-the-box@0.1:club-three-great-scholars": "three-dragon-specials-family",
     "outside-the-box@0.1:four-blessings": "four-blessings",
     "outside-the-box@0.1:fourfold-plenty": "fourfold-plenty",
     "outside-the-box@0.1:knitting": "knitting-reviewed",
@@ -6517,15 +6530,15 @@
     "outside-the-box@0.1:run-one-to-nine-with-honour-pung-and-suited-pair": "grand-sequence-family",
     "buzzard-2000@0.1:all-winds-and-dragons": "buzzard-all-winds-dragons",
     "buzzard-2000@0.1:three-winds-and-fourth-wind-pair": "buzzard-three-winds-pair",
-    "buzzard-2000@0.1:heavens-blessing": "original-hand-buzzard",
+    "buzzard-2000@0.1:heavens-blessing": "heavens-blessing-original-hand",
     "buzzard-2000@0.1:earths-blessing": "buzzard-east-first-discard",
     "buzzard-2000@0.1:heads-and-tails": "buzzard-all-ones-nines",
-    "buzzard-2000@0.1:buzzard-three-dragons-winner": "three-dragons-buzzard-winner-verified",
+    "buzzard-2000@0.1:buzzard-three-dragons-winner": "three-dragon-specials-family",
     "buzzard-2000@0.1:four-concealed-pung-kong-hand": "buzzard-concealed-pungs-kongs",
-    "buzzard-2000@0.1:thirteen-unique-wonders": "thirteen-odd-majors-buzzard",
+    "buzzard-2000@0.1:thirteen-unique-wonders": "thirteen-unique-wonders",
     "buzzard-2000@0.1:one-suit-nine-gates-any-completion": "gates-family",
     "buzzard-2000@0.1:east-thirteenth-consecutive-mahjong": "buzzard-east-thirteenth-consecutive-mahjong",
-    "western-tm@0.1:three-great-scholars": "three-great-scholars-reviewed",
+    "western-tm@0.1:three-great-scholars": "three-dragon-specials-family",
     "western-tm@0.1:thirteen-unique-wonders": "thirteen-unique-wonders",
     "western-tm@0.1:all-pair-honours": "pair-hand-family",
     "western-tm@0.1:four-blessings": "four-blessings",
@@ -6611,11 +6624,7 @@
     "western-tm@0.1:four-winds-with-one-two-two-fours-three-sixes-four-eights": "up-down-you-go-family-western",
     "western-tm@0.1:four-winds-with-four-twos-three-fours-two-sixes-one-eight": "up-down-you-go-family-western"
   },
-  "unresolvedTreatmentReferenceIds": [
-    "buzzard-2000@0.1:thirteen-unique-wonders",
-    "buzzard-2000@0.1:heavens-blessing",
-    "buzzard-2000@0.1:three-winds-and-fourth-wind-pair"
-  ],
+  "unresolvedTreatmentReferenceIds": [],
   "existingScorerExampleIds": [
     "all-pair-honours",
     "all-winds-and-dragons",
