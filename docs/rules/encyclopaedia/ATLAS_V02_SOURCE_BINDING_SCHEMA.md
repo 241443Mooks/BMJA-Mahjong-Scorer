@@ -2,7 +2,7 @@
 
 Status: **docs-scoped contract for #354; not production authority**
 
-The first structured learner proof deliberately used human-readable `evidenceRefs` so the content shape could be tested quickly. Before implementation handoff, those locators must be normalised into explicit source/evidence bindings.
+The first structured learner proof deliberately used human-readable `evidenceRefs` so the content shape could be tested quickly. Those early strings are now research notes only. Authoritative source/evidence binding for the first batch is supplied by `ATLAS_V02_EVIDENCE_BINDINGS_BATCH1.json` and joined by learner `entryId`; later batches carry structured `evidenceBindings` directly. `ATLAS_V02_FINAL_CONTENT_MANIFEST.json` defines that final resolution rule.
 
 The learner layer must not own source truth. It should point to existing source/evidence records and preserve the status that those records already carry.
 
@@ -48,6 +48,7 @@ or, where the reviewed relationship is inherited from the audit rather than re-p
 5. **Learner prose may paraphrase but does not replace the evidence link**.
 6. **Relationships inherit reviewed evidence** from #351/#352 unless stronger evidence is deliberately added.
 7. **Scoring facts do not use this source-binding layer as their authority** when the exact treatment/runtime already owns them.
+8. **Research-stage evidence strings are non-authoritative once a structured companion binding exists.** Implementation consumes the structured binding, not both representations as competing truth.
 
 ## Runtime/treatment binding
 
@@ -99,7 +100,8 @@ The UI may render labels such as `Try this hand`, but the learner prose must not
 
 Before #354 can hand implementation to Luna:
 
-- `evidenceRefs` in the proof must be migrated from strings to structured bindings;
+- every evidence-bearing learner entry must resolve to structured `evidenceBindings`, either directly in its content batch or through the explicit batch-1 companion join in the final manifest;
+- legacy `evidenceRefs` strings in the original proof are treated only as research notes and must not become implementation authority;
 - each relationship claim must name the audit/source evidence that supports it;
 - each exact treatment member must resolve against current bindings;
 - existing examples must be linked by ID, not duplicated;
