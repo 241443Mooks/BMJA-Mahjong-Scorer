@@ -75,6 +75,36 @@ describe('Buzzard 2000 ordinary profile policy', () => {
 const p = (id: string, tile: MahjongHand['sets'][number]['tile']) => set(id, 'pung', tile);
 const pair = (tile: MahjongHand['sets'][number]['tile']) => set('pair', 'pair', tile);
 const normal = (sets: MahjongHand['sets'], extra: Partial<MahjongHand> = {}): MahjongHand => ({ sets, bonusTiles: [], isWinner: true, ...extra });
+describe('Buzzard Three Winds and fourth Wind pair shape', () => {
+  const pattern = 'three-winds-and-fourth-wind-pair';
+  const winds = [p('e', wind('east')), p('s', wind('south')), p('w', wind('west'))];
+  const result = (hand: MahjongHand) => detectSpecialHands(hand, { playerWind: 'east', prevailingWind: 'east', limit: 600 }, buzzard2000SpecialHandBindings).find(({ id }) => id === pattern);
+  const chow = set('fifth', 'chow', suited('bamboo', 1));
+  const malformedFifth = { ...chow, kind: 'unknown' as unknown as MahjongHand['sets'][number]['kind'] };
+  const fourthPair = pair(wind('north'));
+
+  it.each([
+    ['Chow', chow],
+    ['Pung', p('fifth', suited('bamboo', 5))],
+    ['Kong', set('fifth', 'kong', suited('bamboo', 5))],
+    ['Wind Kong', set('s', 'kong', wind('south'))],
+  ] as const)('accepts a complete hand with a lawful fifth %s', (_name, fifth) => {
+    const base = fifth.id === 's' ? [winds[0]!, fifth, winds[2]!] : winds;
+    expect(result(normal([...base, fifth.id === 's' ? chow : fifth, fourthPair]))).toMatchObject({ matched: true, value: 600 });
+  });
+
+  it.each([
+    ['only three Wind sets and a pair', normal([...winds, fourthPair])],
+    ['an extra sixth group', normal([...winds, chow, fourthPair, p('sixth', suited('circles', 5))])],
+    ['a pair duplicating a Wind set', normal([...winds, chow, pair(wind('east'))])],
+    ['one missing Wind set', normal([winds[0]!, winds[1]!, chow, p('other', suited('circles', 5)), fourthPair])],
+    ['a malformed fifth item', normal([...winds, malformedFifth, fourthPair])],
+    ['a second pair', normal([...winds, chow, fourthPair, pair(suited('circles', 5))])],
+    ['loose tile residue', normal([...winds, chow, fourthPair], { looseTiles: [suited('circles', 5)] })],
+    ['remaining tile residue', normal([...winds, chow, fourthPair], { remainingTiles: [suited('circles', 5)] })],
+  ] as const)('rejects %s', (_name, hand) => expect(result(hand)).toMatchObject({ matched: false }));
+});
+
 const limitCases: readonly [string, MahjongHand, Record<string, unknown>][] = [
   ['All Winds and Dragons', normal([p('e', wind('east')), p('s', wind('south')), p('w', wind('west')), p('r', dragon('red')), pair(dragon('green'))]), {}],
   ['Three Winds and fourth pair', normal([p('e', wind('east')), p('s', wind('south')), p('w', wind('west')), p('x', suited('bamboo', 2)), pair(wind('north'))]), {}],
