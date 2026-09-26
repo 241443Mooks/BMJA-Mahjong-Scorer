@@ -15,6 +15,17 @@ const mcrProfile = { id: 'mcr-wmo-2006', version: '0.1' };
 describe('C1 shared standalone scorer workspace', () => {
   beforeAll(() => initialiseCurrentRulesRuntimes());
 
+  it('keeps mobile picker grids, tile actions and internal tile strips shrinkable', () => {
+    const html = renderToStaticMarkup(<HandScorer context={null} onClose={vi.fn()} standaloneHand standaloneRulesProfile={BMJA_PROFILE_REF} onStandaloneRulesProfileChange={vi.fn()} />);
+    expect(html).toMatch(/data-testid="working-picker" class="min-w-0 /);
+    expect(html).toContain('grid min-w-0 grid-cols-2 gap-2');
+    expect(html).toContain('flex flex-wrap items-center justify-between gap-2');
+    expect(html).toContain('mt-3 min-w-0 sm:hidden');
+    expect(html).toContain('flex min-w-0 flex-1 items-center gap-2');
+    expect(html).toMatch(/class="mt-3 min-w-0 max-w-full [^"]*" data-testid="mobile-tile-picker"/);
+    expect(html).toContain('flex gap-2 overflow-x-auto pb-1');
+  });
+
   it('renders the original visual hand workspace and MCR evidence/result surfaces for MCR', () => {
     const html = renderToStaticMarkup(<HandScorer context={null} onClose={vi.fn()} standaloneHand standaloneRulesProfile={mcrProfile} onStandaloneRulesProfileChange={vi.fn()} />);
     expect(html).toContain('data-testid="working-picker"');
