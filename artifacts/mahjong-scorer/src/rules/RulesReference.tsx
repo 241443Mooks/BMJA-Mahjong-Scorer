@@ -1,7 +1,8 @@
-import { ArrowRight, BookOpen, CheckCircle2, CircleAlert, Compass, Gamepad2, ShieldCheck } from 'lucide-react';
+import { ArrowRight, CircleAlert, ShieldCheck } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { SiteHeader } from '../components/SiteHeader';
-import { descriptorForSlug, PUBLIC_RULES_DESCRIPTORS, type PublicRulesSlug, type RulesDescriptor } from '../game/rules-presentation';
+import { descriptorForSlug, type PublicRulesSlug, type RulesDescriptor } from '../game/rules-presentation';
+import { MAHJONG_FAMILIES, supportedProfilesForFamily } from '../home/mahjong-family-presentation';
 
 const actionClass = 'inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-[#284d45] px-4 py-2.5 text-[15px] font-semibold text-[#f8f4e9] transition hover:bg-[#23443d] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249] focus-visible:ring-offset-2';
 const secondaryActionClass = 'inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-[#b8c8c1] bg-white px-4 py-2.5 text-[15px] font-semibold text-[#284d45] transition hover:bg-[#f2f6f3] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249] focus-visible:ring-offset-2';
@@ -94,8 +95,38 @@ export function RulesProfilePage({ slug }: { slug: Exclude<PublicRulesSlug, 'clu
 }
 
 export function RulesHubPage() {
-  return <PageFrame eyebrow="Rules" title="Find the rules your table uses" intro="Mahjong rules vary. Start with the supported rules contexts Mahjong Reference can score today, then choose a scorer, a fuller reference page or a broad comparison.">
-    <section className="border-b border-[#ddd3bf] px-5 py-9 sm:px-8 sm:py-11 lg:px-12"><div className="grid gap-5 lg:grid-cols-3">{PUBLIC_RULES_DESCRIPTORS.filter(({ availability }) => availability.rulesReference).map((descriptor) => <article key={descriptor.slug} className="flex flex-col rounded-xl border border-[#d8ceb8] bg-[#fdfbf5] p-5 sm:p-6"><div className="flex items-start justify-between gap-3"><h2 className="font-serif text-[27px] leading-tight text-[#284d45]">{descriptor.title}</h2>{descriptor.support.implementation === 'Provisional' ? <CircleAlert className="shrink-0 text-[#a65b3d]" aria-label="Provisional" /> : <CheckCircle2 className="shrink-0 text-[#477562]" aria-label="Available" />}</div><p className="mt-3 text-[16px] leading-7 text-[#405650]">{descriptor.description}</p><div className="mt-5"><RulesSupportStatus descriptor={descriptor} /></div><div className="mt-5 flex flex-wrap gap-3"><a href={`/rules/${descriptor.slug}`} className={secondaryActionClass}>About these rules <BookOpen size={16} /></a>{descriptor.availability.handScorer && <a href={`/hand?rules=${descriptor.slug}`} className={secondaryActionClass}>Score a hand <ArrowRight size={16} /></a>}{descriptor.availability.gameTracker && <a href={`/game/${descriptor.slug}`} className={actionClass}>Track a game <ArrowRight size={16} /></a>}</div></article>)}</div></section>
-    <section className="px-5 py-9 sm:px-8 sm:py-11 lg:px-12"><div className="rounded-xl border border-[#cfbfa4] bg-[#f5eadb] p-5 sm:flex sm:items-center sm:justify-between sm:gap-8 sm:p-6"><div><div className="flex items-center gap-3 text-[#477562]"><Compass size={19} /><p className="font-mono text-[12px] font-semibold uppercase tracking-[.14em] text-[#ae6249]">Compare first</p></div><h2 className="mt-3 font-serif text-[29px] text-[#284d45]">Not sure which Mahjong rules you use?</h2><p className="mt-2 max-w-[680px] text-[16px] leading-7 text-[#405650]">See the broad differences between major Mahjong traditions without assuming they share one rulebook.</p></div><a href="/mahjong-rules-compared" className={`${actionClass} mt-5 shrink-0 sm:mt-0`}>Compare Mahjong rules <ArrowRight size={16} /></a></div></section>
+  return <PageFrame eyebrow="Rules" title="Find the Mahjong rules your table uses" intro="You do not need to know the rulebook name. Start with how your game works.">
+    <section aria-labelledby="family-recognition" className="border-b border-[#ddd3bf] px-5 py-7 sm:px-8 sm:py-9 lg:px-12">
+      <h2 id="family-recognition" className="font-serif text-[27px] leading-tight text-[#284d45]">What kind of Mahjong do you play?</h2>
+      <ul className="mt-4 divide-y divide-[#e5dccb]">
+        {MAHJONG_FAMILIES.map((family) => {
+          const profiles = supportedProfilesForFamily(family);
+          return <li key={family.id} className="flex flex-col gap-1 py-3 sm:flex-row sm:items-baseline sm:justify-between sm:gap-5">
+            <div><h3 className="font-semibold text-[#284d45]">{family.name}</h3><p className="mt-1 text-[14px] leading-6 text-[#596b65]">{family.clue}</p></div>
+            <span className={`shrink-0 text-[12px] font-semibold ${profiles.length ? 'text-[#477562]' : 'text-[#7a7769]'}`}>{profiles.length ? 'Supported profiles available' : 'Not currently supported'}</span>
+          </li>;
+        })}
+      </ul>
+    </section>
+    <section aria-labelledby="exact-supported-rules" className="border-b border-[#ddd3bf] px-5 py-8 sm:px-8 sm:py-10 lg:px-12">
+      <h2 id="exact-supported-rules" className="font-serif text-[27px] leading-tight text-[#284d45]">Exact rules available in Mahjong Reference</h2>
+      <div className="mt-5 space-y-6">
+        {MAHJONG_FAMILIES.filter((family) => supportedProfilesForFamily(family).length > 0).map((family) => (
+          <section key={family.id} aria-label={`${family.name} profiles`}>
+            <h3 className="font-serif text-[21px] text-[#284d45]">{family.name}</h3>
+            <ul className="mt-2 divide-y divide-[#e5dccb] rounded-lg border border-[#d8ceb8] bg-[#fdfbf5] px-4">
+              {supportedProfilesForFamily(family).map((descriptor) => <li key={descriptor.slug} className="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+                <div><a href={`/rules/${descriptor.slug}`} className="font-semibold text-[#284d45] underline decoration-[#cfa58f] underline-offset-4">{descriptor.shortLabel} · {descriptor.editionYear}</a><p className="mt-1 text-[13px] leading-5 text-[#596b65]">{descriptor.description}{descriptor.support.implementation === 'Provisional' ? ' Provisional.' : ''}</p></div>
+                <div className="flex flex-wrap gap-2">
+                  {descriptor.availability.handScorer && <a href={`/hand?rules=${descriptor.slug}`} className={secondaryActionClass}>Score a hand</a>}
+                  {descriptor.availability.gameTracker && <a href={`/game/${descriptor.slug}`} className={actionClass}>Track a game</a>}
+                </div>
+              </li>)}
+            </ul>
+          </section>
+        ))}
+      </div>
+    </section>
+    <section className="px-5 py-7 sm:px-8 sm:py-9 lg:px-12"><div className="rounded-xl border border-[#cfbfa4] bg-[#f5eadb] p-5 sm:flex sm:items-center sm:justify-between sm:gap-8 sm:p-6"><div><h2 className="font-serif text-[25px] text-[#284d45]">Not seeing your rules?</h2><p className="mt-2 max-w-[680px] text-[15px] leading-6 text-[#405650]">Exact scorer profiles for Hong Kong, Riichi and American/NMJL-style Mahjong are not currently supported.</p></div><a href="/mahjong-rules-compared" className={`${actionClass} mt-4 shrink-0 sm:mt-0`}>Compare Mahjong rules <ArrowRight size={16} /></a></div></section>
   </PageFrame>;
 }
