@@ -42,6 +42,17 @@ describe('preferred profile flow interactions', () => {
     vi.unstubAllGlobals();
   });
 
+  it('offers group and remaining-tile entry as peer actions for a Classical non-winner', () => {
+    installBrowser();
+    const html = setupMarkup();
+    expect(html).toContain('data-testid="button-add-group-mode"');
+    expect(html).toContain('data-testid="button-add-remaining-tiles-mode"');
+    expect(html).toContain('aria-label="Choose hand evidence to add"');
+    expect(html).toContain('data-testid="remaining-tiles-disclosure"');
+    expect(html).toContain('Completed groups');
+    expect(html).toContain('Remaining tiles');
+  });
+
   it('stores a standalone hand picker choice while retaining the existing profile transition cleanup seam', () => {
     const { values } = installBrowser();
     setupMarkup();
