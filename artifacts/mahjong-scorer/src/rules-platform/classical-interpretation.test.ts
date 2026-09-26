@@ -71,6 +71,19 @@ describe('pure Classical unresolved-tile interpretation', () => {
     expect(result.candidates.every(({ profile, wholeHandComplete }) => profile.id === BMJA_PROFILE_REF.id && wholeHandComplete)).toBe(true);
   });
 
+  it.each([
+    ['BMJA', BMJA_PROFILE_REF],
+    ['Club', OUTSIDE_THE_BOX_PROFILE_REF],
+    ['Buzzard', BUZZARD_2000_PROFILE_REF],
+    ['Western', WESTERN_TM_PROFILE_REF],
+  ] as const)('smokes an ordinary hand through the exact %s profile runtime', (_name, profile) => {
+    const result = interpretClassicalHand(baseInput({ profile, unresolvedTiles: unresolvedWinnerTiles() }));
+    expect(result.candidates.length).toBeGreaterThan(0);
+    expect(result.candidates.every(({ profile: candidateProfile }) =>
+      candidateProfile.id === profile.id && candidateProfile.version === profile.version,
+    )).toBe(true);
+  });
+
   it('does not reinterpret or reuse explicit groups', () => {
     const explicit = set('authority-pung', 'pung', wind('east'), 'exposed');
     const input = baseInput({ explicitSets: [explicit], unresolvedTiles: unresolvedWinnerTiles().slice(3) });
@@ -110,8 +123,29 @@ describe('pure Classical unresolved-tile interpretation', () => {
     const result = interpretClassicalHand(baseInput({ unresolvedTiles: tiles }));
     const kong = result.candidates.flatMap(({ inferredGroups }) => inferredGroups).find(({ kind }) => kind === 'kong');
     expect(kong).toBeDefined();
-    expect(kong).toMatchObject({ structuralSlots: 3, visibility: { state: 'unknown' } });
+    expect(kong).toMatchObject({ structuralSlots: 3 });
     expect(kong!.physicalTileIndexes).toHaveLength(4);
+    expect(result.candidates.some(({ unresolvedFacts }) => unresolvedFacts.some(({ type, groupId, choices }) =>
+      type === 'group-visibility' && groupId === kong!.id && choices.includes('exposed') && choices.includes('concealed'),
+    ))).toBe(true);
+  });
+
+  it('keeps partial candidates available when Kongs make physical count exceed structural count', () => {
+    const explicitSets = [
+      set('east-kong', 'kong', wind('east'), 'exposed'),
+      set('south-kong', 'kong', wind('south'), 'exposed'),
+      set('west-kong', 'kong', wind('west'), 'exposed'),
+    ];
+    const input = baseInput({
+      isWinner: false,
+      explicitSets,
+      unresolvedTiles: Array.from({ length: 2 }, () => dragon('white')),
+    });
+    const result = interpretClassicalHand(input);
+    const candidate = result.candidates.find(({ inferredGroups }) => inferredGroups.some(({ kind }) => kind === 'pair'));
+    expect(input.explicitSets.length * 4 + input.unresolvedTiles.length).toBeGreaterThanOrEqual(13);
+    expect(candidate).toBeDefined();
+    expect(candidate!.structuralTileCount).toBeLessThan(13);
   });
 
   it('offers a local Kong candidate for partial four-of-a-kind evidence without completing the hand', () => {

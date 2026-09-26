@@ -33,7 +33,12 @@ export type InferredClassicalGroup = {
   tile: PlayingTile;
   physicalTileIndexes: readonly number[];
   structuralSlots: 2 | 3;
-  visibility: { state: 'unknown'; choices: readonly Visibility[] };
+};
+
+export type ClassicalInterpretationUnresolvedFact = {
+  type: 'group-visibility';
+  groupId: string;
+  choices: readonly Visibility[];
 };
 
 export type ClassicalInterpretationCandidate = {
@@ -44,6 +49,7 @@ export type ClassicalInterpretationCandidate = {
   wholeHandComplete: boolean;
   explicitSets: readonly HandSet[];
   inferredGroups: readonly InferredClassicalGroup[];
+  unresolvedFacts: readonly ClassicalInterpretationUnresolvedFact[];
   unresolvedTileIndexes: readonly number[];
   lawfulVisibilityAssignments: readonly Readonly<Record<string, Visibility>>[];
 };
@@ -114,7 +120,6 @@ const inferredGroupRecords = (
     tile: group.tile,
     physicalTileIndexes: indexes[index]!,
     structuralSlots: group.kind === 'pair' ? 2 : 3,
-    visibility: { state: 'unknown', choices: ['exposed', 'concealed'] },
   }));
 };
 
@@ -156,7 +161,8 @@ export const projectClassicalInterpretation = (
   }
   const inferred = candidate.inferredGroups.map((group): HandSet => {
     const visibility = visibilityByGroupId[group.id];
-    if (!visibility || !group.visibility.choices.includes(visibility)) {
+    const fact = candidate.unresolvedFacts.find(({ type, groupId }) => type === 'group-visibility' && groupId === group.id);
+    if (!visibility || !fact?.choices.includes(visibility)) {
       throw new Error(`CLASSICAL_INTERPRETATION_VISIBILITY_REQUIRED:${group.id}`);
     }
     return { id: group.id, kind: group.kind, tile: group.tile, visibility };
@@ -181,10 +187,10 @@ export const projectClassicalInterpretation = (
   };
 };
 
-const visibilityAssignments = (groups: readonly InferredClassicalGroup[]): Readonly<Record<string, Visibility>>[] => {
+const visibilityAssignments = (facts: readonly ClassicalInterpretationUnresolvedFact[]): Readonly<Record<string, Visibility>>[] => {
   let assignments: Record<string, Visibility>[] = [{}];
-  for (const group of groups) {
-    assignments = assignments.flatMap((assignment) => group.visibility.choices.map((visibility) => ({ ...assignment, [group.id]: visibility })));
+  for (const fact of facts) {
+    assignments = assignments.flatMap((assignment) => fact.choices.map((visibility) => ({ ...assignment, [fact.groupId]: visibility })));
   }
   return assignments;
 };
@@ -238,12 +244,13 @@ export const interpretClassicalHand = (
       wholeHandComplete: false,
       explicitSets: Object.freeze([...input.explicitSets]),
       inferredGroups: Object.freeze(inferredGroups),
+      unresolvedFacts: Object.freeze(inferredGroups.map(({ id }) => ({ type: 'group-visibility' as const, groupId: id, choices: ['exposed', 'concealed'] as const }))),
       unresolvedTileIndexes: Object.freeze(sortedIndexes([...unresolvedTileIndexes])),
       lawfulVisibilityAssignments: Object.freeze([]),
     };
     const targetStructuralCount = input.isWinner ? 14 : 13;
     const completedCandidate = { ...candidate, wholeHandComplete: candidate.structuralTileCount === targetStructuralCount };
-    const possibleAssignments = visibilityAssignments(inferredGroups);
+    const possibleAssignments = visibilityAssignments(candidate.unresolvedFacts);
     const lawfulAssignments = possibleAssignments.filter((assignment) => {
       try {
         return hasStructuralValidationErrors(input, completedCandidate, assignment, validate).length === 0;
@@ -280,8 +287,8 @@ export const interpretClassicalHand = (
       addCandidate('grouped', groups, allIndexes.filter((index) => !used.has(index)));
     }
 
-    const enteredPhysicalCount = input.explicitSets.reduce((count, group) => count + expandedTiles(group).length, 0) + input.unresolvedTiles.length;
-    if (candidates.size === 0 && !input.isWinner && enteredPhysicalCount < 13) {
+    const enteredStructuralUpperBound = input.explicitSets.reduce((count, group) => count + (group.kind === 'pair' ? 2 : 3), 0) + input.unresolvedTiles.length;
+    if (candidates.size === 0 && !input.isWinner && enteredStructuralUpperBound < 13) {
       for (const sets of partialClassicalDecompositions(input.explicitSets, input.unresolvedTiles, { allowKongs: true })) {
         const groups = makeCandidateGroups(sets);
         if (!groups || groups.length === 0) continue;
@@ -299,6 +306,7 @@ export const interpretClassicalHand = (
         wholeHandComplete: input.unresolvedTiles.length === (input.isWinner ? 14 : 13),
         explicitSets: Object.freeze([]),
         inferredGroups: Object.freeze([]),
+        unresolvedFacts: Object.freeze([]),
         unresolvedTileIndexes: Object.freeze([...allIndexes]),
         lawfulVisibilityAssignments: Object.freeze([Object.freeze({})]),
       };
