@@ -61,11 +61,17 @@ describe('public game route seam', () => {
     expect(html).toContain(`href="/hand?rules=${slug}"`);
   });
 
-  it('links every rules hub card to its descriptor slug and leaves generic home scoring links plain', () => {
+  it('offers every exact profile in the rules chooser and keeps default actions generic', () => {
     const rulesHtml = renderToStaticMarkup(<RouteContent path="/rules" />);
     for (const slug of ['british', 'western', 'club', 'buzzard', 'mcr']) {
-      expect(rulesHtml).toContain(`href="/hand?rules=${slug}"`);
+      expect(rulesHtml).toContain(`value="${slug}"`);
     }
+    expect(rulesHtml).toMatch(/name="my-rules-profile" checked="" value="all"/);
+    expect(rulesHtml).toContain('href="/hand"');
+    expect(rulesHtml).toContain('href="/game"');
+    expect(rulesHtml).toContain('href="/special-hands"');
+    expect(rulesHtml).not.toContain('href="/hand?rules=');
+    expect(rulesHtml).not.toContain('href="/game/');
     const homeHtml = renderToStaticMarkup(<RouteContent path="/" />);
     expect(homeHtml).toContain('href="/hand"');
     expect(homeHtml).not.toContain('/hand?rules=');

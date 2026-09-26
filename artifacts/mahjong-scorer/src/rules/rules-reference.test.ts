@@ -1,12 +1,36 @@
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 import { PUBLIC_RULES_DESCRIPTORS } from '../game/rules-presentation';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { createElement } from 'react';
-import { RulesHubPage, RulesProfilePage } from './RulesReference';
-import { MAHJONG_FAMILIES, supportedProfilesForFamily } from '../home/mahjong-family-presentation';
+import { RulesHubPage, RulesProfilePage, chooseRulesHubProfile } from './RulesReference';
+import { familiesBySupportedProfileCount, MAHJONG_FAMILIES, supportedProfilesForFamily } from '../home/mahjong-family-presentation';
 import { MahjongRulesComparedPage } from '../home/MahjongRulesComparedPage';
+import { initialiseCurrentRulesRuntimes } from '../rules-platform/current-runtime-registry';
+import { PREFERRED_RULES_PROFILE_STORAGE_KEY, readPreferredRulesProfile } from '../game/preferred-rules-profile';
+import type { RulesProfileRef } from '../game/types';
+
+function memoryStorage(initial: string | null = null) {
+  let value = initial;
+  return {
+    getItem: (_key: string) => value,
+    setItem: (_key: string, next: string) => { value = next; },
+    removeItem: (_key: string) => { value = null; },
+    value: () => value,
+  };
+}
+
+function renderRulesHubWithPreference(profile: RulesProfileRef | null) {
+  const storage = memoryStorage(profile ? JSON.stringify(profile) : null);
+  vi.stubGlobal('window', { localStorage: storage });
+  try {
+    return renderToStaticMarkup(createElement(RulesHubPage));
+  } finally {
+    vi.unstubAllGlobals();
+  }
+}
 
 describe('public rules reference model', () => {
+  beforeAll(() => initialiseCurrentRulesRuntimes());
   it('keeps scorer availability, source status and implementation state distinct', () => {
     const british = PUBLIC_RULES_DESCRIPTORS.find((descriptor) => descriptor.slug === 'british')!;
     const western = PUBLIC_RULES_DESCRIPTORS.find((descriptor) => descriptor.slug === 'western')!;
@@ -25,7 +49,7 @@ describe('public rules reference model', () => {
   it('exposes MCR game tracking through the availability-driven Hub and reference page', () => {
     const hub = renderToStaticMarkup(createElement(RulesHubPage));
     const mcr = renderToStaticMarkup(createElement(RulesProfilePage, { slug: 'mcr' }));
-    expect(hub).toContain('href="/game/mcr"');
+    expect(hub).toContain('href="/game"');
     expect(mcr).toContain('Track an MCR game');
     expect(mcr).toContain('href="/game/mcr"');
     expect(mcr).toContain('Provisional');
@@ -46,8 +70,12 @@ describe('public rules reference model', () => {
       ['american', []],
     ]);
     const hub = renderToStaticMarkup(createElement(RulesHubPage));
-    expect(hub.match(/Supported profiles available/g)).toHaveLength(2);
+    expect(hub).toContain('4 supported profiles available');
+    expect(hub).toContain('1 supported profile available');
     expect(hub.match(/Not currently supported/g)).toHaveLength(3);
+    expect(familiesBySupportedProfileCount().map(({ id }) => id)).toEqual(['classical-western', 'mcr', 'hong-kong', 'riichi', 'american']);
+    expect(hub.indexOf('British / Western Classical')).toBeLessThan(hub.indexOf('Chinese Official / MCR'));
+    expect(hub.indexOf('Chinese Official / MCR')).toBeLessThan(hub.indexOf('Hong Kong / Cantonese-style'));
     expect(hub).toContain('Not seeing your rules?');
     expect(hub).not.toContain('Source status');
     expect(hub).not.toContain('Implementation</dt>');
@@ -62,10 +90,52 @@ describe('public rules reference model', () => {
     expect(supportedProfilesForFamily(MAHJONG_FAMILIES.find(({ id }) => id === 'mcr')!).map(({ slug, editionYear }) => [slug, editionYear])).toEqual([['mcr', 2006]]);
 
     const hub = renderToStaticMarkup(createElement(RulesHubPage));
-    for (const slug of ['club', 'british', 'buzzard', 'western', 'mcr']) {
-      expect(hub).toContain(`href="/rules/${slug}"`);
+    expect(hub).toMatch(/name="my-rules-profile" checked="" value="all"/);
+    expect(hub).toContain('href="/hand"');
+    expect(hub).toContain('href="/game"');
+    expect(hub).toContain('href="/special-hands"');
+    expect(hub).not.toContain('href="/hand?rules=');
+    expect(hub).not.toContain('href="/game/club"');
+  });
+
+  it('loads a saved My rules selection and persists or clears changes through the existing preference store', () => {
+    const british = PUBLIC_RULES_DESCRIPTORS.find(({ slug }) => slug === 'british')!;
+    const selectedMarkup = renderRulesHubWithPreference(british.profile);
+    expect(selectedMarkup).toMatch(/name="my-rules-profile" checked="" value="british"/);
+    expect(selectedMarkup).toContain('My rules');
+
+    const storage = memoryStorage();
+    expect(chooseRulesHubProfile('western', storage)).toEqual(PUBLIC_RULES_DESCRIPTORS.find(({ slug }) => slug === 'western')!.profile);
+    expect(storage.value()).toBe(JSON.stringify(PUBLIC_RULES_DESCRIPTORS.find(({ slug }) => slug === 'western')!.profile));
+    expect(readPreferredRulesProfile(storage)).toEqual(PUBLIC_RULES_DESCRIPTORS.find(({ slug }) => slug === 'western')!.profile);
+    expect(PREFERRED_RULES_PROFILE_STORAGE_KEY).toBe('mahjong-reference:preferred-rules-profile');
+    chooseRulesHubProfile(null, storage);
+    expect(storage.value()).toBeNull();
+    expect(readPreferredRulesProfile(storage)).toBeNull();
+  });
+
+  it('preserves selected-profile context in one action area and only exposes truthful learning links', () => {
+    const profiles = PUBLIC_RULES_DESCRIPTORS.map(({ slug }) => slug);
+    for (const slug of profiles) {
+      const descriptor = PUBLIC_RULES_DESCRIPTORS.find((candidate) => candidate.slug === slug)!;
+      const hub = renderRulesHubWithPreference(descriptor.profile);
+      expect(hub).toMatch(new RegExp(`name="my-rules-profile" checked="" value="${slug}"`));
       expect(hub).toContain(`href="/hand?rules=${slug}"`);
       expect(hub).toContain(`href="/game/${slug}"`);
+      expect(hub).toContain(`href="/rules/${slug}"`);
+      expect(hub.match(/href="\/hand\?rules=/g)).toHaveLength(1);
+      expect(hub.match(new RegExp(`href="\\/game\\/${slug}"`, 'g'))).toHaveLength(1);
+      if (slug === 'mcr') expect(hub).not.toContain('href="/special-hands"');
+      else expect(hub).toContain('href="/special-hands"');
+      if (slug === 'british') {
+        expect(hub).toContain('href="/gameplay-basics"');
+        expect(hub).toContain('href="/guide"');
+        expect(hub).toContain('href="/scoring-examples"');
+      } else {
+        expect(hub).not.toContain('href="/gameplay-basics"');
+        expect(hub).not.toContain('href="/guide"');
+        expect(hub).not.toContain('href="/scoring-examples"');
+      }
     }
   });
 

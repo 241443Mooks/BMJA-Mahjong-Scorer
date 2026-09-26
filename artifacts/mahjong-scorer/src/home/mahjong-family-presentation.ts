@@ -9,6 +9,14 @@ export type MahjongFamilyPresentation = {
   supportedProfileSlugs: readonly PublicRulesSlug[];
 };
 
+export const PROFILE_LEARNING_LINKS: Partial<Record<PublicRulesSlug, readonly { label: string; href: string }[]>> = {
+  british: [
+    { label: 'British gameplay basics', href: '/gameplay-basics' },
+    { label: 'British scoring guide', href: '/guide' },
+    { label: 'British scoring examples', href: '/scoring-examples' },
+  ],
+};
+
 /** Broad recognition copy for public pages; this does not define scoring or profile identity. */
 export const MAHJONG_FAMILIES: readonly MahjongFamilyPresentation[] = [
   {
@@ -48,3 +56,8 @@ export const supportedProfilesForFamily = (family: MahjongFamilyPresentation): R
     .map((slug) => PUBLIC_RULES_DESCRIPTORS.find((descriptor) => descriptor.slug === slug))
     .filter((descriptor): descriptor is RulesDescriptor => Boolean(descriptor?.availability.rulesReference))
     .sort((left, right) => right.editionYear - left.editionYear);
+
+export const familiesBySupportedProfileCount = (): MahjongFamilyPresentation[] =>
+  MAHJONG_FAMILIES.map((family, index) => ({ family, index, count: supportedProfilesForFamily(family).length }))
+    .sort((left, right) => right.count - left.count || left.index - right.index)
+    .map(({ family }) => family);
