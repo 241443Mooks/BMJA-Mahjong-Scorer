@@ -11,7 +11,6 @@ type HowItWorksStep = {
   number: string;
   title: string;
   text: string;
-  note?: string;
   screenshot: ResponsiveScreenshotProps;
 };
 
@@ -36,54 +35,33 @@ const settlementPreviewScreenshot: ResponsiveScreenshotProps = {
 const steps: HowItWorksStep[] = [
   {
     number: '01',
-    title: 'Choose the rules your table uses',
-    text: 'Start the game with the rules, game length and four starting seats. Mahjong Reference keeps those choices with the table as you play.',
+    title: 'Choose the table context',
+    text: 'Start a game with its rules profile, length and four seats. Those choices stay with the game as you play.',
     screenshot: phaseOneHelpInstructions['start-game'],
   },
   {
     number: '02',
-    title: 'Enter the hand',
-    text: 'Use the hand scorer when you want Mahjong Reference to work the score out from the tiles. Add the groups you know and watch Hand so far build as you go.',
-    note: 'You do not need every tile. For a losing hand, enter the scoring parts you know. If you already know the score, type it in.',
+    title: 'Enter or record a hand',
+    text: 'Enter tiles for a calculated score, or record the numeric score known at the table.',
     screenshot: phaseOneHelpInstructions['ordinary-hand'],
   },
   {
     number: '03',
-    title: 'See the score',
-    text: 'When the hand is ready, the result shows the score together with the points and doubles that produced it.',
+    title: 'Review the score and explanation',
+    text: 'See the result and, for a calculated score, the points, doubles and patterns recognised from the entered evidence.',
     screenshot: scoreResultScreenshot,
   },
   {
     number: '04',
-    title: 'See why',
-    text: 'Open the breakdown to see what scored and why. Rule-sensitive patterns are shown alongside the parts of the score they support.',
-    note: 'Not sure about something? That’s OK. If Mahjong Reference does not know something, it will not guess.',
-    screenshot: phaseOneHelpInstructions.disagreement,
-  },
-  {
-    number: '05',
-    title: 'See who pays whom',
-    text: 'For a game, the four hand scores become the payments for that hand before you record it. Check who pays whom and each player’s net change first.',
+    title: 'Settle the hand',
+    text: 'For a game, review who pays whom and each player’s net change before recording the hand.',
     screenshot: settlementPreviewScreenshot,
   },
   {
-    number: '06',
-    title: 'Carry on to the next hand',
-    text: 'Record the hand and the table moves on with updated totals, East and prevailing Wind. The next score entry is ready without rebuilding the game.',
-    note: 'Your game stays on this device. You can usually pick it up again on the same device after a refresh or closed browser. No account is needed.',
+    number: '05',
+    title: 'Continue or keep the record',
+    text: 'Recording updates totals, East and prevailing Wind for the next hand. Review the game history or print or save a record when you finish.',
     screenshot: phaseOneHelpInstructions['mix-score-entry'],
-  },
-  {
-    number: '07',
-    title: 'Look back at the game',
-    text: 'Open the game history whenever you need to check a previous hand, the running totals or the settlement that was recorded.',
-    screenshot: phaseOneHelpInstructions.settlement,
-  },
-  {
-    number: '08',
-    title: 'Keep a copy',
-    text: 'Print or save either a compact game summary or the full record. Both come from the game you actually recorded at the table.',
-    screenshot: phaseOneHelpInstructions['save-game'],
   },
 ];
 
@@ -100,10 +78,10 @@ export function HowItWorksPage() {
               <span className="font-mono text-[10px] uppercase tracking-[.2em] text-[#ae6249]">How it works</span>
             </div>
             <h1 className="max-w-[820px] font-serif text-[clamp(38px,6vw,62px)] leading-[.98] text-[#284d45]">
-              From one hand to the whole game.
+              What happens at the table.
             </h1>
             <p className="mt-5 max-w-[760px] text-[16px] leading-7 text-[#596b65]">
-              Tell Mahjong Reference what happened. It works out the score, shows who pays whom and keeps the game moving. Score one hand on its own, or follow the whole table from the opening seats to a saved game record.
+              Choose a rules context, enter or record a hand, review the score, settle, then continue or keep the record.
             </p>
             <div className="mt-7 flex flex-col gap-3 sm:flex-row">
               <a href="/game" className="inline-flex items-center justify-center gap-2 rounded-md bg-[#284d45] px-4 py-2.5 text-[11px] font-semibold text-[#f8f4e9] transition hover:bg-[#23443d] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249] focus-visible:ring-offset-2">
@@ -124,25 +102,17 @@ export function HowItWorksPage() {
           <section className="border-b border-[#ddd3bf] px-5 py-9 sm:px-8 sm:py-11 lg:px-12">
             <div className="mb-7 max-w-[720px]">
               <div className="font-mono text-[9px] uppercase tracking-[.18em] text-[#ae6249]">The table journey</div>
-              <h2 className="mt-2 font-serif text-[32px] leading-tight text-[#284d45]">Eight steps, from choosing the rules to keeping the record.</h2>
-              <p className="mt-3 text-[13px] leading-6 text-[#66746e]">
-                Each picture below is a real generated product screen. Nothing is hidden behind a walkthrough or recreated for this page.
-              </p>
+              <h2 className="mt-2 font-serif text-[32px] leading-tight text-[#284d45]">From context to next hand.</h2>
             </div>
 
             <ol className="space-y-5 sm:space-y-6">
-              {steps.map(({ number, title, text, note, screenshot }) => (
+              {steps.map(({ number, title, text, screenshot }) => (
                 <li key={number} className="rounded-xl border border-[#d8ceb8] bg-[#fdfbf5] p-4 sm:p-6">
                   <div className="grid gap-5 md:grid-cols-[minmax(0,.72fr)_minmax(0,1.28fr)] md:items-center md:gap-7 lg:gap-9">
                     <div>
                       <div className="font-mono text-[10px] font-semibold uppercase tracking-[.18em] text-[#ae6249]">{number}</div>
                       <h3 className="mt-2 font-serif text-[27px] leading-tight text-[#284d45]">{title}</h3>
                       <p className="mt-3 text-[13px] leading-6 text-[#596b65]">{text}</p>
-                      {note && (
-                        <p className="mt-4 rounded-lg bg-[#f5eadb] px-4 py-3 text-[11px] leading-5 text-[#596b65]">
-                          {note}
-                        </p>
-                      )}
                     </div>
                     <div className="overflow-hidden rounded-xl border border-[#d8ceb8] bg-[#eee8dc] p-2 sm:p-3">
                       <ResponsiveScreenshot {...screenshot} />
@@ -159,7 +129,7 @@ export function HowItWorksPage() {
                 <div className="font-mono text-[9px] uppercase tracking-[.18em] text-[#ae6249]">Need more detail?</div>
                 <h2 className="mt-2 font-serif text-[28px] leading-tight text-[#284d45]">The User Guide picks up where this walkthrough stops.</h2>
                 <p className="mt-2 text-[12px] leading-6 text-[#596b65]">
-                  Find step-by-step help for partial hands, the winning tile, recovery, correcting a hand, settlement and saving a game.
+                  See the User Guide for step-by-step instructions and detailed help with using the scorer.
                 </p>
               </div>
               <div className="mt-5 flex shrink-0 flex-col gap-2 sm:mt-0">
@@ -168,6 +138,9 @@ export function HowItWorksPage() {
                 </a>
                 <a href="/rules" className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-[#c9b99d] bg-[#fdfbf5] px-4 text-[11px] font-semibold text-[#284d45] transition hover:bg-[#fffaf0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249] focus-visible:ring-offset-2">
                   See supported rules <ArrowRight size={14} aria-hidden="true" />
+                </a>
+                <a href="/under-the-hood" className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-[#c9b99d] bg-[#fdfbf5] px-4 text-[11px] font-semibold text-[#284d45] transition hover:bg-[#fffaf0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249] focus-visible:ring-offset-2">
+                  Under the hood <ArrowRight size={14} aria-hidden="true" />
                 </a>
               </div>
             </div>
