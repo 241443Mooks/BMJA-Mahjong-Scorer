@@ -287,13 +287,16 @@ export const interpretClassicalHand = (
       addCandidate('grouped', groups, allIndexes.filter((index) => !used.has(index)));
     }
 
-    const enteredStructuralUpperBound = input.explicitSets.reduce((count, group) => count + (group.kind === 'pair' ? 2 : 3), 0) + input.unresolvedTiles.length;
-    if (candidates.size === 0 && !input.isWinner && enteredStructuralUpperBound < 13) {
+    if (candidates.size === 0 && !input.isWinner) {
       for (const sets of partialClassicalDecompositions(input.explicitSets, input.unresolvedTiles, { allowKongs: true })) {
         const groups = makeCandidateGroups(sets);
         if (!groups || groups.length === 0) continue;
         const used = new Set(groups.flatMap(({ physicalTileIndexes }) => physicalTileIndexes));
-        addCandidate('grouped', groups, allIndexes.filter((index) => !used.has(index)));
+        const unresolvedTileIndexes = allIndexes.filter((index) => !used.has(index));
+        const structuralTileCount = input.explicitSets.reduce((count, group) => count + (group.kind === 'pair' ? 2 : 3), 0)
+          + groups.reduce((count, group) => count + group.structuralSlots, 0)
+          + unresolvedTileIndexes.length;
+        if (structuralTileCount < 13) addCandidate('grouped', groups, unresolvedTileIndexes);
       }
     }
 

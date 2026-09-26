@@ -160,6 +160,32 @@ describe('pure Classical unresolved-tile interpretation', () => {
     expect(result.candidates.every(({ wholeHandComplete, structuralTileCount }) => !wholeHandComplete && structuralTileCount < 13)).toBe(true);
   });
 
+  it('keeps an unresolved Kong candidate when physical count reaches thirteen but structural count is twelve', () => {
+    const explicitSets = [
+      pung('explicit-bamboo-one', suited('bamboo', 1)),
+      pung('explicit-circles-two', suited('circles', 2)),
+      pung('explicit-characters-three', suited('characters', 3)),
+    ];
+    const input = baseInput({
+      isWinner: false,
+      explicitSets,
+      unresolvedTiles: Array.from({ length: 4 }, () => wind('east')),
+    });
+    const result = interpretClassicalHand(input);
+    const candidate = result.candidates.find(({ inferredGroups }) =>
+      inferredGroups.length === 1 && inferredGroups[0]?.kind === 'kong',
+    );
+
+    expect(explicitSets.reduce((count, group) => count + (group.kind === 'pair' ? 2 : 3), 0)).toBe(9);
+    expect(input.explicitSets.length * 3 + input.unresolvedTiles.length).toBe(13);
+    expect(candidate).toBeDefined();
+    expect(candidate).toMatchObject({ structuralTileCount: 12, wholeHandComplete: false });
+    expect(candidate!.explicitSets).toEqual(explicitSets);
+    expect(candidate!.inferredGroups).toHaveLength(1);
+    expect(candidate!.inferredGroups[0]).toMatchObject({ kind: 'kong', structuralSlots: 3, physicalTileIndexes: [0, 1, 2, 3] });
+    expect(candidate!.unresolvedTileIndexes).toEqual([]);
+  });
+
   it('applies profile-specific Chow legality through the exact compiled runtime', () => {
     const tiles = [
       suited('bamboo', 1), suited('bamboo', 2), suited('bamboo', 3),
