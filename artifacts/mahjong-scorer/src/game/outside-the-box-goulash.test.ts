@@ -1,8 +1,11 @@
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
+import { initialiseCurrentRulesRuntimes } from '../rules-platform/current-runtime-registry';
 import { dragon, set, suited, validateHand, wind, type MahjongHand } from '../scoring';
 import { confirmHand, createBmjaGame, replayGame, undoLastHand } from './game';
 import { loadGameRecovery, saveGameRecovery } from './persistence';
 import { BMJA_RULESET, OUTSIDE_THE_BOX_PROFILE_REF, OUTSIDE_THE_BOX_RULESET } from './ruleset';
+
+beforeAll(() => initialiseCurrentRulesRuntimes());
 
 const players = ['east', 'south', 'west', 'north'].map((id) => ({ id, name: id }));
 const seats = { east: 'east', south: 'south', west: 'west', north: 'north' } as const;

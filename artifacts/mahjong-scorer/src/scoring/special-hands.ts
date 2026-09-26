@@ -35,6 +35,8 @@ export type FixedSpecialHandPatternBinding =
   value: number;
   /** Fixed value while one tile away, when this profile has published one. */
   fishingValue?: number;
+  /** Whether intrinsic playing-tile value can replace this fixed fishing value when higher. */
+  fishingUsesIntrinsicFloor?: boolean;
   /** Profile-local treatment for represented exposed Pung/Kong groups. */
   exposure?:
     | { allowed: false }
@@ -57,15 +59,18 @@ export type CalculatedSpecialHandPatternBinding =
       };
     };
   };
+export type ConfiguredLimitSpecialHandPatternBinding = CommonSpecialHandPatternBinding & { scoreModel: { kind: 'configured-limit' } };
 
 export type SpecialHandPatternBinding =
   | FixedSpecialHandPatternBinding
-  | CalculatedSpecialHandPatternBinding;
+  | CalculatedSpecialHandPatternBinding
+  | ConfiguredLimitSpecialHandPatternBinding;
 
 export const isFixedSpecialHandBinding = (
   binding: SpecialHandPatternBinding,
 ): binding is FixedSpecialHandPatternBinding =>
-  binding.scoreModel?.kind !== 'calculated';
+  binding.scoreModel?.kind === undefined || binding.scoreModel.kind === 'fixed';
+export const isConfiguredLimitSpecialHandBinding = (binding: SpecialHandPatternBinding): binding is ConfiguredLimitSpecialHandPatternBinding => binding.scoreModel?.kind === 'configured-limit';
 
 export const isCalculatedSpecialHandBinding = (
   binding: SpecialHandPatternBinding,
@@ -220,9 +225,14 @@ const groupedRunShape = (hand: MahjongHand) => {
 };
 
 /** A complete ordinary grouped hand, keeping structure and physical tiles separate. */
-const groupedShape = (hand: MahjongHand, meldCount: number, pairCount = 1) => {
+const groupedShape = (
+  hand: MahjongHand,
+  meldCount: number,
+  pairCount = 1,
+  meldKinds: readonly SetKind[] = ['pung', 'kong'],
+) => {
   const all = tiles(hand);
-  const melds = hand.sets.filter((set) => set.kind === 'pung' || set.kind === 'kong');
+  const melds = hand.sets.filter((set) => meldKinds.includes(set.kind));
   const pairs = hand.sets.filter((set) => set.kind === 'pair');
   return hand.isWinner &&
     hand.sets.length === meldCount + pairCount &&
@@ -416,10 +426,18 @@ const suitedRankCounts = (values: PlayingTile[]) => {
   return tally;
 };
 
-const canPairAcrossSuits = (rankCounts: Map<string, number>) => {
-  const values = [...rankCounts.values()];
-  const total = values.reduce((sum, value) => sum + value, 0);
-  return total % 2 === 0 && Math.max(...values, 0) <= total / 2;
+const isTwoSuitKnittingLayout = (hand: MahjongHand) => {
+  if (!isCompleteLooseLayout(hand)) return false;
+  const all = tiles(hand);
+  const tally = suitedRankCounts(all);
+  if (tally === null) return false;
+  const suits = new Set(all.map((tile) => tile.family === 'suit' ? tile.suit : undefined));
+  if (suits.size !== 2 || suits.has(undefined)) return false;
+  return [...tally.values()].every((rankCounts) => {
+    const values = [...rankCounts.values()];
+    return rankCounts.size === 2 && values[0] === values[1];
+  }) && [...tally.values()].reduce((sum, rankCounts) =>
+    sum + [...rankCounts.values()].reduce((rankSum, count) => rankSum + count, 0) / 2, 0) === 7;
 };
 
 const isGreenTile = (tile: PlayingTile) =>
@@ -1105,47 +1123,19 @@ export const canonicalSpecialHandPatterns: CanonicalSpecialHandPattern[] = [
   },
   {
     id: 'knitting',
-    detect: (hand) => {
-      const all = tiles(hand);
-      const tally = suitedRankCounts(all);
-      return (
-        hand.isWinner &&
-        hand.sets.length === 0 &&
-        all.length === 14 &&
-        hasAtMostFourCopies(all) &&
-        tally !== null &&
-        [...tally.values()].every(canPairAcrossSuits)
-      );
-    },
+    detect: isTwoSuitKnittingLayout,
   },
   {
     id: 'two-suit-knitting',
-    detect: (hand) => {
-      if (!isCompleteLooseLayout(hand)) return false;
-      const tally = suitedRankCounts(tiles(hand));
-      if (tally === null) return false;
-      const suits = new Set(tiles(hand).map((tile) => tile.family === 'suit' ? tile.suit : undefined));
-      if (suits.size !== 2 || suits.has(undefined)) return false;
-      return [...tally.values()].every((rankCounts) => {
-        const values = [...rankCounts.values()];
-        return rankCounts.size === 2 && values[0] === values[1];
-      }) && [...tally.values()].reduce((sum, rankCounts) => sum + [...rankCounts.values()].reduce((rankSum, count) => rankSum + count, 0) / 2, 0) === 7;
-    },
+    detect: isTwoSuitKnittingLayout,
   },
   {
     id: 'triple-knitting',
     detect: (hand) => {
+      if (!isCompleteLooseLayout(hand)) return false;
       const all = tiles(hand);
       const tally = suitedRankCounts(all);
-      if (
-        !hand.isWinner ||
-        hand.sets.length !== 0 ||
-        all.length !== 14 ||
-        !hasAtMostFourCopies(all) ||
-        tally === null
-      ) {
-        return false;
-      }
+      if (tally === null) return false;
       const suits = ['bamboo', 'characters', 'circles'] as const;
       return [...tally.entries()].some(([pairRank, rankCounts]) =>
         suits.some((firstSuit, firstIndex) =>
@@ -1427,6 +1417,33 @@ export const canonicalSpecialHandPatterns: CanonicalSpecialHandPattern[] = [
     },
   },
   {
+    id: 'club-three-great-scholars',
+    detect: (hand) => {
+      const shape = groupedShape(hand, 4, 1, ['chow', 'pung', 'kong']);
+      if (!shape) return false;
+      const dragons = new Set(shape.melds.filter((set) =>
+        (set.kind === 'pung' || set.kind === 'kong') && set.tile.family === 'dragon'
+      ).map((set) => set.tile.family === 'dragon' ? set.tile.dragon : ''));
+      const ordinary = shape.melds.filter((set) => set.tile.family !== 'dragon');
+      const remainingSet = ordinary.length === 1 ? ordinary[0] : undefined;
+      return dragons.size === 3 && remainingSet !== undefined &&
+        (remainingSet.kind === 'chow' || remainingSet.kind === 'pung' || remainingSet.kind === 'kong') &&
+        remainingSet.tile.family === 'suit' && shape.pairs[0]!.tile.family === 'suit' &&
+        remainingSet.tile.suit === shape.pairs[0]!.tile.suit;
+    },
+  },
+  {
+    id: 'buzzard-three-dragons-winner',
+    detect: (hand) => {
+      const shape = groupedShape(hand, 4, 1, ['chow', 'pung', 'kong']);
+      if (!shape) return false;
+      const dragons = new Set(shape.melds.filter((set) =>
+        (set.kind === 'pung' || set.kind === 'kong') && set.tile.family === 'dragon'
+      ).map((set) => set.tile.family === 'dragon' ? set.tile.dragon : ''));
+      return dragons.size === 3;
+    },
+  },
+  {
     id: 'four-blessings',
     detect: (hand) => {
       const windSets = hand.sets.filter(
@@ -1541,6 +1558,22 @@ export const canonicalSpecialHandPatterns: CanonicalSpecialHandPattern[] = [
   },
   { id: 'four-winds-with-one-two-two-fours-three-sixes-four-eights', detect: (hand) => hasFourWindsWithSingleSuitRankMultiplicities(hand, { 2: 1, 4: 2, 6: 3, 8: 4 }) },
   { id: 'four-winds-with-four-twos-three-fours-two-sixes-one-eight', detect: (hand) => hasFourWindsWithSingleSuitRankMultiplicities(hand, { 2: 4, 4: 3, 6: 2, 8: 1 }) },
+  { id: 'one-suit-nine-gates-any-completion', detect: (hand) => {
+    const all = tiles(hand); if (!hand.isWinner || all.length !== 14 || all.some((tile) => tile.family !== 'suit')) return false;
+    const suited = all as Extract<PlayingTile, { family: 'suit' }>[]; if (new Set(suited.map((tile) => tile.suit)).size !== 1) return false;
+    const tally = new Map<number, number>(); for (const tile of suited) tally.set(tile.rank, (tally.get(tile.rank) ?? 0) + 1);
+    return (tally.get(1) ?? 0) >= 3 && (tally.get(9) ?? 0) >= 3 && [2,3,4,5,6,7,8].every((rank) => (tally.get(rank) ?? 0) >= 1) && [...tally.values()].reduce((sum, count) => sum + count, 0) === 14;
+  } },
+  { id: 'three-winds-and-fourth-wind-pair', detect: (hand) => {
+    const shape = groupedShape(hand, 4, 1, ['chow', 'pung', 'kong']);
+    if (shape === undefined) return false;
+    const winds = shape.melds.filter((set) => (set.kind === 'pung' || set.kind === 'kong') && set.tile.family === 'wind');
+    const pair = shape.pairs[0];
+    const pairWind = pair?.tile.family === 'wind' ? pair.tile.wind : undefined;
+    return winds.length === 3 && new Set(winds.map((set) => set.tile.family === 'wind' ? set.tile.wind : '')).size === 3 && pairWind !== undefined && !winds.some((set) => set.tile.family === 'wind' && set.tile.wind === pairWind);
+  } },
+  { id: 'four-concealed-pung-kong-hand', detect: (hand) => hand.isWinner && hand.sets.length === 5 && hand.sets.filter((set) => set.kind === 'pung' || set.kind === 'kong').length === 4 && hand.sets.every((set) => set.visibility === 'concealed') },
+  { id: 'east-thirteenth-consecutive-mahjong', eventBased: true, detect: (hand, context) => hand.isWinner && context?.playerWind === 'east' && context.eastThirteenthConsecutiveMahjong === true },
 ];
 
 const BMJA_SPECIAL_HAND_PROFILE: RulesProfileRef = Object.freeze({
@@ -1565,85 +1598,107 @@ const bmjaBinding = (
   name: string,
   description: string,
   value: number,
-) => bindingFor(BMJA_SPECIAL_HAND_PROFILE, patternId, name, description, value);
+  fishingValue?: number,
+  fishingUsesIntrinsicFloor?: boolean,
+) => ({
+  ...bindingFor(BMJA_SPECIAL_HAND_PROFILE, patternId, name, description, value),
+  ...(fishingValue === undefined ? {} : { fishingValue }),
+  ...(fishingUsesIntrinsicFloor ? { fishingUsesIntrinsicFloor: true } : {}),
+});
 export const bmjaSpecialHandBindings = [
   bmjaBinding(
     'knitting',
     'Knitting',
-    'Seven pairs, each pairing the same number across two different suits; pairs may repeat.',
+    'Seven same-number pairs across exactly two suits; pairs may repeat where physical tile copies permit them.',
     500,
+    200,
   ),
   bmjaBinding(
     'triple-knitting',
     'Triple Knitting',
     'Four same-number groups across all three suits, plus a same-number pair across two suits.',
     500,
+    200,
   ),
   bmjaBinding(
     'all-pair-honours',
     'All pair honours',
     'Seven pairs of major tiles: 1s, 9s, winds and dragons; repeated pairs are allowed.',
     500,
+    200,
   ),
   bmjaBinding(
     'imperial-jade',
     'Imperial Jade',
     'Four pungs/kongs and a pair using only Green Dragon or Bamboo 2, 3, 4, 6 and 8.',
     1000,
+    400,
   ),
   bmjaBinding(
     'thirteen-unique-wonders',
     'Thirteen unique wonders',
     'One of every terminal, wind and dragon, plus a pair of any one.',
     1000,
+    400,
   ),
   bmjaBinding(
     'gates-of-heaven',
     'The Gates of Heaven',
     'A concealed one-suit layout with three 1s, three 9s, 2 through 8, and one of 2 through 8 paired.',
     1000,
+    400,
   ),
   bmjaBinding(
     'wriggling-snake',
     'The Wriggling Snake',
     'A pair of suited 1s, suited 2 through 9 in that suit, and one of each Wind.',
     1000,
+    400,
   ),
   bmjaBinding(
     'all-winds-and-dragons',
     'All Winds and Dragons',
     'Four pungs/kongs and a pair, all made from winds and dragons.',
     1000,
+    400,
+    true,
   ),
   bmjaBinding(
     'heads-and-tails',
     'Heads and Tails',
     'Four pungs/kongs and a pair, all made from suited 1s and 9s.',
     1000,
+    400,
   ),
   bmjaBinding(
     'fourfold-plenty',
     'Fourfold Plenty',
     'Four kongs and a pair.',
     1000,
+    400,
   ),
   bmjaBinding(
     'three-great-scholars',
     'Three great scholars',
     'A pung or kong of each of the three dragons.',
     1000,
+    400,
+    true,
   ),
   bmjaBinding(
     'four-blessings',
     'Four Blessings Hovering over the Door',
     'A pung or kong of each wind, plus any pair.',
     1000,
+    400,
+    true,
   ),
   bmjaBinding(
     'buried-treasure',
     'Buried treasure',
     'Four concealed pungs and a concealed pair, using one suit with optional winds/dragons.',
     1000,
+    400,
   ),
   bmjaBinding(
     'heavens-blessing',
@@ -1723,14 +1778,16 @@ export const detectSpecialHands = (
     bindings[0]?.profile ?? BMJA_SPECIAL_HAND_PROFILE,
     bindings,
   ).map(({ binding, pattern }) =>
-    isFixedSpecialHandBinding(binding)
+    isFixedSpecialHandBinding(binding) || isConfiguredLimitSpecialHandBinding(binding)
       ? {
           id: pattern.id,
           name: binding.name,
           description: binding.description,
           scoreModel: 'fixed' as const,
-          value: specialHandValueFor(hand, binding),
-          matched: pattern.detect(hand, context) && fixedBindingAllowsHand(hand, binding),
+          value: isConfiguredLimitSpecialHandBinding(binding)
+            ? (() => { if (typeof context?.limit !== 'number' || !Number.isFinite(context.limit) || context.limit <= 0) throw new Error('CONFIGURED_LIMIT_CONTEXT_REQUIRED'); return context.limit; })()
+            : specialHandValueFor(hand, binding),
+          matched: pattern.detect(hand, context) && bindingAllowsHand(hand, binding),
         }
       : {
           id: pattern.id,

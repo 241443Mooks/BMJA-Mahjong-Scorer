@@ -46,7 +46,7 @@ describe('independent special-hand detectors', () => {
         }),
       ),
     ).toEqual([
-      { id: 'knitting', name: 'Knitting', description: 'Seven pairs, each pairing the same number across two different suits; pairs may repeat.', value: 500 },
+      { id: 'knitting', name: 'Knitting', description: 'Seven same-number pairs across exactly two suits; pairs may repeat where physical tile copies permit them.', value: 500 },
       { id: 'triple-knitting', name: 'Triple Knitting', description: 'Four same-number groups across all three suits, plus a same-number pair across two suits.', value: 500 },
       { id: 'all-pair-honours', name: 'All pair honours', description: 'Seven pairs of major tiles: 1s, 9s, winds and dragons; repeated pairs are allowed.', value: 500 },
       { id: 'imperial-jade', name: 'Imperial Jade', description: 'Four pungs/kongs and a pair using only Green Dragon or Bamboo 2, 3, 4, 6 and 8.', value: 1000 },
@@ -122,8 +122,8 @@ describe('independent special-hand detectors', () => {
     );
   });
 
-  it('detects Knitting with repeated cross-suit pairs', () => {
-    const hand = looseWinning([
+  it('rejects the former three-suit BMJA Knitting fixture', () => {
+    const threeSuitHand = looseWinning([
       suited('characters', 1),
       suited('bamboo', 1),
       suited('characters', 1),
@@ -139,7 +139,31 @@ describe('independent special-hand detectors', () => {
       suited('bamboo', 9),
       suited('circles', 9),
     ]);
+    expect(matched(threeSuitHand, 'knitting')).toBe(false);
+  });
+
+  it('detects two-suit Knitting with repeated cross-suit pairs', () => {
+    const hand = looseWinning([
+      suited('characters', 1), suited('bamboo', 1),
+      suited('characters', 1), suited('bamboo', 1),
+      suited('characters', 3), suited('bamboo', 3),
+      suited('characters', 4), suited('bamboo', 4),
+      suited('characters', 6), suited('bamboo', 6),
+      suited('characters', 8), suited('bamboo', 8),
+      suited('characters', 9), suited('bamboo', 9),
+    ]);
     expect(matched(hand, 'knitting')).toBe(true);
+  });
+
+  it('rejects Knitting when the fourteenth tile is represented as remaining', () => {
+    const looseTiles = [1, 2, 3, 4, 5, 6, 7].flatMap((rank) => [
+      suited('characters', rank as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9),
+      suited('bamboo', rank as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9),
+    ]);
+    expect(matched({
+      ...looseWinning(looseTiles.slice(0, 13)),
+      remainingTiles: [looseTiles[13]],
+    }, 'knitting')).toBe(false);
   });
 
   it('rejects Knitting with honours or an unpairable same-suit excess', () => {
@@ -232,6 +256,18 @@ describe('independent special-hand detectors', () => {
         'triple-knitting',
       ),
     ).toBe(false);
+  });
+
+  it('rejects Triple Knitting when a 14-total layout includes a remaining tile', () => {
+    const complete = [1, 3, 5, 7].flatMap((rank) => [
+      suited('characters', rank as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9),
+      suited('bamboo', rank as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9),
+      suited('circles', rank as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9),
+    ]).concat([suited('characters', 9), suited('bamboo', 9)]);
+    expect(matched({
+      ...looseWinning(complete.slice(0, 13)),
+      remainingTiles: [complete[13]],
+    }, 'triple-knitting')).toBe(false);
   });
 
   it('detects all pair honours with terminals and repeated pairs', () => {

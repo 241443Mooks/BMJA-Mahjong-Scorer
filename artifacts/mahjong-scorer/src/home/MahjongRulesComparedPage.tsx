@@ -1,6 +1,7 @@
 import { ArrowRight, CheckCircle2, CircleHelp, Compass, Flower2, Gamepad2, ShieldCheck, Sparkles } from 'lucide-react';
 import { SiteHeader } from '../components/SiteHeader';
 import { HorizontalScrollRegion } from '../components/HorizontalScrollRegion';
+import { MAHJONG_FAMILIES } from './mahjong-family-presentation';
 
 const variants = [
   {
@@ -68,14 +69,6 @@ const comparisonRows = [
   ['Do losing hands matter?', 'Yes', 'Usually winner-centred', 'Winner-centred', 'Winner-centred', 'Winner/card-value centred'],
 ] as const;
 
-const quickClues = [
-  ['Jokers + annual card + Charleston', 'American / NMJL-style'],
-  ['Riichi, yaku, han, fu, dora or furiten', 'Japanese Riichi'],
-  ['Formal competition catalogue + 8-point minimum', 'Chinese Official / MCR'],
-  ['Faan/fan + ordinary multiple-Chow play', 'Hong Kong Mahjong'],
-  ['Flowers/Seasons score + one-Chow cap + losing hands matter', 'British / BMJA-style'],
-] as const;
-
 export function MahjongRulesComparedPage() {
   return (
     <div className="mahjong-shell min-h-screen">
@@ -94,7 +87,7 @@ export function MahjongRulesComparedPage() {
               Same family of tiles. Five very different ways to play. This guide compares the structural differences that actually change what counts as a legal hand, how scoring works and what a player needs to know at the table.
             </p>
             <p className="mt-4 max-w-[820px] text-[15px] leading-7 text-[#596b65]">
-              Looking for the profiles Mahjong Reference can score? The <a className="font-semibold text-[#284d45] underline decoration-[#ae6249] underline-offset-4" href="/rules">supported rules hub</a> covers <a className="font-semibold text-[#284d45] underline decoration-[#ae6249] underline-offset-4" href="/rules/british">British / BMJA-style</a> (stable), <a className="font-semibold text-[#284d45] underline decoration-[#ae6249] underline-offset-4" href="/rules/western">Western — Thompson &amp; Maloney</a> (provisional), and configured local Club rules. This comparison does not promise scoring support for Hong Kong, Riichi, MCR or American Mahjong.
+              Looking for the profiles Mahjong Reference can score? The <a className="font-semibold text-[#284d45] underline decoration-[#ae6249] underline-offset-4" href="/rules">rules hub</a> lists current profiles, including British / BMJA-style, Western, Club - Bramhall 2026, Buzzard 2000 and provisional MCR / WMO 2006. This comparison also covers Hong Kong, Riichi and American Mahjong, which are not currently supported scorers.
             </p>
             <div className="mt-7 rounded-xl bg-[#284d45] p-5 text-[#f8f4e9] sm:p-6">
               <div className="font-mono text-[9px] uppercase tracking-[.18em] text-[#d7a287]">Useful mental model</div>
@@ -109,13 +102,13 @@ export function MahjongRulesComparedPage() {
               <p className="mt-3 text-[13px] leading-6 text-[#596b65]">You usually do not need a whole rulebook to identify the family. A few distinctive features narrow it down very quickly.</p>
             </div>
             <div className="mt-7 grid gap-3 md:grid-cols-2">
-              {quickClues.map(([clue, answer]) => (
-                <div key={clue} className="rounded-xl border border-[#d8ceb8] bg-[#fdfbf5] p-5">
+              {MAHJONG_FAMILIES.map((family) => (
+                <div key={family.id} className="rounded-xl border border-[#d8ceb8] bg-[#fdfbf5] p-5">
                   <div className="flex gap-3">
                     <Compass size={18} className="mt-1 shrink-0 text-[#477562]" />
                     <div>
-                      <p className="text-[12px] font-semibold leading-6 text-[#284d45]">{clue}</p>
-                      <p className="mt-1 font-serif text-[21px] text-[#ae6249]">{answer}</p>
+                      <p className="text-[12px] font-semibold leading-6 text-[#284d45]">{family.clue}</p>
+                      <p className="mt-1 font-serif text-[21px] text-[#ae6249]">{family.name}</p>
                     </div>
                   </div>
                 </div>
@@ -198,7 +191,7 @@ export function MahjongRulesComparedPage() {
               </div>
               <div className="rounded-xl border border-[#d8ceb8] bg-[#fdfbf5] p-5 sm:p-6">
                 <div className="flex items-center gap-3"><CircleHelp size={18} className="text-[#ae6249]" /><h3 className="font-serif text-[22px] text-[#284d45]">Why rules profiles matter</h3></div>
-                <p className="mt-3 text-[12px] leading-6 text-[#596b65]">Structural differences are why Mahjong Reference keeps profile-specific scoring and settlement behaviour rather than flattening everything into one universal rules engine. British / BMJA-style is stable; Western — Thompson &amp; Maloney is provisional; Club rules are configured locally. See the <a href="/rules" className="font-semibold text-[#284d45] underline decoration-[#cfa58f] underline-offset-4">supported rules hub</a> for the current boundaries.</p>
+                <p className="mt-3 text-[12px] leading-6 text-[#596b65]">Structural differences are why Mahjong Reference keeps profile-specific scoring and settlement behaviour rather than flattening everything into one universal rules engine. See the <a href="/rules" className="font-semibold text-[#284d45] underline decoration-[#cfa58f] underline-offset-4">rules hub</a> for current profiles and boundaries.</p>
               </div>
             </div>
           </section>

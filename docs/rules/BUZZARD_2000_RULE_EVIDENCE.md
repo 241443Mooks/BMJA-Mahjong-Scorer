@@ -140,6 +140,14 @@ The source states these score the agreed limit irrespective of ordinary scoring 
 9. Calling Nine Tile Hand;
 10. East Wind's thirteenth consecutive Mahjong.
 
+### Calling Nine Tile Hand clarification (20 September 2026)
+
+The captured primary source defines the thirteen-tile calling shape as one suit only:
+`1112345678999`. Any one additional tile of that same suit (rank 1–9,
+including an extra 1 or 9) completes the fourteen-tile limit hand. This is
+not identical to the existing Gates-of-Heaven predicates, which restrict the
+duplicated tile to ranks 2–8.
+
 Implementation shape:
 
 - REUSE canonical structural detectors where exact structure matches;

@@ -1,4 +1,5 @@
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
+import { initialiseCurrentRulesRuntimes } from '../rules-platform/current-runtime-registry';
 import { bonus, dragon, set, suited, validateHand, wind, type MahjongHand } from '../scoring';
 import { canonicalSpecialHandPatterns } from '../scoring/special-hands';
 import { confirmHand, createBmjaGame, replayGame, undoLastHand } from './game';
@@ -13,6 +14,8 @@ import {
   WESTERN_TM_RULESET,
 } from './ruleset';
 import { outsideTheBoxSpecialHandBindings } from './outside-the-box-catalogue';
+
+beforeAll(() => initialiseCurrentRulesRuntimes());
 
 const players = ['east', 'south', 'west', 'north'].map((id) => ({ id, name: id }));
 const seats = { east: 'east', south: 'south', west: 'west', north: 'north' } as const;
@@ -44,7 +47,7 @@ describe('Outside the Box 0.1 readiness certification (#88F)', () => {
   it('locks same-pattern profile values, local exposure, and structural boundaries', () => {
     expect(special(BMJA_RULESET, scholars, 'three-great-scholars')).toMatchObject({ value: 1000 });
     expect(special(WESTERN_TM_RULESET, scholars, 'three-great-scholars')).toMatchObject({ value: 1500 });
-    expect(special(OUTSIDE_THE_BOX_RULESET, scholars, 'three-great-scholars')).toMatchObject({ value: 1000 });
+    expect(special(OUTSIDE_THE_BOX_RULESET, scholars, 'club-three-great-scholars')).toMatchObject({ value: 1000, matched: false });
     expect(score(BMJA_RULESET, scholars).finalScore).toBe(1000);
     expect(score(WESTERN_TM_RULESET, scholars).finalScore).toBe(1500);
     expect(score(OUTSIDE_THE_BOX_RULESET, scholars).finalScore).toBe(1000);

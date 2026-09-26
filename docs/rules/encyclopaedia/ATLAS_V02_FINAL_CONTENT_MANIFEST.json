@@ -1,0 +1,271 @@
+{
+  "schemaVersion": "1.0-handoff",
+  "status": "authoritative #354 content ownership/index; implementation must use this manifest to resolve research-batch ownership without semantic inference",
+  "base": "efe2cec955f973a28a5e982160f3b6e39593606a",
+  "corpus": {
+    "bmja": 18,
+    "western-tm": 85,
+    "outside-the-box": 33,
+    "buzzard-2000": 10,
+    "total": 146
+  },
+  "contentSources": {
+    "batch1": "docs/rules/encyclopaedia/ATLAS_V02_LEARNER_CONTENT_PROOF.json",
+    "batch1Evidence": "docs/rules/encyclopaedia/ATLAS_V02_EVIDENCE_BINDINGS_BATCH1.json",
+    "batch2": "docs/rules/encyclopaedia/ATLAS_V02_LEARNER_CONTENT_BATCH2.json",
+    "batch3": "docs/rules/encyclopaedia/ATLAS_V02_LEARNER_CONTENT_BATCH3.json",
+    "batch4a": "docs/rules/encyclopaedia/ATLAS_V02_LEARNER_CONTENT_BATCH4A.json",
+    "batch4b": "docs/rules/encyclopaedia/ATLAS_V02_LEARNER_CONTENT_BATCH4B.json"
+  },
+  "finalOwnershipRules": [
+    "Each exact treatmentReferenceId has exactly one primaryLearnerEntryId below.",
+    "Family/topic records may link related entries but must not cause duplicate browse cards unless the product deliberately renders a relationship view.",
+    "Score, fishing, exposure and winning-method facts are always derived from the exact treatment projection, never from authored learner prose.",
+    "Batch-1 evidence is joined by entryId from batch1Evidence; later batches embed evidenceBindings directly.",
+    "The finalEntryOverrides in this manifest supersede research-batch fields where present. No other semantic overlay is permitted.",
+    "Proof examples and generator examples are content assets, not existing scorer routes unless explicitly classified as existing-scorer-example."
+  ],
+  "finalEntryOverrides": {
+    "pair-hand-family": {
+      "treatmentReferenceIds": [
+        "bmja@1.0:all-pair-honours",
+        "western-tm@0.1:all-pair-honours",
+        "outside-the-box@0.1:all-pair-honours",
+        "western-tm@0.1:seven-pairs-one-suit-with-honours",
+        "outside-the-box@0.1:seven-pairs-one-suit-with-honours",
+        "western-tm@0.1:seven-pairs-one-suit",
+        "outside-the-box@0.1:seven-pairs-one-suit",
+        "western-tm@0.1:seven-pairs-all-from-wall"
+      ],
+      "variantTreatmentReferenceIds": {
+        "all-pair-honours": [
+          "bmja@1.0:all-pair-honours",
+          "western-tm@0.1:all-pair-honours",
+          "outside-the-box@0.1:all-pair-honours"
+        ],
+        "all-pair-western": [
+          "western-tm@0.1:seven-pairs-one-suit-with-honours",
+          "outside-the-box@0.1:seven-pairs-one-suit-with-honours"
+        ],
+        "heavenly-twins": [
+          "western-tm@0.1:seven-pairs-one-suit",
+          "outside-the-box@0.1:seven-pairs-one-suit"
+        ],
+        "seven-twins": [
+          "western-tm@0.1:seven-pairs-all-from-wall"
+        ]
+      }
+    },
+    "hovering-angel": {
+      "facets": [
+        "ordinary-grouped",
+        "multiple-suits",
+        "chow-involving",
+        "winds",
+        "dragons",
+        "pairs"
+      ]
+    },
+    "windy-ones": {
+      "addFacets": [
+        "hybrid-layout"
+      ]
+    },
+    "windy-nines": {
+      "addFacets": [
+        "hybrid-layout"
+      ]
+    },
+    "windy-chow": {
+      "addFacets": [
+        "hybrid-layout"
+      ]
+    },
+    "dragonfly": {
+      "removeFacets": [
+        "ordinary-grouped"
+      ],
+      "addFacets": [
+        "hybrid-layout"
+      ]
+    },
+    "wriggly-dragon": {
+      "addFacets": [
+        "pairs"
+      ]
+    }
+  },
+  "treatmentOwnership": {
+    "bmja@1.0:knitting": "knitting-reviewed",
+    "bmja@1.0:triple-knitting": "triple-knitting-reviewed",
+    "bmja@1.0:all-pair-honours": "pair-hand-family",
+    "bmja@1.0:imperial-jade": "imperial-jade",
+    "bmja@1.0:thirteen-unique-wonders": "thirteen-unique-wonders",
+    "bmja@1.0:gates-of-heaven": "gates-family",
+    "bmja@1.0:wriggling-snake": "wriggling-snake-family",
+    "bmja@1.0:all-winds-and-dragons": "all-winds-and-dragons",
+    "bmja@1.0:heads-and-tails": "heads-and-tails",
+    "bmja@1.0:fourfold-plenty": "fourfold-plenty",
+    "bmja@1.0:three-great-scholars": "three-dragon-specials-family",
+    "bmja@1.0:four-blessings": "four-blessings",
+    "bmja@1.0:buried-treasure": "buried-treasure",
+    "bmja@1.0:heavens-blessing": "heavens-blessing-original-hand",
+    "bmja@1.0:earths-blessing": "earths-blessing-bmja",
+    "bmja@1.0:gathering-plum-blossom": "gathering-plum-blossom-bmja",
+    "bmja@1.0:plucking-moon": "plucking-moon-bmja",
+    "bmja@1.0:twofold-fortune": "twofold-fortune-bmja",
+    "outside-the-box@0.1:buried-treasure": "buried-treasure",
+    "outside-the-box@0.1:imperial-jade": "imperial-jade",
+    "outside-the-box@0.1:heads-and-tails": "heads-and-tails",
+    "outside-the-box@0.1:all-winds-and-dragons": "all-winds-and-dragons",
+    "outside-the-box@0.1:club-three-great-scholars": "three-dragon-specials-family",
+    "outside-the-box@0.1:four-blessings": "four-blessings",
+    "outside-the-box@0.1:fourfold-plenty": "fourfold-plenty",
+    "outside-the-box@0.1:knitting": "knitting-reviewed",
+    "outside-the-box@0.1:triple-knitting": "triple-knitting-reviewed",
+    "outside-the-box@0.1:all-pair-honours": "pair-hand-family",
+    "outside-the-box@0.1:thirteen-unique-wonders": "thirteen-unique-wonders",
+    "outside-the-box@0.1:wriggling-snake": "wriggling-snake-family",
+    "outside-the-box@0.1:seven-pairs-one-suit-with-honours": "pair-hand-family",
+    "outside-the-box@0.1:seven-pairs-one-suit": "pair-hand-family",
+    "outside-the-box@0.1:all-pair-ruby-jade": "all-pair-ruby-jade",
+    "outside-the-box@0.1:four-bamboo-one-and-five-green-bamboo-pairs": "sparrows-sanctuary",
+    "outside-the-box@0.1:own-wind-meld-with-dragon-pair-and-three-suit-chows": "hovering-angel",
+    "outside-the-box@0.1:three-four-tile-suit-runs-with-honour-pair": "big-robert-family",
+    "outside-the-box@0.1:three-matching-four-tile-suit-runs-with-honour-pair": "big-robert-family",
+    "outside-the-box@0.1:wriggling-snake-any-pair": "wriggling-snake-family",
+    "outside-the-box@0.1:windfall": "windfall",
+    "outside-the-box@0.1:wind-pair-with-three-suit-rank-one-melds": "windy-ones",
+    "outside-the-box@0.1:wind-pair-with-three-suit-rank-nine-melds": "windy-nines",
+    "outside-the-box@0.1:wind-pair-with-three-suit-chows": "windy-chow",
+    "outside-the-box@0.1:hachi-ban": "hachi-ban",
+    "outside-the-box@0.1:three-dragon-singles-with-one-meld-in-each-suit-and-suited-pair": "dragonfly",
+    "outside-the-box@0.1:dragon-pair-with-five-suited-pairs": "dragons-breath",
+    "outside-the-box@0.1:wriggly-dragon": "wriggly-dragon",
+    "outside-the-box@0.1:green-dragon-pung-with-bamboo-melds": "green-jade",
+    "outside-the-box@0.1:red-dragon-pung-with-character-melds": "red-coral",
+    "outside-the-box@0.1:white-dragon-pung-with-circle-melds": "white-opal",
+    "outside-the-box@0.1:run-one-to-nine-with-same-suit-pung-and-pair": "run-pung-pair",
+    "outside-the-box@0.1:run-one-to-nine-with-honour-pung-and-suited-pair": "grand-sequence-family",
+    "buzzard-2000@0.1:all-winds-and-dragons": "buzzard-all-winds-dragons",
+    "buzzard-2000@0.1:three-winds-and-fourth-wind-pair": "buzzard-three-winds-pair",
+    "buzzard-2000@0.1:heavens-blessing": "heavens-blessing-original-hand",
+    "buzzard-2000@0.1:earths-blessing": "buzzard-east-first-discard",
+    "buzzard-2000@0.1:heads-and-tails": "buzzard-all-ones-nines",
+    "buzzard-2000@0.1:buzzard-three-dragons-winner": "three-dragon-specials-family",
+    "buzzard-2000@0.1:four-concealed-pung-kong-hand": "buzzard-concealed-pungs-kongs",
+    "buzzard-2000@0.1:thirteen-unique-wonders": "thirteen-unique-wonders",
+    "buzzard-2000@0.1:one-suit-nine-gates-any-completion": "gates-family",
+    "buzzard-2000@0.1:east-thirteenth-consecutive-mahjong": "buzzard-east-thirteenth-consecutive-mahjong",
+    "western-tm@0.1:three-great-scholars": "three-dragon-specials-family",
+    "western-tm@0.1:thirteen-unique-wonders": "thirteen-unique-wonders",
+    "western-tm@0.1:all-pair-honours": "pair-hand-family",
+    "western-tm@0.1:four-blessings": "four-blessings",
+    "western-tm@0.1:all-winds-and-dragons": "all-winds-and-dragons",
+    "western-tm@0.1:heads-and-tails": "heads-and-tails",
+    "western-tm@0.1:two-suit-knitting": "knitting-reviewed",
+    "western-tm@0.1:three-suit-knitting-with-pair": "triple-knitting-reviewed",
+    "western-tm@0.1:green-dragon-meld-with-green-bamboo-melds-and-pair-one-chow": "imperial-jade",
+    "western-tm@0.1:wriggling-snake-any-pair": "wriggling-snake-family",
+    "western-tm@0.1:western-gates-of-heaven": "gates-family",
+    "western-tm@0.1:seven-pairs-one-suit-with-honours": "pair-hand-family",
+    "western-tm@0.1:seven-pairs-one-suit": "pair-hand-family",
+    "western-tm@0.1:seven-pairs-all-from-wall": "pair-hand-family",
+    "western-tm@0.1:all-pair-ruby-jade": "all-pair-ruby-jade",
+    "western-tm@0.1:four-bamboo-one-and-five-green-bamboo-pairs": "sparrows-sanctuary",
+    "western-tm@0.1:own-wind-meld-with-dragon-pair-and-three-suit-chows": "hovering-angel",
+    "western-tm@0.1:three-four-tile-suit-runs-with-honour-pair": "big-robert-family",
+    "western-tm@0.1:three-matching-four-tile-suit-runs-with-honour-pair": "big-robert-family",
+    "western-tm@0.1:windfall": "windfall",
+    "western-tm@0.1:wind-pair-with-three-suit-rank-one-melds": "windy-ones",
+    "western-tm@0.1:wind-pair-with-three-suit-rank-nine-melds": "windy-nines",
+    "western-tm@0.1:wind-pair-with-three-suit-chows": "windy-chow",
+    "western-tm@0.1:hachi-ban": "hachi-ban",
+    "western-tm@0.1:three-dragon-singles-with-one-meld-in-each-suit-and-suited-pair": "dragonfly",
+    "western-tm@0.1:dragon-pair-with-five-suited-pairs": "dragons-breath",
+    "western-tm@0.1:wriggly-dragon": "wriggly-dragon",
+    "western-tm@0.1:green-dragon-pung-with-bamboo-melds": "green-jade",
+    "western-tm@0.1:red-dragon-pung-with-character-melds": "red-coral",
+    "western-tm@0.1:white-dragon-pung-with-circle-melds": "white-opal",
+    "western-tm@0.1:run-one-to-nine-with-same-suit-pung-and-pair": "run-pung-pair",
+    "western-tm@0.1:run-one-to-nine-with-honour-pung-and-any-pair": "grand-sequence-family",
+    "western-tm@0.1:suit-run-one-to-seven-with-winds-and-dragon-pung": "gretas-run-family",
+    "western-tm@0.1:full-suit-run-with-dragon-singles-and-wind-pair": "dragons-run-western",
+    "western-tm@0.1:two-suit-pairs-and-chows-one-two-five-six-nine": "yin-yang-western",
+    "western-tm@0.1:three-suit-chows-with-suited-meld-and-pair": "little-robert-western",
+    "western-tm@0.1:circle-chows-with-one-two-three-four-five-six-seven-eight-nine": "moon-bottom-well-western",
+    "western-tm@0.1:wind-pair-with-three-suit-one-two-three-chows": "wind-pair-chow-family-western",
+    "western-tm@0.1:wind-pair-with-three-suit-seven-eight-nine-chows": "wind-pair-chow-family-western",
+    "western-tm@0.1:dragonette": "dragonette-western",
+    "western-tm@0.1:run-two-to-eight-with-one-and-nine-pungs": "western-gates-named-topic",
+    "western-tm@0.1:full-suit-run-with-five-distinct-honours": "five-odd-honours-western",
+    "western-tm@0.1:suit-run-one-to-seven-with-all-honours": "gretas-run-family",
+    "western-tm@0.1:purity-one-chow": "purity-western-calculated",
+    "western-tm@0.1:east-wind-meld-white-dragon-pair-three-suit-nonterminal-melds": "sunrise-sunset-family",
+    "western-tm@0.1:white-dragon-meld-red-dragon-pair-three-suit-nonterminal-melds": "sunrise-sunset-family",
+    "western-tm@0.1:honours-and-one-suit-terminals-pung-kong-hand": "all-honour-hand-western",
+    "western-tm@0.1:one-suit-with-honours-mostly-pung-kong-hand": "ordinary-mah-jong-western",
+    "western-tm@0.1:golden-gates": "western-gates-named-topic",
+    "western-tm@0.1:run-one-to-nine-with-wind-pung-and-pair": "one-nine-run-honour-family-western",
+    "western-tm@0.1:run-one-to-nine-with-dragon-pung-and-pair": "one-nine-run-honour-family-western",
+    "western-tm@0.1:full-suit-run-with-honour-pung-and-opposite-honour-pair": "one-nine-run-honour-family-western",
+    "western-tm@0.1:all-pair-green-dragon-and-bamboo": "all-pair-jade-western",
+    "western-tm@0.1:four-wind-pairs-with-two-dragon-melds": "windy-dragons-western",
+    "western-tm@0.1:one-suit-odd-melds": "rank-parity-family-western",
+    "western-tm@0.1:two-odd-suits-and-one-even-suit": "rank-parity-family-western",
+    "western-tm@0.1:four-chows-three-suits-one-two-one": "robin-western",
+    "western-tm@0.1:parallel-suit-rank-melds-with-honours": "numbers-in-parallel-western",
+    "western-tm@0.1:two-to-eight-run-pair-with-terminal-meld-and-corresponding-dragon-meld": "western-gates-named-topic",
+    "western-tm@0.1:green-dragon-pung-with-blue-circle-melds": "dragon-suit-colour-topic-western",
+    "western-tm@0.1:white-dragon-meld-with-even-circle-melds": "dragon-suit-colour-topic-western",
+    "western-tm@0.1:white-dragon-pung-with-odd-character-melds": "dragon-suit-colour-topic-western",
+    "western-tm@0.1:red-dragon-pung-with-even-character-melds": "dragon-suit-colour-topic-western",
+    "western-tm@0.1:green-and-white-dragon-melds-with-green-bamboo": "dragon-suit-colour-topic-western",
+    "western-tm@0.1:red-and-green-dragon-pungs-with-three-suits": "dragon-suit-colour-topic-western",
+    "western-tm@0.1:red-dragon-meld-with-red-bamboo-melds": "dragon-suit-colour-topic-western",
+    "western-tm@0.1:red-and-white-dragon-melds-with-red-bamboo": "dragon-suit-colour-topic-western",
+    "western-tm@0.1:red-and-green-dragon-melds-with-bamboo": "dragon-suit-colour-topic-western",
+    "western-tm@0.1:wind-pair-with-one-meld-in-each-suit": "wind-pair-three-suit-meld-topic-western",
+    "western-tm@0.1:wind-pair-with-three-suit-rank-three-melds": "wind-pair-three-suit-meld-topic-western",
+    "western-tm@0.1:wind-pair-with-three-suit-rank-seven-melds": "wind-pair-three-suit-meld-topic-western",
+    "western-tm@0.1:red-white-dragon-pungs-with-seven-tile-character-or-circle-run-pair": "dragons-teeth-western",
+    "western-tm@0.1:four-chows-three-suits-with-own-wind-pair": "little-brother-western",
+    "western-tm@0.1:two-suit-runs-one-to-seven": "gerties-garter-western",
+    "western-tm@0.1:green-dragon-pung-white-dragon-pair-three-circle-melds": "dragon-suit-colour-topic-western",
+    "western-tm@0.1:two-ranks-doubled-across-two-suits-with-honour-pair": "numbers-doubled-western",
+    "western-tm@0.1:north-south-wind-melds-with-1861-and-1865-two-suit-layout": "civil-war-western",
+    "western-tm@0.1:one-to-seven-run-pair-with-red-dragon-and-own-wind-melds": "red-lantern-western",
+    "western-tm@0.1:three-suit-chows-with-mixed-chow-and-suited-pair": "mixed-chow-family-western",
+    "western-tm@0.1:four-mixed-chows-with-mixed-pair": "mixed-chow-family-western",
+    "western-tm@0.1:white-dragon-meld-green-dragon-pair-with-three-mixed-chows": "mixed-chow-family-western",
+    "western-tm@0.1:three-mixed-chows-three-dragon-singles-own-wind-pair": "mixed-chow-family-western",
+    "western-tm@0.1:four-concealed-chows-one-suit-from-wall": "chow-chow-western",
+    "western-tm@0.1:four-winds-with-one-two-two-fours-three-sixes-four-eights": "up-down-you-go-family-western",
+    "western-tm@0.1:four-winds-with-four-twos-three-fours-two-sixes-one-eight": "up-down-you-go-family-western"
+  },
+  "exampleClassifications": {
+    "existingScorerExampleIds": [
+      "all-pair-honours",
+      "all-winds-and-dragons",
+      "heads-and-tails",
+      "fourfold-plenty",
+      "three-great-scholars",
+      "four-blessings",
+      "buried-treasure",
+      "imperial-jade",
+      "knitting",
+      "triple-knitting",
+      "thirteen-unique-wonders",
+      "gates-of-heaven",
+      "wriggling-snake",
+      "heavens-blessing",
+      "earths-blessing",
+      "gathering-the-plum-blossom-from-the-roof",
+      "plucking-the-moon-from-the-bottom-of-the-sea",
+      "twofold-fortune"
+    ],
+    "proofExamplePolicy": "All other authored examples are knowledge assets only until the implementation slice promotes them into the runtime example registry and proves that the exact target profile accepts them.",
+    "generatorPolicy": "tile-hand-generator examples must be materialised from the referenced canonical predicate/source constraint; do not manually substitute a guessed tile mapping."
+  },
+  "unresolvedTreatmentReferenceIds": []
+}

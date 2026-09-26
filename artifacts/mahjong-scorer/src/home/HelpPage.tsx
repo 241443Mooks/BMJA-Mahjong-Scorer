@@ -43,7 +43,7 @@ const groups: HelpGroup[] = [
       {
         id: 'start-game',
         question: 'How do I start a complete game?',
-        answer: 'Open Score a game, enter the four players, then score each hand as you play.',
+        answer: 'Open Track a game, enter the four players, choose the rules for the table, then score each hand as you play.',
         detail: 'Each player can use the detailed hand scorer or simply type a numeric score. Confirmed hands are added to the ledger, which drives settlement, running balances and the final game record.',
       },
       {
@@ -136,7 +136,7 @@ const groups: HelpGroup[] = [
         id: 'special-name',
         question: 'Do I need to know the name of the special hand first?',
         answer: 'Usually, no.',
-        detail: 'Where the entered evidence is sufficient, the scorer detects supported special-hand patterns from the tiles and context. The British Special hands page remains available as a separate reference catalogue.',
+        detail: 'Where the entered evidence is sufficient, the scorer detects supported special-hand patterns from the tiles and context. The Special hands page is currently a British-focused reference catalogue while the wider reference experience is being expanded.',
       },
       {
         id: 'special-fishing',
@@ -191,9 +191,21 @@ const groups: HelpGroup[] = [
   },
   {
     title: 'Rules, trust and privacy',
-    description: 'Understand what the scorer knows, what it does not infer and where your data lives.',
+    description: 'Choose the right rules, find the right reference material, and understand what the scorer does and does not infer.',
     icon: ShieldCheck,
     items: [
+      {
+        id: 'choose-rules',
+        question: 'Where do I choose or change the rules?',
+        answer: 'Choose the rules profile in the game or hand-scoring flow you are using.',
+        detail: 'For a new game, choose the table’s rules during setup. For a standalone hand, use the rules selector in the scorer. The Rules hub explains the supported profiles before you choose. An in-progress game keeps the rules selected for that game unless you explicitly start a different flow.',
+      },
+      {
+        id: 'find-rules-learning',
+        question: 'Where do I find rules, examples and learning material?',
+        answer: 'Use Rules for supported profiles and Learn for gameplay, scoring, special hands and worked examples.',
+        detail: 'The Rules hub is the best starting point when you are not sure which profile matches your table. British learning pages remain the fullest learning set today; profile-aware learning and wider cross-rules reference material are being expanded separately.',
+      },
       {
         id: 'disagreement',
         question: 'What if the scorer and our table disagree?',
@@ -204,7 +216,7 @@ const groups: HelpGroup[] = [
         id: 'ruleset',
         question: 'Does this support every form of Mahjong?',
         answer: 'No. It supports selected rules profiles, not every form of Mahjong.',
-        detail: 'British / BMJA-style support is stable. Western — Thompson & Maloney scoring is available provisionally while ordinary play, scoring, settlement and progression remain under source review. Club rules use a configured local profile. It is not a universal Mahjong rules engine and does not cover every Mahjong family or house rule; see the supported rules hub if you are unsure which profile applies.',
+        detail: 'The current product exposes five selectable profiles: British / BMJA-style, provisional Western — Thompson & Maloney, a configured Club profile, source-backed Buzzard 2000, and provisional MCR / WMO 2006. Their scope and maturity differ, so use the supported Rules hub to see the current boundary for each profile.',
       },
       {
         id: 'account',
@@ -274,7 +286,7 @@ export function HelpPage() {
               Use Mahjong Reference at the table without hunting for instructions.
             </h1>
             <p className="mt-5 max-w-[760px] text-[15px] leading-7 text-[#596b65]">
-              Search a question or browse by task. This guide covers game tracking, hand scoring, settlement, recovery and saving across the supported Table Companion workflows; rules-specific learning stays in the Rules and Learn areas.
+              Search a question or browse by task. This guide covers game tracking, hand scoring, choosing rules, settlement, recovery and saving across the supported Table Companion workflows; rules-specific learning stays in the Rules and Learn areas.
             </p>
             <div className="mt-5 flex flex-col gap-3 sm:flex-row">
               <a href="/game" className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md bg-[#284d45] px-4 text-[12px] font-semibold text-[#f8f4e9] transition hover:bg-[#23443d] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249] focus-visible:ring-offset-2">Track a game <ArrowRight size={14} aria-hidden="true" /></a>
@@ -288,7 +300,7 @@ export function HelpPage() {
                 type="search"
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
-                placeholder="Try “partial hand”, “winning tile”, “save game”…"
+                placeholder="Try “change rules”, “partial hand”, “winning tile”, “save game”…"
                 className="min-w-0 flex-1 bg-transparent text-[13px] text-[#284d45] outline-none placeholder:text-[#8a8779]"
               />
             </label>
@@ -348,7 +360,7 @@ export function HelpPage() {
                 <AlertTriangle size={21} className="mx-auto text-[#ae6249]" />
                 <h2 className="mt-3 font-serif text-[24px] text-[#284d45]">No matching help answer yet</h2>
                 <p className="mx-auto mt-2 max-w-[560px] text-[12px] leading-6 text-[#66746e]">
-                  Try a shorter phrase such as “partial”, “Kong”, “settlement” or “save”. You can also use the supported rules hub or the explicitly British learning material below.
+                  Try a shorter phrase such as “rules”, “partial”, “Kong”, “settlement” or “save”. You can also use the supported Rules hub or the learning material below.
                 </p>
               </div>
             )}
@@ -359,9 +371,9 @@ export function HelpPage() {
             <div className="mt-5 grid gap-3 md:grid-cols-2 lg:grid-cols-4">
               {[
                 ['/guide', BookOpen, 'British scoring guide', 'Learn British points, doubles and scoring progressively.'],
-                ['/special-hands', Sparkles, 'British special hands', 'Browse the British visual special-hand catalogue.'],
-                ['/rules', CircleHelp, 'Supported rules', 'See British stable, Western provisional and Club configured support.'],
-                ['/how-it-works', CircleHelp, 'How the Table Companion works', 'See the product model from context and evidence through score, settlement and record.'],
+                ['/special-hands', Sparkles, 'British special hands', 'Browse the current British visual special-hand catalogue.'],
+                ['/rules', CircleHelp, 'Supported rules', 'See all five current profiles and the support boundary for each one.'],
+                ['/how-it-works', CircleHelp, 'How the Table Companion works', 'See the current product flow from rules and evidence through score, settlement and record.'],
               ].map(([href, Icon, title, description]) => {
                 const LinkIcon = Icon as typeof BookOpen;
                 return (

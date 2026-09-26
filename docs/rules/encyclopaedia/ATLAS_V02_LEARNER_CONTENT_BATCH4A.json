@@ -1,0 +1,484 @@
+{
+  "schemaVersion": "0.1-proof-batch4a",
+  "status": "docs-scoped source-certified Western learner content; not runtime authority",
+  "base": "efe2cec955f973a28a5e982160f3b6e39593606a",
+  "sourceAuthority": {
+    "path": "docs/rules/TM_COMPANION_CATALOGUE_INDEX.md",
+    "status": "catalogue-complete-source-certified-for-implemented-companion-facts"
+  },
+  "scoreAuthority": "derive from exact western-tm@0.1 treatment referenceId",
+  "examples": [
+    {
+      "id": "example-gretas-dragon",
+      "kind": "tile-hand",
+      "source": { "type": "structured-proof", "looseTiles": ["1-bamboo", "2-bamboo", "3-bamboo", "4-bamboo", "5-bamboo", "6-bamboo", "7-bamboo", "east-wind", "south-wind", "west-wind", "north-wind"], "groups": [{ "kind": "pung", "tile": "red-dragon" }] },
+      "scope": "one-valid-example",
+      "visibleExplanation": "A 1-7 run in one suit, all four Winds, and a Dragon Pung/Kong.",
+      "accessibleDescription": "Example Greta's Dragon hand: 1 through 7 Bamboo, East, South, West and North Winds, and a Pung of Red Dragons."
+    },
+    {
+      "id": "example-gretas-garden",
+      "kind": "tile-hand",
+      "source": { "type": "structured-proof", "looseTiles": ["1-circles", "2-circles", "3-circles", "4-circles", "5-circles", "6-circles", "7-circles", "east-wind", "south-wind", "west-wind", "north-wind", "red-dragon", "green-dragon", "white-dragon"] },
+      "scope": "fixed-structure-example",
+      "visibleExplanation": "A 1-7 run in one suit plus all four Winds and all three Dragons.",
+      "accessibleDescription": "Example Greta's Garden hand: 1 through 7 Circles, all four Winds, and Red, Green and White Dragons."
+    },
+    {
+      "id": "example-dragons-run",
+      "kind": "tile-hand",
+      "source": { "type": "structured-proof", "looseTiles": ["1-characters", "2-characters", "3-characters", "4-characters", "5-characters", "6-characters", "7-characters", "8-characters", "9-characters", "red-dragon", "green-dragon", "white-dragon", "east-wind", "east-wind"] },
+      "scope": "one-valid-example",
+      "visibleExplanation": "A complete 1-9 run in one suit, one of each Dragon, and a Wind pair.",
+      "accessibleDescription": "Example Dragon's Run hand: 1 through 9 Characters, one Red, Green and White Dragon, and a pair of East Winds."
+    },
+    {
+      "id": "example-yin-yang",
+      "kind": "tile-hand",
+      "source": { "type": "structured-proof", "looseGroups": [["1-bamboo", "1-bamboo", "2-bamboo", "3-bamboo", "4-bamboo", "5-bamboo", "5-bamboo"], ["5-circles", "5-circles", "6-circles", "7-circles", "8-circles", "9-circles", "9-circles"]] },
+      "scope": "fixed-layout-example",
+      "visibleExplanation": "Two complementary seven-tile suit blocks: 11, 234, 55 in one suit and 55, 678, 99 in another.",
+      "accessibleDescription": "Example Yin Yang hand: Bamboo 11, 234 and 55; Circles 55, 678 and 99."
+    },
+    {
+      "id": "example-little-robert",
+      "kind": "tile-hand",
+      "source": { "type": "structured-proof", "groups": [{ "kind": "chow", "tiles": ["1-bamboo", "2-bamboo", "3-bamboo"] }, { "kind": "chow", "tiles": ["4-circles", "5-circles", "6-circles"] }, { "kind": "chow", "tiles": ["7-characters", "8-characters", "9-characters"] }, { "kind": "pung", "tile": "5-bamboo" }, { "kind": "pair", "tile": "2-circles" }] },
+      "scope": "one-valid-example",
+      "visibleExplanation": "One Chow in each suit, plus a suited Pung/Kong and a suited pair.",
+      "accessibleDescription": "Example Little Robert hand: 1-2-3 Bamboo, 4-5-6 Circles and 7-8-9 Characters Chows, a Pung of 5 Bamboo, and a pair of 2 Circles."
+    },
+    {
+      "id": "example-moon-bottom-well",
+      "kind": "tile-hand",
+      "source": { "type": "structured-proof", "groups": [{ "kind": "chow", "tiles": ["1-circles", "2-circles", "3-circles"] }, { "kind": "chow", "tiles": ["3-circles", "4-circles", "5-circles"] }, { "kind": "chow", "tiles": ["4-circles", "5-circles", "6-circles"] }, { "kind": "chow", "tiles": ["7-circles", "8-circles", "9-circles"] }, { "kind": "pair", "tile": "5-circles" }] },
+      "scope": "one-valid-example",
+      "visibleExplanation": "Four Circle Chows and a Circle pair, including 123, 456 and 789.",
+      "accessibleDescription": "Example Moon at Bottom of Well hand: Circle Chows 1-2-3, 3-4-5, 4-5-6 and 7-8-9, plus a pair of 5 Circles."
+    },
+    {
+      "id": "example-chop-suey",
+      "kind": "tile-hand",
+      "source": { "type": "structured-proof", "groups": [{ "kind": "chow", "tiles": ["1-bamboo", "2-bamboo", "3-bamboo"] }, { "kind": "chow", "tiles": ["1-circles", "2-circles", "3-circles"] }, { "kind": "chow", "tiles": ["1-characters", "2-characters", "3-characters"] }], "looseTiles": ["east-wind", "east-wind", "south-wind", "west-wind", "north-wind"] },
+      "scope": "one-valid-example",
+      "visibleExplanation": "123 Chow in each suit plus all four Winds, with one Wind paired.",
+      "accessibleDescription": "Example Chop Suey hand: 1-2-3 Chows in Bamboo, Circles and Characters, plus East, South, West and North Winds with East duplicated as the pair."
+    },
+    {
+      "id": "example-chow-mein",
+      "kind": "tile-hand",
+      "source": { "type": "structured-proof", "groups": [{ "kind": "chow", "tiles": ["7-bamboo", "8-bamboo", "9-bamboo"] }, { "kind": "chow", "tiles": ["7-circles", "8-circles", "9-circles"] }, { "kind": "chow", "tiles": ["7-characters", "8-characters", "9-characters"] }], "looseTiles": ["south-wind", "east-wind", "south-wind", "west-wind", "north-wind"] },
+      "scope": "one-valid-example",
+      "visibleExplanation": "789 Chow in each suit plus all four Winds, with one Wind paired.",
+      "accessibleDescription": "Example Chow Mein hand: 7-8-9 Chows in Bamboo, Circles and Characters, plus East, South, West and North Winds with South duplicated as the pair."
+    },
+    {
+      "id": "example-dragonette",
+      "kind": "tile-hand",
+      "source": { "type": "structured-proof", "looseTiles": ["east-wind", "south-wind", "west-wind", "north-wind", "red-dragon", "red-dragon", "green-dragon", "white-dragon", "2-bamboo", "2-bamboo", "4-bamboo", "4-bamboo", "6-bamboo", "6-bamboo"] },
+      "scope": "one-valid-example",
+      "visibleExplanation": "All four Winds, all three Dragons with one Dragon paired, and three non-terminal pairs in one suit.",
+      "accessibleDescription": "Example Dragonette hand: East, South, West and North Winds; a pair of Red Dragons plus single Green and White Dragons; and pairs of 2, 4 and 6 Bamboo."
+    },
+    {
+      "id": "example-confused-gates",
+      "kind": "tile-hand",
+      "source": { "type": "structured-proof", "looseGroups": [["2-bamboo", "3-bamboo", "4-bamboo", "5-bamboo", "5-bamboo", "6-bamboo", "7-bamboo", "8-bamboo"], ["1-circles", "1-circles", "1-circles"], ["9-characters", "9-characters", "9-characters"]] },
+      "scope": "one-valid-example",
+      "visibleExplanation": "A 2-8 run with one rank paired, plus a Pung of 1s in another suit and a Pung of 9s in the third.",
+      "accessibleDescription": "Example Confused Gates hand: Bamboo 2 through 8 with 5 Bamboo duplicated, a Pung of 1 Circles, and a Pung of 9 Characters."
+    },
+    {
+      "id": "example-golden-gates-generator",
+      "kind": "tile-hand-generator",
+      "source": { "type": "runtime-constrained-generator", "patternId": "golden-gates", "constraints": ["choose one numbered suit", "make pairs of 2,4,6,8 in that suit", "choose the source/runtime-valid 1-or-9 Pung/Kong for that suit", "use the corresponding Dragon Pung/Kong defined by the executable predicate"] },
+      "scope": "generator-constraint",
+      "visibleExplanation": "Pairs of 2, 4, 6 and 8 in one suit, plus its qualifying terminal Pung/Kong and corresponding Dragon Pung/Kong.",
+      "accessibleDescription": "Golden Gates example: pairs of 2, 4, 6 and 8 in one suit, with a terminal Pung or Kong and its matching Dragon Pung or Kong.",
+      "referenceNote": "Do not hard-code a suit-to-Dragon correspondence in learner prose; derive the concrete example from the hand rule/source mapping during implementation."
+    },
+    {
+      "id": "example-dragons-gates-generator",
+      "kind": "tile-hand-generator",
+      "source": { "type": "runtime-constrained-generator", "patternId": "two-to-eight-run-pair-with-terminal-meld-and-corresponding-dragon-meld", "constraints": ["choose one numbered suit for a 2-8 run plus duplicated run rank", "add a same-suit 1-or-9 Pung/Kong permitted by the predicate", "add the corresponding Dragon Pung/Kong"] },
+      "scope": "generator-constraint",
+      "visibleExplanation": "A 2-8 run and pair, plus a same-suit terminal Pung/Kong and its corresponding Dragon Pung/Kong.",
+      "accessibleDescription": "Dragon’s Gates example: a 2 to 8 run in one suit with one tile paired, plus a 1 or 9 Pung or Kong and its matching Dragon Pung or Kong.",
+      "referenceNote": "The exact suit and Dragon pairing is not clear in the available reference, so no tile example is shown."
+    },
+    {
+      "id": "example-five-odd-honours",
+      "kind": "tile-hand",
+      "source": { "type": "structured-proof", "looseTiles": ["1-bamboo", "2-bamboo", "3-bamboo", "4-bamboo", "5-bamboo", "6-bamboo", "7-bamboo", "8-bamboo", "9-bamboo", "east-wind", "south-wind", "west-wind", "red-dragon", "green-dragon"] },
+      "scope": "one-valid-example",
+      "visibleExplanation": "A 1-9 run in one suit plus five different Winds or Dragons.",
+      "accessibleDescription": "Example Five Odd Honours hand: 1 through 9 Bamboo, East, South and West Winds, and Red and Green Dragons."
+    },
+    {
+      "id": "example-sunrise",
+      "kind": "tile-hand",
+      "source": { "type": "structured-proof", "groups": [{ "kind": "pung", "tile": "east-wind" }, { "kind": "pung", "tile": "2-bamboo" }, { "kind": "pung", "tile": "4-circles" }, { "kind": "pung", "tile": "6-characters" }, { "kind": "pair", "tile": "white-dragon" }] },
+      "scope": "one-valid-example",
+      "visibleExplanation": "East Wind Pung/Kong, White Dragon pair, and a non-terminal Pung/Kong in each suit.",
+      "accessibleDescription": "Example Sunrise hand: a Pung of East Winds, a pair of White Dragons, and Pungs of 2 Bamboo, 4 Circles and 6 Characters."
+    },
+    {
+      "id": "example-sunset",
+      "kind": "tile-hand",
+      "source": { "type": "structured-proof", "groups": [{ "kind": "pung", "tile": "white-dragon" }, { "kind": "pung", "tile": "2-bamboo" }, { "kind": "pung", "tile": "4-circles" }, { "kind": "pung", "tile": "6-characters" }, { "kind": "pair", "tile": "red-dragon" }] },
+      "scope": "one-valid-example",
+      "visibleExplanation": "White Dragon Pung/Kong, Red Dragon pair, and a non-terminal Pung/Kong in each suit.",
+      "accessibleDescription": "Example Sunset hand: a Pung of White Dragons, a pair of Red Dragons, and Pungs of 2 Bamboo, 4 Circles and 6 Characters."
+    },
+    {
+      "id": "example-guardian-winds",
+      "kind": "tile-hand",
+      "source": { "type": "structured-proof", "groups": [{ "kind": "chow", "tiles": ["1-circles", "2-circles", "3-circles"] }, { "kind": "chow", "tiles": ["4-circles", "5-circles", "6-circles"] }, { "kind": "chow", "tiles": ["7-circles", "8-circles", "9-circles"] }, { "kind": "pung", "tile": "east-wind" }, { "kind": "pair", "tile": "south-wind" }] },
+      "scope": "one-valid-example",
+      "visibleExplanation": "A complete 1-9 run plus a Wind Pung/Kong and Wind pair.",
+      "accessibleDescription": "Example Guardian Winds hand: Circles Chows 1-2-3, 4-5-6 and 7-8-9, a Pung of East Winds, and a pair of South Winds."
+    },
+    {
+      "id": "example-guardian-dragons",
+      "kind": "tile-hand",
+      "source": { "type": "structured-proof", "groups": [{ "kind": "chow", "tiles": ["1-bamboo", "2-bamboo", "3-bamboo"] }, { "kind": "chow", "tiles": ["4-bamboo", "5-bamboo", "6-bamboo"] }, { "kind": "chow", "tiles": ["7-bamboo", "8-bamboo", "9-bamboo"] }, { "kind": "pung", "tile": "red-dragon" }, { "kind": "pair", "tile": "green-dragon" }] },
+      "scope": "one-valid-example",
+      "visibleExplanation": "A complete 1-9 run plus a Dragon Pung/Kong and Dragon pair.",
+      "accessibleDescription": "Example Guardian Dragons hand: Bamboo Chows 1-2-3, 4-5-6 and 7-8-9, a Pung of Red Dragons, and a pair of Green Dragons."
+    },
+    {
+      "id": "example-dragons-tail",
+      "kind": "tile-hand",
+      "source": { "type": "structured-proof", "groups": [{ "kind": "chow", "tiles": ["1-characters", "2-characters", "3-characters"] }, { "kind": "chow", "tiles": ["4-characters", "5-characters", "6-characters"] }, { "kind": "chow", "tiles": ["7-characters", "8-characters", "9-characters"] }, { "kind": "pung", "tile": "west-wind" }, { "kind": "pair", "tile": "white-dragon" }] },
+      "scope": "one-valid-example",
+      "visibleExplanation": "A complete 1-9 run with a Wind Pung/Kong and Dragon pair, or the reverse honour roles.",
+      "accessibleDescription": "Example Dragon's Tail hand: Characters Chows 1-2-3, 4-5-6 and 7-8-9, a Pung of West Winds, and a pair of White Dragons. The source also permits the Wind/Dragon roles reversed."
+    },
+    {
+      "id": "example-all-pair-jade",
+      "kind": "tile-hand",
+      "source": { "type": "runtime-constrained-generator", "patternId": "all-pair-green-dragon-and-bamboo", "constraints": ["seven pairs total", "Green Dragon pairs and green Bamboo tiles only as defined by executable predicate"] },
+      "scope": "generator-constraint",
+      "visibleExplanation": "Seven pairs drawn from Green Dragons and the permitted green Bamboo tiles.",
+      "accessibleDescription": "All Pair Jade example: make seven pairs from Green Dragons and the green Bamboo tiles allowed by these rules."
+    },
+    {
+      "id": "example-windy-dragons",
+      "kind": "tile-hand",
+      "source": { "type": "structured-proof", "looseTiles": ["east-wind", "east-wind", "south-wind", "south-wind", "west-wind", "west-wind", "north-wind", "north-wind"], "groups": [{ "kind": "pung", "tile": "red-dragon" }, { "kind": "pung", "tile": "green-dragon" }] },
+      "scope": "one-valid-example",
+      "visibleExplanation": "Pairs of all four Winds plus two Dragon Pungs/Kongs.",
+      "accessibleDescription": "Example Windy Dragons hand: pairs of East, South, West and North Winds, plus Pungs of Red and Green Dragons."
+    },
+    {
+      "id": "example-chinese-odds",
+      "kind": "tile-hand",
+      "source": { "type": "structured-proof", "groups": [{ "kind": "pung", "tile": "1-circles" }, { "kind": "pung", "tile": "3-circles" }, { "kind": "pung", "tile": "5-circles" }, { "kind": "pung", "tile": "7-circles" }, { "kind": "pair", "tile": "9-circles" }] },
+      "scope": "one-valid-example",
+      "visibleExplanation": "Four Pungs/Kongs and a pair using only odd ranks in one suit.",
+      "accessibleDescription": "Example Chinese Odds hand: Pungs of 1, 3, 5 and 7 Circles, plus a pair of 9 Circles."
+    },
+    {
+      "id": "example-odds-evens",
+      "kind": "tile-hand-generator",
+      "source": { "type": "runtime-constrained-generator", "patternId": "two-odd-suits-and-one-even-suit", "constraints": ["two suits contribute only odd ranks", "third suit contributes only even ranks", "construct the exact complete layout accepted by canonical predicate"] },
+      "scope": "generator-constraint",
+      "visibleExplanation": "Use odd ranks in two suits and even ranks in the third, following the full hand rule.",
+      "accessibleDescription": "Odds and Evens example: use odd ranks in two suits and even ranks in the third."
+    },
+    {
+      "id": "example-robin",
+      "kind": "tile-hand",
+      "source": { "type": "structured-proof", "groups": [{ "kind": "chow", "tiles": ["1-bamboo", "2-bamboo", "3-bamboo"] }, { "kind": "chow", "tiles": ["4-circles", "5-circles", "6-circles"] }, { "kind": "chow", "tiles": ["1-circles", "2-circles", "3-circles"] }, { "kind": "chow", "tiles": ["7-characters", "8-characters", "9-characters"] }, { "kind": "pair", "tile": "5-bamboo" }] },
+      "scope": "one-valid-example",
+      "visibleExplanation": "Four Chows across all three suits in a 1/2/1 suit distribution, plus a pair.",
+      "accessibleDescription": "Example Robin hand: one Bamboo Chow, two Circles Chows, one Characters Chow, and a pair of 5 Bamboo."
+    },
+    {
+      "id": "example-numbers-parallel-generator",
+      "kind": "tile-hand-generator",
+      "source": { "type": "runtime-constrained-generator", "patternId": "parallel-suit-rank-melds-with-honours", "constraints": ["matching non-terminal rank Pung/Kong in each suit", "one honour Pung/Kong", "one pair accepted by predicate"] },
+      "scope": "generator-constraint",
+      "visibleExplanation": "Matching-rank Pungs/Kongs in all three suits, plus an honour Pung/Kong and a pair.",
+      "accessibleDescription": "Numbers in Parallel example: make a Pung or Kong of the same non-terminal number in all three suits, then add the required honour set and pair."
+    }
+  ],
+  "entries": [
+    {
+      "id": "gretas-run-family",
+      "state": "reviewed-family-topic",
+      "displayName": "Greta's 1-7 run hands",
+      "treatmentReferenceIds": ["western-tm@0.1:suit-run-one-to-seven-with-winds-and-dragon-pung", "western-tm@0.1:suit-run-one-to-seven-with-all-honours"],
+      "facets": ["irregular-hand", "one-suit", "winds", "dragons"],
+      "summary": "Both Greta hands start with 1 to 7 in one suit. Their Wind and Dragon tiles differ.",
+      "whatItIs": "Both hands use 1 to 7 in one suit. Greta’s Dragon adds all four Winds and a Dragon Pung or Kong. Greta’s Garden adds all four Winds and all three Dragons as singles.",
+      "whatItMeans": "The 1-7 run is the common visual cue. Greta's Dragon adds all four Winds and a Dragon Pung/Kong; Greta's Garden instead adds all four Winds and all three Dragons as single honours.",
+      "whySpecial": "The same 1 to 7 run leads to two hands with different Wind and Dragon tiles.",
+      "variants": [
+        { "id": "gretas-dragon", "label": "Greta's Dragon", "treatmentReferenceIds": ["western-tm@0.1:suit-run-one-to-seven-with-winds-and-dragon-pung"], "exampleIds": ["example-gretas-dragon"], "definition": "A 1-7 run in one suit, all four Winds and a Dragon Pung/Kong." },
+        { "id": "gretas-garden", "label": "Greta's Garden", "treatmentReferenceIds": ["western-tm@0.1:suit-run-one-to-seven-with-all-honours"], "exampleIds": ["example-gretas-garden"], "definition": "A 1-7 run in one suit plus all four Winds and all three Dragons." }
+      ],
+      "evidenceBindings": [{ "kind": "repo-evidence", "path": "docs/rules/TM_COMPANION_CATALOGUE_INDEX.md", "locator": "§3 Runs inventory — Greta's Dragon pp.13,38; Greta's Garden pp.13,38", "supports": ["both-treatment-memberships", "shared-1-to-7-run", "distinct-honour-structures"], "status": "source-certified" }]
+    },
+    {
+      "id": "dragons-run-western",
+      "state": "standalone-verified-treatment",
+      "displayName": "Dragon's Run",
+      "treatmentReferenceIds": ["western-tm@0.1:full-suit-run-with-dragon-singles-and-wind-pair"],
+      "facets": ["irregular-hand", "one-suit", "winds", "dragons", "pairs"],
+      "summary": "A 1-9 run in one suit, one of each Dragon and a Wind pair.",
+      "whatItIs": "Use 1 to 9 in one suit, one of each Dragon and a pair of Winds. The 1-9 run is nine single tiles, not Chows.",
+      "whatItMeans": "The nine suited tiles are singles forming 1 through 9; the remaining five tiles are the three Dragons plus two identical Winds.",
+      "whySpecial": "It combines a full suited run with all three Dragons and a Wind pair.",
+      "exampleIds": ["example-dragons-run"],
+      "evidenceBindings": [{ "kind": "repo-evidence", "path": "docs/rules/TM_COMPANION_CATALOGUE_INDEX.md", "locator": "§3 Dragons/honours inventory — Dragon's Run (not illustrated)", "supports": ["treatment-membership", "structure"], "status": "source-certified" }]
+    },
+    {
+      "id": "yin-yang-western",
+      "state": "standalone-verified-treatment",
+      "displayName": "Yin Yang",
+      "treatmentReferenceIds": ["western-tm@0.1:two-suit-pairs-and-chows-one-two-five-six-nine"],
+      "facets": ["irregular-hand", "multiple-suits", "pairs", "chow-involving"],
+      "summary": "Two complementary suit blocks: 11, 234, 55 in one suit and 55, 678, 99 in the other.",
+      "whatItIs": "A fixed two-suit layout combining pairs and three-tile runs in a mirrored pattern.",
+      "whatItMeans": "One suit supplies the low pair/run pattern; the other supplies the high run/pair pattern, with a 5 pair present in both suits.",
+      "whySpecial": "The hand must use this exact two-suit arrangement.",
+      "exampleIds": ["example-yin-yang"],
+      "evidenceBindings": [{ "kind": "repo-evidence", "path": "docs/rules/TM_COMPANION_CATALOGUE_INDEX.md", "locator": "§3 Runs inventory — Yin Yang pp.14,50", "supports": ["treatment-membership", "fixed-layout"], "status": "source-certified" }]
+    },
+    {
+      "id": "little-robert-western",
+      "state": "standalone-verified-treatment",
+      "displayName": "Little Robert",
+      "treatmentReferenceIds": ["western-tm@0.1:three-suit-chows-with-suited-meld-and-pair"],
+      "facets": ["ordinary-grouped", "multiple-suits", "chow-involving", "pungs-kongs", "pairs"],
+      "summary": "One Chow in each suit, plus a suited Pung/Kong and suited pair.",
+      "whatItIs": "Make one Chow in each suit, then add a suited Pung or Kong and a suited pair. Do not use an honour set or pair.",
+      "whatItMeans": "The three Chows guarantee all three suits appear; the remaining Pung/Kong and pair must also be suited rather than honours.",
+      "whySpecial": "It uses a Chow in all three suits and no honour set or pair.",
+      "exampleIds": ["example-little-robert"],
+      "evidenceBindings": [{ "kind": "repo-evidence", "path": "docs/rules/TM_COMPANION_CATALOGUE_INDEX.md", "locator": "§3 Runs/Chows inventory — Little Robert p.16", "supports": ["treatment-membership", "three-suit-chow-structure"], "status": "source-certified" }]
+    },
+    {
+      "id": "moon-bottom-well-western",
+      "state": "standalone-verified-treatment",
+      "displayName": "Moon at Bottom of Well",
+      "treatmentReferenceIds": ["western-tm@0.1:circle-chows-with-one-two-three-four-five-six-seven-eight-nine"],
+      "facets": ["ordinary-grouped", "one-suit", "chow-involving", "pairs"],
+      "summary": "Four Circle Chows and a Circle pair, including 123, 456 and 789.",
+      "whatItIs": "Make four Circle Chows and a Circle pair. The Chows must include 1-2-3, 4-5-6 and 7-8-9.",
+      "whatItMeans": "Three of the Chows establish 123, 456 and 789; a fourth Circle Chow and Circle pair complete the ordinary hand.",
+      "whySpecial": "The four Chows include the full 1-9 run in Circles.",
+      "exampleIds": ["example-moon-bottom-well"],
+      "evidenceBindings": [{ "kind": "repo-evidence", "path": "docs/rules/TM_COMPANION_CATALOGUE_INDEX.md", "locator": "§3 Runs/Chows inventory — Moon at Bottom of Well pp.15,47,60", "supports": ["treatment-membership", "circle-chow-structure"], "status": "source-certified" }]
+    },
+    {
+      "id": "wind-pair-chow-family-western",
+      "state": "reviewed-family-topic",
+      "displayName": "Wind-pair Chow hands",
+      "treatmentReferenceIds": ["western-tm@0.1:wind-pair-with-three-suit-chows", "western-tm@0.1:wind-pair-with-three-suit-one-two-three-chows", "western-tm@0.1:wind-pair-with-three-suit-seven-eight-nine-chows"],
+      "facets": ["hybrid-layout", "multiple-suits", "winds", "chow-involving", "pairs"],
+      "summary": "All three hands use one Chow in each suit and all four Winds, with one Wind paired. Two hands fix the Chow ranks to 1-2-3 or 7-8-9.",
+      "whatItIs": "Windy Chow allows any Chows. Chop Suey uses 1-2-3 in every suit. Chow Mein uses 7-8-9 in every suit.",
+      "whatItMeans": "Windy Chow leaves the three Chows open; Chop Suey fixes all three to 123; Chow Mein fixes all three to 789.",
+      "whySpecial": "The fixed Chow ranks distinguish Chop Suey and Chow Mein from Windy Chow.",
+      "variants": [
+        { "id": "windy-chow-western-base", "label": "Windy Chow", "treatmentReferenceIds": ["western-tm@0.1:wind-pair-with-three-suit-chows"], "definition": "One Chow in each suit plus all four Winds with one paired." },
+        { "id": "chop-suey", "label": "Chop Suey", "treatmentReferenceIds": ["western-tm@0.1:wind-pair-with-three-suit-one-two-three-chows"], "exampleIds": ["example-chop-suey"], "definition": "123 Chow in every suit plus all four Winds with one paired." },
+        { "id": "chow-mein", "label": "Chow Mein", "treatmentReferenceIds": ["western-tm@0.1:wind-pair-with-three-suit-seven-eight-nine-chows"], "exampleIds": ["example-chow-mein"], "definition": "789 Chow in every suit plus all four Winds with one paired." }
+      ],
+      "evidenceBindings": [{ "kind": "repo-evidence", "path": "docs/rules/TM_COMPANION_CATALOGUE_INDEX.md", "locator": "§3 Runs/Chows inventory — Windy Chow, Chop Suey, Chow Mein pp.18,26", "supports": ["family-topic", "variant-qualification"], "status": "source-certified" }]
+    },
+    {
+      "id": "dragonette-western",
+      "state": "standalone-verified-treatment",
+      "displayName": "Dragonette",
+      "treatmentReferenceIds": ["western-tm@0.1:dragonette"],
+      "facets": ["irregular-hand", "one-suit", "winds", "dragons", "pairs"],
+      "summary": "All four Winds, all three Dragons with one Dragon paired, and three non-terminal pairs in one suit.",
+      "whatItIs": "Use all four Winds as singles, all three Dragons with one Dragon paired, and three non-terminal pairs in one suit.",
+      "whatItMeans": "The Winds remain four singles; the Dragons contribute one pair and two singles; the remaining six tiles are three non-terminal pairs in one suit.",
+      "whySpecial": "All seven honour tiles appear, and three pairs complete the suited part.",
+      "exampleIds": ["example-dragonette"],
+      "evidenceBindings": [{ "kind": "repo-evidence", "path": "docs/rules/TM_COMPANION_CATALOGUE_INDEX.md", "locator": "§3 Pairs/Winds inventory — Dragonette pp.24,39", "supports": ["treatment-membership", "honour-and-pair-structure"], "status": "source-certified" }]
+    },
+    {
+      "id": "western-gates-named-topic",
+      "state": "reviewed-family-topic",
+      "displayName": "Western hands named “Gates”",
+      "treatmentReferenceIds": ["western-tm@0.1:run-two-to-eight-with-one-and-nine-pungs", "western-tm@0.1:golden-gates", "western-tm@0.1:two-to-eight-run-pair-with-terminal-meld-and-corresponding-dragon-meld"],
+      "facets": ["terminals"],
+      "summary": "Three Western hands have “Gates” in the name, but their tile patterns are different.",
+      "whatItIs": "Compare Confused Gates, Golden Gates and Dragon’s Gates to tell the names apart.",
+      "whatItMeans": "This topic exists to help a learner distinguish names, not to assert a common canonical hand. Confused Gates uses a 2-8 run plus terminal Pungs; Golden Gates uses even-rank pairs plus a terminal and corresponding Dragon; Dragon's Gates combines a 2-8 run/pair with a terminal meld and corresponding Dragon meld.",
+      "whySpecial": "The similar names can easily cause lookup mistakes.",
+      "variants": [
+        { "id": "confused-gates", "label": "Confused Gates", "treatmentReferenceIds": ["western-tm@0.1:run-two-to-eight-with-one-and-nine-pungs"], "exampleIds": ["example-confused-gates"], "definition": "A 2-8 run with one duplicated run tile, plus 111 and 999 in the other two suits." },
+        { "id": "golden-gates", "label": "Golden Gates", "treatmentReferenceIds": ["western-tm@0.1:golden-gates"], "exampleIds": ["example-golden-gates-generator"], "definition": "Pairs of 2,4,6,8 in one suit plus its qualifying terminal and corresponding Dragon melds." },
+        { "id": "dragons-gates", "label": "Dragon's Gates", "treatmentReferenceIds": ["western-tm@0.1:two-to-eight-run-pair-with-terminal-meld-and-corresponding-dragon-meld"], "exampleIds": ["example-dragons-gates-generator"], "definition": "A 2-8 run with pair plus a same-suit terminal meld and corresponding Dragon meld." }
+      ],
+      "referenceNote": "These hands are different from Gates of Heaven.",
+      "evidenceBindings": [{ "kind": "repo-evidence", "path": "docs/rules/TM_COMPANION_CATALOGUE_INDEX.md", "locator": "§3 inventory — Confused Gates pp.9,51; Golden Gates pp.25,34; Dragon's Gates pp.12,34", "supports": ["three-treatment-memberships", "name-disambiguation"], "status": "source-certified" }]
+    },
+    {
+      "id": "five-odd-honours-western",
+      "state": "standalone-verified-treatment",
+      "displayName": "Five Odd Honours",
+      "treatmentReferenceIds": ["western-tm@0.1:full-suit-run-with-five-distinct-honours"],
+      "facets": ["irregular-hand", "one-suit", "honours"],
+      "summary": "Take 1 to 9 in one suit as single tiles, then add five different Winds or Dragons.",
+      "whatItIs": "An irregular hand joining a complete one-suit straight to five distinct honour tiles.",
+      "whatItMeans": "The suited nine tiles form 1 through 9 as singles; the remaining five tiles are distinct Winds/Dragons rather than pairs or melds.",
+      "whySpecial": "It combines a complete suited straight with five different honour tiles.",
+      "exampleIds": ["example-five-odd-honours"],
+      "evidenceBindings": [{ "kind": "repo-evidence", "path": "docs/rules/TM_COMPANION_CATALOGUE_INDEX.md", "locator": "§3 Runs inventory — Five Odd Honours pp.11,38", "supports": ["treatment-membership", "run-plus-five-honours"], "status": "source-certified" }]
+    },
+    {
+      "id": "purity-western-calculated",
+      "state": "standalone-verified-treatment",
+      "displayName": "Purity",
+      "treatmentReferenceIds": ["western-tm@0.1:purity-one-chow"],
+      "facets": ["ordinary-grouped", "one-suit", "pungs-kongs", "pairs", "chow-involving"],
+      "summary": "One suit, four sets and a pair. Western — T&M allows at most one Chow.",
+      "whatItIs": "A one-suit Western scoring pattern, not a fixed-value special hand.",
+      "whatItMeans": "The hand uses the usual four sets and a pair. One set may be a Chow.",
+      "whySpecial": "The same name “Purity” has a different structure under these rules.",
+      "exampleIds": [],
+      "referenceNote": "The score and exposure value are calculated under Western — T&M. One Chow is allowed; an exposed Chow does not count.",
+      "evidenceBindings": [{ "kind": "repo-evidence", "path": "docs/rules/TM_COMPANION_CATALOGUE_INDEX.md", "locator": "§3 Dragons/honours inventory — Purity p.48; Pass 4I/4H catalogue notes", "supports": ["calculated-treatment", "one-chow-permission", "profile-local-exposure"], "status": "source-certified" }, { "kind": "reviewed-audit", "path": "docs/rules/encyclopaedia/CLASSICAL_ATLAS_CONCEPT_AUDIT_V1.md", "locator": "§12 Purity boundary", "supports": ["do-not-flatten-with-bmja-fixed-atlas"], "status": "reviewed" }]
+    },
+    {
+      "id": "sunrise-sunset-family",
+      "state": "reviewed-family-topic",
+      "displayName": "Sunrise and Sunset",
+      "treatmentReferenceIds": ["western-tm@0.1:east-wind-meld-white-dragon-pair-three-suit-nonterminal-melds", "western-tm@0.1:white-dragon-meld-red-dragon-pair-three-suit-nonterminal-melds"],
+      "facets": ["ordinary-grouped", "multiple-suits", "winds", "dragons", "pungs-kongs", "pairs"],
+      "summary": "Two mirrored three-suit Pung/Kong hands with different honour anchors.",
+      "whatItIs": "Both hands use one non-terminal Pung or Kong in each suit. Sunrise adds an East Wind Pung or Kong and a White Dragon pair. Sunset adds a White Dragon Pung or Kong and a Red Dragon pair.",
+      "whatItMeans": "Sunrise uses East Wind as the meld and White Dragon as the pair; Sunset uses White Dragon as the meld and Red Dragon as the pair.",
+      "whySpecial": "The suited sets match, while the Wind and Dragon tiles tell the hands apart.",
+      "variants": [
+        { "id": "sunrise", "label": "Sunrise", "treatmentReferenceIds": ["western-tm@0.1:east-wind-meld-white-dragon-pair-three-suit-nonterminal-melds"], "exampleIds": ["example-sunrise"], "definition": "East Wind Pung/Kong, White Dragon pair, and one non-terminal Pung/Kong in each suit." },
+        { "id": "sunset", "label": "Sunset", "treatmentReferenceIds": ["western-tm@0.1:white-dragon-meld-red-dragon-pair-three-suit-nonterminal-melds"], "exampleIds": ["example-sunset"], "definition": "White Dragon Pung/Kong, Red Dragon pair, and one non-terminal Pung/Kong in each suit." }
+      ],
+      "evidenceBindings": [{ "kind": "repo-evidence", "path": "docs/rules/TM_COMPANION_CATALOGUE_INDEX.md", "locator": "Pass 4I — Sunrise p.42/p.59; Sunset p.42/p.59", "supports": ["both-treatment-memberships", "mirrored-shared-suited-skeleton", "profile-exposure-markers"], "status": "source-certified" }]
+    },
+    {
+      "id": "all-honour-hand-western",
+      "state": "standalone-verified-treatment",
+      "displayName": "All Honour Hand",
+      "treatmentReferenceIds": ["western-tm@0.1:honours-and-one-suit-terminals-pung-kong-hand"],
+      "facets": ["ordinary-grouped", "one-suit", "terminals", "honours", "pungs-kongs", "pairs"],
+      "summary": "Four Pungs or Kongs and a pair using honours and, if used, 1s or 9s from one suit.",
+      "whatItIs": "Use only Winds, Dragons, and 1s or 9s from at most one numbered suit.",
+      "whatItMeans": "The hand uses Pungs or Kongs. Any suited tiles must all come from one suit and be 1s or 9s.",
+      "whySpecial": "Any suited tiles must be 1s or 9s, and they must all come from one suit.",
+      "exampleIds": [],
+      "referenceNote": "The score and exposure value are calculated under these rules.",
+      "evidenceBindings": [{ "kind": "repo-evidence", "path": "docs/rules/TM_COMPANION_CATALOGUE_INDEX.md", "locator": "Pass 4I — All Honour Hand p.44/p.58", "supports": ["calculated-treatment", "qualification", "exposure-policy"], "status": "source-certified" }]
+    },
+    {
+      "id": "ordinary-mah-jong-western",
+      "state": "standalone-verified-treatment",
+      "displayName": "Ordinary Mah Jong",
+      "treatmentReferenceIds": ["western-tm@0.1:one-suit-with-honours-mostly-pung-kong-hand"],
+      "facets": ["ordinary-grouped", "one-suit", "honours", "pungs-kongs", "pairs", "chow-involving"],
+      "summary": "One suit with optional honours, mostly Pungs or Kongs, plus a pair. One Chow may be allowed.",
+      "whatItIs": "A named Western scoring pattern for a mostly Pung or Kong hand using one numbered suit plus optional Winds or Dragons.",
+      "whatItMeans": "One Chow may be used, but the rest of the hand is built from Pungs or Kongs and a pair.",
+      "whySpecial": "This named hand has its own rules for sets, honours and exposure.",
+      "exampleIds": [],
+      "referenceNote": "The score and exposure eligibility are calculated under these rules. An exposed Chow does not count.",
+      "evidenceBindings": [{ "kind": "repo-evidence", "path": "docs/rules/TM_COMPANION_CATALOGUE_INDEX.md", "locator": "Pass 4I — Ordinary Mah Jong p.42/p.59", "supports": ["calculated-treatment", "qualification", "exposure-policy"], "status": "source-certified" }]
+    },
+    {
+      "id": "one-nine-run-honour-family-western",
+      "state": "reviewed-family-topic",
+      "displayName": "1-9 run with honour sets",
+      "treatmentReferenceIds": ["western-tm@0.1:run-one-to-nine-with-wind-pung-and-pair", "western-tm@0.1:run-one-to-nine-with-dragon-pung-and-pair", "western-tm@0.1:full-suit-run-with-honour-pung-and-opposite-honour-pair"],
+      "facets": ["ordinary-grouped", "one-suit", "chow-involving", "honours", "pungs-kongs", "pairs"],
+      "summary": "Three hands share a 1-9 run in one suit. Their honour Pung or Kong and pair tell them apart.",
+      "whatItIs": "Guardian Winds uses a Wind set and Wind pair. Guardian Dragons uses a Dragon set and Dragon pair. Dragon’s Tail mixes the two honour types.",
+      "whatItMeans": "Guardian Winds uses a Wind meld and Wind pair; Guardian Dragons uses a Dragon meld and Dragon pair; Dragon's Tail deliberately mixes the honour families, one as the meld and the other as the pair.",
+      "whySpecial": "The same suited run supports three hands with different honour rules.",
+      "variants": [
+        { "id": "guardian-winds", "label": "Guardian Winds", "treatmentReferenceIds": ["western-tm@0.1:run-one-to-nine-with-wind-pung-and-pair"], "exampleIds": ["example-guardian-winds"], "definition": "A 1-9 run, Wind Pung/Kong and Wind pair." },
+        { "id": "guardian-dragons", "label": "Guardian Dragons", "treatmentReferenceIds": ["western-tm@0.1:run-one-to-nine-with-dragon-pung-and-pair"], "exampleIds": ["example-guardian-dragons"], "definition": "A 1-9 run, Dragon Pung/Kong and Dragon pair." },
+        { "id": "dragons-tail", "label": "Dragon's Tail", "treatmentReferenceIds": ["western-tm@0.1:full-suit-run-with-honour-pung-and-opposite-honour-pair"], "exampleIds": ["example-dragons-tail"], "definition": "A 1-9 run with a Wind Pung/Kong and Dragon pair, or a Dragon Pung/Kong and Wind pair." }
+      ],
+      "evidenceBindings": [{ "kind": "repo-evidence", "path": "docs/rules/TM_COMPANION_CATALOGUE_INDEX.md", "locator": "§3 Runs inventory — Guardian Winds pp.10,39; Guardian Dragons pp.10/11,39; Dragon's Tail pp.12,41", "supports": ["three-treatment-memberships", "shared-run-backbone", "honour-role-differences"], "status": "source-certified" }]
+    },
+    {
+      "id": "all-pair-jade-western",
+      "state": "standalone-verified-treatment",
+      "displayName": "All Pair Jade",
+      "treatmentReferenceIds": ["western-tm@0.1:all-pair-green-dragon-and-bamboo"],
+      "facets": ["irregular-hand", "one-suit", "dragons", "pairs", "green-tiles"],
+      "summary": "Seven pairs using Green Dragons and the permitted green Bamboo tiles.",
+      "whatItIs": "A Western seven-pair Jade hand using Green Dragons and the green Bamboo tiles allowed by these rules.",
+      "whatItMeans": "The hand is entirely pair-based and uses the Jade/green tile theme rather than normal melds.",
+      "whySpecial": "It combines the seven-pair structure with a tight green-tile composition.",
+      "exampleIds": ["example-all-pair-jade"],
+      "evidenceBindings": [{ "kind": "repo-evidence", "path": "docs/rules/TM_COMPANION_CATALOGUE_INDEX.md", "locator": "§3 Pairs/Winds inventory — All Pair Jade pp.23,32,52", "supports": ["treatment-membership", "pair-structure", "green-tile-composition"], "status": "source-certified" }]
+    },
+    {
+      "id": "windy-dragons-western",
+      "state": "standalone-verified-treatment",
+      "displayName": "Windy Dragons",
+      "treatmentReferenceIds": ["western-tm@0.1:four-wind-pairs-with-two-dragon-melds"],
+      "facets": ["hybrid-layout", "winds", "dragons", "pairs", "pungs-kongs"],
+      "summary": "Pairs of all four Winds plus two Dragon Pungs/Kongs.",
+      "whatItIs": "Make a pair of each Wind, then two Dragon Pungs or Kongs.",
+      "whatItMeans": "The Winds are paired rather than melded; the Dragon component provides the two Pungs/Kongs.",
+      "whySpecial": "All four Winds are pairs, while the Dragons make the two sets.",
+      "exampleIds": ["example-windy-dragons"],
+      "evidenceBindings": [{ "kind": "repo-evidence", "path": "docs/rules/TM_COMPANION_CATALOGUE_INDEX.md", "locator": "§3 Pairs/Winds inventory — Windy Dragons pp.25,46", "supports": ["treatment-membership", "wind-pairs-dragon-melds"], "status": "source-certified" }]
+    },
+    {
+      "id": "rank-parity-family-western",
+      "state": "reviewed-family-topic",
+      "displayName": "Odd and even rank hands",
+      "treatmentReferenceIds": ["western-tm@0.1:one-suit-odd-melds", "western-tm@0.1:two-odd-suits-and-one-even-suit"],
+      "facets": ["rank-parity"],
+      "summary": "Chinese Odds and Odds & Evens both use odd or even tile numbers, but the hands are built differently.",
+      "whatItIs": "Chinese Odds uses odd-number Pungs or Kongs in one suit. Odds & Evens uses odd ranks in two suits and even ranks in the third.",
+      "whatItMeans": "Chinese Odds is a usual grouped hand in one suit. Odds & Evens spreads odd ranks across two suits and even ranks across the third.",
+      "whySpecial": "The tile numbers themselves are part of the rule.",
+      "variants": [
+        { "id": "chinese-odds", "label": "Chinese Odds", "treatmentReferenceIds": ["western-tm@0.1:one-suit-odd-melds"], "exampleIds": ["example-chinese-odds"], "definition": "Four Pungs/Kongs and a pair of odd ranks in one suit." },
+        { "id": "odds-and-evens", "label": "Odds & Evens", "treatmentReferenceIds": ["western-tm@0.1:two-odd-suits-and-one-even-suit"], "exampleIds": ["example-odds-evens"], "definition": "Odd ranks in two suits and even ranks in the third, under the exact canonical layout hand rule." }
+      ],
+      "evidenceBindings": [{ "kind": "repo-evidence", "path": "docs/rules/TM_COMPANION_CATALOGUE_INDEX.md", "locator": "§3 Dragons/honours/suit inventory — Chinese Odds p.49; Odds & Evens not illustrated", "supports": ["two-treatment-memberships", "rank-parity-topic"], "status": "source-certified" }]
+    },
+    {
+      "id": "robin-western",
+      "state": "standalone-verified-treatment",
+      "displayName": "Robin",
+      "treatmentReferenceIds": ["western-tm@0.1:four-chows-three-suits-one-two-one"],
+      "facets": ["ordinary-grouped", "multiple-suits", "chow-involving", "pairs"],
+      "summary": "Four Chows across all three suits in a 1/2/1 suit distribution, plus a pair.",
+      "whatItIs": "Make four Chows across all three suits, plus a pair. One suit must supply two of the four Chows.",
+      "whatItMeans": "All three suits must be represented, but the four Chow slots cannot be distributed evenly; one suit supplies two of them.",
+      "whySpecial": "The four Chows use one suit twice and the other suits once each.",
+      "exampleIds": ["example-robin"],
+      "evidenceBindings": [{ "kind": "repo-evidence", "path": "docs/rules/TM_COMPANION_CATALOGUE_INDEX.md", "locator": "§3 Dragons/honours/suit inventory — Robin not illustrated", "supports": ["treatment-membership", "four-chow-suit-distribution"], "status": "source-certified" }]
+    },
+    {
+      "id": "numbers-in-parallel-western",
+      "state": "standalone-verified-treatment",
+      "displayName": "Numbers in Parallel",
+      "treatmentReferenceIds": ["western-tm@0.1:parallel-suit-rank-melds-with-honours"],
+      "facets": ["ordinary-grouped", "multiple-suits", "honours", "pungs-kongs", "pairs", "parallel-ranks"],
+      "summary": "Matching non-terminal Pungs/Kongs in each suit, plus an honour Pung/Kong and pair.",
+      "whatItIs": "Choose one non-terminal number and make that Pung or Kong in all three suits. Add an honour Pung or Kong and a pair.",
+      "whatItMeans": "The three suited melds are parallel versions of one another, differing only by suit; an honour meld and pair complete the hand.",
+      "whySpecial": "The same number appears as a set in every suit.",
+      "exampleIds": ["example-numbers-parallel-generator"],
+      "evidenceBindings": [{ "kind": "repo-evidence", "path": "docs/rules/TM_COMPANION_CATALOGUE_INDEX.md", "locator": "§3 Dragons/honours/suit inventory — Numbers in Parallel p.43", "supports": ["treatment-membership", "matching-rank-three-suit-structure"], "status": "source-certified" }]
+    }
+  ],
+  "facetDefinitionAdditions": {
+    "rank-parity": "Odd/even suited-rank membership is a defining qualification fact.",
+    "parallel-ranks": "The same suited rank is deliberately repeated across multiple suits as corresponding groups."
+  }
+}

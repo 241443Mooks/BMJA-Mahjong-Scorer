@@ -4,6 +4,12 @@ import type { HandScorerContext, HandScorerExampleContext } from '../game';
 import { bonusTileDefinition, playingTileDefinition } from '../tiles/MahjongTileArtwork';
 import { exampleHandScorerContext, exampleVisualTiles, specialHandExampleById } from './special-hand-examples';
 import type { TileDefinition } from './MahjongTileGallery';
+import { BMJA_PROFILE_REF } from '../game/ruleset';
+import { resolveSpecialHandTreatment } from '../rules-knowledge/special-hand-treatments';
+
+export type ScoringExampleReference =
+  | { label: string; href: string }
+  | { treatment: { profile: typeof BMJA_PROFILE_REF; patternId: string } };
 
 export type WorkedScoringExample = {
   id: string;
@@ -12,7 +18,7 @@ export type WorkedScoringExample = {
   hand: MahjongHand;
   context: GameContext;
   explanation: string;
-  references: { label: string; href: string }[];
+  references: ScoringExampleReference[];
   expected: Pick<ScoreBreakdown, 'basePoints' | 'doubles' | 'finalScore' | 'evidenceCompleteness' | 'scoringMode'>;
   practice: boolean;
   returnHref: string;
@@ -58,18 +64,25 @@ export const scoringExamples: WorkedScoringExample[] = [
     hand: { sets: [], looseTiles: [suited('bamboo', 1), suited('bamboo', 9), suited('characters', 1), suited('characters', 9), suited('circles', 1), suited('circles', 9), wind('east'), wind('south'), wind('west'), wind('north'), dragon('red'), dragon('green'), dragon('white')], bonusTiles: [bonus('flower', 4), bonus('season', 2)], isWinner: false, originalCall: false },
     context: context('north'), expected: { basePoints: 8, doubles: 1, finalScore: 416, evidenceCompleteness: 'complete', scoringMode: 'special' }, practice: true,
     explanation: 'The 400 fishing value is a special component. The two bonus tiles are a separate component, and only their own-Flower double applies to that component.',
-    references: [{ label: 'Thirteen Unique Wonders', href: '/special-hands#thirteen-unique-wonders' }, { label: 'Fishing', href: '/guide#fishing' }], returnHref: '/scoring-examples#thirteen-wonders-fishing',
+    references: [{ treatment: { profile: BMJA_PROFILE_REF, patternId: 'thirteen-unique-wonders' } }, { label: 'Fishing', href: '/guide#fishing' }], returnHref: '/scoring-examples#thirteen-wonders-fishing',
   },
   {
     id: 'all-pair-honours-bonus', title: 'Special hand with separately doubled bonus tiles', purpose: 'Show why a special hand’s fixed value is not doubled by a bonus-tile double.',
     hand: grouped([set('1', 'pair', wind('east')), set('2', 'pair', wind('south')), set('3', 'pair', suited('bamboo', 1)), set('4', 'pair', suited('characters', 9)), set('5', 'pair', dragon('red')), set('6', 'pair', dragon('green')), set('7', 'pair', dragon('white'))], { bonusTiles: [bonus('flower', 4), bonus('season', 2)] }),
     context: context('north'), expected: { basePoints: 8, doubles: 1, finalScore: 516, evidenceCompleteness: 'complete', scoringMode: 'special' }, practice: true,
     explanation: 'All Pair Honours contributes its fixed 500. The Flower and Season contribute 8, doubled to 16 by the own Flower—so the total is 516, not the special hand doubled.',
-    references: [{ label: 'All Pair Honours', href: '/special-hands#all-pair-honours' }], returnHref: '/scoring-examples#all-pair-honours-bonus',
+    references: [{ treatment: { profile: BMJA_PROFILE_REF, patternId: 'all-pair-honours' } }], returnHref: '/scoring-examples#all-pair-honours-bonus',
   },
 ];
 
 export const scoringExampleById = (id: string | null | undefined) => scoringExamples.find((example) => example.id === id);
+export const resolveScoringExampleReferences = (example: WorkedScoringExample) => example.references.flatMap((reference) => {
+  if ('treatment' in reference) {
+    const treatment = resolveSpecialHandTreatment(reference.treatment.profile, reference.treatment.patternId);
+    return treatment?.href ? [{ label: treatment.name, href: treatment.href }] : [];
+  }
+  return [reference];
+});
 export const completedExampleHref = (id: string) => `/hand?example=${encodeURIComponent(id)}`;
 export const practiceExampleHref = (id: string) => `/hand?practice=${encodeURIComponent(id)}`;
 export const scoringExampleContext = (example: WorkedScoringExample): HandScorerExampleContext => ({ playerId: 'worked-example', playerName: example.title, playerWind: example.context.playerWind, prevailingWind: example.context.prevailingWind, isWinner: example.hand.isWinner, limit: example.context.limit, handMode: 'normal', detailedHand: { source: 'detailed-scorer', hand: example.hand, context: example.context, breakdown: { valid: false, evidenceCompleteness: 'invalid', validationErrors: [], pointRules: [], doubleRules: [], specialHands: [], basePoints: 0, doubles: 0, uncappedScore: 0, finalScore: 0, limitApplied: false, scoringMode: 'standard', calculationComponents: [] }, finalScore: 0 } });
@@ -89,7 +102,7 @@ export const resolveScorerExample = (id: string | null | undefined): ResolvedSco
 
 /** Practice has the same target/context but must never preload the learner's hand. */
 export const initialHandForExampleMode = (example: ResolvedScorerExample | undefined, practice: boolean) => practice ? undefined : example?.hand;
-export const handForScorerMode = (context: HandScorerContext | HandScorerExampleContext | null, example: ResolvedScorerExample | undefined, practice: boolean) => example ? initialHandForExampleMode(example, practice) : context?.detailedHand?.hand;
+export const handForScorerMode = (context: HandScorerContext | HandScorerExampleContext | null, example: ResolvedScorerExample | undefined, practice: boolean) => example ? initialHandForExampleMode(example, practice) : context?.mcr?.acceptedScore?.hand ?? context?.detailedHand?.hand;
 
 /** Fixed facts that must survive practice without preloading a learner tile, set or bonus selection. */
 export const practiceScorerContext = (example: ResolvedScorerExample | undefined) => ({

@@ -1,6 +1,7 @@
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
+import { initialiseCurrentRulesRuntimes } from '../rules-platform/current-runtime-registry';
 import { suited } from '../scoring';
-import { confirmHand, createBmjaGame, undoLastHand } from './game';
+import { confirmHand, createBmjaGame, createGame, undoLastHand } from './game';
 import {
   applyHandScorerSession,
   applyManualScore,
@@ -8,31 +9,47 @@ import {
   createHandScorerContext,
   handScorerLocalContext,
   reconcileDetailedHandsForOutcome,
+  buildMcrHandScorerResult,
 } from './hand-scorer-handoff';
-import { BMJA_PROFILE_REF, OUTSIDE_THE_BOX_PROFILE_REF, resolveRulesProfile, WESTERN_TM_PROFILE_REF } from './ruleset';
+import { BMJA_PROFILE_REF, OUTSIDE_THE_BOX_PROFILE_REF, WESTERN_TM_PROFILE_REF } from './ruleset';
+import { BUZZARD_2000_PROFILE_REF } from './buzzard-2000';
+import { currentClassicalScorerDefaultLimit } from './rules-presentation';
+import { toMcrScoringInput } from './mcr-hand-input';
+import { wind } from '../scoring/tiles';
+import { getCurrentCompiledRulesRuntime } from '../rules-platform/current-runtime-registry';
+import { handForScorerMode } from '../guide/scoring-examples';
 import type {
+  ClassicalHandScorerResult,
   HandScorerResult,
   RoundScoringDraft,
 } from './types';
 
-const game = createBmjaGame(
-  [
-    { id: 'jenn', name: 'Jenn' },
-    { id: 'bill', name: 'Bill' },
-    { id: 'ben', name: 'Ben' },
-    { id: 'jack', name: 'Jack' },
-  ],
-  { jenn: 'east', bill: 'south', ben: 'west', jack: 'north' },
-);
+let game: ReturnType<typeof createBmjaGame>;
+
+beforeAll(async () => {
+  await initialiseCurrentRulesRuntimes();
+  game = createBmjaGame(
+    [
+      { id: 'jenn', name: 'Jenn' },
+      { id: 'bill', name: 'Bill' },
+      { id: 'ben', name: 'Ben' },
+      { id: 'jack', name: 'Jack' },
+    ],
+    { jenn: 'east', bill: 'south', ben: 'west', jack: 'north' },
+  );
+});
 
 const billWins = { type: 'win' as const, winnerId: 'bill' };
+const mcrRef = { id: 'mcr-wmo-2006', version: '0.1' };
+const mcrSevenPairs = { sets: [], looseTiles: [suited('characters',1),suited('characters',1),suited('characters',2),suited('characters',2),suited('circles',3),suited('circles',3),suited('circles',4),suited('circles',4),suited('bamboo',5),suited('bamboo',5),suited('bamboo',6),suited('bamboo',6),wind('east'),wind('east')], bonusTiles: [], isWinner: true, winningTileProvenance: { tile: wind('east'), target: { type: 'loose-layout' as const } } };
 
 const makeCalculatedResult = (
   playerId: string,
   score: number,
   isWinner: boolean,
   marker: string,
-): HandScorerResult => ({
+): ClassicalHandScorerResult => ({
+  grammar: 'classical-points-doubles',
   playerId,
   score,
   isWinner,
@@ -77,6 +94,54 @@ const makeCalculatedResult = (
 });
 
 describe('game hand-scorer handoff', () => {
+  it('creates locked MCR context, returns canonical Seven Pairs score without rescoring, and reopens exact evidence', () => {
+    const mcrGame = createGame(game.players, game.seats, undefined, 'full-game', mcrRef);
+    const outcome = { type: 'mcr-win' as const, winnerId: 'bill', winSource: 'discard' as const };
+    const context = createHandScorerContext(mcrGame, 'bill', outcome);
+    expect(context).toMatchObject({ playerId: 'bill', playerWind: 'south', prevailingWind: 'east', isWinner: true, handMode: 'normal', mcr: { winSource: 'discard', lockedTableContext: true } });
+    expect(context.limit).toBeUndefined();
+    const adapted = toMcrScoringInput(mcrSevenPairs, { winSource: 'discard', resolvedWinEvent: 'none', lastVisibleCopy: false, seatWind: 'south', prevailingWind: 'east' });
+    expect(adapted.kind).toBe('ready'); if (adapted.kind !== 'ready') return;
+    const runtime = getCurrentCompiledRulesRuntime(mcrRef); if (runtime.grammar !== 'pattern-accumulator') throw new Error('Expected MCR runtime');
+    const scoreSpy = vi.spyOn(runtime.runtime, 'scoreHand');
+    const raw = runtime.runtime.scoreHand(adapted.input);
+    expect(raw).toMatchObject({ grammar: 'pattern-accumulator', profile: mcrRef, rulesFingerprint: '8044ee6ee883192bae97e83a67380f6c0bff999179df93229fc9daa4308a7ace', legal: true, disposition: { kind: 'scored' }, result: { unit: 'points', total: 24 } });
+    const returned = buildMcrHandScorerResult(context, mcrSevenPairs, adapted.input, raw);
+    expect(scoreSpy).toHaveBeenCalledTimes(1);
+    scoreSpy.mockRestore();
+    expect(returned).toMatchObject({ grammar: 'pattern-accumulator', score: 24, isWinner: true, acceptedScore: { source: 'mcr-detailed-scorer', playerId: 'bill', rulesProfile: mcrRef, rulesFingerprint: '8044ee6ee883192bae97e83a67380f6c0bff999179df93229fc9daa4308a7ace', hand: mcrSevenPairs, input: adapted.input, result: raw, finalScore: 24 } });
+    if (returned.grammar !== 'pattern-accumulator') throw new Error('Expected MCR result');
+    expect(returned.score).toBe(returned.acceptedScore.finalScore);
+    expect(returned.score).toBe(returned.acceptedScore.result.result.total);
+    expect(returned.acceptedScore.hand).toBe(mcrSevenPairs);
+    const reopened = createHandScorerContext(mcrGame, 'bill', outcome, returned.acceptedScore);
+    expect(reopened.mcr?.acceptedScore).toBe(returned.acceptedScore);
+    expect(reopened.mcr?.acceptedScore?.input).toBe(adapted.input);
+    expect(handForScorerMode(reopened, undefined, false)).toBe(mcrSevenPairs);
+    expect(reopened.mcr?.acceptedScore?.input.context).toMatchObject({ resolvedWinEvent: 'none', lastVisibleCopy: false });
+    expect(() => createHandScorerContext(mcrGame, 'bill', { ...outcome, winSource: 'self-draw' }, returned.acceptedScore)).toThrow(/current game context/);
+    expect(() => createHandScorerContext({ ...mcrGame, seats: { ...mcrGame.seats, bill: 'west' } }, 'bill', outcome, returned.acceptedScore)).toThrow(/current game context/);
+    expect(() => createHandScorerContext({ ...mcrGame, prevailingWind: 'south' }, 'bill', outcome, returned.acceptedScore)).toThrow(/current game context/);
+  });
+
+  it('rejects non-winners, non-MCR outcomes, and non-scored MCR runtime results', () => {
+    const mcrGame = createGame(game.players, game.seats, undefined, 'full-game', mcrRef);
+    expect(() => createHandScorerContext(mcrGame, 'jenn', { type: 'mcr-win', winnerId: 'bill', winSource: 'discard' })).toThrow();
+    expect(() => createHandScorerContext(mcrGame, 'bill', billWins)).toThrow();
+    expect(() => createHandScorerContext(mcrGame, 'bill', { type: 'mcr-draw' })).toThrow();
+    const context = createHandScorerContext(mcrGame, 'bill', { type: 'mcr-win', winnerId: 'bill', winSource: 'discard' });
+    const input = toMcrScoringInput(mcrSevenPairs, { winSource: 'discard', resolvedWinEvent: 'none', lastVisibleCopy: false, seatWind: 'south', prevailingWind: 'east' });
+    if (input.kind !== 'ready') throw new Error('Expected adapted hand');
+    const runtime = getCurrentCompiledRulesRuntime(mcrRef); if (runtime.grammar !== 'pattern-accumulator') throw new Error('Expected MCR runtime');
+    const scored = runtime.runtime.scoreHand(input.input);
+    for (const failed of [
+      { ...scored, disposition: { kind: 'not-qualifying' as const, reasonId: 'below-minimum' }, legal: false },
+      { ...scored, disposition: { kind: 'needs-evidence' as const, missingEvidenceIds: ['evidence.last-visible-copy'] }, legal: false },
+      { ...scored, disposition: { kind: 'invalid' as const, reasonId: 'invalid' }, legal: false },
+    ]) expect(() => buildMcrHandScorerResult(context, mcrSevenPairs, input.input, failed)).toThrow();
+    expect(() => buildMcrHandScorerResult(context, mcrSevenPairs, { ...input.input, context: { ...input.input.context, winSource: 'self-draw' } }, scored)).toThrow(/locked table context/);
+  });
+
   it('passes the selected player and live game context into the hand scorer', () => {
     const context = createHandScorerContext(game, 'bill', {
         type: 'win',
@@ -94,19 +159,33 @@ describe('game hand-scorer handoff', () => {
       limit: 1000,
       handMode: 'normal',
     });
+    expect(() => createHandScorerContext(game, 'bill', { type: 'mcr-win', winnerId: 'bill', winSource: 'discard' })).toThrow(/Classical hand scorer/);
   });
 
   it('defaults a standalone scorer session explicitly to bmja@1.0', () => {
     expect(handScorerLocalContext(null).limit).toBe(
-      resolveRulesProfile(BMJA_PROFILE_REF).defaultLimit,
+      currentClassicalScorerDefaultLimit(BMJA_PROFILE_REF),
     );
   });
 
   it('uses the selected standalone profile for the local score context and preserves game profile inheritance', () => {
-    expect(handScorerLocalContext(null, WESTERN_TM_PROFILE_REF).limit).toBe(resolveRulesProfile(WESTERN_TM_PROFILE_REF).defaultLimit);
+    expect(handScorerLocalContext(null, WESTERN_TM_PROFILE_REF).limit).toBe(currentClassicalScorerDefaultLimit(WESTERN_TM_PROFILE_REF));
     expect(handScorerLocalContext(null, OUTSIDE_THE_BOX_PROFILE_REF).handMode).toBe('normal');
     const clubGame = createBmjaGame(game.players, game.seats, undefined, 'full-game', OUTSIDE_THE_BOX_PROFILE_REF);
     expect(createHandScorerContext(clubGame, 'bill', billWins).rulesProfile).toEqual(OUTSIDE_THE_BOX_PROFILE_REF);
+  });
+
+  it('passes a persisted non-default Buzzard table limit into in-game detailed scoring', () => {
+    const buzzard = createBmjaGame(game.players, game.seats, undefined, 'full-game', BUZZARD_2000_PROFILE_REF, 725);
+    expect(createHandScorerContext(buzzard, 'bill', billWins).limit).toBe(725);
+  });
+
+  it('round-trips East thirteenth consecutive Mah Jong through detailed Buzzard scorer re-entry', () => {
+    const buzzard = createBmjaGame(game.players, game.seats, undefined, 'full-game', BUZZARD_2000_PROFILE_REF);
+    const record = makeCalculatedResult('bill', 100, true, 'east-thirteenth').detailedHand;
+    record.context = { ...record.context, eastThirteenthConsecutiveMahjong: true };
+    const reopened = createHandScorerContext(buzzard, 'bill', billWins, record);
+    expect(handScorerLocalContext(reopened, BUZZARD_2000_PROFILE_REF).eastThirteenthConsecutiveMahjong).toBe(true);
   });
 
   it('inherits the next Club game hand mode after a draw changes it to Goulash', () => {

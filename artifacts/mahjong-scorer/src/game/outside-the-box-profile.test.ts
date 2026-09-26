@@ -1,6 +1,7 @@
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
+import { initialiseCurrentRulesRuntimes } from '../rules-platform/current-runtime-registry';
 import { dragon, set, suited, wind, type MahjongHand } from '../scoring';
-import { canonicalSpecialHandPatterns } from '../scoring/special-hands';
+import { canonicalSpecialHandPatterns, detectSpecialHands } from '../scoring/special-hands';
 import { createBmjaGame } from './game';
 import { loadGameRecovery, saveGameRecovery } from './persistence';
 import {
@@ -11,6 +12,8 @@ import {
   WESTERN_TM_RULESET,
 } from './ruleset';
 import { outsideTheBoxSpecialHandBindings } from './outside-the-box-catalogue';
+
+beforeAll(() => initialiseCurrentRulesRuntimes());
 
 const players = ['east', 'south', 'west', 'north'].map((id) => ({ id, name: id }));
 const seats = { east: 'east', south: 'south', west: 'west', north: 'north' } as const;
@@ -37,10 +40,60 @@ describe('outside-the-box@0.1 special-hand profile', () => {
   });
 
   it('keeps cross-profile values and local overrides isolated', () => {
-    expect(score(OUTSIDE_THE_BOX_RULESET, scholars).specialHands.find(({ id }) => id === 'three-great-scholars')).toMatchObject({ value: 1000, matched: true });
+    expect(score(OUTSIDE_THE_BOX_RULESET, scholars).specialHands.find(({ id }) => id === 'club-three-great-scholars')).toMatchObject({ value: 1000, matched: false });
     expect(score(WESTERN_TM_RULESET, scholars).specialHands.find(({ id }) => id === 'three-great-scholars')).toMatchObject({ value: 1500, matched: true });
     expect(outsideTheBoxSpecialHandBindings.find(({ patternId }) => patternId === 'four-bamboo-one-and-five-green-bamboo-pairs')).toMatchObject({ value: 1000, fishingValue: 400, exposure: { allowed: false } });
     for (const patternId of ['green-dragon-pung-with-bamboo-melds', 'red-dragon-pung-with-character-melds', 'white-dragon-pung-with-circle-melds']) expect(outsideTheBoxSpecialHandBindings.find((binding) => binding.patternId === patternId)).toMatchObject({ exposure: { allowed: true, exposedValue: 500, exposedFishingValue: 200 } });
+  });
+
+  it('matches Club Three Great Scholars only when the remaining set and pair share a numbered suit', () => {
+    const club = (sets: MahjongHand['sets']) => detectSpecialHands({ sets, bonusTiles: [], isWinner: true }, undefined, outsideTheBoxSpecialHandBindings)
+      .find(({ id }) => id === 'club-three-great-scholars');
+    const dragons = [set('red', 'pung', dragon('red')), set('green', 'pung', dragon('green')), set('white', 'pung', dragon('white'))];
+    expect(club([...dragons, set('fourth', 'pung', suited('circles', 4)), set('pair', 'pair', suited('circles', 2))])).toMatchObject({ matched: true, value: 1000 });
+    expect(club([...dragons, set('fourth', 'chow', suited('circles', 4)), set('pair', 'pair', suited('circles', 2))])).toMatchObject({ matched: true, value: 1000 });
+    expect(club([...dragons.map((set) => ({ ...set, kind: 'kong' as const })), set('fourth', 'kong', suited('circles', 4)), set('pair', 'pair', suited('circles', 2))])).toMatchObject({ matched: true, value: 1000 });
+    expect(club([...dragons, set('fourth', 'pung', suited('circles', 4)), set('pair', 'pair', suited('bamboo', 2))])).toMatchObject({ matched: false });
+    expect(club([...dragons, set('fourth', 'chow', suited('circles', 4)), set('pair', 'pair', dragon('red'))])).toMatchObject({ matched: false });
+    expect(club([dragons[0]!, dragons[1]!, set('fourth', 'pung', suited('circles', 4)), set('pair', 'pair', suited('circles', 2))])).toMatchObject({ matched: false });
+    expect(club([...dragons, set('fourth', 'pung', suited('circles', 4)), set('pair', 'pair', suited('circles', 2)), set('extra', 'pung', wind('east'))])).toMatchObject({ matched: false });
+  });
+
+  it('uses the corrected canonical Knitting and Triple Knitting predicates with Club-local bindings', () => {
+    const knitting: MahjongHand = {
+      sets: [],
+      looseTiles: [1, 2, 3, 4, 5, 6, 7].flatMap((rank) => [
+        suited('bamboo', rank as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9),
+        suited('characters', rank as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9),
+      ]),
+      bonusTiles: [],
+      isWinner: true,
+    };
+    const threeSuitKnitting: MahjongHand = {
+      ...knitting,
+      looseTiles: [1, 2, 3, 4, 5, 6, 7].flatMap((rank) => [
+        suited('bamboo', rank as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9),
+        suited('characters', rank as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9),
+      ]).map((tile, index) => index === 13 ? suited('circles', 7) : tile),
+    };
+    const tripleKnitting: MahjongHand = {
+      ...knitting,
+      looseTiles: [1, 3, 5, 7].flatMap((rank) => [
+        suited('bamboo', rank as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9),
+        suited('characters', rank as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9),
+        suited('circles', rank as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9),
+      ]).concat([suited('bamboo', 9), suited('characters', 9)]),
+    };
+    expect(score(OUTSIDE_THE_BOX_RULESET, knitting).specialHands).toContainEqual(expect.objectContaining({ id: 'knitting', matched: true, value: 500 }));
+    expect(score(OUTSIDE_THE_BOX_RULESET, threeSuitKnitting).specialHands).toContainEqual(expect.objectContaining({ id: 'knitting', matched: false }));
+    expect(score(OUTSIDE_THE_BOX_RULESET, tripleKnitting).specialHands).toContainEqual(expect.objectContaining({ id: 'triple-knitting', matched: true, value: 500 }));
+    for (const patternId of ['knitting', 'triple-knitting']) {
+      expect(outsideTheBoxSpecialHandBindings.find(({ patternId: id }) => id === patternId)).toMatchObject({
+        value: 500,
+        fishingValue: 200,
+        exposure: { allowed: false },
+      });
+    }
   });
 
   it('uses any Bamboo ranks for Ruby Jade without changing the Western canonical pattern', () => {

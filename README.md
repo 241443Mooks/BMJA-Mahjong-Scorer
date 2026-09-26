@@ -32,6 +32,8 @@ Current public profiles are:
 | British / BMJA-style | Stable |
 | Western — Thompson & Maloney | Provisional ordinary rules; source-certified Companion special-hand catalogue |
 | Club rules | Configured profile |
+| Buzzard 2000 | Executable and publicly selectable Classical profile |
+| MCR / WMO 2006 | 0.1 Provisional hand scorer and Table Companion; 1.0 awaits experienced-player review |
 
 The project is independent and does not claim BMJA endorsement.
 
@@ -39,7 +41,7 @@ The project is independent and does not claim BMJA endorsement.
 
 A few decisions shape the whole project:
 
-- **Deterministic rules engines are the authority.** AI may later help translate speech into structured evidence; it does not calculate the Mahjong score.
+- **Deterministic rules engines are the authority.** AI may later help translate speech into structured evidence or explain verified facts; it does not invent or calculate the Mahjong rules.
 - **Explain rather than guess.** Unknown material evidence remains unknown and fails conservatively.
 - **Hand value and settlement are separate.** What a hand scores is not automatically what a player pays or receives.
 - **Rules identity is data, not a label.** Saved games retain an exact profile/version so later changes cannot silently reinterpret old play.
@@ -50,25 +52,31 @@ A few decisions shape the whole project:
 
 The project started as a British Mahjong scorer. Adding Western and Club profiles exposed a larger design problem: related Mahjong traditions can share tile structures and pattern recognition while differing in values, settlement, progression and even the scoring grammar itself.
 
-The current architecture therefore uses one profile envelope above a small number of scoring grammars:
+The rules platform therefore uses one profile envelope above a small number of scoring grammars:
 
 1. **Classical points + doubles** — British/Western/Classical profiles;
 2. **Pattern accumulator** — MCR and related traditions;
 3. **Riichi han + fu** — Riichi-family profiles;
 4. **Target catalogue** — American/NMJL-style versioned catalogue matching.
 
-Rules research is deliberately separated from implementation. Buzzard 2000 is source-ready as a Classical configuration proof; the MCR 2006 81-fan correctness corpus and EMA Riichi 2025 yaku/fu/payment corpus are both source-pinned and waiting for the shared runtime platform rather than for more rules discovery.
+Buzzard 2000 is an executable public profile. MCR/WMO 2006 is available for hand scoring and whole-game tracking at version 0.1 Provisional; experienced-player review remains the gate for 1.0. The complete EMA Riichi 2025 source/correctness corpus is ready, but Riichi runtime is not implemented.
 
-Cross-family implementation is staged on `integration/rules-platform-v1` under issue #227. The next engineering slices are #229 (universal type/schema boxes) and #230 (typed registries/labelled pieces). #231 is intentionally held until those two implementation slices provide real feedback.
+The shared rules-platform implementation, permanent parity/replay harness and caller cutover are complete on `integration/rules-platform-v1`; #323 is reconciling that train with production before a separate promotion. Public game routes include `/game/buzzard` and `/game/mcr`. The durable programme authority is issue [#227](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/227) and the rollout tracker [#275](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/275). For the live priority map, use [#105](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/105) rather than treating this README as a roadmap.
 
-For the live priority map, use [issue #105](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/105) rather than treating this README as a roadmap.
+## Structured Mahjong knowledge
+
+The longer-term reference direction is not a wiki or a second prose rules database. Issue [#251](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/251) is building toward a **machine-readable, source/runtime-backed Mahjong knowledge layer** whose human-readable reference pages are views over the same verified concepts, profile treatments, relationships and evidence.
+
+The source-local inventory currently contains **626 entries across 18 corpora** before any cross-family de-duplication or canonical concept matching. Buzzard and MCR now have executable identities; Riichi remains future runtime work, so similar names are not treated as equivalent without proof.
+
+That same structured layer is intended to support future search/reference pages, scorer links, comparison tools and grounded AI/voice explanations. See `docs/product/REFERENCE_KNOWLEDGE_ARCHITECTURE.md`.
 
 ## Other product work
 
 - **Mahjong Reference Plus** is designed as optional convenience: cloud memory, preferences and later metered services; free scoring/table play remains account-free. See `docs/product/MAHJONG_REFERENCE_PLUS_ARCHITECTURE.md` and #206.
 - **Voice hand entry** is an evaluation-first experiment: speech → structured evidence → deterministic scorer → Accept/Edit. See #147.
 - **Analytics** is deliberately limited and cookieless. See `docs/product/ANALYTICS_MEASUREMENT_PLAN.md` and #246.
-- **Search/content growth** is evidence-led. The current strategy is `docs/product/SEO_GROWTH_STRATEGY.md`; major encyclopaedia/SEO expansion is deliberately sequenced after the multi-ruleset runtime exists.
+- **Search/content growth** is evidence-led. The current strategy is `docs/product/SEO_GROWTH_STRATEGY.md`; reference expansion is sequenced around verified rules identities rather than speculative page generation.
 
 ## Repository map
 
@@ -83,7 +91,7 @@ For the live priority map, use [issue #105](https://github.com/241443Mooks/BMJA-
 - `CHANGELOG.md` — durable product milestones
 - `Agents.md` — bounded implementation guardrails
 
-`main` is the production line. The rules-platform migration remains isolated on `integration/rules-platform-v1` until its parity/cutover gates pass.
+`main` is the production line. The completed rules-platform, Buzzard and MCR train is being reconciled from `integration/rules-platform-v1` through #323; production promotion is a separate next step.
 
 ## Stack
 

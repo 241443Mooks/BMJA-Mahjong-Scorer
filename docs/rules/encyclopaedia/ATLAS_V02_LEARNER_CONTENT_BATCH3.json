@@ -1,0 +1,660 @@
+{
+  "schemaVersion": "0.1-proof-batch3",
+  "status": "docs-scoped learner content; completes current BMJA/OTB/Buzzard treatment coverage without changing runtime semantics",
+  "base": "efe2cec955f973a28a5e982160f3b6e39593606a",
+  "scoreAuthority": "derive from exact treatment referenceId",
+  "examples": [
+    {
+      "id": "example-buried-treasure-existing",
+      "kind": "tile-hand",
+      "source": {
+        "type": "existing-example",
+        "id": "buried-treasure"
+      },
+      "scope": "one-valid-example",
+      "presentation": "preserve four concealed Pung groups and pair",
+      "visibleExplanation": "Four concealed Pungs and a concealed pair in one suit. The way you must win depends on the rules.",
+      "accessibleDescription": "Example Buried Treasure hand: concealed Pungs of 2, 4, 6 and 8 Circles, plus a concealed pair of 5 Circles."
+    },
+    {
+      "id": "example-earths-blessing-existing",
+      "kind": "event-sequence",
+      "source": {
+        "type": "existing-example",
+        "id": "earths-blessing"
+      },
+      "scope": "event-definition",
+      "steps": [
+        "East makes the first discard",
+        "Another player claims that discard",
+        "The discard completes Mahjong"
+      ],
+      "visibleExplanation": "A non-East player wins with East's first discard.",
+      "accessibleDescription": "Earth's Blessing event sequence: East makes the first discard of the hand, another player claims it, and that discard completes Mahjong."
+    },
+    {
+      "id": "example-gathering-plum-existing",
+      "kind": "event-sequence",
+      "source": {
+        "type": "existing-example",
+        "id": "gathering-the-plum-blossom-from-the-roof"
+      },
+      "scope": "event-definition",
+      "steps": [
+        "A Kong or bonus replacement draw occurs",
+        "The replacement tile is 5 Circles",
+        "5 Circles completes Mahjong"
+      ],
+      "visibleExplanation": "The replacement tile is 5 Circles and it completes Mahjong.",
+      "accessibleDescription": "Gathering the Plum Blossom from the Roof event sequence: a replacement draw produces 5 Circles, and that tile completes Mahjong."
+    },
+    {
+      "id": "example-plucking-moon-existing",
+      "kind": "event-sequence",
+      "source": {
+        "type": "existing-example",
+        "id": "plucking-the-moon-from-the-bottom-of-the-sea"
+      },
+      "scope": "event-definition",
+      "steps": [
+        "The last drawable live-wall tile is taken",
+        "The tile is 1 Circles",
+        "1 Circles completes Mahjong"
+      ],
+      "visibleExplanation": "The last live-wall tile is 1 Circles and it completes Mahjong.",
+      "accessibleDescription": "Plucking the Moon from the Bottom of the Sea event sequence: the last drawable live-wall tile is 1 Circles, and that tile completes Mahjong."
+    },
+    {
+      "id": "example-buzzard-all-winds-dragons-runtime",
+      "kind": "tile-hand",
+      "source": {
+        "type": "existing-example",
+        "id": "all-winds-and-dragons"
+      },
+      "scope": "runtime-treatment-example",
+      "visibleExplanation": "Buzzard example: four Pungs or Kongs and a pair using only Winds and Dragons.",
+      "accessibleDescription": "current rules Buzzard All Winds and Dragons example: Pungs of East, South, West and North Winds, plus a pair of Red Dragons."
+    },
+    {
+      "id": "example-buzzard-three-winds-pair-runtime",
+      "kind": "tile-hand",
+      "source": {
+        "type": "structured-proof",
+        "groups": [
+          {
+            "kind": "pung",
+            "tile": "east-wind"
+          },
+          {
+            "kind": "pung",
+            "tile": "south-wind"
+          },
+          {
+            "kind": "pung",
+            "tile": "west-wind"
+          },
+          {
+            "kind": "pung",
+            "tile": "5-circles"
+          },
+          {
+            "kind": "pair",
+            "tile": "north-wind"
+          }
+        ]
+      },
+      "scope": "runtime-treatment-example-not-exhaustive-source-qualification",
+      "visibleExplanation": "Winning example: three Wind Pungs or Kongs, the fourth Wind as the pair, plus another set.",
+      "accessibleDescription": "current rules Buzzard Three Winds and a Pair example: Pungs of East, South and West Winds, a pair of North Winds, and a Pung of 5 Circles. Buzzard source evidence also permits a non-winning limit case not represented by this example."
+    },
+    {
+      "id": "example-buzzard-east-first-discard",
+      "kind": "event-sequence",
+      "source": {
+        "type": "structured-proof"
+      },
+      "scope": "event-definition",
+      "steps": [
+        "East makes the first discard",
+        "Another player wins on that discard"
+      ],
+      "visibleExplanation": "Mahjong is made with East's first discard.",
+      "accessibleDescription": "Buzzard East's First Discard event: East makes the first discard and another player completes Mahjong with that tile."
+    },
+    {
+      "id": "example-buzzard-all-ones-nines-runtime",
+      "kind": "tile-hand",
+      "source": {
+        "type": "existing-example",
+        "id": "heads-and-tails"
+      },
+      "scope": "runtime-treatment-example",
+      "visibleExplanation": "Buzzard example: four Pungs or Kongs and a pair made from suited 1s and 9s.",
+      "accessibleDescription": "current rules Buzzard All Ones and Nines example: Pungs of 1 Bamboo, 9 Circles, 1 Character and 9 Bamboo, plus a pair of 9 Characters."
+    },
+    {
+      "id": "example-buzzard-concealed-pungs-kongs",
+      "kind": "tile-hand",
+      "source": {
+        "type": "structured-proof",
+        "groups": [
+          {
+            "kind": "pung",
+            "tile": "2-bamboo",
+            "visibility": "concealed"
+          },
+          {
+            "kind": "pung",
+            "tile": "4-circles",
+            "visibility": "concealed"
+          },
+          {
+            "kind": "pung",
+            "tile": "6-characters",
+            "visibility": "concealed"
+          },
+          {
+            "kind": "pung",
+            "tile": "red-dragon",
+            "visibility": "concealed"
+          },
+          {
+            "kind": "pair",
+            "tile": "east-wind",
+            "visibility": "concealed"
+          }
+        ]
+      },
+      "scope": "one-valid-example",
+      "visibleExplanation": "Four concealed Pungs/Kongs plus a pair.",
+      "accessibleDescription": "Example Buzzard Concealed Pungs/Kongs hand: concealed Pungs of 2 Bamboo, 4 Circles, 6 Characters and Red Dragons, plus a pair of East Winds."
+    },
+    {
+      "id": "example-buzzard-east-thirteenth",
+      "kind": "event-sequence",
+      "source": {
+        "type": "structured-proof"
+      },
+      "scope": "event-definition",
+      "steps": [
+        "East has already won twelve consecutive hands as East",
+        "East wins the thirteenth consecutive Mahjong"
+      ],
+      "visibleExplanation": "East wins a thirteenth consecutive Mahjong while remaining East.",
+      "accessibleDescription": "Buzzard East's Thirteenth Consecutive Mahjong event: East has already retained East through twelve consecutive wins and then wins the thirteenth consecutive hand."
+    }
+  ],
+  "entries": [
+    {
+      "id": "buried-treasure",
+      "state": "reviewed-concept",
+      "displayName": "Buried Treasure",
+      "treatmentReferenceIds": [
+        "bmja@1.0:buried-treasure",
+        "outside-the-box@0.1:buried-treasure"
+      ],
+      "facets": [
+        "ordinary-grouped",
+        "one-suit",
+        "pungs-kongs",
+        "pairs"
+      ],
+      "summary": "Four concealed Pungs and a concealed pair in one suit. The winning rules depend on the version you play.",
+      "whatItIs": "Make four concealed Pungs and a concealed pair in one numbered suit.",
+      "whatItMeans": "Keep the hand concealed. The rules also set how you must win.",
+      "whySpecial": "The concealed Pungs and the way you win make this hand unusual.",
+      "exampleIds": [
+        "example-buried-treasure-existing"
+      ],
+      "evidenceBindings": [
+        {
+          "kind": "runtime-binding",
+          "path": "artifacts/mahjong-scorer/src/scoring/special-hands.ts",
+          "locator": "bmjaSpecialHandBindings / buried-treasure",
+          "supports": [
+            "bmja-treatment-qualification"
+          ],
+          "status": "current-executable"
+        },
+        {
+          "kind": "repo-evidence",
+          "path": "docs/rules/OUTSIDE_THE_BOX_PROFILE_CROSSWALK.md",
+          "locator": "§2 Buried Treasure",
+          "supports": [
+            "outside-the-box-treatment-qualification",
+            "reuse-identical",
+            "provenance-wall-rule-retained"
+          ],
+          "status": "verified-club"
+        }
+      ],
+      "actions": [
+        {
+          "kind": "scorer-example",
+          "exampleId": "buried-treasure",
+          "profileReferenceId": "bmja@1.0:buried-treasure"
+        }
+      ]
+    },
+    {
+      "id": "earths-blessing-bmja",
+      "state": "standalone-verified-treatment",
+      "displayName": "Earth's Blessing",
+      "treatmentReferenceIds": [
+        "bmja@1.0:earths-blessing"
+      ],
+      "facets": [
+        "event-defined"
+      ],
+      "summary": "A non-East player wins from East’s first discard.",
+      "whatItIs": "Win with East’s first discard.",
+      "whatItMeans": "The hand shape can be ordinary; the special comes from the exact moment and discarder that provide the winning tile.",
+      "whySpecial": "East’s first discard ends the hand before normal play develops.",
+      "exampleIds": [
+        "example-earths-blessing-existing"
+      ],
+      "referenceNote": "This BMJA hand is won from East’s first discard.",
+      "evidenceBindings": [
+        {
+          "kind": "reviewed-audit",
+          "path": "docs/rules/encyclopaedia/CLASSICAL_ATLAS_CONCEPT_AUDIT_V1.md",
+          "locator": "§8 Heaven's/Earth's Blessing and event-defined treatments",
+          "supports": [
+            "bmja-event-qualification",
+            "cross-profile-caution"
+          ],
+          "status": "reviewed"
+        },
+        {
+          "kind": "repo-evidence",
+          "path": "docs/rules/BMJA_RULES_REFERENCE.md",
+          "locator": "Event-dependent specials — Earth's Blessing",
+          "supports": [
+            "east-first-discard-event"
+          ],
+          "status": "current-reference"
+        }
+      ],
+      "actions": [
+        {
+          "kind": "scorer-example",
+          "exampleId": "earths-blessing",
+          "profileReferenceId": "bmja@1.0:earths-blessing"
+        }
+      ]
+    },
+    {
+      "id": "gathering-plum-blossom-bmja",
+      "state": "standalone-verified-treatment",
+      "displayName": "Gathering the Plum Blossom from the Roof",
+      "treatmentReferenceIds": [
+        "bmja@1.0:gathering-plum-blossom"
+      ],
+      "facets": [
+        "event-defined"
+      ],
+      "summary": "A replacement draw gives you the 5 Circles that completes Mahjong.",
+      "whatItIs": "Draw the 5 Circles as a replacement tile, and use it to win.",
+      "whatItMeans": "The final hand shape alone is not enough; the scorer needs to know that 5 Circles arrived as the qualifying replacement draw.",
+      "whySpecial": "The winning tile must be the 5 Circles drawn as a replacement tile.",
+      "exampleIds": [
+        "example-gathering-plum-existing"
+      ],
+      "evidenceBindings": [
+        {
+          "kind": "runtime-binding",
+          "path": "artifacts/mahjong-scorer/src/scoring/special-hands.ts",
+          "locator": "bmjaSpecialHandBindings / gathering-plum-blossom",
+          "supports": [
+            "current-event-treatment"
+          ],
+          "status": "current-executable"
+        },
+        {
+          "kind": "repo-evidence",
+          "path": "docs/rules/BMJA_RULES_REFERENCE.md",
+          "locator": "Event-dependent specials — Gathering the Plum Blossom from the Roof",
+          "supports": [
+            "replacement-draw",
+            "5-circles-winning-tile"
+          ],
+          "status": "current-reference"
+        }
+      ],
+      "actions": [
+        {
+          "kind": "scorer-example",
+          "exampleId": "gathering-the-plum-blossom-from-the-roof",
+          "profileReferenceId": "bmja@1.0:gathering-plum-blossom"
+        }
+      ]
+    },
+    {
+      "id": "plucking-moon-bmja",
+      "state": "standalone-verified-treatment",
+      "displayName": "Plucking the Moon from the Bottom of the Sea",
+      "treatmentReferenceIds": [
+        "bmja@1.0:plucking-moon"
+      ],
+      "facets": [
+        "event-defined"
+      ],
+      "summary": "The last drawable tile is 1 Circle, and it completes Mahjong.",
+      "whatItIs": "Draw the last live-wall tile, the 1 Circle, and use it to win.",
+      "whatItMeans": "The winning tile and its place in the wall both matter. The same final tiles won another way do not make this hand.",
+      "whySpecial": "The hand must win on the 1 Circle from the last live-wall draw.",
+      "exampleIds": [
+        "example-plucking-moon-existing"
+      ],
+      "evidenceBindings": [
+        {
+          "kind": "runtime-binding",
+          "path": "artifacts/mahjong-scorer/src/scoring/special-hands.ts",
+          "locator": "bmjaSpecialHandBindings / plucking-moon",
+          "supports": [
+            "current-event-treatment"
+          ],
+          "status": "current-executable"
+        },
+        {
+          "kind": "repo-evidence",
+          "path": "docs/rules/BMJA_RULES_REFERENCE.md",
+          "locator": "Event-dependent specials — Plucking the Moon from the Bottom of the Sea",
+          "supports": [
+            "last-wall-event",
+            "1-circles-winning-tile"
+          ],
+          "status": "current-reference"
+        }
+      ],
+      "actions": [
+        {
+          "kind": "scorer-example",
+          "exampleId": "plucking-the-moon-from-the-bottom-of-the-sea",
+          "profileReferenceId": "bmja@1.0:plucking-moon"
+        }
+      ]
+    },
+    {
+      "id": "buzzard-all-winds-dragons",
+      "state": "standalone-verified-treatment",
+      "displayName": "All Winds and Dragons",
+      "treatmentReferenceIds": [
+        "buzzard-2000@0.1:all-winds-and-dragons"
+      ],
+      "facets": [
+        "ordinary-grouped",
+        "honours",
+        "winds",
+        "dragons",
+        "pungs-kongs",
+        "pairs"
+      ],
+      "summary": "Four Pungs or Kongs and a pair made only from Winds and Dragons.",
+      "whatItIs": "Make four honour Pungs or Kongs and a pair. Buzzard scores this named hand at the table limit.",
+      "whatItMeans": "Every set and the pair are Winds or Dragons. No suited tiles appear.",
+      "whySpecial": "Buzzard lists All Winds and Dragons among its ten limit hands, irrespective of ordinary score value.",
+      "exampleIds": [
+        "example-buzzard-all-winds-dragons-runtime"
+      ],
+      "referenceNote": "This describes the Buzzard 2000 hand. Other rules may define a hand with the same name differently.",
+      "evidenceBindings": [
+        {
+          "kind": "repo-evidence",
+          "path": "docs/rules/BUZZARD_2000_RULE_EVIDENCE.md",
+          "locator": "§B Winner only — All Winds and Dragons; §D Limit hands item 1",
+          "supports": [
+            "buzzard-named-treatment",
+            "configured-limit-status"
+          ],
+          "status": "source-complete-for-scoring-design"
+        },
+        {
+          "kind": "runtime-binding",
+          "path": "artifacts/mahjong-scorer/src/game/buzzard-2000.ts",
+          "locator": "all-winds-and-dragons",
+          "supports": [
+            "current-executable-predicate-binding"
+          ],
+          "status": "current-executable"
+        }
+      ]
+    },
+    {
+      "id": "buzzard-three-winds-pair",
+      "state": "standalone-verified-treatment",
+      "displayName": "Three Winds and a Pair",
+      "treatmentReferenceIds": [
+        "buzzard-2000@0.1:three-winds-and-fourth-wind-pair"
+      ],
+      "facets": [
+        "winds",
+        "pungs-kongs",
+        "pairs"
+      ],
+      "summary": "Three Wind Pungs or Kongs, a pair of the fourth Wind, and one more set.",
+      "whatItIs": "A Buzzard hand with Pungs or Kongs of three Winds and a pair of the fourth Wind.",
+      "whatItMeans": "The winning form has Pung/Kongs of three distinct Winds, a pair of the fourth Wind, and one ordinary Chow, Pung or Kong. It is materially different from Four Blessings, which requires four Wind Pung/Kongs.",
+      "whySpecial": "Buzzard requires three Wind sets, the fourth Wind as a pair, and one other set.",
+      "exampleIds": [
+        "example-buzzard-three-winds-pair-runtime"
+      ],
+      "referenceNote": "Buzzard also has a separate table-score rule for some hands that do not win as this special hand.",
+      "evidenceBindings": [
+        {
+          "kind": "repo-evidence",
+          "path": "docs/rules/BUZZARD_2000_RULE_EVIDENCE.md",
+          "locator": "§D Limit hands / retained PDF p.11 — completed Four-Wind hand",
+          "supports": [
+            "three-distinct-wind-pung-kongs",
+            "fourth-wind-pair",
+            "complete-winning-hand",
+            "local-name",
+            "configured-limit-membership"
+          ],
+          "status": "source-verified"
+        },
+        {
+          "kind": "runtime-binding",
+          "path": "artifacts/mahjong-scorer/src/game/buzzard-2000.ts",
+          "locator": "three-winds-and-fourth-wind-pair",
+          "supports": [
+            "complete-five-group-winning-predicate",
+            "chow-pung-kong-final-set"
+          ],
+          "status": "current-executable-after-issue-365"
+        },
+        {
+          "kind": "repo-evidence",
+          "path": "docs/rules/BUZZARD_2000_RULE_EVIDENCE.md",
+          "locator": "§E non-winner limits / retained PDF pp.11–12",
+          "supports": [
+            "separate-incomplete-four-wind-profile-score-result"
+          ],
+          "status": "source-verified"
+        },
+        {
+          "kind": "runtime-binding",
+          "path": "artifacts/mahjong-scorer/src/game/types.ts",
+          "locator": "ProfileScoreResult resultId union",
+          "supports": [
+            "profile-score-result-link-is-not-a-special-hand-treatment"
+          ],
+          "status": "existing-runtime-contract"
+        }
+      ],
+      "localNames": [
+        "Three Winds"
+      ],
+      "knowledgeLinks": [
+        {
+          "kind": "profile-score-result",
+          "profile": "buzzard-2000@0.1",
+          "resultId": "buzzard.incomplete-four-wind-limit",
+          "relationship": "same-source-family-non-winner-consequence",
+          "authority": "issue-220-runtime"
+        }
+      ]
+    },
+    {
+      "id": "buzzard-east-first-discard",
+      "state": "standalone-verified-treatment",
+      "displayName": "East's First Discard",
+      "treatmentReferenceIds": [
+        "buzzard-2000@0.1:earths-blessing"
+      ],
+      "facets": [
+        "event-defined"
+      ],
+      "summary": "Mahjong is made with East Wind's first discard.",
+      "whatItIs": "A special win from East’s first discard. Buzzard scores it at the table limit.",
+      "whatItMeans": "The completed hand does not define the special by itself; the winning tile must be East's first discard.",
+      "whySpecial": "Buzzard lists this immediate first-discard win among its ten limit hands.",
+      "exampleIds": [
+        "example-buzzard-east-first-discard"
+      ],
+      "referenceNote": "This describes the Buzzard 2000 rule. It does not establish that every ruleset uses the same rule as BMJA Earth’s Blessing.",
+      "evidenceBindings": [
+        {
+          "kind": "repo-evidence",
+          "path": "docs/rules/BUZZARD_2000_RULE_EVIDENCE.md",
+          "locator": "§D Limit hands item 4",
+          "supports": [
+            "east-first-discard-limit-event"
+          ],
+          "status": "source-complete-for-local-event"
+        },
+        {
+          "kind": "reviewed-audit",
+          "path": "docs/rules/encyclopaedia/CLASSICAL_ATLAS_CONCEPT_AUDIT_V1.md",
+          "locator": "§8 Heaven's/Earth's Blessing and event-defined treatments",
+          "supports": [
+            "cross-profile-equivalence-not-proved"
+          ],
+          "status": "reviewed"
+        }
+      ]
+    },
+    {
+      "id": "buzzard-all-ones-nines",
+      "state": "standalone-verified-treatment",
+      "displayName": "All Ones and Nines",
+      "treatmentReferenceIds": [
+        "buzzard-2000@0.1:heads-and-tails"
+      ],
+      "facets": [
+        "ordinary-grouped",
+        "terminals",
+        "pungs-kongs",
+        "pairs"
+      ],
+      "summary": "Four Pungs or Kongs and a pair made only from suited 1s and 9s.",
+      "whatItIs": "Use only the 1 and 9 tiles from Bamboo, Circles and Characters.",
+      "whatItMeans": "Winds and Dragons are not part of this hand.",
+      "whySpecial": "Buzzard lists All Ones and Nines among its ten limit hands.",
+      "exampleIds": [
+        "example-buzzard-all-ones-nines-runtime"
+      ],
+      "referenceNote": "Buzzard scores this hand at the table limit. Other rules may score similar tile patterns differently.",
+      "evidenceBindings": [
+        {
+          "kind": "repo-evidence",
+          "path": "docs/rules/BUZZARD_2000_RULE_EVIDENCE.md",
+          "locator": "§D Limit hands item 5",
+          "supports": [
+            "all-ones-and-nines-limit"
+          ],
+          "status": "source-complete-for-scoring-design"
+        },
+        {
+          "kind": "runtime-binding",
+          "path": "artifacts/mahjong-scorer/src/game/buzzard-2000.ts",
+          "locator": "heads-and-tails / local name All Ones and Nines",
+          "supports": [
+            "current-executable-predicate-binding"
+          ],
+          "status": "current-executable"
+        }
+      ]
+    },
+    {
+      "id": "buzzard-concealed-pungs-kongs",
+      "state": "standalone-verified-treatment",
+      "displayName": "Concealed Pungs/Kongs",
+      "treatmentReferenceIds": [
+        "buzzard-2000@0.1:four-concealed-pung-kong-hand"
+      ],
+      "facets": [
+        "ordinary-grouped",
+        "pungs-kongs",
+        "pairs"
+      ],
+      "summary": "Four concealed Pungs or Kongs and a pair.",
+      "whatItIs": "Make four concealed Pungs or Kongs and a pair. Buzzard scores this named hand at the table limit.",
+      "whatItMeans": "The grouped structure is ordinary, but every meld must satisfy the concealed Pung/Kong condition represented by the current detector.",
+      "whySpecial": "Buzzard scores concealed Pungs and Kongs as a named limit hand.",
+      "exampleIds": [
+        "example-buzzard-concealed-pungs-kongs"
+      ],
+      "evidenceBindings": [
+        {
+          "kind": "repo-evidence",
+          "path": "docs/rules/BUZZARD_2000_RULE_EVIDENCE.md",
+          "locator": "§D Limit hands item 7; §B remove generic fully-concealed ordinary double",
+          "supports": [
+            "concealed-pungs-kongs-limit",
+            "distinct-from-generic-concealed-double"
+          ],
+          "status": "source-complete"
+        },
+        {
+          "kind": "runtime-binding",
+          "path": "artifacts/mahjong-scorer/src/game/buzzard-2000.ts",
+          "locator": "four-concealed-pung-kong-hand",
+          "supports": [
+            "current-executable-predicate-binding"
+          ],
+          "status": "current-executable"
+        }
+      ]
+    },
+    {
+      "id": "buzzard-east-thirteenth-consecutive-mahjong",
+      "state": "standalone-verified-treatment",
+      "displayName": "East's Thirteenth Consecutive Mahjong",
+      "treatmentReferenceIds": [
+        "buzzard-2000@0.1:east-thirteenth-consecutive-mahjong"
+      ],
+      "facets": [
+        "event-defined"
+      ],
+      "summary": "East wins a thirteenth consecutive hand while remaining East.",
+      "whatItIs": "East wins the thirteenth hand in a row.",
+      "whatItMeans": "This depends on the game history, not on a particular tile pattern.",
+      "whySpecial": "Buzzard rewards the thirteenth consecutive East win as a limit event.",
+      "exampleIds": [
+        "example-buzzard-east-thirteenth"
+      ],
+      "evidenceBindings": [
+        {
+          "kind": "repo-evidence",
+          "path": "docs/rules/BUZZARD_2000_RULE_EVIDENCE.md",
+          "locator": "§D Limit hands item 10",
+          "supports": [
+            "east-thirteenth-consecutive-limit-event"
+          ],
+          "status": "source-complete"
+        },
+        {
+          "kind": "runtime-binding",
+          "path": "artifacts/mahjong-scorer/src/game/buzzard-2000.ts",
+          "locator": "east-thirteenth-consecutive-mahjong",
+          "supports": [
+            "current-executable-event-binding"
+          ],
+          "status": "current-executable"
+        }
+      ]
+    }
+  ]
+}

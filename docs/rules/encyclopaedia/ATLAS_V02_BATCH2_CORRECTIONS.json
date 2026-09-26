@@ -1,0 +1,35 @@
+{
+  "schemaVersion": "0.1-corrections",
+  "appliesTo": "ATLAS_V02_LEARNER_CONTENT_BATCH2.json",
+  "facetDefinitionAdditions": {
+    "hybrid-layout": "Qualification deliberately combines represented meld/pair groups with loose tiles rather than using either a complete ordinary four-melds-plus-pair decomposition or a wholly loose irregular collection."
+  },
+  "entryCorrections": [
+    {
+      "entryId": "hovering-angel",
+      "addFacets": ["pairs"]
+    },
+    {
+      "entryId": "windy-ones",
+      "addFacets": ["hybrid-layout"]
+    },
+    {
+      "entryId": "windy-nines",
+      "addFacets": ["hybrid-layout"]
+    },
+    {
+      "entryId": "windy-chow",
+      "addFacets": ["hybrid-layout"]
+    },
+    {
+      "entryId": "dragonfly",
+      "removeFacets": ["ordinary-grouped"],
+      "addFacets": ["hybrid-layout"]
+    },
+    {
+      "entryId": "wriggly-dragon",
+      "addFacets": ["pairs"]
+    }
+  ],
+  "reason": "The second batch exposed a useful third structural presentation shape. Windy Ones/Nines/Chow and Dragonfly combine loose honour tiles with represented groups, so classifying them as ordinary grouped or wholly irregular would mis-teach the hand structure."
+}

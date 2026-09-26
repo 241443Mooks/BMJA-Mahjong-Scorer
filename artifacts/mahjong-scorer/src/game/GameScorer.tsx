@@ -11,24 +11,29 @@ import {
   X,
 } from 'lucide-react';
 import { HandRecord, settlementDescription } from './HandRecord';
+import { McrHandRecord, mcrSettlementDescription } from './McrPresentation';
+import { presentMcrScore } from './mcr-score-presentation';
 import { incidentDescription } from './outside-the-box-incidents';
 import { SiteHeader } from '../components/SiteHeader';
 import {
   applyManualScore,
   applyHandScorerSession,
   confirmHand,
-  createBmjaGame,
+  createGameScorerGame,
   createHandScorerContext,
   GAME_WINDS,
   reconcileDetailedHandsForOutcome,
   returnAppliedScoreToTable,
   undoLastHand,
-  resolveRulesProfile,
   clearGameRecovery,
-  loadInProgressGameRecovery,
-  saveGameRecovery,
+  loadInProgressGameRecoveryCore,
+  saveGameRecoveryV2,
 } from '.';
+import { mapCurrentRuntimeSettlement } from '../rules-platform/current-runtime-compat';
+import { getCurrentCompiledRulesRuntime } from '../rules-platform/current-runtime-registry';
+import { gameScorerCurrentRound, gameScorerSetup, gameScorerSupports, isClassicalGameState } from './game-scorer-setup';
 import { RulesProfilePicker } from './RulesProfilePicker';
+import { preferredRulesProfileStorage, setPreferredRulesProfile } from './preferred-rules-profile';
 import { descriptorForRulesProfile, isBritishRulesProfile } from './rules-presentation';
 import { prepareFullPrintDisclosures, watchPrintLifecycle } from './print-disclosures';
 import type {
@@ -43,9 +48,14 @@ import type {
   RoundScoreDraft,
   RoundScoringDraft,
   RoundIncident,
+  BuzzardIncident,
+  ProfileScoreResult,
   RulesProfileRef,
   SeatAssignments,
+  McrRoundInput,
+  McrConfirmedHand,
 } from '.';
+import { applyMcrScorerResult, buildMcrRoundInput, mcrTableProfile, transitionMcrRouting, type McrRoutingState } from './mcr-table-routing';
 import type { Wind } from '../scoring';
 
 type GameScorerProps = {
@@ -53,6 +63,7 @@ type GameScorerProps = {
   returnedScore?: HandScorerResult | null;
   onClearReturnedScore: () => void;
   initialRulesProfile: RulesProfileRef;
+  initialRulesProfileIsExplicit?: boolean;
 };
 
 const windLabel = (wind: Wind) =>
@@ -80,23 +91,28 @@ export const recoveredGameConflictsWithRoute = (game: GameState, routeProfile: R
 export const shouldShowBritishSetupHelper = (profile: RulesProfileRef) =>
   isBritishRulesProfile(profile);
 
+const supports = gameScorerSupports;
+
 export const previewRoundSettlement = (
   game: GameState,
   outcome: HandOutcome,
   scores: RoundScoreDraft,
-  incidents: RoundIncident[] = [],
+  incidents: RoundIncident[] = [], buzzardIncidents: BuzzardIncident[] = [], profileScoreResults: Partial<Record<string, ProfileScoreResult>> = {},
 ) => {
   const fullScores = Object.fromEntries(
     game.players.map((player) => [player.id, scores[player.id] ?? 0]),
   ) as PlayerAmounts;
-  const ruleset = resolveRulesProfile(game.setup.rulesProfile);
-  if (!ruleset.prepareRound && incidents.length > 0) throw new Error(`${ruleset.name} does not support round incidents.`);
-  const round = { outcome, scores: fullScores, incidents };
-  const prepared = ruleset.prepareRound ? ruleset.prepareRound(game.players, game.seats, round) : round;
-  return ruleset.settleRound(
-    game.players,
-    game.seats,
-    prepared,
+  const compiled = getCurrentCompiledRulesRuntime(game.setup.rulesProfile);
+  if (compiled.grammar !== 'classical-points-doubles') throw new Error('Classical settlement preview cannot be used for an MCR round.');
+  const runtime = compiled.runtime;
+  if (!runtime.prepareRound && incidents.length > 0) throw new Error('This rules profile does not support round incidents.');
+  const round = { outcome, scores: fullScores, incidents, buzzardIncidents, profileScoreResults };
+  const prepared = runtime.prepareRound
+    ? runtime.prepareRound({ players: game.players, seats: game.seats, round, tableLimit: game.setup.tableLimit } as Parameters<NonNullable<typeof runtime.prepareRound>>[0])
+    : round;
+  return mapCurrentRuntimeSettlement(
+    game.players.map(({ id }) => id),
+    runtime.settleRound({ players: game.players, seats: game.seats, round: prepared, tableLimit: game.setup.tableLimit } as Parameters<typeof runtime.settleRound>[0]),
   );
 };
 
@@ -104,10 +120,10 @@ export const getRoundSettlementPreview = (
   game: GameState,
   outcome: HandOutcome,
   scores: RoundScoreDraft,
-  incidents: RoundIncident[] = [],
+  incidents: RoundIncident[] = [], buzzardIncidents: BuzzardIncident[] = [], profileScoreResults: Partial<Record<string, ProfileScoreResult>> = {},
 ): { settlement: ReturnType<typeof previewRoundSettlement> | null; error: string | null } => {
   try {
-    return { settlement: previewRoundSettlement(game, outcome, scores, incidents), error: null };
+    return { settlement: previewRoundSettlement(game, outcome, scores, incidents, buzzardIncidents, profileScoreResults), error: null };
   } catch (caught) {
     return { settlement: null, error: caught instanceof Error ? caught.message : 'This round cannot be settled.' };
   }
@@ -122,6 +138,32 @@ export const settlementPreviewPresentation = (
   return outcome?.type === 'win' && game.players.every((player) => scores[player.id] !== undefined)
     ? 'transactions' as const
     : 'awaiting-scores' as const;
+};
+
+export const selectProfileScoreResult = (
+  scores: RoundScoreDraft,
+  scoreRecords: PlayerScoreRecords,
+  previousProfileScoreResults: Partial<Record<string, ProfileScoreResult>>,
+  playerId: string,
+  resultId: ProfileScoreResult['resultId'] | '',
+  tableLimit: number,
+) => {
+  const previousPlayerId = Object.keys(previousProfileScoreResults)[0];
+  const nextScores = { ...scores };
+  const nextScoreRecords = { ...scoreRecords };
+  if (previousPlayerId) {
+    delete nextScores[previousPlayerId];
+    delete nextScoreRecords[previousPlayerId];
+  }
+  if (playerId && resultId) {
+    nextScores[playerId] = tableLimit;
+    delete nextScoreRecords[playerId];
+  }
+  return {
+    profileScoreResults: playerId && resultId ? { [playerId]: { resultId } } : {},
+    scores: nextScores,
+    scoreRecords: nextScoreRecords,
+  };
 };
 
 export const gameWorkspaceStage = (
@@ -142,21 +184,28 @@ export const shouldKeepScoreEntryOpen = (stage: GameWorkspaceStage, editingHand:
 export const shouldShowEditCurrentHandSummary = (stage: GameWorkspaceStage, editingHand: boolean) =>
   stage === 'settlement' && !editingHand;
 
-export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedScore, initialRulesProfile }: GameScorerProps) {
-  const [recovered, setRecovered] = useState(() =>
-    typeof window === 'undefined'
-      ? null
-      : loadInProgressGameRecovery(window.localStorage),
-  );
+export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedScore, initialRulesProfile, initialRulesProfileIsExplicit = false }: GameScorerProps) {
+  const [recovered, setRecovered] = useState(() => {
+    const storage = preferredRulesProfileStorage();
+    return storage ? loadInProgressGameRecoveryCore(storage) : null;
+  });
   const [names, setNames] = useState(['', '', '', '']);
-  const [gameLength, setGameLength] = useState<GameLength>(recovered?.game.setup.gameLength ?? 'one-round');
+  const [gameLength, setGameLength] = useState<GameLength>(recovered?.game.setup.gameLength ?? gameScorerSetup(initialRulesProfile, 'one-round').gameLength);
   const [game, setGame] = useState<GameState | null>(recovered?.game ?? null);
   const [selectedRulesProfile, setSelectedRulesProfile] = useState<RulesProfileRef>(() => recovered?.game.setup.rulesProfile ?? initialRulesProfile);
-  const [outcomeType, setOutcomeType] = useState<'win' | 'draw'>(recovered?.outcomeType ?? 'win');
-  const [winnerId, setWinnerId] = useState(recovered?.winnerId ?? '');
-  const [scores, setScores] = useState<RoundScoreDraft>(recovered?.draft.scores ?? {});
-  const [scoreRecords, setScoreRecords] = useState<PlayerScoreRecords>(recovered?.draft.scoreRecords ?? {});
-  const [incidents, setIncidents] = useState<RoundIncident[]>(recovered?.draft.incidents ?? []);
+  const recoveredClassical = recovered?.currentRound.grammar === 'classical-points-doubles' ? recovered.currentRound : null;
+  const [outcomeType, setOutcomeType] = useState<'win' | 'draw'>(recoveredClassical?.outcomeType ?? (recovered?.currentRound.grammar === 'pattern-accumulator' ? recovered.currentRound.outcomeType ?? 'win' : 'win'));
+  const [winnerId, setWinnerId] = useState(recoveredClassical?.winnerId ?? (recovered?.currentRound.grammar === 'pattern-accumulator' ? recovered.currentRound.winnerId ?? '' : ''));
+  const recoveredDraft = recovered?.currentRound.draft;
+  const [scores, setScores] = useState<RoundScoreDraft>(recoveredDraft?.scores ?? {});
+  const [scoreRecords, setScoreRecords] = useState<PlayerScoreRecords>(recoveredDraft?.scoreRecords ?? {});
+  const [mcrRoute, setMcrRoute] = useState<McrRoutingState>(() => recovered?.currentRound.grammar === 'pattern-accumulator'
+    ? { outcomeType: recovered.currentRound.outcomeType, winnerId: recovered.currentRound.winnerId, winSource: recovered.currentRound.winSource, discarderId: recovered.currentRound.discarderId, draft: structuredClone(recovered.currentRound.draft) }
+    : { draft: { scores: {}, scoreRecords: {} } });
+  const [incidents, setIncidents] = useState<RoundIncident[]>(recoveredDraft && 'incidents' in recoveredDraft ? recoveredDraft.incidents ?? [] : []);
+  const [buzzardIncidents, setBuzzardIncidents] = useState<BuzzardIncident[]>(recoveredDraft && 'buzzardIncidents' in recoveredDraft ? recoveredDraft.buzzardIncidents ?? [] : []);
+  const [profileScoreResults, setProfileScoreResults] = useState<Partial<Record<string, ProfileScoreResult>>>(recoveredDraft && 'profileScoreResults' in recoveredDraft ? recoveredDraft.profileScoreResults ?? {} : {});
+  const [tableLimit, setTableLimit] = useState<number | undefined>(() => recovered?.game.setup.tableLimit ?? gameScorerSetup(initialRulesProfile, 'one-round').tableLimit);
   const [error, setError] = useState('');
   const [printMode, setPrintMode] = useState<'summary' | 'full' | null>(null);
   const [editingHand, setEditingHand] = useState(false);
@@ -169,7 +218,7 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
   const currentEastId = game
     ? Object.entries(game.seats).find(([, seat]) => seat === 'east')?.[0]
     : undefined;
-  const recoveredProfileConflictsWithRoute = !!recovered && recoveredGameConflictsWithRoute(recovered.game, initialRulesProfile);
+  const recoveredProfileConflictsWithRoute = !!recovered && initialRulesProfileIsExplicit && recoveredGameConflictsWithRoute(recovered.game, initialRulesProfile);
 
   const outcome = useMemo<HandOutcome | null>(
     () =>
@@ -184,19 +233,19 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
   );
 
   useEffect(() => {
-    if (!game || typeof window === 'undefined') return;
+    const storage = preferredRulesProfileStorage();
+    if (!game || !storage) return;
     if (game.isComplete) {
-      clearGameRecovery(window.localStorage);
+      clearGameRecovery(storage);
       return;
     }
-    saveGameRecovery(
-      window.localStorage,
-      game,
-      outcomeType,
-      winnerId,
-      { scores, scoreRecords, incidents },
+    const currentRound = gameScorerCurrentRound(
+      game, recovered?.currentRound ?? null, outcomeType, winnerId,
+      { scores, scoreRecords, incidents, buzzardIncidents, profileScoreResults },
+      mcrTableProfile(game.setup.rulesProfile) ? mcrRoute : undefined,
     );
-  }, [game, outcomeType, scoreRecords, scores, incidents, winnerId]);
+    saveGameRecoveryV2(storage, game, currentRound);
+  }, [game, outcomeType, scoreRecords, scores, incidents, buzzardIncidents, profileScoreResults, winnerId, recovered, mcrRoute]);
 
   useEffect(() => {
     if (!printMode || typeof window === 'undefined') return;
@@ -222,7 +271,23 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
   }, [printMode]);
 
   useEffect(() => {
-    if (returnedScore === undefined || !game || !outcome) return;
+    if (returnedScore === undefined || !game) return;
+    if (mcrTableProfile(game.setup.rulesProfile)) {
+      if (returnedScore === null) { onClearReturnedScore(); return; }
+      try {
+        if (!returnedScore || returnedScore.grammar !== 'pattern-accumulator') throw new Error('Only a canonical MCR hand score can be applied here.');
+        setMcrRoute((current) => applyMcrScorerResult(game, current, returnedScore));
+        setError('');
+      } catch (caught) {
+        setError(caught instanceof Error ? caught.message : 'The MCR hand score could not be applied.');
+      } finally { onClearReturnedScore(); }
+      return;
+    }
+    if (!outcome) return;
+    if (getCurrentCompiledRulesRuntime(game.setup.rulesProfile).grammar !== 'classical-points-doubles') {
+      onClearReturnedScore();
+      return;
+    }
 
     try {
       const returned = applyHandScorerSession(
@@ -253,6 +318,7 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
     returnedScore,
     scoreRecords,
     scores,
+    mcrRoute,
   ]);
 
   const changeRoundOutcome = (nextOutcome: HandOutcome) => {
@@ -283,11 +349,12 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
 
   const preview = useMemo(() => {
     if (!game || !outcome) return { settlement: null, error: null };
-    return getRoundSettlementPreview(game, outcome, scores, incidents);
-  }, [game, outcome, scores, incidents]);
+    return getRoundSettlementPreview(game, outcome, scores, incidents, buzzardIncidents, profileScoreResults);
+  }, [game, outcome, scores, incidents, buzzardIncidents, profileScoreResults]);
   const previewPresentation = game
     ? settlementPreviewPresentation(game, outcome, scores)
     : 'awaiting-scores';
+  const selectedProfileResult = Object.entries(profileScoreResults)[0];
   const settlementReadyForReview = previewPresentation !== 'awaiting-scores';
   const workspaceStage = game
     ? gameWorkspaceStage(
@@ -314,29 +381,40 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
     const seats = Object.fromEntries(
       players.map((player, index) => [player.id, GAME_WINDS[index]]),
     ) as SeatAssignments;
-    if (typeof window !== 'undefined') clearGameRecovery(window.localStorage);
+    const storage = preferredRulesProfileStorage();
+    if (storage) clearGameRecovery(storage);
     setRecovered(null);
-    const started = createBmjaGame(players, seats, undefined, gameLength, selectedRulesProfile);
+    const setup = gameScorerSetup(selectedRulesProfile, gameLength, tableLimit);
+    if (setup.grammar === 'classical-points-doubles' && (!Number.isFinite(setup.tableLimit) || setup.tableLimit! <= 0)) { setError('Enter a positive table limit.'); return; }
+    const started = createGameScorerGame(players, seats, gameLength, selectedRulesProfile, setup.tableLimit);
     setGame(started);
     setScores({});
     setScoreRecords({});
     setIncidents([]);
+    setBuzzardIncidents([]);
+    setProfileScoreResults({});
     setEditingHand(false);
     setSettlementReviewRequested(false);
     setWinnerId(players[0].id);
+    setMcrRoute({ draft: { scores: {}, scoreRecords: {} } });
     setError('');
   };
 
   const startOver = () => {
     if (typeof window !== 'undefined' && !window.confirm('Start over? Your current saved game will be discarded.')) return;
-    if (typeof window !== 'undefined') clearGameRecovery(window.localStorage);
+    const storage = preferredRulesProfileStorage();
+    if (storage) clearGameRecovery(storage);
     setRecovered(null);
     setGame(null);
     setSelectedRulesProfile(initialRulesProfile);
+    setTableLimit(gameScorerSetup(initialRulesProfile, 'one-round').tableLimit);
     setScores({});
     setScoreRecords({});
     setIncidents([]);
+    setBuzzardIncidents([]);
+    setProfileScoreResults({});
     setWinnerId('');
+    setMcrRoute({ draft: { scores: {}, scoreRecords: {} } });
     setOutcomeType('win');
     setEditingHand(false);
     setSettlementReviewRequested(false);
@@ -347,6 +425,8 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
     setScores({});
     setScoreRecords({});
     setIncidents([]);
+    setBuzzardIncidents([]);
+    setProfileScoreResults({});
     setEditingHand(false);
     setSettlementReviewRequested(false);
     const east = Object.entries(nextGame.seats).find(
@@ -376,7 +456,7 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
         outcome,
         scores: fullScores,
         scoreRecords: outcome.type === 'draw' ? {} : scoreRecords,
-        incidents,
+        incidents, buzzardIncidents, profileScoreResults,
       });
       setGame(next);
       resetRoundEntry(next);
@@ -417,24 +497,8 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
           </div>
 
           <section className="rounded-xl border border-[#d8ceb8] bg-[#fbf8ed] p-5 shadow-[var(--shadow-sm)] sm:p-7">
-            <RulesProfilePicker prompt="Which rules are you playing?" selectedProfile={selectedRulesProfile} onSelect={setSelectedRulesProfile} />
-            {shouldShowBritishSetupHelper(selectedRulesProfile) ? <p className="mb-6 rounded-md bg-[#edf3ed] px-3 py-2 text-[14px] leading-6 text-[#284d45]">New to table setup? <a href="/gameplay-basics#wind-rotation" className="font-semibold underline decoration-[#ae6249] underline-offset-4">Starting Winds</a> set the first seats; <a href="/gameplay-basics#prevailing-wind" className="font-semibold underline decoration-[#ae6249] underline-offset-4">prevailing rounds</a> describe the game’s longer progress.</p> : null}
-            <div className="mb-6 grid gap-4 sm:grid-cols-2">
-              <label className="block sm:col-span-2">
-                <span className="mb-1.5 block font-mono text-[10px] uppercase tracking-[.15em] text-[#7a7769]">
-                  Game length
-                </span>
-                <select
-                  data-testid="select-game-length"
-                  value={gameLength}
-                  onChange={(e) => setGameLength(e.target.value as GameLength)}
-                  className="w-full rounded-md border border-[#cfc3aa] bg-[#fdfbf5] px-3 py-3 text-[15px] font-semibold text-[#284d45] focus:ring-2 focus:ring-[#ae6249]"
-                >
-                  <option value="one-round">One Prevailing Round (East only)</option>
-                  <option value="full-game">Full Game (East, South, West, North)</option>
-                </select>
-              </label>
-
+            <h2 className="mb-4 font-serif text-2xl text-[#284d45]">Who is playing?</h2>
+            <div className="mb-8 grid gap-4 sm:grid-cols-2">
               {GAME_WINDS.map((wind, index) => (
                 <label key={wind} className="block">
                   <span className="mb-1.5 block font-mono text-[10px] uppercase tracking-[.15em] text-[#7a7769]">
@@ -456,6 +520,22 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
                 </label>
               ))}
             </div>
+            <RulesProfilePicker prompt="What rules are we playing?" selectedProfile={selectedRulesProfile} onSelect={(profile) => { const setup = gameScorerSetup(profile, gameLength); setSelectedRulesProfile(profile); setGameLength(setup.gameLength); setTableLimit(setup.tableLimit); setPreferredRulesProfile(profile); }} />
+            {shouldShowBritishSetupHelper(selectedRulesProfile) ? <p className="mb-6 rounded-md bg-[#edf3ed] px-3 py-2 text-[14px] leading-6 text-[#284d45]">New to table setup? <a href="/gameplay-basics#wind-rotation" className="font-semibold underline decoration-[#ae6249] underline-offset-4">Starting Winds</a> set the first seats; <a href="/gameplay-basics#prevailing-wind" className="font-semibold underline decoration-[#ae6249] underline-offset-4">prevailing rounds</a> describe the game’s longer progress.</p> : null}
+            {supports(selectedRulesProfile, 'table.configurable-limit') && <label className="mb-6 block"><span className="mb-1.5 block font-mono text-[10px] uppercase tracking-[.15em] text-[#7a7769]">Table limit</span><input data-testid="input-table-limit" type="number" min="1" value={tableLimit ?? ''} onChange={(event) => setTableLimit(Number(event.target.value))} className="w-full rounded-md border border-[#cfc3aa] bg-[#fdfbf5] px-3 py-2.5 text-[14px] text-[#284d45] focus:ring-2" /></label>}
+            <h2 className="mb-3 font-serif text-2xl text-[#284d45]">How are we playing today?</h2>
+            <label className="mb-6 block">
+              <span className="mb-1.5 block font-mono text-[10px] uppercase tracking-[.15em] text-[#7a7769]">Game length</span>
+              <select
+                data-testid="select-game-length"
+                value={gameScorerSetup(selectedRulesProfile, gameLength, tableLimit).gameLength}
+                onChange={(e) => setGameLength(gameScorerSetup(selectedRulesProfile, e.target.value as GameLength, tableLimit).gameLength)}
+                className="w-full rounded-md border border-[#cfc3aa] bg-[#fdfbf5] px-3 py-3 text-[15px] font-semibold text-[#284d45] focus:ring-2 focus:ring-[#ae6249]"
+              >
+                {gameScorerSetup(selectedRulesProfile, gameLength, tableLimit).grammar === 'classical-points-doubles' && <option value="one-round">One Prevailing Round (East only)</option>}
+                <option value="full-game">Full Game (East, South, West, North)</option>
+              </select>
+            </label>
             {error && (
               <p role="alert" className="mt-4 text-[12px] font-semibold text-[#9a4d3a]">
                 {error}
@@ -473,6 +553,73 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
         </main>
       </div>
     );
+  }
+
+  if (!isClassicalGameState(game)) {
+    let roundInput: McrRoundInput | null = null;
+    let prospective: GameState | null = null;
+    let routeError = '';
+    try { if (!game.isComplete) { roundInput = buildMcrRoundInput(game, mcrRoute); prospective = confirmHand(game, roundInput); } }
+    catch (caught) { routeError = caught instanceof Error ? caught.message : 'Complete the MCR round route.'; }
+    const winnerRecord = mcrRoute.winnerId ? mcrRoute.draft.scoreRecords[mcrRoute.winnerId] : undefined;
+    const previewHand = prospective?.handHistory.at(-1) as McrConfirmedHand | undefined;
+    const previewWin = previewHand?.outcome.type === 'mcr-win' ? previewHand.outcome : undefined;
+    const settlement = previewHand?.settlement;
+    const nextEast = prospective?.players.find((player) => prospective.seats[player.id] === 'east');
+    const acceptedView = winnerRecord && 'source' in winnerRecord && winnerRecord.source === 'mcr-detailed-scorer' ? presentMcrScore(winnerRecord.result) : null;
+    const recordMcrHand = () => {
+      if (!prospective) { setError(routeError); return; }
+      setGame(prospective);
+      setMcrRoute({ draft: { scores: {}, scoreRecords: {} } });
+      setError('');
+    };
+    return <div className={`mahjong-shell ${printMode === 'summary' ? 'print-summary' : ''}`}>
+      <div className="screen-only"><SiteHeader /></div>
+      <div className="print-only game-print-heading"><h1>MCR / WMO 2006 game record</h1><p>Profile {game.setup.rulesProfile.id} · Version {game.setup.rulesProfile.version}</p><p>Runtime fingerprint: {game.runtimeFingerprint}</p><p>{game.isComplete ? 'Game complete' : 'Game in progress'} · {handCountLabel(game.handHistory.length)}</p></div>
+      <div className="screen-only sticky top-0 z-20 border-b border-[#d8ceb8] bg-[#f5f1e6]/95 px-5 py-3 text-[#284d45]">{game.isComplete ? 'Game complete' : `Hand ${game.handHistory.length + 1}`} · {windLabel(game.prevailingWind)} prevailing · {game.players.find((player) => game.seats[player.id] === 'east')?.name} is East</div>
+      <section className="screen-only mx-auto flex max-w-[900px] flex-wrap gap-2 px-5 pt-4"><a href="/rules/mcr" className="rounded border px-3 py-2 text-sm">Rules reference</a><a href="#game-ledger" className="rounded border px-3 py-2 text-sm">History / ledger</a><button data-testid="mcr-undo" disabled={!game.handHistory.length} onClick={() => { const previous = undoLastHand(game); setGame(previous); setMcrRoute({ draft: { scores: {}, scoreRecords: {} } }); }} className="rounded border px-3 py-2 text-sm">Undo last hand</button><button data-testid="mcr-start-over" onClick={startOver} className="rounded border px-3 py-2 text-sm">Start over</button><button data-testid="mcr-print-full" onClick={() => printGame('full')} className="rounded border px-3 py-2 text-sm">Print / Save full game record</button><button data-testid="mcr-print-summary" onClick={() => printGame('summary')} className="rounded border px-3 py-2 text-sm">Print / Save summary</button></section>
+      <main className="mx-auto max-w-[900px] space-y-5 px-5 py-8">
+        <section className="rounded-xl border border-[#d8ceb8] bg-[#fbf8ed] p-5 sm:p-7">
+          {game.isComplete ? <h1 className="font-serif text-3xl text-[#284d45]">Game complete</h1> : <>
+          <h1 className="font-serif text-3xl text-[#284d45]">MCR round</h1>
+          <p className="mt-2 text-sm text-[#66746e]">Choose the table outcome, then score the winner’s hand with the MCR scorer. A discard source identifies the discarder for settlement.</p>
+          <div className="mt-5 flex gap-2">
+            <button data-testid="mcr-outcome-win" aria-pressed={mcrRoute.outcomeType === 'win'} onClick={() => setMcrRoute((route) => transitionMcrRouting(route, { outcomeType: 'win' }))} className="rounded bg-[#284d45] px-4 py-2 text-white">Win</button>
+            <button data-testid="mcr-outcome-draw" aria-pressed={mcrRoute.outcomeType === 'draw'} onClick={() => setMcrRoute((route) => transitionMcrRouting(route, { outcomeType: 'draw' }))} className="rounded border px-4 py-2">Draw</button>
+          </div>
+          {mcrRoute.outcomeType === 'win' && <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            <label className="text-sm">Winner<select data-testid="mcr-winner" value={mcrRoute.winnerId ?? ''} onChange={(event) => setMcrRoute((route) => transitionMcrRouting(route, { winnerId: event.target.value || undefined }))} className="mt-1 block w-full rounded border p-2"><option value="">Choose winner</option>{game.players.map((player) => <option key={player.id} value={player.id}>{player.name} · {windLabel(game.seats[player.id])}</option>)}</select></label>
+            <label className="text-sm">Win source<select data-testid="mcr-win-source" value={mcrRoute.winSource ?? ''} onChange={(event) => setMcrRoute((route) => transitionMcrRouting(route, { winSource: (event.target.value || undefined) as McrRoutingState['winSource'], ...(event.target.value === 'self-draw' ? { discarderId: undefined } : {}) }))} className="mt-1 block w-full rounded border p-2"><option value="">Choose source</option><option value="discard">Discard</option><option value="self-draw">Self-draw</option></select></label>
+            {mcrRoute.winSource === 'discard' && <label className="text-sm sm:col-span-2">Discarder<select data-testid="mcr-discarder" value={mcrRoute.discarderId ?? ''} onChange={(event) => setMcrRoute((route) => transitionMcrRouting(route, { discarderId: event.target.value || undefined }))} className="mt-1 block w-full rounded border p-2"><option value="">Choose discarder</option>{game.players.filter(({ id }) => id !== mcrRoute.winnerId).map((player) => <option key={player.id} value={player.id}>{player.name} · {windLabel(game.seats[player.id])}</option>)}</select></label>}
+          </div>}
+          {mcrRoute.outcomeType === 'draw' && <p className="mt-4 rounded bg-[#f7f1e3] p-3 text-sm">Draw: no payments; the dealer passes and seats rotate.</p>}
+          {mcrRoute.outcomeType === 'win' && mcrRoute.winnerId && mcrRoute.winSource && <div className="mt-5 flex flex-wrap gap-2">
+            <button data-testid="mcr-score-winner" onClick={() => onOpenHandScorer(createHandScorerContext(game, mcrRoute.winnerId!, { type: 'mcr-win', winnerId: mcrRoute.winnerId!, winSource: mcrRoute.winSource! }, winnerRecord))} className="rounded bg-[#284d45] px-4 py-2 text-white">{winnerRecord ? 'Reopen winner score' : 'Score winner hand'}</button>
+            {winnerRecord && <span data-testid="mcr-basic-points" className="self-center text-sm">Accepted Basic Points: {winnerRecord.finalScore}</span>}
+          </div>}
+          {routeError && <p className="mt-4 text-sm text-[#9a4d3a]">{routeError}</p>}
+          {error && <p role="alert" className="mt-3 text-sm text-[#9a4d3a]">{error}</p>}
+          {prospective && previewHand && <section data-testid="mcr-settlement-preview" className="mt-5 rounded-lg bg-[#284d45] p-4 text-white"><h2 className="font-serif text-xl">Settlement preview</h2>{previewWin ? <p className="mt-1">{game.players.find((player) => player.id === previewWin.winnerId)?.name} wins by {previewWin.winSource === 'self-draw' ? 'self-draw' : `discard${previewWin.discarderId ? ` · ${game.players.find((player) => player.id === previewWin.discarderId)?.name} discarded` : ''}`} · {acceptedView?.kind === 'scored' ? `${acceptedView.basicPoints} Basic Points` : 'Accepted Basic Points unavailable'}</p> : <p className="mt-1">No payments. Dealer passes and seats rotate.</p>}<div className="mt-3 space-y-1 text-sm">{settlement && 'transactions' in settlement && settlement.transactions.map((transaction, index) => <p key={index}>{mcrSettlementDescription(transaction, game.players)}</p>)}{(!settlement || !('transactions' in settlement) || settlement.transactions.length === 0) && <p>No payments.</p>}</div><div className="mt-3 grid grid-cols-2 gap-2">{game.players.map((player) => <div key={player.id} className="rounded bg-white/10 p-2">{player.name}: net {formatChange(settlement?.changes[player.id] ?? 0)}</div>)}</div><p className="mt-3 text-sm">Next East: {nextEast?.name} · Next prevailing wind: {windLabel(prospective.prevailingWind)}{previewHand.progressionAfter.prevailingWind !== previewHand.prevailingWind ? ` (advanced from ${windLabel(previewHand.prevailingWind)})` : ''}{prospective.isComplete ? ' · Game complete' : ''}</p></section>}
+          {!game.isComplete && <button data-testid="mcr-record-hand" disabled={!prospective} onClick={recordMcrHand} className="mt-5 w-full rounded bg-[#ae6249] px-4 py-3 font-semibold text-white">Record hand / advance</button>}
+          </>}
+        </section>
+        <section data-testid="mcr-balances" className="rounded-xl border border-[#d8ceb8] bg-[#fbf8ed] p-5"><h2 className="font-serif text-xl text-[#284d45]">{game.isComplete ? 'Final balances' : 'Current balances'}</h2><div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">{game.players.map((player) => <div key={player.id} className="rounded bg-[#f7f1e3] p-3"><b>{player.name}</b><div>{formatChange(game.balances[player.id])}</div></div>)}</div></section>
+        <details ref={gameLedgerRef} id="game-ledger" data-testid="mcr-ledger" className="rounded-xl border border-[#d8ceb8] bg-[#fbf8ed] p-5"><summary className="cursor-pointer font-serif text-2xl text-[#284d45]">Confirmed ledger · {game.handHistory.length} hands</summary>
+          {game.handHistory.length === 0 ? <p className="mt-3 text-sm text-[#66746e]">No confirmed hands.</p> : <div className="mt-4 space-y-3">{[...game.handHistory].reverse().map((hand) => {
+            if (hand.outcome.type !== 'mcr-win' && hand.outcome.type !== 'mcr-draw') return null;
+            const winnerId = hand.outcome.type === 'mcr-win' ? hand.outcome.winnerId : undefined;
+            const mcrHand = hand as McrConfirmedHand;
+            const accepted = winnerId ? mcrHand.scoreRecords[winnerId] : undefined;
+            const mcrAccepted = accepted?.source === 'mcr-detailed-scorer' ? accepted : undefined;
+            const mcrSettlement = mcrHand.settlement;
+            const resultingEast = game.players.find((player) => mcrHand.progressionAfter.seats[player.id] === 'east');
+            const mcrOutcome = mcrHand.outcome;
+            return <details key={hand.handNumber} ref={(element) => { if (element) ledgerDetailsRefs.current.set(hand.handNumber, element); else ledgerDetailsRefs.current.delete(hand.handNumber); }} className="rounded-lg border border-[#e2d9c7] bg-[#fdfbf5] p-4"><summary className="cursor-pointer font-serif text-lg text-[#284d45]">Hand {hand.handNumber} · {mcrOutcome.type === 'mcr-draw' ? 'Draw' : `${game.players.find((player) => player.id === winnerId)?.name} won (${mcrOutcome.winSource === 'self-draw' ? 'self-draw' : `discard · ${game.players.find((player) => player.id === mcrOutcome.discarderId)?.name} discarded`})`}</summary><p className="mt-1 text-xs text-[#7a7769]">{game.players.find((player) => player.id === mcrHand.eastPlayerId)?.name} was East · {windLabel(mcrHand.prevailingWind)} prevailing</p><p className="mt-2 text-sm">{mcrOutcome.type === 'mcr-draw' ? 'Dealer passed · no payment · ' : ''}Next East: {resultingEast?.name} · next prevailing wind: {windLabel(mcrHand.progressionAfter.prevailingWind)}{mcrHand.progressionAfter.prevailingWind !== mcrHand.prevailingWind ? ` (advanced from ${windLabel(mcrHand.prevailingWind)})` : ''}</p><div className="mt-3 grid gap-2 sm:grid-cols-2">{game.players.map((player) => <div key={player.id} className="flex justify-between text-sm"><span>{player.name}: net {formatChange(mcrSettlement.changes[player.id])} · balance {formatChange(mcrHand.runningTotals[player.id])}</span></div>)}</div>{mcrSettlement.transactions.length > 0 ? <div className="mt-3 border-t pt-2 text-xs leading-5">{mcrSettlement.transactions.map((transaction, index) => <p key={index}>{mcrSettlementDescription(transaction, game.players)}</p>)}</div> : <p className="mt-2 text-xs">No payment.</p>}{mcrAccepted && <McrHandRecord playerName={game.players.find((player) => player.id === winnerId)?.name ?? 'Winner'} record={mcrAccepted} />}</details>;
+          })}</div>}
+        </details>
+        <section className="print-only game-print-standings"><h2>{game.isComplete ? 'Final balances' : 'Balances'}</h2><div className="grid grid-cols-2 gap-2">{game.players.map((player) => <p key={player.id}>{player.name}: {formatChange(game.balances[player.id])}</p>)}</div></section>
+      </main>
+    </div>;
   }
 
   return (
@@ -656,7 +803,7 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
                         </span>
                            {scoreRecords[player.id]?.source ===
                              'detailed-scorer' &&
-                             scoreRecords[player.id]?.requiresRecalculation && (
+                             (scoreRecords[player.id] as { requiresRecalculation?: boolean }).requiresRecalculation && (
                                <span className="ml-2 font-normal text-[#ae6249]">
                                  Winner changed — recalculate
                                </span>
@@ -708,7 +855,7 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
                     </label>
                   ))}
                 </div>}
-                {game.setup.rulesProfile.id === 'outside-the-box' && (
+                {supports(game.setup.rulesProfile, 'table.round-incidents') && (
                   <section data-testid="section-round-incidents" className="mt-5 border-t border-[#d8ceb8] pt-5">
                     <div className="font-mono text-[10px] uppercase tracking-[.15em] text-[#ae6249]">Round incidents / penalties</div>
                     <p className="mt-1 text-[11px] text-[#7a7769]">No incidents unless the table records one. These are manual end-of-round evidence, not simulated play.</p>
@@ -741,6 +888,19 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
                     </div>}
                   </section>
                 )}
+                {(supports(game.setup.rulesProfile, 'table.buzzard-profile-results') || supports(game.setup.rulesProfile, 'table.buzzard-dangerous-discard') || supports(game.setup.rulesProfile, 'table.buzzard-false-mah-jong') || supports(game.setup.rulesProfile, 'table.incorrect-hand')) && <section data-testid="section-buzzard-round-facts" className="mt-5 border-t border-[#d8ceb8] pt-5">
+                  <div className="font-mono text-[10px] uppercase tracking-[.15em] text-[#ae6249]">Buzzard round facts</div>
+                  <p className="mt-1 text-[11px] text-[#7a7769]">Record table-resolved incidents and non-winner results; the runtime remains the settlement authority.</p>
+                  <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                    {supports(game.setup.rulesProfile, 'table.buzzard-profile-results') && <><label className="text-[11px]">Non-winner<select value={selectedProfileResult?.[0] ?? ''} onChange={(event) => { const next = selectProfileScoreResult(scores, scoreRecords, profileScoreResults, event.target.value, event.target.value ? selectedProfileResult?.[1]?.resultId ?? 'buzzard.incomplete-four-wind-limit' : '', game.setup.tableLimit!); setProfileScoreResults(next.profileScoreResults); setScores(next.scores); setScoreRecords(next.scoreRecords); if (Object.keys(next.profileScoreResults).length > 0) { setBuzzardIncidents([]); setIncidents([]); } }} className="mt-1 block w-full rounded border p-2"><option value="">Choose player</option>{game.players.filter((player) => player.id !== winnerId).map((player) => <option key={player.id} value={player.id}>{player.name}</option>)}</select></label>
+                    <label className="text-[11px]">Non-winner limit result<select data-testid="select-buzzard-profile-result" value={selectedProfileResult?.[1]?.resultId ?? ''} onChange={(event) => { const next = selectProfileScoreResult(scores, scoreRecords, profileScoreResults, selectedProfileResult?.[0] ?? '', event.target.value as ProfileScoreResult['resultId'] | '', game.setup.tableLimit!); setProfileScoreResults(next.profileScoreResults); setScores(next.scores); setScoreRecords(next.scoreRecords); if (next.profileScoreResults && Object.keys(next.profileScoreResults).length > 0) { setBuzzardIncidents([]); setIncidents([]); } }} className="mt-1 block w-full rounded border p-2"><option value="">None</option><option value="buzzard.incomplete-four-wind-limit">Incomplete Four-Wind</option><option value="buzzard.incomplete-three-dragon-limit">Incomplete Three-Dragon</option></select></label></>}
+                    {supports(game.setup.rulesProfile, 'table.buzzard-dangerous-discard') && <button type="button" className="min-h-10 rounded border px-3 text-[11px]" onClick={() => { const next = selectProfileScoreResult(scores, scoreRecords, profileScoreResults, '', '', game.setup.tableLimit!); setBuzzardIncidents([{ type: 'buzzard-dangerous-discard', liablePlayerId: game.players.find((player) => player.id !== winnerId)?.id ?? game.players[0].id, reason: 'one-suit' }]); setProfileScoreResults(next.profileScoreResults); setScores(next.scores); setScoreRecords(next.scoreRecords); setIncidents([]); }}>Add dangerous discard</button>}
+                    {supports(game.setup.rulesProfile, 'table.buzzard-false-mah-jong') && <button type="button" className="min-h-10 rounded border px-3 text-[11px]" onClick={() => { const next = selectProfileScoreResult(scores, scoreRecords, profileScoreResults, '', '', game.setup.tableLimit!); setBuzzardIncidents([{ type: 'buzzard-false-mah-jong', declarerId: game.players[0].id, exposure: 'not-fully-exposed' }]); setProfileScoreResults(next.profileScoreResults); setScores(next.scores); setScoreRecords(next.scoreRecords); setIncidents([]); }}>Add false Mah Jong</button>}
+                    {supports(game.setup.rulesProfile, 'table.incorrect-hand') && <button type="button" className="min-h-10 rounded border px-3 text-[11px]" onClick={() => { const next = selectProfileScoreResult(scores, scoreRecords, profileScoreResults, '', '', game.setup.tableLimit!); setIncidents([{ type: 'incorrect-hand', playerId: game.players.find((player) => player.id !== winnerId)?.id ?? game.players[0].id, condition: 'too-few' }]); setBuzzardIncidents([]); setProfileScoreResults(next.profileScoreResults); setScores(next.scores); setScoreRecords(next.scoreRecords); }}>Add incorrect hand</button>}
+                  </div>
+                  {buzzardIncidents.map((incident, index) => <div key={index} className="mt-2 flex flex-wrap gap-2 rounded bg-[#f7f1e3] p-2 text-[11px]"><span>{incident.type === 'buzzard-dangerous-discard' ? 'Dangerous discard' : 'False Mah Jong'}</span><select value={'liablePlayerId' in incident ? incident.liablePlayerId : incident.declarerId} onChange={(event) => setBuzzardIncidents((current) => current.map((item, itemIndex) => itemIndex !== index ? item : 'liablePlayerId' in item ? { ...item, liablePlayerId: event.target.value } : { ...item, declarerId: event.target.value }))}>{game.players.map((player) => <option key={player.id} value={player.id}>{player.name}</option>)}</select>{incident.type === 'buzzard-dangerous-discard' ? <select value={incident.reason} onChange={(event) => setBuzzardIncidents((current) => current.map((item, itemIndex) => itemIndex === index && item.type === 'buzzard-dangerous-discard' ? { ...item, reason: event.target.value as typeof item.reason } : item))}><option value="one-suit">one suit</option><option value="three-dragons">three dragons</option><option value="all-winds">all winds</option><option value="ones-and-nines">ones and nines</option></select> : <select value={incident.exposure} onChange={(event) => setBuzzardIncidents((current) => current.map((item, itemIndex) => itemIndex === index && item.type === 'buzzard-false-mah-jong' ? { ...item, exposure: event.target.value as typeof item.exposure } : item))}><option value="not-fully-exposed">not fully exposed</option><option value="fully-exposed">fully exposed</option></select>}<button type="button" onClick={() => setBuzzardIncidents((current) => current.filter((_, itemIndex) => itemIndex !== index))}>Remove</button></div>)}
+                  {incidents.filter((incident) => incident.type === 'incorrect-hand').map((incident) => <div key={incident.playerId} className="mt-2 flex flex-wrap gap-2 rounded bg-[#f7f1e3] p-2 text-[11px]"><span>Incorrect hand</span><select value={incident.playerId} onChange={(event) => setIncidents([{ ...incident, playerId: event.target.value }])}>{game.players.filter((player) => player.id !== winnerId).map((player) => <option key={player.id} value={player.id}>{player.name}</option>)}</select><select value={incident.condition} onChange={(event) => setIncidents([{ ...incident, condition: event.target.value as 'too-few' | 'too-many' }])}><option value="too-few">too few</option><option value="too-many">too many</option></select><button type="button" onClick={() => setIncidents([])}>Remove</button></div>)}
+                </section>}
                 {outcomeType === 'win' && settlementReadyForReview && workspaceStage === 'entry' && (
                   <div className="mt-5 flex justify-end">
                     <button

@@ -4,7 +4,7 @@ type EditableSet = { id: string; kind: string; visibility: Visibility; tile: Pla
 export type HandScorerEditableState = {
   sets: EditableSet[]; layoutMode: 'sets' | 'special'; looseTiles: PlayingTile[]; remainingTiles: PlayingTile[];
   ungroupedBlankTiles: UngroupedBlankTile[];
-  flowers: number[]; seasons: number[]; playerWind: Wind; prevailingWind: Wind; limit: number; isWinner: boolean;
+  flowers: number[]; seasons: number[]; playerWind: Wind; prevailingWind: Wind; limit?: number; isWinner: boolean;
   winningMethod: WinningMethod; originalCall: boolean; winningTileProvenance?: WinningTileProvenance; winningEventEvidence?: WinningEventEvidence;
 };
 

@@ -1,4 +1,5 @@
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
+import { initialiseCurrentRulesRuntimes } from '../rules-platform/current-runtime-registry';
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { bonus, set, suited } from "../scoring";
@@ -10,6 +11,8 @@ import type {
 import { HandRecord, detailedHandStatus, settlementDescription } from "./HandRecord";
 import { handCountLabel, printStandings } from "./GameScorer";
 import { createBmjaGame } from "./game";
+
+beforeAll(() => initialiseCurrentRulesRuntimes());
 
 const players: GamePlayer[] = [
   { id: "jenn", name: "Jenn" },

@@ -40,9 +40,12 @@ describe('site footer', () => {
     ]);
   });
 
-  it('shows project ownership without the old BMJA-only independence disclaimer', () => {
+  it('shows project ownership without exposing the repository link', () => {
     const markup = renderToStaticMarkup(SiteFooter({}));
     expect(markup).toContain('© 2026 SMooks');
     expect(markup).not.toContain('not an official BMJA publication');
+    expect(markup).toContain('Privacy &amp; analytics');
+    expect(markup).not.toContain('Source on GitHub');
+    expect(markup).toContain('Support the project');
   });
 });

@@ -2,6 +2,7 @@ import path from 'node:path';
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
+  esbuild: { jsx: 'automatic' },
   resolve: {
     alias: {
       '@': path.resolve(import.meta.dirname, 'src'),
@@ -10,8 +11,9 @@ export default defineConfig({
   test: {
     environment: 'node',
     include: [
-      'src/{scoring,game,guide,components,rules,home}/**/*.test.ts',
+      'src/{scoring,game,guide,components,rules,home,rules-platform}/**/*.test.ts',
       'src/*.test.ts',
+      'src/*.test.tsx',
     ],
   },
 });

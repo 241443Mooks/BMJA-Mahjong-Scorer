@@ -1,0 +1,656 @@
+{
+  "schemaVersion": "0.1-proof-batch2",
+  "status": "docs-scoped structured learner content; not production runtime authority",
+  "base": "efe2cec955f973a28a5e982160f3b6e39593606a",
+  "scoreAuthority": "derive from exact treatment referenceId",
+  "evidencePolicy": "relationships use current runtime identity plus explicit repo evidence; score/restriction facts remain treatment-owned",
+  "extends": [
+    {
+      "entryId": "pair-hand-family",
+      "addTreatmentReferenceIds": [
+        "outside-the-box@0.1:seven-pairs-one-suit-with-honours",
+        "outside-the-box@0.1:seven-pairs-one-suit"
+      ],
+      "variantExtensions": [
+        {
+          "variantId": "all-pair-western",
+          "addTreatmentReferenceIds": ["outside-the-box@0.1:seven-pairs-one-suit-with-honours"]
+        },
+        {
+          "variantId": "heavenly-twins",
+          "addTreatmentReferenceIds": ["outside-the-box@0.1:seven-pairs-one-suit"]
+        }
+      ],
+      "evidenceBindings": [
+        {
+          "kind": "repo-evidence",
+          "path": "docs/rules/OUTSIDE_THE_BOX_PROFILE_CROSSWALK.md",
+          "locator": "§2 Complete special-hand inventory — All Pair; Heavenly Twins",
+          "supports": ["outside-the-box-treatment-qualification", "reuse-identical"],
+          "status": "verified-club"
+        }
+      ]
+    }
+  ],
+  "examples": [
+    {
+      "id": "example-all-winds-dragons-existing",
+      "kind": "tile-hand",
+      "source": { "type": "existing-example", "id": "all-winds-and-dragons" },
+      "scope": "one-valid-example",
+      "presentation": "preserve four honour Pung/Kong groups plus the pair",
+      "visibleExplanation": "Four Pungs/Kongs and a pair, using only Winds and Dragons.",
+      "accessibleDescription": "Example All Winds and Dragons hand: Pungs of East, South, West and North Winds, plus a pair of Red Dragons."
+    },
+    {
+      "id": "example-heads-tails-existing",
+      "kind": "tile-hand",
+      "source": { "type": "existing-example", "id": "heads-and-tails" },
+      "scope": "one-valid-example",
+      "presentation": "preserve four terminal Pung/Kong groups plus the pair",
+      "visibleExplanation": "Four Pungs/Kongs and a pair made only from suited 1s and 9s.",
+      "accessibleDescription": "Example Heads and Tails hand: Pungs of 1 Bamboo, 9 Circles, 1 Character and 9 Bamboo, plus a pair of 9 Characters."
+    },
+    {
+      "id": "example-fourfold-plenty-existing",
+      "kind": "tile-hand",
+      "source": { "type": "existing-example", "id": "fourfold-plenty" },
+      "scope": "one-valid-example",
+      "presentation": "preserve four Kong group boundaries plus the pair and show all physical Kong tiles",
+      "visibleExplanation": "Four Kongs plus a pair.",
+      "accessibleDescription": "Example Fourfold Plenty hand: Kongs of 2 Circles, 4 Bamboo, Red Dragons and East Winds, plus a pair of 7 Characters."
+    },
+    {
+      "id": "example-all-pair-ruby-jade",
+      "kind": "tile-hand",
+      "source": {
+        "type": "structured-proof",
+        "pairs": ["green-dragon", "red-dragon", "2-bamboo", "3-bamboo", "4-bamboo", "6-bamboo", "8-bamboo"]
+      },
+      "scope": "one-valid-example",
+      "visibleExplanation": "Pairs of Green and Red Dragons plus five Bamboo pairs.",
+      "accessibleDescription": "Example All Pair Ruby Jade hand: pairs of Green Dragons, Red Dragons, 2 Bamboo, 3 Bamboo, 4 Bamboo, 6 Bamboo and 8 Bamboo."
+    },
+    {
+      "id": "example-sparrows-sanctuary",
+      "kind": "tile-hand",
+      "source": {
+        "type": "structured-proof",
+        "looseTiles": ["1-bamboo", "1-bamboo", "1-bamboo", "1-bamboo", "2-bamboo", "2-bamboo", "3-bamboo", "3-bamboo", "4-bamboo", "4-bamboo", "6-bamboo", "6-bamboo", "8-bamboo", "8-bamboo"]
+      },
+      "scope": "fixed-structure-example",
+      "visibleExplanation": "All four 1 Bamboo tiles, plus pairs of 2, 3, 4, 6 and 8 Bamboo.",
+      "accessibleDescription": "Sparrow's Sanctuary example: four 1 Bamboo tiles and pairs of 2, 3, 4, 6 and 8 Bamboo."
+    },
+    {
+      "id": "example-hovering-angel",
+      "kind": "tile-hand",
+      "source": {
+        "type": "structured-proof",
+        "context": { "playerWind": "east" },
+        "groups": [
+          { "kind": "chow", "tiles": ["1-bamboo", "2-bamboo", "3-bamboo"] },
+          { "kind": "chow", "tiles": ["4-circles", "5-circles", "6-circles"] },
+          { "kind": "chow", "tiles": ["7-characters", "8-characters", "9-characters"] },
+          { "kind": "pung", "tile": "east-wind" },
+          { "kind": "pair", "tile": "red-dragon" }
+        ]
+      },
+      "scope": "one-valid-example",
+      "visibleExplanation": "One Chow in each suit, a Pung/Kong of your own Wind, and a Dragon pair.",
+      "accessibleDescription": "Example Hovering Angel for an East-seat player: 1-2-3 Bamboo, 4-5-6 Circles and 7-8-9 Characters Chows, a Pung of East Winds, and a pair of Red Dragons."
+    },
+    {
+      "id": "example-big-robert-different-runs",
+      "kind": "tile-hand",
+      "source": {
+        "type": "structured-proof",
+        "looseGroups": [
+          ["1-bamboo", "2-bamboo", "3-bamboo", "4-bamboo"],
+          ["2-circles", "3-circles", "4-circles", "5-circles"],
+          ["4-characters", "5-characters", "6-characters", "7-characters"],
+          ["east-wind", "east-wind"]
+        ]
+      },
+      "scope": "variant-example",
+      "supportsVariant": "big-robert-different-starts",
+      "visibleExplanation": "A four-tile consecutive run in each suit, with different starts, plus an honour pair.",
+      "accessibleDescription": "Example Big Robert base form: Bamboo 1 through 4, Circles 2 through 5, Characters 4 through 7, and a pair of East Winds."
+    },
+    {
+      "id": "example-big-robert-matching-runs",
+      "kind": "tile-hand",
+      "source": {
+        "type": "structured-proof",
+        "looseGroups": [
+          ["2-bamboo", "3-bamboo", "4-bamboo", "5-bamboo"],
+          ["2-circles", "3-circles", "4-circles", "5-circles"],
+          ["2-characters", "3-characters", "4-characters", "5-characters"],
+          ["red-dragon", "red-dragon"]
+        ]
+      },
+      "scope": "variant-example",
+      "supportsVariant": "big-robert-matching-starts",
+      "visibleExplanation": "Matching four-tile runs in all three suits, plus an honour pair.",
+      "accessibleDescription": "Example higher Big Robert form: 2-3-4-5 in Bamboo, Circles and Characters, plus a pair of Red Dragons."
+    },
+    {
+      "id": "example-windfall",
+      "kind": "tile-hand",
+      "source": {
+        "type": "structured-proof",
+        "looseTiles": ["east-wind", "south-wind", "west-wind", "north-wind", "1-bamboo", "1-bamboo", "2-bamboo", "2-bamboo", "3-bamboo", "3-bamboo", "4-bamboo", "4-bamboo", "5-bamboo", "5-bamboo"]
+      },
+      "scope": "one-valid-example",
+      "visibleExplanation": "One of each Wind plus five pairs in one suit.",
+      "accessibleDescription": "Example Windfall hand: one each of East, South, West and North Winds, plus pairs of 1, 2, 3, 4 and 5 Bamboo."
+    },
+    {
+      "id": "example-windy-ones",
+      "kind": "tile-hand",
+      "source": {
+        "type": "structured-proof",
+        "groups": [
+          { "kind": "pung", "tile": "1-bamboo" },
+          { "kind": "pung", "tile": "1-circles" },
+          { "kind": "pung", "tile": "1-characters" }
+        ],
+        "looseTiles": ["east-wind", "east-wind", "south-wind", "west-wind", "north-wind"]
+      },
+      "scope": "one-valid-example",
+      "visibleExplanation": "A Pung/Kong of 1s in each suit, plus all four Winds with one Wind paired.",
+      "accessibleDescription": "Example Windy Ones hand: Pungs of 1 Bamboo, 1 Circles and 1 Characters; East, South, West and North Winds with East Wind duplicated as the pair."
+    },
+    {
+      "id": "example-windy-nines",
+      "kind": "tile-hand",
+      "source": {
+        "type": "structured-proof",
+        "groups": [
+          { "kind": "pung", "tile": "9-bamboo" },
+          { "kind": "pung", "tile": "9-circles" },
+          { "kind": "pung", "tile": "9-characters" }
+        ],
+        "looseTiles": ["south-wind", "east-wind", "south-wind", "west-wind", "north-wind"]
+      },
+      "scope": "one-valid-example",
+      "visibleExplanation": "A Pung/Kong of 9s in each suit, plus all four Winds with one Wind paired.",
+      "accessibleDescription": "Example Windy Nines hand: Pungs of 9 Bamboo, 9 Circles and 9 Characters; East, South, West and North Winds with South Wind duplicated as the pair."
+    },
+    {
+      "id": "example-windy-chow",
+      "kind": "tile-hand",
+      "source": {
+        "type": "structured-proof",
+        "groups": [
+          { "kind": "chow", "tiles": ["1-bamboo", "2-bamboo", "3-bamboo"] },
+          { "kind": "chow", "tiles": ["4-circles", "5-circles", "6-circles"] },
+          { "kind": "chow", "tiles": ["7-characters", "8-characters", "9-characters"] }
+        ],
+        "looseTiles": ["west-wind", "east-wind", "south-wind", "west-wind", "north-wind"]
+      },
+      "scope": "one-valid-example",
+      "visibleExplanation": "One Chow in each suit, plus all four Winds with one Wind paired.",
+      "accessibleDescription": "Example Windy Chow hand: a Chow in Bamboo, Circles and Characters, plus East, South, West and North Winds with West Wind duplicated as the pair."
+    },
+    {
+      "id": "example-hachi-ban",
+      "kind": "tile-hand",
+      "source": {
+        "type": "structured-proof",
+        "looseTiles": ["1-circles", "2-circles", "3-circles", "4-circles", "5-circles", "6-circles", "7-circles", "8-circles", "east-wind", "east-wind", "south-wind", "south-wind", "west-wind", "west-wind"]
+      },
+      "scope": "one-valid-example",
+      "visibleExplanation": "A one-suit run from 1-8 or 2-9, plus three Wind or Dragon pairs.",
+      "accessibleDescription": "Example Hachi Ban hand: 1 through 8 Circles, plus pairs of East, South and West Winds."
+    },
+    {
+      "id": "example-dragonfly",
+      "kind": "tile-hand",
+      "source": {
+        "type": "structured-proof",
+        "groups": [
+          { "kind": "pung", "tile": "2-bamboo" },
+          { "kind": "pung", "tile": "4-circles" },
+          { "kind": "pung", "tile": "6-characters" },
+          { "kind": "pair", "tile": "8-bamboo" }
+        ],
+        "looseTiles": ["red-dragon", "green-dragon", "white-dragon"]
+      },
+      "scope": "one-valid-example",
+      "visibleExplanation": "One single of each Dragon, a Pung/Kong in each suit, and a suited pair.",
+      "accessibleDescription": "Example Dragonfly hand: single Red, Green and White Dragons; Pungs of 2 Bamboo, 4 Circles and 6 Characters; and a pair of 8 Bamboo."
+    },
+    {
+      "id": "example-dragons-breath",
+      "kind": "tile-hand",
+      "source": {
+        "type": "structured-proof",
+        "looseTiles": ["red-dragon", "red-dragon", "green-dragon", "white-dragon", "1-bamboo", "1-bamboo", "2-bamboo", "2-bamboo", "3-bamboo", "3-bamboo", "4-bamboo", "4-bamboo", "5-bamboo", "5-bamboo"]
+      },
+      "scope": "one-valid-example",
+      "visibleExplanation": "All three Dragons with one Dragon paired, plus five pairs in one suit.",
+      "accessibleDescription": "Example Dragon's Breath hand: a pair of Red Dragons, single Green and White Dragons, and pairs of 1 through 5 Bamboo."
+    },
+    {
+      "id": "example-wriggly-dragon",
+      "kind": "tile-hand",
+      "source": {
+        "type": "structured-proof",
+        "looseTiles": ["1-circles", "2-circles", "3-circles", "4-circles", "5-circles", "6-circles", "7-circles", "8-circles", "9-circles", "red-dragon", "green-dragon", "white-dragon", "green-dragon", "green-dragon"]
+      },
+      "scope": "one-valid-example",
+      "visibleExplanation": "A complete 1-9 run in one suit, one of each Dragon, plus an extra pair of one Dragon.",
+      "accessibleDescription": "Example Wriggly Dragon hand: 1 through 9 Circles, one Red Dragon, three Green Dragons in total so that Green forms the additional pair, and one White Dragon."
+    },
+    {
+      "id": "example-green-jade",
+      "kind": "tile-hand",
+      "source": {
+        "type": "structured-proof",
+        "groups": [
+          { "kind": "pung", "tile": "green-dragon" },
+          { "kind": "pung", "tile": "2-bamboo" },
+          { "kind": "pung", "tile": "4-bamboo" },
+          { "kind": "pung", "tile": "6-bamboo" },
+          { "kind": "pair", "tile": "8-bamboo" }
+        ]
+      },
+      "scope": "one-valid-example",
+      "visibleExplanation": "A Green Dragon Pung/Kong with Bamboo Pungs/Kongs and a Bamboo pair.",
+      "accessibleDescription": "Example Green Jade hand: Pungs of Green Dragons, 2 Bamboo, 4 Bamboo and 6 Bamboo, plus a pair of 8 Bamboo."
+    },
+    {
+      "id": "example-red-coral",
+      "kind": "tile-hand",
+      "source": {
+        "type": "structured-proof",
+        "groups": [
+          { "kind": "pung", "tile": "red-dragon" },
+          { "kind": "pung", "tile": "2-characters" },
+          { "kind": "pung", "tile": "4-characters" },
+          { "kind": "pung", "tile": "6-characters" },
+          { "kind": "pair", "tile": "8-characters" }
+        ]
+      },
+      "scope": "one-valid-example",
+      "visibleExplanation": "A Red Dragon Pung with Character Pungs/Kongs and a Character pair.",
+      "accessibleDescription": "Example Red Coral hand: Pungs of Red Dragons, 2 Characters, 4 Characters and 6 Characters, plus a pair of 8 Characters."
+    },
+    {
+      "id": "example-white-opal",
+      "kind": "tile-hand",
+      "source": {
+        "type": "structured-proof",
+        "groups": [
+          { "kind": "pung", "tile": "white-dragon" },
+          { "kind": "pung", "tile": "2-circles" },
+          { "kind": "pung", "tile": "4-circles" },
+          { "kind": "pung", "tile": "6-circles" },
+          { "kind": "pair", "tile": "8-circles" }
+        ]
+      },
+      "scope": "one-valid-example",
+      "visibleExplanation": "A White Dragon Pung with Circle Pungs/Kongs and a Circle pair.",
+      "accessibleDescription": "Example White Opal hand: Pungs of White Dragons, 2 Circles, 4 Circles and 6 Circles, plus a pair of 8 Circles."
+    },
+    {
+      "id": "example-run-pung-pair",
+      "kind": "tile-hand",
+      "source": {
+        "type": "structured-proof",
+        "groups": [
+          { "kind": "chow", "tiles": ["1-circles", "2-circles", "3-circles"] },
+          { "kind": "chow", "tiles": ["4-circles", "5-circles", "6-circles"] },
+          { "kind": "chow", "tiles": ["7-circles", "8-circles", "9-circles"] },
+          { "kind": "pung", "tile": "1-circles" },
+          { "kind": "pair", "tile": "2-circles" }
+        ]
+      },
+      "scope": "one-valid-example",
+      "visibleExplanation": "A complete 1-9 run as three Chows, plus a same-suit Pung and pair.",
+      "accessibleDescription": "Example Run, Pung and Pair hand in Circles: Chows 1-2-3, 4-5-6 and 7-8-9, a Pung of 1 Circles, and a pair of 2 Circles."
+    },
+    {
+      "id": "example-grand-sequence-suited-pair",
+      "kind": "tile-hand",
+      "source": {
+        "type": "structured-proof",
+        "groups": [
+          { "kind": "chow", "tiles": ["1-circles", "2-circles", "3-circles"] },
+          { "kind": "chow", "tiles": ["4-circles", "5-circles", "6-circles"] },
+          { "kind": "chow", "tiles": ["7-circles", "8-circles", "9-circles"] },
+          { "kind": "pung", "tile": "east-wind" },
+          { "kind": "pair", "tile": "5-circles" }
+        ]
+      },
+      "scope": "variant-example",
+      "supportsVariant": "grand-sequence-otb-narrower",
+      "visibleExplanation": "A 1-9 run, an honour Pung or Kong and a suited pair. This is the Club - Bramhall 2026 form.",
+      "accessibleDescription": "Example Club - Bramhall 2026 Grand Sequence: Circles Chows 1-2-3, 4-5-6 and 7-8-9, a Pung of East Winds, and a pair of 5 Circles."
+    },
+    {
+      "id": "example-grand-sequence-any-pair",
+      "kind": "tile-hand",
+      "source": {
+        "type": "structured-proof",
+        "groups": [
+          { "kind": "chow", "tiles": ["1-bamboo", "2-bamboo", "3-bamboo"] },
+          { "kind": "chow", "tiles": ["4-bamboo", "5-bamboo", "6-bamboo"] },
+          { "kind": "chow", "tiles": ["7-bamboo", "8-bamboo", "9-bamboo"] },
+          { "kind": "pung", "tile": "south-wind" },
+          { "kind": "pair", "tile": "red-dragon" }
+        ]
+      },
+      "scope": "variant-example",
+      "supportsVariant": "grand-sequence-western-broader",
+      "visibleExplanation": "A 1-9 run and honour Pung/Kong with an honour pair, demonstrating the broader Western any-pair form.",
+      "accessibleDescription": "Example Western Grand Sequence: Bamboo Chows 1-2-3, 4-5-6 and 7-8-9, a Pung of South Winds, and a pair of Red Dragons."
+    }
+  ],
+  "entries": [
+    {
+      "id": "all-winds-and-dragons",
+      "state": "reviewed-concept",
+      "displayName": "All Winds and Dragons",
+      "treatmentReferenceIds": [
+        "bmja@1.0:all-winds-and-dragons",
+        "western-tm@0.1:all-winds-and-dragons",
+        "outside-the-box@0.1:all-winds-and-dragons"
+      ],
+      "facets": ["ordinary-grouped", "honours", "winds", "dragons", "pungs-kongs", "pairs"],
+      "summary": "Four Pungs/Kongs and a pair, all made from Winds and Dragons.",
+      "whatItIs": "Make four Pungs or Kongs and a pair from Winds and Dragons only.",
+      "whatItMeans": "Every meld and the pair must be made from Winds or Dragons; suited tiles do not appear in the shared hand pattern.",
+      "whySpecial": "Every tile is an honour tile.",
+      "exampleIds": ["example-all-winds-dragons-existing"],
+      "evidenceBindings": [
+        { "kind": "runtime-binding", "path": "artifacts/mahjong-scorer/src/scoring/special-hands.ts", "locator": "bmjaSpecialHandBindings / all-winds-and-dragons", "supports": ["bmja-treatment-qualification"], "status": "current-executable" },
+        { "kind": "runtime-binding", "path": "artifacts/mahjong-scorer/src/game/western-tm-catalogue.ts", "locator": "all-winds-and-dragons", "supports": ["western-treatment-qualification"], "status": "current-executable" },
+        { "kind": "repo-evidence", "path": "docs/rules/OUTSIDE_THE_BOX_PROFILE_CROSSWALK.md", "locator": "§2 All Winds & Dragons", "supports": ["outside-the-box-treatment-qualification", "shared-structure"], "status": "verified-club" }
+      ],
+      "actions": [{ "kind": "scorer-example", "exampleId": "all-winds-and-dragons", "profileReferenceId": "bmja@1.0:all-winds-and-dragons" }]
+    },
+    {
+      "id": "heads-and-tails",
+      "state": "reviewed-concept",
+      "displayName": "Heads and Tails",
+      "treatmentReferenceIds": ["bmja@1.0:heads-and-tails", "western-tm@0.1:heads-and-tails", "outside-the-box@0.1:heads-and-tails"],
+      "facets": ["ordinary-grouped", "terminals", "pungs-kongs", "pairs"],
+      "summary": "Four Pungs/Kongs and a pair made only from suited 1s and 9s.",
+      "whatItIs": "Make four Pungs or Kongs and a pair from suited 1s and 9s only.",
+      "whatItMeans": "Only the 1 and 9 of the three numbered suits can appear, and they must form the four melds and pair.",
+      "whySpecial": "Every tile is a suited terminal.",
+      "exampleIds": ["example-heads-tails-existing"],
+      "evidenceBindings": [
+        { "kind": "runtime-binding", "path": "artifacts/mahjong-scorer/src/scoring/special-hands.ts", "locator": "bmjaSpecialHandBindings / heads-and-tails", "supports": ["bmja-treatment-qualification"], "status": "current-executable" },
+        { "kind": "runtime-binding", "path": "artifacts/mahjong-scorer/src/game/western-tm-catalogue.ts", "locator": "heads-and-tails", "supports": ["western-treatment-qualification"], "status": "current-executable" },
+        { "kind": "repo-evidence", "path": "docs/rules/OUTSIDE_THE_BOX_PROFILE_CROSSWALK.md", "locator": "§2 Heads & Tails", "supports": ["outside-the-box-treatment-qualification", "shared-structure"], "status": "verified-club" }
+      ],
+      "actions": [{ "kind": "scorer-example", "exampleId": "heads-and-tails", "profileReferenceId": "bmja@1.0:heads-and-tails" }]
+    },
+    {
+      "id": "fourfold-plenty",
+      "state": "reviewed-concept",
+      "displayName": "Fourfold Plenty",
+      "treatmentReferenceIds": ["bmja@1.0:fourfold-plenty", "outside-the-box@0.1:fourfold-plenty"],
+      "facets": ["ordinary-grouped", "pungs-kongs", "pairs"],
+      "summary": "Four Kongs plus a pair.",
+      "whatItIs": "Make four Kongs and a pair.",
+      "whatItMeans": "Each of the four meld positions is a four-of-a-kind Kong; the pair completes the hand.",
+      "whySpecial": "All four sets are Kongs.",
+      "exampleIds": ["example-fourfold-plenty-existing"],
+      "evidenceBindings": [
+        { "kind": "runtime-binding", "path": "artifacts/mahjong-scorer/src/scoring/special-hands.ts", "locator": "bmjaSpecialHandBindings / fourfold-plenty", "supports": ["bmja-treatment-qualification"], "status": "current-executable" },
+        { "kind": "repo-evidence", "path": "docs/rules/OUTSIDE_THE_BOX_PROFILE_CROSSWALK.md", "locator": "§2 Fourfold Plenty", "supports": ["outside-the-box-treatment-qualification", "reuse-identical"], "status": "verified-club" }
+      ],
+      "actions": [{ "kind": "scorer-example", "exampleId": "fourfold-plenty", "profileReferenceId": "bmja@1.0:fourfold-plenty" }]
+    },
+    {
+      "id": "all-pair-ruby-jade",
+      "state": "reviewed-concept",
+      "displayName": "All Pair Ruby Jade",
+      "treatmentReferenceIds": ["western-tm@0.1:all-pair-ruby-jade", "outside-the-box@0.1:all-pair-ruby-jade"],
+      "facets": ["irregular-hand", "pairs", "dragons", "one-suit"],
+      "summary": "Pairs of Green and Red Dragons plus five Bamboo pairs.",
+      "whatItIs": "Make seven pairs: one Green Dragon pair, one Red Dragon pair and five Bamboo pairs.",
+      "whatItMeans": "The hand is organised entirely as pairs rather than normal melds, with the two coloured Dragon pairs fixed and the remaining five pairs in Bamboo.",
+      "whySpecial": "The hand combines both coloured Dragon pairs with five Bamboo pairs.",
+      "exampleIds": ["example-all-pair-ruby-jade"],
+      "evidenceBindings": [
+        { "kind": "runtime-binding", "path": "artifacts/mahjong-scorer/src/game/western-tm-catalogue.ts", "locator": "all-pair-ruby-jade", "supports": ["western-treatment-qualification"], "status": "current-executable" },
+        { "kind": "repo-evidence", "path": "docs/rules/OUTSIDE_THE_BOX_PROFILE_CROSSWALK.md", "locator": "§2 All Pair Ruby Jade", "supports": ["outside-the-box-treatment-qualification", "reuse-identical"], "status": "verified-club" }
+      ]
+    },
+    {
+      "id": "sparrows-sanctuary",
+      "state": "reviewed-concept",
+      "displayName": "Sparrow's Sanctuary",
+      "treatmentReferenceIds": ["western-tm@0.1:four-bamboo-one-and-five-green-bamboo-pairs", "outside-the-box@0.1:four-bamboo-one-and-five-green-bamboo-pairs"],
+      "facets": ["irregular-hand", "one-suit", "pairs"],
+      "summary": "All four 1 Bamboo tiles plus pairs of 2, 3, 4, 6 and 8 Bamboo.",
+      "whatItIs": "Use all four 1 Bamboo tiles, then make pairs of 2, 3, 4, 6 and 8 Bamboo.",
+      "whatItMeans": "Unlike a normal grouped hand, rule comes from matching a fixed fourteen-tile Bamboo collection.",
+      "whySpecial": "The tiles are almost fixed: all four 1 Bamboos and five named pairs.",
+      "exampleIds": ["example-sparrows-sanctuary"],
+      "evidenceBindings": [
+        { "kind": "runtime-binding", "path": "artifacts/mahjong-scorer/src/game/western-tm-catalogue.ts", "locator": "four-bamboo-one-and-five-green-bamboo-pairs", "supports": ["western-treatment-qualification"], "status": "current-executable" },
+        { "kind": "repo-evidence", "path": "docs/rules/OUTSIDE_THE_BOX_PROFILE_CROSSWALK.md", "locator": "§2 Sparrow's Sanctuary", "supports": ["outside-the-box-treatment-qualification", "shared-structure", "profile-local-value-difference"], "status": "verified-club" }
+      ]
+    },
+    {
+      "id": "hovering-angel",
+      "state": "reviewed-concept",
+      "displayName": "Hovering Angel",
+      "treatmentReferenceIds": ["western-tm@0.1:own-wind-meld-with-dragon-pair-and-three-suit-chows", "outside-the-box@0.1:own-wind-meld-with-dragon-pair-and-three-suit-chows"],
+      "facets": ["ordinary-grouped", "multiple-suits", "chow-involving", "winds", "dragons"],
+      "summary": "One Chow in each suit, your own Wind as a Pung/Kong, and a Dragon pair.",
+      "whatItIs": "Make one Chow in each suit, a Pung or Kong of your seat Wind, and a Dragon pair.",
+      "whatItMeans": "The player's seat Wind is part of the rule, so the same tile layout may qualify for one player and not another.",
+      "whySpecial": "Your seat Wind decides which Wind set counts.",
+      "exampleIds": ["example-hovering-angel"],
+      "evidenceBindings": [
+        { "kind": "runtime-binding", "path": "artifacts/mahjong-scorer/src/game/western-tm-catalogue.ts", "locator": "own-wind-meld-with-dragon-pair-and-three-suit-chows", "supports": ["western-treatment-qualification"], "status": "current-executable" },
+        { "kind": "repo-evidence", "path": "docs/rules/OUTSIDE_THE_BOX_PROFILE_CROSSWALK.md", "locator": "§2 Hovering Angel", "supports": ["outside-the-box-treatment-qualification", "reuse-identical", "player-wind-context"], "status": "verified-club" }
+      ]
+    },
+    {
+      "id": "big-robert-family",
+      "state": "reviewed-family-topic",
+      "displayName": "Big Robert",
+      "treatmentReferenceIds": [
+        "western-tm@0.1:three-four-tile-suit-runs-with-honour-pair",
+        "western-tm@0.1:three-matching-four-tile-suit-runs-with-honour-pair",
+        "outside-the-box@0.1:three-four-tile-suit-runs-with-honour-pair",
+        "outside-the-box@0.1:three-matching-four-tile-suit-runs-with-honour-pair"
+      ],
+      "facets": ["irregular-hand", "multiple-suits", "honours", "pairs"],
+      "summary": "A four-tile run in each suit, plus an honour pair. Matching run starts make the higher-scoring hand.",
+      "whatItIs": "Make a four-tile run in each suit, then add an honour pair.",
+      "whatItMeans": "The three runs may start at different numbers. If all three runs match, the hand scores higher.",
+      "whySpecial": "These four-tile runs are different from Chows. Matching run starts make the hand score higher.",
+      "variants": [
+        { "id": "big-robert-different-starts", "label": "Big Robert", "treatmentReferenceIds": ["western-tm@0.1:three-four-tile-suit-runs-with-honour-pair", "outside-the-box@0.1:three-four-tile-suit-runs-with-honour-pair"], "exampleIds": ["example-big-robert-different-runs"], "definition": "One consecutive four-tile run in each suit, with an honour pair; the run starts are not all the same." },
+        { "id": "big-robert-matching-starts", "label": "Big Robert — matching runs", "treatmentReferenceIds": ["western-tm@0.1:three-matching-four-tile-suit-runs-with-honour-pair", "outside-the-box@0.1:three-matching-four-tile-suit-runs-with-honour-pair"], "exampleIds": ["example-big-robert-matching-runs"], "definition": "Matching consecutive four-tile runs in all three suits, plus an honour pair." }
+      ],
+      "evidenceBindings": [
+        { "kind": "repo-evidence", "path": "docs/rules/OUTSIDE_THE_BOX_PROFILE_CROSSWALK.md", "locator": "§2 Big Robert", "supports": ["both-profile-treatment-qualification", "reuse-identical", "two-variant-structure"], "status": "verified-club" }
+      ]
+    },
+    {
+      "id": "windfall",
+      "state": "reviewed-concept",
+      "displayName": "Windfall",
+      "treatmentReferenceIds": ["western-tm@0.1:windfall", "outside-the-box@0.1:windfall"],
+      "facets": ["irregular-hand", "one-suit", "winds", "pairs"],
+      "summary": "One of each Wind plus five pairs in one numbered suit.",
+      "whatItIs": "Use one of each Wind and make five pairs in one numbered suit.",
+      "whatItMeans": "The Winds are not melds; they form four distinct single honours while the remaining ten tiles form five pairs in one suit.",
+      "whySpecial": "The hand has all four Winds as single tiles and five pairs in one suit.",
+      "exampleIds": ["example-windfall"],
+      "evidenceBindings": [{ "kind": "repo-evidence", "path": "docs/rules/OUTSIDE_THE_BOX_PROFILE_CROSSWALK.md", "locator": "§2 Windfall", "supports": ["both-profile-treatment-qualification", "reuse-identical"], "status": "verified-club" }]
+    },
+    {
+      "id": "windy-ones",
+      "state": "reviewed-concept",
+      "displayName": "Windy Ones",
+      "treatmentReferenceIds": ["western-tm@0.1:wind-pair-with-three-suit-rank-one-melds", "outside-the-box@0.1:wind-pair-with-three-suit-rank-one-melds"],
+      "facets": ["multiple-suits", "winds", "terminals", "pungs-kongs", "pairs"],
+      "summary": "A Pung/Kong of 1s in each suit, plus all four Winds with one Wind paired.",
+      "whatItIs": "A hybrid hand combining terminal Pungs/Kongs in all three suits with all four Wind identities and a Wind pair.",
+      "whatItMeans": "The three suit groups are fixed to rank 1; the remaining five tiles are the four Winds with one duplicated to make the pair.",
+      "whySpecial": "All three suited sets use the same terminal rank, alongside all four Winds.",
+      "exampleIds": ["example-windy-ones"],
+      "evidenceBindings": [{ "kind": "repo-evidence", "path": "docs/rules/OUTSIDE_THE_BOX_PROFILE_CROSSWALK.md", "locator": "§2 Windy Ones", "supports": ["both-profile-treatment-qualification", "reuse-identical"], "status": "verified-club" }]
+    },
+    {
+      "id": "windy-nines",
+      "state": "reviewed-concept",
+      "displayName": "Windy Nines",
+      "treatmentReferenceIds": ["western-tm@0.1:wind-pair-with-three-suit-rank-nine-melds", "outside-the-box@0.1:wind-pair-with-three-suit-rank-nine-melds"],
+      "facets": ["multiple-suits", "winds", "terminals", "pungs-kongs", "pairs"],
+      "summary": "A Pung/Kong of 9s in each suit, plus all four Winds with one Wind paired.",
+      "whatItIs": "A hybrid hand combining terminal Pungs/Kongs in all three suits with all four Wind identities and a Wind pair.",
+      "whatItMeans": "The three suit groups are fixed to rank 9; the remaining five tiles are the four Winds with one duplicated to make the pair.",
+      "whySpecial": "All three suited sets use the same terminal rank, alongside all four Winds.",
+      "exampleIds": ["example-windy-nines"],
+      "evidenceBindings": [{ "kind": "repo-evidence", "path": "docs/rules/OUTSIDE_THE_BOX_PROFILE_CROSSWALK.md", "locator": "§2 Windy Nines", "supports": ["both-profile-treatment-qualification", "reuse-identical"], "status": "verified-club" }]
+    },
+    {
+      "id": "windy-chow",
+      "state": "reviewed-concept",
+      "displayName": "Windy Chow",
+      "treatmentReferenceIds": ["western-tm@0.1:wind-pair-with-three-suit-chows", "outside-the-box@0.1:wind-pair-with-three-suit-chows"],
+      "facets": ["multiple-suits", "winds", "chow-involving", "pairs"],
+      "summary": "One Chow in each suit, plus all four Winds with one Wind paired.",
+      "whatItIs": "Make one Chow in each suit. Use all four Winds, with one Wind paired.",
+      "whatItMeans": "The hand contains one Chow from every suit; the five remaining tiles are all four Winds with one forming the pair.",
+      "whySpecial": "The hand combines a Chow from each suit with all four Winds.",
+      "exampleIds": ["example-windy-chow"],
+      "evidenceBindings": [{ "kind": "repo-evidence", "path": "docs/rules/OUTSIDE_THE_BOX_PROFILE_CROSSWALK.md", "locator": "§2 Windy Chow", "supports": ["both-profile-treatment-qualification", "reuse-identical"], "status": "verified-club" }]
+    },
+    {
+      "id": "hachi-ban",
+      "state": "reviewed-concept",
+      "displayName": "Hachi Ban",
+      "treatmentReferenceIds": ["western-tm@0.1:hachi-ban", "outside-the-box@0.1:hachi-ban"],
+      "facets": ["irregular-hand", "one-suit", "honours", "pairs"],
+      "summary": "A one-suit 1-8 or 2-9 run plus three Wind or Dragon pairs.",
+      "whatItIs": "Use eight consecutive tiles in one suit, from 1 to 8 or 2 to 9, plus three pairs of Winds or three pairs of Dragons.",
+      "whatItMeans": "The suited section is a single-tile run rather than Chows; the other six tiles form three pairs of Winds or three pairs of Dragons.",
+      "whySpecial": "It combines an eight-tile straight with three honour pairs.",
+      "exampleIds": ["example-hachi-ban"],
+      "evidenceBindings": [{ "kind": "repo-evidence", "path": "docs/rules/OUTSIDE_THE_BOX_PROFILE_CROSSWALK.md", "locator": "§2 Hachi Ban", "supports": ["both-profile-treatment-qualification", "reuse-identical", "two-published-forms"], "status": "verified-club" }]
+    },
+    {
+      "id": "dragonfly",
+      "state": "reviewed-concept",
+      "displayName": "Dragonfly",
+      "treatmentReferenceIds": ["western-tm@0.1:three-dragon-singles-with-one-meld-in-each-suit-and-suited-pair", "outside-the-box@0.1:three-dragon-singles-with-one-meld-in-each-suit-and-suited-pair"],
+      "facets": ["ordinary-grouped", "multiple-suits", "dragons", "pungs-kongs", "pairs"],
+      "summary": "One single of each Dragon, a Pung/Kong in each suit, and a suited pair.",
+      "whatItIs": "Use one of each Dragon, make a Pung or Kong in each suit, then add a suited pair.",
+      "whatItMeans": "The Dragons deliberately remain single; the grouped part of the hand is spread across all three suits.",
+      "whySpecial": "The Dragons stay as singles while each suit makes one set.",
+      "exampleIds": ["example-dragonfly"],
+      "evidenceBindings": [{ "kind": "repo-evidence", "path": "docs/rules/OUTSIDE_THE_BOX_PROFILE_CROSSWALK.md", "locator": "§2 Dragonfly", "supports": ["both-profile-treatment-qualification", "reuse-identical"], "status": "verified-club" }]
+    },
+    {
+      "id": "dragons-breath",
+      "state": "reviewed-concept",
+      "displayName": "Dragon's Breath",
+      "treatmentReferenceIds": ["western-tm@0.1:dragon-pair-with-five-suited-pairs", "outside-the-box@0.1:dragon-pair-with-five-suited-pairs"],
+      "facets": ["irregular-hand", "one-suit", "dragons", "pairs"],
+      "summary": "All three Dragons with one Dragon paired, plus five pairs in one suit.",
+      "whatItIs": "Use all three Dragons, with one Dragon paired, and make five pairs in one suit.",
+      "whatItMeans": "Four Dragon tiles occupy the honour portion; the other ten tiles form five pairs within a single numbered suit.",
+      "whySpecial": "The hand pairs one Dragon and adds five pairs from a single suit.",
+      "exampleIds": ["example-dragons-breath"],
+      "evidenceBindings": [{ "kind": "repo-evidence", "path": "docs/rules/OUTSIDE_THE_BOX_PROFILE_CROSSWALK.md", "locator": "§2 Dragon Breath", "supports": ["both-profile-treatment-qualification", "reuse-identical", "local-name-apostrophe-difference"], "status": "verified-club" }]
+    },
+    {
+      "id": "wriggly-dragon",
+      "state": "reviewed-concept",
+      "displayName": "Wriggly Dragon",
+      "treatmentReferenceIds": ["western-tm@0.1:wriggly-dragon", "outside-the-box@0.1:wriggly-dragon"],
+      "facets": ["irregular-hand", "one-suit", "dragons"],
+      "summary": "A complete 1-9 run in one suit, one of each Dragon, plus a pair of one Dragon.",
+      "whatItIs": "Use 1 to 9 in one suit, one of each Dragon, and a pair of one Dragon.",
+      "whatItMeans": "The 1-9 suited run uses nine singles; the remaining five tiles are one of each Dragon plus an extra two copies of one Dragon to form the pair alongside its single.",
+      "whySpecial": "The hand combines a full suited run with all three Dragons.",
+      "exampleIds": ["example-wriggly-dragon"],
+      "evidenceBindings": [{ "kind": "repo-evidence", "path": "docs/rules/OUTSIDE_THE_BOX_PROFILE_CROSSWALK.md", "locator": "§2 Wriggly Dragon", "supports": ["both-profile-treatment-qualification", "reuse-identical"], "status": "verified-club" }]
+    },
+    {
+      "id": "green-jade",
+      "state": "reviewed-concept",
+      "displayName": "Green Jade",
+      "treatmentReferenceIds": ["western-tm@0.1:green-dragon-pung-with-bamboo-melds", "outside-the-box@0.1:green-dragon-pung-with-bamboo-melds"],
+      "facets": ["ordinary-grouped", "one-suit", "dragons", "pungs-kongs", "pairs"],
+      "summary": "A Green Dragon Pung with Bamboo Pungs/Kongs and a Bamboo pair.",
+      "whatItIs": "Make a Green Dragon Pung, then use Bamboo Pungs or Kongs and a Bamboo pair.",
+      "whatItMeans": "Green Dragon is the only honour component; every suited group and the pair come from Bamboo.",
+      "whySpecial": "The Green Dragon and every suited tile are linked to Bamboo.",
+      "exampleIds": ["example-green-jade"],
+      "evidenceBindings": [{ "kind": "repo-evidence", "path": "docs/rules/OUTSIDE_THE_BOX_PROFILE_CROSSWALK.md", "locator": "§2 Green Jade", "supports": ["both-profile-treatment-qualification", "shared-structure", "profile-local-exposure-difference"], "status": "verified-club" }]
+    },
+    {
+      "id": "red-coral",
+      "state": "reviewed-concept",
+      "displayName": "Red Coral",
+      "treatmentReferenceIds": ["western-tm@0.1:red-dragon-pung-with-character-melds", "outside-the-box@0.1:red-dragon-pung-with-character-melds"],
+      "facets": ["ordinary-grouped", "one-suit", "dragons", "pungs-kongs", "pairs"],
+      "summary": "A Red Dragon Pung with Character Pungs/Kongs and a Character pair.",
+      "whatItIs": "Make a Red Dragon Pung, then use Character Pungs or Kongs and a Character pair.",
+      "whatItMeans": "Red Dragon is the only honour component; every suited group and the pair come from Characters.",
+      "whySpecial": "It links a specific Dragon to a single suited family while retaining a normal grouped hand shape.",
+      "exampleIds": ["example-red-coral"],
+      "evidenceBindings": [{ "kind": "repo-evidence", "path": "docs/rules/OUTSIDE_THE_BOX_PROFILE_CROSSWALK.md", "locator": "§2 Red Coral", "supports": ["both-profile-treatment-qualification", "shared-structure", "profile-local-exposure-difference"], "status": "verified-club" }]
+    },
+    {
+      "id": "white-opal",
+      "state": "reviewed-concept",
+      "displayName": "White Opal",
+      "treatmentReferenceIds": ["western-tm@0.1:white-dragon-pung-with-circle-melds", "outside-the-box@0.1:white-dragon-pung-with-circle-melds"],
+      "facets": ["ordinary-grouped", "one-suit", "dragons", "pungs-kongs", "pairs"],
+      "summary": "A White Dragon Pung with Circle Pungs/Kongs and a Circle pair.",
+      "whatItIs": "Make a White Dragon Pung, then use Circle Pungs or Kongs and a Circle pair.",
+      "whatItMeans": "White Dragon is the only honour component; every suited group and the pair come from Circles.",
+      "whySpecial": "It links a specific Dragon to a single suited family while retaining a normal grouped hand shape.",
+      "exampleIds": ["example-white-opal"],
+      "evidenceBindings": [{ "kind": "repo-evidence", "path": "docs/rules/OUTSIDE_THE_BOX_PROFILE_CROSSWALK.md", "locator": "§2 White Opal", "supports": ["both-profile-treatment-qualification", "shared-structure", "profile-local-exposure-difference"], "status": "verified-club" }]
+    },
+    {
+      "id": "run-pung-pair",
+      "state": "reviewed-concept",
+      "displayName": "Run, Pung & Pair",
+      "treatmentReferenceIds": ["western-tm@0.1:run-one-to-nine-with-same-suit-pung-and-pair", "outside-the-box@0.1:run-one-to-nine-with-same-suit-pung-and-pair"],
+      "facets": ["ordinary-grouped", "one-suit", "chow-involving", "pungs-kongs", "pairs"],
+      "summary": "A complete 1-9 run as three Chows, plus a same-suit Pung and pair.",
+      "whatItIs": "Make Chows 1-2-3, 4-5-6 and 7-8-9 in one suit, then add a Pung and pair in that suit.",
+      "whatItMeans": "The three Chows guarantee every rank 1 through 9 appears; the final Pung and pair repeat ranks from that same suit within physical copy limits.",
+      "whySpecial": "The hand combines a full 1-9 run with a Pung and a pair in one suit.",
+      "exampleIds": ["example-run-pung-pair"],
+      "evidenceBindings": [{ "kind": "repo-evidence", "path": "docs/rules/OUTSIDE_THE_BOX_PROFILE_CROSSWALK.md", "locator": "§2 Run, Pung & Pair", "supports": ["both-profile-treatment-qualification", "reuse-identical", "physical-four-copy-note"], "status": "verified-club" }]
+    },
+    {
+      "id": "grand-sequence-family",
+      "state": "reviewed-family-topic",
+      "displayName": "Grand Sequence",
+      "treatmentReferenceIds": ["western-tm@0.1:run-one-to-nine-with-honour-pung-and-any-pair", "outside-the-box@0.1:run-one-to-nine-with-honour-pung-and-suited-pair"],
+      "facets": ["ordinary-grouped", "one-suit", "chow-involving", "honours", "pungs-kongs", "pairs"],
+      "summary": "A complete 1-9 run plus an honour Pung/Kong; Western permits any pair, while Club - Bramhall 2026 requires a suited pair.",
+      "whatItIs": "Make a 1-9 run in one suit and an honour Pung or Kong. The pair rule depends on the rules you use.",
+      "whatItMeans": "The three-Chow run and honour meld are shared. The important difference is the pair: Thompson & Maloney allows any pair; Club - Bramhall 2026 narrows this to a suited pair.",
+      "whySpecial": "The pair rule changes which hands count, even when the run and honour set match.",
+      "variants": [
+        { "id": "grand-sequence-western-broader", "label": "Western — any pair", "relation": "broader-than OTB variant", "treatmentReferenceIds": ["western-tm@0.1:run-one-to-nine-with-honour-pung-and-any-pair"], "exampleIds": ["example-grand-sequence-any-pair"], "definition": "A 1-9 run, an honour Pung/Kong and any pair." },
+        { "id": "grand-sequence-otb-narrower", "label": "Club - Bramhall 2026 — suited pair", "relation": "narrower-than Western variant", "treatmentReferenceIds": ["outside-the-box@0.1:run-one-to-nine-with-honour-pung-and-suited-pair"], "exampleIds": ["example-grand-sequence-suited-pair"], "definition": "A 1-9 run, an honour Pung/Kong and a suited pair." }
+      ],
+      "evidenceBindings": [
+        { "kind": "runtime-binding", "path": "artifacts/mahjong-scorer/src/game/western-tm-catalogue.ts", "locator": "run-one-to-nine-with-honour-pung-and-any-pair", "supports": ["western-treatment-qualification"], "status": "current-executable" },
+        { "kind": "repo-evidence", "path": "docs/rules/OUTSIDE_THE_BOX_PROFILE_CROSSWALK.md", "locator": "§2 Grand Sequence", "supports": ["outside-the-box-treatment-qualification", "structurally-distinct", "narrower-pair-rule"], "status": "verified-club" }
+      ]
+    }
+  ]
+}
