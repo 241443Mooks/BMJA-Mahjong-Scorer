@@ -30,6 +30,7 @@ import {
   type SpecialFishingResult,
   type WinningMethod,
 } from './types';
+import { completionSetId, standardClassicalDecompositions } from './classical-decomposition';
 
 const playingTiles: PlayingTile[] = [
   ...SUITS.flatMap((suit) =>
@@ -58,166 +59,6 @@ const bmjaFishingSpecials = bmjaFishingOrder.flatMap((id) => {
 export const FISHING_SPECIALS = [purityFishing, ...bmjaFishingSpecials];
 
 const currentTiles = (hand: MahjongHand) => [...handPlayingTiles(hand)];
-
-type TileTally = Map<string, { tile: PlayingTile; count: number }>;
-
-const tallyTiles = (tiles: PlayingTile[]): TileTally => {
-  const tally: TileTally = new Map();
-  for (const tile of tiles) {
-    const key = tileKey(tile);
-    const current = tally.get(key);
-    tally.set(key, { tile, count: (current?.count ?? 0) + 1 });
-  }
-  return tally;
-};
-
-const cloneTally = (tally: TileTally): TileTally =>
-  new Map([...tally].map(([key, value]) => [key, { ...value }]));
-
-const removeTiles = (
-  tally: TileTally,
-  tiles: PlayingTile[],
-): TileTally | undefined => {
-  const next = cloneTally(tally);
-  for (const tile of tiles) {
-    const key = tileKey(tile);
-    const entry = next.get(key);
-    if (!entry || entry.count === 0) return undefined;
-    if (entry.count === 1) next.delete(key);
-    else next.set(key, { ...entry, count: entry.count - 1 });
-  }
-  return next;
-};
-
-const remainingPhysicalCount = (tally: TileTally): number =>
-  [...tally.values()].reduce((sum, entry) => sum + entry.count, 0);
-
-const nextTile = (tally: TileTally): PlayingTile | undefined =>
-  [...tally.entries()].sort(([left], [right]) =>
-    left.localeCompare(right),
-  )[0]?.[1].tile;
-
-const completionSetId = (sets: HandSet[], index: number): string => {
-  const base = `fishing-completion-${index + 1}`;
-  if (!sets.some((handSet) => handSet.id === base)) return base;
-  return `__${base}`;
-};
-
-const standardDecompositions = (
-  existingSets: HandSet[],
-  concealedTiles: PlayingTile[],
-): HandSet[][] => {
-  const results: HandSet[][] = [];
-  const existingPairs = existingSets.filter(
-    (handSet) => handSet.kind === 'pair',
-  ).length;
-
-  const search = (
-    tally: TileTally,
-    generated: HandSet[],
-    pairsNeeded: number,
-    meldsNeeded: number,
-    chowsUsed: number,
-  ) => {
-    if (pairsNeeded < 0 || meldsNeeded < 0) return;
-    if (remainingPhysicalCount(tally) !== pairsNeeded * 2 + meldsNeeded * 3) {
-      return;
-    }
-    const tile = nextTile(tally);
-    if (!tile) {
-      if (pairsNeeded === 0 && meldsNeeded === 0) {
-        results.push([...existingSets, ...generated]);
-      }
-      return;
-    }
-
-    const addGroup = (
-      kind: 'pair' | 'pung' | 'chow',
-      members: PlayingTile[],
-      nextPairs: number,
-      nextMelds: number,
-      nextChows: number,
-    ) => {
-      const next = removeTiles(tally, members);
-      if (!next) return;
-      search(
-        next,
-        [
-          ...generated,
-          {
-            id: completionSetId(
-              [...existingSets, ...generated],
-              generated.length,
-            ),
-            kind,
-            tile,
-            visibility: 'concealed',
-          },
-        ],
-        nextPairs,
-        nextMelds,
-        nextChows,
-      );
-    };
-
-    if (pairsNeeded > 0) {
-      addGroup('pair', [tile, tile], pairsNeeded - 1, meldsNeeded, chowsUsed);
-    }
-    if (meldsNeeded > 0) {
-      addGroup(
-        'pung',
-        [tile, tile, tile],
-        pairsNeeded,
-        meldsNeeded - 1,
-        chowsUsed,
-      );
-      if (chowsUsed < 4 && tile.family === 'suit' && tile.rank <= 7) {
-        const second = {
-          ...tile,
-          rank: (tile.rank + 1) as Extract<
-            PlayingTile,
-            { family: 'suit' }
-          >['rank'],
-        };
-        const third = {
-          ...tile,
-          rank: (tile.rank + 2) as Extract<
-            PlayingTile,
-            { family: 'suit' }
-          >['rank'],
-        };
-        addGroup(
-          'chow',
-          [tile, second, third],
-          pairsNeeded,
-          meldsNeeded - 1,
-          chowsUsed + 1,
-        );
-      }
-    }
-  };
-
-  if (existingSets.length <= 5 && existingPairs <= 1) {
-    const pairsNeeded = 1 - existingPairs;
-    const meldsNeeded = 4 - (existingSets.length - existingPairs);
-    search(
-      tallyTiles(concealedTiles),
-      [],
-      pairsNeeded,
-      meldsNeeded,
-      existingSets.filter((handSet) => handSet.kind === 'chow').length,
-    );
-  }
-
-  if (
-    existingSets.length <= 7 &&
-    existingSets.every((handSet) => handSet.kind === 'pair')
-  ) {
-    search(tallyTiles(concealedTiles), [], 7 - existingSets.length, 0, 0);
-  }
-
-  return results;
-};
 
 const completedHands = (
   hand: MahjongHand,
@@ -255,7 +96,7 @@ const completedHands = (
     if (hasCompleteWinningShape(irregular)) completed.push(irregular);
   }
 
-  for (const sets of standardDecompositions(hand.sets, [
+  for (const sets of standardClassicalDecompositions(hand.sets, [
     ...remaining,
     completingTile,
   ])) {
@@ -276,7 +117,7 @@ const completedHands = (
         ? { ...candidate, kind: 'pung' as const }
         : candidate,
     );
-    for (const sets of standardDecompositions(upgraded, remaining)) {
+    for (const sets of standardClassicalDecompositions(upgraded, remaining)) {
       const candidate = finish(sets);
       if (hasCompleteWinningShape(candidate)) completed.push(candidate);
     }
