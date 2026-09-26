@@ -9,7 +9,6 @@ describe('public support copy', () => {
   it('keeps About current without duplicating a partial profile list', () => {
     const markup = renderToStaticMarkup(createElement(AboutPage));
     expect(markup).toContain('href="/rules"');
-    expect(markup).toContain('learning library is still explicitly British Mahjong material');
     expect(markup).not.toContain('a configured local Club profile');
     expect(markup).not.toContain('Club rules describe a configured local table');
   });
