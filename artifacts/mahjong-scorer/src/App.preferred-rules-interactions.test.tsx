@@ -17,11 +17,13 @@ import { transitionStandaloneHandProfile } from './game/hand-scorer-profile-tran
 import { PREFERRED_RULES_PROFILE_STORAGE_KEY } from './game/preferred-rules-profile';
 import { OUTSIDE_THE_BOX_PROFILE_REF } from './game/outside-the-box-catalogue';
 import { WESTERN_TM_PROFILE_REF } from './game/western-tm-catalogue';
+import { BMJA_PROFILE_REF } from './game/ruleset';
 import { initialiseCurrentRulesRuntimes } from './rules-platform/current-runtime-registry';
 import { set, suited } from './scoring/tiles';
 
-function installBrowser(search = '', storedProfile = WESTERN_TM_PROFILE_REF) {
-  const values = new Map<string, string>([[PREFERRED_RULES_PROFILE_STORAGE_KEY, JSON.stringify(storedProfile)]]);
+function installBrowser(search = '', storedProfile: typeof WESTERN_TM_PROFILE_REF | null = WESTERN_TM_PROFILE_REF) {
+  const values = new Map<string, string>();
+  if (storedProfile) values.set(PREFERRED_RULES_PROFILE_STORAGE_KEY, JSON.stringify(storedProfile));
   const localStorage = {
     getItem: (key: string) => values.get(key) ?? null,
     setItem: (key: string, value: string) => values.set(key, value),
@@ -65,6 +67,40 @@ describe('preferred profile flow interactions', () => {
     const html = setupMarkup();
     expect(html).toContain('data-testid="active-profile">bmja@1.0');
     expect(interaction.pickers.some(({ prompt }) => prompt === 'Which rules are you scoring?')).toBe(false);
+    expect(values.get(PREFERRED_RULES_PROFILE_STORAGE_KEY)).toBe(JSON.stringify(WESTERN_TM_PROFILE_REF));
+  });
+
+  it.each([
+    ['western', WESTERN_TM_PROFILE_REF],
+    ['mcr', { id: 'mcr-wmo-2006', version: '0.1' }],
+  ] as const)('uses the explicit %s hand context ahead of a conflicting preference without changing it', (slug, profile) => {
+    const { values } = installBrowser(`?rules=${slug}`, BMJA_PROFILE_REF);
+    const html = setupMarkup();
+    expect(html).toContain(`data-testid="active-profile">${profile.id}@${profile.version}`);
+    expect(values.get(PREFERRED_RULES_PROFILE_STORAGE_KEY)).toBe(JSON.stringify(BMJA_PROFILE_REF));
+  });
+
+  it('ignores an unknown hand context and retains the saved profile', () => {
+    const { values } = installBrowser('?rules=westernish', BMJA_PROFILE_REF);
+    expect(setupMarkup()).toContain(`data-testid="active-profile">${BMJA_PROFILE_REF.id}@${BMJA_PROFILE_REF.version}`);
+    expect(values.get(PREFERRED_RULES_PROFILE_STORAGE_KEY)).toBe(JSON.stringify(BMJA_PROFILE_REF));
+  });
+
+  it('falls back to British when both hand context and saved preference are unavailable', () => {
+    installBrowser('?rules=westernish', null);
+    expect(setupMarkup()).toContain('data-testid="active-profile">bmja@1.0');
+  });
+
+  it('keeps an explicit caller profile ahead of the URL rules context', () => {
+    installBrowser('?rules=mcr', BMJA_PROFILE_REF);
+    const html = renderToStaticMarkup(<App initialView="hand" standaloneHand initialRulesProfile={OUTSIDE_THE_BOX_PROFILE_REF} />);
+    expect(html).toContain(`data-testid="active-profile">${OUTSIDE_THE_BOX_PROFILE_REF.id}@${OUTSIDE_THE_BOX_PROFILE_REF.version}`);
+  });
+
+  it('keeps a worked practice hand on its validated example profile ahead of rules context', () => {
+    const { values } = installBrowser('?practice=thirteen-wonders-fishing&rules=mcr', WESTERN_TM_PROFILE_REF);
+    const html = setupMarkup();
+    expect(html).toContain('data-testid="active-profile">bmja@1.0');
     expect(values.get(PREFERRED_RULES_PROFILE_STORAGE_KEY)).toBe(JSON.stringify(WESTERN_TM_PROFILE_REF));
   });
 
