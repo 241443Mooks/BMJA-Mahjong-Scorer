@@ -119,22 +119,24 @@ describe('public rules reference model', () => {
     for (const slug of profiles) {
       const descriptor = PUBLIC_RULES_DESCRIPTORS.find((candidate) => candidate.slug === slug)!;
       const hub = renderRulesHubWithPreference(descriptor.profile);
+      const actionArea = hub.match(/<section aria-labelledby="rules-context-actions"[\s\S]*?<\/section>/)?.[0];
+      expect(actionArea).toBeTruthy();
       expect(hub).toMatch(new RegExp(`name="my-rules-profile" checked="" value="${slug}"`));
-      expect(hub).toContain(`href="/hand?rules=${slug}"`);
-      expect(hub).toContain(`href="/game/${slug}"`);
-      expect(hub).toContain(`href="/rules/${slug}"`);
-      expect(hub.match(/href="\/hand\?rules=/g)).toHaveLength(1);
-      expect(hub.match(new RegExp(`href="\\/game\\/${slug}"`, 'g'))).toHaveLength(1);
-      if (slug === 'mcr') expect(hub).not.toContain('href="/special-hands"');
-      else expect(hub).toContain('href="/special-hands"');
+      expect(actionArea).toContain(`href="/hand?rules=${slug}"`);
+      expect(actionArea).toContain(`href="/game/${slug}"`);
+      expect(actionArea).toContain(`href="/rules/${slug}"`);
+      expect(actionArea?.match(/href="\/hand\?rules=/g)).toHaveLength(1);
+      expect(actionArea?.match(new RegExp(`href="\\/game\\/${slug}"`, 'g'))).toHaveLength(1);
+      if (slug === 'mcr') expect(actionArea).not.toContain('href="/special-hands"');
+      else expect(actionArea).toContain('href="/special-hands"');
       if (slug === 'british') {
-        expect(hub).toContain('href="/gameplay-basics"');
-        expect(hub).toContain('href="/guide"');
-        expect(hub).toContain('href="/scoring-examples"');
+        expect(actionArea).toContain('href="/gameplay-basics"');
+        expect(actionArea).toContain('href="/guide"');
+        expect(actionArea).toContain('href="/scoring-examples"');
       } else {
-        expect(hub).not.toContain('href="/gameplay-basics"');
-        expect(hub).not.toContain('href="/guide"');
-        expect(hub).not.toContain('href="/scoring-examples"');
+        expect(actionArea).not.toContain('href="/gameplay-basics"');
+        expect(actionArea).not.toContain('href="/guide"');
+        expect(actionArea).not.toContain('href="/scoring-examples"');
       }
     }
   });
