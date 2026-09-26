@@ -22,6 +22,12 @@ function materialize(exampleId: string): MahjongHand | undefined {
   if (example.source.type === 'existing-example' && example.source.id) return specialHandExampleById(example.source.id)?.hand;
   if (example.source.type !== 'structured-proof') return undefined;
   const sets: NonNullable<MahjongHand['sets']> = [];
+  const pairsAsLooseTiles: PlayingTile[] = [];
+  for (const pairId of example.source.pairs ?? []) {
+    const pairTile = tile(pairId);
+    if (!pairTile) return undefined;
+    pairsAsLooseTiles.push(pairTile, pairTile);
+  }
   for (const [index, group] of (example.source.groups ?? []).entries()) {
     const members = group.tiles?.map(tile) ?? (group.tile ? [tile(group.tile)] : []);
     if (members.length === 0 || members.some((member) => !member)) return undefined;
@@ -37,8 +43,8 @@ function materialize(exampleId: string): MahjongHand | undefined {
     if (parsed.length !== 1) return undefined;
     sets.push({ id: `atlas-${index}`, kind: group.kind as 'pung' | 'kong' | 'pair', tile: parsed[0], visibility: 'concealed' });
   }
-  if (!sets.length) return undefined;
-  return { sets, looseTiles: (example.source.looseTiles ?? []).map(tile).filter((member): member is PlayingTile => !!member), bonusTiles: [], isWinner: true, winningMethod: 'wall' };
+  if (!sets.length && !pairsAsLooseTiles.length && !(example.source.looseTiles?.length)) return undefined;
+  return { sets, looseTiles: [...pairsAsLooseTiles, ...(example.source.looseTiles ?? []).map(tile).filter((member): member is PlayingTile => !!member)], bonusTiles: [], isWinner: true, winningMethod: 'wall' };
 }
 
 export function atlasExampleProvesTreatment(exampleId: string, referenceId: string): boolean {
@@ -51,7 +57,7 @@ export function atlasExampleProvesTreatment(exampleId: string, referenceId: stri
     entry.variants?.some((variant) => variant.exampleIds?.includes(exampleId) && variant.treatmentReferenceIds?.includes(referenceId)),
   );
   if (!associated) return false;
-  return detectSpecialHands(hand, { playerWind: 'east', prevailingWind: 'east', limit: 1000 }, [...specialHandBindingsForCurrentClassicalProfile(descriptor.profile)]).some(({ id }) => id === match[3]);
+  return detectSpecialHands(hand, { playerWind: 'east', prevailingWind: 'east', limit: 1000 }, [...specialHandBindingsForCurrentClassicalProfile(descriptor.profile)]).some(({ id, matched }) => id === match[3] && matched);
 }
 
 export function resolveAtlasScorerExample(exampleId: string, rulesSlug: string, patternId: string): ResolvedScorerExample | undefined {

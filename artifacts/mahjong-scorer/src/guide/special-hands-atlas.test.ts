@@ -5,7 +5,7 @@ import { initialiseCurrentRulesRuntimes } from '../rules-platform/current-runtim
 import { readPreferredRulesProfile, PREFERRED_RULES_PROFILE_STORAGE_KEY } from '../game/preferred-rules-profile';
 import { specialHandBindingsForCurrentClassicalProfile } from '../rules-knowledge/current-classical-special-hand-bindings';
 import { specialHandTreatmentsForProfile } from '../rules-knowledge/special-hand-treatments';
-import { ATLAS_EXAMPLE_BY_ID, ATLAS_FACET_DEFINITIONS, ATLAS_LEARNER_ENTRIES, ATLAS_LEARNER_EXAMPLES, ATLAS_TREATMENT_OWNERSHIP, ATLAS_UNRESOLVED_TREATMENTS, SPECIAL_HANDS_ATLAS, atlasBrowseRecords, atlasExamplesForTreatment, atlasScoreLabel, atlasTreatmentsForEntry, clearAtlasSearchAndProfileFilter, filterAtlasEntriesByFacets, filterSpecialHandsAtlasByProfile, searchAtlasLearnerEntries, searchSpecialHandsAtlas, selectAtlasLeadExample } from './special-hands-atlas';
+import { ATLAS_EXAMPLE_BY_ID, ATLAS_FACET_DEFINITIONS, ATLAS_LEARNER_ENTRIES, ATLAS_LEARNER_EXAMPLES, ATLAS_TREATMENT_OWNERSHIP, ATLAS_UNRESOLVED_TREATMENTS, CLASSICAL_ATLAS_DISPLAY_PROFILES, SPECIAL_HANDS_ATLAS, atlasBrowseRecords, atlasExamplesForTreatment, atlasScoreLabel, atlasTreatmentsForEntry, clearAtlasSearchAndProfileFilter, filterAtlasEntriesByFacets, filterSpecialHandsAtlasByProfile, searchAtlasLearnerEntries, searchSpecialHandsAtlas, selectAtlasLeadExample } from './special-hands-atlas';
 import { specialHandExampleProvesBmjaTreatment } from './special-hand-examples';
 import { materializeAtlasGenerator } from './AtlasExampleVisual';
 import { detectSpecialHands } from '../scoring';
@@ -16,6 +16,10 @@ const profiles = [BMJA_PROFILE_REF, WESTERN_TM_PROFILE_REF, OUTSIDE_THE_BOX_PROF
 beforeAll(() => initialiseCurrentRulesRuntimes());
 
 describe('Special Hands Atlas directory projection', () => {
+  it('orders rules choices by newest displayed source year', () => {
+    expect(CLASSICAL_ATLAS_DISPLAY_PROFILES.map(({ id }) => id)).toEqual(['outside-the-box', 'bmja', 'buzzard-2000', 'western-tm']);
+  });
+
   it('keeps internal project and research language out of learner copy', () => {
     const learnerCopy = ATLAS_LEARNER_ENTRIES.flatMap((entry) => [
       entry.summary, entry.whatItIs, entry.whatItMeans, entry.whySpecial,

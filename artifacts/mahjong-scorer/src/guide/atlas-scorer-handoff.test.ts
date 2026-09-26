@@ -23,4 +23,12 @@ describe('Atlas exact-profile scorer handoff', () => {
     expect(resolveAtlasScorerExample(example.id, 'western', 'four-blessings')?.hand.sets).toHaveLength(5);
     expect(resolveAtlasScorerExample(example.id, 'buzzard', 'four-blessings')).toBeUndefined();
   });
+
+  it('hands off exact pair-based variants using their authored pair structure', () => {
+    const resolved = resolveAtlasScorerExample('example-heavenly-twins', 'western', 'seven-pairs-one-suit');
+    expect(resolved?.hand.sets).toHaveLength(0);
+    expect(resolved?.hand.looseTiles).toHaveLength(14);
+    expect(resolved?.returnHref).toBe('/special-hands#atlas-entry-pair-hand-family');
+    expect(atlasExampleProvesTreatment('example-wriggly-snake-any-pair', 'outside-the-box@0.1:wriggling-snake-any-pair')).toBe(true);
+  });
 });

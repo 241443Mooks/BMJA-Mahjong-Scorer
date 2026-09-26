@@ -12,6 +12,8 @@ export type PublicRulesSlug = 'british' | 'western' | 'club' | 'buzzard' | 'mcr'
 export type RulesDescriptor = {
   profile: RulesProfileRef;
   slug: PublicRulesSlug;
+  shortLabel: string;
+  editionYear: number;
   title: string;
   compactLabel: string;
   status: string;
@@ -39,6 +41,8 @@ export const PUBLIC_RULES_DESCRIPTORS: readonly RulesDescriptor[] = Object.freez
   {
     profile: BMJA_PROFILE_REF,
     slug: 'british',
+    shortLabel: 'British / BMJA-style',
+    editionYear: 2008,
     title: 'British / BMJA-style',
     compactLabel: 'British / BMJA-style',
     status: 'Stable',
@@ -58,6 +62,8 @@ export const PUBLIC_RULES_DESCRIPTORS: readonly RulesDescriptor[] = Object.freez
   {
     profile: WESTERN_TM_PROFILE_REF,
     slug: 'western',
+    shortLabel: 'Western — T&M',
+    editionYear: 1997,
     title: 'Western — Thompson & Maloney',
     compactLabel: 'Western — T&M',
     status: 'Scorer available. Special-hand catalogue source-verified; ordinary play is still under source review.',
@@ -77,6 +83,8 @@ export const PUBLIC_RULES_DESCRIPTORS: readonly RulesDescriptor[] = Object.freez
   {
     profile: OUTSIDE_THE_BOX_PROFILE_REF,
     slug: 'club',
+    shortLabel: 'Club - Bramhall',
+    editionYear: 2026,
     title: 'Club - Bramhall 2026',
     compactLabel: 'Club - Bramhall 2026',
     status: 'Configured club profile',
@@ -96,6 +104,8 @@ export const PUBLIC_RULES_DESCRIPTORS: readonly RulesDescriptor[] = Object.freez
   {
     profile: BUZZARD_2000_PROFILE_REF,
     slug: 'buzzard',
+    shortLabel: 'Buzzard',
+    editionYear: 2000,
     title: 'British/Western Classical — Buzzard 2000',
     compactLabel: 'Buzzard 2000',
     status: 'Provisional, source-backed profile',
@@ -109,6 +119,7 @@ export const PUBLIC_RULES_DESCRIPTORS: readonly RulesDescriptor[] = Object.freez
   },
   {
     profile: { id: 'mcr-wmo-2006', version: '0.1' }, slug: 'mcr',
+    shortLabel: 'MCR', editionYear: 2006,
     title: 'MCR / WMO 2006', compactLabel: 'MCR / WMO 2006', status: 'Provisional',
     description: 'Provisional MCR / WMO 2006 fan scoring for completed winning hands and Table Companion game tracking.',
     publiclySelectable: true, availability: { handScorer: true, gameTracker: true, rulesReference: true }, configuredClubProfile: false,
@@ -116,6 +127,12 @@ export const PUBLIC_RULES_DESCRIPTORS: readonly RulesDescriptor[] = Object.freez
     support: { scorer: 'Winning-hand scorer and Table Companion game tracking available', source: 'source.mcr-ema-green-book-2006 · 2006 MCR/EMA Green Book', implementation: 'Provisional', authority: 'Mahjong Competition Rules / WMO 2006' },
   },
 ]);
+
+export const publicRulesEditionLabel = (descriptor: Pick<RulesDescriptor, 'shortLabel' | 'editionYear'>) =>
+  `${descriptor.shortLabel} · ${descriptor.editionYear}`;
+
+export const publicRulesDescriptorsNewestFirst = () =>
+  [...PUBLIC_RULES_DESCRIPTORS].sort((left, right) => right.editionYear - left.editionYear);
 
 export const descriptorForRulesProfile = (profile: RulesProfileRef): RulesDescriptor => {
   const descriptor = PUBLIC_RULES_DESCRIPTORS.find((candidate) => sameProfile(candidate.profile, profile));

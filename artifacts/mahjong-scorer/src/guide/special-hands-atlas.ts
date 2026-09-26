@@ -1,10 +1,14 @@
-import { PUBLIC_RULES_DESCRIPTORS, descriptorForRulesProfile } from '../game/rules-presentation';
+import { PUBLIC_RULES_DESCRIPTORS, descriptorForRulesProfile, publicRulesDescriptorsNewestFirst } from '../game/rules-presentation';
 import type { RulesProfileRef } from '../game/types';
 import content from './atlas-v02-content.json';
 import { specialHandBindingsForCurrentClassicalProfile } from '../rules-knowledge/current-classical-special-hand-bindings';
 import { specialHandTreatmentsForProfile, type ProfileLocalSpecialHandTreatment } from '../rules-knowledge/special-hand-treatments';
 
 export const CLASSICAL_ATLAS_PROFILES = PUBLIC_RULES_DESCRIPTORS
+  .filter(({ profile }) => specialHandBindingsForCurrentClassicalProfile(profile).length > 0)
+  .map(({ profile }) => profile);
+
+export const CLASSICAL_ATLAS_DISPLAY_PROFILES = publicRulesDescriptorsNewestFirst()
   .filter(({ profile }) => specialHandBindingsForCurrentClassicalProfile(profile).length > 0)
   .map(({ profile }) => profile);
 

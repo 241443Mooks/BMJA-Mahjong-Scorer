@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { BookOpen, Search, X, Check } from 'lucide-react';
 import { SiteHeader } from '../components/SiteHeader';
 import { ReturnToGame } from '../components/ReturnToGame';
-import { descriptorForRulesProfile, PUBLIC_RULES_DESCRIPTORS } from '../game/rules-presentation';
+import { descriptorForRulesProfile, publicRulesEditionLabel, PUBLIC_RULES_DESCRIPTORS } from '../game/rules-presentation';
 import { readPreferredRulesProfile } from '../game/preferred-rules-profile';
 import { atlasExampleProvesTreatment } from './atlas-scorer-handoff';
 import { SPECIAL_HAND_ANCHORS } from './special-hand-references';
@@ -13,6 +13,7 @@ import {
   ATLAS_LEARNER_ENTRIES,
   ATLAS_UNRESOLVED_TREATMENTS,
   CLASSICAL_ATLAS_PROFILES,
+  CLASSICAL_ATLAS_DISPLAY_PROFILES,
   SPECIAL_HANDS_ATLAS,
   atlasScoreLabel,
   atlasExamplesForTreatment,
@@ -60,7 +61,7 @@ function SafeScorerAction({ record, examples }: { record: SpecialHandsAtlasRecor
   const slug = PUBLIC_RULES_DESCRIPTORS.find(({ profile }) => profile.id === record.identity.profile.id && profile.version === record.identity.profile.version)?.slug;
   if (!slug) return null;
   const exampleQuery = `atlasExample=${encodeURIComponent(example.id)}`;
-  return <a href={`/hand?${exampleQuery}&rules=${slug}&treatment=${encodeURIComponent(record.identity.patternId)}`} className="mt-3 inline-flex min-h-10 items-center gap-2 rounded-lg border border-[#b8cdbf] bg-[#edf3ed] px-3 text-sm font-semibold text-[#284d45] hover:bg-[#dceade] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">Try this hand in {record.profileLabel} scorer</a>;
+  return <a href={`/hand?${exampleQuery}&rules=${slug}&treatment=${encodeURIComponent(record.identity.patternId)}`} className="inline-flex min-h-10 items-center rounded px-1 text-sm font-semibold text-[#284d45] underline decoration-[#ae6249] underline-offset-4 hover:text-[#477562] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">Score this hand →</a>;
 }
 
 function TreatmentDetails({
@@ -77,7 +78,7 @@ function TreatmentDetails({
   const unresolved = ATLAS_UNRESOLVED_TREATMENTS.has(record.referenceId);
   return <details className="rounded-lg border border-[#dfd5c2] bg-white/70 p-3">
     <summary id={treatmentAnchor(record)} className="cursor-pointer rounded text-sm font-semibold text-[#284d45] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">
-      <span>{publicClubCopy(record.name)}</span><span className="ml-2 text-xs font-normal text-[#596b65]">{publicClubCopy(record.profileLabel)} · {record.identity.profile.version} · {atlasScoreLabel(record)}</span>
+      <span>{publicClubCopy(record.name)}</span><span className="ml-2 text-xs font-normal text-[#596b65]">{publicClubCopy(publicRulesEditionLabel(descriptorForRulesProfile(record.identity.profile)))} · {record.identity.profile.version} · {atlasScoreLabel(record)}</span>
       {preferredProfile?.id === record.identity.profile.id && preferredProfile.version === record.identity.profile.version && <span className="ml-2 rounded-full bg-[#284d45] px-2 py-1 text-[11px] font-semibold text-white">My rules</span>}
     </summary>
     <div className="mt-3 space-y-3 text-sm leading-6 text-[#596b65]">
@@ -92,16 +93,14 @@ function TreatmentDetails({
   </details>;
 }
 
-function TreatmentQuickSummary({ record, examples, preferredProfile, displayName }: { record: SpecialHandsAtlasRecord; examples: AtlasExample[]; preferredProfile: { id: string; version: string } | null; displayName?: string }) {
-  const anchorId = treatmentAnchor(record);
+function CompactTreatmentSummary({ record, examples }: { record: SpecialHandsAtlasRecord; examples: AtlasExample[] }) {
   const unresolved = ATLAS_UNRESOLVED_TREATMENTS.has(record.referenceId);
-  return <section id={anchorId} className="scroll-mt-24 mt-4 rounded-xl border-2 border-[#284d45] bg-[#edf3ed] p-4" aria-label={`${publicClubCopy(record.profileTitle)} rules version`}>
-    <div className="font-mono text-xs font-semibold uppercase tracking-[.14em] text-[#477562]">{preferredProfile?.id === record.identity.profile.id && preferredProfile.version === record.identity.profile.version ? 'Your rules' : 'Under these rules'} · {publicClubCopy(record.profileTitle)} {record.identity.profile.version}</div>
-    <h3 className="mt-1 font-serif text-xl text-[#284d45]">{publicClubCopy(displayName ?? record.name)}</h3>
-    <p className="mt-1 text-sm leading-6 text-[#284d45]">{publicClubCopy(record.description)}</p>
-    <p className="mt-2 text-sm font-semibold text-[#284d45]">{atlasScoreLabel(record)}</p>
-    {qualifierText(record).map((fact) => <p key={fact} className="mt-1 text-sm leading-6 text-[#596b65]">{fact}</p>)}
-    {unresolved && <p className="mt-3 rounded-lg border-l-4 border-[#ae6249] bg-[#f5f1e6] p-3 text-sm leading-6 text-[#596b65]">{examples.find((example) => example.referenceNote)?.referenceNote ?? 'The available reference does not give the full hand rule. The scorer follows the rules shown here.'}</p>}
+  const score = atlasScoreLabel(record).replace(/^Fixed · /, '');
+  const rulesLabel = publicClubCopy(publicRulesEditionLabel(descriptorForRulesProfile(record.identity.profile)));
+  return <section id={treatmentAnchor(record)} className="scroll-mt-24 mt-2 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-sm" aria-label={`${rulesLabel} score and action`}>
+    <span className="font-semibold text-[#284d45]">{score}</span>
+    {qualifierText(record).map((fact) => <span key={fact} className="text-[#596b65]">{fact.replace(/\.$/, '')}</span>)}
+    {unresolved && <span className="text-[#596b65]">{examples.find((example) => example.referenceNote)?.referenceNote ?? 'The available reference does not give the full hand rule.'}</span>}
     <SafeScorerAction record={record} examples={examples} />
   </section>;
 }
@@ -122,7 +121,8 @@ function EntryCard({
   onExpandedChange: (open: boolean) => void;
 }) {
   const [localTreatment, setLocalTreatment] = useState<string | null>(null);
-  const treatments = atlasTreatmentsForEntry(entry);
+  const profileOrder = new Map(CLASSICAL_ATLAS_DISPLAY_PROFILES.map((profile, index) => [`${profile.id}@${profile.version}`, index]));
+  const treatments = atlasTreatmentsForEntry(entry).sort((left, right) => (profileOrder.get(`${left.identity.profile.id}@${left.identity.profile.version}`) ?? 99) - (profileOrder.get(`${right.identity.profile.id}@${right.identity.profile.version}`) ?? 99));
   const ownTreatment = preferredProfile && treatments.find(({ identity }) => identity.profile.id === preferredProfile.id && identity.profile.version === preferredProfile.version);
   const legacyTreatment = treatments.find((record) => !!record.href);
   const globallySelected = explicitProfile ? treatments.find(({ identity }) => `${identity.profile.id}@${identity.profile.version}` === explicitProfile) : undefined;
@@ -138,30 +138,35 @@ function EntryCard({
     return related ? [related] : [];
   });
 
+  const profileChoices = [...new Map(treatments.map((record) => [`${record.identity.profile.id}@${record.identity.profile.version}`, record])).values()]
+    .filter((record) => !explicitProfile || `${record.identity.profile.id}@${record.identity.profile.version}` === explicitProfile);
+
   return <article id={`atlas-entry-${entry.id}`} className="scroll-mt-24 rounded-2xl border border-[#d8ceb8] bg-[#fbf8ed] p-4 shadow-[var(--shadow-sm)] sm:p-5">
-    <div className="flex flex-col items-start gap-2 sm:flex-row sm:justify-between sm:gap-3">
-      <div className="w-full min-w-0 flex-1 sm:w-auto">
+    <div>
         <div className="flex flex-wrap items-center gap-2">
           <h2 className="font-serif text-2xl leading-tight text-[#284d45]">{publicClubCopy(entry.displayName)}</h2>
           <span className="rounded-full bg-[#efe8da] px-2 py-1 text-xs font-semibold text-[#596b65]">{entry.state === 'reviewed-concept' ? 'Special hand group' : entry.state === 'reviewed-family-topic' ? 'Related hands' : entry.state === 'standalone-unresolved' ? 'Reference note' : 'Special hand'}</span>
         </div>
         <p className="mt-2 text-sm font-semibold leading-6 text-[#284d45]">{publicClubCopy(entry.summary)}</p>
         <p className="mt-1 text-sm leading-6 text-[#596b65]">{publicClubCopy(entry.whatItIs)}</p>
+    </div>
+
+    <section className="mt-3" aria-label={`Rules and score for ${publicClubCopy(entry.displayName)}`}>
+      <div className="flex max-w-full flex-wrap items-center gap-2" role="group" aria-label={`Choose rules for ${publicClubCopy(entry.displayName)}`}>
+        {profileChoices.map((record) => { const selected = prominentProfileKey === `${record.identity.profile.id}@${record.identity.profile.version}`; const key = `${record.identity.profile.id}@${record.identity.profile.version}`; const label = publicClubCopy(publicRulesEditionLabel(descriptorForRulesProfile(record.identity.profile))); return <button key={key} type="button" aria-pressed={selected} onClick={() => setLocalTreatment(record.referenceId)} className={`inline-flex min-h-11 items-center gap-1.5 rounded-md border px-3 py-2 font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249] ${selected ? 'border-[#284d45] bg-[#284d45] text-white' : 'min-h-10 rounded-full border-[#b8cdbf] bg-white px-2.5 py-1 text-xs text-[#284d45]'}`}><span>{label}</span>{selected && <Check size={14} aria-hidden="true" />}</button>; })}
       </div>
-      <div className="flex w-full max-w-full flex-col items-start gap-2 sm:w-auto" role="group" aria-label={`Choose rules for ${publicClubCopy(entry.displayName)}`}>
-        <div className="flex max-w-full flex-wrap gap-2">{[...new Map(treatments.map((record) => [`${record.identity.profile.id}@${record.identity.profile.version}`, record])).values()].filter((record) => !explicitProfile || `${record.identity.profile.id}@${record.identity.profile.version}` === explicitProfile).map((record) => { const selected = prominentProfileKey === `${record.identity.profile.id}@${record.identity.profile.version}`; const key = `${record.identity.profile.id}@${record.identity.profile.version}`; return <button key={key} type="button" aria-pressed={selected} onClick={() => setLocalTreatment(record.referenceId)} className={`inline-flex min-h-11 items-center gap-1.5 rounded-md border px-3 py-2 text-xs font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249] ${selected ? 'border-[#284d45] bg-[#284d45] text-white ring-2 ring-[#284d45] ring-offset-1' : 'border-[#b8cdbf] bg-white text-[#284d45]'}`}><span>{record.profileLabel}</span>{selected && <Check size={14} aria-hidden="true" />}</button>; })}</div>
+      {prominentTreatment && <CompactTreatmentSummary record={prominentTreatment} examples={atlasExamplesForTreatment(entry, prominentTreatment.referenceId)} />}
+      <div className="mt-2">
         {sameProfileTreatments.length > 1 && <label className="block max-w-full text-xs font-semibold text-[#284d45]">Hand name under these rules
           <select aria-label={`Hand name under these rules for ${publicClubCopy(entry.displayName)}`} value={prominentTreatment?.referenceId ?? ''} onChange={(event) => setLocalTreatment(event.target.value)} className="mt-1 block min-h-11 max-w-full rounded-md border border-[#b8cdbf] bg-white px-3 py-2 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">
             {sameProfileTreatments.map((record) => <option key={record.referenceId} value={record.referenceId}>{treatmentChoiceLabel(entry, record)}</option>)}
           </select>
         </label>}
       </div>
-    </div>
+    </section>
 
     {leadExample && <AtlasExampleVisual example={leadExample.example} title={leadExample.variantLabel ? `Example variant: ${leadExample.variantLabel}` : undefined} />}
     {entry.facets?.length ? <ul className="mt-3 flex flex-wrap gap-2" aria-label="Hand features">{entry.facets.map((facet) => <li key={facet} className="rounded-full border border-[#b8cdbf] bg-[#edf3ed] px-2.5 py-1 text-xs font-medium text-[#284d45]">{facetName(facet)}</li>)}</ul> : null}
-
-    {prominentTreatment && <TreatmentQuickSummary record={prominentTreatment} examples={atlasExamplesForTreatment(entry, prominentTreatment.referenceId)} preferredProfile={preferredProfile} displayName={treatmentChoiceLabel(entry, prominentTreatment)} />}
     {myRules && preferredProfile && !ownTreatment ? <p className="mt-4 rounded-xl border border-[#dfd5c2] bg-white/70 p-3 text-sm leading-6 text-[#596b65]">This hand is not listed under your remembered rules ({descriptorForRulesProfile(preferredProfile).title}). The general reference is still available here.</p> : null}
 
     <details open={expanded} onToggle={(event) => onExpandedChange(event.currentTarget.open)} className="mt-4 rounded-xl border border-[#dfd5c2] bg-white/55 p-3">
@@ -246,15 +251,17 @@ export function SpecialHandsCatalogue() {
         {mcrPreference && <p role="status" className="mt-4 rounded-lg bg-[#edf3ed] p-3 text-sm leading-6 text-[#284d45]">Your remembered rules are MCR. This guide currently covers the supported Classical rules; choose All rules to browse them.</p>}
         {preferred && !preferredClassical && !mcrPreference && <p role="status" className="mt-4 rounded-lg bg-[#edf3ed] p-3 text-sm leading-6 text-[#284d45]">Your remembered rules do not have a special-hands list yet. Choose All rules to browse the supported Classical rules.</p>}
         <label className="sr-only" htmlFor="atlas-search">Search hand names and patterns</label>
-        <div className="mt-2 flex flex-wrap gap-2">
-          <div className="flex min-h-12 min-w-0 flex-1 items-center gap-2 rounded-lg border border-[#b8cdbf] bg-white px-3 focus-within:ring-2 focus-within:ring-[#ae6249]"><Search size={18} aria-hidden="true" className="shrink-0 text-[#596b65]" /><input id="atlas-search" type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Try Unique Wonder, Imperial Jade or Seven Twins" className="min-h-11 min-w-0 flex-1 border-0 bg-transparent text-base text-[#284d45] outline-none" /></div>
+        <div className="mt-2 flex flex-col gap-2">
+          <div className="flex min-h-12 w-full min-w-0 items-center gap-2 rounded-lg border border-[#b8cdbf] bg-white px-3 focus-within:ring-2 focus-within:ring-[#ae6249]"><Search size={18} aria-hidden="true" className="shrink-0 text-[#596b65]" /><input id="atlas-search" type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Try Unique Wonder, Imperial Jade or Seven Twins" className="min-h-11 min-w-0 flex-1 border-0 bg-transparent text-base text-[#284d45] outline-none" /></div>
+          <div className="flex min-w-0 items-center gap-2">
           <select aria-label="Rules" value={myRules && preferredClassical ? 'my-rules' : profileFilter} onChange={(event) => { if (event.target.value === 'my-rules') { setMyRules(true); setProfileFilter('all'); } else { setMyRules(false); setProfileFilter(event.target.value); } }} className="min-h-12 min-w-0 flex-1 rounded-lg border border-[#b8cdbf] bg-white px-3 text-sm font-semibold text-[#284d45] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">
             <option value="all">Rules: All rules ({entriesForScope('all').length})</option>
-            {preferredClassical && <option value="my-rules">My rules — {descriptorForRulesProfile(preferredClassical).compactLabel} ({entriesForScope('my-rules').length})</option>}
-            {CLASSICAL_ATLAS_PROFILES.map((profile) => { const slug = PUBLIC_RULES_DESCRIPTORS.find(({ profile: candidate }) => candidate.id === profile.id && candidate.version === profile.version)!.slug; return <option key={slug} value={slug}>{descriptorForRulesProfile(profile).compactLabel} ({entriesForScope(profile).length})</option>; })}
+            {preferredClassical && <option value="my-rules">My rules — {publicRulesEditionLabel(descriptorForRulesProfile(preferredClassical))} ({entriesForScope('my-rules').length})</option>}
+            {CLASSICAL_ATLAS_DISPLAY_PROFILES.map((profile) => { const descriptor = descriptorForRulesProfile(profile); const slug = descriptor.slug; return <option key={slug} value={slug}>{publicRulesEditionLabel(descriptor)} ({entriesForScope(profile).length})</option>; })}
           </select>
           <button type="button" aria-expanded={filtersOpen} onClick={() => setFiltersOpen((open) => !open)} className="inline-flex min-h-12 items-center gap-2 rounded-lg border border-[#b8cdbf] bg-white px-3 text-sm font-semibold text-[#284d45] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">Filters{selectedFacets.length > 0 ? ` (${selectedFacets.length})` : ''}</button>
-          {(query || profileFilter !== 'all' || selectedFacets.length > 0 || myRules) && <button type="button" onClick={clearSearchAndFilter} aria-label="Clear search and filters" className="inline-flex min-h-12 items-center gap-2 rounded-lg border border-[#b8cdbf] px-3 text-sm font-semibold text-[#284d45] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]"><X size={16} aria-hidden="true" /><span className="sr-only">Clear filters</span></button>}
+          {(query || profileFilter !== 'all' || selectedFacets.length > 0 || myRules) && <button type="button" onClick={clearSearchAndFilter} aria-label="Clear search and filters" className="inline-flex min-h-10 items-center gap-1 rounded px-2 text-xs font-semibold text-[#596b65] underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]"><X size={14} aria-hidden="true" />Clear</button>}
+          </div>
         </div>
         {filtersOpen && <section className="mt-4" aria-labelledby="atlas-facets-heading">
           <h2 id="atlas-facets-heading" className="text-sm font-semibold text-[#284d45]">More ways to find a hand</h2>

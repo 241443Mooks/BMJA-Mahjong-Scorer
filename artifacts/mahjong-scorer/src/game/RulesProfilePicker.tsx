@@ -1,5 +1,5 @@
 import { captureProductEvent } from '../lib/analytics';
-import { descriptorForRulesProfile, PUBLIC_RULES_DESCRIPTORS } from './rules-presentation';
+import { descriptorForRulesProfile, publicRulesDescriptorsNewestFirst, publicRulesEditionLabel, PUBLIC_RULES_DESCRIPTORS } from './rules-presentation';
 import type { RulesProfileRef } from './types';
 
 /** Non-selectable layout fixture: production choices follow descriptor availability for each surface. */
@@ -10,7 +10,7 @@ export const RULES_PROFILE_PICKER_SCALABILITY_FIXTURE = Object.freeze([
 ]);
 
 const sameProfile = (left: RulesProfileRef, right: RulesProfileRef) => left.id === right.id && left.version === right.version;
-export const descriptorsForPickerSurface = (surface: 'hand' | 'game') => PUBLIC_RULES_DESCRIPTORS.filter(({ availability }) => surface === 'hand' ? availability.handScorer : availability.gameTracker);
+export const descriptorsForPickerSurface = (surface: 'hand' | 'game') => publicRulesDescriptorsNewestFirst().filter(({ availability }) => surface === 'hand' ? availability.handScorer : availability.gameTracker);
 
 export const rulesCardStatus = (descriptor: ReturnType<typeof descriptorForRulesProfile>) =>
   descriptor.support.implementation === 'Stable'
@@ -51,7 +51,7 @@ export function RulesProfilePicker({ prompt, selectedProfile, onSelect, surface 
   const selected = descriptorForRulesProfile(selectedProfile);
   const choices: readonly CompactChoice[] = descriptorsForPickerSurface(surface).map((descriptor) => ({
     key: descriptor.slug,
-    label: descriptor.compactLabel,
+    label: publicRulesEditionLabel(descriptor),
     status: rulesCardStatus(descriptor),
     selected: sameProfile(descriptor.profile, selectedProfile),
     profile: descriptor.profile,
