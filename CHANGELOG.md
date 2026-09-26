@@ -6,16 +6,23 @@ This file records meaningful changes to **Mahjong Reference** at product-milesto
 
 ### Added
 
-- Added a concept-first Classical special-hands Atlas with all 146 exact treatments, reviewed learner families, profile-aware search and facets, structured examples, and runtime-derived treatment facts. [#356](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/356)
-- Completed the shared rules-platform runtime/caller cutover with permanent parity and replay regression coverage; released-train reconciliation is tracked by #323.
-- Added Buzzard 2000 as a public selectable Classical profile and MCR/WMO 2006 `0.1` Provisional hand scoring and Table Companion, including settlement, progression, persistence, history and print.
-
+- Promoted the completed shared rules platform, permanent parity/replay harness, Buzzard 2000 profile and MCR/WMO 2006 `0.1` Provisional scorer/Table Companion to production `main`; the earlier integration/reconciliation train is complete. [#325](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/pull/325)
+- Expanded the Special Hands surface into a concept-first **Special Hands Guide** over all **146 current Classical exact treatments**, with 71 learner entries, structured examples, profile-aware search/browsing, exact-rules treatment selection, compact score/scorer handoff and source-aware qualifiers. [#350](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/pull/350) [#357](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/pull/357) [#369](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/pull/369) [#370](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/pull/370) [#372](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/pull/372)
+- Added the public `/under-the-hood` trust and provenance page explaining the product reasoning chain from source evidence and exact rules through score, settlement, progression and record. [#331](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/pull/331)
+- Restored **Remaining tiles** as a first-class peer to **Add a group** for Classical non-winning hand entry, preserving grouped and ungrouped evidence separately as the first delivery slice of the hybrid evidence-first scorer direction. [#392](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/pull/392)
 - Expanded the source-local reference inventory to **626 entries across 18 rules/source corpora before cross-family de-duplication**, while deliberately keeping equivalence/canonical-concept work held until executable profile identities exist. [#265](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/pull/265)
 - Defined the structured-reference architecture for #251: human pages are views over a source/runtime-backed concept, profile-treatment, relationship and evidence layer rather than a wiki or second prose rules database. The same verified records are intended to support future scorer links, comparisons and grounded AI/voice explanations. [#281](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/pull/281)
 
 ### Changed
 
-- Reframed the repository front door and documentation authority map around durable programme boundaries rather than short-lived child-issue sequencing.
+- Reworked the public information architecture around user goals: simpler global navigation, a family-first Rules hub, a shorter action-led Home page, a project-story About page, clearer separation between Features and How It Works, and exact rules context preserved when entering the hand scorer. [#374](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/pull/374) [#381](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/pull/381) [#382](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/pull/382) [#383](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/pull/383) [#384](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/pull/384) [#389](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/pull/389)
+- Tightened several Classical rules-integrity boundaries discovered through the knowledge work, including Knitting/Triple Knitting qualification and profile-specific Club/Buzzard dragon and Three Winds predicates, while retaining 146/146 exact Special Hands treatment ownership. [#363](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/pull/363) [#364](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/pull/364) [#366](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/pull/366) [#367](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/pull/367)
+- Reframed the repository front door and documentation authority map around current production truth and bounded programme boundaries rather than the completed integration train.
+
+### Fixed
+
+- Prevented the mobile hand scorer picker and selected-tile/action rows from widening the scorer workspace while preserving intentional horizontal tile-strip scrolling. [#387](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/pull/387)
+- Corrected stale multi-profile public copy and links after the rules-platform release. [#373](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/pull/373)
 
 ## 2026-09-17 — Source-correct expansion and measurement baseline
 
@@ -48,7 +55,6 @@ This file records meaningful changes to **Mahjong Reference** at product-milesto
 ### Fixed
 
 - Kept the mounted game workspace stable when switching between Classical and MCR profiles.
-
 - Kept manual table-score entry calm while typing or editing multi-digit values by requiring an explicit **Review settlement** action before the settlement workspace appears; progression still requires **Record hand and advance**. [#191](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/191)
 - Closed the bounded manual WCAG audit findings around Escape focus restoration, recovered-game status contrast, recorded-tile semantics, live error announcements, outcome selected state and confirmation before discarding a recoverable game. [#194](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/194) [#195](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/195) [#196](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/196) [#197](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/197) [#198](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/198) [#199](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/199)
 

@@ -5,6 +5,7 @@ Current product/platform decision records live here. The named issue/PR still ow
 ## Core product
 
 - `TABLE_COMPANION_TRANSFORMATION.md` — durable Table Companion product direction.
+- `WHATS_NEXT_ROADMAP.md` — dated 26 September 2026 handoff/restart plan; useful for sequencing, while issue #105 remains the live programme authority.
 - `SEO_GROWTH_STRATEGY.md` — evidence-led search/acquisition strategy and sequencing.
 - `SEARCH_VISIBILITY_LOG.md` — dated Search Console, manual SERP, indexing and generated-search/AI discovery observations; evidence log rather than strategy authority.
 - `ANALYTICS_MEASUREMENT_PLAN.md` — privacy boundary, event taxonomy and reporting caveats.
@@ -22,4 +23,4 @@ Current product/platform decision records live here. The named issue/PR still ow
 
 `PLUS_214_COMPLETION_NOTE.md` is a checkpoint record for the completed readiness package, not a second roadmap.
 
-For current priorities use issue #105. For Plus sequencing use #206. For rules-platform implementation use #227 and the exact child issue.
+For current priorities use issue #105, with `WHATS_NEXT_ROADMAP.md` as the dated restart companion. For Plus sequencing use #206. For rules-profile rollout use #275 and the exact child issue.
