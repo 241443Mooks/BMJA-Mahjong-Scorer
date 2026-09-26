@@ -1,20 +1,10 @@
-import {
-  ArrowRight,
-  BookOpen,
-  Calculator,
-  Gamepad2,
-  Sparkles,
-} from 'lucide-react';
+import { ArrowRight, Calculator, Gamepad2 } from 'lucide-react';
 import { SiteHeader } from '../components/SiteHeader';
 import { useInProgressGameRecovery } from '../components/ReturnToGame';
 import {
   clearGameRecovery,
   gameProgressSummary,
 } from '../game';
-import {
-  PUBLIC_RULES_DESCRIPTORS,
-  type PublicRulesSlug,
-} from '../game/rules-presentation';
 
 type HomeLink = {
   title: string;
@@ -22,58 +12,6 @@ type HomeLink = {
   href: string;
   icon: typeof Calculator;
 };
-
-export const homeRulesStatusLabel = (slug: PublicRulesSlug) => {
-  switch (slug) {
-    case 'british':
-      return 'Ready to use';
-    case 'western':
-      return 'Available — still being checked';
-    case 'club':
-      return 'Set up';
-    case 'buzzard':
-      return 'Available — source-specific';
-    case 'mcr':
-      return 'Available — provisional';
-  }
-};
-
-const homeRulesSummary: Record<PublicRulesSlug, string> = {
-  british: 'The established British / BMJA-style scoring and game rules.',
-  western: 'Western scoring with Thompson & Maloney special hands. Some ordinary rules are still being checked.',
-  club: 'Rules set up for one club, including its own special hands and Goulash.',
-  buzzard: 'British/Western Classical Buzzard 2000 scoring and table procedures.',
-  mcr: 'Provisional Mahjong Competition Rules / WMO 2006 fan scoring and game tracking.',
-};
-
-const homeRulesHref = (slug: PublicRulesSlug) => `/rules/${slug}`;
-
-export const homeLearningLinks: HomeLink[] = [
-  {
-    title: 'British gameplay basics',
-    description: 'Learn the tiles, sets, claiming, Kongs, Winds and how a British game moves on.',
-    href: '/gameplay-basics',
-    icon: BookOpen,
-  },
-  {
-    title: 'British scoring guide',
-    description: 'Understand points, doubles, fishing and ordinary British scoring.',
-    href: '/guide#ordinary-scoring',
-    icon: Calculator,
-  },
-  {
-    title: 'British special hands',
-    description: 'Browse special hands, their values and example patterns.',
-    href: '/special-hands',
-    icon: Sparkles,
-  },
-  {
-    title: 'How the Table Companion works',
-    description: 'See how a hand becomes a score, who pays whom, the next hand and the game record.',
-    href: '/how-it-works',
-    icon: Gamepad2,
-  },
-];
 
 function PrimaryAction({
   title,
@@ -105,26 +43,6 @@ function PrimaryAction({
         <p className={`mt-2 max-w-[470px] text-[15px] leading-6 ${dark ? 'text-[#c8d8d1]' : 'text-[#66746e]'}`}>
           {description}
         </p>
-      </div>
-    </a>
-  );
-}
-
-function LearningAction({ title, description, href, icon: Icon }: HomeLink) {
-  return (
-    <a
-      href={href}
-      className="group flex min-h-[126px] items-start gap-4 rounded-xl border border-[#ddd3bf] bg-[#fbf8ed] p-5 transition hover:border-[#c9b99d] hover:bg-[#fffaf0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249] focus-visible:ring-offset-2"
-    >
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#efe8da] text-[#477562]">
-        <Icon size={18} strokeWidth={1.8} />
-      </div>
-      <div className="min-w-0 flex-1">
-        <div className="flex items-center justify-between gap-3">
-          <h3 className="font-serif text-[21px] leading-tight text-[#284d45]">{title}</h3>
-          <ArrowRight size={15} className="shrink-0 text-[#ae6249] transition-transform group-hover:translate-x-1" />
-        </div>
-        <p className="mt-1.5 text-[14px] leading-6 text-[#6d746f]">{description}</p>
       </div>
     </a>
   );
@@ -213,78 +131,6 @@ export function HomePage() {
           </a>
         </section>
 
-        <section className="mt-11" aria-labelledby="home-rules-heading">
-          <div className="mb-4 flex items-center gap-3">
-            <h2 id="home-rules-heading" className="font-serif text-[28px] text-[#284d45]">Play by the rules your table uses</h2>
-            <div className="fine-rule max-w-16 flex-1" />
-          </div>
-          <p className="mb-5 max-w-[720px] text-[14px] leading-6 text-[#66746e]">
-            Choose the rules that match your table. Mahjong Reference keeps those rules with the game.
-          </p>
-          <div className="grid gap-3 md:grid-cols-3">
-            {PUBLIC_RULES_DESCRIPTORS.map((descriptor) => (
-              <a
-                key={descriptor.slug}
-                href={homeRulesHref(descriptor.slug)}
-                className="group flex min-h-[170px] flex-col justify-between rounded-xl border border-[#ddd3bf] bg-[#fbf8ed] p-5 transition hover:border-[#c9b99d] hover:bg-[#fffaf0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249] focus-visible:ring-offset-2"
-              >
-                <div>
-                  <span className="inline-flex rounded-full border border-[#d8ceb8] bg-[#f5f1e6] px-2.5 py-1 text-[12px] font-semibold text-[#596b65]">
-                    {homeRulesStatusLabel(descriptor.slug)}
-                  </span>
-                  <h3 className="mt-3 font-serif text-[22px] leading-tight text-[#284d45]">{descriptor.title}</h3>
-                  <p className="mt-2 text-[14px] leading-6 text-[#66746e]">{homeRulesSummary[descriptor.slug]}</p>
-                </div>
-                <span className="mt-4 inline-flex items-center gap-2 text-[14px] font-semibold text-[#284d45]">
-                  Read these rules
-                  <ArrowRight size={14} className="text-[#ae6249] transition-transform group-hover:translate-x-1" />
-                </span>
-              </a>
-            ))}
-          </div>
-          <a
-            href="/rules"
-            className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-md px-1 text-[14px] font-semibold text-[#596b65] underline decoration-[#ae6249] underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]"
-          >
-            See all supported rules <ArrowRight size={14} />
-          </a>
-        </section>
-
-        <section className="mt-11" aria-labelledby="home-learn-heading">
-          <div className="mb-4 flex items-center gap-3">
-            <h2 id="home-learn-heading" className="font-serif text-[28px] text-[#284d45]">Learn and understand</h2>
-            <div className="fine-rule max-w-16 flex-1" />
-          </div>
-          <div className="grid gap-3 md:grid-cols-2">
-            {homeLearningLinks.map((link) => (
-              <LearningAction key={link.title} {...link} />
-            ))}
-          </div>
-          <a
-            href="/scoring-examples"
-            className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-md px-1 text-[14px] font-semibold text-[#596b65] underline decoration-[#ae6249] underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]"
-          >
-            Try British scoring examples <ArrowRight size={14} />
-          </a>
-        </section>
-
-        <section className="mt-11 border-y border-[#ddd3bf] py-7" aria-labelledby="home-trust-heading">
-          <div className="grid gap-6 md:grid-cols-2 md:gap-10">
-            <div>
-              <p className="font-mono text-[11px] uppercase tracking-[.16em] text-[#ae6249]">Trust</p>
-              <h2 id="home-trust-heading" className="mt-2 font-serif text-[28px] leading-tight text-[#284d45]">One game. One record.</h2>
-              <p className="mt-3 text-[14px] leading-6 text-[#66746e]">
-                Confirmed hands, who pays whom, running totals, corrections and the copy you print or save all stay tied to the same game history.
-              </p>
-            </div>
-            <div>
-              <h3 className="font-serif text-[22px] leading-tight text-[#284d45]">If Mahjong Reference does not know something, it will not guess.</h3>
-              <p className="mt-3 text-[14px] leading-6 text-[#66746e]">
-                Enter what you know. If something is missing, Mahjong Reference shows that instead of quietly making an answer up.
-              </p>
-            </div>
-          </div>
-        </section>
       </main>
     </div>
   );
