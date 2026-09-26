@@ -46,8 +46,7 @@ const homeRulesSummary: Record<PublicRulesSlug, string> = {
   mcr: 'Provisional Mahjong Competition Rules / WMO 2006 fan scoring and game tracking.',
 };
 
-const homeRulesHref = (slug: PublicRulesSlug) =>
-  slug === 'club' ? '/game/club' : `/rules/${slug}`;
+const homeRulesHref = (slug: PublicRulesSlug) => `/rules/${slug}`;
 
 export const homeLearningLinks: HomeLink[] = [
   {
@@ -237,7 +236,7 @@ export function HomePage() {
                   <p className="mt-2 text-[14px] leading-6 text-[#66746e]">{homeRulesSummary[descriptor.slug]}</p>
                 </div>
                 <span className="mt-4 inline-flex items-center gap-2 text-[14px] font-semibold text-[#284d45]">
-                  {descriptor.slug === 'club' ? 'Use these rules' : 'Read these rules'}
+                  Read these rules
                   <ArrowRight size={14} className="text-[#ae6249] transition-transform group-hover:translate-x-1" />
                 </span>
               </a>

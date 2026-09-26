@@ -94,7 +94,7 @@ export function MahjongRulesComparedPage() {
               Same family of tiles. Five very different ways to play. This guide compares the structural differences that actually change what counts as a legal hand, how scoring works and what a player needs to know at the table.
             </p>
             <p className="mt-4 max-w-[820px] text-[15px] leading-7 text-[#596b65]">
-              Looking for the profiles Mahjong Reference can score? The <a className="font-semibold text-[#284d45] underline decoration-[#ae6249] underline-offset-4" href="/rules">supported rules hub</a> covers <a className="font-semibold text-[#284d45] underline decoration-[#ae6249] underline-offset-4" href="/rules/british">British / BMJA-style</a> (stable), <a className="font-semibold text-[#284d45] underline decoration-[#ae6249] underline-offset-4" href="/rules/western">Western — Thompson &amp; Maloney</a> (provisional), and configured local Club rules. This comparison does not promise scoring support for Hong Kong, Riichi, MCR or American Mahjong.
+              Looking for the profiles Mahjong Reference can score? The <a className="font-semibold text-[#284d45] underline decoration-[#ae6249] underline-offset-4" href="/rules">rules hub</a> lists current profiles, including British / BMJA-style, Western, Club - Bramhall 2026, Buzzard 2000 and provisional MCR / WMO 2006. This comparison also covers Hong Kong, Riichi and American Mahjong, which are not currently supported scorers.
             </p>
             <div className="mt-7 rounded-xl bg-[#284d45] p-5 text-[#f8f4e9] sm:p-6">
               <div className="font-mono text-[9px] uppercase tracking-[.18em] text-[#d7a287]">Useful mental model</div>
@@ -198,7 +198,7 @@ export function MahjongRulesComparedPage() {
               </div>
               <div className="rounded-xl border border-[#d8ceb8] bg-[#fdfbf5] p-5 sm:p-6">
                 <div className="flex items-center gap-3"><CircleHelp size={18} className="text-[#ae6249]" /><h3 className="font-serif text-[22px] text-[#284d45]">Why rules profiles matter</h3></div>
-                <p className="mt-3 text-[12px] leading-6 text-[#596b65]">Structural differences are why Mahjong Reference keeps profile-specific scoring and settlement behaviour rather than flattening everything into one universal rules engine. British / BMJA-style is stable; Western — Thompson &amp; Maloney is provisional; Club rules are configured locally. See the <a href="/rules" className="font-semibold text-[#284d45] underline decoration-[#cfa58f] underline-offset-4">supported rules hub</a> for the current boundaries.</p>
+                <p className="mt-3 text-[12px] leading-6 text-[#596b65]">Structural differences are why Mahjong Reference keeps profile-specific scoring and settlement behaviour rather than flattening everything into one universal rules engine. See the <a href="/rules" className="font-semibold text-[#284d45] underline decoration-[#cfa58f] underline-offset-4">rules hub</a> for current profiles and boundaries.</p>
               </div>
             </div>
           </section>
