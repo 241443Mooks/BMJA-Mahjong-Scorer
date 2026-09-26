@@ -21,23 +21,6 @@ describe('hand entry workspace recovery', () => {
     expect(recovered.sets).toEqual([{ id: 'later', tile: '2b' }, draft()]);
   });
 
-  it('restores group entry after editing a group, switching to remaining tiles, then returning', () => {
-    // editSet removes the unused draft. The remaining-tile action changes the
-    // active destination, then Add a group must recover a new editable draft.
-    let sets: Set[] = [{ id: 'entered', tile: '1b' }];
-    let selectedSet = 'remaining-tiles';
-    let remainingTilesExpanded = true;
-
-    const recovered = recoverWorkingDraft(sets, () => ({ id: 'fresh-draft', tile: null }));
-    sets = recovered.sets;
-    selectedSet = recovered.draftId;
-    remainingTilesExpanded = false;
-
-    expect(sets).toEqual([{ id: 'entered', tile: '1b' }, { id: 'fresh-draft', tile: null }]);
-    expect(selectedSet).toBe('fresh-draft');
-    expect(remainingTilesExpanded).toBe(false);
-  });
-
   it('keeps later completed groups while recovering a winner-ready draft', () => {
     const recovered = recoverWorkingDraft<Set>([{ id: 'one', tile: '1b' }, { id: 'later', tile: '3b' }], draft);
     expect(recovered.sets.map((set) => set.id)).toEqual(['one', 'later', 'draft']);

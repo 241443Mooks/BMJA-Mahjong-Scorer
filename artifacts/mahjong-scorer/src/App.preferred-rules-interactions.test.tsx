@@ -1,4 +1,7 @@
+// @vitest-environment happy-dom
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
+import { act } from 'react';
+import { createRoot } from 'react-dom/client';
 import { renderToStaticMarkup } from 'react-dom/server';
 
 const interaction = vi.hoisted(() => ({ pickers: [] as Array<{ prompt: string; onSelect: (profile: { id: string; version: string }) => void }> }));
@@ -51,6 +54,43 @@ describe('preferred profile flow interactions', () => {
     expect(html).toContain('data-testid="remaining-tiles-disclosure"');
     expect(html).toContain('Completed groups');
     expect(html).toContain('Remaining tiles');
+  });
+
+  it('recovers an active group draft after editing a group and switching through remaining tiles', async () => {
+    vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
+    const container = document.createElement('div');
+    document.body.append(container);
+    const root = createRoot(container);
+    await act(async () => {
+      root.render(<HandScorer context={null} onClose={vi.fn()} standaloneHand standaloneRulesProfile={WESTERN_TM_PROFILE_REF} onStandaloneRulesProfileChange={vi.fn()} />);
+    });
+
+    const click = async (element: Element | null) => {
+      expect(element).not.toBeNull();
+      await act(async () => {
+        element!.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      });
+    };
+
+    try {
+      await click(container.querySelector('[data-testid="button-add-working-group"]'));
+      expect(container.querySelector('[data-testid="card-set-1"]')).not.toBeNull();
+
+      await click(container.querySelector('[data-testid="card-set-1"] button'));
+      expect(container.querySelector('[data-testid="working-group-draft"]')).toBeNull();
+
+      await click(container.querySelector('[data-testid="button-add-remaining-tiles-mode"]'));
+      expect(container.querySelector('[data-testid="remaining-tiles-disclosure"]')?.hasAttribute('open')).toBe(true);
+
+      await click(container.querySelector('[data-testid="button-add-group-mode"]'));
+      expect(container.querySelector('[data-testid="button-add-group-mode"]')?.getAttribute('aria-pressed')).toBe('true');
+      expect(container.querySelector('[data-testid="working-group-draft"]')).not.toBeNull();
+      expect(container.querySelector('[data-testid="select-working-set-type"]')).not.toBeNull();
+      expect(container.querySelector('[data-testid="select-working-family"]')).not.toBeNull();
+    } finally {
+      await act(async () => root.unmount());
+      container.remove();
+    }
   });
 
   it('stores a standalone hand picker choice while retaining the existing profile transition cleanup seam', () => {
