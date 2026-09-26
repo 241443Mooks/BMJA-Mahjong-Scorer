@@ -1581,7 +1581,9 @@ export default function App({ initialView = 'game', standaloneHand = false, init
   const atlasExample = search?.get('atlasExample') && search.get('rules') && treatmentPatternId ? resolveAtlasScorerExample(search.get('atlasExample')!, search.get('rules')!, treatmentPatternId) : undefined;
   const example = atlasExample ?? (search ? resolveScorerExample(exampleId) : undefined);
   const validatedExampleProfile = atlasExample && requestedDescriptor ? requestedDescriptor.profile : example && requestedDescriptor && treatmentPatternId && specialHandExampleProvesTreatment(exampleId ?? '', `${requestedDescriptor.profile.id}@${requestedDescriptor.profile.version}:${treatmentPatternId}`) ? requestedDescriptor.profile : undefined;
-  const resolvedInitialRulesProfile = example ? validatedExampleProfile ?? BMJA_PROFILE_REF : initialRulesProfile ?? readPreferredRulesProfile() ?? BMJA_PROFILE_REF;
+  const resolvedInitialRulesProfile = example
+    ? validatedExampleProfile ?? BMJA_PROFILE_REF
+    : initialRulesProfile ?? requestedDescriptor?.profile ?? readPreferredRulesProfile() ?? BMJA_PROFILE_REF;
   const [view, setView] = useState<'game' | 'hand'>(initialView);
   const [scorerContext, setScorerContext] = useState<HandScorerContext | null>(null);
   const [returnedScore, setReturnedScore] = useState<

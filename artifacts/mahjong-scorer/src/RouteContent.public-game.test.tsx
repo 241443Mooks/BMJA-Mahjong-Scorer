@@ -55,6 +55,22 @@ describe('public game route seam', () => {
     expect(renderToStaticMarkup(<RouteContent path="/hand" />)).toMatch(/data-testid="rules-card-british"[\s\S]*?checked=""/);
   });
 
+  it.each(['british', 'western', 'club', 'buzzard', 'mcr'] as const)('links the %s rules reference to its exact hand context', (slug) => {
+    const path = slug === 'club' ? '/rules/club' : `/rules/${slug}`;
+    const html = renderToStaticMarkup(<RouteContent path={path} />);
+    expect(html).toContain(`href="/hand?rules=${slug}"`);
+  });
+
+  it('links every rules hub card to its descriptor slug and leaves generic home scoring links plain', () => {
+    const rulesHtml = renderToStaticMarkup(<RouteContent path="/rules" />);
+    for (const slug of ['british', 'western', 'club', 'buzzard', 'mcr']) {
+      expect(rulesHtml).toContain(`href="/hand?rules=${slug}"`);
+    }
+    const homeHtml = renderToStaticMarkup(<RouteContent path="/" />);
+    expect(homeHtml).toContain('href="/hand"');
+    expect(homeHtml).not.toContain('/hand?rules=');
+  });
+
   it('loads the scorer when the browser storage getter itself throws', () => {
     vi.stubGlobal('window', { get localStorage() { throw new Error('blocked'); }, location: { search: '' } });
     expect(() => renderToStaticMarkup(<RouteContent path="/hand" />)).not.toThrow();
