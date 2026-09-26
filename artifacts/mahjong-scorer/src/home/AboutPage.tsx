@@ -177,7 +177,7 @@ export function AboutPage() {
           <section className="border-b border-[#ddd3bf] px-5 py-9 sm:px-8 sm:py-11 lg:px-12">
             <h2 className="font-serif text-[32px] leading-tight text-[#284d45]">What you can do here now</h2>
             <p className="mt-3 max-w-[780px] text-[15px] leading-7 text-[#596b65]">
-              Mahjong Reference supports British / BMJA-style rules as the stable profile, Western — Thompson &amp; Maloney provisionally while its ordinary rules remain under source review, and a configured local Club profile. The learning library is still explicitly British Mahjong material.
+              The <a href="/rules" className="font-semibold text-[#284d45] underline decoration-[#cfa58f] underline-offset-4">rules hub</a> is the live source for current profiles and their support status. The learning library is still explicitly British Mahjong material.
             </p>
             <div className="mt-6 grid gap-3 md:grid-cols-3">
               {projectActions.map((action) => (
@@ -194,7 +194,7 @@ export function AboutPage() {
                   <h2 className="font-serif text-[30px] leading-tight text-[#284d45]">Rules should be clear about what they know</h2>
                 </div>
                 <p className="text-[14px] leading-7 text-[#596b65]">
-                  The <a href="/rules" className="font-semibold text-[#284d45] underline decoration-[#cfa58f] underline-offset-4 transition hover:text-[#ae6249]">supported rules hub</a> shows the current boundaries and sources. British / BMJA-style support is stable. Western — Thompson &amp; Maloney remains provisional for ordinary play, scoring, settlement and progression while that source review continues. Club rules describe a configured local table, not a universal club standard.
+                  The <a href="/rules" className="font-semibold text-[#284d45] underline decoration-[#cfa58f] underline-offset-4 transition hover:text-[#ae6249]">rules hub</a> shows current profiles, support boundaries and sources. Rules support and confidence vary by profile, and a game keeps the rules selected for that table. The learning library remains explicitly British Mahjong material.
                 </p>
                 <p className="mt-3 text-[14px] leading-7 text-[#596b65]">
                   The main public British reference used during development is <ExternalTextLink href="https://mahjongbritishrules.wordpress.com/">Mah-Jong British Rules</ExternalTextLink>. Where evidence is incomplete or something is genuinely unknown, Mahjong Reference should say so rather than quietly invent certainty.
