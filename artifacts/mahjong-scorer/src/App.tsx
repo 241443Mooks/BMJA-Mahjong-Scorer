@@ -26,6 +26,7 @@ import { buildMcrHandScorerResult } from './game/hand-scorer-handoff';
 import type { McrResolvedWinEvent, McrWinSource, McrWind } from './rules-platform/mcr-scoring-input';
 import { handScorerInitialBaseline, hasHandScorerUnsavedWork } from './game/hand-scorer-dirty-state';
 import { resolveHybridWinner, type HybridWinnerAudit } from './game/classical-hybrid-winner-entry';
+import { resolveHybridNonWinner } from './game/classical-hybrid-non-winner-entry';
 import { transitionStandaloneHandProfile } from './game/hand-scorer-profile-transition';
 import { readPreferredRulesProfile, setPreferredRulesProfile } from './game/preferred-rules-profile';
 import { normaliseStructuredChoiceForGroup, recoverWorkingDraft } from './game/hand-entry-workspace';
@@ -596,6 +597,18 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
     candidateId: hybridCandidateId, visibility: hybridVisibility, rejectedCandidateIds: hybridRejectedCandidates,
   }) : undefined, [hybridActive, context, standaloneRulesProfile, sets, remainingTiles, flowers, seasons, ungroupedBlankTiles, gameContext, handMode, hybridMethodStatus, winningMethod, winningTileProvenance, effectiveWinningEventEvidence, originalCall, standingHand, onlyPossibleWinningTile, hybridCandidateId, hybridVisibility, hybridRejectedCandidates]);
   const scoredHand = hybridActive && hybridResolution?.kind === 'ready' ? hybridResolution.hand : hand;
+  const hybridNonWinnerResolution = useMemo(() => {
+    if (isMcr || isWinner || layoutMode !== 'sets') return undefined;
+    return resolveHybridNonWinner({
+      profile: activeProfile,
+      explicitSets: sets.filter((item): item is HandSet => item.tile !== null),
+      unresolvedTiles: remainingTiles,
+      bonusTiles: hand.bonusTiles,
+      ungroupedBlankTiles: applicableUngroupedBlanks(ungroupedBlankTiles, 'sets', false),
+      context: gameContext,
+      handMode,
+    });
+  }, [isMcr, isWinner, layoutMode, activeProfile, sets, remainingTiles, hand.bonusTiles, ungroupedBlankTiles, gameContext, handMode]);
 
   const isStructureComplete = useMemo(() => {
     if (!isWinner) return false;
@@ -613,8 +626,9 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
   const score = useMemo(
     () => hybridActive
       ? hybridResolution?.kind === 'ready' ? mapCurrentClassicalScoreBreakdown(hybridResolution.scoreResult) : undefined
+      : hybridNonWinnerResolution ? mapCurrentClassicalScoreBreakdown(hybridNonWinnerResolution.scoreResult)
       : scoringRuntime ? mapCurrentClassicalScoreBreakdown(scoringRuntime.scoreHand({ evidence: hand, context: gameContext })) : undefined,
-    [hybridActive, hybridResolution, gameContext, hand, scoringRuntime],
+    [hybridActive, hybridResolution, hybridNonWinnerResolution, gameContext, hand, scoringRuntime],
   );
   const mcrPass = useMemo(() => {
     if (!isMcr || compiledRuntime.grammar !== 'pattern-accumulator' || !mcrWinSource || !mcrResolvedWinEvent) return undefined;
@@ -997,6 +1011,14 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
     {hybridResolution?.kind === 'facts-required' && <div className="mt-2"><p>Choose how each inferred group was exposed.</p>{hybridResolution.unresolvedFacts.map((fact) => <div key={fact.groupId} className="mt-2 flex flex-wrap items-center gap-2"><b>{hybridResolution.candidate.inferredGroups.find(({ id }) => id === fact.groupId)?.kind}</b>{fact.choices.map((value) => <button key={value} type="button" onClick={() => setHybridVisibility((current) => [...current.filter((item) => item.groupId !== fact.groupId), { groupId: fact.groupId, value }])} className="rounded border border-[#cfc3aa] px-2 py-1">{value === 'exposed' ? 'Exposed' : 'Concealed'}</button>)}{hybridResolution.candidate.inferredGroups.find(({ id }) => id === fact.groupId)?.kind === 'kong' && <button type="button" onClick={() => { setHybridRejectedCandidates((current) => [...new Set([...current, hybridResolution.candidate.id])]); setHybridCandidateId(undefined); setHybridVisibility([]); }} className="rounded border border-[#cfc3aa] px-2 py-1">Not a Kong</button>}</div>)}</div>}
     {hybridResolution?.kind === 'ready' && <p className="mt-2"><b>How I read this hand</b><br/>{hybridResolution.provenance.explicitSetIds.length} groups entered · {hybridResolution.provenance.inferredGroups.length} inferred{hybridResolution.provenance.factResolutions.some(({ origin }) => origin === 'default') ? ' · exposed Kong assumed for now' : ''}</p>}
     {hybridActive && hybridResolution?.kind === 'ready' && <label className="mt-2 block">Winning method{hybridMethodStatus === 'default' && ' · not confirmed'}<select aria-label="Hybrid winning method" value={hybridMethodStatus === 'unknown' ? '' : winningMethod} onChange={(event) => { if (!event.target.value) { setHybridMethodStatus('unknown'); return; } setWinningMethod(event.target.value as WinningMethod); setHybridMethodStatus('confirmed'); }} className="ml-2 rounded border border-[#cfc3aa] bg-white px-2 py-1"><option value="">I’m not sure</option>{availableWinningMethods.map(({ value, label }) => <option key={value} value={value}>{label}</option>)}</select></label>}
+  </section>;
+  const hybridNonWinnerPanel = !isMcr && !isWinner && hybridNonWinnerResolution?.interpretation && <section data-testid="hybrid-non-winner-analysis" className="mt-3 rounded-md border border-[#d8ceb8] bg-[#fbf8ed] p-3 text-[11px]">
+    <h3 className="font-semibold text-[#284d45]">Rest-tile analysis</h3>
+    {hybridNonWinnerResolution.interpretation.candidates.length > 1 && <p className="mt-1">The rest of these tiles has {hybridNonWinnerResolution.interpretation.candidates.length} lawful structural readings. None is chosen for scoring; only your entered groups contribute intrinsic score.</p>}
+    {hybridNonWinnerResolution.interpretation.candidates.length === 1 && <p className="mt-1">The rest of these tiles supports one structural reading. It is used for analysis only; only your entered groups contribute intrinsic score.</p>}
+    {hybridNonWinnerResolution.interpretation.candidates.length === 0 && <p className="mt-1">No structural reading is available for this evidence yet. Your entered groups remain scored independently.</p>}
+    {hybridNonWinnerResolution.interpretation.rejected.some(({ code }) => code === 'needs-explicit-goulash-blank-placement') && <p className="mt-1 font-semibold">Place each Goulash blank explicitly before structural analysis.</p>}
+    {score?.specialFishing && <p className="mt-1">{score.specialFishing.name} fishing · {score.specialFishing.completingTiles.length} completing {score.specialFishing.completingTiles.length === 1 ? 'tile' : 'tiles'}.</p>}
   </section>;
 
   return (
@@ -1493,6 +1515,7 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
                         </p>
                       </div>
                     )}
+                    {hybridNonWinnerPanel}
                     {isWinner && (
                       <label className="flex cursor-pointer items-center justify-between rounded-md bg-[#f4eddf] px-3 py-2.5 text-[12px] font-semibold text-[#284d45]">
                         <span>Original Call (First turn win)</span>
