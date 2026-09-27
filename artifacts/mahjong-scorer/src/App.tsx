@@ -85,6 +85,14 @@ const suitNames: Record<string, string> = { characters: 'Characters', bamboo: 'B
 const suitOrder = ['characters', 'bamboo', 'circles', 'wind', 'dragon'] as const;
 type HandEvidenceOrigin = NonNullable<MahjongHand['classicalEvidenceOrigins']>[keyof NonNullable<MahjongHand['classicalEvidenceOrigins']>];
 const knownFactOrigin = (origin: HandEvidenceOrigin | undefined): Exclude<HandEvidenceOrigin, 'absent'> | undefined => !origin || origin === 'absent' ? undefined : origin;
+const factOriginIsResolved = (origin: HandEvidenceOrigin | undefined) => origin === 'confirmed' || origin === 'inherited';
+const classicalEvidenceForFacts = (facts: { standingHand: boolean; onlyPossibleWinningTile: boolean }, origins: Pick<NonNullable<MahjongHand['classicalEvidenceOrigins']>, 'standingHand' | 'onlyPossibleWinningTile'>) => {
+  const evidence: NonNullable<MahjongHand['classicalEvidence']> = {
+    ...(factOriginIsResolved(origins.standingHand) ? { standingHand: facts.standingHand } : {}),
+    ...(factOriginIsResolved(origins.onlyPossibleWinningTile) ? { onlyPossibleWinningTile: facts.onlyPossibleWinningTile } : {}),
+  };
+  return Object.keys(evidence).length ? evidence : undefined;
+};
 
 const allSuitTiles: PlayingTile[] = SUITS.flatMap((s) =>
   Array.from({ length: 9 }, (_, i) => suited(s, (i + 1) as SuitTile['rank']))
@@ -498,6 +506,7 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
     setUngroupedBlankTiles(transition.classical.ungroupedBlankTiles);
     setStandingHand(transition.classical.standingHand);
     setOnlyPossibleWinningTile(transition.classical.onlyPossibleWinningTile);
+    setProfileFactOrigins({ standingHand: 'default', onlyPossibleWinningTile: 'default', eastThirteenth: 'default' });
     setEastThirteenthConsecutiveMahjong(transition.classical.eastThirteenthConsecutiveMahjong);
     setOriginalCall(transition.classical.originalCall);
     setWinningMethod(transition.classical.winningMethod);
@@ -533,8 +542,8 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
       winningTileProvenance: isWinner && winningMethod !== 'initial-deal' ? winningTileProvenance : undefined,
       winningTileEvidenceOrigin: isWinner && winningMethod !== 'initial-deal' ? winningTileProvenance ? 'confirmed' : winningTileEvidenceOrigin : undefined,
       winningEventEvidence: effectiveWinningEventEvidence,
-      originalCall: isWinner ? originalCall : false,
-      classicalEvidence: standingHand || onlyPossibleWinningTile ? { standingHand, onlyPossibleWinningTile } : undefined,
+      originalCall: isWinner && factOriginIsResolved(originalCallStatus) ? originalCall : undefined,
+      classicalEvidence: classicalEvidenceForFacts({ standingHand, onlyPossibleWinningTile }, profileFactOrigins),
     };
   }, [sets, looseTiles, remainingTiles, ungroupedBlankTiles, layoutMode, flowers, seasons, isWinner, winningMethod, originalCall, standingHand, onlyPossibleWinningTile, winningTileProvenance, winningTileEvidenceOrigin, effectiveWinningEventEvidence]);
 
@@ -598,8 +607,8 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
   }, [isWinner, winningMethod, numberOfKongs]);
 
   const gameContext = useMemo<GameContext>(
-    () => ({ playerWind, prevailingWind, limit: limit as number, handMode, eastThirteenthConsecutiveMahjong }),
-    [handMode, limit, playerWind, prevailingWind, eastThirteenthConsecutiveMahjong],
+    () => ({ playerWind, prevailingWind, limit: limit as number, handMode, ...(factOriginIsResolved(profileFactOrigins.eastThirteenth) ? { eastThirteenthConsecutiveMahjong } : {}) }),
+    [handMode, limit, playerWind, prevailingWind, eastThirteenthConsecutiveMahjong, profileFactOrigins.eastThirteenth],
   );
 
   const scoringRuntime = compiledRuntime.grammar === 'classical-points-doubles' ? compiledRuntime.runtime : undefined;
@@ -621,7 +630,7 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
     bonusTiles: [...flowers.map((n) => bonus('flower', n as BonusTile['number'])), ...seasons.map((n) => bonus('season', n as BonusTile['number']))],
     ungroupedBlankTiles: [...applicableUngroupedBlanks(ungroupedBlankTiles, 'sets', true), ...unresolvedWinnerBlankEvidence(ungroupedBlankTiles)],
     context: gameContext, handMode,
-    evidence: { winningMethod: hybridMethodStatus === 'confirmed' || hybridMethodStatus === 'inherited' ? winningMethod : undefined, winningTileProvenance, winningTileEvidenceOrigin, winningEventEvidence: effectiveWinningEventEvidence, originalCall: originalCallStatus === 'confirmed' || originalCallStatus === 'inherited' ? originalCall : false, classicalEvidence: standingHand || onlyPossibleWinningTile ? { standingHand, onlyPossibleWinningTile } : undefined },
+    evidence: { winningMethod: factOriginIsResolved(hybridMethodStatus) ? winningMethod : undefined, winningTileProvenance, winningTileEvidenceOrigin, winningEventEvidence: effectiveWinningEventEvidence, originalCall: factOriginIsResolved(originalCallStatus) ? originalCall : undefined, classicalEvidence: classicalEvidenceForFacts({ standingHand, onlyPossibleWinningTile }, profileFactOrigins) },
     candidateId: hybridCandidateId, visibility: hybridVisibility, rejectedCandidateIds: hybridRejectedCandidates,
   }) : undefined, [hybridActive, context, standaloneRulesProfile, sets, remainingTiles, flowers, seasons, ungroupedBlankTiles, gameContext, handMode, hybridMethodStatus, winningMethod, winningTileProvenance, winningTileEvidenceOrigin, effectiveWinningEventEvidence, originalCall, originalCallStatus, standingHand, onlyPossibleWinningTile, hybridCandidateId, hybridVisibility, hybridRejectedCandidates]);
   const hybridNonWinnerResolution = useMemo(() => {
@@ -684,19 +693,19 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
   const shouldAskFirstDiscard = classicalMaterialFacts.firstDiscard;
   const shouldAskReplacementSequence = classicalMaterialFacts.replacementChain;
   const pendingMaterialEvidence = [
-    classicalMaterialFacts.winningMethod && hybridMethodStatus === 'default' ? 'winning method' : undefined,
-    classicalMaterialFacts.originalCall && originalCallStatus === 'default' ? 'Original Call' : undefined,
-    classicalMaterialFacts.standingHand && profileFactOrigins.standingHand === 'default' ? 'Standing Hand' : undefined,
-    classicalMaterialFacts.onlyPossibleWinningTile && profileFactOrigins.onlyPossibleWinningTile === 'default' ? 'only possible winning tile' : undefined,
-    classicalMaterialFacts.eastThirteenth && profileFactOrigins.eastThirteenth === 'default' ? 'East’s thirteenth consecutive Mahjong' : undefined,
+    classicalMaterialFacts.winningMethod && !factOriginIsResolved(hybridMethodStatus) ? 'winning method' : undefined,
+    classicalMaterialFacts.originalCall && !factOriginIsResolved(originalCallStatus) ? 'Original Call' : undefined,
+    classicalMaterialFacts.standingHand && !factOriginIsResolved(profileFactOrigins.standingHand) ? 'Standing Hand' : undefined,
+    classicalMaterialFacts.onlyPossibleWinningTile && !factOriginIsResolved(profileFactOrigins.onlyPossibleWinningTile) ? 'only possible winning tile' : undefined,
+    classicalMaterialFacts.eastThirteenth && !factOriginIsResolved(profileFactOrigins.eastThirteenth) ? 'East’s thirteenth consecutive Mahjong' : undefined,
     classicalMaterialFacts.firstDiscard && (discardAnswer === null || discardAnswer === 'unsure') ? 'first discard' : undefined,
     classicalMaterialFacts.replacementChain && (replacementAnswer === null || replacementAnswer === 'unsure') ? 'replacement sequence' : undefined,
-    classicalMaterialFacts.playerWind && windFactOrigins.playerWind === 'default' ? 'player Wind' : undefined,
-    classicalMaterialFacts.prevailingWind && windFactOrigins.prevailingWind === 'default' ? 'prevailing Wind' : undefined,
+    classicalMaterialFacts.playerWind && !factOriginIsResolved(windFactOrigins.playerWind) ? 'player Wind' : undefined,
+    classicalMaterialFacts.prevailingWind && !factOriginIsResolved(windFactOrigins.prevailingWind) ? 'prevailing Wind' : undefined,
   ].filter((fact): fact is string => !!fact);
   const unresolvedMaterialEvidence = pendingMaterialEvidence.length > 0;
-  const unresolvedStandaloneWind = (classicalMaterialFacts.playerWind && windFactOrigins.playerWind !== 'confirmed')
-    || (classicalMaterialFacts.prevailingWind && windFactOrigins.prevailingWind !== 'confirmed');
+  const unresolvedStandaloneWind = (classicalMaterialFacts.playerWind && !factOriginIsResolved(windFactOrigins.playerWind))
+    || (classicalMaterialFacts.prevailingWind && !factOriginIsResolved(windFactOrigins.prevailingWind));
 
   const isStructureComplete = useMemo(() => {
     if (!isWinner) return false;
@@ -717,8 +726,12 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
   const shouldAskWinningTile = isMcr || winningTileRequirement?.kind === 'required' || winningTileRequirement?.kind === 'unknown';
   const handForScoring: MahjongHand = {
     ...scoredHand,
-    ...(!classicalMaterialFacts.winningMethod || hybridMethodStatus === 'confirmed' || hybridMethodStatus === 'inherited' ? {} : { winningMethod: undefined }),
-    originalCall: !classicalMaterialFacts.originalCall || originalCallStatus === 'confirmed' || originalCallStatus === 'inherited' ? originalCall : false,
+    ...(!classicalMaterialFacts.winningMethod || factOriginIsResolved(hybridMethodStatus) ? {} : { winningMethod: undefined }),
+    ...(classicalMaterialFacts.originalCall ? { originalCall: factOriginIsResolved(originalCallStatus) ? originalCall : undefined } : {}),
+    classicalEvidence: classicalEvidenceForFacts({ standingHand, onlyPossibleWinningTile }, {
+      standingHand: classicalMaterialFacts.standingHand ? profileFactOrigins.standingHand : 'absent',
+      onlyPossibleWinningTile: classicalMaterialFacts.onlyPossibleWinningTile ? profileFactOrigins.onlyPossibleWinningTile : 'absent',
+    }),
     classicalEvidenceOrigins: {
       winningMethod: classicalMaterialFacts.winningMethod ? hybridMethodStatus : 'absent',
       originalCall: classicalMaterialFacts.originalCall ? originalCallStatus : 'absent',
@@ -740,7 +753,7 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
       : scoringRuntime ? mapCurrentClassicalScoreBreakdown(scoringRuntime.scoreHand({ evidence: handForScoring, context: gameContext })) : undefined,
     [hybridActive, hybridResolution, hybridNonWinnerResolution, gameContext, handForScoring, scoringRuntime],
   );
-  const scoreResultVisible = !hybridNonWinnerResolution?.kongConfirmationRequired?.length;
+  const scoreResultVisible = !unresolvedMaterialEvidence && !unresolvedStandaloneWind && !hybridNonWinnerResolution?.kongConfirmationRequired?.length;
   const mcrPass = useMemo(() => {
     if (!isMcr || compiledRuntime.grammar !== 'pattern-accumulator' || !mcrWinSource || !mcrResolvedWinEvent) return undefined;
     const adapted = toMcrScoringInput(hand, { winSource: mcrWinSource, resolvedWinEvent: mcrResolvedWinEvent, lastVisibleCopy: mcrLastVisibleCopy, seatWind: mcrSeatWind, prevailingWind: mcrPrevailingWind });
@@ -1465,7 +1478,7 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
             </div>
 
             <aside className="min-w-0 space-y-5">
-              {!isMcr && scoreResultVisible && score && <>
+              {!isMcr && score && <>
               <section id="game-status-controls" className={`animate-rise animate-rise-delay-1 min-w-0 rounded-xl border border-[#d8ceb8] bg-[#e8e1d1] p-5 sm:p-6 ${hasContext ? 'hidden sm:block' : ''}`}>
                 <SectionLabel eyebrow="05 / context" title="Game status" />
                 <div className="space-y-4">
@@ -1660,6 +1673,7 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
               {hybridActive && <section data-testid="hybrid-rest-tile-entry" className="mt-3 rounded-lg border border-[#d8ceb8] bg-[#fbf8ed] p-3"><div className="mb-2 flex items-center justify-between"><b className="text-[11px] text-[#284d45]">Add tiles</b><span className="text-[10px] text-[#66746e]">{remainingTiles.length} entered</span></div>{renderMobileTilePicker('Add tiles', 'remaining-tiles')}<div className="hidden flex-wrap gap-2 sm:flex">{visibleTilesFor('remaining-tiles').map((tile) => <button key={tileKey(tile)} type="button" aria-label={`Add ${tileName(tile)} to tiles`} onClick={() => addTile(tile, 'remaining-tiles')} disabled={tileIsDisabled(tile, 'remaining-tiles')} className="rounded disabled:opacity-35"><TileFace tile={tile} compact /></button>)}</div><div className="mt-2 flex flex-wrap gap-2">{remainingTiles.map((tile, index) => <div key={`${tileKey(tile)}-${index}`} className="flex items-center gap-1"><button type="button" aria-label={`Remove ${tileName(tile)} from tiles`} onClick={() => removeUngroupedTile('remaining', index)} className="rounded border border-[#cfc3aa] px-2 py-1">Remove {tileName(tile)}</button>{handMode === 'goulash' && <button type="button" aria-label={`Toggle blank for ${tileName(tile)}`} data-testid={`button-toggle-winner-blank-desktop-${index}`} aria-pressed={isUngroupedBlank('remaining', index)} onClick={() => toggleUngroupedBlank('remaining', index)} className="rounded border border-[#cfc3aa] px-2 py-1 text-[10px]">{isUngroupedBlank('remaining', index) ? 'Blank' : 'Mark blank'}</button>}</div>)}</div></section>}
               {mobileLiveResult}
 
+              {scoreResultVisible && <>
               <section className="animate-rise animate-rise-delay-2 overflow-hidden rounded-xl bg-[#284d45] text-[#f8f4e9] shadow-[var(--shadow-lg)]">
                 <div className="border-b border-[#55756c] px-5 pb-4 pt-5 sm:px-6">
                   <div className="flex items-center justify-between">
@@ -1751,6 +1765,7 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
                   </div>
                 </section>
               )}
+              </>}
               </>}
               {isMcr && <>
                 <section data-testid="mcr-evidence-controls" className="rounded-xl border border-[#d8ceb8] bg-[#fbf8ed] p-5">

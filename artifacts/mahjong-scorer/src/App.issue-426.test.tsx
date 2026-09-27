@@ -123,4 +123,56 @@ describe('issue 426 winning-tile evidence integration', () => {
       await act(async () => root.unmount()); container.remove(); vi.unstubAllGlobals();
     }
   });
+
+  it('fails closed for default and unknown material facts, then accepts a confirmed No', async () => {
+    vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
+    let appliedResult: HandScorerResult | undefined;
+    const onClose = (result?: HandScorerResult) => { appliedResult = result; };
+    const container = document.createElement('div'); document.body.append(container);
+    const root = createRoot(container);
+    await act(async () => root.render(<HandScorer context={scorerContext(buriedHand())} onClose={onClose} standaloneHand={false} standaloneRulesProfile={BMJA_PROFILE_REF} onStandaloneRulesProfileChange={vi.fn()} />));
+    const click = async (element: Element | null) => { expect(element).not.toBeNull(); await act(async () => element!.dispatchEvent(new MouseEvent('click', { bubbles: true }))); };
+    const chooseAllMaterialFactsNo = async () => {
+      const method = container.querySelector<HTMLSelectElement>('[data-testid="select-winning-method"]');
+      if (method) await act(async () => { method.value = 'wall'; method.dispatchEvent(new Event('change', { bubbles: true })); });
+      for (const selector of ['[data-testid="button-discard-answer-no"]', '[data-testid="button-replacement-answer-no"]', '[data-testid="standing-hand-no"]', '[data-testid="only-possible-tile-no"]', '[data-testid="east-thirteenth-no"]']) {
+        for (let pass = 0; pass < 2; pass += 1) {
+          const answer = container.querySelector(selector);
+          if (answer) await click(answer);
+        }
+      }
+    };
+    try {
+      expect(container.querySelector('[data-testid="current-score-value"]')).toBeNull();
+      expect(container.querySelector('[data-testid^="button-apply-score"]')).toBeNull();
+      await chooseAllMaterialFactsNo();
+
+      const originalCallUnknown = container.querySelector('[data-testid="original-call-unknown"]');
+      expect(originalCallUnknown).not.toBeNull();
+      await click(originalCallUnknown);
+      expect(container.querySelector('[data-testid="pending-material-evidence"]')).not.toBeNull();
+      expect(container.querySelector('[data-testid="current-score-value"]')).toBeNull();
+      expect(container.querySelector('[data-testid^="button-apply-score"]')).toBeNull();
+
+      await click(container.querySelector('[data-testid="original-call-no"]'));
+      expect(container.querySelector('[data-testid="current-score-value"]')).not.toBeNull();
+      const applyButton = container.querySelector<HTMLButtonElement>('[data-testid="button-apply-score-mobile"]');
+      expect(applyButton).not.toBeNull();
+      expect(applyButton?.disabled).toBe(false);
+      await click(applyButton ?? null);
+      expect(appliedResult?.grammar).toBe('classical-points-doubles');
+      if (appliedResult?.grammar !== 'classical-points-doubles') throw new Error('Expected an applied Classical hand');
+      expect(appliedResult.detailedHand.hand.originalCall).toBe(false);
+      expect(appliedResult.detailedHand.hand.classicalEvidenceOrigins?.originalCall).toBe('confirmed');
+      for (const fact of ['standingHand', 'onlyPossibleWinningTile'] as const) {
+        if (appliedResult.detailedHand.hand.classicalEvidenceOrigins?.[fact] === 'confirmed') {
+          expect(appliedResult.detailedHand.hand.classicalEvidence?.[fact]).toBe(false);
+        } else {
+          expect(appliedResult.detailedHand.hand.classicalEvidence?.[fact]).toBeUndefined();
+        }
+      }
+    } finally {
+      await act(async () => root.unmount()); container.remove(); vi.unstubAllGlobals();
+    }
+  });
 });
