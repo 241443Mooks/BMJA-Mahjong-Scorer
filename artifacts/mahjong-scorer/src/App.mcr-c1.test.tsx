@@ -49,6 +49,13 @@ describe('C1 shared standalone scorer workspace', () => {
     expect(html).toContain('<h1 data-testid="hand-scorer-title"');
     expect(html).toContain('Mahjong hand calculator');
     expect(html).toContain('Change rules');
+    expect(html).toContain('data-testid="standalone-rules-row"');
+    expect(html).toMatch(/data-testid="standalone-rules-row"[^>]*>.*?data-testid="active-rules".*?Change rules/s);
+    expect(html).toContain('data-testid="mobile-tile-progress"');
+    expect(html).toMatch(/data-testid="tile-entry-shell" class="[^"]*rounded-none border-0 bg-transparent p-0 shadow-none/);
+    expect(html).toMatch(/class="[^"]*hidden sm:flex[^"]*"[^>]*>.*?Arrange the tiles/s);
+    expect(html).toMatch(/data-testid="completed-groups-empty-state" class="[^"]*hidden sm:block/);
+    expect(html).not.toContain('data-testid="detected-patterns"');
     expect(html).not.toContain('data-testid="rules-profile-picker"');
     const order = ['hand-scorer-title', 'active-rules', 'button-load-example', 'working-picker', 'hand-so-far', 'bonus-tiles', 'mcr-evidence-controls', 'mobile-live-result', 'mcr-score-result', 'calculator-supporting-info'];
     const positions = order.map((testId) => html.indexOf(`data-testid="${testId}"`));
@@ -75,6 +82,8 @@ describe('C1 shared standalone scorer workspace', () => {
     expect(html).toContain('Change rules');
     expect(html).not.toContain('New hand · ready to enter');
     expect(html.indexOf('Arrange the tiles')).toBeGreaterThan(html.indexOf('Change rules'));
+    const workingPicker = html.slice(html.indexOf('data-testid="working-picker"'), html.indexOf('data-testid="hand-so-far"'));
+    expect(workingPicker).toContain('data-testid="mobile-tile-progress"');
     const openingHeader = html.slice(html.indexOf('data-testid="hand-scorer-title"'), html.indexOf('Arrange the tiles'));
     expect(openingHeader).not.toContain('Leave hand and go home');
     expect(openingHeader).not.toContain('Enter your tiles visually');
@@ -83,6 +92,9 @@ describe('C1 shared standalone scorer workspace', () => {
     expect(html).toContain('Understand settlement');
     expect(html).toContain('track a full game');
     expect(html).toContain('Leave hand and go home');
+    expect(html).toContain('data-testid="remaining-tile-preview"');
+    expect(html).toContain('flex-wrap justify-end gap-x-1 gap-y-1');
+    expect(html).toMatch(/data-testid="completed-groups-empty-state" class="[^"]*hidden sm:block/);
   });
 
   it('locks table-owned MCR context while preserving editable scorer evidence', () => {

@@ -75,6 +75,7 @@ describe('preferred profile flow interactions', () => {
     try {
       await click(container.querySelector('[data-testid="button-add-working-group"]'));
       expect(container.querySelector('[data-testid="card-set-1"]')).not.toBeNull();
+      expect(container.querySelector('[data-testid="completed-group-tiles"]')?.className).toContain('flex-wrap');
 
       await click(container.querySelector('[data-testid="card-set-1"] button'));
       expect(container.querySelector('[data-testid="working-group-draft"]')).toBeNull();
