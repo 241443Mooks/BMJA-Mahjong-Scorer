@@ -66,11 +66,22 @@ The durable rules rollout tracker is [#275](https://github.com/241443Mooks/BMJA-
 
 ## Current engineering direction — hybrid hand entry
 
-The current bounded engineering programme is [#386](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/386): make Classical hand entry read naturally as **enter what you know, then add the rest**.
+The current bounded engineering programme is [#386](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/386): make Classical hand entry read naturally as **enter what you know, add the rest, interpret only what can be proved, and ask only for material facts the evidence cannot supply**.
 
-The first presentation slice is live: **Add a group** and **Add remaining tiles** are peer actions, preserving structured and ungrouped evidence separately. The next seam is a pure Classical interpreter that can enumerate lawful structures around the player's explicit groups without scoring, ranking or guessing missing facts. That work is tracked by [#391](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/391) / PR [#396](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/pull/396).
+The core programme is now almost complete. The merged path includes:
 
-For the dated handoff and sequencing plan, see `docs/product/WHATS_NEXT_ROADMAP.md`.
+- hybrid grouped + unresolved-tile entry;
+- a pure exact-profile Classical remainder interpreter;
+- complete-winner resolution with auditable candidate/fact handling;
+- winner UI / Apply Score / persistence integration;
+- partial, 13-tile and fishing interpretation;
+- one unified Classical entry workflow without a `normal` versus `special` prerequisite;
+- conservative non-winner ordinary inference with deterministic partial decomposition and exact-runtime scoring;
+- conditional winning-tile evidence, requested only when lawful provenance can materially change the exact runtime result.
+
+The final semantic child is [#428](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/428): finish the remaining materially required Classical evidence questions and add safe confirmation for inferred non-winner Kongs. After #428 is reviewed and merged, the intended close-out is one final #386 acceptance audit, closure of the parent programme, then [#411](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/411) for the task-first/app-like calculator shell.
+
+For current sequencing, use the live programme map in [#105](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/105). `docs/product/WHATS_NEXT_ROADMAP.md` remains the dated 26 September handoff snapshot until #386 closes and the next restart point is written.
 
 ## Structured Mahjong knowledge
 
