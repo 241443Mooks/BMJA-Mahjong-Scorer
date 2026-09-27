@@ -37,4 +37,15 @@ describe('hand scorer dirty baseline', () => {
     expect(hand.ungroupedBlankTiles[0].id).toBe('blank-loose');
     expect(hasHandScorerUnsavedWork({ ...baseline, ungroupedBlankTiles: [] }, baseline)).toBe(true);
   });
+
+  it('treats a legacy Classical loose layout as clean after workspace normalisation', () => {
+    const hand = {
+      sets: [], looseTiles: [dragon('red')], bonusTiles: [], isWinner: true,
+      ungroupedBlankTiles: [{ id: 'blank-loose', location: 'loose' as const, tileIndex: 0 }],
+    };
+    const baseline = handScorerInitialBaseline(hand, practiceContext, true);
+    expect(baseline).toMatchObject({ layoutMode: 'sets', looseTiles: [], remainingTiles: [dragon('red')], ungroupedBlankTiles: [{ id: 'blank-loose', location: 'remaining', tileIndex: 0 }] });
+    expect(hasHandScorerUnsavedWork(baseline, baseline)).toBe(false);
+    expect(hasHandScorerUnsavedWork({ ...baseline, remainingTiles: [] }, baseline)).toBe(true);
+  });
 });

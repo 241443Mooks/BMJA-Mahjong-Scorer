@@ -23,6 +23,9 @@ describe('Classical hybrid winner integration', () => {
     await act(async () => root.render(<HandScorer context={context} onClose={vi.fn()} standaloneHand={false} standaloneRulesProfile={BMJA_PROFILE_REF} onStandaloneRulesProfileChange={vi.fn()} />));
     try {
       expect(container.querySelector('[data-testid="hybrid-rest-tile-entry-start"]')).not.toBeNull();
+      expect(container.querySelector('[data-testid="button-add-a-group"]')?.textContent).toBe('Add a group');
+      expect(container.querySelector('[data-testid="button-add-tiles"]')?.textContent).toBe('Add tiles');
+      expect(container.querySelector('[data-testid="button-layout-special"]')).toBeNull();
       const firstTile = container.querySelector('[data-testid="hybrid-rest-tile-entry-start"] button[aria-label^="Add "]');
       expect(firstTile).not.toBeNull();
       expect(firstTile?.hasAttribute('disabled')).toBe(false);
