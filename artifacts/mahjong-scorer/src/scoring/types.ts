@@ -84,6 +84,9 @@ export type WinningTileProvenance = {
   target: WinningTileTarget;
 };
 
+/** Current input records assertion or explicit uncertainty; no current evidence can derive tile arrival history. */
+export type WinningTileEvidenceOrigin = 'confirmed' | 'unknown';
+
 export type WinningEventEvidence =
   | {
       type: 'discard';
@@ -114,6 +117,8 @@ export type MahjongHand = {
   winningMethod?: WinningMethod;
   /** Exact winning tile and its destination; absence means unknown. */
   winningTileProvenance?: WinningTileProvenance;
+  /** Provenance status for persistence/audit; absence means not asked or irrelevant. */
+  winningTileEvidenceOrigin?: WinningTileEvidenceOrigin;
   /** Minimal event facts not represented by winningMethod; absence means unknown. */
   winningEventEvidence?: WinningEventEvidence;
   originalCall?: boolean;

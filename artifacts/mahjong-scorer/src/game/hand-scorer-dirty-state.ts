@@ -6,7 +6,7 @@ export type HandScorerEditableState = {
   sets: EditableSet[]; layoutMode: 'sets' | 'special'; looseTiles: PlayingTile[]; remainingTiles: PlayingTile[];
   ungroupedBlankTiles: UngroupedBlankTile[];
   flowers: number[]; seasons: number[]; playerWind: Wind; prevailingWind: Wind; limit?: number; isWinner: boolean;
-  winningMethod: WinningMethod; originalCall: boolean; winningTileProvenance?: WinningTileProvenance; winningEventEvidence?: WinningEventEvidence;
+  winningMethod: WinningMethod; originalCall: boolean; winningTileProvenance?: WinningTileProvenance; winningTileEvidenceOrigin?: MahjongHand['winningTileEvidenceOrigin']; winningEventEvidence?: WinningEventEvidence;
   hybridInterpretation?: unknown;
 };
 
@@ -24,7 +24,7 @@ export function handScorerInitialBaseline(hand: MahjongHand | undefined, context
     ...workspace,
     flowers: hand?.bonusTiles.filter((tile) => tile.family === 'flower').map((tile) => tile.number) ?? [], seasons: hand?.bonusTiles.filter((tile) => tile.family === 'season').map((tile) => tile.number) ?? [],
   };
-  const winnerFacts = { winningTileProvenance: hand?.winningTileProvenance, winningEventEvidence: hand?.winningEventEvidence };
+  const winnerFacts = { winningTileProvenance: hand?.winningTileProvenance, winningTileEvidenceOrigin: hand?.winningTileEvidenceOrigin, winningEventEvidence: hand?.winningEventEvidence };
   if (!isClassical) return { ...editableHand, ...context, ...winnerFacts };
   const { hybridInterpretation, ...editableContext } = context;
   return {
