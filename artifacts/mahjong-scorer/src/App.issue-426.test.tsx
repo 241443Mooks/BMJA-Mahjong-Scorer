@@ -7,6 +7,7 @@ import { HandScorer } from './App';
 import { createBmjaGame } from './game/game';
 import { applyHandScorerResult, createHandScorerContext } from './game/hand-scorer-handoff';
 import { BMJA_PROFILE_REF } from './game/ruleset';
+import { BUZZARD_2000_PROFILE_REF } from './game/buzzard-2000';
 import { mapCurrentClassicalScoreBreakdown } from './rules-platform/current-runtime-compat';
 import { getCurrentCompiledRulesRuntime, initialiseCurrentRulesRuntimes } from './rules-platform/current-runtime-registry';
 import { dragon, set, suited, type MahjongHand } from './scoring';
@@ -29,14 +30,14 @@ const buriedHand = (origin?: 'confirmed' | 'unknown', selected = false): Mahjong
   sets: buriedSets, bonusTiles: [], isWinner: true, winningMethod: 'discard',
   ...(selected ? { winningTileProvenance: { tile: suited('bamboo', 2), target: { type: 'grouped-set' as const, setId: 'one' } }, winningTileEvidenceOrigin: origin ?? 'confirmed' as const } : origin ? { winningTileEvidenceOrigin: origin } : {}),
 });
-const recordFor = (hand: MahjongHand): DetailedHandRecord => {
-  const compiled = getCurrentCompiledRulesRuntime(BMJA_PROFILE_REF);
+const recordFor = (hand: MahjongHand, profile = BMJA_PROFILE_REF): DetailedHandRecord => {
+  const compiled = getCurrentCompiledRulesRuntime(profile);
   if (compiled.grammar !== 'classical-points-doubles') throw new Error('Expected Classical runtime');
   const result = compiled.runtime.scoreHand({ evidence: hand, context: contextFacts });
   const breakdown = mapCurrentClassicalScoreBreakdown(result);
   return { source: 'detailed-scorer', hand, context: contextFacts, breakdown, finalScore: breakdown.finalScore };
 };
-const scorerContext = (hand: MahjongHand) => createHandScorerContext(game, 'south', winning, recordFor(hand));
+const scorerContext = (hand: MahjongHand, profile = BMJA_PROFILE_REF) => createHandScorerContext(game, 'south', winning, recordFor(hand, profile));
 const renderScorer = (context: ReturnType<typeof scorerContext>, onClose = vi.fn()) => renderToStaticMarkup(
   <HandScorer context={context} onClose={onClose} standaloneHand={false} standaloneRulesProfile={BMJA_PROFILE_REF} onStandaloneRulesProfileChange={vi.fn()} />,
 );
@@ -71,6 +72,12 @@ describe('issue 426 winning-tile evidence integration', () => {
     const click = async (element: Element | null) => { expect(element).not.toBeNull(); await act(async () => element!.dispatchEvent(new MouseEvent('click', { bubbles: true }))); };
     try {
       await click(container.querySelector('[data-testid="button-winning-tile-unknown"]'));
+      for (const selector of ['[data-testid="button-discard-answer-no"]', '[data-testid="button-replacement-answer-no"]', '[data-testid="standing-hand-no"]', '[data-testid="only-possible-tile-no"]', '[data-testid="east-thirteenth-no"]', '[data-testid="original-call-no"]']) {
+        const answer = container.querySelector(selector);
+        if (answer) await click(answer);
+      }
+      const winningMethod = container.querySelector<HTMLSelectElement>('[data-testid="select-winning-method"]');
+      if (winningMethod) await act(async () => { winningMethod.value = 'wall'; winningMethod.dispatchEvent(new Event('change', { bubbles: true })); });
       await click(container.querySelector('[data-testid="button-apply-score-mobile"]'));
       const result = appliedResult;
       expect(result?.grammar).toBe('classical-points-doubles');
@@ -88,7 +95,7 @@ describe('issue 426 winning-tile evidence integration', () => {
     }
   });
 
-  it('preserves a confirmed tile and origin across a winning-method change, then Apply/reopen stays consistent', async () => {
+  it('keeps a confirmed tile and material-fact answers through Apply/reopen', async () => {
     vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
     let appliedResult: HandScorerResult | undefined;
     const onClose = (result?: HandScorerResult) => { appliedResult = result; };
@@ -99,8 +106,11 @@ describe('issue 426 winning-tile evidence integration', () => {
     try {
       await click(container.querySelector('[data-testid="button-winning-tile-one-0"]'));
       const method = container.querySelector<HTMLSelectElement>('[data-testid="select-winning-method"]');
-      expect(method).not.toBeNull();
-      await act(async () => { method!.value = 'wall'; method!.dispatchEvent(new Event('change', { bubbles: true })); });
+      if (method) await act(async () => { method.value = 'wall'; method.dispatchEvent(new Event('change', { bubbles: true })); });
+      for (const selector of ['[data-testid="button-discard-answer-no"]', '[data-testid="button-replacement-answer-no"]', '[data-testid="standing-hand-no"]', '[data-testid="only-possible-tile-no"]', '[data-testid="east-thirteenth-no"]', '[data-testid="original-call-no"]']) {
+        const answer = container.querySelector(selector);
+        if (answer) await click(answer);
+      }
       await click(container.querySelector('[data-testid="button-apply-score-mobile"]'));
       const result = appliedResult;
       expect(result?.grammar).toBe('classical-points-doubles');
@@ -112,6 +122,88 @@ describe('issue 426 winning-tile evidence integration', () => {
       expect(createHandScorerContext(game, 'south', winning, applied).detailedHand?.hand).toMatchObject({ winningTileEvidenceOrigin: 'confirmed', winningTileProvenance: { target: { setId: 'one' } } });
     } finally {
       await act(async () => root.unmount()); container.remove(); vi.unstubAllGlobals();
+    }
+  });
+
+  it('fails closed for default and unknown material facts, then accepts a confirmed No', async () => {
+    vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
+    let appliedResult: HandScorerResult | undefined;
+    const onClose = (result?: HandScorerResult) => { appliedResult = result; };
+    const container = document.createElement('div'); document.body.append(container);
+    const root = createRoot(container);
+    await act(async () => root.render(<HandScorer context={scorerContext(buriedHand())} onClose={onClose} standaloneHand={false} standaloneRulesProfile={BMJA_PROFILE_REF} onStandaloneRulesProfileChange={vi.fn()} />));
+    const click = async (element: Element | null) => { expect(element).not.toBeNull(); await act(async () => element!.dispatchEvent(new MouseEvent('click', { bubbles: true }))); };
+    const chooseAllMaterialFactsNo = async () => {
+      const method = container.querySelector<HTMLSelectElement>('[data-testid="select-winning-method"]');
+      if (method) await act(async () => { method.value = 'wall'; method.dispatchEvent(new Event('change', { bubbles: true })); });
+      for (const selector of ['[data-testid="button-discard-answer-no"]', '[data-testid="button-replacement-answer-no"]', '[data-testid="standing-hand-no"]', '[data-testid="only-possible-tile-no"]', '[data-testid="east-thirteenth-no"]']) {
+        for (let pass = 0; pass < 2; pass += 1) {
+          const answer = container.querySelector(selector);
+          if (answer) await click(answer);
+        }
+      }
+    };
+    try {
+      expect(container.querySelector('[data-testid="current-score-value"]')).toBeNull();
+      expect(container.querySelector('[data-testid^="button-apply-score"]')).toBeNull();
+      await chooseAllMaterialFactsNo();
+
+      const originalCallUnknown = container.querySelector('[data-testid="original-call-unknown"]');
+      expect(originalCallUnknown).not.toBeNull();
+      await click(originalCallUnknown);
+      expect(container.querySelector('[data-testid="pending-material-evidence"]')).not.toBeNull();
+      expect(container.querySelector('[data-testid="current-score-value"]')).toBeNull();
+      expect(container.querySelector('[data-testid^="button-apply-score"]')).toBeNull();
+
+      await click(container.querySelector('[data-testid="original-call-no"]'));
+      expect(container.querySelector('[data-testid="current-score-value"]')).not.toBeNull();
+      const applyButton = container.querySelector<HTMLButtonElement>('[data-testid="button-apply-score-mobile"]');
+      expect(applyButton).not.toBeNull();
+      expect(applyButton?.disabled).toBe(false);
+      await click(applyButton ?? null);
+      expect(appliedResult?.grammar).toBe('classical-points-doubles');
+      if (appliedResult?.grammar !== 'classical-points-doubles') throw new Error('Expected an applied Classical hand');
+      expect(appliedResult.detailedHand.hand.originalCall).toBe(false);
+      expect(appliedResult.detailedHand.hand.classicalEvidenceOrigins?.originalCall).toBe('confirmed');
+      for (const fact of ['standingHand', 'onlyPossibleWinningTile'] as const) {
+        if (appliedResult.detailedHand.hand.classicalEvidenceOrigins?.[fact] === 'confirmed') {
+          expect(appliedResult.detailedHand.hand.classicalEvidence?.[fact]).toBe(false);
+        } else {
+          expect(appliedResult.detailedHand.hand.classicalEvidence?.[fact]).toBeUndefined();
+        }
+      }
+    } finally {
+      await act(async () => root.unmount()); container.remove(); vi.unstubAllGlobals();
+    }
+  });
+
+  it('keeps an absent material profile fact unresolved in a tracked game after mount', async () => {
+    vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
+    const previousGame = game;
+    game = createBmjaGame(players, seats, undefined, 'full-game', BUZZARD_2000_PROFILE_REF);
+    const handWithoutStandingEvidence: MahjongHand = {
+      ...buriedHand(),
+      winningMethod: 'wall',
+      classicalEvidence: { onlyPossibleWinningTile: false },
+      classicalEvidenceOrigins: { onlyPossibleWinningTile: 'confirmed' },
+    };
+    const container = document.createElement('div'); document.body.append(container);
+    const root = createRoot(container);
+    await act(async () => root.render(<HandScorer context={scorerContext(handWithoutStandingEvidence, BUZZARD_2000_PROFILE_REF)} onClose={vi.fn()} standaloneHand={false} standaloneRulesProfile={BUZZARD_2000_PROFILE_REF} onStandaloneRulesProfileChange={vi.fn()} />));
+    const click = async (element: Element | null) => { expect(element).not.toBeNull(); await act(async () => element!.dispatchEvent(new MouseEvent('click', { bubbles: true }))); };
+    try {
+      expect(handWithoutStandingEvidence.classicalEvidence?.standingHand).toBeUndefined();
+      expect(container.querySelector('[data-testid="standing-hand-no"]')).not.toBeNull();
+      expect(container.querySelector('[data-testid="current-score-value"]')).toBeNull();
+      expect(container.querySelector('[data-testid^="button-apply-score"]')).toBeNull();
+
+      await click(container.querySelector('[data-testid="standing-hand-no"]'));
+      expect(container.querySelector('[data-testid="current-score-value"]')).not.toBeNull();
+      const applyButton = container.querySelector<HTMLButtonElement>('[data-testid="button-apply-score-mobile"]');
+      expect(applyButton).not.toBeNull();
+      expect(applyButton?.disabled).toBe(false);
+    } finally {
+      await act(async () => root.unmount()); container.remove(); game = previousGame; vi.unstubAllGlobals();
     }
   });
 });

@@ -123,6 +123,8 @@ export type MahjongHand = {
   winningEventEvidence?: WinningEventEvidence;
   originalCall?: boolean;
   classicalEvidence?: { standingHand?: boolean; onlyPossibleWinningTile?: boolean };
+  /** Provenance for material Classical questions; optional for existing saved hands. */
+  classicalEvidenceOrigins?: Partial<Record<'winningMethod' | 'originalCall' | 'standingHand' | 'onlyPossibleWinningTile' | 'eastThirteenth' | 'firstDiscard' | 'replacementChain' | 'playerWind' | 'prevailingWind', 'default' | 'confirmed' | 'unknown' | 'inherited' | 'absent'>>;
 };
 
 export type GameContext = {

@@ -143,6 +143,27 @@ describe('Classical hybrid non-winner orchestration', () => {
       .toBeGreaterThan(mapCurrentClassicalScoreBreakdown(established.scoreResult).finalScore);
   });
 
+  it('requires confirmation before an inferred Kong can affect a non-winner score', () => {
+    const explicitSets = [
+      set('bamboo-one', 'pung', suited('bamboo', 1)),
+      set('circles-two', 'pung', suited('circles', 2)),
+      set('characters-three', 'pung', suited('characters', 3)),
+    ];
+    const unresolvedTiles = Array.from({ length: 4 }, () => wind('east'));
+    const input = { profile: BMJA_PROFILE_REF, explicitSets, unresolvedTiles, bonusTiles: [], context, handMode: 'normal' as const };
+    const undecided = resolveHybridNonWinner(input);
+    expect(undecided.kongConfirmationRequired?.some(({ inferredGroups }) => inferredGroups.some(({ kind }) => kind === 'kong'))).toBe(true);
+    expect(undecided.resolvedHand.sets.some(({ kind }) => kind === 'kong')).toBe(false);
+    const candidate = undecided.kongConfirmationRequired![0]!;
+    const visibilityByGroupId = candidate.lawfulVisibilityAssignments[0]!;
+    const confirmed = resolveHybridNonWinner({ ...input, kongConfirmation: { candidateId: candidate.id, visibilityByGroupId } });
+    expect(confirmed.resolvedHand.sets.some(({ kind }) => kind === 'kong')).toBe(true);
+    expect(Object.values(confirmed.audit?.factOrigins ?? {})).toContain('confirmed');
+    const notKong = resolveHybridNonWinner({ ...input, rejectedKongCandidateIds: [candidate.id] });
+    expect(notKong.kongConfirmationRequired?.some(({ id }) => id === candidate.id) ?? false).toBe(false);
+    expect(notKong.resolvedHand.remainingTiles?.filter((tile) => tile.family === 'wind' && tile.wind === 'east')).toHaveLength(4);
+  });
+
   it('maximizes grouped tile coverage before score minimization', () => {
     const unresolvedTiles = [suited('bamboo', 1), ...Array.from({ length: 4 }, () => suited('bamboo', 2)), suited('bamboo', 3)];
     const result = resolveHybridNonWinner({ profile: BMJA_PROFILE_REF, explicitSets: [], unresolvedTiles, bonusTiles: [], context, handMode: 'normal' });
