@@ -44,6 +44,7 @@ A few decisions shape the whole project:
 - **Deterministic rules engines are the authority.** AI may later help translate speech into structured evidence or explain verified facts; it does not invent or calculate the Mahjong rules.
 - **Explain rather than guess.** Unknown material evidence remains unknown and fails conservatively.
 - **Evidence first; structure where known.** Players can state groups they recognise and provide unresolved tiles separately; explicit player evidence outranks later interpretation.
+- **Ask only when it matters.** Classical winning/event/context questions are driven by exact-runtime materiality rather than universal form requirements.
 - **Hand value and settlement are separate.** What a hand scores is not automatically what a player pays or receives.
 - **Rules identity is data, not a label.** Saved games retain an exact profile/version so later changes cannot silently reinterpret old play.
 - **Free table play stays local-first.** Future accounts, billing, cloud sync or AI services must not become a dependency for ordinary play.
@@ -57,31 +58,67 @@ The platform therefore uses one profile envelope above a small number of scoring
 
 1. **Classical points + doubles** — British/Western/Classical profiles;
 2. **Pattern accumulator** — MCR and related traditions;
-3. **Riichi han + fu** — Riichi-family profiles;
-4. **Target catalogue** — American/NMJL-style versioned catalogue matching.
+3. **Riichi han + fu** — Riichi-family architecture; EMA Riichi runtime is not implemented yet;
+4. **Target catalogue / external target evidence** — architecture for American/NMJL-style target-value families, with any proprietary annual card remaining outside the product.
 
 The shared rules platform, permanent parity/replay harness and caller cutover are **live on production `main`**. Buzzard 2000 and MCR/WMO 2006 are also live. The complete EMA Riichi 2025 source/correctness corpus is ready, but Riichi runtime is not implemented.
 
 The durable rules rollout tracker is [#275](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/275). The live programme map is [#105](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/105).
 
-## Current engineering direction — hybrid hand entry
+## Hybrid hand entry — completed
 
-The current bounded engineering programme is [#386](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/386): make Classical hand entry read naturally as **enter what you know, add the rest, interpret only what can be proved, and ask only for material facts the evidence cannot supply**.
+The bounded [#386](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/386) programme is complete and closed.
 
-The core programme is now almost complete. The merged path includes:
+The Classical scorer now follows the product rule:
 
-- hybrid grouped + unresolved-tile entry;
-- a pure exact-profile Classical remainder interpreter;
-- complete-winner resolution with auditable candidate/fact handling;
-- winner UI / Apply Score / persistence integration;
-- partial, 13-tile and fishing interpretation;
-- one unified Classical entry workflow without a `normal` versus `special` prerequisite;
-- conservative non-winner ordinary inference with deterministic partial decomposition and exact-runtime scoring;
-- conditional winning-tile evidence, requested only when lawful provenance can materially change the exact runtime result.
+> **Enter what you know, add the rest, interpret only what can be proved, and ask only for material facts the evidence cannot supply.**
 
-The final semantic child is [#428](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/428): finish the remaining materially required Classical evidence questions and add safe confirmation for inferred non-winner Kongs. After #428 is reviewed and merged, the intended close-out is one final #386 acceptance audit, closure of the parent programme, then [#411](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/411) for the task-first/app-like calculator shell.
+The delivered path includes:
 
-For current sequencing, use the live programme map in [#105](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/105). `docs/product/WHATS_NEXT_ROADMAP.md` remains the dated 26 September handoff snapshot until #386 closes and the next restart point is written.
+- explicit groups plus unresolved physical tiles as peer evidence;
+- all-loose ordinary Classical entry without diagnosing a hand type first;
+- explicit-only entry remaining authoritative;
+- exact-profile decomposition only over unresolved evidence;
+- complete-winner, partial, 13-tile and fishing paths;
+- conservative deterministic non-winner inference;
+- explicit handling of ambiguous lawful decompositions;
+- inferred-Kong confirmation when declaration/exposure can materially alter the result;
+- winning-tile and other Classical evidence questions only when exact-runtime alternatives differ;
+- persistence/reopen with inferred-versus-entered provenance retained;
+- representative all-explicit, mixed and all-loose coverage across BMJA, Club, Buzzard and Western.
+
+The standalone hand calculator was then simplified through real-phone QA in [#411](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/411), and the shared shell gained a state-safe canonical Share action in [#400](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/400).
+
+## Current engineering direction — machine-readable rules truth
+
+The next major architecture programme is [#399](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/399): make the existing source, evidence, semantic identity, profile treatment, executable runtime and downstream reference chain explicitly machine-readable and auditable.
+
+The target authority chain is:
+
+```text
+real source
+→ source record
+→ evidence claim
+→ canonical semantic identity
+→ exact profile treatment
+→ executable profile/runtime
+→ input evidence
+→ decision trace/result
+→ reference / comparator / Table Companion / AI projections
+```
+
+This is deliberately **not** a wholesale rules rewrite and not a second rules database. It is the architectural gate before a fresh Riichi implementation preflight.
+
+Closely related work should consume the same truth rather than fork it:
+
+- [#296](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/296) — shared rules comparator/dimension model;
+- [#405](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/405) — single-profile human-readable ruleset report over that shared dimension model;
+- [#251](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/251) — structured reference / Encyclopaedia projections;
+- [#412](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/412) — curated public What's New history above the technical changelog.
+
+A new [#434](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/434) umbrella captures American/NMJL-style support. Its first stage is evidence/architecture preflight only. The guiding boundary is **use the annual card; do not become the annual card**: Mahjong Reference may work alongside the player's card, but must not reproduce, transcribe or encode the proprietary annual hand catalogue.
+
+For current sequencing, use [#105](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/105) and `docs/product/WHATS_NEXT_ROADMAP.md`.
 
 ## Structured Mahjong knowledge
 
@@ -115,7 +152,8 @@ Source/provenance work remains deliberately separate from retail or marketing me
 - **Voice hand entry** is an evaluation-first experiment: speech → structured evidence → deterministic scorer → Accept/Edit. See #147.
 - **Analytics** is deliberately limited and cookieless. See `docs/product/ANALYTICS_MEASUREMENT_PLAN.md` and #246.
 - **Search/content growth** is evidence-led. The current strategy is `docs/product/SEO_GROWTH_STRATEGY.md`; reference expansion is sequenced around verified rules identities rather than speculative page generation.
-- **Contact and feedback** are planned as a low-friction public product flow under #393, after the durable project email identity in #394 is settled.
+- **Contact and feedback** remain a low-friction public-product stream under #393.
+- **Production confidence** continues through #253, #89 real-table validation on 10 October 2026, analytics observation and experienced-player MCR review.
 
 ## Repository map
 
@@ -130,7 +168,7 @@ Source/provenance work remains deliberately separate from retail or marketing me
 - `CHANGELOG.md` — durable product milestones
 - `Agents.md` — bounded implementation guardrails
 
-`main` is the production line. The rules-platform/Buzzard/MCR migration is complete and live; current work should branch from current `main`, remain bounded to its issue contract, and return through a reviewed PR.
+`main` is the production line. Current work should branch from current `main`, remain bounded to its issue contract, and return through a reviewed PR. The old rules-platform integration train is historical and must not be restarted.
 
 ## Stack
 
