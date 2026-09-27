@@ -20,8 +20,6 @@ describe('C1 shared standalone scorer workspace', () => {
     expect(html).toMatch(/data-testid="working-picker" class="min-w-0 /);
     expect(html).toContain('grid min-w-0 grid-cols-2 gap-2');
     expect(html).toContain('flex flex-wrap items-center justify-between gap-2');
-    expect(html).toContain('mt-3 min-w-0 sm:hidden');
-    expect(html).toContain('flex min-w-0 flex-1 items-center gap-2');
     expect(html).toMatch(/class="mt-3 min-w-0 max-w-full [^"]*" data-testid="mobile-tile-picker"/);
     expect(html).toContain('flex gap-2 overflow-x-auto pb-1');
   });
@@ -52,13 +50,18 @@ describe('C1 shared standalone scorer workspace', () => {
     expect(html).toContain('Mahjong hand calculator');
     expect(html).toContain('Change rules');
     expect(html).not.toContain('data-testid="rules-profile-picker"');
-    const order = ['hand-scorer-title', 'active-rules', 'button-load-example', 'working-picker', 'hand-so-far', 'bonus-tiles', 'mobile-hand-context', 'mcr-evidence-controls', 'mobile-live-result', 'mcr-score-result', 'calculator-supporting-info'];
+    const order = ['hand-scorer-title', 'active-rules', 'button-load-example', 'working-picker', 'hand-so-far', 'bonus-tiles', 'mcr-evidence-controls', 'mobile-live-result', 'mcr-score-result', 'calculator-supporting-info'];
     const positions = order.map((testId) => html.indexOf(`data-testid="${testId}"`));
     expect(positions.every((position) => position >= 0)).toBe(true);
     expect(positions).toEqual([...positions].sort((left, right) => left - right));
 
     expect(html.indexOf('Understand settlement')).toBe(-1);
     expect(html.indexOf('About this calculator / How scoring works')).toBeGreaterThan(positions[9]);
+    expect(html).not.toContain('data-testid="mobile-hand-context"');
+    expect(html).toContain('data-testid="bonus-tile-strip"');
+    const bonusStrip = html.match(/<div data-testid="bonus-tile-strip"[^>]*>([\s\S]*?)<\/div>/)?.[0] ?? '';
+    expect(bonusStrip).toContain('overflow-x-auto');
+    expect(bonusStrip.match(/data-testid="button-(?:flower|season)-/g)).toHaveLength(8);
   });
 
   it('opens Classical standalone on a compact task header with supporting links after the scorer', () => {
@@ -87,6 +90,8 @@ describe('C1 shared standalone scorer workspace', () => {
     expect(html).not.toContain('data-testid="mcr-seat-wind"');
     expect(html).not.toContain('data-testid="mcr-prevailing-wind"');
     expect(html).toContain('data-testid="mcr-locked-table-context"');
+    expect(html).toContain('data-testid="mobile-hand-context"');
+    expect(html).toContain('data-testid="mobile-inherited-context"');
     expect(html).toContain('Discard'); expect(html).toContain('south'); expect(html).toContain('east');
     expect(html).toContain('data-testid="mcr-win-event"');
     expect(html).toContain('Last visible copy');

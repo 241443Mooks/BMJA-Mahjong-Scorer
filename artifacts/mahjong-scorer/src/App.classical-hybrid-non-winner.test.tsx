@@ -38,8 +38,9 @@ describe('Classical hybrid non-winner integration', () => {
     const onClose = vi.fn<(result?: HandScorerResult) => void>();
     const first = await renderScorer(context, onClose);
     try {
-      const addTiles = first.container.querySelector<HTMLButtonElement>('[data-testid="button-add-tiles"]')!;
+      const addTiles = first.container.querySelector<HTMLButtonElement>('[data-testid="button-add-remaining-tiles-mode"]')!;
       await act(async () => addTiles.click());
+      expect(first.container.querySelector('[data-testid="working-picker"] [data-testid="remaining-tile-picker-controls"]')).not.toBeNull();
       await selectValue(first.container.querySelector<HTMLSelectElement>('[data-testid="select-remaining-family"]')!, 'dragon');
       await selectValue(first.container.querySelector<HTMLSelectElement>('[data-testid="select-remaining-value"]')!, 'green');
       const addTile = first.container.querySelector<HTMLButtonElement>('[data-testid="button-add-remaining-tile"]')!;

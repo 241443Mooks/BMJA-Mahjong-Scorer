@@ -81,9 +81,12 @@ describe('preferred profile flow interactions', () => {
 
       await click(container.querySelector('[data-testid="button-add-remaining-tiles-mode"]'));
       expect(container.querySelector('[data-testid="remaining-tiles-disclosure"]')?.hasAttribute('open')).toBe(true);
+      expect(container.querySelector('[data-testid="working-picker"] [data-testid="remaining-tile-picker-controls"]')).not.toBeNull();
+      expect(container.querySelector('[data-testid="hand-so-far"] [data-testid="select-remaining-family"]')).toBeNull();
 
       await click(container.querySelector('[data-testid="button-add-group-mode"]'));
       expect(container.querySelector('[data-testid="button-add-group-mode"]')?.getAttribute('aria-pressed')).toBe('true');
+      expect(container.querySelector('[data-testid="remaining-tile-picker-controls"]')).toBeNull();
       expect(container.querySelector('[data-testid="working-group-draft"]')).not.toBeNull();
       expect(container.querySelector('[data-testid="select-working-set-type"]')).not.toBeNull();
       expect(container.querySelector('[data-testid="select-working-family"]')).not.toBeNull();
