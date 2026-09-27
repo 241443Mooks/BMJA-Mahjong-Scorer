@@ -61,6 +61,7 @@ const cloneDetailedHandRecord = (
           target: { ...record.hand.winningTileProvenance.target },
         }
       : undefined,
+    winningTileEvidenceOrigin: record.hand.winningTileEvidenceOrigin,
     winningEventEvidence: record.hand.winningEventEvidence
       ? { ...record.hand.winningEventEvidence }
       : undefined,

@@ -20,6 +20,7 @@ import { resolveAtlasScorerExample } from './guide/atlas-scorer-handoff';
 import { getCurrentCompiledRulesRuntime } from './rules-platform/current-runtime-registry';
 import { mapCurrentClassicalScoreBreakdown } from './rules-platform/current-runtime-compat';
 import { interpretClassicalHand } from './rules-platform/classical-interpretation';
+import { requireClassicalWinningTile } from './rules-platform/classical-winning-tile-requirement';
 import { toMcrScoringInput } from './game/mcr-hand-input';
 import { presentMcrScore } from './game/mcr-score-presentation';
 import { buildMcrHandScorerResult } from './game/hand-scorer-handoff';
@@ -56,6 +57,7 @@ import type {
   SetKind,
   Visibility,
   WinningTileProvenance,
+  WinningTileEvidenceOrigin,
   WinningEventEvidence,
   UngroupedBlankTile,
 } from './scoring';
@@ -284,6 +286,9 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
         }
       : undefined,
   );
+  const [winningTileEvidenceOrigin, setWinningTileEvidenceOrigin] = useState<WinningTileEvidenceOrigin | undefined>(
+    initialHand?.winningTileEvidenceOrigin ?? (initialHand?.winningTileProvenance ? 'confirmed' : undefined),
+  );
   const [winningEventEvidence, setWinningEventEvidence] = useState<WinningEventEvidence | undefined>(
     initialHand?.winningEventEvidence ? { ...initialHand.winningEventEvidence } : undefined
   );
@@ -335,7 +340,7 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
     originalCall: initialContext.isWinner ? initialHand?.originalCall ?? (practice ? practiceContext.originalCall : false) : false,
     hybridInterpretation: { hybridMethodStatus: initialHand?.winningMethod ? 'inherited' : 'default', hybridCandidateId: undefined, hybridVisibility: [], hybridRejectedCandidates: [] },
   }, initialCompiledRuntime.grammar === 'classical-points-doubles'), [context, example, practice]);
-  const hasUnsavedWork = !hasContext && hasHandScorerUnsavedWork({ sets, layoutMode, looseTiles, remainingTiles, ungroupedBlankTiles, flowers, seasons, playerWind, prevailingWind, limit, isWinner, winningMethod, originalCall, winningTileProvenance, winningEventEvidence, hybridInterpretation: { hybridMethodStatus, hybridCandidateId, hybridVisibility, hybridRejectedCandidates } }, initialBaseline);
+  const hasUnsavedWork = !hasContext && hasHandScorerUnsavedWork({ sets, layoutMode, looseTiles, remainingTiles, ungroupedBlankTiles, flowers, seasons, playerWind, prevailingWind, limit, isWinner, winningMethod, originalCall, winningTileProvenance, winningTileEvidenceOrigin, winningEventEvidence, hybridInterpretation: { hybridMethodStatus, hybridCandidateId, hybridVisibility, hybridRejectedCandidates } }, initialBaseline);
   const leaveHand = () => {
     if (hasUnsavedWork && !window.confirm('Leave this hand? The hand details you entered will be discarded.')) return;
     if (example) { window.location.assign(example.returnHref); return; }
@@ -504,11 +509,12 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
       isWinner,
       winningMethod: isWinner ? winningMethod : undefined,
       winningTileProvenance: isWinner && winningMethod !== 'initial-deal' ? winningTileProvenance : undefined,
+      winningTileEvidenceOrigin: isWinner && winningMethod !== 'initial-deal' ? winningTileEvidenceOrigin : undefined,
       winningEventEvidence: effectiveWinningEventEvidence,
       originalCall: isWinner ? originalCall : false,
       classicalEvidence: standingHand || onlyPossibleWinningTile ? { standingHand, onlyPossibleWinningTile } : undefined,
     };
-  }, [sets, looseTiles, remainingTiles, ungroupedBlankTiles, layoutMode, flowers, seasons, isWinner, winningMethod, originalCall, standingHand, onlyPossibleWinningTile, winningTileProvenance, effectiveWinningEventEvidence]);
+  }, [sets, looseTiles, remainingTiles, ungroupedBlankTiles, layoutMode, flowers, seasons, isWinner, winningMethod, originalCall, standingHand, onlyPossibleWinningTile, winningTileProvenance, winningTileEvidenceOrigin, effectiveWinningEventEvidence]);
 
   useEffect(() => {
     if (isMcr) return;
@@ -526,6 +532,7 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
       };
       if (!resolveWinningTileProvenance(tempHand)) {
         setWinningTileProvenance(undefined);
+        setWinningTileEvidenceOrigin(undefined);
       }
     }
   }, [sets, looseTiles, remainingTiles, layoutMode, isWinner, winningMethod, winningTileProvenance, isMcr, context, standaloneRulesProfile]);
@@ -539,6 +546,7 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
   useEffect(() => {
     if (winningMethod === 'initial-deal') {
       setWinningTileProvenance(undefined);
+      setWinningTileEvidenceOrigin(undefined);
     }
   }, [winningMethod]);
 
@@ -592,9 +600,9 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
     bonusTiles: [...flowers.map((n) => bonus('flower', n as BonusTile['number'])), ...seasons.map((n) => bonus('season', n as BonusTile['number']))],
     ungroupedBlankTiles: [...applicableUngroupedBlanks(ungroupedBlankTiles, 'sets', true), ...unresolvedWinnerBlankEvidence(ungroupedBlankTiles)],
     context: gameContext, handMode,
-    evidence: { winningMethod: hybridMethodStatus === 'confirmed' || hybridMethodStatus === 'inherited' ? winningMethod : undefined, winningTileProvenance, winningEventEvidence: effectiveWinningEventEvidence, originalCall, classicalEvidence: standingHand || onlyPossibleWinningTile ? { standingHand, onlyPossibleWinningTile } : undefined },
+    evidence: { winningMethod: hybridMethodStatus === 'confirmed' || hybridMethodStatus === 'inherited' ? winningMethod : undefined, winningTileProvenance, winningTileEvidenceOrigin, winningEventEvidence: effectiveWinningEventEvidence, originalCall, classicalEvidence: standingHand || onlyPossibleWinningTile ? { standingHand, onlyPossibleWinningTile } : undefined },
     candidateId: hybridCandidateId, visibility: hybridVisibility, rejectedCandidateIds: hybridRejectedCandidates,
-  }) : undefined, [hybridActive, context, standaloneRulesProfile, sets, remainingTiles, flowers, seasons, ungroupedBlankTiles, gameContext, handMode, hybridMethodStatus, winningMethod, winningTileProvenance, effectiveWinningEventEvidence, originalCall, standingHand, onlyPossibleWinningTile, hybridCandidateId, hybridVisibility, hybridRejectedCandidates]);
+  }) : undefined, [hybridActive, context, standaloneRulesProfile, sets, remainingTiles, flowers, seasons, ungroupedBlankTiles, gameContext, handMode, hybridMethodStatus, winningMethod, winningTileProvenance, winningTileEvidenceOrigin, effectiveWinningEventEvidence, originalCall, standingHand, onlyPossibleWinningTile, hybridCandidateId, hybridVisibility, hybridRejectedCandidates]);
   const hybridNonWinnerResolution = useMemo(() => {
     if (isMcr || isWinner || layoutMode !== 'sets') return undefined;
     return resolveHybridNonWinner({
@@ -623,6 +631,18 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
     const physical = layoutMode === 'special' ? looseTiles.length : sets.filter((item) => item.tile).flatMap((item) => expandedTiles(item as HandSet)).length + (!isWinner ? remainingTiles.length : 0);
     return scoringRuntime ? scoringRuntime.validateHand({ evidence: tempHand, context: gameContext }).length === 0 : physical - represented === 14;
   }, [hand, isWinner, gameContext, scoringRuntime, layoutMode, sets, looseTiles, remainingTiles, hybridActive, hybridResolution]);
+  const winningTileRequirement = useMemo(() => {
+    if (!isWinner || !isStructureComplete || isMcr || winningMethod === 'initial-deal') return undefined;
+    return requireClassicalWinningTile(activeProfile, scoredHand, gameContext);
+  }, [isWinner, isStructureComplete, isMcr, winningMethod, activeProfile, scoredHand, gameContext]);
+  const shouldAskWinningTile = isMcr || winningTileRequirement?.kind === 'required';
+  const winningEvidenceContextKey = JSON.stringify([activeProfile, isWinner, layoutMode, sets, looseTiles, remainingTiles, winningMethod, effectiveWinningEventEvidence, gameContext]);
+  const winningEvidenceContextRef = useRef(winningEvidenceContextKey);
+  useEffect(() => {
+    if (winningEvidenceContextRef.current === winningEvidenceContextKey) return;
+    winningEvidenceContextRef.current = winningEvidenceContextKey;
+    setWinningTileEvidenceOrigin(undefined);
+  }, [winningEvidenceContextKey]);
 
   const score = useMemo(
     () => hybridActive
@@ -890,6 +910,7 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
                 target: { ...scoredHand.winningTileProvenance.target },
               }
             : undefined,
+          winningTileEvidenceOrigin,
           winningEventEvidence: scoredHand.winningEventEvidence
             ? { ...scoredHand.winningEventEvidence }
             : undefined,
@@ -898,7 +919,7 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
         breakdown: score,
         finalScore: score!.finalScore,
         ...(hybridActive && hybridResolution?.kind === 'ready'
-          ? { interpretation: { schemaVersion: 1, c1: hybridResolution.provenance, factOrigins: { winningMethod: hybridMethodStatus, winningTile: winningTileProvenance ? 'confirmed' : 'absent', originalCall: 'default', playerWind: context.playerWind ? 'inherited' : 'absent', prevailingWind: context.prevailingWind ? 'inherited' : 'absent' } } satisfies HybridWinnerAudit }
+          ? { interpretation: { schemaVersion: 1, c1: hybridResolution.provenance, factOrigins: { winningMethod: hybridMethodStatus, winningTile: winningTileEvidenceOrigin ?? 'absent', originalCall: 'default', playerWind: context.playerWind ? 'inherited' : 'absent', prevailingWind: context.prevailingWind ? 'inherited' : 'absent' } } satisfies HybridWinnerAudit }
           : hybridNonWinnerResolution?.audit ? { interpretation: hybridNonWinnerResolution.audit } : {}),
       },
     });
@@ -1182,7 +1203,7 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
                 )}
               </section>
 
-              {isWinner && isStructureComplete && (isMcr || winningMethod !== 'initial-deal') && (
+              {isWinner && isStructureComplete && (isMcr || winningMethod !== 'initial-deal') && shouldAskWinningTile && (
                 <section className="animate-rise rounded-xl border border-[#d8ceb8] bg-[#fbf8ed] p-5 shadow-[var(--shadow-sm)] sm:p-6">
                   <SectionLabel eyebrow="03 / completion" title="The winning tile" />
                   <p className="mb-4 text-[13px] text-[#66746e]">
@@ -1210,14 +1231,10 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
                                   data-testid={`button-winning-tile-${set.id}-${idx}`}
                                   aria-label={`${tileName(tile)} in ${set.kind}`}
                                   aria-pressed={isSelected}
-                                  onClick={() => setWinningTileProvenance({
-                                    tile: { ...tile },
-                                    target: {
-                                      type: 'grouped-set',
-                                      setId: set.id,
-                                      ...(set.kind === 'chow' ? { tileIndex: idx as 0 | 1 | 2 } : {})
-                                    }
-                                  })}
+                                  onClick={() => {
+                                    setWinningTileProvenance({ tile: { ...tile }, target: { type: 'grouped-set', setId: set.id, ...(set.kind === 'chow' ? { tileIndex: idx as 0 | 1 | 2 } : {}) } });
+                                    setWinningTileEvidenceOrigin('confirmed');
+                                  }}
                                   className={`group relative rounded-[7px] transition-transform ${isSelected ? 'scale-[1.05] ring-2 ring-[#ae6249] ring-offset-2 ring-offset-[#fbf8ed]' : 'hover:-translate-y-0.5 hover:shadow-md'}`}
                                 >
                                   <TileFace tile={tile} compact />
@@ -1246,10 +1263,10 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
                               data-testid={`button-winning-loose-${tileKey(tile)}-${idx}`}
                               aria-label={`${tileName(tile)} in special layout`}
                               aria-pressed={isSelected}
-                              onClick={() => setWinningTileProvenance({
-                                tile: { ...tile },
-                                target: { type: 'loose-layout' }
-                              })}
+                              onClick={() => {
+                                setWinningTileProvenance({ tile: { ...tile }, target: { type: 'loose-layout' } });
+                                setWinningTileEvidenceOrigin('confirmed');
+                              }}
                               className={`group relative rounded-[7px] transition-transform ${isSelected ? 'scale-[1.05] ring-2 ring-[#ae6249] ring-offset-2 ring-offset-[#fdfbf5]' : 'hover:-translate-y-0.5 hover:shadow-md'}`}
                             >
                               <TileFace tile={tile} compact />
@@ -1276,7 +1293,7 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
                           <button
                             type="button"
                             data-testid="button-winning-tile-unknown"
-                            onClick={() => setWinningTileProvenance(undefined)}
+                            onClick={() => { setWinningTileProvenance(undefined); setWinningTileEvidenceOrigin('unknown'); }}
                             className="text-[11px] font-semibold text-[#477562] transition hover:text-[#284d45] focus:underline"
                           >
                             I'm not sure
@@ -1291,7 +1308,7 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
                             type="button"
                             data-testid="button-winning-tile-unknown"
                             aria-pressed="true"
-                            onClick={() => setWinningTileProvenance(undefined)}
+                            onClick={() => { setWinningTileProvenance(undefined); setWinningTileEvidenceOrigin('unknown'); }}
                             className="shrink-0 rounded-md border border-[#cfc3aa] bg-[#f4eddf] px-3 py-2 text-[11px] font-semibold text-[#284d45] focus:ring-2"
                           >
                             I'm not sure

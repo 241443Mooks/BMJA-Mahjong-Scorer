@@ -5,7 +5,7 @@ import { getCurrentCompiledRulesRuntime } from './current-runtime-registry';
 import type { HandScoreResult } from './types';
 
 export type ClassicalWinnerEvidence = Pick<MahjongHand,
-  'winningMethod' | 'winningTileProvenance' | 'winningEventEvidence' | 'originalCall' | 'classicalEvidence'>;
+  'winningMethod' | 'winningTileProvenance' | 'winningTileEvidenceOrigin' | 'winningEventEvidence' | 'originalCall' | 'classicalEvidence'>;
 export type ClassicalWinnerVisibilityResolution = { groupId: string; value: Visibility };
 export type ClassicalWinnerFactResolution = {
   type: 'group-visibility'; groupId: string; value: Visibility; origin: 'default' | 'confirmed';

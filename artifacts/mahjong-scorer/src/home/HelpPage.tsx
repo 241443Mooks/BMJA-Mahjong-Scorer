@@ -116,9 +116,9 @@ const groups: HelpGroup[] = [
     items: [
       {
         id: 'winning-tile',
-        question: 'Why does the scorer ask which tile completed Mah Jong?',
-        answer: 'Some rules depend on the actual winning tile, not only the final 14-tile layout.',
-        detail: 'When it matters, select the tile that completed Mah Jong from the entered hand. The scorer can retain the tile and, where relevant, the set or pair it completed.',
+        question: 'When does the scorer ask which tile completed Mah Jong?',
+        answer: 'The scorer asks only when the winning tile can change a supported result for this hand under the selected rules.',
+        detail: 'If the question appears, select the tile that completed Mah Jong from the entered hand. The scorer retains the tile and, where relevant, the set or pair it completed.',
       },
       {
         id: 'winning-tile-unknown',

@@ -92,6 +92,7 @@ export const assertDetailedWinnerMatchesOutcome = (
     record.hand.isWinner !== expectedWinner ||
     (!expectedWinner && record.hand.winningMethod !== undefined) ||
     (!expectedWinner && record.hand.winningTileProvenance !== undefined) ||
+    (!expectedWinner && record.hand.winningTileEvidenceOrigin !== undefined) ||
     (!expectedWinner && record.hand.winningEventEvidence !== undefined) ||
     (!expectedWinner && record.hand.originalCall === true)
   ) {
@@ -192,6 +193,7 @@ export const reconcileDetailedHandsForOutcome = (
         winningTileProvenance: expectedWinner
           ? record.hand.winningTileProvenance
           : undefined,
+        winningTileEvidenceOrigin: expectedWinner ? record.hand.winningTileEvidenceOrigin : undefined,
         winningEventEvidence: expectedWinner
           ? record.hand.winningEventEvidence
           : undefined,
