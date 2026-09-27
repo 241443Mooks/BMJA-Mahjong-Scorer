@@ -1,5 +1,6 @@
 import { ChevronDown, Menu, X } from 'lucide-react';
 import { useEffect, useId, useRef, useState, type MouseEvent } from 'react';
+import { ShareAction } from './ShareAction';
 
 type Destination = readonly [label: string, href: string];
 type NavigationGroup = { label: 'Learn' | 'Rules'; destinations: readonly Destination[] };
@@ -111,16 +112,17 @@ export function SiteHeader({ onNavigate }: SiteHeaderProps) {
 
   return (
     <header className="relative z-20 border-b border-[#d8ceb8] bg-[#f5f1e6]/95 backdrop-blur-sm">
-      <div className="mx-auto flex max-w-[1440px] items-center justify-between gap-4 px-5 py-3 lg:px-8">
-        <a href="/" onClick={(event) => navigate(event, '/')} className="flex min-h-11 items-center gap-3 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249] focus-visible:ring-offset-2">
-          <span className="flex h-10 w-10 items-center justify-center rounded-md bg-[#284d45] font-serif text-[22px] font-bold text-[#f5f1e6]">麻</span>
-          <span className="font-serif text-[20px] font-bold leading-none text-[#284d45]">Mahjong Reference</span>
+      <div className="mx-auto flex max-w-[1440px] items-center justify-between gap-2 px-3 py-3 sm:gap-4 sm:px-5 lg:px-8">
+        <a href="/" onClick={(event) => navigate(event, '/')} className="flex min-h-11 min-w-0 items-center gap-2 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249] focus-visible:ring-offset-2 sm:gap-3">
+          <span className="hidden h-9 w-9 shrink-0 items-center justify-center rounded-md bg-[#284d45] font-serif text-[20px] font-bold text-[#f5f1e6] min-[360px]:flex sm:h-10 sm:w-10 sm:text-[22px]">麻</span>
+          <span className="whitespace-nowrap font-serif text-[15px] font-bold leading-none text-[#284d45] sm:text-[20px]">Mahjong Reference</span>
         </a>
         <nav aria-label="Primary navigation" className="hidden items-center gap-1 md:flex">
           {renderDirectLinks().slice(0, 2)}
           {navigationGroups.map((group) => renderGroup(group, 'desktop'))}
           {renderDirectLinks().slice(2)}
         </nav>
+        <ShareAction />
         <div className="relative md:hidden">
           <button ref={mobileTriggerRef} type="button" aria-label={mobileOpen ? 'Close site navigation' : 'Open site navigation'} aria-expanded={mobileOpen} aria-controls={menuId} onClick={() => {
             if (mobileOpen) setOpenGroup(null);
