@@ -36,5 +36,5 @@ export function resolveHybridWinner(state: HybridWinnerState): ClassicalWinnerRe
   return resolveClassicalWinner(input, { candidateId: state.candidateId, visibility: state.visibility, evidence: state.evidence });
 }
 
-export type HybridWinnerAudit = { schemaVersion: 1; c1: ClassicalWinnerProvenance; factOrigins: Record<string, 'default' | 'confirmed' | 'derived' | 'unknown' | 'inherited' | 'absent'> };
+export type HybridWinnerAudit = { schemaVersion: 1; c1: ClassicalWinnerProvenance; factOrigins: Record<string, 'default' | 'confirmed' | 'unknown' | 'inherited' | 'absent'> };
 export type ResolvedHybridWinner = Extract<ClassicalWinnerResolution, { kind: 'ready' }> & { hand: MahjongHand };

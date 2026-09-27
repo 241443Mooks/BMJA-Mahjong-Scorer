@@ -6,7 +6,9 @@ import type { HandScoreResult } from './types';
 
 export type ClassicalWinningTileRequirement =
   | { kind: 'irrelevant' }
-  | { kind: 'required'; alternatives: readonly WinningTileProvenance[] };
+  | { kind: 'required'; alternatives: readonly WinningTileProvenance[] }
+  | { kind: 'unknown'; alternatives: readonly WinningTileProvenance[] }
+  | { kind: 'unsupported' };
 
 const alternativesFor = (hand: MahjongHand): WinningTileProvenance[] => {
   if (hand.sets.length === 0) {
@@ -31,8 +33,12 @@ const materialResult = (result: Extract<HandScoreResult, { grammar: 'classical-p
   JSON.stringify({ legal: result.legal, disposition: result.disposition, matchedCanonicalPatternIds: result.matchedCanonicalPatternIds, result: result.result });
 
 /**
- * Compares only lawful destinations already represented by this complete hand.
- * The exact profile runtime remains the sole scoring authority.
+ * Compares only represented destinations accepted by the exact profile
+ * validator. The exact runtime remains the sole legality and scoring authority.
+ * The available evidence has no pre-win 13-tile state or per-tile arrival
+ * history. Even a sole remaining destination after filtering cannot prove
+ * which tile arrived last; it can only remove a material choice. Therefore
+ * this seam never manufactures derived provenance.
  */
 export const requireClassicalWinningTile = (
   profile: RulesProfileRef,
@@ -41,12 +47,18 @@ export const requireClassicalWinningTile = (
 ): ClassicalWinningTileRequirement => {
   const compiled = getCurrentCompiledRulesRuntime(profile);
   if (compiled.grammar !== 'classical-points-doubles') throw new Error('CLASSICAL_WINNER_RUNTIME_REQUIRED');
-  const alternatives = alternativesFor(hand);
-  if (alternatives.length < 2) return { kind: 'irrelevant' };
-  const outcomes = new Set(alternatives.map((provenance) => {
-    const result = compiled.runtime.scoreHand({ evidence: { ...hand, winningTileProvenance: provenance }, context });
+  const lawful = alternativesFor(hand).flatMap((provenance) => {
+    const evidence = { ...hand, winningTileProvenance: provenance, winningTileEvidenceOrigin: 'confirmed' as const };
+    if (compiled.runtime.validateHand({ evidence, context }).length > 0) return [];
+    const result = compiled.runtime.scoreHand({ evidence, context });
     if (result.grammar !== 'classical-points-doubles') throw new Error('CLASSICAL_WINNER_RUNTIME_GRAMMAR_CHANGED');
-    return materialResult(result);
-  }));
-  return outcomes.size > 1 ? { kind: 'required', alternatives } : { kind: 'irrelevant' };
+    return result.legal ? [{ provenance, outcome: materialResult(result) }] : [];
+  });
+  if (lawful.length === 0) return { kind: 'unsupported' };
+  if (lawful.length === 1) return { kind: 'irrelevant' };
+  if (new Set(lawful.map(({ outcome }) => outcome)).size === 1) return { kind: 'irrelevant' };
+  if (hand.winningTileEvidenceOrigin === 'unknown' && !hand.winningTileProvenance) {
+    return { kind: 'unknown', alternatives: lawful.map(({ provenance }) => provenance) };
+  }
+  return { kind: 'required', alternatives: lawful.map(({ provenance }) => provenance) };
 };

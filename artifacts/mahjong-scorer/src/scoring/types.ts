@@ -84,7 +84,8 @@ export type WinningTileProvenance = {
   target: WinningTileTarget;
 };
 
-export type WinningTileEvidenceOrigin = 'confirmed' | 'unknown' | 'derived';
+/** Current input records assertion or explicit uncertainty; no current evidence can derive tile arrival history. */
+export type WinningTileEvidenceOrigin = 'confirmed' | 'unknown';
 
 export type WinningEventEvidence =
   | {

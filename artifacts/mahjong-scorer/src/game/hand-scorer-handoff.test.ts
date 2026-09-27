@@ -355,6 +355,7 @@ describe('game hand-scorer handoff', () => {
       tile: { family: 'dragon', dragon: 'red' },
       target: { type: 'grouped-set', setId: 'original' },
     };
+    calculated.detailedHand.hand.winningTileEvidenceOrigin = 'confirmed';
     calculated.detailedHand.hand.winningEventEvidence = {
       type: 'discard',
       discardedBy: 'east',

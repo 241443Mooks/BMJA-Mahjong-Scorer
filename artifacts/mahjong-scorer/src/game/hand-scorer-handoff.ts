@@ -79,6 +79,13 @@ export const isRoundWinner = (
   playerId: PlayerId,
 ): boolean => outcome.type === 'win' && outcome.winnerId === playerId;
 
+export const normalizeWinningTileEvidenceOrigin = (hand: MahjongHand): MahjongHand => {
+  if (!hand.winningTileProvenance) {
+    return hand.winningTileEvidenceOrigin === 'confirmed' ? { ...hand, winningTileEvidenceOrigin: undefined } : hand;
+  }
+  return hand.winningTileEvidenceOrigin === 'confirmed' ? hand : { ...hand, winningTileEvidenceOrigin: 'confirmed' };
+};
+
 export const assertDetailedWinnerMatchesOutcome = (
   outcome: HandOutcome,
   playerId: PlayerId,
@@ -93,6 +100,8 @@ export const assertDetailedWinnerMatchesOutcome = (
     (!expectedWinner && record.hand.winningMethod !== undefined) ||
     (!expectedWinner && record.hand.winningTileProvenance !== undefined) ||
     (!expectedWinner && record.hand.winningTileEvidenceOrigin !== undefined) ||
+    (record.hand.winningTileProvenance !== undefined && record.hand.winningTileEvidenceOrigin !== 'confirmed') ||
+    (record.hand.winningTileProvenance === undefined && record.hand.winningTileEvidenceOrigin === 'confirmed') ||
     (!expectedWinner && record.hand.winningEventEvidence !== undefined) ||
     (!expectedWinner && record.hand.originalCall === true)
   ) {
@@ -124,15 +133,16 @@ export const applyHandScorerResult = (
       'The detailed hand winner status does not match the active round.',
     );
   }
+  const detailedHand = { ...result.detailedHand, hand: normalizeWinningTileEvidenceOrigin(result.detailedHand.hand) };
   assertDetailedWinnerMatchesOutcome(
     outcome,
     result.playerId,
-    result.detailedHand,
+    detailedHand,
   );
   if (
-    result.detailedHand.source !== 'detailed-scorer' ||
-    result.detailedHand.finalScore !== result.score ||
-    result.detailedHand.breakdown.finalScore !== result.score
+    detailedHand.source !== 'detailed-scorer' ||
+    detailedHand.finalScore !== result.score ||
+    detailedHand.breakdown.finalScore !== result.score
   ) {
     throw new Error('Detailed hand metadata must match the returned score.');
   }
@@ -142,7 +152,7 @@ export const applyHandScorerResult = (
       scores: { ...draft.scores, [result.playerId]: result.score },
       scoreRecords: {
         ...draft.scoreRecords,
-        [result.playerId]: result.detailedHand,
+        [result.playerId]: detailedHand,
       },
     },
   };
