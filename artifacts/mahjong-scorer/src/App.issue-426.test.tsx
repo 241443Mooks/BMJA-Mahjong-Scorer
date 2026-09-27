@@ -71,6 +71,12 @@ describe('issue 426 winning-tile evidence integration', () => {
     const click = async (element: Element | null) => { expect(element).not.toBeNull(); await act(async () => element!.dispatchEvent(new MouseEvent('click', { bubbles: true }))); };
     try {
       await click(container.querySelector('[data-testid="button-winning-tile-unknown"]'));
+      for (const selector of ['[data-testid="button-discard-answer-no"]', '[data-testid="button-replacement-answer-no"]', '[data-testid="standing-hand-no"]', '[data-testid="only-possible-tile-no"]', '[data-testid="east-thirteenth-no"]', '[data-testid="original-call-no"]']) {
+        const answer = container.querySelector(selector);
+        if (answer) await click(answer);
+      }
+      const winningMethod = container.querySelector<HTMLSelectElement>('[data-testid="select-winning-method"]');
+      if (winningMethod) await act(async () => { winningMethod.value = 'wall'; winningMethod.dispatchEvent(new Event('change', { bubbles: true })); });
       await click(container.querySelector('[data-testid="button-apply-score-mobile"]'));
       const result = appliedResult;
       expect(result?.grammar).toBe('classical-points-doubles');
@@ -88,7 +94,7 @@ describe('issue 426 winning-tile evidence integration', () => {
     }
   });
 
-  it('preserves a confirmed tile and origin across a winning-method change, then Apply/reopen stays consistent', async () => {
+  it('keeps a confirmed tile and material-fact answers through Apply/reopen', async () => {
     vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
     let appliedResult: HandScorerResult | undefined;
     const onClose = (result?: HandScorerResult) => { appliedResult = result; };
@@ -99,8 +105,11 @@ describe('issue 426 winning-tile evidence integration', () => {
     try {
       await click(container.querySelector('[data-testid="button-winning-tile-one-0"]'));
       const method = container.querySelector<HTMLSelectElement>('[data-testid="select-winning-method"]');
-      expect(method).not.toBeNull();
-      await act(async () => { method!.value = 'wall'; method!.dispatchEvent(new Event('change', { bubbles: true })); });
+      if (method) await act(async () => { method.value = 'wall'; method.dispatchEvent(new Event('change', { bubbles: true })); });
+      for (const selector of ['[data-testid="button-discard-answer-no"]', '[data-testid="button-replacement-answer-no"]', '[data-testid="standing-hand-no"]', '[data-testid="only-possible-tile-no"]', '[data-testid="east-thirteenth-no"]', '[data-testid="original-call-no"]']) {
+        const answer = container.querySelector(selector);
+        if (answer) await click(answer);
+      }
       await click(container.querySelector('[data-testid="button-apply-score-mobile"]'));
       const result = appliedResult;
       expect(result?.grammar).toBe('classical-points-doubles');

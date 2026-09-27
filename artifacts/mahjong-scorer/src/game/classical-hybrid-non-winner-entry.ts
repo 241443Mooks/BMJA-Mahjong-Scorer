@@ -7,6 +7,7 @@ import { mapCurrentClassicalScoreBreakdown } from '../rules-platform/current-run
 import type { HandScoreResult } from '../rules-platform/types';
 import type { ClassicalWinnerFactResolution, ClassicalWinnerProvenance } from '../rules-platform/classical-winner-resolution';
 import type { HybridWinnerAudit } from './classical-hybrid-winner-entry';
+import { classicalFactIsMaterial } from '../rules-platform/classical-materiality';
 
 export type HybridNonWinnerState = {
   profile: RulesProfileRef;
@@ -16,6 +17,8 @@ export type HybridNonWinnerState = {
   ungroupedBlankTiles?: readonly UngroupedBlankTile[];
   context: GameContext;
   handMode: 'normal' | 'goulash';
+  kongConfirmation?: { candidateId: string; visibilityByGroupId: Readonly<Record<string, Visibility>> };
+  rejectedKongCandidateIds?: readonly string[];
 };
 
 export type HybridNonWinnerSelection = {
@@ -30,6 +33,7 @@ export type HybridNonWinnerResolution = {
   resolvedHand: MahjongHand;
   interpretation: ClassicalInterpretationResult;
   selection?: HybridNonWinnerSelection;
+  kongConfirmationRequired?: readonly ClassicalInterpretationCandidate[];
   audit?: HybridWinnerAudit;
 };
 
@@ -48,9 +52,10 @@ const candidateCoverage = (candidate: ClassicalInterpretationCandidate) =>
 const selectedAudit = (
   candidate: ClassicalInterpretationCandidate,
   visibilityByGroupId: Readonly<Record<string, Visibility>>,
+  origin: 'default' | 'confirmed' = 'default',
 ): HybridWinnerAudit => {
   const factResolutions: ClassicalWinnerFactResolution[] = candidate.unresolvedFacts.map(({ groupId }) => ({
-    type: 'group-visibility', groupId, value: visibilityByGroupId[groupId]!, origin: 'default',
+    type: 'group-visibility', groupId, value: visibilityByGroupId[groupId]!, origin,
   }));
   const c1: ClassicalWinnerProvenance = {
     schemaVersion: 1,
@@ -60,7 +65,7 @@ const selectedAudit = (
     inferredGroups: candidate.inferredGroups,
     factResolutions,
   };
-  return { schemaVersion: 1, c1, factOrigins: Object.fromEntries(factResolutions.map(({ groupId }) => [groupId, 'default'])) };
+  return { schemaVersion: 1, c1, factOrigins: Object.fromEntries(factResolutions.map(({ groupId }) => [groupId, origin])) };
 };
 
 /** Reopens an applied inferred score as editable explicit-plus-unresolved evidence. */
@@ -137,9 +142,14 @@ export function resolveHybridNonWinner(state: HybridNonWinnerState): HybridNonWi
     handMode: state.handMode,
   });
 
+  const rejectedKongCandidates = new Set(state.rejectedKongCandidateIds ?? []);
+  const rejectedKongIndexes = new Set(interpretation.candidates
+    .filter(({ id, inferredGroups }) => rejectedKongCandidates.has(id) && inferredGroups.some(({ kind }) => kind === 'kong'))
+    .flatMap(({ inferredGroups }) => inferredGroups.filter(({ kind }) => kind === 'kong').flatMap(({ physicalTileIndexes }) => physicalTileIndexes)));
   const eligible = interpretation.candidates
     .filter((candidate) => candidate.layout === 'grouped' && candidate.inferredGroups.length > 0
-      && candidate.inferredGroups.every(({ kind }) => kind !== 'kong'))
+      && candidate.inferredGroups.every(({ kind }) => kind !== 'kong')
+      && !candidate.inferredGroups.some(({ physicalTileIndexes }) => physicalTileIndexes.some((index) => rejectedKongIndexes.has(index))))
     .map((candidate) => ({ candidate, groupedTileCount: candidateCoverage(candidate) }))
     .filter(({ groupedTileCount }) => groupedTileCount > 0);
   const bestCoverage = eligible.reduce((maximum, candidate) => Math.max(maximum, candidate.groupedTileCount), 0);
@@ -164,6 +174,30 @@ export function resolveHybridNonWinner(state: HybridNonWinnerState): HybridNonWi
     || left.candidate.id.localeCompare(right.candidate.id)
     || left.visibilityKey.localeCompare(right.visibilityKey));
   const best = ranked[0];
+  if (state.kongConfirmation) {
+    const candidate = interpretation.candidates.find(({ id }) => id === state.kongConfirmation!.candidateId);
+    const assignment = state.kongConfirmation.visibilityByGroupId;
+    if (candidate?.inferredGroups.some(({ kind }) => kind === 'kong') && candidate.lawfulVisibilityAssignments.some((lawful) =>
+      candidate.unresolvedFacts.every(({ groupId }) => lawful[groupId] === assignment[groupId]) && Object.keys(assignment).length === candidate.unresolvedFacts.length,
+    )) {
+      const resolvedHand = projectClassicalInterpretation({ profile: state.profile, explicitSets: state.explicitSets, unresolvedTiles: state.unresolvedTiles, bonusTiles: state.bonusTiles, ungroupedBlankTiles: state.ungroupedBlankTiles, isWinner: false, context: state.context, handMode: state.handMode }, candidate, assignment);
+      const scoreResult = compiled.runtime.scoreHand({ evidence: resolvedHand, context });
+      const selection = { candidate, visibilityByGroupId: assignment, groupedTileCount: candidateCoverage(candidate) };
+      return { scoreResult, resolvedHand, interpretation, selection, audit: selectedAudit(candidate, assignment, 'confirmed') };
+    }
+  }
+  const conservativeHand = best?.hand ?? establishedHand;
+  const kongCandidates = interpretation.candidates.filter((candidate) => candidate.layout === 'grouped' && candidate.inferredGroups.some(({ kind }) => kind === 'kong') && !rejectedKongCandidates.has(candidate.id));
+  const materialKongCandidates = kongCandidates.filter((candidate) => candidate.lawfulVisibilityAssignments.some((visibilityByGroupId) => {
+    const candidateHand = projectClassicalInterpretation({ profile: state.profile, explicitSets: state.explicitSets, unresolvedTiles: state.unresolvedTiles, bonusTiles: state.bonusTiles, ungroupedBlankTiles: state.ungroupedBlankTiles, isWinner: false, context: state.context, handMode: state.handMode }, candidate, visibilityByGroupId);
+    return classicalFactIsMaterial(state.profile, conservativeHand, context, [{ hand: conservativeHand }, { hand: candidateHand }]);
+  }));
+  if (materialKongCandidates.length) return {
+    scoreResult: best?.scoreResult ?? establishedScore, resolvedHand: conservativeHand, interpretation,
+    ...(best ? { selection: { candidate: best.candidate, visibilityByGroupId: best.visibilityByGroupId, groupedTileCount: best.groupedTileCount } } : {}),
+    kongConfirmationRequired: materialKongCandidates,
+    ...(best ? { audit: selectedAudit(best.candidate, best.visibilityByGroupId) } : {}),
+  };
   if (!best) return { scoreResult: establishedScore, resolvedHand: establishedHand, interpretation };
 
   const selection: HybridNonWinnerSelection = {

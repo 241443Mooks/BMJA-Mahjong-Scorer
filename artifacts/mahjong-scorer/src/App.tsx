@@ -19,6 +19,7 @@ import { specialHandExampleProvesTreatment } from './guide/special-hand-examples
 import { resolveAtlasScorerExample } from './guide/atlas-scorer-handoff';
 import { getCurrentCompiledRulesRuntime } from './rules-platform/current-runtime-registry';
 import { mapCurrentClassicalScoreBreakdown } from './rules-platform/current-runtime-compat';
+import { classicalFactIsMaterial } from './rules-platform/classical-materiality';
 import { interpretClassicalHand } from './rules-platform/classical-interpretation';
 import { requireClassicalWinningTile } from './rules-platform/classical-winning-tile-requirement';
 import { toMcrScoringInput } from './game/mcr-hand-input';
@@ -82,6 +83,8 @@ const queryClient = new QueryClient();
 
 const suitNames: Record<string, string> = { characters: 'Characters', bamboo: 'Bamboo', circles: 'Circles', wind: 'Winds', dragon: 'Dragons' };
 const suitOrder = ['characters', 'bamboo', 'circles', 'wind', 'dragon'] as const;
+type HandEvidenceOrigin = NonNullable<MahjongHand['classicalEvidenceOrigins']>[keyof NonNullable<MahjongHand['classicalEvidenceOrigins']>];
+const knownFactOrigin = (origin: HandEvidenceOrigin | undefined): Exclude<HandEvidenceOrigin, 'absent'> | undefined => !origin || origin === 'absent' ? undefined : origin;
 
 const allSuitTiles: PlayingTile[] = SUITS.flatMap((s) =>
   Array.from({ length: 9 }, (_, i) => suited(s, (i + 1) as SuitTile['rank']))
@@ -272,12 +275,24 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
   const [hybridCandidateId, setHybridCandidateId] = useState<string | undefined>();
   const [hybridVisibility, setHybridVisibility] = useState<{ groupId: string; value: Visibility }[]>([]);
   const [hybridRejectedCandidates, setHybridRejectedCandidates] = useState<string[]>([]);
+  const [hybridKongConfirmation, setHybridKongConfirmation] = useState<{ candidateId: string; visibilityByGroupId: Readonly<Record<string, Visibility>> } | undefined>();
+  const [rejectedKongCandidateIds, setRejectedKongCandidateIds] = useState<string[]>([]);
+  const [kongChoiceDraft, setKongChoiceDraft] = useState<{ candidateId: string; visibilityByGroupId: Record<string, Visibility> } | undefined>();
   const [originalCall, setOriginalCall] = useState<boolean>(
     initialContext.isWinner ? initialHand?.originalCall ?? (practice ? practiceContext.originalCall : false) : false,
+  );
+  const [originalCallStatus, setOriginalCallStatus] = useState<'default' | 'confirmed' | 'unknown' | 'inherited'>(
+    knownFactOrigin(initialHand?.classicalEvidenceOrigins?.originalCall) ?? (initialHand?.originalCall === true ? 'inherited' : 'default'),
   );
   const [standingHand, setStandingHand] = useState(initialHand?.classicalEvidence?.standingHand ?? false);
   const [onlyPossibleWinningTile, setOnlyPossibleWinningTile] = useState(initialHand?.classicalEvidence?.onlyPossibleWinningTile ?? false);
   const [eastThirteenthConsecutiveMahjong, setEastThirteenthConsecutiveMahjong] = useState(('eastThirteenthConsecutiveMahjong' in initialContext ? initialContext.eastThirteenthConsecutiveMahjong : undefined) ?? false);
+  const [profileFactOrigins, setProfileFactOrigins] = useState<Record<'standingHand' | 'onlyPossibleWinningTile' | 'eastThirteenth', 'default' | 'confirmed' | 'unknown' | 'inherited'>>({
+    standingHand: knownFactOrigin(initialHand?.classicalEvidenceOrigins?.standingHand) ?? (initialHand?.classicalEvidence?.standingHand !== undefined ? 'inherited' : 'default'),
+    onlyPossibleWinningTile: knownFactOrigin(initialHand?.classicalEvidenceOrigins?.onlyPossibleWinningTile) ?? (initialHand?.classicalEvidence?.onlyPossibleWinningTile !== undefined ? 'inherited' : 'default'),
+    eastThirteenth: context && 'eastThirteenthConsecutiveMahjong' in context ? 'inherited' : knownFactOrigin(initialHand?.classicalEvidenceOrigins?.eastThirteenth) ?? 'default',
+  });
+  const [windFactOrigins, setWindFactOrigins] = useState<Record<'playerWind' | 'prevailingWind', 'default' | 'confirmed' | 'unknown' | 'inherited'>>({ playerWind: context ? 'inherited' : knownFactOrigin(initialHand?.classicalEvidenceOrigins?.playerWind) ?? 'default', prevailingWind: context ? 'inherited' : knownFactOrigin(initialHand?.classicalEvidenceOrigins?.prevailingWind) ?? 'default' });
   const [winningTileProvenance, setWinningTileProvenance] = useState<WinningTileProvenance | undefined>(
     initialHand?.winningTileProvenance
       ? {
@@ -376,10 +391,6 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
     winningMethod: isWinner && !(remainingTiles.length > 0 && getCurrentCompiledRulesRuntime(context?.rulesProfile ?? standaloneRulesProfile).grammar === 'classical-points-doubles' && (hybridMethodStatus === 'default' || hybridMethodStatus === 'unknown')) ? winningMethod : undefined,
     completedKongs: numberOfKongs,
   };
-  const shouldAskFirstDiscard =
-    isFirstDiscardEvidenceCandidate(winningEventCandidate);
-  const shouldAskReplacementSequence =
-    isReplacementSequenceEvidenceCandidate(winningEventCandidate);
   const effectiveWinningEventEvidence =
     isWinningEventEvidenceCompatible(
       winningEventEvidence,
@@ -425,8 +436,18 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
     setOriginalCall(
       nextContext.isWinner ? savedHand?.originalCall ?? (practice ? nextPracticeContext.originalCall : false) : false,
     );
+    setOriginalCallStatus(knownFactOrigin(savedHand?.classicalEvidenceOrigins?.originalCall) ?? (savedHand?.originalCall === true ? 'inherited' : 'default'));
     setStandingHand(savedHand?.classicalEvidence?.standingHand ?? false);
     setOnlyPossibleWinningTile(savedHand?.classicalEvidence?.onlyPossibleWinningTile ?? false);
+    setProfileFactOrigins({
+      standingHand: context ? 'inherited' : knownFactOrigin(savedHand?.classicalEvidenceOrigins?.standingHand) ?? (savedHand?.classicalEvidence?.standingHand !== undefined ? 'inherited' : 'default'),
+      onlyPossibleWinningTile: context ? 'inherited' : knownFactOrigin(savedHand?.classicalEvidenceOrigins?.onlyPossibleWinningTile) ?? (savedHand?.classicalEvidence?.onlyPossibleWinningTile !== undefined ? 'inherited' : 'default'),
+      eastThirteenth: context ? 'inherited' : knownFactOrigin(savedHand?.classicalEvidenceOrigins?.eastThirteenth) ?? 'default',
+    });
+    setWindFactOrigins({
+      playerWind: context ? 'inherited' : knownFactOrigin(savedHand?.classicalEvidenceOrigins?.playerWind) ?? 'default',
+      prevailingWind: context ? 'inherited' : knownFactOrigin(savedHand?.classicalEvidenceOrigins?.prevailingWind) ?? 'default',
+    });
     setEastThirteenthConsecutiveMahjong(('eastThirteenthConsecutiveMahjong' in nextContext ? nextContext.eastThirteenthConsecutiveMahjong : undefined) ?? false);
     setWinningTileProvenance(
       savedHand?.winningTileProvenance
@@ -590,6 +611,7 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
     if (hybridStructureRef.current === hybridStructureKey) return;
     hybridStructureRef.current = hybridStructureKey;
     setHybridCandidateId(undefined); setHybridVisibility([]); setHybridRejectedCandidates([]);
+    setHybridKongConfirmation(undefined); setRejectedKongCandidateIds([]); setKongChoiceDraft(undefined);
     clearWinningTileEvidence();
   }, [hybridStructureKey]);
   const hybridResolution = useMemo(() => hybridActive ? resolveHybridWinner({
@@ -599,9 +621,9 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
     bonusTiles: [...flowers.map((n) => bonus('flower', n as BonusTile['number'])), ...seasons.map((n) => bonus('season', n as BonusTile['number']))],
     ungroupedBlankTiles: [...applicableUngroupedBlanks(ungroupedBlankTiles, 'sets', true), ...unresolvedWinnerBlankEvidence(ungroupedBlankTiles)],
     context: gameContext, handMode,
-    evidence: { winningMethod: hybridMethodStatus === 'confirmed' || hybridMethodStatus === 'inherited' ? winningMethod : undefined, winningTileProvenance, winningTileEvidenceOrigin, winningEventEvidence: effectiveWinningEventEvidence, originalCall, classicalEvidence: standingHand || onlyPossibleWinningTile ? { standingHand, onlyPossibleWinningTile } : undefined },
+    evidence: { winningMethod: hybridMethodStatus === 'confirmed' || hybridMethodStatus === 'inherited' ? winningMethod : undefined, winningTileProvenance, winningTileEvidenceOrigin, winningEventEvidence: effectiveWinningEventEvidence, originalCall: originalCallStatus === 'confirmed' || originalCallStatus === 'inherited' ? originalCall : false, classicalEvidence: standingHand || onlyPossibleWinningTile ? { standingHand, onlyPossibleWinningTile } : undefined },
     candidateId: hybridCandidateId, visibility: hybridVisibility, rejectedCandidateIds: hybridRejectedCandidates,
-  }) : undefined, [hybridActive, context, standaloneRulesProfile, sets, remainingTiles, flowers, seasons, ungroupedBlankTiles, gameContext, handMode, hybridMethodStatus, winningMethod, winningTileProvenance, winningTileEvidenceOrigin, effectiveWinningEventEvidence, originalCall, standingHand, onlyPossibleWinningTile, hybridCandidateId, hybridVisibility, hybridRejectedCandidates]);
+  }) : undefined, [hybridActive, context, standaloneRulesProfile, sets, remainingTiles, flowers, seasons, ungroupedBlankTiles, gameContext, handMode, hybridMethodStatus, winningMethod, winningTileProvenance, winningTileEvidenceOrigin, effectiveWinningEventEvidence, originalCall, originalCallStatus, standingHand, onlyPossibleWinningTile, hybridCandidateId, hybridVisibility, hybridRejectedCandidates]);
   const hybridNonWinnerResolution = useMemo(() => {
     if (isMcr || isWinner || layoutMode !== 'sets') return undefined;
     return resolveHybridNonWinner({
@@ -612,11 +634,69 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
       ungroupedBlankTiles: applicableUngroupedBlanks(ungroupedBlankTiles, 'sets', false),
       context: gameContext,
       handMode,
+      kongConfirmation: hybridKongConfirmation,
+      rejectedKongCandidateIds,
     });
-  }, [isMcr, isWinner, layoutMode, activeProfile, sets, remainingTiles, hand.bonusTiles, ungroupedBlankTiles, gameContext, handMode]);
+  }, [isMcr, isWinner, layoutMode, activeProfile, sets, remainingTiles, hand.bonusTiles, ungroupedBlankTiles, gameContext, handMode, hybridKongConfirmation, rejectedKongCandidateIds]);
   const scoredHand = hybridActive && hybridResolution?.kind === 'ready'
     ? hybridResolution.hand
     : hybridNonWinnerResolution?.resolvedHand ?? hand;
+
+  const classicalMaterialFacts = useMemo(() => {
+    const physicalCount = scoredHand.sets.flatMap(expandedTiles).length + (scoredHand.looseTiles?.length ?? 0) + (scoredHand.remainingTiles?.length ?? 0);
+    const structuralCount = physicalCount - scoredHand.sets.filter(({ kind }) => kind === 'kong').length;
+    const resolvedHybrid = !hybridActive || hybridResolution?.kind === 'ready';
+    if (compiledRuntime.grammar !== 'classical-points-doubles' || !resolvedHybrid || structuralCount !== (isWinner ? 14 : 13)) return {
+      winningMethod: false, originalCall: false, standingHand: false, onlyPossibleWinningTile: false,
+      eastThirteenth: false, firstDiscard: false, replacementChain: false, playerWind: false, prevailingWind: false,
+    };
+    const methodChoices = availableWinningMethods.map(({ value }) => ({ hand: { ...scoredHand, winningMethod: value } }));
+    const eventCandidate = { isWinner, playerWind, winningMethod, completedKongs: scoredHand.sets.filter(({ kind }) => kind === 'kong').length };
+    const eventAlternatives = (evidence?: WinningEventEvidence) => [undefined, evidence].map((winningEventEvidence) => ({ hand: { ...scoredHand, winningEventEvidence } }));
+    const windValues: Wind[] = ['east', 'south', 'west', 'north'];
+    return {
+      winningMethod: isWinner && methodChoices.length > 1 && classicalFactIsMaterial(activeProfile, scoredHand, gameContext, methodChoices),
+      originalCall: isWinner && classicalFactIsMaterial(activeProfile, scoredHand, gameContext, [
+        { hand: { ...scoredHand, originalCall: false } }, { hand: { ...scoredHand, originalCall: true } },
+      ]),
+      standingHand: classicalFactIsMaterial(activeProfile, scoredHand, gameContext, [
+        { hand: { ...scoredHand, classicalEvidence: { ...scoredHand.classicalEvidence, standingHand: false } } },
+        { hand: { ...scoredHand, classicalEvidence: { ...scoredHand.classicalEvidence, standingHand: true } } },
+      ]),
+      onlyPossibleWinningTile: classicalFactIsMaterial(activeProfile, scoredHand, gameContext, [
+        { hand: { ...scoredHand, classicalEvidence: { ...scoredHand.classicalEvidence, onlyPossibleWinningTile: false } } },
+        { hand: { ...scoredHand, classicalEvidence: { ...scoredHand.classicalEvidence, onlyPossibleWinningTile: true } } },
+      ]),
+      eastThirteenth: classicalFactIsMaterial(activeProfile, scoredHand, gameContext, [
+        { context: { ...gameContext, eastThirteenthConsecutiveMahjong: false } },
+        { context: { ...gameContext, eastThirteenthConsecutiveMahjong: true } },
+      ]),
+      firstDiscard: isFirstDiscardEvidenceCandidate(eventCandidate) && classicalFactIsMaterial(activeProfile, scoredHand, gameContext,
+        eventAlternatives({ type: 'discard', discardedBy: 'east', handDiscardOrdinal: 1 })),
+      replacementChain: isReplacementSequenceEvidenceCandidate(eventCandidate) && classicalFactIsMaterial(activeProfile, scoredHand, gameContext,
+        eventAlternatives({ type: 'replacement-chain', kongDeclarations: 2 })),
+      playerWind: !context && classicalFactIsMaterial(activeProfile, scoredHand, gameContext,
+        windValues.map((playerWind) => ({ context: { ...gameContext, playerWind } }))),
+      prevailingWind: !context && classicalFactIsMaterial(activeProfile, scoredHand, gameContext,
+        windValues.map((prevailingWind) => ({ context: { ...gameContext, prevailingWind } }))),
+    };
+  }, [activeProfile, availableWinningMethods, compiledRuntime, context, gameContext, scoredHand, isWinner, playerWind, winningMethod, hybridActive, hybridResolution]);
+  const shouldAskFirstDiscard = classicalMaterialFacts.firstDiscard;
+  const shouldAskReplacementSequence = classicalMaterialFacts.replacementChain;
+  const pendingMaterialEvidence = [
+    classicalMaterialFacts.winningMethod && hybridMethodStatus === 'default' ? 'winning method' : undefined,
+    classicalMaterialFacts.originalCall && originalCallStatus === 'default' ? 'Original Call' : undefined,
+    classicalMaterialFacts.standingHand && profileFactOrigins.standingHand === 'default' ? 'Standing Hand' : undefined,
+    classicalMaterialFacts.onlyPossibleWinningTile && profileFactOrigins.onlyPossibleWinningTile === 'default' ? 'only possible winning tile' : undefined,
+    classicalMaterialFacts.eastThirteenth && profileFactOrigins.eastThirteenth === 'default' ? 'East’s thirteenth consecutive Mahjong' : undefined,
+    classicalMaterialFacts.firstDiscard && (discardAnswer === null || discardAnswer === 'unsure') ? 'first discard' : undefined,
+    classicalMaterialFacts.replacementChain && (replacementAnswer === null || replacementAnswer === 'unsure') ? 'replacement sequence' : undefined,
+    classicalMaterialFacts.playerWind && windFactOrigins.playerWind === 'default' ? 'player Wind' : undefined,
+    classicalMaterialFacts.prevailingWind && windFactOrigins.prevailingWind === 'default' ? 'prevailing Wind' : undefined,
+  ].filter((fact): fact is string => !!fact);
+  const unresolvedMaterialEvidence = pendingMaterialEvidence.length > 0;
+  const unresolvedStandaloneWind = (classicalMaterialFacts.playerWind && windFactOrigins.playerWind !== 'confirmed')
+    || (classicalMaterialFacts.prevailingWind && windFactOrigins.prevailingWind !== 'confirmed');
 
   const isStructureComplete = useMemo(() => {
     if (!isWinner) return false;
@@ -637,6 +717,19 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
   const shouldAskWinningTile = isMcr || winningTileRequirement?.kind === 'required' || winningTileRequirement?.kind === 'unknown';
   const handForScoring: MahjongHand = {
     ...scoredHand,
+    ...(!classicalMaterialFacts.winningMethod || hybridMethodStatus === 'confirmed' || hybridMethodStatus === 'inherited' ? {} : { winningMethod: undefined }),
+    originalCall: !classicalMaterialFacts.originalCall || originalCallStatus === 'confirmed' || originalCallStatus === 'inherited' ? originalCall : false,
+    classicalEvidenceOrigins: {
+      winningMethod: classicalMaterialFacts.winningMethod ? hybridMethodStatus : 'absent',
+      originalCall: classicalMaterialFacts.originalCall ? originalCallStatus : 'absent',
+      standingHand: classicalMaterialFacts.standingHand ? profileFactOrigins.standingHand : 'absent',
+      onlyPossibleWinningTile: classicalMaterialFacts.onlyPossibleWinningTile ? profileFactOrigins.onlyPossibleWinningTile : 'absent',
+      eastThirteenth: classicalMaterialFacts.eastThirteenth ? profileFactOrigins.eastThirteenth : 'absent',
+      firstDiscard: classicalMaterialFacts.firstDiscard ? (discardAnswer === 'unsure' ? 'unknown' : discardAnswer ? 'confirmed' : 'default') : 'absent',
+      replacementChain: classicalMaterialFacts.replacementChain ? (replacementAnswer === 'unsure' ? 'unknown' : replacementAnswer ? 'confirmed' : 'default') : 'absent',
+      playerWind: context ? 'inherited' : classicalMaterialFacts.playerWind ? windFactOrigins.playerWind : 'absent',
+      prevailingWind: context ? 'inherited' : classicalMaterialFacts.prevailingWind ? windFactOrigins.prevailingWind : 'absent',
+    },
     ...(scoredHand.winningTileProvenance && scoredHand.winningTileEvidenceOrigin !== 'confirmed' ? { winningTileEvidenceOrigin: 'confirmed' as const } : {}),
   };
 
@@ -647,6 +740,7 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
       : scoringRuntime ? mapCurrentClassicalScoreBreakdown(scoringRuntime.scoreHand({ evidence: handForScoring, context: gameContext })) : undefined,
     [hybridActive, hybridResolution, hybridNonWinnerResolution, gameContext, handForScoring, scoringRuntime],
   );
+  const scoreResultVisible = !hybridNonWinnerResolution?.kongConfirmationRequired?.length;
   const mcrPass = useMemo(() => {
     if (!isMcr || compiledRuntime.grammar !== 'pattern-accumulator' || !mcrWinSource || !mcrResolvedWinEvent) return undefined;
     const adapted = toMcrScoringInput(hand, { winSource: mcrWinSource, resolvedWinEvent: mcrResolvedWinEvent, lastVisibleCopy: mcrLastVisibleCopy, seatWind: mcrSeatWind, prevailingWind: mcrPrevailingWind });
@@ -886,7 +980,7 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
   }
 
   function applyScore() {
-    if (isMcr || !context || example || !score?.valid || (hybridActive && hybridResolution?.kind !== 'ready')) return;
+    if (isMcr || !context || example || !score?.valid || unresolvedMaterialEvidence || (hybridActive && hybridResolution?.kind !== 'ready')) return;
       onClose({
       grammar: 'classical-points-doubles',
       playerId: context.playerId,
@@ -919,7 +1013,7 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
         breakdown: score,
         finalScore: score!.finalScore,
         ...(hybridActive && hybridResolution?.kind === 'ready'
-          ? { interpretation: { schemaVersion: 1, c1: hybridResolution.provenance, factOrigins: { winningMethod: hybridMethodStatus, winningTile: handForScoring.winningTileEvidenceOrigin ?? 'absent', originalCall: 'default', playerWind: context.playerWind ? 'inherited' : 'absent', prevailingWind: context.prevailingWind ? 'inherited' : 'absent' } } satisfies HybridWinnerAudit }
+          ? { interpretation: { schemaVersion: 1, c1: hybridResolution.provenance, factOrigins: { ...handForScoring.classicalEvidenceOrigins, winningTile: handForScoring.winningTileEvidenceOrigin ?? 'absent' } } satisfies HybridWinnerAudit }
           : hybridNonWinnerResolution?.audit ? { interpretation: hybridNonWinnerResolution.audit } : {}),
       },
     });
@@ -1026,7 +1120,7 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
 
   const mobileLiveResult = isMcr
     ? <details data-testid="mobile-live-result" className="mt-3 rounded-md border border-[#b8cdbf] bg-[#edf3ed] px-3 py-2 sm:hidden"><summary className="cursor-pointer text-[11px] font-semibold text-[#284d45]">{mcrResult?.kind === 'scored' ? `${mcrResult.basicPoints} Basic Points` : mcrResult?.kind === 'not-qualifying' ? 'Not qualifying' : 'MCR evidence needed'}</summary><div className="mt-2 text-[10px]">Fan · qualifying subtotal · Flowers · Basic Points</div></details>
-    : score && <details data-testid="mobile-live-result" className="mt-3 rounded-md border border-[#b8cdbf] bg-[#edf3ed] px-3 py-2 sm:hidden"><summary className="cursor-pointer text-[11px] font-semibold text-[#284d45]">{score.valid ? `${score.finalScore} pts · ${score.basePoints} base · ${score.doubles} doubles${score.evidenceCompleteness === 'partial' ? ' · Partial evidence' : ''}` : structuralTileCount === structuralTarget && score.validationErrors[0] ? score.validationErrors[0] : tileProgressLabel}</summary><div className="mt-2 text-[10px] leading-4 text-[#66746e]">{score.valid ? score.evidenceCompleteness === 'partial' ? 'Score from entered evidence; add remaining tiles for whole-hand checks.' : 'Open for the full score breakdown below.' : 'Keep adding or correcting evidence; partial hands remain supported.'}</div>{hasContext && score.valid && <button type="button" data-testid="button-apply-score-compact" onClick={applyScore} className="mt-2 rounded bg-[#284d45] px-3 py-2 text-[11px] font-semibold text-[#f8f4e9]">Apply {score.finalScore} to {context.playerName}</button>}</details>;
+    : !scoreResultVisible ? <p data-testid="pending-material-evidence" className="mt-3 rounded-md border border-[#d8ceb8] bg-[#fbf8ed] px-3 py-2 text-[11px] leading-5 text-[#66746e]">{unresolvedStandaloneWind ? 'The wind is unknown; wind-sensitive score details are unavailable.' : unresolvedMaterialEvidence ? `Confirm ${pendingMaterialEvidence.join(', ')} to show a supported score.` : 'Confirm how these four tiles were declared to show a supported score.'}</p> : score && <details data-testid="mobile-live-result" className="mt-3 rounded-md border border-[#b8cdbf] bg-[#edf3ed] px-3 py-2 sm:hidden"><summary className="cursor-pointer text-[11px] font-semibold text-[#284d45]">{score.valid ? `${score.finalScore} pts · ${score.basePoints} base · ${score.doubles} doubles${score.evidenceCompleteness === 'partial' ? ' · Partial evidence' : ''}` : structuralTileCount === structuralTarget && score.validationErrors[0] ? score.validationErrors[0] : tileProgressLabel}</summary><div className="mt-2 text-[10px] leading-4 text-[#66746e]">{score.valid ? score.evidenceCompleteness === 'partial' ? 'Score from entered evidence; add remaining tiles for whole-hand checks.' : 'Open for the full score breakdown below.' : 'Keep adding or correcting evidence; partial hands remain supported.'}</div>{hasContext && score.valid && <button type="button" data-testid="button-apply-score-compact" onClick={applyScore} className="mt-2 rounded bg-[#284d45] px-3 py-2 text-[11px] font-semibold text-[#f8f4e9]">Apply {score.finalScore} to {context.playerName}</button>}</details>;
 
   const hybridResolutionPanel = hybridActive && <section data-testid="hybrid-winner-resolution" className="mt-3 rounded-md border border-[#d8ceb8] bg-[#fbf8ed] p-3 text-[11px]">
     <h3 className="font-semibold text-[#284d45]">Reading the rest of these tiles</h3>
@@ -1034,7 +1128,7 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
     {hybridResolution?.kind === 'candidate-choice-required' && <><p className="mt-2">This hand can be read more than one way. Which matches the table?</p><div className="mt-2 flex flex-wrap gap-2">{hybridResolution.candidates.filter(({ id }) => !hybridRejectedCandidates.includes(id)).map((candidate) => <button key={candidate.id} type="button" onClick={() => { setHybridCandidateId(candidate.id); setHybridVisibility([]); clearWinningTileEvidence(); }} className="rounded border border-[#cfc3aa] px-2 py-1.5">{candidate.layout === 'irregular' ? 'Irregular hand' : `${candidate.inferredGroups.length} inferred · ${candidate.inferredGroups.map(({ kind, tile }) => `${kind} ${tileName(tile)}`).join(', ')}`}</button>)}</div></>}
     {hybridResolution?.kind === 'facts-required' && <div className="mt-2"><p>Choose how each inferred group was exposed.</p>{hybridResolution.unresolvedFacts.map((fact) => <div key={fact.groupId} className="mt-2 flex flex-wrap items-center gap-2"><b>{hybridResolution.candidate.inferredGroups.find(({ id }) => id === fact.groupId)?.kind}</b>{fact.choices.map((value) => <button key={value} type="button" onClick={() => setHybridVisibility((current) => [...current.filter((item) => item.groupId !== fact.groupId), { groupId: fact.groupId, value }])} className="rounded border border-[#cfc3aa] px-2 py-1">{value === 'exposed' ? 'Exposed' : 'Concealed'}</button>)}{hybridResolution.candidate.inferredGroups.find(({ id }) => id === fact.groupId)?.kind === 'kong' && <button type="button" onClick={() => { setHybridRejectedCandidates((current) => [...new Set([...current, hybridResolution.candidate.id])]); setHybridCandidateId(undefined); setHybridVisibility([]); }} className="rounded border border-[#cfc3aa] px-2 py-1">Not a Kong</button>}</div>)}</div>}
     {hybridResolution?.kind === 'ready' && <p className="mt-2"><b>How I read this hand</b><br/>{hybridResolution.provenance.explicitSetIds.length} groups entered · {hybridResolution.provenance.inferredGroups.length} inferred{hybridResolution.provenance.factResolutions.some(({ origin }) => origin === 'default') ? ' · exposed Kong assumed for now' : ''}</p>}
-    {hybridActive && hybridResolution?.kind === 'ready' && <label className="mt-2 block">Winning method{hybridMethodStatus === 'default' && ' · not confirmed'}<select aria-label="Hybrid winning method" value={hybridMethodStatus === 'unknown' ? '' : winningMethod} onChange={(event) => { if (!event.target.value) { setHybridMethodStatus('unknown'); return; } setWinningMethod(event.target.value as WinningMethod); setHybridMethodStatus('confirmed'); }} className="ml-2 rounded border border-[#cfc3aa] bg-white px-2 py-1"><option value="">I’m not sure</option>{availableWinningMethods.map(({ value, label }) => <option key={value} value={value}>{label}</option>)}</select></label>}
+    {hybridActive && hybridResolution?.kind === 'ready' && classicalMaterialFacts.winningMethod && <label className="mt-2 block">How did this hand win?<select aria-label="Hybrid winning method" value={hybridMethodStatus === 'unknown' || hybridMethodStatus === 'default' ? '' : winningMethod} onChange={(event) => { if (!event.target.value) { setHybridMethodStatus('unknown'); return; } setWinningMethod(event.target.value as WinningMethod); setHybridMethodStatus('confirmed'); }} className="ml-2 rounded border border-[#cfc3aa] bg-white px-2 py-1"><option value="">I’m not sure</option>{availableWinningMethods.map(({ value, label }) => <option key={value} value={value}>{label}</option>)}</select></label>}
   </section>;
   const hybridNonWinnerPanel = !isMcr && !isWinner && hybridNonWinnerResolution?.interpretation && <section data-testid="hybrid-non-winner-analysis" className="mt-3 rounded-md border border-[#d8ceb8] bg-[#fbf8ed] p-3 text-[11px]">
     <h3 className="font-semibold text-[#284d45]">Rest-tile analysis</h3>
@@ -1042,6 +1136,7 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
     {!hybridNonWinnerResolution.selection && hybridNonWinnerResolution.interpretation.candidates.length > 0 && <p className="mt-1">No ordinary inferred grouping is selected for scoring; explicit groups remain authoritative and unmatched tiles stay unresolved.</p>}
     {!hybridNonWinnerResolution.selection && hybridNonWinnerResolution.interpretation.candidates.length === 0 && <p className="mt-1">No lawful ordinary grouping is available for this evidence yet. Explicit groups remain scored independently.</p>}
     {hybridNonWinnerResolution.interpretation.rejected.some(({ code }) => code === 'needs-explicit-goulash-blank-placement') && <p className="mt-1 font-semibold">Place each Goulash blank explicitly before structural analysis.</p>}
+    {!!hybridNonWinnerResolution.kongConfirmationRequired?.length && <div data-testid="hybrid-kong-confirmation" className="mt-3 rounded border border-[#cfc3aa] bg-white p-3"><p className="font-semibold">Were these four tiles declared as a Kong?</p><p className="mt-1">Four matching tiles can be a Kong, but the tiles alone do not confirm the declaration.</p>{kongChoiceDraft ? (() => { const candidate = hybridNonWinnerResolution.kongConfirmationRequired!.find(({ id }) => id === kongChoiceDraft.candidateId); if (!candidate) return null; return <div className="mt-2 space-y-2">{candidate.unresolvedFacts.map((fact) => <div key={fact.groupId} className="flex flex-wrap items-center gap-2"><b>{candidate.inferredGroups.find(({ id }) => id === fact.groupId)?.kind}</b>{fact.choices.map((value) => <button key={value} type="button" onClick={() => { const next = { ...kongChoiceDraft.visibilityByGroupId, [fact.groupId]: value }; setKongChoiceDraft({ ...kongChoiceDraft, visibilityByGroupId: next }); if (candidate.unresolvedFacts.every(({ groupId }) => next[groupId])) setHybridKongConfirmation({ candidateId: candidate.id, visibilityByGroupId: next }); }} className="rounded border border-[#cfc3aa] px-2 py-1">{value === 'exposed' ? 'Exposed Kong' : 'Concealed Kong'}</button>)}</div>)}<button type="button" onClick={() => { setRejectedKongCandidateIds((current) => [...new Set([...current, candidate.id])]); setKongChoiceDraft(undefined); setHybridKongConfirmation(undefined); }} className="rounded border border-[#cfc3aa] px-2 py-1">Not a Kong</button></div>; })() : <div className="mt-2 space-y-2">{hybridNonWinnerResolution.kongConfirmationRequired.map((candidate) => <div key={candidate.id} className="flex flex-wrap items-center gap-2"><button type="button" onClick={() => setKongChoiceDraft({ candidateId: candidate.id, visibilityByGroupId: {} })} className="rounded border border-[#cfc3aa] px-2 py-1">{candidate.inferredGroups.map(({ kind, tile }) => `${kind} ${tileName(tile)}`).join(', ')}</button><button type="button" onClick={() => setRejectedKongCandidateIds((current) => [...new Set([...current, candidate.id])])} className="rounded border border-[#cfc3aa] px-2 py-1">Not a Kong</button></div>)}</div>}</div>}
     {score?.specialFishing && <p className="mt-1">{score.specialFishing.name} fishing · {score.specialFishing.completingTiles.length} completing {score.specialFishing.completingTiles.length === 1 ? 'tile' : 'tiles'}.</p>}
   </section>;
 
@@ -1359,7 +1454,7 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
               </section>
               {standaloneHand && !hasContext && !example && !practice && <div className="max-w-[900px]"><RulesProfilePicker surface="hand" prompt="Which rules are you scoring?" selectedProfile={standaloneRulesProfile} onSelect={onStandaloneRulesProfileChange} />
                 {compiledRuntime.grammar === 'classical-points-doubles' && compiledRuntime.runtime.supportedCapabilities().includes('hand.goulash') && <label className="mb-6 block rounded-lg border border-[#d8ceb8] bg-[#fbf8ed] p-4 text-[12px] text-[#284d45]"><span className="mb-2 block font-semibold">Hand mode</span><select data-testid="select-standalone-hand-mode" value={handMode} onChange={(event) => setHandMode(event.target.value as 'normal' | 'goulash')} className="w-full rounded-md border border-[#cfc3aa] bg-[#fdfbf5] px-3 py-2"><option value="normal">Normal hand</option><option value="goulash">Goulash hand (blank tiles; no chows)</option></select></label>}</div>}
-              {compiledRuntime.grammar === 'classical-points-doubles' && (() => { const capabilities = compiledRuntime.runtime.supportedCapabilities(); return (capabilities.includes('hand.standing-hand') || capabilities.includes('hand.only-possible-winning-tile') || capabilities.includes('context.east-thirteenth-consecutive-mahjong')) && <section data-testid="profile-hand-evidence" className="mx-auto mb-5 max-w-[900px] rounded-lg border border-[#d8ceb8] bg-[#fbf8ed] p-4 text-[12px] text-[#284d45]"><h2 className="font-serif text-[20px]">Scoring evidence</h2>{capabilities.includes('hand.standing-hand') && <label className="mt-3 flex gap-2"><input type="checkbox" checked={standingHand} onChange={(event) => setStandingHand(event.target.checked)} />Standing Hand (declared/locked table state)</label>}{capabilities.includes('hand.only-possible-winning-tile') && <label className="mt-2 flex gap-2"><input type="checkbox" checked={onlyPossibleWinningTile} onChange={(event) => setOnlyPossibleWinningTile(event.target.checked)} />Only possible winning tile</label>}{capabilities.includes('context.east-thirteenth-consecutive-mahjong') && <label className="mt-2 flex gap-2"><input type="checkbox" checked={eastThirteenthConsecutiveMahjong} onChange={(event) => setEastThirteenthConsecutiveMahjong(event.target.checked)} />East's thirteenth consecutive Mah Jong</label>}</section>; })()}
+              {compiledRuntime.grammar === 'classical-points-doubles' && (classicalMaterialFacts.standingHand || classicalMaterialFacts.onlyPossibleWinningTile || classicalMaterialFacts.eastThirteenth) && <section data-testid="profile-hand-evidence" className="mx-auto mb-5 max-w-[900px] rounded-lg border border-[#d8ceb8] bg-[#fbf8ed] p-4 text-[12px] text-[#284d45]"><h2 className="font-serif text-[20px]">Scoring evidence</h2>{classicalMaterialFacts.standingHand && <div className="mt-3"><p>Was this Standing Hand locked in?</p><div className="mt-1 flex flex-wrap gap-2">{[['yes', 'Yes'], ['no', 'No'], ['unknown', 'I’m not sure']].map(([value, label]) => <button key={value} type="button" data-testid={`standing-hand-${value}`} aria-pressed={profileFactOrigins.standingHand === (value === 'unknown' ? 'unknown' : 'confirmed') && standingHand === (value === 'yes')} onClick={() => { setStandingHand(value === 'yes'); setProfileFactOrigins((current) => ({ ...current, standingHand: value === 'unknown' ? 'unknown' : 'confirmed' })); }} className="rounded border border-[#cfc3aa] px-2 py-1">{label}</button>)}</div></div>}{classicalMaterialFacts.onlyPossibleWinningTile && <div className="mt-3"><p>Was this the only possible winning tile?</p><div className="mt-1 flex flex-wrap gap-2">{[['yes', 'Yes'], ['no', 'No'], ['unknown', 'I’m not sure']].map(([value, label]) => <button key={value} type="button" data-testid={`only-possible-tile-${value}`} aria-pressed={profileFactOrigins.onlyPossibleWinningTile === (value === 'unknown' ? 'unknown' : 'confirmed') && onlyPossibleWinningTile === (value === 'yes')} onClick={() => { setOnlyPossibleWinningTile(value === 'yes'); setProfileFactOrigins((current) => ({ ...current, onlyPossibleWinningTile: value === 'unknown' ? 'unknown' : 'confirmed' })); }} className="rounded border border-[#cfc3aa] px-2 py-1">{label}</button>)}</div></div>}{classicalMaterialFacts.eastThirteenth && <div className="mt-3"><p>Was East’s thirteenth consecutive Mahjong?</p><div className="mt-1 flex flex-wrap gap-2">{[['yes', 'Yes'], ['no', 'No'], ['unknown', 'I’m not sure']].map(([value, label]) => <button key={value} type="button" data-testid={`east-thirteenth-${value}`} aria-pressed={profileFactOrigins.eastThirteenth === (value === 'unknown' ? 'unknown' : 'confirmed') && eastThirteenthConsecutiveMahjong === (value === 'yes')} onClick={() => { setEastThirteenthConsecutiveMahjong(value === 'yes'); setProfileFactOrigins((current) => ({ ...current, eastThirteenth: value === 'unknown' ? 'unknown' : 'confirmed' })); }} className="rounded border border-[#cfc3aa] px-2 py-1">{label}</button>)}</div></div>}</section>}
               <section className="rounded-xl border border-[#d8ceb8] bg-[#e8e1d1] p-4 sm:hidden" data-testid="mobile-hand-context">
                 <h2 className="font-serif text-[22px] leading-tight text-[#284d45]">Hand context</h2>
                 <p className="mt-1 text-[11px] leading-5 text-[#66746e]">{hasContext ? 'Your game has supplied these facts.' : 'Review or set the scoring context below.'}</p>
@@ -1370,7 +1465,7 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
             </div>
 
             <aside className="min-w-0 space-y-5">
-              {!isMcr && score && <>
+              {!isMcr && scoreResultVisible && score && <>
               <section id="game-status-controls" className={`animate-rise animate-rise-delay-1 min-w-0 rounded-xl border border-[#d8ceb8] bg-[#e8e1d1] p-5 sm:p-6 ${hasContext ? 'hidden sm:block' : ''}`}>
                 <SectionLabel eyebrow="05 / context" title="Game status" />
                 <div className="space-y-4">
@@ -1382,7 +1477,8 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
                           {playerWind.charAt(0).toUpperCase() + playerWind.slice(1)} (Inherited)
                         </div>
                       ) : (
-                        <select data-testid="select-player-wind" value={playerWind} onChange={(e) => setPlayerWind(e.target.value as Wind)} className="w-full min-w-0 rounded-md border border-[#cfc3aa] bg-[#fdfbf5] px-3 py-2.5 text-[12px] font-semibold text-[#284d45] focus:ring-2">
+                          <select data-testid="select-player-wind" value={classicalMaterialFacts.playerWind && windFactOrigins.playerWind !== 'confirmed' ? (windFactOrigins.playerWind === 'unknown' ? 'unknown' : '') : playerWind} onChange={(e) => { if (e.target.value === 'unknown') { setWindFactOrigins((current) => ({ ...current, playerWind: 'unknown' })); return; } if (!e.target.value) { setWindFactOrigins((current) => ({ ...current, playerWind: 'default' })); return; } setPlayerWind(e.target.value as Wind); setWindFactOrigins((current) => ({ ...current, playerWind: 'confirmed' })); }} className="w-full min-w-0 rounded-md border border-[#cfc3aa] bg-[#fdfbf5] px-3 py-2.5 text-[12px] font-semibold text-[#284d45] focus:ring-2">
+                          {classicalMaterialFacts.playerWind && <><option value="">Choose player Wind</option><option value="unknown">I’m not sure</option></>}
                           <option value="east">East</option>
                           <option value="south">South</option>
                           <option value="west">West</option>
@@ -1397,7 +1493,8 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
                           {prevailingWind.charAt(0).toUpperCase() + prevailingWind.slice(1)} (Inherited)
                         </div>
                       ) : (
-                        <select data-testid="select-prevailing-wind" value={prevailingWind} onChange={(e) => setPrevailingWind(e.target.value as Wind)} className="w-full min-w-0 rounded-md border border-[#cfc3aa] bg-[#fdfbf5] px-3 py-2.5 text-[12px] font-semibold text-[#284d45] focus:ring-2">
+                          <select data-testid="select-prevailing-wind" value={classicalMaterialFacts.prevailingWind && windFactOrigins.prevailingWind !== 'confirmed' ? (windFactOrigins.prevailingWind === 'unknown' ? 'unknown' : '') : prevailingWind} onChange={(e) => { if (e.target.value === 'unknown') { setWindFactOrigins((current) => ({ ...current, prevailingWind: 'unknown' })); return; } if (!e.target.value) { setWindFactOrigins((current) => ({ ...current, prevailingWind: 'default' })); return; } setPrevailingWind(e.target.value as Wind); setWindFactOrigins((current) => ({ ...current, prevailingWind: 'confirmed' })); }} className="w-full min-w-0 rounded-md border border-[#cfc3aa] bg-[#fdfbf5] px-3 py-2.5 text-[12px] font-semibold text-[#284d45] focus:ring-2">
+                          {classicalMaterialFacts.prevailingWind && <><option value="">Choose prevailing Wind</option><option value="unknown">I’m not sure</option></>}
                           <option value="east">East</option>
                           <option value="south">South</option>
                           <option value="west">West</option>
@@ -1440,12 +1537,13 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
                     </label>
                     {isWinner && !isMcr && (
                       <div className="mt-2 space-y-4">
-                        <label className="block min-w-0">
+                        {classicalMaterialFacts.winningMethod && !hybridActive && <label className="block min-w-0">
                           <span className="mb-1.5 block font-mono text-[10px] uppercase tracking-[.15em] text-[#7a7769]">Winning method</span>
-                          <select data-testid="select-winning-method" value={winningMethod} onChange={(e) => setWinningMethod(e.target.value as WinningMethod)} className="w-full min-w-0 rounded-md border border-[#cfc3aa] bg-[#fdfbf5] px-3 py-2.5 text-[12px] font-semibold text-[#284d45] focus:ring-2">
+                          <select data-testid="select-winning-method" value={hybridMethodStatus === 'default' || hybridMethodStatus === 'unknown' ? '' : winningMethod} onChange={(e) => { if (!e.target.value) { setHybridMethodStatus('unknown'); return; } setWinningMethod(e.target.value as WinningMethod); setHybridMethodStatus('confirmed'); }} className="w-full min-w-0 rounded-md border border-[#cfc3aa] bg-[#fdfbf5] px-3 py-2.5 text-[12px] font-semibold text-[#284d45] focus:ring-2">
+                            <option value="">I’m not sure</option>
                             {availableWinningMethods.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
                           </select>
-                        </label>
+                        </label>}
 
                         {shouldAskFirstDiscard && (
                           <div className="animate-rise rounded-lg border border-[#e2d9c7] bg-[#fdfbf5] p-3">
@@ -1540,12 +1638,7 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
                       </div>
                     )}
                     {hybridNonWinnerPanel}
-                    {isWinner && (
-                      <label className="flex cursor-pointer items-center justify-between rounded-md bg-[#f4eddf] px-3 py-2.5 text-[12px] font-semibold text-[#284d45]">
-                        <span>Original Call (First turn win)</span>
-                        <input type="checkbox" data-testid="checkbox-original-call" checked={originalCall} onChange={(e) => setOriginalCall(e.target.checked)} className="h-4 w-4 accent-[#284d45]" />
-                      </label>
-                    )}
+                    {isWinner && classicalMaterialFacts.originalCall && <div data-testid="original-call-question" className="rounded-md bg-[#f4eddf] px-3 py-2.5 text-[12px] font-semibold text-[#284d45]"><p>Was this Original Call?</p><div className="mt-2 flex flex-wrap gap-2">{[['yes', 'Yes'], ['no', 'No'], ['unknown', 'I’m not sure']].map(([value, label]) => <button key={value} type="button" data-testid={`original-call-${value}`} aria-pressed={originalCallStatus === (value === 'unknown' ? 'unknown' : 'confirmed') && originalCall === (value === 'yes')} onClick={() => { setOriginalCall(value === 'yes'); setOriginalCallStatus(value === 'unknown' ? 'unknown' : 'confirmed'); }} className="rounded border border-[#cfc3aa] px-2 py-1">{label}</button>)}</div></div>}
                   </div>
 
                   <label className="block border-t border-[#d1c7b4] pt-4">
