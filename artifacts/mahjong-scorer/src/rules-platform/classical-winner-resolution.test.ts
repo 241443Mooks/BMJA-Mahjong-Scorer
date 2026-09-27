@@ -1,4 +1,5 @@
 import { beforeAll, describe, expect, it, vi } from 'vitest';
+import * as Scoring from '../scoring';
 import { dragon, set, suited, wind, type HandSet, type PlayingTile } from '../scoring';
 import { BMJA_PROFILE_REF } from '../game/ruleset';
 import { BUZZARD_2000_PROFILE_REF } from '../game/buzzard-2000';
@@ -101,9 +102,7 @@ describe('pure Classical complete-winner resolution', () => {
     const candidates = interpretClassicalHand(input);
     const chosen = candidates.candidates.find(({ inferredGroups }) => inferredGroups.some(({ kind }) => kind === 'kong'));
     if (!chosen) throw new Error('Expected inferred Kong candidate');
-    const compiled = getCurrentCompiledRulesRuntime(BMJA_PROFILE_REF);
-    if (compiled.grammar !== 'classical-points-doubles') throw new Error('Expected Classical runtime');
-    const scoreHand = vi.spyOn(compiled.runtime, 'scoreHand');
+    const scoreHand = vi.spyOn(Scoring, 'scoreHand');
     try {
       const result = resolveClassicalWinner(input, {
         candidateId: chosen.id,
@@ -111,8 +110,8 @@ describe('pure Classical complete-winner resolution', () => {
       });
       expect(result.kind).toBe('ready');
       expect(scoreHand.mock.calls.length).toBeGreaterThanOrEqual(3);
-      expect(scoreHand.mock.calls.every(([request]) =>
-        request.evidence.winningMethod === 'wall' && request.evidence.originalCall === true,
+      expect(scoreHand.mock.calls.every(([hand]) =>
+        hand.winningMethod === 'wall' && hand.originalCall === true,
       )).toBe(true);
     } finally {
       scoreHand.mockRestore();
