@@ -21,6 +21,27 @@ describe('Classical exact-runtime evidence materiality', () => {
     ])).toBe(true);
   });
 
+  it('detects material BMJA Original Call evidence', () => {
+    expect(classicalFactIsMaterial(BMJA_PROFILE_REF, hand, context, [
+      { hand: { ...hand, originalCall: false } }, { hand: { ...hand, originalCall: true } },
+    ])).toBe(true);
+  });
+
+  it('detects standalone player and prevailing Wind materiality', () => {
+    expect(classicalFactIsMaterial(BMJA_PROFILE_REF, hand, context, [
+      { context: { ...context, playerWind: 'east' } }, { context: { ...context, playerWind: 'south' } },
+    ])).toBe(true);
+    expect(classicalFactIsMaterial(BMJA_PROFILE_REF, hand, context, [
+      { context: { ...context, prevailingWind: 'east' } }, { context: { ...context, prevailingWind: 'south' } },
+    ])).toBe(true);
+  });
+
+  it('treats winning method as irrelevant for a non-winner', () => {
+    expect(classicalFactIsMaterial(BUZZARD_2000_PROFILE_REF, hand, context, [
+      { hand: { ...hand, isWinner: false, winningMethod: 'wall' } }, { hand: { ...hand, isWinner: false, winningMethod: 'discard' } },
+    ])).toBe(false);
+  });
+
   it('keeps a disabled profile treatment irrelevant', () => {
     expect(classicalFactIsMaterial(BUZZARD_2000_PROFILE_REF, hand, context, [
       { hand }, { hand: { ...hand, originalCall: true } },
