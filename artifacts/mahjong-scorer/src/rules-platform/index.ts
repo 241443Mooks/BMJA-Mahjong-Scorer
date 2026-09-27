@@ -9,6 +9,7 @@ export * from './classical-validation';
 export * from './classical-winner-resolution';
 export * from './outside-the-box-strategies';
 export * from './current-profiles';
+export * from './profile-dimensions';
 export * from './classical-runtime';
 export * from './mcr-scoring-input';
 export * from './mcr-detectors';
