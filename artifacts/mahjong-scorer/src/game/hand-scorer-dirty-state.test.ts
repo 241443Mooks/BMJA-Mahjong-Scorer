@@ -16,6 +16,11 @@ describe('hand scorer dirty baseline', () => {
     expect(hasHandScorerUnsavedWork({ ...baseline, winningMethod: 'wall' }, baseline)).toBe(true);
   });
 
+  it('warns before discarding hybrid candidate, visibility and method evidence', () => {
+    const baseline = handScorerInitialBaseline(undefined, { ...practiceContext, hybridInterpretation: { method: 'default', candidate: undefined, visibility: [] } });
+    expect(hasHandScorerUnsavedWork({ ...baseline, hybridInterpretation: { method: 'unknown', candidate: 'candidate-a', visibility: [{ groupId: 'g1', value: 'concealed' }] } }, baseline)).toBe(true);
+  });
+
   it('keeps the ordinary blank standalone scorer clean', () => {
     const baseline = handScorerInitialBaseline(undefined, { playerWind: 'east', prevailingWind: 'east', limit: 1000, isWinner: false, winningMethod: 'wall', originalCall: false });
     expect(hasHandScorerUnsavedWork(baseline, baseline)).toBe(false);

@@ -251,6 +251,7 @@ export type DetailedHandRecord = {
   context: GameContext;
   breakdown: ScoreBreakdown;
   finalScore: number;
+  interpretation?: import('./classical-hybrid-winner-entry').HybridWinnerAudit;
   requiresRecalculation?: boolean;
 };
 

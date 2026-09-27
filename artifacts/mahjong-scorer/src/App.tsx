@@ -19,11 +19,13 @@ import { specialHandExampleProvesTreatment } from './guide/special-hand-examples
 import { resolveAtlasScorerExample } from './guide/atlas-scorer-handoff';
 import { getCurrentCompiledRulesRuntime } from './rules-platform/current-runtime-registry';
 import { mapCurrentClassicalScoreBreakdown } from './rules-platform/current-runtime-compat';
+import { interpretClassicalHand } from './rules-platform/classical-interpretation';
 import { toMcrScoringInput } from './game/mcr-hand-input';
 import { presentMcrScore } from './game/mcr-score-presentation';
 import { buildMcrHandScorerResult } from './game/hand-scorer-handoff';
 import type { McrResolvedWinEvent, McrWinSource, McrWind } from './rules-platform/mcr-scoring-input';
 import { handScorerInitialBaseline, hasHandScorerUnsavedWork } from './game/hand-scorer-dirty-state';
+import { resolveHybridWinner, type HybridWinnerAudit } from './game/classical-hybrid-winner-entry';
 import { transitionStandaloneHandProfile } from './game/hand-scorer-profile-transition';
 import { readPreferredRulesProfile, setPreferredRulesProfile } from './game/preferred-rules-profile';
 import { normaliseStructuredChoiceForGroup, recoverWorkingDraft } from './game/hand-entry-workspace';
@@ -265,6 +267,10 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
   const [winningMethod, setWinningMethod] = useState<WinningMethod>(
     initialHand?.winningMethod ?? (practice ? practiceContext.winningMethod : 'wall'),
   );
+  const [hybridMethodStatus, setHybridMethodStatus] = useState<'default' | 'confirmed' | 'unknown' | 'inherited'>(initialHand?.winningMethod ? 'inherited' : 'default');
+  const [hybridCandidateId, setHybridCandidateId] = useState<string | undefined>();
+  const [hybridVisibility, setHybridVisibility] = useState<{ groupId: string; value: Visibility }[]>([]);
+  const [hybridRejectedCandidates, setHybridRejectedCandidates] = useState<string[]>([]);
   const [originalCall, setOriginalCall] = useState<boolean>(
     initialContext.isWinner ? initialHand?.originalCall ?? (practice ? practiceContext.originalCall : false) : false,
   );
@@ -328,8 +334,9 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
     playerWind: initialContext.playerWind, prevailingWind: initialContext.prevailingWind, limit: initialContext.limit,
     isWinner: initialIsMcr || initialContext.isWinner, winningMethod: initialHand?.winningMethod ?? (practice ? practiceContext.winningMethod : 'wall'),
     originalCall: initialContext.isWinner ? initialHand?.originalCall ?? (practice ? practiceContext.originalCall : false) : false,
+    hybridInterpretation: { hybridMethodStatus: initialHand?.winningMethod ? 'inherited' : 'default', hybridCandidateId: undefined, hybridVisibility: [], hybridRejectedCandidates: [] },
   }), [context, example, practice]);
-  const hasUnsavedWork = !hasContext && hasHandScorerUnsavedWork({ sets, layoutMode, looseTiles, remainingTiles, ungroupedBlankTiles, flowers, seasons, playerWind, prevailingWind, limit, isWinner, winningMethod, originalCall, winningTileProvenance, winningEventEvidence }, initialBaseline);
+  const hasUnsavedWork = !hasContext && hasHandScorerUnsavedWork({ sets, layoutMode, looseTiles, remainingTiles, ungroupedBlankTiles, flowers, seasons, playerWind, prevailingWind, limit, isWinner, winningMethod, originalCall, winningTileProvenance, winningEventEvidence, hybridInterpretation: { hybridMethodStatus, hybridCandidateId, hybridVisibility, hybridRejectedCandidates } }, initialBaseline);
   const leaveHand = () => {
     if (hasUnsavedWork && !window.confirm('Leave this hand? The hand details you entered will be discarded.')) return;
     if (example) { window.location.assign(example.returnHref); return; }
@@ -342,14 +349,27 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
   };
 
   const activeSet = sets.find(s => s.id === selectedSet);
+  const preliminaryHybridCandidates = useMemo(() => {
+    if (getCurrentCompiledRulesRuntime(context?.rulesProfile ?? standaloneRulesProfile).grammar !== 'classical-points-doubles' || !isWinner || layoutMode !== 'sets' || remainingTiles.length === 0) return [];
+    return interpretClassicalHand({
+      profile: context?.rulesProfile ?? standaloneRulesProfile,
+      explicitSets: sets.filter((item): item is HandSet => item.tile !== null), unresolvedTiles: remainingTiles,
+      bonusTiles: [...flowers.map((n) => bonus('flower', n as BonusTile['number'])), ...seasons.map((n) => bonus('season', n as BonusTile['number']))],
+      ungroupedBlankTiles: applicableUngroupedBlanks(ungroupedBlankTiles, 'sets', true),
+      isWinner: true, context: { playerWind, prevailingWind, limit: limit as number, handMode, eastThirteenthConsecutiveMahjong }, handMode,
+    }).candidates;
+  }, [isWinner, layoutMode, remainingTiles, context, standaloneRulesProfile, sets, flowers, seasons, ungroupedBlankTiles, playerWind, prevailingWind, limit, handMode, eastThirteenthConsecutiveMahjong]);
+  const preliminaryHybridCandidate = hybridCandidateId
+    ? preliminaryHybridCandidates.find(({ id }) => id === hybridCandidateId)
+    : preliminaryHybridCandidates.length === 1 ? preliminaryHybridCandidates[0] : undefined;
   const numberOfKongs =
     layoutMode === 'sets'
-      ? sets.filter((set) => set.kind === 'kong' && set.tile !== null).length
+      ? sets.filter((set) => set.kind === 'kong' && set.tile !== null).length + (preliminaryHybridCandidate?.inferredGroups.filter(({ kind }) => kind === 'kong').length ?? 0)
       : 0;
   const winningEventCandidate = {
     isWinner,
     playerWind,
-    winningMethod: isWinner ? winningMethod : undefined,
+    winningMethod: isWinner && !(remainingTiles.length > 0 && getCurrentCompiledRulesRuntime(context?.rulesProfile ?? standaloneRulesProfile).grammar === 'classical-points-doubles' && (hybridMethodStatus === 'default' || hybridMethodStatus === 'unknown')) ? winningMethod : undefined,
     completedKongs: numberOfKongs,
   };
   const shouldAskFirstDiscard =
@@ -492,6 +512,7 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
 
   useEffect(() => {
     if (isMcr) return;
+    if (isWinner && layoutMode === 'sets' && remainingTiles.length > 0 && getCurrentCompiledRulesRuntime(context?.rulesProfile ?? standaloneRulesProfile).grammar === 'classical-points-doubles') return;
     if (winningTileProvenance) {
       const validSets = sets.filter((s): s is HandSet => s.tile !== null);
       const tempHand: MahjongHand = {
@@ -507,7 +528,7 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
         setWinningTileProvenance(undefined);
       }
     }
-  }, [sets, looseTiles, layoutMode, isWinner, winningMethod, winningTileProvenance, isMcr]);
+  }, [sets, looseTiles, remainingTiles, layoutMode, isWinner, winningMethod, winningTileProvenance, isMcr, context, standaloneRulesProfile]);
 
   useEffect(() => {
     if (playerWind !== 'east' && winningMethod === 'initial-deal') {
@@ -555,8 +576,30 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
 
   const scoringRuntime = compiledRuntime.grammar === 'classical-points-doubles' ? compiledRuntime.runtime : undefined;
 
+  const hybridActive = !isMcr && isWinner && layoutMode === 'sets' && remainingTiles.length > 0;
+  const hybridStructureKey = JSON.stringify([context?.rulesProfile ?? standaloneRulesProfile, isWinner, layoutMode, sets, remainingTiles, handMode, ungroupedBlankTiles]);
+  const hybridStructureRef = useRef(hybridStructureKey);
+  useEffect(() => {
+    if (hybridStructureRef.current === hybridStructureKey) return;
+    hybridStructureRef.current = hybridStructureKey;
+    setHybridCandidateId(undefined); setHybridVisibility([]); setHybridRejectedCandidates([]);
+    setWinningTileProvenance(undefined);
+  }, [hybridStructureKey]);
+  const hybridResolution = useMemo(() => hybridActive ? resolveHybridWinner({
+    profile: context?.rulesProfile ?? standaloneRulesProfile,
+    explicitSets: sets.filter((item): item is HandSet => item.tile !== null),
+    unresolvedTiles: remainingTiles,
+    bonusTiles: [...flowers.map((n) => bonus('flower', n as BonusTile['number'])), ...seasons.map((n) => bonus('season', n as BonusTile['number']))],
+    ungroupedBlankTiles: applicableUngroupedBlanks(ungroupedBlankTiles, 'sets', true),
+    context: gameContext, handMode,
+    evidence: { winningMethod: hybridMethodStatus === 'confirmed' || hybridMethodStatus === 'inherited' ? winningMethod : undefined, winningTileProvenance, winningEventEvidence: effectiveWinningEventEvidence, originalCall, classicalEvidence: standingHand || onlyPossibleWinningTile ? { standingHand, onlyPossibleWinningTile } : undefined },
+    candidateId: hybridCandidateId, visibility: hybridVisibility, rejectedCandidateIds: hybridRejectedCandidates,
+  }) : undefined, [hybridActive, context, standaloneRulesProfile, sets, remainingTiles, flowers, seasons, ungroupedBlankTiles, gameContext, handMode, hybridMethodStatus, winningMethod, winningTileProvenance, effectiveWinningEventEvidence, originalCall, standingHand, onlyPossibleWinningTile, hybridCandidateId, hybridVisibility, hybridRejectedCandidates]);
+  const scoredHand = hybridActive && hybridResolution?.kind === 'ready' ? hybridResolution.hand : hand;
+
   const isStructureComplete = useMemo(() => {
     if (!isWinner) return false;
+    if (hybridActive) return hybridResolution?.kind === 'ready';
     const tempHand: MahjongHand = {
       ...hand,
       winningMethod: 'wall',
@@ -565,11 +608,13 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
     const represented = layoutMode === 'sets' ? sets.filter((item) => item.tile && item.kind === 'kong').length : 0;
     const physical = layoutMode === 'special' ? looseTiles.length : sets.filter((item) => item.tile).flatMap((item) => expandedTiles(item as HandSet)).length + (!isWinner ? remainingTiles.length : 0);
     return scoringRuntime ? scoringRuntime.validateHand({ evidence: tempHand, context: gameContext }).length === 0 : physical - represented === 14;
-  }, [hand, isWinner, gameContext, scoringRuntime, layoutMode, sets, looseTiles, remainingTiles]);
+  }, [hand, isWinner, gameContext, scoringRuntime, layoutMode, sets, looseTiles, remainingTiles, hybridActive, hybridResolution]);
 
   const score = useMemo(
-    () => scoringRuntime ? mapCurrentClassicalScoreBreakdown(scoringRuntime.scoreHand({ evidence: hand, context: gameContext })) : undefined,
-    [gameContext, hand, scoringRuntime],
+    () => hybridActive
+      ? hybridResolution?.kind === 'ready' ? mapCurrentClassicalScoreBreakdown(hybridResolution.scoreResult) : undefined
+      : scoringRuntime ? mapCurrentClassicalScoreBreakdown(scoringRuntime.scoreHand({ evidence: hand, context: gameContext })) : undefined,
+    [hybridActive, hybridResolution, gameContext, hand, scoringRuntime],
   );
   const mcrPass = useMemo(() => {
     if (!isMcr || compiledRuntime.grammar !== 'pattern-accumulator' || !mcrWinSource || !mcrResolvedWinEvent) return undefined;
@@ -591,7 +636,7 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
     layoutMode === 'special'
       ? looseTiles.length
       : enteredSets.flatMap(expandedTiles).length +
-        (!isWinner ? remainingTiles.length : 0);
+        ((!isWinner || hybridActive) ? remainingTiles.length : 0);
   const structuralTileCount = physicalTileCount - representedKongs;
   const structuralTarget = isWinner ? 14 : 13;
   const tileProgressLabel = `${structuralTileCount}/${structuralTarget} hand tiles${
@@ -694,7 +739,7 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
       return;
     }
     if (!canAddStandardTile(tile, destination)) return;
-    if (!isWinner && destination === 'remaining-tiles') {
+    if ((!isWinner || (!isMcr && layoutMode === 'sets')) && destination === 'remaining-tiles') {
       setRemainingTiles((current) => [...current, tile]);
       return;
     }
@@ -714,9 +759,9 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
   function canAddStandardTile(tile: PlayingTile, destination = selectedSet): boolean {
     if (layoutMode !== 'sets') return false;
     let candidateSets = enteredSets;
-    let candidateRemaining = !isWinner ? remainingTiles : [];
+    let candidateRemaining = (!isWinner || (!isMcr && layoutMode === 'sets')) ? remainingTiles : [];
 
-    if (!isWinner && destination === 'remaining-tiles') {
+    if ((!isWinner || (!isMcr && layoutMode === 'sets')) && destination === 'remaining-tiles') {
       candidateRemaining = [...candidateRemaining, tile];
     } else {
       const selected = sets.find((handSet) => handSet.id === destination);
@@ -806,7 +851,7 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
   }
 
   function applyScore() {
-    if (isMcr || !context || example || !score?.valid) return;
+    if (isMcr || !context || example || !score?.valid || (hybridActive && hybridResolution?.kind !== 'ready')) return;
       onClose({
       grammar: 'classical-points-doubles',
       playerId: context.playerId,
@@ -815,28 +860,29 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
       detailedHand: {
         source: 'detailed-scorer',
         hand: {
-          ...hand,
-          sets: hand.sets.map((handSet) => ({
+          ...scoredHand,
+          sets: scoredHand.sets.map((handSet) => ({
             ...handSet,
             tile: { ...handSet.tile },
           })),
-          bonusTiles: hand.bonusTiles.map((tile) => ({ ...tile })),
-          looseTiles: hand.looseTiles?.map((tile) => ({ ...tile })),
-          remainingTiles: hand.remainingTiles?.map((tile) => ({ ...tile })),
-          ungroupedBlankTiles: hand.ungroupedBlankTiles?.map((blank) => ({ ...blank })),
-          winningTileProvenance: hand.winningTileProvenance
+          bonusTiles: scoredHand.bonusTiles.map((tile) => ({ ...tile })),
+          looseTiles: scoredHand.looseTiles?.map((tile) => ({ ...tile })),
+          remainingTiles: scoredHand.remainingTiles?.map((tile) => ({ ...tile })),
+          ungroupedBlankTiles: scoredHand.ungroupedBlankTiles?.map((blank) => ({ ...blank })),
+          winningTileProvenance: scoredHand.winningTileProvenance
             ? {
-                tile: { ...hand.winningTileProvenance.tile },
-                target: { ...hand.winningTileProvenance.target },
+                tile: { ...scoredHand.winningTileProvenance.tile },
+                target: { ...scoredHand.winningTileProvenance.target },
               }
             : undefined,
-          winningEventEvidence: hand.winningEventEvidence
-            ? { ...hand.winningEventEvidence }
+          winningEventEvidence: scoredHand.winningEventEvidence
+            ? { ...scoredHand.winningEventEvidence }
             : undefined,
         },
         context: { ...gameContext },
         breakdown: score,
         finalScore: score!.finalScore,
+        ...(hybridActive && hybridResolution?.kind === 'ready' ? { interpretation: { schemaVersion: 1, c1: hybridResolution.provenance, factOrigins: { winningMethod: hybridMethodStatus, winningTile: winningTileProvenance ? 'confirmed' : 'absent', originalCall: 'default', playerWind: context.playerWind ? 'inherited' : 'absent', prevailingWind: context.prevailingWind ? 'inherited' : 'absent' } } satisfies HybridWinnerAudit } : {}),
       },
     });
   }
@@ -943,6 +989,15 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
   const mobileLiveResult = isMcr
     ? <details data-testid="mobile-live-result" className="mt-3 rounded-md border border-[#b8cdbf] bg-[#edf3ed] px-3 py-2 sm:hidden"><summary className="cursor-pointer text-[11px] font-semibold text-[#284d45]">{mcrResult?.kind === 'scored' ? `${mcrResult.basicPoints} Basic Points` : mcrResult?.kind === 'not-qualifying' ? 'Not qualifying' : 'MCR evidence needed'}</summary><div className="mt-2 text-[10px]">Fan · qualifying subtotal · Flowers · Basic Points</div></details>
     : score && <details data-testid="mobile-live-result" className="mt-3 rounded-md border border-[#b8cdbf] bg-[#edf3ed] px-3 py-2 sm:hidden"><summary className="cursor-pointer text-[11px] font-semibold text-[#284d45]">{score.valid ? `${score.finalScore} pts · ${score.basePoints} base · ${score.doubles} doubles${score.evidenceCompleteness === 'partial' ? ' · Partial evidence' : ''}` : structuralTileCount === structuralTarget && score.validationErrors[0] ? score.validationErrors[0] : tileProgressLabel}</summary><div className="mt-2 text-[10px] leading-4 text-[#66746e]">{score.valid ? score.evidenceCompleteness === 'partial' ? 'Score from entered evidence; add remaining tiles for whole-hand checks.' : 'Open for the full score breakdown below.' : 'Keep adding or correcting evidence; partial hands remain supported.'}</div>{hasContext && score.valid && <button type="button" data-testid="button-apply-score-compact" onClick={applyScore} className="mt-2 rounded bg-[#284d45] px-3 py-2 text-[11px] font-semibold text-[#f8f4e9]">Apply {score.finalScore} to {context.playerName}</button>}</details>;
+
+  const hybridResolutionPanel = hybridActive && <section data-testid="hybrid-winner-resolution" className="mt-3 rounded-md border border-[#d8ceb8] bg-[#fbf8ed] p-3 text-[11px]">
+    <h3 className="font-semibold text-[#284d45]">Reading the rest of these tiles</h3>
+    {hybridResolution?.kind === 'no-lawful-candidate' && <p className="mt-2">I can’t make a lawful winning hand from this evidence yet.</p>}
+    {hybridResolution?.kind === 'candidate-choice-required' && <><p className="mt-2">This hand can be read more than one way. Which matches the table?</p><div className="mt-2 flex flex-wrap gap-2">{hybridResolution.candidates.filter(({ id }) => !hybridRejectedCandidates.includes(id)).map((candidate) => <button key={candidate.id} type="button" onClick={() => { setHybridCandidateId(candidate.id); setHybridVisibility([]); setWinningTileProvenance(undefined); }} className="rounded border border-[#cfc3aa] px-2 py-1.5">{candidate.layout === 'irregular' ? 'Irregular hand' : `${candidate.inferredGroups.length} inferred · ${candidate.inferredGroups.map(({ kind, tile }) => `${kind} ${tileName(tile)}`).join(', ')}`}</button>)}</div></>}
+    {hybridResolution?.kind === 'facts-required' && <div className="mt-2"><p>Choose how each inferred group was exposed.</p>{hybridResolution.unresolvedFacts.map((fact) => <div key={fact.groupId} className="mt-2 flex flex-wrap items-center gap-2"><b>{hybridResolution.candidate.inferredGroups.find(({ id }) => id === fact.groupId)?.kind}</b>{fact.choices.map((value) => <button key={value} type="button" onClick={() => setHybridVisibility((current) => [...current.filter((item) => item.groupId !== fact.groupId), { groupId: fact.groupId, value }])} className="rounded border border-[#cfc3aa] px-2 py-1">{value === 'exposed' ? 'Exposed' : 'Concealed'}</button>)}{hybridResolution.candidate.inferredGroups.find(({ id }) => id === fact.groupId)?.kind === 'kong' && <button type="button" onClick={() => { setHybridRejectedCandidates((current) => [...new Set([...current, hybridResolution.candidate.id])]); setHybridCandidateId(undefined); setHybridVisibility([]); }} className="rounded border border-[#cfc3aa] px-2 py-1">Not a Kong</button>}</div>)}</div>}
+    {hybridResolution?.kind === 'ready' && <p className="mt-2"><b>How I read this hand</b><br/>{hybridResolution.provenance.explicitSetIds.length} groups entered · {hybridResolution.provenance.inferredGroups.length} inferred{hybridResolution.provenance.factResolutions.some(({ origin }) => origin === 'default') ? ' · exposed Kong assumed for now' : ''}</p>}
+    {hybridActive && hybridResolution?.kind === 'ready' && <label className="mt-2 block">Winning method{hybridMethodStatus === 'default' && ' · not confirmed'}<select aria-label="Hybrid winning method" value={hybridMethodStatus === 'unknown' ? '' : winningMethod} onChange={(event) => { if (!event.target.value) { setHybridMethodStatus('unknown'); return; } setWinningMethod(event.target.value as WinningMethod); setHybridMethodStatus('confirmed'); }} className="ml-2 rounded border border-[#cfc3aa] bg-white px-2 py-1"><option value="">I’m not sure</option>{availableWinningMethods.map(({ value, label }) => <option key={value} value={value}>{label}</option>)}</select></label>}
+  </section>;
 
   return (
     <div className="mahjong-shell">
@@ -1082,6 +1137,7 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
                     </section>
                     <section data-testid="hand-so-far" className="rounded-lg border border-[#e2d9c7] bg-[#fdfbf5] p-3 sm:p-4"><div className="mb-3 flex items-baseline justify-between"><div><div className="font-mono text-[10px] uppercase tracking-[.15em] text-[#ae6249]">Hand so far</div><h3 className="font-serif text-[20px] text-[#284d45]">Completed groups</h3></div><span className="font-mono text-[10px] text-[#66746e]">{enteredSets.length} entered</span></div><div className="space-y-2">{enteredSets.map((s) => <div key={s.id} data-testid={`card-set-${sets.findIndex((candidate) => candidate.id === s.id) + 1}`} className="flex items-center justify-between gap-2 rounded-md border border-[#e2d9c7] bg-[#fbf8ed] p-2"><button type="button" onClick={() => editSet(s.id)} className="flex min-w-0 flex-1 items-center gap-2 text-left"><div className="flex shrink-0 -space-x-3">{expandedTiles(s).map((tile, i) => <span key={i} className="first:ml-0"><TileFace tile={tile} compact /></span>)}</div><span className="min-w-0 text-[11px] font-semibold capitalize text-[#284d45]">{s.kind} · {s.visibility}<span className="block text-[10px] font-normal text-[#7a7769]">Tap to edit</span></span></button><button type="button" aria-label="Remove set" onClick={() => removeSet(s.id)} className="shrink-0 text-[#ae6249]"><X size={14}/></button></div>)}{enteredSets.length === 0 && <p className="rounded-md border border-dashed border-[#d7cbb5] p-3 text-[11px] text-[#7a7769]">Your confirmed groups will collect here. The picker stays ready above.</p>}</div>{!isMcr && !isWinner && <details data-testid="remaining-tiles-disclosure" open={remainingTilesExpanded} onToggle={(event) => setRemainingTilesExpanded(event.currentTarget.open)} className="mt-3 rounded-md border border-[#d8ceb8] bg-[#fbf8ed] px-3 py-2"><summary data-testid="button-select-remaining-tiles" className="flex cursor-pointer list-none items-center justify-between gap-2 text-[11px] font-semibold text-[#284d45]"><span>Remaining tiles <span className="font-normal text-[#66746e]">· {remainingTiles.length} entered</span></span><span className="flex min-w-0 items-center gap-1">{remainingTiles.slice(0, 5).map((tile, index) => { const isBlank = isUngroupedBlank("remaining", index); return <span key={tileKey(tile) + "-" + index} className="relative"><TileFace tile={tile} compact />{isBlank && <span className="absolute -right-1 -top-1 rounded bg-[#ae6249] px-1 text-[8px] font-bold text-white" aria-label={"Blank representing " + tileName(tile)}>B</span>}</span>; })}<span aria-hidden="true">▾</span></span></summary>{score!.evidenceCompleteness === 'partial' && <p data-testid="notice-partial-hand" className="mt-2 text-[10px] leading-4 text-[#66746e]"><strong className="text-[#284d45]">Partial evidence</strong> — add Remaining tiles only for whole-hand pattern or fishing checks. <a href="/help#partial-losing-hand" className="font-semibold text-[#284d45] underline decoration-[#cfa58f] underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">Partial-hand help</a></p>}<div className="mt-3 border-t border-[#e2d9c7] pt-3"><p className="mb-2 text-[10px] font-semibold text-[#ae6249]">Tap an entered tile to remove it.</p><div className="flex flex-wrap gap-2">{remainingTiles.map((tile, index) => { const isBlank = isUngroupedBlank('remaining', index); return <div key={`${tileKey(tile)}-${index}`} className="flex flex-col items-center gap-1"><TileFace tile={tile} compact actionLabel={`Remove ${tileName(tile)} from the remaining tiles`} actionTestId={`button-remove-remaining-tile-${index}`} onActivate={() => removeUngroupedTile('remaining', index)} />{handMode === 'goulash' && <button type="button" data-testid={`button-toggle-remaining-blank-${index}`} aria-pressed={isBlank} onClick={() => toggleUngroupedBlank('remaining', index)} className={`rounded px-1.5 py-0.5 text-[9px] font-semibold ${isBlank ? 'bg-[#ae6249] text-white' : 'border border-[#cfc3aa] text-[#66746e]'}`}>{isBlank ? 'Blank' : 'Mark blank'}</button>}</div>; })}</div><div className="mt-3 min-w-0 sm:hidden"><div className="grid min-w-0 grid-cols-2 gap-2"><label className="min-w-0 text-[10px] font-semibold text-[#66746e]">Family<select data-testid="select-remaining-family" value={remainingStructuredFamily} onChange={(event) => { const family = event.target.value as typeof remainingStructuredFamily; setRemainingStructuredFamily(family); setRemainingStructuredValue(family === 'wind' ? 'east' : family === 'dragon' ? 'red' : '1'); }} className="mt-1 w-full rounded border border-[#cfc3aa] bg-[#fdfbf5] px-2 py-2 text-[12px]"><option value="characters">Characters</option><option value="bamboo">Bamboo</option><option value="circles">Circles</option><option value="wind">Winds</option><option value="dragon">Dragons</option></select></label><label className="min-w-0 text-[10px] font-semibold text-[#66746e]">Value<select data-testid="select-remaining-value" value={remainingStructuredValue} onChange={(event) => setRemainingStructuredValue(event.target.value)} className="mt-1 w-full rounded border border-[#cfc3aa] bg-[#fdfbf5] px-2 py-2 text-[12px]">{remainingStructuredValues.map((value) => <option key={value} value={value}>{value}</option>)}</select></label></div>{remainingStructuredTile && <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-md border border-[#e2d9c7] bg-[#fdfbf5] p-2"><div className="flex min-w-0 flex-1 items-center gap-2"><TileFace tile={remainingStructuredTile} compact /><span className="min-w-0 break-words text-[11px] font-semibold text-[#284d45]">Loose · {tileName(remainingStructuredTile)}</span></div><button type="button" data-testid="button-add-remaining-tile" disabled={tileIsDisabled(remainingStructuredTile, 'remaining-tiles')} onClick={() => addTile(remainingStructuredTile, 'remaining-tiles')} className="shrink-0 rounded-md bg-[#284d45] px-3 py-2 text-[11px] font-semibold text-[#f8f4e9] disabled:opacity-40">Add tile</button></div>}<details className="mt-2"><summary className="cursor-pointer text-[11px] font-semibold text-[#66746e]">Pick visually instead</summary>{renderMobileTilePicker('Remaining tiles', 'remaining-tiles')}</details></div><div className="mt-3 hidden sm:block"><div className="mb-2 flex gap-1 overflow-x-auto">{suitOrder.map((suit) => <button type="button" key={suit} onClick={() => { setActiveSuit(suit); setShowAllTiles(false); }} className={`shrink-0 rounded px-3 py-1.5 font-mono text-[10px] uppercase ${activeSuit === suit && !showAllTiles ? 'bg-[#284d45] text-[#f8f4e9]' : 'text-[#7a7769] hover:bg-[#eee6d5]'}`}>{suitNames[suit]}</button>)}</div><div className="flex flex-wrap gap-2">{visibleTilesFor('remaining-tiles').map((tile) => <button type="button" key={tileKey(tile)} aria-label={`Add ${tileName(tile)}`} onClick={() => addTile(tile, 'remaining-tiles')} disabled={tileIsDisabled(tile, 'remaining-tiles')} className="rounded-[7px] disabled:opacity-35"><TileFace tile={tile} compact /></button>)}</div></div><button type="button" data-testid="button-return-normal-groups" onClick={() => setRemainingTilesExpanded(false)} className="mt-3 text-[11px] font-semibold text-[#66746e] underline decoration-[#cfc3aa] underline-offset-4">Return to normal group entry</button></div></details>}</section>
                   </div>
+                  {!isMcr && isWinner && layoutMode === 'sets' && <>{hybridResolutionPanel}{hybridActive ? <section data-testid="hybrid-rest-tile-entry" className="mt-3 rounded-lg border border-[#d8ceb8] bg-[#fbf8ed] p-3"><div className="mb-2 flex items-center justify-between"><b className="text-[11px] text-[#284d45]">Add the rest of the tiles</b><span className="text-[10px] text-[#66746e]">{remainingTiles.length} entered</span></div>{renderMobileTilePicker('Rest of the tiles', 'remaining-tiles')}<div className="hidden flex-wrap gap-2 sm:flex">{visibleTilesFor('remaining-tiles').map((tile) => <button key={tileKey(tile)} type="button" aria-label={`Add ${tileName(tile)} to rest of tiles`} onClick={() => addTile(tile, 'remaining-tiles')} disabled={tileIsDisabled(tile, 'remaining-tiles')} className="rounded disabled:opacity-35"><TileFace tile={tile} compact /></button>)}</div><div className="mt-2 flex flex-wrap gap-2">{remainingTiles.map((tile, index) => <button key={`${tileKey(tile)}-${index}`} type="button" aria-label={`Remove ${tileName(tile)} from rest tiles`} onClick={() => removeUngroupedTile('remaining', index)} className="rounded border border-[#cfc3aa] px-2 py-1">Remove {tileName(tile)}</button>)}</div></section> : <section data-testid="hybrid-rest-tile-entry-start" className="mt-3 rounded-lg border border-[#d8ceb8] bg-[#fbf8ed] p-3"><div className="flex flex-wrap items-center gap-3"><b className="text-[11px] text-[#284d45]">Add a group or add the rest of the tiles</b><button type="button" onClick={startNormalGroup} className="rounded border border-[#cfc3aa] px-2 py-1.5 text-[11px]">Add a group</button></div>{renderMobileTilePicker('Rest of the tiles', 'remaining-tiles')}<div className="mt-2 hidden flex-wrap gap-2 sm:flex">{visibleTilesFor('remaining-tiles').map((tile) => <button key={tileKey(tile)} type="button" aria-label={`Add ${tileName(tile)} to rest of tiles`} onClick={() => addTile(tile, 'remaining-tiles')} disabled={tileIsDisabled(tile, 'remaining-tiles')} className="rounded disabled:opacity-35"><TileFace tile={tile} compact /></button>)}</div></section>}</>}
                   <button
                     type="button"
                     data-testid="button-layout-special"
@@ -1105,9 +1161,9 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
                   </p>
 
                   <div className="space-y-4">
-                    {layoutMode === 'sets' ? (
+                    {layoutMode === 'sets' && !(hybridActive && hybridResolution?.kind === 'ready' && hybridResolution.hand.looseTiles?.length) ? (
                       <div className="flex flex-wrap gap-3">
-                        {sets.filter(s => s.tile !== null).map(set => (
+                        {(hybridActive && hybridResolution?.kind === 'ready' ? scoredHand.sets : sets.filter(s => s.tile !== null)).map(set => (
                           <div key={set.id} className="min-w-0 rounded-lg border border-[#e2d9c7] bg-[#fdfbf5] p-2 shadow-sm">
                             <div className="mb-1.5 font-mono text-[9px] uppercase tracking-[.12em] text-[#7a7769]">
                               {set.kind}
@@ -1150,7 +1206,7 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
                       </div>
                     ) : (
                       <div className="flex flex-wrap gap-2 rounded-lg border border-[#e2d9c7] bg-[#fdfbf5] p-3 shadow-sm">
-                        {looseTiles.map((tile, idx) => {
+                        {(hybridActive && hybridResolution?.kind === 'ready' ? scoredHand.looseTiles ?? [] : looseTiles).map((tile, idx) => {
                           const isSelected = winningTileProvenance?.target.type === 'loose-layout'
                             && tileKey(winningTileProvenance.tile) === tileKey(tile);
 
@@ -1459,6 +1515,9 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
                   </label>
                 </div>
               </section>
+              {!isMcr && isWinner && layoutMode === 'sets' && !hybridActive && <section data-testid="hybrid-rest-tile-entry-start" className="mt-3 rounded-lg border border-[#d8ceb8] bg-[#fbf8ed] p-3"><div className="flex flex-wrap items-center gap-3"><b className="text-[11px] text-[#284d45]">Add a group or add the rest of the tiles</b><button type="button" onClick={startNormalGroup} className="rounded border border-[#cfc3aa] px-2 py-1.5 text-[11px]">Add a group</button></div>{renderMobileTilePicker('Rest of the tiles', 'remaining-tiles')}<div className="mt-2 hidden flex-wrap gap-2 sm:flex">{visibleTilesFor('remaining-tiles').map((tile) => <button key={tileKey(tile)} type="button" aria-label={`Add ${tileName(tile)} to rest of tiles`} onClick={() => addTile(tile, 'remaining-tiles')} disabled={tileIsDisabled(tile, 'remaining-tiles')} className="rounded disabled:opacity-35"><TileFace tile={tile} compact /></button>)}</div></section>}
+              {hybridResolutionPanel}
+              {hybridActive && <section data-testid="hybrid-rest-tile-entry" className="mt-3 rounded-lg border border-[#d8ceb8] bg-[#fbf8ed] p-3"><div className="mb-2 flex items-center justify-between"><b className="text-[11px] text-[#284d45]">Add the rest of the tiles</b><span className="text-[10px] text-[#66746e]">{remainingTiles.length} entered</span></div>{renderMobileTilePicker('Rest of the tiles', 'remaining-tiles')}<div className="hidden flex-wrap gap-2 sm:flex">{visibleTilesFor('remaining-tiles').map((tile) => <button key={tileKey(tile)} type="button" aria-label={`Add ${tileName(tile)} to rest of tiles`} onClick={() => addTile(tile, 'remaining-tiles')} disabled={tileIsDisabled(tile, 'remaining-tiles')} className="rounded disabled:opacity-35"><TileFace tile={tile} compact /></button>)}</div><div className="mt-2 flex flex-wrap gap-2">{remainingTiles.map((tile, index) => <button key={`${tileKey(tile)}-${index}`} type="button" aria-label={`Remove ${tileName(tile)} from rest tiles`} onClick={() => removeUngroupedTile('remaining', index)} className="rounded border border-[#cfc3aa] px-2 py-1">Remove {tileName(tile)}</button>)}</div></section>}
               {mobileLiveResult}
 
               <section className="animate-rise animate-rise-delay-2 overflow-hidden rounded-xl bg-[#284d45] text-[#f8f4e9] shadow-[var(--shadow-lg)]">
