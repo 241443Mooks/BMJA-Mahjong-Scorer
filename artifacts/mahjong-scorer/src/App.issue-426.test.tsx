@@ -7,6 +7,7 @@ import { HandScorer } from './App';
 import { createBmjaGame } from './game/game';
 import { applyHandScorerResult, createHandScorerContext } from './game/hand-scorer-handoff';
 import { BMJA_PROFILE_REF } from './game/ruleset';
+import { BUZZARD_2000_PROFILE_REF } from './game/buzzard-2000';
 import { mapCurrentClassicalScoreBreakdown } from './rules-platform/current-runtime-compat';
 import { getCurrentCompiledRulesRuntime, initialiseCurrentRulesRuntimes } from './rules-platform/current-runtime-registry';
 import { dragon, set, suited, type MahjongHand } from './scoring';
@@ -29,14 +30,14 @@ const buriedHand = (origin?: 'confirmed' | 'unknown', selected = false): Mahjong
   sets: buriedSets, bonusTiles: [], isWinner: true, winningMethod: 'discard',
   ...(selected ? { winningTileProvenance: { tile: suited('bamboo', 2), target: { type: 'grouped-set' as const, setId: 'one' } }, winningTileEvidenceOrigin: origin ?? 'confirmed' as const } : origin ? { winningTileEvidenceOrigin: origin } : {}),
 });
-const recordFor = (hand: MahjongHand): DetailedHandRecord => {
-  const compiled = getCurrentCompiledRulesRuntime(BMJA_PROFILE_REF);
+const recordFor = (hand: MahjongHand, profile = BMJA_PROFILE_REF): DetailedHandRecord => {
+  const compiled = getCurrentCompiledRulesRuntime(profile);
   if (compiled.grammar !== 'classical-points-doubles') throw new Error('Expected Classical runtime');
   const result = compiled.runtime.scoreHand({ evidence: hand, context: contextFacts });
   const breakdown = mapCurrentClassicalScoreBreakdown(result);
   return { source: 'detailed-scorer', hand, context: contextFacts, breakdown, finalScore: breakdown.finalScore };
 };
-const scorerContext = (hand: MahjongHand) => createHandScorerContext(game, 'south', winning, recordFor(hand));
+const scorerContext = (hand: MahjongHand, profile = BMJA_PROFILE_REF) => createHandScorerContext(game, 'south', winning, recordFor(hand, profile));
 const renderScorer = (context: ReturnType<typeof scorerContext>, onClose = vi.fn()) => renderToStaticMarkup(
   <HandScorer context={context} onClose={onClose} standaloneHand={false} standaloneRulesProfile={BMJA_PROFILE_REF} onStandaloneRulesProfileChange={vi.fn()} />,
 );
@@ -173,6 +174,36 @@ describe('issue 426 winning-tile evidence integration', () => {
       }
     } finally {
       await act(async () => root.unmount()); container.remove(); vi.unstubAllGlobals();
+    }
+  });
+
+  it('keeps an absent material profile fact unresolved in a tracked game after mount', async () => {
+    vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
+    const previousGame = game;
+    game = createBmjaGame(players, seats, undefined, 'full-game', BUZZARD_2000_PROFILE_REF);
+    const handWithoutStandingEvidence: MahjongHand = {
+      ...buriedHand(),
+      winningMethod: 'wall',
+      classicalEvidence: { onlyPossibleWinningTile: false },
+      classicalEvidenceOrigins: { onlyPossibleWinningTile: 'confirmed' },
+    };
+    const container = document.createElement('div'); document.body.append(container);
+    const root = createRoot(container);
+    await act(async () => root.render(<HandScorer context={scorerContext(handWithoutStandingEvidence, BUZZARD_2000_PROFILE_REF)} onClose={vi.fn()} standaloneHand={false} standaloneRulesProfile={BUZZARD_2000_PROFILE_REF} onStandaloneRulesProfileChange={vi.fn()} />));
+    const click = async (element: Element | null) => { expect(element).not.toBeNull(); await act(async () => element!.dispatchEvent(new MouseEvent('click', { bubbles: true }))); };
+    try {
+      expect(handWithoutStandingEvidence.classicalEvidence?.standingHand).toBeUndefined();
+      expect(container.querySelector('[data-testid="standing-hand-no"]')).not.toBeNull();
+      expect(container.querySelector('[data-testid="current-score-value"]')).toBeNull();
+      expect(container.querySelector('[data-testid^="button-apply-score"]')).toBeNull();
+
+      await click(container.querySelector('[data-testid="standing-hand-no"]'));
+      expect(container.querySelector('[data-testid="current-score-value"]')).not.toBeNull();
+      const applyButton = container.querySelector<HTMLButtonElement>('[data-testid="button-apply-score-mobile"]');
+      expect(applyButton).not.toBeNull();
+      expect(applyButton?.disabled).toBe(false);
+    } finally {
+      await act(async () => root.unmount()); container.remove(); game = previousGame; vi.unstubAllGlobals();
     }
   });
 });

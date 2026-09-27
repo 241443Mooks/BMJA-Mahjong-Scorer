@@ -298,7 +298,7 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
   const [profileFactOrigins, setProfileFactOrigins] = useState<Record<'standingHand' | 'onlyPossibleWinningTile' | 'eastThirteenth', 'default' | 'confirmed' | 'unknown' | 'inherited'>>({
     standingHand: knownFactOrigin(initialHand?.classicalEvidenceOrigins?.standingHand) ?? (initialHand?.classicalEvidence?.standingHand !== undefined ? 'inherited' : 'default'),
     onlyPossibleWinningTile: knownFactOrigin(initialHand?.classicalEvidenceOrigins?.onlyPossibleWinningTile) ?? (initialHand?.classicalEvidence?.onlyPossibleWinningTile !== undefined ? 'inherited' : 'default'),
-    eastThirteenth: context && 'eastThirteenthConsecutiveMahjong' in context ? 'inherited' : knownFactOrigin(initialHand?.classicalEvidenceOrigins?.eastThirteenth) ?? 'default',
+    eastThirteenth: 'eastThirteenthConsecutiveMahjong' in initialContext && typeof initialContext.eastThirteenthConsecutiveMahjong === 'boolean' ? 'inherited' : knownFactOrigin(initialHand?.classicalEvidenceOrigins?.eastThirteenth) ?? 'default',
   });
   const [windFactOrigins, setWindFactOrigins] = useState<Record<'playerWind' | 'prevailingWind', 'default' | 'confirmed' | 'unknown' | 'inherited'>>({ playerWind: context ? 'inherited' : knownFactOrigin(initialHand?.classicalEvidenceOrigins?.playerWind) ?? 'default', prevailingWind: context ? 'inherited' : knownFactOrigin(initialHand?.classicalEvidenceOrigins?.prevailingWind) ?? 'default' });
   const [winningTileProvenance, setWinningTileProvenance] = useState<WinningTileProvenance | undefined>(
@@ -448,9 +448,9 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
     setStandingHand(savedHand?.classicalEvidence?.standingHand ?? false);
     setOnlyPossibleWinningTile(savedHand?.classicalEvidence?.onlyPossibleWinningTile ?? false);
     setProfileFactOrigins({
-      standingHand: context ? 'inherited' : knownFactOrigin(savedHand?.classicalEvidenceOrigins?.standingHand) ?? (savedHand?.classicalEvidence?.standingHand !== undefined ? 'inherited' : 'default'),
-      onlyPossibleWinningTile: context ? 'inherited' : knownFactOrigin(savedHand?.classicalEvidenceOrigins?.onlyPossibleWinningTile) ?? (savedHand?.classicalEvidence?.onlyPossibleWinningTile !== undefined ? 'inherited' : 'default'),
-      eastThirteenth: context ? 'inherited' : knownFactOrigin(savedHand?.classicalEvidenceOrigins?.eastThirteenth) ?? 'default',
+      standingHand: knownFactOrigin(savedHand?.classicalEvidenceOrigins?.standingHand) ?? (savedHand?.classicalEvidence?.standingHand !== undefined ? 'inherited' : 'default'),
+      onlyPossibleWinningTile: knownFactOrigin(savedHand?.classicalEvidenceOrigins?.onlyPossibleWinningTile) ?? (savedHand?.classicalEvidence?.onlyPossibleWinningTile !== undefined ? 'inherited' : 'default'),
+      eastThirteenth: 'eastThirteenthConsecutiveMahjong' in nextContext && typeof nextContext.eastThirteenthConsecutiveMahjong === 'boolean' ? 'inherited' : knownFactOrigin(savedHand?.classicalEvidenceOrigins?.eastThirteenth) ?? 'default',
     });
     setWindFactOrigins({
       playerWind: context ? 'inherited' : knownFactOrigin(savedHand?.classicalEvidenceOrigins?.playerWind) ?? 'default',
