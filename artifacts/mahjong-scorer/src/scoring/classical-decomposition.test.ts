@@ -46,6 +46,32 @@ describe('partial Classical decompositions', () => {
     expect(candidates.every(({ usedTileIndexes }) => new Set(usedTileIndexes).size === usedTileIndexes.length)).toBe(true);
   });
 
+  it('reuses a Chow signature for duplicate copies with stable complete source-index coverage', () => {
+    const tiles = [1, 1, 2, 2, 3, 3].map((rank) => suited('bamboo', rank as 1 | 2 | 3));
+    const first = partialClassicalDecompositions([], tiles);
+    const second = partialClassicalDecompositions([], tiles);
+    const candidate = first.find(({ sets }) => {
+      const groups = inferred(sets);
+      return groups.length === 2
+        && groups.every(({ kind, tile }) => kind === 'chow' && tileKey(tile) === tileKey(suited('bamboo', 1)));
+    });
+
+    expect(candidate).toBeDefined();
+    expect(inferred(candidate!.sets)).toHaveLength(2);
+    expect(candidate!.usedTileIndexes).toEqual([0, 1, 2, 3, 4, 5]);
+    expect(candidate!.unresolvedTileIndexes).toEqual([]);
+    expect(second).toEqual(first);
+    expect(second.map(({ sets, usedTileIndexes, unresolvedTileIndexes }) => ({
+      groups: inferred(sets).map(({ id, kind, tile }) => ({ id, kind, tile: tileKey(tile) })),
+      usedTileIndexes,
+      unresolvedTileIndexes,
+    }))).toEqual(first.map(({ sets, usedTileIndexes, unresolvedTileIndexes }) => ({
+      groups: inferred(sets).map(({ id, kind, tile }) => ({ id, kind, tile: tileKey(tile) })),
+      usedTileIndexes,
+      unresolvedTileIndexes,
+    })));
+  });
+
   it('retains unusable tiles as unmatched and does not exceed ordinary capacity', () => {
     const tiles = [
       ...repeated(wind('east'), 3), ...repeated(wind('south'), 3), ...repeated(wind('west'), 3),

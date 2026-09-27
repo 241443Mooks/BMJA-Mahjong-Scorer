@@ -204,7 +204,7 @@ export const partialClassicalDecompositions = (
       if (isPair ? existingPairs + groups.filter(({ kind }) => kind === 'pair').length >= 1
         : existingMelds + groups.filter(({ kind }) => kind !== 'pair').length >= 4) continue;
       const next = removeTiles(available, candidate.members);
-      if (next) search(index + 1, next, [...groups, candidate]);
+      if (next) search(index, next, [...groups, candidate]);
     }
   };
 
