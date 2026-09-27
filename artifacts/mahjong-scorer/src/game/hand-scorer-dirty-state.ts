@@ -12,13 +12,26 @@ export type HandScorerEditableState = {
 
 export function handScorerInitialBaseline(hand: MahjongHand | undefined, context: Pick<HandScorerEditableState, 'playerWind' | 'prevailingWind' | 'limit' | 'isWinner' | 'winningMethod' | 'originalCall' | 'hybridInterpretation'>, isClassical = false): HandScorerEditableState {
   const workspace = seedHandEntryWorkspace(hand, isClassical);
-  return {
-    sets: hand ? hand.sets.map((set) => ({ ...set })) : [{ id: 'set-1', kind: 'pung', visibility: 'concealed', tile: null }],
+  const workingDraft: EditableSet = { id: 'set-working', kind: 'pung', visibility: 'concealed', tile: null };
+  const sets: EditableSet[] = hand
+    ? [
+        ...hand.sets.map((set) => ({ ...set })),
+        ...(isClassical ? [workingDraft] : []),
+      ]
+    : [{ id: 'set-1', kind: 'pung', visibility: 'concealed', tile: null }];
+  const editableHand = {
+    sets,
     ...workspace,
     flowers: hand?.bonusTiles.filter((tile) => tile.family === 'flower').map((tile) => tile.number) ?? [], seasons: hand?.bonusTiles.filter((tile) => tile.family === 'season').map((tile) => tile.number) ?? [],
-    ...context,
-    winningTileProvenance: isClassical && hand?.looseTiles?.length && hand.winningTileProvenance?.target.type === 'loose-layout' ? undefined : hand?.winningTileProvenance,
-    winningEventEvidence: hand?.winningEventEvidence,
+  };
+  const winnerFacts = { winningTileProvenance: hand?.winningTileProvenance, winningEventEvidence: hand?.winningEventEvidence };
+  if (!isClassical) return { ...editableHand, ...context, ...winnerFacts };
+  const { hybridInterpretation, ...editableContext } = context;
+  return {
+    ...editableHand,
+    ...editableContext,
+    ...winnerFacts,
+    ...(hybridInterpretation !== undefined ? { hybridInterpretation } : {}),
   };
 }
 
