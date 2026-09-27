@@ -59,9 +59,12 @@ describe('C1 shared standalone scorer workspace', () => {
     expect(html.indexOf('About this calculator / How scoring works')).toBeGreaterThan(positions[9]);
     expect(html).not.toContain('data-testid="mobile-hand-context"');
     expect(html).toContain('data-testid="bonus-tile-strip"');
-    const bonusStrip = html.match(/<div data-testid="bonus-tile-strip"[^>]*>([\s\S]*?)<\/div>/)?.[0] ?? '';
-    expect(bonusStrip).toContain('overflow-x-auto');
-    expect(bonusStrip.match(/data-testid="button-(?:flower|season)-/g)).toHaveLength(8);
+    const flowerStrip = html.match(/<div data-testid="flower-tile-strip"[^>]*>([\s\S]*?)<\/div>/)?.[0] ?? '';
+    const seasonStrip = html.match(/<div data-testid="season-tile-strip"[^>]*>([\s\S]*?)<\/div>/)?.[0] ?? '';
+    expect(flowerStrip).toContain('overflow-x-auto');
+    expect(seasonStrip).toContain('overflow-x-auto');
+    expect(flowerStrip.match(/data-testid="button-flower-/g)).toHaveLength(4);
+    expect(seasonStrip.match(/data-testid="button-season-/g)).toHaveLength(4);
   });
 
   it('opens Classical standalone on a compact task header with supporting links after the scorer', () => {

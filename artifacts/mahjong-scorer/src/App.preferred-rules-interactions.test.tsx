@@ -80,7 +80,7 @@ describe('preferred profile flow interactions', () => {
       expect(container.querySelector('[data-testid="working-group-draft"]')).toBeNull();
 
       await click(container.querySelector('[data-testid="button-add-remaining-tiles-mode"]'));
-      expect(container.querySelector('[data-testid="remaining-tiles-disclosure"]')?.hasAttribute('open')).toBe(true);
+      expect(container.querySelector('[data-testid="remaining-tiles-disclosure"]')?.hasAttribute('open')).toBe(false);
       expect(container.querySelector('[data-testid="working-picker"] [data-testid="remaining-tile-picker-controls"]')).not.toBeNull();
       expect(container.querySelector('[data-testid="hand-so-far"] [data-testid="select-remaining-family"]')).toBeNull();
 
