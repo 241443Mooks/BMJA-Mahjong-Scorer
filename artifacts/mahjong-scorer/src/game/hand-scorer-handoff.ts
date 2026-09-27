@@ -181,6 +181,7 @@ export const reconcileDetailedHandsForOutcome = (
     delete scores[player.id];
     scoreRecords[player.id] = {
       ...record,
+      interpretation: undefined,
       requiresRecalculation: true,
       hand: {
         ...record.hand,

@@ -6,9 +6,10 @@ export type HandScorerEditableState = {
   ungroupedBlankTiles: UngroupedBlankTile[];
   flowers: number[]; seasons: number[]; playerWind: Wind; prevailingWind: Wind; limit?: number; isWinner: boolean;
   winningMethod: WinningMethod; originalCall: boolean; winningTileProvenance?: WinningTileProvenance; winningEventEvidence?: WinningEventEvidence;
+  hybridInterpretation?: unknown;
 };
 
-export function handScorerInitialBaseline(hand: MahjongHand | undefined, context: Pick<HandScorerEditableState, 'playerWind' | 'prevailingWind' | 'limit' | 'isWinner' | 'winningMethod' | 'originalCall'>): HandScorerEditableState {
+export function handScorerInitialBaseline(hand: MahjongHand | undefined, context: Pick<HandScorerEditableState, 'playerWind' | 'prevailingWind' | 'limit' | 'isWinner' | 'winningMethod' | 'originalCall' | 'hybridInterpretation'>): HandScorerEditableState {
   return {
     sets: hand ? hand.sets.map((set) => ({ ...set })) : [{ id: 'set-1', kind: 'pung', visibility: 'concealed', tile: null }],
     layoutMode: hand?.looseTiles?.length ? 'special' : 'sets', looseTiles: hand?.looseTiles?.map((tile) => ({ ...tile })) ?? [], remainingTiles: hand?.remainingTiles?.map((tile) => ({ ...tile })) ?? [],

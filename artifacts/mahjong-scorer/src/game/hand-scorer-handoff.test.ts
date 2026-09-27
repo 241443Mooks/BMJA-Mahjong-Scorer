@@ -504,6 +504,8 @@ describe('game hand-scorer handoff', () => {
       billWins,
       makeCalculatedResult('ben', 32, false, 'ben-non-winner'),
     ).draft;
+    const billRecord = draft.scoreRecords.bill;
+    if (billRecord?.source === 'detailed-scorer') billRecord.interpretation = { schemaVersion: 1, c1: { schemaVersion: 1, profile: { id: 'bmja', version: '1.0' }, candidateId: 'candidate-a', explicitSetIds: [], inferredGroups: [], factResolutions: [] }, factOrigins: { winningMethod: 'default' } };
 
     const changed = reconcileDetailedHandsForOutcome(game, draft, {
       type: 'win',
@@ -516,6 +518,7 @@ describe('game hand-scorer handoff', () => {
     expect(changed.scoreRecords.bill).toMatchObject({
       source: 'detailed-scorer',
       requiresRecalculation: true,
+      interpretation: undefined,
       hand: { isWinner: false, winningEventEvidence: undefined },
     });
     expect(changed.scoreRecords.jenn).toMatchObject({
