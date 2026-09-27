@@ -21,6 +21,12 @@ const knownWinner = (): HandSet[] => [
   set('west', 'pung', wind('west')), set('red', 'pung', dragon('red')),
   set('pair', 'pair', suited('bamboo', 9)),
 ];
+const unresolvedWinnerRemainder = (): PlayingTile[] => [
+  ...Array.from({ length: 3 }, () => wind('south')),
+  ...Array.from({ length: 3 }, () => wind('west')),
+  ...Array.from({ length: 3 }, () => dragon('red')),
+  ...Array.from({ length: 2 }, () => suited('bamboo', 9)),
+];
 const resolvedAll = (result: Extract<ReturnType<typeof resolveClassicalWinner>, { kind: 'facts-required' }>): ClassicalWinnerVisibilityResolution[] =>
   result.unresolvedFacts.map(({ groupId }) => ({ groupId, value: 'exposed' }));
 
@@ -50,6 +56,41 @@ describe('pure Classical complete-winner resolution', () => {
     expect(result.scoreResult.profile).toEqual(profile);
     expect(result.scoreResult.legal).toBe(true);
     expect(result.hand.remainingTiles).toBeUndefined();
+  });
+
+  it.each([
+    ['BMJA', BMJA_PROFILE_REF], ['Club', OUTSIDE_THE_BOX_PROFILE_REF],
+    ['Buzzard', BUZZARD_2000_PROFILE_REF], ['Western', WESTERN_TM_PROFILE_REF],
+  ] as const)('resolves mixed explicit and unresolved evidence through exact %s runtime identity', (_label, profile) => {
+    const explicitSets = [set('entered-east', 'pung', wind('east'), 'exposed')];
+    const input = inputFor({
+      profile,
+      explicitSets,
+      unresolvedTiles: unresolvedWinnerRemainder(),
+    });
+    const interpreted = interpretClassicalHand(input);
+    expect(interpreted.candidates.length).toBeGreaterThan(0);
+    const candidate = interpreted.candidates[0]!;
+    expect(candidate.profile).toEqual(profile);
+    expect(candidate.explicitSets[0]).toBe(explicitSets[0]);
+    expect(candidate.inferredGroups.length).toBeGreaterThan(0);
+
+    const lawfulAssignment = candidate.lawfulVisibilityAssignments[0]!;
+    const result = resolveClassicalWinner(input, {
+      candidateId: candidate.id,
+      visibility: Object.entries(lawfulAssignment).map(([groupId, value]) => ({ groupId, value })),
+    });
+    expect(result.kind).toBe('ready');
+    if (result.kind !== 'ready') return;
+
+    const runtime = getCurrentCompiledRulesRuntime(profile);
+    if (runtime.grammar !== 'classical-points-doubles') throw new Error('Expected Classical runtime');
+    expect(result.scoreResult.profile).toEqual(profile);
+    expect(result.scoreResult).toEqual(runtime.runtime.scoreHand({ evidence: result.hand, context }));
+    expect(result.hand.sets[0]).toBe(explicitSets[0]);
+    expect(result.provenance.profile).toEqual(profile);
+    expect(result.provenance.explicitSetIds).toEqual(['entered-east']);
+    expect(result.provenance.inferredGroups).toEqual(candidate.inferredGroups);
   });
 
   it('keeps multiple structural candidates unranked until a candidate is selected', () => {
