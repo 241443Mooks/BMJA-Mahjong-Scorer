@@ -1,4 +1,4 @@
-import { beforeAll, describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 import { dragon, set, suited, wind, type HandSet, type PlayingTile } from '../scoring';
 import { BMJA_PROFILE_REF } from '../game/ruleset';
 import { BUZZARD_2000_PROFILE_REF } from '../game/buzzard-2000';
@@ -90,6 +90,33 @@ describe('pure Classical complete-winner resolution', () => {
     const concealed = resolveClassicalWinner(input, { candidateId: chosen.id, visibility: [{ groupId: chosen.inferredGroups.find(({ kind }) => kind === 'kong')!.id, value: 'concealed' }] });
     expect(concealed.kind).toBe('ready');
     if (concealed.kind === 'ready') expect(concealed.scoreResult.result).not.toEqual(result.scoreResult.result);
+  });
+
+  it('holds supplied winner evidence constant while evaluating the inferred Kong default', () => {
+    const explicitSets = [
+      set('east', 'pung', wind('east')), set('south', 'pung', wind('south')),
+      set('west', 'pung', wind('west')), set('pair', 'pair', suited('bamboo', 9)),
+    ];
+    const input = inputFor({ explicitSets, unresolvedTiles: Array.from({ length: 4 }, () => dragon('red')) });
+    const candidates = interpretClassicalHand(input);
+    const chosen = candidates.candidates.find(({ inferredGroups }) => inferredGroups.some(({ kind }) => kind === 'kong'));
+    if (!chosen) throw new Error('Expected inferred Kong candidate');
+    const compiled = getCurrentCompiledRulesRuntime(BMJA_PROFILE_REF);
+    if (compiled.grammar !== 'classical-points-doubles') throw new Error('Expected Classical runtime');
+    const scoreHand = vi.spyOn(compiled.runtime, 'scoreHand');
+    try {
+      const result = resolveClassicalWinner(input, {
+        candidateId: chosen.id,
+        evidence: { winningMethod: 'wall', originalCall: true },
+      });
+      expect(result.kind).toBe('ready');
+      expect(scoreHand.mock.calls.length).toBeGreaterThanOrEqual(3);
+      expect(scoreHand.mock.calls.every(([request]) =>
+        request.evidence.winningMethod === 'wall' && request.evidence.originalCall === true,
+      )).toBe(true);
+    } finally {
+      scoreHand.mockRestore();
+    }
   });
 
   it('preserves supplied winner evidence and rejects MCR at the interpreter boundary', () => {
