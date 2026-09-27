@@ -92,7 +92,7 @@ describe('public game route seam', () => {
 
   it.each(['/game/foo', '/game/mcr/foo'])('%s is not a game route and does not fall back to British', (path) => {
     const html = renderToStaticMarkup(<RouteContent path={path} />);
-    expect(html).toContain('404 Page Not Found');
+    expect(html).toContain('404 · Page not found');
     expect(html).not.toContain('British / BMJA-style');
   });
 });
