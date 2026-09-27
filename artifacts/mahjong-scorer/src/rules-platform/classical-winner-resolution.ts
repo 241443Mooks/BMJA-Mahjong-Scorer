@@ -55,6 +55,7 @@ export const resolveClassicalWinner = (
 
   const compiled = getCurrentCompiledRulesRuntime(input.profile);
   if (compiled.grammar !== 'classical-points-doubles') throw new Error('CLASSICAL_WINNER_RUNTIME_REQUIRED');
+  const withWinnerEvidence = (hand: MahjongHand): MahjongHand => ({ ...hand, ...(options.evidence ?? {}) });
   const supplied = new Map<string, Visibility>();
   for (const resolution of options.visibility ?? []) {
     const fact = candidate.unresolvedFacts.find(({ groupId }) => groupId === resolution.groupId);
@@ -73,8 +74,8 @@ export const resolveClassicalWinner = (
     const fact = candidate.unresolvedFacts.find(({ groupId }) => groupId === group.id);
     if (!fact?.choices.includes('exposed') || !fact.choices.includes('concealed')) continue;
     const base = Object.fromEntries([...supplied, ...defaults]);
-    const exposedHand = projectClassicalInterpretation(input, candidate, { ...base, [group.id]: 'exposed' });
-    const concealedHand = projectClassicalInterpretation(input, candidate, { ...base, [group.id]: 'concealed' });
+    const exposedHand = withWinnerEvidence(projectClassicalInterpretation(input, candidate, { ...base, [group.id]: 'exposed' }));
+    const concealedHand = withWinnerEvidence(projectClassicalInterpretation(input, candidate, { ...base, [group.id]: 'concealed' }));
     const context: GameContext = input.context;
     const exposed = scoreValue(compiled.runtime.scoreHand({ evidence: exposedHand, context }));
     const concealed = scoreValue(compiled.runtime.scoreHand({ evidence: concealedHand, context }));
@@ -89,11 +90,10 @@ export const resolveClassicalWinner = (
     Object.keys(assignment).length === candidate.unresolvedFacts.length,
   );
   if (!lawfulAssignment) throw new Error('CLASSICAL_WINNER_UNLAWFUL_VISIBILITY_ASSIGNMENT');
-  let hand = projectClassicalInterpretation(input, candidate, visibility);
+  const hand = withWinnerEvidence(projectClassicalInterpretation(input, candidate, visibility));
   if (hand.remainingTiles?.length || (candidate.layout === 'grouped' && candidate.unresolvedTileIndexes.length > 0)) {
     throw new Error('CLASSICAL_WINNER_PROJECTION_HAS_UNCONSUMED_TILES');
   }
-  hand = { ...hand, ...(options.evidence ?? {}) };
   const validationErrors = compiled.runtime.validateHand({ evidence: hand, context: input.context });
   const scoreResult = compiled.runtime.scoreHand({ evidence: hand, context: input.context });
   if (validationErrors.length || !scoreResult.legal) return { kind: 'runtime-rejected', hand, scoreResult };
