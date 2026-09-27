@@ -1,106 +1,158 @@
 # Platform + ruleset build sequence
 
-Status: **readiness plan**  
-Programme: #105
+Status: **historical/readiness guide — refreshed 27 September 2026**  
+Live programme authority: #105  
+Current restart sequence: `WHATS_NEXT_ROADMAP.md`
 
-## Goal
+## Purpose
 
-Coordinate the shared platform work (i18n, account foundation, cloud saves) with the next three rules programmes without turning them into one monolithic build.
+This file retains the architectural sequencing logic that helped Mahjong Reference grow from one Classical scorer into a multi-grammar rules platform. It is no longer the live task list.
 
-## Sequence
+Current production truth:
 
-### Foundation wave
+- shared rules platform — **complete and live**;
+- Buzzard 2000 — **complete and live**;
+- MCR / WMO 2006 `0.1` — **complete and live**, with experienced-player review remaining before a future `1.0`;
+- Classical hybrid evidence-first hand entry — **complete** under #386;
+- EMA Riichi 2025 source/correctness corpus — complete, runtime not implemented;
+- #399 machine-readable rules truth layers — current architecture gate before Riichi runtime work;
+- #434 American/NMJL-style — new umbrella at evidence/architecture preflight stage.
 
-1. English-only i18n foundation.
-2. Local language preference.
-3. Cloudflare/Hono + D1/Drizzle foundation.
-4. Better Auth Email OTP.
-5. Sync `preferredLocale` across sessions/devices.
-6. Stop and inspect the actual platform before game-data sync.
-7. Neutral cross-profile cloud-game envelope + current-profile codec.
+For current priorities, use #105 and `WHATS_NEXT_ROADMAP.md` rather than treating the older sequence below as an execution queue.
 
-### Rules wave
+## Durable sequencing principle
 
-1. **Buzzard 2000** — first adjacent classical-family composition proof.
-2. **MCR / WMO 2006** — first materially different scoring grammar.
-3. **EMA Riichi 2025** — scoring + richer game-state architecture after the shared seams have been exercised.
-
-The architecture intent is: use the least-different profile first to prove that our rules are genuinely composable, then test a different scoring grammar, then tackle Riichi's larger state model.
-
-## What can progress in parallel before coding
-
-Buzzard:
-
-- source PDF recovered and hashed;
-- exact point table, winner bonuses, doubles, limit list, settlement, progression, liability and penalties are now page-bound in `docs/rules/BUZZARD_2000_RULE_EVIDENCE.md`;
-- architecture crosswalk has been corrected to the actual product scope: score the physical game and run the table, do not simulate play;
-- prepare source-linked golden fixtures for #217;
-- explicitly resolve/pin the cumulative complete-Flower/Season + own-tile double fixture rather than silently inheriting BMJA bouquet behaviour.
-
-MCR:
-
-- transcribe all 81 fan from the pinned Green Book;
-- bind exclusions/non-combination rules;
-- prepare official/source scorer fixtures.
-
-Riichi:
-
-- build source-linked yaku/fu/payment fixtures;
-- retain the now-resolved architecture decisions;
-- recruit experienced EMA players for later terminology/table-flow validation.
-
-## Shared architecture changes should be evidence-led
-
-Do not build a universal rules framework speculatively.
-
-Only generalise a seam when at least two profiles demonstrate the need.
-
-Examples already justified by current + future profiles:
-
-- stable profile id/version separate from display language;
-- profile-discriminated scoring result;
-- neutral cloud envelope + profile codec;
-- generic payer→payee settlement transactions;
-- profile-owned game/progression/completion state;
-- richer round outcomes than single winner/draw where a future profile proves that need.
-
-Examples **not** justified yet:
-
-- CRDT game history;
-- universal wall simulator;
-- one generic rule-expression language for every Mahjong discipline;
-- one giant event log requiring every tile draw/discard;
-- generic entitlement framework beyond current Plus need.
-
-## Readiness checkpoints
-
-### Checkpoint A — platform spine
-
-A user can choose a locale locally, sign in by OTP, persist the preference to their account and recover it in another browser while all free play still works offline/backend-down.
-
-### Checkpoint B — cloud contract
-
-A current supported game can round-trip through the neutral cloud envelope and replay exactly, with revision conflict protection.
-
-### Checkpoint C — Buzzard
-
-Buzzard proves the existing classical engine can be composed rather than copied.
-
-1. **C1 evidence** — COMPLETE: primary PDF snapshot recovered; executable score/double/limit/settlement/progression/penalty facts are page-bound.
-2. **C2 profile composition** — #217: KEEP existing classical rules, ADD Buzzard-only rules, AMEND the few divergent predicates/values, REMOVE BMJA-only behaviour, and prove profile isolation.
-3. **C3 table-companion seams** — support Buzzard's non-winner Wind/Dragon limit result and profile-specific incident/liability settlement using the existing transaction infrastructure.
-4. **C4 public profile** — profile-picker/reference/help exposure after source fixtures and cross-profile regression pass.
-
-There is **no Buzzard wall/claim gameplay simulator checkpoint** in the current product scope. Physical-play procedure belongs in reference/help unless a later product decision changes that scope.
-
-### Checkpoint D — MCR
-
-The platform can present/store a non-classical score result, settle it and progress a game without pretending it has British points/doubles.
-
-### Checkpoint E — Riichi
-
-The platform supports the Riichi scoring/settlement/progression evidence actually needed by a physical-table companion; do not default to simulating play unless the product requires it.
-
-## Rule
+The useful principle from the original plan remains:
 
 > **Build up, discover, then generalise only what the next real profile proves we need.**
+
+That approach has now been exercised successfully:
+
+1. adjacent Classical profiles proved composable profile variation;
+2. Buzzard pressured Classical configuration without requiring a copied scorer;
+3. MCR proved a materially different `pattern-accumulator` grammar;
+4. #386 proved that evidence-first hand interpretation can remain exact-profile and fail closed;
+5. the next architecture step is to make source/evidence/treatment/runtime ownership machine-readable before adding a larger new family.
+
+## Current rules-family sequence
+
+### Existing production families
+
+#### Classical points + doubles
+
+Current executable profiles include:
+
+- British / BMJA-style;
+- Western — Thompson & Maloney;
+- configured Club;
+- Buzzard 2000.
+
+They share a Classical grammar while retaining exact profile identity, values, treatments, settlement and progression differences.
+
+#### Pattern accumulator
+
+MCR / WMO 2006 `0.1` is the first complete executable profile on this grammar.
+
+It remains Provisional pending experienced-player terminology/table-flow review, not because the runtime programme is unfinished.
+
+### Architecture gate — #399
+
+Before Riichi, prove one governed machine-readable chain:
+
+```text
+source
+→ evidence claim
+→ semantic identity
+→ exact profile treatment
+→ executable runtime
+→ decision trace/result
+→ reference/comparator/Table Companion/AI projection
+```
+
+Start vertically rather than migrating everything at once:
+
+- Truth Model v0;
+- Classical Special Hands proof;
+- machine-readable source/evidence continuity;
+- integrity/impact gates;
+- MCR second-family proof;
+- pre-Riichi readiness gate.
+
+### EMA Riichi 2025
+
+The source/correctness corpus is complete. Runtime implementation starts only after #399 and a fresh preflight against the resulting production architecture.
+
+Planned sequence:
+
+```text
+#399 readiness gate
+→ fresh Riichi preflight
+→ optional bounded grammar/runtime seam
+→ #262 scoring core
+→ optional neutral state seam
+→ #263 settlement/progression/finalisation
+→ #264 public integration
+→ experienced EMA/European Riichi review before 1.0
+```
+
+The preflight must prove whether current architecture can express the actual requirements, including richer outcomes, honba, riichi pot and profile-owned table state. Do not generalise speculatively.
+
+### American / NMJL-style — #434
+
+This is a separate family track, currently at N0 evidence/architecture preflight.
+
+Product boundary:
+
+> **Use the annual card; do not become the annual card.**
+
+The programme may source and implement general American/NMJL-style mechanics and work alongside a player's annual card. It must not reproduce, transcribe, OCR, scrape or encode a current annual card.
+
+N0 should test whether the existing target-family architecture can support a card-external/manual-target evidence path, including first-class physical Jokers and winner-only scoring around a player-supplied printed value. Do not create another scoring grammar unless real evidence proves one is required.
+
+## Shared platform changes remain evidence-led
+
+Already justified shared seams include:
+
+- stable profile id/version separate from display language;
+- exact resolved profile artifacts and fingerprints;
+- profile-discriminated scoring results;
+- generic payer→payee settlement transactions;
+- profile-owned progression/game-end state;
+- richer outcome/state contracts where a real profile demonstrates the need;
+- source/evidence/treatment identity that can be joined and audited through #399.
+
+Still avoid speculative infrastructure such as:
+
+- universal wall simulation;
+- one generic rule-expression language for every Mahjong discipline;
+- a mandatory tile-by-tile event log;
+- a second hand-maintained rules facts database;
+- generic architecture that exists only because a future ruleset might need it.
+
+## Related projections
+
+The same governed rules truth should support, without duplication:
+
+- #296 rules comparator;
+- #405 single-profile ruleset report;
+- #251 structured reference / Encyclopaedia;
+- exact scorer → rule/explanation links;
+- future profile/version diagnostics;
+- bounded voice/AI explanation packets.
+
+## Current operational rule
+
+For a new or expanded rules family:
+
+```text
+source/evidence review
+→ architecture preflight against current main
+→ smallest proved substrate change, if any
+→ exact executable profile/runtime
+→ fixtures + parity/isolation proof
+→ settlement/progression
+→ public integration
+→ human terminology/table-flow review where required
+```
+
+Stop on contradictions instead of filling gaps from memory or a neighbouring Mahjong tradition.
