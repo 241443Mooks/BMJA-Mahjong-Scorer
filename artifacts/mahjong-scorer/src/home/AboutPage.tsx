@@ -23,10 +23,6 @@ export function AboutPage() {
       <main className="mx-auto max-w-[1100px] px-5 py-9 lg:px-8 lg:py-14">
         <article className="overflow-hidden rounded-2xl border border-[#d8ceb8] bg-[#fbf8ed] shadow-[var(--shadow-sm)]">
           <header className="border-b border-[#ddd3bf] px-5 py-10 sm:px-8 sm:py-14 lg:px-12 lg:py-16">
-            <div className="mb-4 flex items-center gap-3">
-              <div className="fine-rule w-10" />
-              <span className="font-mono text-[11px] uppercase tracking-[.2em] text-[#ae6249]">Independent project</span>
-            </div>
             <h1 className="max-w-[820px] font-serif text-[clamp(38px,6vw,62px)] leading-[.98] text-[#284d45]">
               About Mahjong Reference
             </h1>
@@ -70,38 +66,17 @@ export function AboutPage() {
 
           <section className="border-b border-[#ddd3bf] px-5 py-10 sm:px-8 sm:py-12 lg:px-12">
             <div className="max-w-[760px] space-y-5 text-[15px] leading-7 text-[#596b65]">
-              <h2 className="font-serif text-[34px] leading-tight text-[#284d45]">Where this might go</h2>
-              <p>I don&apos;t really know yet.</p>
-              <p>Right now, Mahjong Reference can help score hands, explain scores, track a game and explore different rules.</p>
-              <p>I have plenty of ideas about where it could go next, but I&apos;m deliberately treating them as ideas rather than destiny.</p>
-              <p>The useful test is whether real Mahjong players actually find any of this helpful.</p>
-              <p>So for now I&apos;m building, checking, learning, correcting things and seeing which questions are worth following.</p>
-              <p>If it helps someone else at their table, brilliant.</p>
-              <p>If it leads me to another question, that seems to be how this whole thing works.</p>
+              <h2 className="font-serif text-[34px] leading-tight text-[#284d45]">Where it is now</h2>
+              <p>Mahjong Reference can score hands, explain scores, track a game and help you explore different rules.</p>
             </div>
           </section>
 
           <section className="px-5 py-8 sm:px-8 sm:py-10 lg:px-12">
             <div className="max-w-[760px]">
-              <h2 className="font-serif text-[29px] leading-tight text-[#284d45]">A few practical things</h2>
-              <div className="mt-5 space-y-5 text-[14px] leading-6 text-[#596b65]">
-                <section>
-                  <h3 className="font-semibold text-[#284d45]">Independent project</h3>
-                  <p className="mt-1">Mahjong Reference is an independent project. It is not backed by, sponsored by or affiliated with a Mahjong association, society or commercial organisation. It exists because I got curious and kept going.</p>
-                  <p className="mt-2">Where I use published rules or other people&apos;s work, I try to make the source and relationship clear. That does not imply endorsement in either direction. In particular, <strong className="text-[#284d45]">Mahjong Reference is not an official British Mah-Jong Association product and does not claim BMJA endorsement.</strong></p>
-                </section>
-                <section>
-                  <h3 className="font-semibold text-[#284d45]">Rules and sources</h3>
-                  <p className="mt-1">The <a href="/rules" className="font-semibold text-[#284d45] underline decoration-[#cfa58f] underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">Rules area</a> shows the profiles currently supported, their boundaries and the sources used. Support and confidence vary between rulesets. I would rather say something is not yet known than invent certainty to fill the gap.</p>
-                </section>
-                <section>
-                  <h3 className="font-semibold text-[#284d45]">No account required</h3>
-                  <p className="mt-1">Ordinary scoring and game tracking happen in your browser. In-progress recovery is stored locally on your device rather than in a Mahjong Reference account.</p>
-                </section>
-                <section>
-                  <h3 className="font-semibold text-[#284d45]">Licensing</h3>
-                  <p className="mt-1">The project&apos;s original software code is licensed under the MIT License. Third-party material keeps its own licence.</p>
-                </section>
+              <h2 className="font-serif text-[29px] leading-tight text-[#284d45]">Rules and sources</h2>
+              <div className="mt-5 space-y-3 text-[14px] leading-6 text-[#596b65]">
+                <p>The <a href="/rules" className="font-semibold text-[#284d45] underline decoration-[#cfa58f] underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">Rules area</a> shows the versions currently supported, what is known about them and the sources used.</p>
+                <p>Where sources disagree or something is not yet known, I would rather show that uncertainty than invent certainty to fill the gap.</p>
               </div>
 
               <div className="mt-6 grid gap-4 sm:grid-cols-2">
