@@ -32,7 +32,7 @@ function installBrowser(search = '', storedProfile: typeof WESTERN_TM_PROFILE_RE
     setItem: (key: string, value: string) => values.set(key, value),
     removeItem: (key: string) => values.delete(key),
   };
-  vi.stubGlobal('window', { localStorage, location: { search } });
+  vi.stubGlobal('window', { localStorage, location: { search }, setTimeout, clearTimeout });
   return { localStorage, values };
 }
 
@@ -75,15 +75,19 @@ describe('preferred profile flow interactions', () => {
     try {
       await click(container.querySelector('[data-testid="button-add-working-group"]'));
       expect(container.querySelector('[data-testid="card-set-1"]')).not.toBeNull();
+      expect(container.querySelector('[data-testid="completed-group-tiles"]')?.className).toContain('flex-wrap');
 
       await click(container.querySelector('[data-testid="card-set-1"] button'));
       expect(container.querySelector('[data-testid="working-group-draft"]')).toBeNull();
 
       await click(container.querySelector('[data-testid="button-add-remaining-tiles-mode"]'));
-      expect(container.querySelector('[data-testid="remaining-tiles-disclosure"]')?.hasAttribute('open')).toBe(true);
+      expect(container.querySelector('[data-testid="remaining-tiles-disclosure"]')?.hasAttribute('open')).toBe(false);
+      expect(container.querySelector('[data-testid="working-picker"] [data-testid="remaining-tile-picker-controls"]')).not.toBeNull();
+      expect(container.querySelector('[data-testid="hand-so-far"] [data-testid="select-remaining-family"]')).toBeNull();
 
       await click(container.querySelector('[data-testid="button-add-group-mode"]'));
       expect(container.querySelector('[data-testid="button-add-group-mode"]')?.getAttribute('aria-pressed')).toBe('true');
+      expect(container.querySelector('[data-testid="remaining-tile-picker-controls"]')).toBeNull();
       expect(container.querySelector('[data-testid="working-group-draft"]')).not.toBeNull();
       expect(container.querySelector('[data-testid="select-working-set-type"]')).not.toBeNull();
       expect(container.querySelector('[data-testid="select-working-family"]')).not.toBeNull();
@@ -93,13 +97,22 @@ describe('preferred profile flow interactions', () => {
     }
   });
 
-  it('stores a standalone hand picker choice while retaining the existing profile transition cleanup seam', () => {
+  it('reveals the existing standalone rules picker on demand and retains profile transition cleanup', async () => {
     const { values } = installBrowser();
-    setupMarkup();
+    vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
+    const container = document.createElement('div');
+    document.body.append(container);
+    const root = createRoot(container);
+    await act(async () => root.render(<App initialView="hand" standaloneHand />));
+    expect(container.querySelector('[data-testid="standalone-rules-disclosure"]')).toBeNull();
+    await act(async () => container.querySelector('button[aria-controls="standalone-hand-rules"]')?.dispatchEvent(new MouseEvent('click', { bubbles: true })));
     const handPicker = interaction.pickers.find(({ prompt }) => prompt === 'Which rules are you scoring?');
     expect(handPicker).toBeDefined();
-    handPicker!.onSelect(OUTSIDE_THE_BOX_PROFILE_REF);
+    await act(async () => handPicker!.onSelect(OUTSIDE_THE_BOX_PROFILE_REF));
     expect(values.get(PREFERRED_RULES_PROFILE_STORAGE_KEY)).toBe(JSON.stringify(OUTSIDE_THE_BOX_PROFILE_REF));
+    expect(container.querySelector('[data-testid="active-profile"]')?.textContent).toBe(`${OUTSIDE_THE_BOX_PROFILE_REF.id}@${OUTSIDE_THE_BOX_PROFILE_REF.version}`);
+    await act(async () => root.unmount());
+    container.remove();
 
     const transition = transitionStandaloneHandProfile({
       shared: { sets: [{ ...set('physical-pung', 'pung', suited('characters', 5), 'exposed'), blankTileIds: ['old-blank'] }], layoutMode: 'sets', looseTiles: [suited('circles', 8)], flowers: [], seasons: [], winningTileProvenance: undefined },

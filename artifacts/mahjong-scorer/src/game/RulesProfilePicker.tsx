@@ -42,9 +42,9 @@ function CompactRulesChoiceList({ prompt, choices, onSelect, disabled = false }:
   </fieldset>;
 }
 
-export function ActiveRules({ profile, inherited = false, locked = false }: { profile: RulesProfileRef; inherited?: boolean; locked?: boolean }) {
+export function ActiveRules({ profile, inherited = false, locked = false, compact = false }: { profile: RulesProfileRef; inherited?: boolean; locked?: boolean; compact?: boolean }) {
   const descriptor = descriptorForRulesProfile(profile);
-  return <p data-testid="active-rules" className="mt-3 text-[13px] leading-6 text-[#284d45]"><strong>Rules: {descriptor.title}.</strong>{inherited ? ' Inherited from this game.' : locked ? ' Fixed for this game.' : ''}</p>;
+  return <p data-testid="active-rules" className={`${compact ? 'min-w-0 text-[12px] leading-5' : 'mt-3 text-[13px] leading-6'} text-[#284d45]`}><strong>Rules: {descriptor.title}.</strong>{inherited ? ' Inherited from this game.' : locked ? ' Fixed for this game.' : ''}</p>;
 }
 
 export function RulesProfilePicker({ prompt, selectedProfile, onSelect, surface = 'game' }: { prompt: string; selectedProfile: RulesProfileRef; onSelect: (profile: RulesProfileRef) => void; surface?: 'hand' | 'game' }) {

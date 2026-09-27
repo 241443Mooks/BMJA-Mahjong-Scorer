@@ -20,8 +20,6 @@ describe('C1 shared standalone scorer workspace', () => {
     expect(html).toMatch(/data-testid="working-picker" class="min-w-0 /);
     expect(html).toContain('grid min-w-0 grid-cols-2 gap-2');
     expect(html).toContain('flex flex-wrap items-center justify-between gap-2');
-    expect(html).toContain('mt-3 min-w-0 sm:hidden');
-    expect(html).toContain('flex min-w-0 flex-1 items-center gap-2');
     expect(html).toMatch(/class="mt-3 min-w-0 max-w-full [^"]*" data-testid="mobile-tile-picker"/);
     expect(html).toContain('flex gap-2 overflow-x-auto pb-1');
   });
@@ -46,15 +44,57 @@ describe('C1 shared standalone scorer workspace', () => {
     expect(gamePicker).toContain('rules-card-mcr');
   });
 
-  it('places the standalone hand, bonuses, rules, MCR context and result in hand-first order', () => {
+  it('places MCR hand entry first and keeps the collapsed picker and supporting material below the task header', () => {
     const html = renderToStaticMarkup(<HandScorer context={null} onClose={vi.fn()} standaloneHand standaloneRulesProfile={mcrProfile} onStandaloneRulesProfileChange={vi.fn()} />);
-    const order = ['working-picker', 'hand-so-far', 'bonus-tiles', 'rules-profile-picker', 'mobile-hand-context', 'mcr-evidence-controls', 'mobile-live-result', 'mcr-score-result'];
+    expect(html).toContain('<h1 data-testid="hand-scorer-title"');
+    expect(html).toContain('Mahjong hand calculator');
+    expect(html).toContain('Change rules');
+    expect(html).toContain('data-testid="standalone-rules-row"');
+    expect(html).toMatch(/data-testid="standalone-rules-row"[^>]*>.*?data-testid="active-rules".*?Change rules/s);
+    expect(html).toContain('data-testid="mobile-tile-progress"');
+    expect(html).toMatch(/data-testid="tile-entry-shell" class="[^"]*rounded-none border-0 bg-transparent p-0 shadow-none/);
+    expect(html).toMatch(/class="[^"]*hidden sm:flex[^"]*"[^>]*>.*?Arrange the tiles/s);
+    expect(html).toMatch(/data-testid="completed-groups-empty-state" class="[^"]*hidden sm:block/);
+    expect(html).not.toContain('data-testid="detected-patterns"');
+    expect(html).not.toContain('data-testid="rules-profile-picker"');
+    const order = ['hand-scorer-title', 'active-rules', 'button-load-example', 'working-picker', 'hand-so-far', 'bonus-tiles', 'mcr-evidence-controls', 'mobile-live-result', 'mcr-score-result', 'calculator-supporting-info'];
     const positions = order.map((testId) => html.indexOf(`data-testid="${testId}"`));
     expect(positions.every((position) => position >= 0)).toBe(true);
     expect(positions).toEqual([...positions].sort((left, right) => left - right));
 
-    const workingPickerEnd = html.indexOf('</section>', positions[0]);
-    expect(positions[6]).toBeGreaterThan(workingPickerEnd);
+    expect(html.indexOf('Understand settlement')).toBe(-1);
+    expect(html.indexOf('About this calculator / How scoring works')).toBeGreaterThan(positions[9]);
+    expect(html).not.toContain('data-testid="mobile-hand-context"');
+    expect(html).toContain('data-testid="bonus-tile-strip"');
+    const flowerStrip = html.match(/<div data-testid="flower-tile-strip"[^>]*>([\s\S]*?)<\/div>/)?.[0] ?? '';
+    const seasonStrip = html.match(/<div data-testid="season-tile-strip"[^>]*>([\s\S]*?)<\/div>/)?.[0] ?? '';
+    expect(flowerStrip).toContain('overflow-x-auto');
+    expect(seasonStrip).toContain('overflow-x-auto');
+    expect(flowerStrip.match(/data-testid="button-flower-/g)).toHaveLength(4);
+    expect(seasonStrip.match(/data-testid="button-season-/g)).toHaveLength(4);
+  });
+
+  it('opens Classical standalone on a compact task header with supporting links after the scorer', () => {
+    const html = renderToStaticMarkup(<HandScorer context={null} onClose={vi.fn()} standaloneHand standaloneRulesProfile={BMJA_PROFILE_REF} onStandaloneRulesProfileChange={vi.fn()} />);
+    expect(html.match(/<h1\b/g)).toHaveLength(1);
+    expect(html).toContain('Mahjong hand calculator');
+    expect(html).toContain('Rules:');
+    expect(html).toContain('Change rules');
+    expect(html).not.toContain('New hand · ready to enter');
+    expect(html.indexOf('Arrange the tiles')).toBeGreaterThan(html.indexOf('Change rules'));
+    const workingPicker = html.slice(html.indexOf('data-testid="working-picker"'), html.indexOf('data-testid="hand-so-far"'));
+    expect(workingPicker).toContain('data-testid="mobile-tile-progress"');
+    const openingHeader = html.slice(html.indexOf('data-testid="hand-scorer-title"'), html.indexOf('Arrange the tiles'));
+    expect(openingHeader).not.toContain('Leave hand and go home');
+    expect(openingHeader).not.toContain('Enter your tiles visually');
+    expect(openingHeader).not.toContain('Need to see who pays whom');
+    expect(html.indexOf('About this calculator / How scoring works')).toBeGreaterThan(html.indexOf('button-apply-score-mobile'));
+    expect(html).toContain('Understand settlement');
+    expect(html).toContain('track a full game');
+    expect(html).toContain('Leave hand and go home');
+    expect(html).toContain('data-testid="remaining-tile-preview"');
+    expect(html).toContain('flex-wrap justify-end gap-x-1 gap-y-1');
+    expect(html).toMatch(/data-testid="completed-groups-empty-state" class="[^"]*hidden sm:block/);
   });
 
   it('locks table-owned MCR context while preserving editable scorer evidence', () => {
@@ -65,6 +105,8 @@ describe('C1 shared standalone scorer workspace', () => {
     expect(html).not.toContain('data-testid="mcr-seat-wind"');
     expect(html).not.toContain('data-testid="mcr-prevailing-wind"');
     expect(html).toContain('data-testid="mcr-locked-table-context"');
+    expect(html).toContain('data-testid="mobile-hand-context"');
+    expect(html).toContain('data-testid="mobile-inherited-context"');
     expect(html).toContain('Discard'); expect(html).toContain('south'); expect(html).toContain('east');
     expect(html).toContain('data-testid="mcr-win-event"');
     expect(html).toContain('Last visible copy');
