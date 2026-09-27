@@ -148,6 +148,29 @@ describe('pure Classical unresolved-tile interpretation', () => {
     expect(candidate!.structuralTileCount).toBeLessThan(13);
   });
 
+  it('keeps a lawful non-winner partial candidate at thirteen structural tiles with unmatched evidence', () => {
+    const unresolvedTiles = [
+      ...Array.from({ length: 3 }, () => wind('east')),
+      ...Array.from({ length: 3 }, () => wind('south')),
+      ...Array.from({ length: 3 }, () => wind('west')),
+      ...Array.from({ length: 2 }, () => dragon('red')),
+      wind('north'), suited('bamboo', 9),
+    ];
+    const input = baseInput({ isWinner: false, unresolvedTiles });
+    const candidate = interpretClassicalHand(input).candidates.find(({ inferredGroups, unresolvedTileIndexes, structuralTileCount }) =>
+      inferredGroups.filter(({ kind }) => kind === 'pung').length === 3
+      && inferredGroups.some(({ kind }) => kind === 'pair')
+      && unresolvedTileIndexes.length === 2
+      && structuralTileCount === 13,
+    );
+    expect(candidate).toBeDefined();
+    expect(candidate!.wholeHandComplete).toBe(true);
+    expect(candidate!.unresolvedTileIndexes).toEqual([11, 12]);
+    const evidence = projectClassicalInterpretation(input, candidate!, candidate!.lawfulVisibilityAssignments[0]);
+    expect(evidence.remainingTiles).toEqual([wind('north'), suited('bamboo', 9)]);
+    expect(candidate!.lawfulVisibilityAssignments.length).toBeGreaterThan(0);
+  });
+
   it('offers a local Kong candidate for partial four-of-a-kind evidence without completing the hand', () => {
     const result = interpretClassicalHand(baseInput({
       isWinner: false,

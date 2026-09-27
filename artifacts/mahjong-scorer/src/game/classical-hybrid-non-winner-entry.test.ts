@@ -36,7 +36,9 @@ describe('Classical hybrid non-winner orchestration', () => {
       pointRules: establishedScore.pointRules,
       doubleRules: establishedScore.doubleRules,
     });
-    expect(withRest.interpretation?.candidates.every(({ inferredGroups }) => inferredGroups.length === 0)).toBe(true);
+    expect(withRest.interpretation?.candidates.some(({ inferredGroups }) => inferredGroups.some(({ kind, tile }) =>
+      kind === 'pung' && tile.family === 'dragon' && tile.dragon === 'green',
+    ))).toBe(true);
   });
 
   it('finds supported all-loose 13-tile fishing without promoting its reading into score evidence', () => {

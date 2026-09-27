@@ -288,15 +288,15 @@ export const interpretClassicalHand = (
     }
 
     if (candidates.size === 0 && !input.isWinner) {
-      for (const sets of partialClassicalDecompositions(input.explicitSets, input.unresolvedTiles, { allowKongs: true })) {
-        const groups = makeCandidateGroups(sets);
+      for (const decomposition of partialClassicalDecompositions(input.explicitSets, input.unresolvedTiles, { allowKongs: true })) {
+        const groups = makeCandidateGroups(decomposition.sets);
         if (!groups || groups.length === 0) continue;
-        const used = new Set(groups.flatMap(({ physicalTileIndexes }) => physicalTileIndexes));
-        const unresolvedTileIndexes = allIndexes.filter((index) => !used.has(index));
+        const recoveredUnresolvedIndexes = allIndexes.filter((index) => !groups.some(({ physicalTileIndexes }) => physicalTileIndexes.includes(index)));
+        if (recoveredUnresolvedIndexes.join(',') !== decomposition.unresolvedTileIndexes.join(',')) continue;
         const structuralTileCount = input.explicitSets.reduce((count, group) => count + (group.kind === 'pair' ? 2 : 3), 0)
           + groups.reduce((count, group) => count + group.structuralSlots, 0)
-          + unresolvedTileIndexes.length;
-        if (structuralTileCount < 13) addCandidate('grouped', groups, unresolvedTileIndexes);
+          + decomposition.unresolvedTileIndexes.length;
+        if (structuralTileCount <= 13) addCandidate('grouped', groups, decomposition.unresolvedTileIndexes);
       }
     }
 

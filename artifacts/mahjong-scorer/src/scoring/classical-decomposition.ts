@@ -31,6 +31,8 @@ const removeTiles = (tally: TileTally, tiles: readonly PlayingTile[]): TileTally
 const remainingPhysicalCount = (tally: TileTally): number =>
   [...tally.values()].reduce((sum, entry) => sum + entry.count, 0);
 
+const sortedIndexes = (indexes: number[]) => indexes.sort((left, right) => left - right);
+
 const nextTile = (tally: TileTally): PlayingTile | undefined =>
   [...tally.entries()].sort(([left], [right]) => left.localeCompare(right))[0]?.[1].tile;
 
@@ -134,33 +136,78 @@ export const standardClassicalDecompositions = (
   return results;
 };
 
-/** Enumerates one-group hypotheses for partial evidence; all other tiles stay unresolved. */
+export type PartialClassicalDecomposition = {
+  sets: HandSet[];
+  usedTileIndexes: number[];
+  unresolvedTileIndexes: number[];
+};
+
+const groupSignature = (group: Pick<HandSet, 'kind' | 'tile'>) => `${group.kind}:${tileKey(group.tile)}`;
+
+/** Enumerates bounded, disjoint ordinary groupings for partial evidence. */
 export const partialClassicalDecompositions = (
   existingSets: readonly HandSet[],
   unresolvedTiles: readonly PlayingTile[],
   { allowKongs = false }: ClassicalDecompositionOptions = {},
-): HandSet[][] => {
+): PartialClassicalDecomposition[] => {
   const fixedSets = [...existingSets];
   const tally = tallyTiles(unresolvedTiles);
-  const groups: HandSet[] = [];
-  const seen = new Set<string>();
-  const add = (kind: HandSet['kind'], tile: PlayingTile, members: PlayingTile[]) => {
-    if (!removeTiles(tally, members)) return;
-    const key = `${kind}:${tileKey(tile)}`;
-    if (seen.has(key)) return;
-    seen.add(key);
-    groups.push({ id: completionSetId(fixedSets, groups.length), kind, tile, visibility: 'concealed' });
-  };
+  const existingPairs = fixedSets.filter(({ kind }) => kind === 'pair').length;
+  const existingMelds = fixedSets.length - existingPairs;
+  if (existingPairs > 1 || existingMelds > 4) return [];
 
+  const possibleGroups: Array<{ kind: HandSet['kind']; tile: PlayingTile; members: PlayingTile[] }> = [];
   for (const [, { tile, count }] of [...tally.entries()].sort(([left], [right]) => left.localeCompare(right))) {
-    if (count >= 2) add('pair', tile, [tile, tile]);
-    if (count >= 3) add('pung', tile, [tile, tile, tile]);
-    if (allowKongs && count >= 4) add('kong', tile, [tile, tile, tile, tile]);
+    if (count >= 2) possibleGroups.push({ kind: 'pair', tile, members: [tile, tile] });
+    if (count >= 3) possibleGroups.push({ kind: 'pung', tile, members: [tile, tile, tile] });
+    if (allowKongs && count >= 4) possibleGroups.push({ kind: 'kong', tile, members: [tile, tile, tile, tile] });
     if (tile.family === 'suit' && tile.rank <= 7) {
       const second = { ...tile, rank: (tile.rank + 1) as typeof tile.rank };
       const third = { ...tile, rank: (tile.rank + 2) as typeof tile.rank };
-      add('chow', tile, [tile, second, third]);
+      if (removeTiles(tally, [tile, second, third])) possibleGroups.push({ kind: 'chow', tile, members: [tile, second, third] });
     }
   }
-  return groups.map((group) => [...fixedSets, group]);
+  possibleGroups.sort((left, right) => groupSignature(left).localeCompare(groupSignature(right)));
+
+  const results = new Map<string, PartialClassicalDecomposition>();
+  const search = (start: number, available: TileTally, groups: typeof possibleGroups) => {
+    if (groups.length > 0) {
+      const usedIndexes: number[] = [];
+      const usedByKey = new Map<string, number>();
+      const indexesByKey = new Map<string, number[]>();
+      unresolvedTiles.forEach((tile, index) => {
+        const key = tileKey(tile);
+        indexesByKey.set(key, [...(indexesByKey.get(key) ?? []), index]);
+      });
+      for (const group of groups) {
+        for (const member of group.members) {
+          const key = tileKey(member);
+          const occurrence = usedByKey.get(key) ?? 0;
+          const index = indexesByKey.get(key)?.[occurrence];
+          if (index !== undefined) usedIndexes.push(index);
+          usedByKey.set(key, occurrence + 1);
+        }
+      }
+      const sortedUsedIndexes = sortedIndexes(usedIndexes);
+      const unresolvedTileIndexes = unresolvedTiles.map((_, index) => index).filter((index) => !sortedUsedIndexes.includes(index));
+      const inferred: HandSet[] = [];
+      for (const { kind, tile } of groups) {
+        inferred.push({ id: completionSetId([...fixedSets, ...inferred], inferred.length), kind, tile, visibility: 'concealed' });
+      }
+      const key = `${groups.map(groupSignature).join('|')}[${sortedUsedIndexes.join(',')}]`;
+      results.set(key, { sets: [...fixedSets, ...inferred], usedTileIndexes: sortedUsedIndexes, unresolvedTileIndexes });
+    }
+    if (groups.length >= 5) return;
+    for (let index = start; index < possibleGroups.length; index += 1) {
+      const candidate = possibleGroups[index]!;
+      const isPair = candidate.kind === 'pair';
+      if (isPair ? existingPairs + groups.filter(({ kind }) => kind === 'pair').length >= 1
+        : existingMelds + groups.filter(({ kind }) => kind !== 'pair').length >= 4) continue;
+      const next = removeTiles(available, candidate.members);
+      if (next) search(index + 1, next, [...groups, candidate]);
+    }
+  };
+
+  search(0, tally, []);
+  return [...results.entries()].sort(([left], [right]) => left.localeCompare(right)).map(([, result]) => result);
 };
