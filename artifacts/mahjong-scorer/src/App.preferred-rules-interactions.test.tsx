@@ -32,7 +32,7 @@ function installBrowser(search = '', storedProfile: typeof WESTERN_TM_PROFILE_RE
     setItem: (key: string, value: string) => values.set(key, value),
     removeItem: (key: string) => values.delete(key),
   };
-  vi.stubGlobal('window', { localStorage, location: { search } });
+  vi.stubGlobal('window', { localStorage, location: { search }, setTimeout, clearTimeout });
   return { localStorage, values };
 }
 
@@ -93,13 +93,22 @@ describe('preferred profile flow interactions', () => {
     }
   });
 
-  it('stores a standalone hand picker choice while retaining the existing profile transition cleanup seam', () => {
+  it('reveals the existing standalone rules picker on demand and retains profile transition cleanup', async () => {
     const { values } = installBrowser();
-    setupMarkup();
+    vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
+    const container = document.createElement('div');
+    document.body.append(container);
+    const root = createRoot(container);
+    await act(async () => root.render(<App initialView="hand" standaloneHand />));
+    expect(container.querySelector('[data-testid="standalone-rules-disclosure"]')).toBeNull();
+    await act(async () => container.querySelector('button[aria-controls="standalone-hand-rules"]')?.dispatchEvent(new MouseEvent('click', { bubbles: true })));
     const handPicker = interaction.pickers.find(({ prompt }) => prompt === 'Which rules are you scoring?');
     expect(handPicker).toBeDefined();
-    handPicker!.onSelect(OUTSIDE_THE_BOX_PROFILE_REF);
+    await act(async () => handPicker!.onSelect(OUTSIDE_THE_BOX_PROFILE_REF));
     expect(values.get(PREFERRED_RULES_PROFILE_STORAGE_KEY)).toBe(JSON.stringify(OUTSIDE_THE_BOX_PROFILE_REF));
+    expect(container.querySelector('[data-testid="active-profile"]')?.textContent).toBe(`${OUTSIDE_THE_BOX_PROFILE_REF.id}@${OUTSIDE_THE_BOX_PROFILE_REF.version}`);
+    await act(async () => root.unmount());
+    container.remove();
 
     const transition = transitionStandaloneHandProfile({
       shared: { sets: [{ ...set('physical-pung', 'pung', suited('characters', 5), 'exposed'), blankTileIds: ['old-blank'] }], layoutMode: 'sets', looseTiles: [suited('circles', 8)], flowers: [], seasons: [], winningTileProvenance: undefined },

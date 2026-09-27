@@ -356,6 +356,7 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
   const [expandedRule, setExpandedRule] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [showPracticeAnswer, setShowPracticeAnswer] = useState(false);
+  const [showStandaloneRulesPicker, setShowStandaloneRulesPicker] = useState(false);
   const practiceTarget = practice ? scoringExampleById(example?.id) : undefined;
   const initialBaseline = useMemo(() => handScorerInitialBaseline(initialHand, {
     playerWind: initialContext.playerWind, prevailingWind: initialContext.prevailingWind, limit: initialContext.limit,
@@ -1159,18 +1160,18 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
 
       <main className="mx-auto grid max-w-[1440px] grid-cols-[minmax(0,1fr)] gap-6 px-5 py-7 lg:px-8 lg:py-9">
         <section className="min-w-0">
-          <div className="mb-7 animate-rise">
+          <div className={`${standaloneHand && !hasContext && !example && !practice ? 'mb-4' : 'mb-7'} animate-rise`}>
             {example && <>
               <a data-testid="link-back-to-example" href={example.returnHref} className="mb-4 inline-flex min-h-10 items-center rounded-md border border-[#b8cdbf] bg-[#edf3ed] px-3 text-[11px] font-semibold text-[#284d45] transition hover:bg-[#dceade]">{example.returnLabel} · {example.name}</a>
               <p className="mb-3 text-[11px] leading-5 text-[#66746e]">{practice ? 'Build this hand yourself with the normal scorer. The target is shown below; the worked result stays hidden until you ask for it.' : 'Example hand — change tiles or context to explore.'} Your saved game, if any, remains separate.</p>
               <ReturnToGame />
               {practiceTarget && <section className="mb-5 rounded-xl border border-[#d8ceb8] bg-[#f5f1e6] p-4" data-testid="practice-target"><div className="font-mono text-[9px] uppercase tracking-[.16em] text-[#ae6249]">Build this hand yourself</div><p className="mt-2 text-[11px] leading-5 text-[#66746e]">Target: {practiceTarget.hand.isWinner ? 'winner' : 'non-winner'} · {practiceTarget.hand.winningMethod ?? 'wall'} · {practiceTarget.context.playerWind} player · {practiceTarget.context.prevailingWind} prevailing · limit {practiceTarget.context.limit}. Your tiles and bonus selections begin empty.</p>{practiceTarget.hand.sets.length > 0 && <ul className="mt-3 space-y-1 text-[11px] text-[#284d45]" aria-label="Target set structure">{practiceSetSummary(practiceTarget).map((set) => <li key={set.id} className="rounded bg-[#eee6d5] px-2 py-1.5"><b>{set.label}</b> · {set.visibility}</li>)}</ul>}<div className="mt-3"><TileStrip tiles={scoringExampleTiles(practiceTarget)} ariaLabel={`Target tiles for ${practiceTarget.title}`} /></div>{scoringExampleBonusTiles(practiceTarget).length > 0 && <div className="mt-3"><div className="font-mono text-[9px] uppercase tracking-[.14em] text-[#ae6249]">Bonus tiles</div><TileStrip tiles={scoringExampleBonusTiles(practiceTarget)} ariaLabel={`Bonus tiles for ${practiceTarget.title}`} /></div>}<button type="button" data-testid="button-reveal-practice-answer" onClick={() => setShowPracticeAnswer(true)} className="mt-3 min-h-10 rounded-md border border-[#c9b99d] bg-[#fdfbf5] px-3 text-[11px] font-semibold">{showPracticeAnswer ? `Worked answer: ${practiceTarget.expected.finalScore} points` : 'Reveal worked answer'}</button>{showPracticeAnswer && <p className="mt-2 text-[11px] leading-5 text-[#66746e]">{practiceTarget.explanation}</p>}</section>}
             </>}
-            <div className="mb-3 flex items-center gap-3"><div className="fine-rule w-10" /><span className="font-mono text-[10px] uppercase tracking-[.2em] text-[#ae6249]">New hand · ready to enter</span></div>
+            {!(standaloneHand && !hasContext && !example && !practice) && <div className="mb-3 flex items-center gap-3"><div className="fine-rule w-10" /><span className="font-mono text-[10px] uppercase tracking-[.2em] text-[#ae6249]">New hand · ready to enter</span></div>}
             <div className="flex flex-wrap items-end justify-between gap-4">
               <div>
-                <h1 className="font-serif text-[clamp(36px,5vw,62px)] leading-[.97] tracking-[-.03em] text-[#284d45]">{standaloneHand ? <>Mahjong<br /><span className="text-[#ae6249]">hand calculator.</span></> : <>Score a hand<br /><span className="text-[#ae6249]">with confidence.</span></>}</h1>
-                <p className="mt-4 max-w-[560px] text-[14px] leading-6 text-[#66746e]">
+                <h1 data-testid="hand-scorer-title" className={`font-serif ${standaloneHand && !hasContext && !example && !practice ? 'text-[26px] leading-tight tracking-[-.02em]' : 'text-[clamp(36px,5vw,62px)] leading-[.97] tracking-[-.03em]'} text-[#284d45]`}>{standaloneHand && !hasContext && !example && !practice ? 'Mahjong hand calculator' : standaloneHand ? <>Mahjong<br /><span className="text-[#ae6249]">hand calculator.</span></> : <>Score a hand<br /><span className="text-[#ae6249]">with confidence.</span></>}</h1>
+                {!(standaloneHand && !hasContext && !example && !practice) && <p className="mt-4 max-w-[560px] text-[14px] leading-6 text-[#66746e]">
                   {example
                     ? `Example: ${example.name}. This uses the normal scorer; change it to explore.`
                     : hasContext
@@ -1178,9 +1179,9 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
                     : standaloneHand
                       ? isMcr ? 'Enter a completed winning hand. The MCR scorer evaluates fan, the qualifying subtotal, Flowers and Basic Points.' : 'Enter your tiles visually as they sit on the table. The calculator shows supported points, doubles, special hands and fishing in a clear score breakdown. Playing a whole game? Use the full-game tracker for settlement and running totals.'
                       : 'Enter each set as it sits on the table. The score builds beside you, with every point and double accounted for.'}
-                </p>
+                </p>}
                 {hasContext ? <ActiveRules profile={context.rulesProfile} inherited /> : <ActiveRules profile={standaloneRulesProfile} />}
-                {standaloneHand && !hasContext && !isMcr && <p className="mt-3 text-[15px] leading-6 text-[#66746e]">Need to see who pays whom after scoring? <a className="font-semibold underline decoration-[#ae6249] underline-offset-4" href="/mahjong-settlement">Understand settlement</a> or <a className="font-semibold underline decoration-[#ae6249] underline-offset-4" href="/game">track a full game</a>.</p>}
+                {standaloneHand && !hasContext && !example && !practice && <button type="button" aria-expanded={showStandaloneRulesPicker} aria-controls="standalone-hand-rules" onClick={() => setShowStandaloneRulesPicker((visible) => !visible)} className="mt-1 min-h-10 rounded px-2 text-[12px] font-semibold text-[#284d45] underline decoration-[#ae6249] underline-offset-4">{showStandaloneRulesPicker ? 'Hide rules' : 'Change rules'}</button>}
                 {context?.requiresRecalculation && (
                   <div
                     data-testid="notice-recalculation-required"
@@ -1189,9 +1190,9 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
                     The round winner changed. Review this hand and apply it again before confirming the round.
                   </div>
                 )}
-                <button type="button" onClick={leaveHand} className="mt-4 rounded-md border border-[#cfc3aa] bg-[#fbf8ed] px-3 py-2 text-[11px] font-semibold text-[#284d45] transition hover:bg-[#efe8da] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">
+                {!(standaloneHand && !hasContext && !example && !practice) && <button type="button" onClick={leaveHand} className="mt-4 rounded-md border border-[#cfc3aa] bg-[#fbf8ed] px-3 py-2 text-[11px] font-semibold text-[#284d45] transition hover:bg-[#efe8da] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">
                   {exampleExitLabel(example, hasContext ? 'Back to game without applying a score' : 'Leave hand and go home')}
-                </button>
+                </button>}
               </div>
               <div className="flex gap-2">
                 <button type="button" data-testid="button-load-example" onClick={loadExample} className="flex items-center gap-2 rounded-md border border-[#cfc3aa] bg-[#f8f4e9] px-3 py-2 text-[11px] font-semibold text-[#284d45] transition hover:-translate-y-0.5 hover:border-[#ae6249] focus:ring-2"><Sparkles size={14} /> Load example</button>
@@ -1199,6 +1200,8 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
               </div>
             </div>
           </div>
+
+          {standaloneHand && !hasContext && !example && !practice && showStandaloneRulesPicker && <div id="standalone-hand-rules" className="mb-4 max-w-[900px]" data-testid="standalone-rules-disclosure"><RulesProfilePicker surface="hand" prompt="Which rules are you scoring?" selectedProfile={standaloneRulesProfile} onSelect={onStandaloneRulesProfileChange} /></div>}
 
           <div className="grid min-w-0 grid-cols-1 gap-5">
             <div className="min-w-0 space-y-5">
@@ -1465,7 +1468,7 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
                   </div>
                 </div>
               </section>
-              {standaloneHand && !hasContext && !example && !practice && <div className="max-w-[900px]"><RulesProfilePicker surface="hand" prompt="Which rules are you scoring?" selectedProfile={standaloneRulesProfile} onSelect={onStandaloneRulesProfileChange} />
+              {standaloneHand && !hasContext && !example && !practice && <div className="max-w-[900px]">
                 {compiledRuntime.grammar === 'classical-points-doubles' && compiledRuntime.runtime.supportedCapabilities().includes('hand.goulash') && <label className="mb-6 block rounded-lg border border-[#d8ceb8] bg-[#fbf8ed] p-4 text-[12px] text-[#284d45]"><span className="mb-2 block font-semibold">Hand mode</span><select data-testid="select-standalone-hand-mode" value={handMode} onChange={(event) => setHandMode(event.target.value as 'normal' | 'goulash')} className="w-full rounded-md border border-[#cfc3aa] bg-[#fdfbf5] px-3 py-2"><option value="normal">Normal hand</option><option value="goulash">Goulash hand (blank tiles; no chows)</option></select></label>}</div>}
               {compiledRuntime.grammar === 'classical-points-doubles' && (classicalMaterialFacts.standingHand || classicalMaterialFacts.onlyPossibleWinningTile || classicalMaterialFacts.eastThirteenth) && <section data-testid="profile-hand-evidence" className="mx-auto mb-5 max-w-[900px] rounded-lg border border-[#d8ceb8] bg-[#fbf8ed] p-4 text-[12px] text-[#284d45]"><h2 className="font-serif text-[20px]">Scoring evidence</h2>{classicalMaterialFacts.standingHand && <div className="mt-3"><p>Was this Standing Hand locked in?</p><div className="mt-1 flex flex-wrap gap-2">{[['yes', 'Yes'], ['no', 'No'], ['unknown', 'I’m not sure']].map(([value, label]) => <button key={value} type="button" data-testid={`standing-hand-${value}`} aria-pressed={profileFactOrigins.standingHand === (value === 'unknown' ? 'unknown' : 'confirmed') && standingHand === (value === 'yes')} onClick={() => { setStandingHand(value === 'yes'); setProfileFactOrigins((current) => ({ ...current, standingHand: value === 'unknown' ? 'unknown' : 'confirmed' })); }} className="rounded border border-[#cfc3aa] px-2 py-1">{label}</button>)}</div></div>}{classicalMaterialFacts.onlyPossibleWinningTile && <div className="mt-3"><p>Was this the only possible winning tile?</p><div className="mt-1 flex flex-wrap gap-2">{[['yes', 'Yes'], ['no', 'No'], ['unknown', 'I’m not sure']].map(([value, label]) => <button key={value} type="button" data-testid={`only-possible-tile-${value}`} aria-pressed={profileFactOrigins.onlyPossibleWinningTile === (value === 'unknown' ? 'unknown' : 'confirmed') && onlyPossibleWinningTile === (value === 'yes')} onClick={() => { setOnlyPossibleWinningTile(value === 'yes'); setProfileFactOrigins((current) => ({ ...current, onlyPossibleWinningTile: value === 'unknown' ? 'unknown' : 'confirmed' })); }} className="rounded border border-[#cfc3aa] px-2 py-1">{label}</button>)}</div></div>}{classicalMaterialFacts.eastThirteenth && <div className="mt-3"><p>Was East’s thirteenth consecutive Mahjong?</p><div className="mt-1 flex flex-wrap gap-2">{[['yes', 'Yes'], ['no', 'No'], ['unknown', 'I’m not sure']].map(([value, label]) => <button key={value} type="button" data-testid={`east-thirteenth-${value}`} aria-pressed={profileFactOrigins.eastThirteenth === (value === 'unknown' ? 'unknown' : 'confirmed') && eastThirteenthConsecutiveMahjong === (value === 'yes')} onClick={() => { setEastThirteenthConsecutiveMahjong(value === 'yes'); setProfileFactOrigins((current) => ({ ...current, eastThirteenth: value === 'unknown' ? 'unknown' : 'confirmed' })); }} className="rounded border border-[#cfc3aa] px-2 py-1">{label}</button>)}</div></div>}</section>}
               <section className="rounded-xl border border-[#d8ceb8] bg-[#e8e1d1] p-4 sm:hidden" data-testid="mobile-hand-context">
@@ -1780,6 +1783,15 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
               </>}
             </aside>
           </div>
+          {standaloneHand && !hasContext && !example && !practice && <div className="mt-6 max-w-[900px]" data-testid="calculator-supporting-info">
+            <details className="rounded-lg border border-[#d8ceb8] bg-[#f8f4e9] px-4 py-3">
+              <summary className="min-h-8 cursor-pointer py-1 text-[13px] font-semibold text-[#284d45]">About this calculator / How scoring works</summary>
+              <div className="space-y-3 pb-2 pt-2 text-[12px] leading-5 text-[#66746e]">
+                <p>{isMcr ? 'Enter a completed winning hand. The MCR scorer evaluates fan, the qualifying subtotal, Flowers and Basic Points.' : 'Enter your tiles visually as they sit on the table. The calculator shows supported points, doubles, special hands and fishing in a clear score breakdown.'}</p>
+                {!isMcr && <p>Need to see who pays whom after scoring? <a className="font-semibold underline decoration-[#ae6249] underline-offset-4" href="/mahjong-settlement">Understand settlement</a> or <a className="font-semibold underline decoration-[#ae6249] underline-offset-4" href="/game">track a full game</a>.</p>}
+              </div>
+            </details>
+          </div>}
         </section>
       </main>
       <footer className="mx-auto flex max-w-[1440px] flex-wrap items-center justify-between gap-3 border-t border-[#d8ceb8] px-5 py-5 lg:px-8"><p className="font-mono text-[10px] uppercase tracking-[.12em] text-[#8c8a7f]">Local tool · no hand data leaves this device</p><p className="text-[11px] text-[#8c8a7f]">Built for the quiet moment before the next deal.</p></footer>
