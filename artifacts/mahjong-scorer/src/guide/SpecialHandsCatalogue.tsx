@@ -56,6 +56,79 @@ function treatmentChoiceLabel(entry: AtlasLearnerEntry, record: SpecialHandsAtla
   return publicClubCopy(variant?.label ?? record.name);
 }
 
+function treatmentDefinition(entry: AtlasLearnerEntry, record: SpecialHandsAtlasRecord) {
+  const variant = entry.variants?.find(({ treatmentReferenceIds }) => treatmentReferenceIds?.includes(record.referenceId));
+  return variant?.definition ? publicClubCopy(variant.definition) : undefined;
+}
+
+function treatmentExposureLabel(record: SpecialHandsAtlasRecord) {
+  const policy = record.exposurePolicy?.policy as { allowed?: boolean; exposedValue?: number; exposedFishingValue?: number } | undefined;
+  if (!policy) return undefined;
+  if (policy.allowed === false) return 'Concealed only; exposed sets are not allowed.';
+  if (policy.allowed === true && policy.exposedValue !== undefined) {
+    return `Exposed sets: ${new Intl.NumberFormat('en-GB').format(policy.exposedValue)} winner${policy.exposedFishingValue === undefined ? '' : `; ${new Intl.NumberFormat('en-GB').format(policy.exposedFishingValue)} fishing`}.`;
+  }
+  return policy.allowed === true ? 'Exposed sets are allowed.' : undefined;
+}
+
+function ComparisonField({ label, values }: { label: string; values: Array<{ key: string; name: string; value: React.ReactNode }> }) {
+  if (!values.some(({ value }) => value !== undefined && value !== null && value !== '')) return null;
+  return <div className="grid gap-2 border-t border-[#dfd5c2] py-3 sm:grid-cols-[9rem_1fr]">
+    <dt className="text-sm font-semibold text-[#284d45]">{label}</dt>
+    <dd className="grid min-w-0 gap-2 sm:grid-cols-2 lg:grid-cols-3">{values.map(({ key, name, value }) => <div key={key} className="min-w-0 rounded-md bg-[#f5f1e6] p-2 text-sm leading-5 text-[#596b65]"><span className="block font-semibold text-[#284d45]">{name}</span><span>{value ?? 'Not specified'}</span></div>)}</dd>
+  </div>;
+}
+
+function TreatmentComparison({ entry, treatments, selectedIds, onSelectedIdsChange }: {
+  entry: AtlasLearnerEntry;
+  treatments: SpecialHandsAtlasRecord[];
+  selectedIds: string[];
+  onSelectedIdsChange: (ids: string[]) => void;
+}) {
+  const selected = treatments.filter(({ referenceId }) => selectedIds.includes(referenceId));
+  const relation = entry.state === 'reviewed-concept'
+    ? 'These are reviewed versions of the same Special Hands concept.'
+    : entry.state === 'reviewed-family-topic'
+      ? 'These are related hands and are not necessarily equivalent.'
+      : 'Compare the exact treatments listed for this hand.';
+  const names = (record: SpecialHandsAtlasRecord) => `${publicClubCopy(publicRulesEditionLabel(descriptorForRulesProfile(record.identity.profile)))} · ${treatmentChoiceLabel(entry, record)}`;
+  const examples = new Map(selected.map((record) => [record.referenceId, atlasExamplesForTreatment(entry, record.referenceId)]));
+  const teaching = new Map((entry.treatmentTeaching ?? []).map(({ referenceId, difference }) => [referenceId, publicClubCopy(difference)]));
+  return <section className="mt-3 rounded-xl border border-[#b8cdbf] bg-white p-3" aria-labelledby={`compare-title-${entry.id}`}>
+    <h3 id={`compare-title-${entry.id}`} className="font-serif text-lg text-[#284d45]">Compare rules</h3>
+    <p className="mt-1 text-sm leading-5 text-[#596b65]">{relation}</p>
+    <fieldset className="mt-3">
+      <legend className="text-sm font-semibold text-[#284d45]">Choose 2 or 3 exact treatments</legend>
+      <div className="mt-2 flex flex-wrap gap-2">{treatments.map((record) => {
+        const checked = selectedIds.includes(record.referenceId);
+        const disabled = !checked && selectedIds.length >= 3;
+        return <label key={record.referenceId} className={`inline-flex min-h-11 items-center gap-2 rounded-md border px-3 py-2 text-sm focus-within:ring-2 focus-within:ring-[#ae6249] ${checked ? 'border-[#284d45] bg-[#edf3ed] text-[#284d45]' : 'border-[#b8cdbf] bg-white text-[#596b65]'}`}>
+          <input type="checkbox" checked={checked} disabled={disabled} onChange={(event) => {
+            const next = event.target.checked ? [...selectedIds, record.referenceId] : selectedIds.filter((id) => id !== record.referenceId);
+            if (next.length >= 2 && next.length <= 3) onSelectedIdsChange(next);
+          }} aria-label={`Compare ${names(record)}`} className="h-4 w-4 accent-[#284d45]" />
+          <span>{names(record)}</span>
+        </label>;
+      })}</div>
+      <p className="mt-2 text-xs text-[#596b65]" aria-live="polite">Comparing {selected.length} of 3 treatments.</p>
+    </fieldset>
+    <dl className="mt-3">
+      <ComparisonField label="Rules and hand" values={selected.map((record) => ({ key: record.referenceId, name: names(record), value: treatmentChoiceLabel(entry, record) }))} />
+      <ComparisonField label="Hand form" values={selected.map((record) => ({ key: record.referenceId, name: names(record), value: treatmentDefinition(entry, record) }))} />
+      <ComparisonField label="Score and fishing" values={selected.map((record) => ({ key: record.referenceId, name: names(record), value: atlasScoreLabel(record) }))} />
+      <ComparisonField label="Exposure" values={selected.map((record) => ({ key: record.referenceId, name: names(record), value: treatmentExposureLabel(record) }))} />
+      <ComparisonField label="Winning method" values={selected.map((record) => ({ key: record.referenceId, name: names(record), value: record.winningMethods?.length ? record.winningMethods.map((method) => method.replaceAll('-', ' ')).join(' or ') : record.winningMethods ? 'Any method accepted by these rules.' : undefined }))} />
+      <ComparisonField label="Difference" values={selected.map((record) => ({ key: record.referenceId, name: names(record), value: teaching.get(record.referenceId) }))} />
+      <ComparisonField label="Reference note" values={selected.map((record) => ({ key: record.referenceId, name: names(record), value: examples.get(record.referenceId)?.find(({ referenceNote }) => referenceNote)?.referenceNote ?? entry.referenceNote }))} />
+      <ComparisonField label="Scorer" values={selected.map((record) => {
+        const exampleList = examples.get(record.referenceId) ?? [];
+        const proven = exampleList.some(({ id }) => atlasExampleProvesTreatment(id, record.referenceId));
+        return { key: record.referenceId, name: names(record), value: proven ? <SafeScorerAction record={record} examples={exampleList} /> : 'No proven example is available for this treatment.' };
+      })} />
+    </dl>
+  </section>;
+}
+
 function SafeScorerAction({ record, examples }: { record: SpecialHandsAtlasRecord; examples: AtlasExample[] }) {
   const example = examples.find((item) => atlasExampleProvesTreatment(item.id, record.referenceId));
   if (!example) return null;
@@ -124,6 +197,8 @@ function EntryCard({
   targetTreatmentReferenceId?: string;
 }) {
   const [localTreatment, setLocalTreatment] = useState<string | null>(null);
+  const [comparisonOpen, setComparisonOpen] = useState(false);
+  const [comparisonTreatmentIds, setComparisonTreatmentIds] = useState<string[]>([]);
   useEffect(() => {
     if (targetTreatmentReferenceId) setLocalTreatment(targetTreatmentReferenceId);
   }, [targetTreatmentReferenceId]);
@@ -135,6 +210,14 @@ function EntryCard({
   const locallySelected = localTreatment ? treatments.find(({ referenceId }) => referenceId === localTreatment) : undefined;
   const localForScope = locallySelected && (!explicitProfile || `${locallySelected.identity.profile.id}@${locallySelected.identity.profile.version}` === explicitProfile) ? locallySelected : undefined;
   const prominentTreatment = localForScope ?? globallySelected ?? (myRules ? ownTreatment : undefined) ?? legacyTreatment ?? treatments[0];
+  const compareTreatments = treatments;
+  const startComparison = () => {
+    if (!prominentTreatment) return;
+    const alternative = compareTreatments.find(({ referenceId }) => referenceId !== prominentTreatment.referenceId);
+    if (!alternative) return;
+    setComparisonTreatmentIds([prominentTreatment.referenceId, alternative.referenceId]);
+    setComparisonOpen(true);
+  };
   const prominentProfileKey = prominentTreatment ? `${prominentTreatment.identity.profile.id}@${prominentTreatment.identity.profile.version}` : null;
   const sameProfileTreatments = prominentProfileKey ? treatments.filter(({ identity }) => `${identity.profile.id}@${identity.profile.version}` === prominentProfileKey) : [];
   const leadExample = prominentTreatment ? selectAtlasLeadExampleForTreatment(entry, prominentTreatment.referenceId) : selectAtlasLeadExample(entry, myRules ? preferredProfile : null);
@@ -162,6 +245,8 @@ function EntryCard({
         {profileChoices.map((record) => { const selected = prominentProfileKey === `${record.identity.profile.id}@${record.identity.profile.version}`; const key = `${record.identity.profile.id}@${record.identity.profile.version}`; const label = publicClubCopy(publicRulesEditionLabel(descriptorForRulesProfile(record.identity.profile))); return <button key={key} type="button" aria-pressed={selected} onClick={() => setLocalTreatment(record.referenceId)} className={`inline-flex min-h-11 items-center gap-1.5 rounded-md border px-3 py-2 font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249] ${selected ? 'border-[#284d45] bg-[#284d45] text-white' : 'min-h-10 rounded-full border-[#b8cdbf] bg-white px-2.5 py-1 text-xs text-[#284d45]'}`}><span>{label}</span>{selected && <Check size={14} aria-hidden="true" />}</button>; })}
       </div>
       {prominentTreatment && <CompactTreatmentSummary record={prominentTreatment} examples={atlasExamplesForTreatment(entry, prominentTreatment.referenceId)} />}
+      {compareTreatments.length >= 2 && <div className="mt-2 flex flex-wrap items-center gap-2"><button type="button" onClick={startComparison} aria-expanded={comparisonOpen} aria-controls={`comparison-${entry.id}`} className="inline-flex min-h-10 items-center rounded-md border border-[#b8cdbf] bg-white px-3 text-sm font-semibold text-[#284d45] hover:bg-[#edf3ed] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">Compare rules</button></div>}
+      {comparisonOpen && <div id={`comparison-${entry.id}`}><TreatmentComparison entry={entry} treatments={compareTreatments} selectedIds={comparisonTreatmentIds} onSelectedIdsChange={setComparisonTreatmentIds} /></div>}
       <div className="mt-2">
         {sameProfileTreatments.length > 1 && <label className="block max-w-full text-xs font-semibold text-[#284d45]">Hand name under these rules
           <select aria-label={`Hand name under these rules for ${publicClubCopy(entry.displayName)}`} value={prominentTreatment?.referenceId ?? ''} onChange={(event) => setLocalTreatment(event.target.value)} className="mt-1 block min-h-11 max-w-full rounded-md border border-[#b8cdbf] bg-white px-3 py-2 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">
