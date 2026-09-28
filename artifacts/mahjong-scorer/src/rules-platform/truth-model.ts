@@ -60,27 +60,43 @@ export type RuntimeTreatmentRef =
   | { kind: 'binding'; id: string }
   | { kind: 'policy'; id: string };
 
+/** Runtime/treatment state is explicit; omission is never used to encode uncertainty. */
+export type ProfileTreatmentRuntimeState =
+  | { kind: 'executable'; ref: RuntimeTreatmentRef }
+  | { kind: 'absent-by-rule' }
+  | { kind: 'present-not-modelled' }
+  | { kind: 'unknown' }
+  | { kind: 'not-applicable' }
+  | { kind: 'migration-incomplete' };
+
 /** Exact profile/version treatment identity, joined to runtime by identity when executable. */
 export type ProfileTreatment = {
   treatmentId: string;
   profile: RulesProfileRef;
   subjectId: string;
-  runtime?: RuntimeTreatmentRef;
+  runtimeState: ProfileTreatmentRuntimeState;
   evidenceClaimIds: readonly string[];
-  relationTo?: {
+  relationships?: readonly {
     profile: RulesProfileRef;
     relationship: ProfileRelationship;
-  };
+  }[];
 };
 
 /** Record lifecycle is separate from evidence confidence and runtime support. */
 export type TruthRecordLifecycle = 'draft' | 'current' | 'superseded';
 
+/** Identifies one immutable revision of a record with a stable record ID. */
+export type TruthRecordVersionRef = {
+  recordId: string;
+  recordVersion: number;
+};
+
 export type VersionedTruthRecord<T> = {
   schemaVersion: 0;
+  recordId: string;
   recordVersion: number;
   lifecycle: TruthRecordLifecycle;
-  supersedes?: string;
+  supersedes?: TruthRecordVersionRef;
   record: T;
 };
 

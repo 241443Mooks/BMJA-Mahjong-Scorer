@@ -20,8 +20,9 @@ Every edge is an explicit identifier reference. Names and display labels are not
 - **SourceLocator** identifies a URL section, publication edition/page, club-material section/page, or image in a named collection. Locators should be as narrow as the source allows.
 - **EvidenceClaim** is a concise project-authored factual claim tied to a registered source, locator, semantic subject, review date, and optional exact profile version. Its `EvidenceStatus` describes evidence confidence only; neither `verified` nor a runtime reference silently changes executable behaviour.
 - **SemanticSubject** gives a stable ID and one of the kinds `rule`, `pattern`, or `concept`. The subject is profile-independent; profile names and scores do not belong in its identity.
-- **ProfileTreatment** joins a subject to one exact profile version and its evidence. When executable, it points to a runtime-owned rule, binding, or policy identity. Its contract intentionally has no score/value payload: `ResolvedProfileArtifact` and the compiled runtime remain the executable authority.
+- **ProfileTreatment** joins a subject to one exact profile version and its evidence. `runtimeState` distinguishes an executable runtime identity, absence by rule, a known treatment not modelled by the runtime, unknown state, non-applicability, and incomplete migration. Its contract intentionally has no score/value payload: `ResolvedProfileArtifact` and the compiled runtime remain the executable authority.
 - **ProfileRelationship** records a research comparison (`identical`, `subset`, `superset`, `override`, `alias`, `unique`, or `unknown`). It is descriptive and is never an inheritance or execution instruction.
+- One treatment may have a relationship to several exact profile versions; each comparison is a separate entry in `relationships`.
 
 ## Status vocabularies
 
@@ -31,7 +32,7 @@ Record lifecycle is separate: `draft`, `current`, or `superseded`. Runtime suppo
 
 ## Versioning and immutability
 
-IDs identify semantic records and remain stable across edits. A versioned record has a schema version and monotonically increasing record version. Once current, a record is immutable: correction or changed evidence creates a new version and marks the previous record superseded, with `supersedes` pointing to its prior record identity. Exact profile versions used in saved results remain immutable; a new rules treatment requires a new profile version and fingerprint. Never rewrite a saved result's profile identity in place.
+IDs identify semantic records and remain stable across edits. A versioned record carries its stable `recordId` and a monotonically increasing `recordVersion`. Once current, a record is immutable: correction or changed evidence creates a new version and marks the previous version superseded. `supersedes` is a `TruthRecordVersionRef` containing both the stable `recordId` and exact `recordVersion` of the prior revision; a record ID alone never identifies ancestry. Exact profile versions used in saved results remain immutable; a new rules treatment requires a new profile version and fingerprint. Never rewrite a saved result's profile identity in place.
 
 ## Ownership boundaries
 
