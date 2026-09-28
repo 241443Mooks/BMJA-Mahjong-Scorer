@@ -171,6 +171,17 @@ export function atlasScoreLabel(record: SpecialHandsAtlasRecord): string {
   return `Fixed · ${winner} winner${record.fishingValue === undefined ? '' : ` · ${new Intl.NumberFormat('en-GB').format(record.fishingValue)} fishing${record.fishingUsesIntrinsicFloor ? ' or intrinsic if greater' : ''}`}`;
 }
 
+export function atlasExposureLabel(record: SpecialHandsAtlasRecord): string | undefined {
+  const policy = record.exposurePolicy?.policy as { allowed?: boolean; exposedValue?: number; exposedFishingValue?: number; multiplier?: number } | undefined;
+  if (!policy) return undefined;
+  if (policy.allowed === false) return 'Concealed only; exposed sets are not allowed.';
+  if (policy.allowed === true && policy.exposedValue !== undefined) {
+    return `Exposed sets: ${new Intl.NumberFormat('en-GB').format(policy.exposedValue)} winner${policy.exposedFishingValue === undefined ? '' : `; ${new Intl.NumberFormat('en-GB').format(policy.exposedFishingValue)} fishing`}.`;
+  }
+  if (policy.multiplier !== undefined) return `Exposed sets multiply the score by ${policy.multiplier}.`;
+  return policy.allowed === true ? 'Exposed sets are allowed.' : undefined;
+}
+
 export function searchSpecialHandsAtlas(records: readonly SpecialHandsAtlasRecord[], query: string): SpecialHandsAtlasRecord[] {
   const normalized = query.trim().toLocaleLowerCase('en-GB');
   if (!normalized) return [...records];
