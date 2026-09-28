@@ -46,7 +46,7 @@ const locatorIsMaterial = (claim: EvidenceClaim): boolean => {
       if (!nonBlank(usable.url)) return false;
       try { return ['http:', 'https:'].includes(new URL(usable.url).protocol); } catch { return false; }
     case 'publication':
-      return nonBlank(usable.title) && nonBlank(usable.page);
+      return nonBlank(usable.title) && (nonBlank(usable.page) || nonBlank(usable.section));
     case 'club-material':
       return nonBlank(usable.title)
         && [usable.version, usable.date, usable.section, usable.page].some(nonBlank);

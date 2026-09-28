@@ -9,7 +9,7 @@ export type SemanticSubject = {
 /** A source pointer precise enough to find the cited material again. */
 export type SourceLocator =
   | { kind: 'url'; url: string; section?: string; page?: string }
-  | { kind: 'publication'; title: string; edition?: string; year?: number; page: string }
+  | { kind: 'publication'; title: string; edition?: string; year?: number; page?: string; section?: string }
   | { kind: 'club-material'; title: string; version?: string; date?: string; section?: string; page?: string }
   | { kind: 'image'; collection: string; imageId: string; page?: string };
 

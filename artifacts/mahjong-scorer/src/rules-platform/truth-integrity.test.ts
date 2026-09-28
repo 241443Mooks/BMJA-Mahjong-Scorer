@@ -61,6 +61,14 @@ describe('truth corpus integrity gate', () => {
     const missingLocator = copyCorpus();
     (missingLocator.claims[0]!.record as unknown as { locator?: unknown }).locator = undefined;
     hasCode(missingLocator, 'EMPTY_LOCATOR');
+
+    const sectionOnlyPublication = copyCorpus();
+    sectionOnlyPublication.claims[0]!.record.locator = { kind: 'publication', title: 'Example publication', section: '§2.1' };
+    expect(issueCodes(sectionOnlyPublication)).not.toContain('EMPTY_LOCATOR');
+
+    const emptyPublicationLocation = copyCorpus();
+    emptyPublicationLocation.claims[0]!.record.locator = { kind: 'publication', title: 'Example publication', section: ' ', page: '' };
+    hasCode(emptyPublicationLocation, 'EMPTY_LOCATOR');
   });
 
   it('requires exact known profile versions on claims and treatments', () => {
@@ -108,6 +116,28 @@ describe('truth corpus integrity gate', () => {
     const corpus = copyCorpus();
     corpus.treatments[0]!.record.runtimeState = { kind: 'executable', ref: { kind: 'binding', id: 'binding.missing' } };
     hasCode(corpus, 'UNKNOWN_RUNTIME_TREATMENT');
+
+    const wrongMcrVersion = copyCorpus();
+    wrongMcrVersion.treatments.find(({ record }) => record.treatmentId === 'mcr-wmo-2006@0.1:thirteen-orphans')!.record.profile.version = '0.2';
+    hasCode(wrongMcrVersion, 'UNKNOWN_PROFILE');
+
+    const wrongMcrBinding = copyCorpus();
+    wrongMcrBinding.treatments.find(({ record }) => record.treatmentId === 'mcr-wmo-2006@0.1:thirteen-orphans')!.record.runtimeState = { kind: 'executable', ref: { kind: 'binding', id: 'mcr2006.fan.missing' } };
+    hasCode(wrongMcrBinding, 'UNKNOWN_RUNTIME_TREATMENT');
+
+    const wrongMcrPolicy = copyCorpus();
+    wrongMcrPolicy.treatments.find(({ record }) => record.treatmentId === 'mcr-wmo-2006@0.1:non-combination')!.record.runtimeState = { kind: 'executable', ref: { kind: 'policy', id: 'interaction.not-configured' } };
+    hasCode(wrongMcrPolicy, 'UNKNOWN_RUNTIME_TREATMENT');
+
+    const unresolvedMcrEvidence = copyCorpus();
+    const mcrClaim = unresolvedMcrEvidence.claims.find(({ record }) => record.claimId === 'evidence.rule.mcr-2006-non-combination')!;
+    mcrClaim.record.status = 'secondary-only';
+    unresolvedMcrEvidence.treatments.find(({ record }) => record.treatmentId === 'mcr-wmo-2006@0.1:non-combination')!.record.evidenceClaimIds = [mcrClaim.record.claimId];
+    hasCode(unresolvedMcrEvidence, 'UNRESOLVED_EXECUTABLE_EVIDENCE');
+
+    const wrongMcrSourceScope = copyCorpus();
+    wrongMcrSourceScope.sources.find(({ record }) => record.sourceId === 'source.mcr-ema-green-book-2006')!.record.authorityForProfileIds = [];
+    hasCode(wrongMcrSourceScope, 'SOURCE_PROFILE_SCOPE_MISMATCH');
   });
 
   it('rejects duplicate or conflicting current treatment identities', () => {
