@@ -61,7 +61,7 @@ The platform therefore uses one profile envelope above a small number of scoring
 3. **Riichi han + fu** — Riichi-family architecture; EMA Riichi runtime is not implemented yet;
 4. **Target catalogue / external target evidence** — architecture for American/NMJL-style target-value families, with any proprietary annual card remaining outside the product.
 
-The shared rules platform, permanent parity/replay harness and caller cutover are **live on production `main`**. Buzzard 2000 and MCR/WMO 2006 are also live. The complete EMA Riichi 2025 source/correctness corpus is ready, but Riichi runtime is not implemented.
+The shared rules platform, permanent parity/replay harness and caller cutover are **live on production `main`**. Buzzard 2000 and MCR/WMO 2006 are also live. The complete EMA Riichi 2025 source/correctness corpus is ready; the pre-Riichi architecture gate has now passed, but Riichi runtime is still not implemented and begins with a fresh preflight against current `main`.
 
 The durable rules rollout tracker is [#275](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/275). The live programme map is [#105](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/105).
 
@@ -89,11 +89,11 @@ The delivered path includes:
 
 The standalone hand calculator was then simplified through real-phone QA in [#411](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/411), and the shared shell gained a state-safe canonical Share action in [#400](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/400).
 
-## Current engineering direction — machine-readable rules truth
+## Machine-readable rules truth — architecture complete, corpus expansion next
 
-The next major architecture programme is [#399](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/399): make the existing source, evidence, semantic identity, profile treatment, executable runtime and downstream reference chain explicitly machine-readable and auditable.
+The [#399](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/399) architecture programme is complete and closed.
 
-The target authority chain is:
+It made the existing source, evidence, semantic identity, profile treatment, executable runtime and downstream reference chain explicitly machine-readable and auditable:
 
 ```text
 real source
@@ -107,16 +107,20 @@ real source
 → reference / comparator / Table Companion / AI projections
 ```
 
-This is deliberately **not** a wholesale rules rewrite and not a second rules database. It is the architectural gate before a fresh Riichi implementation preflight.
+The model has been proved vertically on Classical and MCR, with fail-closed integrity checks and a passing pre-Riichi readiness audit. This remains deliberately **not** a generic rules language and not a second score database.
 
-Closely related work should consume the same truth rather than fork it:
+The next bounded rules-truth work is [#440](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/440): expand the reviewed corpus through the existing typed/sharded authority model without redesigning it or copying executable score truth.
+
+Closely related projections consume the same truth rather than forking it:
 
 - [#296](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/296) — shared rules comparator/dimension model;
-- [#405](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/405) — single-profile human-readable ruleset report over that shared dimension model;
+- [#405](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/405) — single-profile human-readable ruleset report over that shared dimension model; the shared #406 substrate is complete;
 - [#251](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/251) — structured reference / Encyclopaedia projections;
 - [#412](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/412) — curated public What's New history above the technical changelog.
 
-A new [#434](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/434) umbrella captures American/NMJL-style support. Its first stage is evidence/architecture preflight only. The guiding boundary is **use the annual card; do not become the annual card**: Mahjong Reference may work alongside the player's card, but must not reproduce, transcribe or encode the proprietary annual hand catalogue.
+A [#434](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/434) umbrella captures American/NMJL-style support. Its first stage is evidence/architecture preflight only. The guiding boundary is **use the annual card; do not become the annual card**: Mahjong Reference may work alongside the player's card, but must not reproduce, transcribe or encode the proprietary annual hand catalogue.
+
+[#447](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/447) records a future ruleset compiler/authoring pipeline for turning source documents into structured, auditable candidate profiles. It is intentionally parked until real corpus-migration and family-onboarding evidence justifies the next level of automation.
 
 For current sequencing, use [#105](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/105) and `docs/product/WHATS_NEXT_ROADMAP.md`.
 
@@ -126,7 +130,7 @@ The longer-term reference direction is not a wiki or a second prose rules databa
 
 The source-local inventory contains **626 entries across 18 corpora** before cross-family de-duplication or canonical concept matching.
 
-The public **Special Hands Guide** already proves the approach on the current executable Classical family: it is concept-first and learner-facing while retaining all **146 exact profile-local treatment identities** underneath. Search, rules selection, examples and scorer handoff derive from those exact treatments rather than a second hand-maintained score catalogue.
+The public **Special Hands Guide** already proves the approach on the current executable Classical family: it is concept-first and learner-facing while retaining all **146 exact profile-local treatment identities** underneath. Search, rules selection, examples and scorer handoff derive from those exact treatments rather than a second hand-maintained score catalogue. Scorer results now deep-link to the exact owning treatment, and the Guide can compare 2–3 exact treatments locally without changing the player's remembered rules choice.
 
 The same structured layer is intended to support future comparison tools, broader reference pages and grounded AI/voice explanations. See `docs/product/REFERENCE_KNOWLEDGE_ARCHITECTURE.md`.
 
