@@ -53,7 +53,10 @@ export const createTruthIndex = (corpus: TruthCorpus) => {
         && treatment.evidenceClaimIds.some((claimId) => claimIds.has(claimId)));
     },
     claimsByStatus: (status: EvidenceStatus) => claimsFor((claim) => claim.status === status),
-    unresolvedClaims: () => claimsFor((claim) => claim.status !== 'verified' && claim.status !== 'verified-club'),
+    unresolvedClaims: () => claimsFor((claim) =>
+      claim.status === 'needs-primary-source'
+      || claim.status === 'needs-club-confirmation'
+      || claim.status === 'conflict'),
     claimsSupportingProfile: (profile: RulesProfileRef) => claimsFor((claim) => claim.supportsProfile !== undefined && exactProfile(claim.supportsProfile, profile)),
     claimById: (id: string) => claimsById.get(id),
     treatmentById: (id: string) => treatmentsById.get(id),

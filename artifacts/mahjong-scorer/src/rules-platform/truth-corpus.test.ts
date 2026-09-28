@@ -9,6 +9,13 @@ describe('current typed truth corpus', () => {
     expect(currentTruthIndex.claimsForSource('buzzard-2000-classical').map(({ record }) => record.supportsProfile)).toEqual([
       { id: 'buzzard-2000', version: '0.1' },
     ]);
+    expect(currentTruthIndex.claimById('evidence.pattern.thirteen-orphans.outside-the-box')?.record.locator).toEqual({
+      kind: 'club-material',
+      title: 'Outside the Box Mahjong guide supplied by Rachel',
+      version: 'September 2026',
+      section: '13 Unique Wonders',
+      page: '12–14',
+    });
     expect(currentTruthIndex.treatmentsForSubject(subjectId).map(({ record }) => record.treatmentId)).toEqual([
       'bmja@1.0:thirteen-unique-wonders',
       'buzzard-2000@0.1:thirteen-unique-wonders',
@@ -29,8 +36,15 @@ describe('current typed truth corpus', () => {
     ]);
     expect(currentTruthIndex.treatmentsDependingOnSource('classical-atlas-concept-audit-v1', { id: 'western-tm', version: '0.2' })).toEqual([]);
     expect(currentTruthIndex.claimsByStatus('secondary-only')).toHaveLength(1);
-    expect(currentTruthIndex.unresolvedClaims().map(({ record }) => record.claimId)).toEqual([
-      'evidence.pattern.thirteen-orphans.classical-membership-audit',
+    expect(currentTruthIndex.unresolvedClaims()).toEqual([]);
+    const unresolvedStatuses = ['needs-primary-source', 'needs-club-confirmation', 'conflict'] as const;
+    const unresolvedClaims = unresolvedStatuses.map((status) => {
+      const base = currentTruthCorpus.claims[0];
+      return { ...base, recordId: `fixture.${status}`, record: { ...base.record, claimId: `fixture.${status}`, status } };
+    });
+    const withUnresolved = createTruthIndex({ ...currentTruthCorpus, claims: [...currentTruthCorpus.claims, ...unresolvedClaims] });
+    expect(withUnresolved.unresolvedClaims().map(({ record }) => record.status)).toEqual([
+      'conflict', 'needs-club-confirmation', 'needs-primary-source',
     ]);
   });
 
