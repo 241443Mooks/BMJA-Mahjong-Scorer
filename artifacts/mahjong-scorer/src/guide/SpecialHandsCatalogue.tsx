@@ -15,6 +15,7 @@ import {
   CLASSICAL_ATLAS_PROFILES,
   CLASSICAL_ATLAS_DISPLAY_PROFILES,
   SPECIAL_HANDS_ATLAS,
+  atlasExposureLabel,
   atlasScoreLabel,
   atlasExamplesForTreatment,
   atlasTreatmentsForEntry,
@@ -61,16 +62,6 @@ function treatmentDefinition(entry: AtlasLearnerEntry, record: SpecialHandsAtlas
   return variant?.definition ? publicClubCopy(variant.definition) : undefined;
 }
 
-function treatmentExposureLabel(record: SpecialHandsAtlasRecord) {
-  const policy = record.exposurePolicy?.policy as { allowed?: boolean; exposedValue?: number; exposedFishingValue?: number } | undefined;
-  if (!policy) return undefined;
-  if (policy.allowed === false) return 'Concealed only; exposed sets are not allowed.';
-  if (policy.allowed === true && policy.exposedValue !== undefined) {
-    return `Exposed sets: ${new Intl.NumberFormat('en-GB').format(policy.exposedValue)} winner${policy.exposedFishingValue === undefined ? '' : `; ${new Intl.NumberFormat('en-GB').format(policy.exposedFishingValue)} fishing`}.`;
-  }
-  return policy.allowed === true ? 'Exposed sets are allowed.' : undefined;
-}
-
 function ComparisonField({ label, values }: { label: string; values: Array<{ key: string; name: string; value: React.ReactNode }> }) {
   if (!values.some(({ value }) => value !== undefined && value !== null && value !== '')) return null;
   return <div className="grid gap-2 border-t border-[#dfd5c2] py-3 sm:grid-cols-[9rem_1fr]">
@@ -110,13 +101,13 @@ function TreatmentComparison({ entry, treatments, selectedIds, onSelectedIdsChan
           <span>{names(record)}</span>
         </label>;
       })}</div>
-      <p className="mt-2 text-xs text-[#596b65]" aria-live="polite">Comparing {selected.length} of 3 treatments.</p>
+      <p className="mt-2 text-xs text-[#596b65]" aria-live="polite">Comparing {selected.length} of {treatments.length} available treatments; choose up to {Math.min(3, treatments.length)}.</p>
     </fieldset>
     <dl className="mt-3">
       <ComparisonField label="Rules and hand" values={selected.map((record) => ({ key: record.referenceId, name: names(record), value: treatmentChoiceLabel(entry, record) }))} />
       <ComparisonField label="Hand form" values={selected.map((record) => ({ key: record.referenceId, name: names(record), value: treatmentDefinition(entry, record) }))} />
       <ComparisonField label="Score and fishing" values={selected.map((record) => ({ key: record.referenceId, name: names(record), value: atlasScoreLabel(record) }))} />
-      <ComparisonField label="Exposure" values={selected.map((record) => ({ key: record.referenceId, name: names(record), value: treatmentExposureLabel(record) }))} />
+      <ComparisonField label="Exposure" values={selected.map((record) => ({ key: record.referenceId, name: names(record), value: atlasExposureLabel(record) }))} />
       <ComparisonField label="Winning method" values={selected.map((record) => ({ key: record.referenceId, name: names(record), value: record.winningMethods?.length ? record.winningMethods.map((method) => method.replaceAll('-', ' ')).join(' or ') : record.winningMethods ? 'Any method accepted by these rules.' : undefined }))} />
       <ComparisonField label="Difference" values={selected.map((record) => ({ key: record.referenceId, name: names(record), value: teaching.get(record.referenceId) }))} />
       <ComparisonField label="Reference note" values={selected.map((record) => ({ key: record.referenceId, name: names(record), value: examples.get(record.referenceId)?.find(({ referenceNote }) => referenceNote)?.referenceNote ?? entry.referenceNote }))} />

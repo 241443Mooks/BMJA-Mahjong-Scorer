@@ -63,7 +63,7 @@ describe('Special Hands exact treatment deep links', () => {
     expect(comparison.textContent).toContain('Concealed only');
     expect(comparison.textContent).toContain('British');
     expect(comparison.textContent).toContain('Western');
-    expect(comparison.querySelector('[aria-live="polite"]')?.textContent).toContain('3 of 3');
+    expect(comparison.querySelector('[aria-live="polite"]')?.textContent).toContain('3 of 4 available treatments; choose up to 3.');
     expect(comparison.querySelector('dl')?.textContent).toContain('Fixed · 1,000 winner · 400 fishing');
     expect(comparison.querySelector('dl')?.textContent).toContain('Fixed · 2,000 winner · 800 fishing');
     expect(comparison.textContent).not.toContain('outside-the-box');
@@ -106,6 +106,6 @@ describe('Special Hands exact treatment deep links', () => {
     const checkboxes = [...pairEntry.querySelectorAll<HTMLInputElement>('[id^="comparison-"] input[type="checkbox"]')];
     expect(checkboxes.length).toBeGreaterThanOrEqual(2);
     expect(new Set(checkboxes.map(({ parentElement }) => parentElement?.textContent)).size).toBe(checkboxes.length);
-    expect(pairEntry.querySelector('[aria-live="polite"]')?.textContent).toContain('2 of 3');
+    expect(pairEntry.querySelector('[aria-live="polite"]')?.textContent).toMatch(/^Comparing 2 of \d+ available treatments; choose up to 3\.$/);
   });
 });

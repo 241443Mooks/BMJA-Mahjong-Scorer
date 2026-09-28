@@ -5,7 +5,7 @@ import { initialiseCurrentRulesRuntimes } from '../rules-platform/current-runtim
 import { readPreferredRulesProfile, PREFERRED_RULES_PROFILE_STORAGE_KEY } from '../game/preferred-rules-profile';
 import { specialHandBindingsForCurrentClassicalProfile } from '../rules-knowledge/current-classical-special-hand-bindings';
 import { specialHandTreatmentsForProfile } from '../rules-knowledge/special-hand-treatments';
-import { ATLAS_EXAMPLE_BY_ID, ATLAS_FACET_DEFINITIONS, ATLAS_LEARNER_ENTRIES, ATLAS_LEARNER_EXAMPLES, ATLAS_TREATMENT_OWNERSHIP, ATLAS_UNRESOLVED_TREATMENTS, CLASSICAL_ATLAS_DISPLAY_PROFILES, SPECIAL_HANDS_ATLAS, atlasBrowseRecords, atlasExamplesForTreatment, atlasScoreLabel, atlasTreatmentsForEntry, clearAtlasSearchAndProfileFilter, filterAtlasEntriesByFacets, filterSpecialHandsAtlasByProfile, resolveSpecialHandsTarget, searchAtlasLearnerEntries, searchSpecialHandsAtlas, selectAtlasLeadExample } from './special-hands-atlas';
+import { ATLAS_EXAMPLE_BY_ID, ATLAS_FACET_DEFINITIONS, ATLAS_LEARNER_ENTRIES, ATLAS_LEARNER_EXAMPLES, ATLAS_TREATMENT_OWNERSHIP, ATLAS_UNRESOLVED_TREATMENTS, CLASSICAL_ATLAS_DISPLAY_PROFILES, SPECIAL_HANDS_ATLAS, atlasBrowseRecords, atlasExposureLabel, atlasExamplesForTreatment, atlasScoreLabel, atlasTreatmentsForEntry, clearAtlasSearchAndProfileFilter, filterAtlasEntriesByFacets, filterSpecialHandsAtlasByProfile, resolveSpecialHandsTarget, searchAtlasLearnerEntries, searchSpecialHandsAtlas, selectAtlasLeadExample } from './special-hands-atlas';
 import { specialHandExampleProvesBmjaTreatment } from './special-hand-examples';
 import { materializeAtlasGenerator } from './AtlasExampleVisual';
 import { detectSpecialHands } from '../scoring';
@@ -172,6 +172,15 @@ describe('Special Hands Atlas directory projection', () => {
     expect(calculated).not.toHaveProperty('fishingValue');
     expect(atlasScoreLabel(configured)).toBe('Configured/table limit');
     expect(configured).not.toHaveProperty('winnerValue');
+  });
+
+  it('describes multiplier exposure policies in treatment comparisons', () => {
+    const treatment = SPECIAL_HANDS_ATLAS[0];
+    const multiplierTreatment = {
+      ...treatment,
+      exposurePolicy: { scoreModel: 'calculated', policy: { multiplier: 0.5, triggerSetKinds: ['pung', 'kong'] } },
+    } as typeof treatment;
+    expect(atlasExposureLabel(multiplierTreatment)).toBe('Exposed sets multiply the score by 0.5.');
   });
 
   it('searches deterministically with exact and prefix names ranked ahead of weaker matches', () => {
