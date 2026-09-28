@@ -7,6 +7,7 @@ import { Check, ChevronDown, Copy, RotateCcw, Sparkles, X, AlertCircle } from 'l
 import { GameScorer } from './game/GameScorer';
 import { SiteHeader } from './components/SiteHeader';
 import { specialHandReferenceHref } from './guide/special-hand-references';
+import { SPECIAL_HANDS_ATLAS } from './guide/special-hands-atlas';
 import { exampleExitLabel, handForScorerMode, practiceScorerContext, practiceSetSummary, resolveScorerExample, scoringExampleBonusTiles, scoringExampleById, scoringExampleTiles, type ResolvedScorerExample } from './guide/scoring-examples';
 import { TileStrip } from './guide/MahjongTileGallery';
 import { ReturnToGame } from './components/ReturnToGame';
@@ -102,11 +103,18 @@ const allDragonTiles: PlayingTile[] = DRAGONS.map(dragon);
 
 const allPlayingTiles = [...allSuitTiles, ...allWindTiles, ...allDragonTiles];
 export const patternReferenceHref = (pattern: { id: string; type: string }, rulesProfile: import('./game').RulesProfileRef) => {
-  if (!isBritishRulesProfile(rulesProfile)) return undefined;
-  if (pattern.type === 'points') return '/guide#ordinary-scoring';
-  if (pattern.type === 'doubles') return '/guide#doubles';
-  if (pattern.type === 'special') return specialHandReferenceHref(pattern.id.replace('special-', ''));
-  if (pattern.type === 'fishing') return specialHandReferenceHref(pattern.id.replace('fishing-', '')) ?? '/guide#fishing';
+  if (pattern.type === 'points') return isBritishRulesProfile(rulesProfile) ? '/guide#ordinary-scoring' : undefined;
+  if (pattern.type === 'doubles') return isBritishRulesProfile(rulesProfile) ? '/guide#doubles' : undefined;
+  if (pattern.type === 'special' || pattern.type === 'fishing') {
+    const patternId = pattern.id.replace(/^(special|fishing)-/, '');
+    const exactTreatment = SPECIAL_HANDS_ATLAS.find(({ identity }) =>
+      identity.profile.id === rulesProfile.id && identity.profile.version === rulesProfile.version && identity.patternId === patternId,
+    );
+    if (exactTreatment?.href) return exactTreatment.href;
+    if (isBritishRulesProfile(rulesProfile)) {
+      return specialHandReferenceHref(patternId) ?? (pattern.type === 'fishing' ? '/guide#fishing' : undefined);
+    }
+  }
   return undefined;
 };
 const tileName = (tile: PlayingTile) => playingTileDefinition(tile).label;
