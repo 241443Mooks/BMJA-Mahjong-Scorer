@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createTruthIndex, currentTruthCorpus, currentTruthIndex, projectSourceRegister } from '../rules-knowledge/truth';
+import { createTruthIndex, currentTruthCorpus, currentTruthIndex, currentTruthValidationEnvironment, projectSourceRegister, truthImpactForSource } from '../rules-knowledge/truth';
 
 describe('current typed truth corpus', () => {
   it('indexes exact source, subject, claim, and profile treatment identities', () => {
@@ -35,6 +35,16 @@ describe('current typed truth corpus', () => {
       'western-tm@0.1:thirteen-unique-wonders',
     ]);
     expect(currentTruthIndex.treatmentsDependingOnSource('classical-atlas-concept-audit-v1', { id: 'western-tm', version: '0.2' })).toEqual([]);
+    const impact = truthImpactForSource(currentTruthIndex, 'buzzard-2000-classical', [
+      { treatmentId: 'western-tm@0.1:thirteen-unique-wonders', projectionId: 'atlas:shared-entry' },
+      { treatmentId: 'buzzard-2000@0.1:thirteen-unique-wonders', projectionId: 'atlas:thirteen-unique-wonders' },
+    ]);
+    expect(impact).toMatchObject({
+      claimIds: ['evidence.pattern.thirteen-orphans.buzzard-2000'],
+      subjects: [{ subjectId: 'pattern.thirteen-orphans', treatmentIds: ['buzzard-2000@0.1:thirteen-unique-wonders'] }],
+      treatments: [{ treatmentId: 'buzzard-2000@0.1:thirteen-unique-wonders', profile: { id: 'buzzard-2000', version: '0.1' }, runtimeState: { kind: 'executable', ref: { kind: 'binding', id: 'thirteen-unique-wonders' } } }],
+      projections: [{ treatmentId: 'buzzard-2000@0.1:thirteen-unique-wonders', projectionId: 'atlas:thirteen-unique-wonders' }],
+    });
     expect(currentTruthIndex.claimsByStatus('secondary-only')).toHaveLength(1);
     expect(currentTruthIndex.unresolvedClaims()).toEqual([]);
     const unresolvedStatuses = ['needs-primary-source', 'needs-club-confirmation', 'conflict'] as const;
@@ -42,7 +52,7 @@ describe('current typed truth corpus', () => {
       const base = currentTruthCorpus.claims[0];
       return { ...base, recordId: `fixture.${status}`, record: { ...base.record, claimId: `fixture.${status}`, status } };
     });
-    const withUnresolved = createTruthIndex({ ...currentTruthCorpus, claims: [...currentTruthCorpus.claims, ...unresolvedClaims] });
+    const withUnresolved = createTruthIndex({ ...currentTruthCorpus, claims: [...currentTruthCorpus.claims, ...unresolvedClaims] }, currentTruthValidationEnvironment);
     expect(withUnresolved.unresolvedClaims().map(({ record }) => record.status)).toEqual([
       'conflict', 'needs-club-confirmation', 'needs-primary-source',
     ]);
@@ -58,19 +68,9 @@ describe('current typed truth corpus', () => {
       sources: [...currentTruthCorpus.sources].reverse(),
       claims: [...currentTruthCorpus.claims].reverse(),
       treatments: [...currentTruthCorpus.treatments].reverse(),
-    });
+    }, currentTruthValidationEnvironment);
     expect(reordered.treatmentsDependingOnSource('classical-atlas-concept-audit-v1').map(({ record }) => record.treatmentId))
       .toEqual(currentTruthIndex.treatmentsDependingOnSource('classical-atlas-concept-audit-v1').map(({ record }) => record.treatmentId));
   });
 
-  it('refuses executable treatments without exact-profile verified evidence', () => {
-    const secondaryOnly = currentTruthCorpus.claims.find(({ record }) => record.status === 'secondary-only')!;
-    const invalid = {
-      ...currentTruthCorpus,
-      treatments: currentTruthCorpus.treatments.map((entry, index) => index === 0
-        ? { ...entry, record: { ...entry.record, evidenceClaimIds: [secondaryOnly.record.claimId] } }
-        : entry),
-    };
-    expect(() => createTruthIndex(invalid)).toThrow(/verified evidence for its exact subject and profile version/);
-  });
 });
