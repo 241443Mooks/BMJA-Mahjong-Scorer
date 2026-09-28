@@ -22,8 +22,9 @@ For a bounded task, start with the named issue or PR. Then use only the relevant
 - **Durable Table Companion direction:** `product/TABLE_COMPANION_TRANSFORMATION.md`.
 - **Search/acquisition strategy:** `product/SEO_GROWTH_STRATEGY.md`.
 - **Structured reference knowledge:** `product/REFERENCE_KNOWLEDGE_ARCHITECTURE.md` and #251. Public pages are views over source/runtime-backed concepts, profile treatments, relationships and evidence; they are not a wiki or a second rules database.
-- **Machine-readable rules truth:** #399 owns the governed source → evidence → semantic identity → exact profile treatment → runtime chain.
-- **Rules comparison/profile reporting:** #296 owns the shared dimension contract; #405 consumes the same contract for one-profile human-readable reports.
+- **Machine-readable rules truth:** #399 is the completed governed source → evidence → semantic identity → exact profile treatment → runtime architecture; #440 owns the next bounded corpus expansion through that model.
+- **Rules comparison/profile reporting:** #296 owns the shared comparison direction; #405 consumes the same profile × dimension contract for one-profile human-readable reports. #406 established the shared substrate and is complete.
+- **Ruleset authoring/compiler:** #447 records the future source-document → structured-claims → reviewed candidate-profile pipeline; it is parked, not current authority for implementation.
 - **Analytics/privacy measurement:** `product/ANALYTICS_MEASUREMENT_PLAN.md` and #246.
 - **Plus/accounts/cloud:** `product/MAHJONG_REFERENCE_PLUS_ARCHITECTURE.md`, supporting `PLUS_*` docs and #206.
 - **Rules/scoring:** relevant `rules/` source/evidence files, `BMJA_RULES_REFERENCE.md`, executable tests and the named profile issue.
@@ -39,7 +40,7 @@ The cross-family rules platform, permanent parity/replay harness, current caller
 
 MCR `0.1` Provisional is implemented for hand scoring and Table Companion; experienced-player review remains its `1.0` gate.
 
-The Classical hybrid evidence-first hand-entry programme (#386) is complete and closed. Riichi correctness research is complete, but Riichi runtime implementation remains downstream of #399 and a fresh preflight against the resulting production architecture.
+The Classical hybrid evidence-first hand-entry programme (#386) is complete and closed. The machine-readable rules-truth programme (#399) is also complete, including Classical/MCR proof and the pre-Riichi readiness gate. Riichi correctness research is complete and the architecture gate has passed, but Riichi runtime implementation still starts with a fresh preflight against current production `main`.
 
 For programme state, use #105 and the dated `product/WHATS_NEXT_ROADMAP.md` rather than freezing child-issue sequencing into this file.
 
