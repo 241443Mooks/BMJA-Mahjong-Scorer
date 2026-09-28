@@ -4,6 +4,7 @@ export type { TruthIndex } from './queries';
 export { assertTruthCorpusIntegrity, TruthCorpusIntegrityError, validateTruthCorpus } from './integrity';
 export type { TruthIntegrityIssue, TruthIntegrityIssueCode, TruthValidationEnvironment } from './integrity';
 export { currentTruthValidationEnvironment } from './current-validation-environment';
+export { mcrTruthValidationEnvironment } from './mcr-validation-environment';
 export { projectSourceRegister } from './projection';
 export type { TruthCorpus } from './records';
 export { truthImpactForSource } from './impact';

@@ -1,11 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { createTruthIndex, currentTruthCorpus, currentTruthIndex, currentTruthValidationEnvironment, projectSourceRegister, truthImpactForSource } from '../rules-knowledge/truth';
+import { MCR_2006_FAN_BINDINGS, detectMcr2006Fans } from './mcr-detectors';
+import type { McrScoringInput } from './mcr-scoring-input';
 
 describe('current typed truth corpus', () => {
   it('indexes exact source, subject, claim, and profile treatment identities', () => {
     const subjectId = 'pattern.thirteen-orphans';
     expect(currentTruthIndex.subjectById(subjectId)?.record.kind).toBe('pattern');
-    expect(currentTruthIndex.claimsForSubject(subjectId)).toHaveLength(5);
+    expect(currentTruthIndex.claimsForSubject(subjectId)).toHaveLength(6);
     expect(currentTruthIndex.claimsForSource('buzzard-2000-classical').map(({ record }) => record.supportsProfile)).toEqual([
       { id: 'buzzard-2000', version: '0.1' },
     ]);
@@ -19,6 +21,7 @@ describe('current typed truth corpus', () => {
     expect(currentTruthIndex.treatmentsForSubject(subjectId).map(({ record }) => record.treatmentId)).toEqual([
       'bmja@1.0:thirteen-unique-wonders',
       'buzzard-2000@0.1:thirteen-unique-wonders',
+      'mcr-wmo-2006@0.1:thirteen-orphans',
       'outside-the-box@0.1:thirteen-unique-wonders',
       'western-tm@0.1:thirteen-unique-wonders',
     ]);
@@ -26,11 +29,43 @@ describe('current typed truth corpus', () => {
     expect(currentTruthIndex.claimsSupportingProfile({ id: 'outside-the-box', version: '0.1' })).toHaveLength(1);
   });
 
+  it('joins the MCR truth records to the exact pattern-accumulator bindings and detector', () => {
+    const profile = { id: 'mcr-wmo-2006', version: '0.1' } as const;
+    const mcrTreatment = currentTruthIndex.treatmentById('mcr-wmo-2006@0.1:thirteen-orphans')!.record;
+    expect(mcrTreatment).toMatchObject({ profile, subjectId: 'pattern.thirteen-orphans', runtimeState: { kind: 'executable', ref: { kind: 'binding', id: 'mcr2006.fan.thirteen-orphans' } } });
+    expect(currentTruthIndex.subjectById('pattern.thirteen-orphans')?.record.kind).toBe('pattern');
+    expect(currentTruthIndex.claimById('evidence.pattern.thirteen-orphans.mcr-wmo-2006')?.record).toMatchObject({
+      sourceId: 'source.mcr-ema-green-book-2006', supportsProfile: profile,
+      locator: { kind: 'publication', page: '§3.8.1 #7; Appendix 1 #7' },
+    });
+    const bindingId = 'mcr2006.fan.thirteen-orphans';
+    expect(MCR_2006_FAN_BINDINGS.some(({ id }) => id === bindingId)).toBe(true);
+    expect(currentTruthValidationEnvironment.runtimeTreatmentExists(profile, { kind: 'policy', id: 'interaction.mcr-2006-non-combination' })).toBe(true);
+    expect(currentTruthValidationEnvironment.runtimeTreatmentExists(profile, { kind: 'policy', id: 'qualification.mcr-8-before-flowers' })).toBe(true);
+    expect(currentTruthValidationEnvironment.runtimeTreatmentExists(profile, { kind: 'policy', id: 'interaction.not-configured' })).toBe(false);
+
+    const t = (s: 'characters' | 'bamboo' | 'dots', rank: number) => ({ face: { family: 'suit' as const, suit: s, rank } });
+    const w = (wind: 'east' | 'south' | 'west' | 'north') => ({ face: { family: 'wind' as const, wind } });
+    const d = (dragon: 'red' | 'green' | 'white') => ({ face: { family: 'dragon' as const, dragon } });
+    const fixture: McrScoringInput = {
+      evidence: { fixedGroups: [], freeTiles: [t('characters', 1), t('characters', 9), t('bamboo', 1), t('bamboo', 9), t('dots', 1), t('dots', 9), w('east'), w('south'), w('west'), w('north'), d('red'), d('green'), d('white'), t('characters', 1)], winningTile: t('characters', 1), flowerCount: 0 },
+      context: { winSource: 'discard', resolvedWinEvent: 'none', lastVisibleCopy: false },
+    };
+    expect(detectMcr2006Fans(fixture).candidates.some((candidate) => candidate.bindingId === bindingId)).toBe(true);
+  });
+
   it('follows source impact through claims to only the supported treatments', () => {
     expect(currentTruthIndex.treatmentsDependingOnSource('buzzard-2000-classical').map(({ record }) => record.treatmentId)).toEqual([
       'buzzard-2000@0.1:thirteen-unique-wonders',
     ]);
     expect(currentTruthIndex.treatmentsDependingOnSource('classical-atlas-concept-audit-v1')).toHaveLength(4);
+    expect(currentTruthIndex.treatmentsDependingOnSource('source.mcr-ema-green-book-2006').map(({ record }) => record.treatmentId)).toEqual([
+      'mcr-wmo-2006@0.1:eight-point-qualification',
+      'mcr-wmo-2006@0.1:non-combination',
+      'mcr-wmo-2006@0.1:thirteen-orphans',
+    ]);
+    expect(currentTruthIndex.treatmentsDependingOnSource('source.mcr-ema-green-book-2006', { id: 'mcr-wmo-2006', version: '0.1' })).toHaveLength(3);
+    expect(currentTruthIndex.treatmentsDependingOnSource('source.mcr-ema-green-book-2006', { id: 'mcr-wmo-2006', version: '0.2' })).toEqual([]);
     expect(currentTruthIndex.treatmentsDependingOnSource('classical-atlas-concept-audit-v1', { id: 'western-tm', version: '0.1' }).map(({ record }) => record.treatmentId)).toEqual([
       'western-tm@0.1:thirteen-unique-wonders',
     ]);
