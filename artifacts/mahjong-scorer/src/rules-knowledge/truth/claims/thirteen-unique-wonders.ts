@@ -1,0 +1,14 @@
+import type { EvidenceClaim } from '../../../rules-platform/truth-model';
+import { versioned } from '../records';
+
+const subjectId = 'pattern.thirteen-orphans';
+const claim = (record: EvidenceClaim) => versioned(record.claimId, record);
+const auditUrl = 'https://github.com/241443Mooks/BMJA-Mahjong-Scorer/blob/main/docs/rules/encyclopaedia/CLASSICAL_ATLAS_CONCEPT_AUDIT_V1.md';
+
+export const thirteenUniqueWondersClaims = [
+  claim({ claimId: 'evidence.pattern.thirteen-orphans.bmja', subjectId, sourceId: 'bmja-special-hands', locator: { kind: 'url', url: 'https://mahjongbritishrules.wordpress.com/scoring/special-hands/', section: 'The thirteen unique wonders' }, status: 'verified', claim: 'The BMJA special-hands source documents Thirteen Unique Wonders for the BMJA profile.', checkedOn: '2026-09-28', supportsProfile: { id: 'bmja', version: '1.0' } }),
+  claim({ claimId: 'evidence.pattern.thirteen-orphans.western-tm', subjectId, sourceId: 'tm-companion', locator: { kind: 'publication', title: 'Thompson & Maloney Player’s Companion', edition: '1997', year: 1997, page: 'synopsis p.58; detail p.44' }, status: 'verified', claim: 'The Player’s Companion records the Western Unique Wonder treatment.', checkedOn: '2026-09-28', supportsProfile: { id: 'western-tm', version: '0.1' } }),
+  claim({ claimId: 'evidence.pattern.thirteen-orphans.outside-the-box', subjectId, sourceId: 'otb-guide-2026-09', locator: { kind: 'club-material', title: 'Outside the Box profile crosswalk', version: '2026-09', section: '§2 13 Unique Wonders' }, status: 'verified-club', claim: 'The current club crosswalk confirms the Outside the Box 13 Unique Wonders treatment and its concealed-only qualification.', checkedOn: '2026-09-28', supportsProfile: { id: 'outside-the-box', version: '0.1' } }),
+  claim({ claimId: 'evidence.pattern.thirteen-orphans.buzzard-2000', subjectId, sourceId: 'buzzard-2000-classical', locator: { kind: 'publication', title: 'Buzzard 2000 Classical rules, retained original source snapshot', year: 2000, page: 'retained PDF p.11' }, status: 'verified', claim: 'The Buzzard primary source defines Thirteen Odd Majors with the same thirteen terminal/honour faces and a pair from those faces; the reconciliation confirms exact structural equivalence to the shared concept.', checkedOn: '2026-09-28', supportsProfile: { id: 'buzzard-2000', version: '0.1' } }),
+  claim({ claimId: 'evidence.pattern.thirteen-orphans.classical-membership-audit', subjectId, sourceId: 'classical-atlas-concept-audit-v1', locator: { kind: 'url', url: auditUrl, section: '§1 Thirteen Unique Wonders / Unique Wonder / Thirteen Odd Majors' }, status: 'secondary-only', claim: 'The audit supports a shared structural subject across the four treatments; the Buzzard part follows the later source-backed reconciliation, and profile qualification remains independently evidenced.', checkedOn: '2026-09-28' }),
+];

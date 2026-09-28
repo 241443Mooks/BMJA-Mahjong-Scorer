@@ -11,7 +11,7 @@ import { materializeAtlasGenerator } from './AtlasExampleVisual';
 import { detectSpecialHands } from '../scoring';
 import { SPECIAL_HAND_ANCHORS, specialHandReferenceHref } from './special-hand-references';
 import { atlasExampleProvesTreatment, resolveAtlasScorerExample } from './atlas-scorer-handoff';
-import type { EvidenceClaim, ProfileTreatment, SemanticSubject, SourceRecord } from '../rules-platform/truth-model';
+import { currentTruthIndex } from '../rules-knowledge/truth';
 
 const profiles = [BMJA_PROFILE_REF, WESTERN_TM_PROFILE_REF, OUTSIDE_THE_BOX_PROFILE_REF, BUZZARD_2000_PROFILE_REF];
 
@@ -60,28 +60,9 @@ describe('Special Hands Atlas directory projection', () => {
     const entry = ATLAS_LEARNER_ENTRIES.find(({ id }) => id === 'thirteen-unique-wonders')!;
     const exampleId = 'example-thirteen-wonders-existing';
     const evidence = entry.evidenceBindings ?? [];
-    const subject: SemanticSubject = { id: 'pattern.thirteen-orphans', kind: 'pattern' };
-    const source: SourceRecord = {
-      sourceId: 'classical-atlas-concept-audit-v1',
-      citation: 'Current-Classical Atlas concept and facet audit (v1), §1',
-      authority: 'secondary',
-      authorityForProfileIds: [],
-      publicationVersion: 'v1',
-      recordedOn: '2026-09-28',
-    };
-    const claim: EvidenceClaim = {
-      claimId: 'evidence.pattern.thirteen-orphans.classical-membership',
-      subjectId: subject.id,
-      sourceId: source.sourceId,
-      locator: {
-        kind: 'url',
-        url: 'https://github.com/241443Mooks/BMJA-Mahjong-Scorer/blob/main/docs/rules/encyclopaedia/CLASSICAL_ATLAS_CONCEPT_AUDIT_V1.md',
-        section: '§1 Thirteen Unique Wonders / Unique Wonder / Thirteen Odd Majors',
-      },
-      status: 'secondary-only',
-      claim: 'The reviewed audit supports one shared structural pattern identity across the four exact Classical treatments; profile qualification and score stay owned by each runtime binding.',
-      checkedOn: '2026-09-28',
-    };
+    const subject = currentTruthIndex.subjectById('pattern.thirteen-orphans')!.record;
+    const source = currentTruthIndex.sourceById('classical-atlas-concept-audit-v1')!.record;
+    const claim = currentTruthIndex.claimById('evidence.pattern.thirteen-orphans.classical-membership-audit')!.record;
     expect(entry.state).toBe('reviewed-concept');
     expect(evidence).toContainEqual(expect.objectContaining({
       kind: 'reviewed-audit',
@@ -114,16 +95,7 @@ describe('Special Hands Atlas directory projection', () => {
     expect(source.sourceId).toBe(claim.sourceId);
     expect(claim.subjectId).toBe(subject.id);
     expect(claim.status).toBe('secondary-only');
-    const truthTreatments: ProfileTreatment[] = expectedTreatments.map(({ profile, referenceId }) => ({
-      treatmentId: referenceId,
-      profile,
-      subjectId: subject.id,
-      runtimeState: {
-        kind: 'executable',
-        ref: { kind: 'binding', id: referenceId.slice(referenceId.indexOf(':') + 1) },
-      },
-      evidenceClaimIds: [claim.claimId],
-    }));
+    const truthTreatments = currentTruthIndex.treatmentsForSubject(subject.id).map(({ record }) => record);
     expect(ATLAS_LEARNER_ENTRIES).toHaveLength(71);
     expect(SPECIAL_HANDS_ATLAS).toHaveLength(146);
     expect([...entry.treatmentReferenceIds].sort()).toEqual(expectedTreatments.map(({ referenceId }) => referenceId).sort());
@@ -131,11 +103,17 @@ describe('Special Hands Atlas directory projection', () => {
     for (const { profile, slug, referenceId } of expectedTreatments) {
       const patternId = referenceId.slice(referenceId.indexOf(':') + 1);
       const truthTreatment = truthTreatments.find(({ treatmentId }) => treatmentId === referenceId)!;
+      const profileClaim = truthTreatment.evidenceClaimIds
+        .map((claimId) => currentTruthIndex.claimById(claimId)?.record)
+        .find((candidate) => candidate?.supportsProfile?.id === profile.id && candidate.supportsProfile.version === profile.version);
       const runtimeBinding = specialHandBindingsForCurrentClassicalProfile(profile)
         .find((binding) => binding.patternId === patternId);
       expect(truthTreatment.profile).toEqual(profile);
       expect(truthTreatment.subjectId).toBe(subject.id);
       expect(truthTreatment.evidenceClaimIds).toContain(claim.claimId);
+      expect(profileClaim?.status).toBe(profile.id === 'outside-the-box' ? 'verified-club' : 'verified');
+      expect(profileClaim?.subjectId).toBe(subject.id);
+      expect(profileClaim && currentTruthIndex.sourceById(profileClaim.sourceId)).toBeDefined();
       expect(truthTreatment.runtimeState).toEqual({ kind: 'executable', ref: { kind: 'binding', id: patternId } });
       expect(ATLAS_TREATMENT_OWNERSHIP[referenceId]).toBe(entry.id);
       expect(atlasTreatmentsForEntry(entry).some(({ referenceId: projectedId }) => projectedId === referenceId)).toBe(true);
