@@ -1,6 +1,7 @@
 import type { EvidenceClaim, EvidenceStatus, ProfileTreatment, SemanticSubject, SourceRecord, VersionedTruthRecord } from '../../rules-platform/truth-model';
 import type { RulesProfileRef } from '../../rules-platform/types';
 import type { TruthCorpus } from './records';
+import { assertTruthCorpusIntegrity, type TruthValidationEnvironment } from './integrity';
 
 const byId = <T>(records: readonly VersionedTruthRecord<T>[], id: (record: T) => string) =>
   new Map(records.map((entry) => [id(entry.record), entry]));
@@ -10,31 +11,16 @@ const exactProfile = (a: RulesProfileRef, b: RulesProfileRef) => a.id === b.id &
 
 export type TruthIndex = ReturnType<typeof createTruthIndex>;
 
-export const createTruthIndex = (corpus: TruthCorpus) => {
-  const sources = ordered(corpus.sources);
-  const subjects = ordered(corpus.subjects);
-  const claims = ordered(corpus.claims);
-  const treatments = ordered(corpus.treatments);
+export const createTruthIndex = (corpus: TruthCorpus, environment: TruthValidationEnvironment) => {
+  assertTruthCorpusIntegrity(corpus, environment);
+  const sources = ordered(corpus.sources.filter(({ lifecycle }) => lifecycle === 'current'));
+  const subjects = ordered(corpus.subjects.filter(({ lifecycle }) => lifecycle === 'current'));
+  const claims = ordered(corpus.claims.filter(({ lifecycle }) => lifecycle === 'current'));
+  const treatments = ordered(corpus.treatments.filter(({ lifecycle }) => lifecycle === 'current'));
   const sourcesById = byId(sources, (record: SourceRecord) => record.sourceId);
   const subjectsById = byId(subjects, (record: SemanticSubject) => record.id);
   const claimsById = byId(claims, (record: EvidenceClaim) => record.claimId);
   const treatmentsById = byId(treatments, (record: ProfileTreatment) => record.treatmentId);
-  for (const { record: treatment } of treatments) {
-    if (treatment.runtimeState.kind !== 'executable') continue;
-    const hasExactVerifiedEvidence = treatment.evidenceClaimIds.some((claimId) => {
-      const claim = claimsById.get(claimId)?.record;
-      return claim !== undefined
-        && (claim.status === 'verified' || claim.status === 'verified-club')
-        && claim.subjectId === treatment.subjectId
-        && claim.sourceId !== undefined
-        && sourcesById.has(claim.sourceId)
-        && claim.supportsProfile !== undefined
-        && exactProfile(claim.supportsProfile, treatment.profile);
-    });
-    if (!hasExactVerifiedEvidence) {
-      throw new Error(`Executable treatment ${treatment.treatmentId} requires verified evidence for its exact subject and profile version`);
-    }
-  }
   const claimsFor = (predicate: (claim: EvidenceClaim) => boolean) => claims.filter(({ record }) => predicate(record));
   const treatmentsFor = (predicate: (treatment: ProfileTreatment) => boolean) => treatments.filter(({ record }) => predicate(record));
 
