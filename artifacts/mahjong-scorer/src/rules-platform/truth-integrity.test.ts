@@ -61,6 +61,14 @@ describe('truth corpus integrity gate', () => {
     const missingLocator = copyCorpus();
     (missingLocator.claims[0]!.record as unknown as { locator?: unknown }).locator = undefined;
     hasCode(missingLocator, 'EMPTY_LOCATOR');
+
+    const sectionOnlyPublication = copyCorpus();
+    sectionOnlyPublication.claims[0]!.record.locator = { kind: 'publication', title: 'Example publication', section: '§2.1' };
+    expect(issueCodes(sectionOnlyPublication)).not.toContain('EMPTY_LOCATOR');
+
+    const emptyPublicationLocation = copyCorpus();
+    emptyPublicationLocation.claims[0]!.record.locator = { kind: 'publication', title: 'Example publication', section: ' ', page: '' };
+    hasCode(emptyPublicationLocation, 'EMPTY_LOCATOR');
   });
 
   it('requires exact known profile versions on claims and treatments', () => {

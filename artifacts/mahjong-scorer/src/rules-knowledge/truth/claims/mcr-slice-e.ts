@@ -4,7 +4,7 @@ import { versioned } from '../records';
 const sourceId = 'source.mcr-ema-green-book-2006';
 const supportsProfile = { id: 'mcr-wmo-2006', version: '0.1' } as const;
 const claim = (record: EvidenceClaim) => versioned(record.claimId, record);
-const greenBook = (section: string) => ({ kind: 'publication' as const, title: 'Mahjong Competition Rules (2006), English Mahjong Association edition', edition: '2006', year: 2006, page: section });
+const greenBook = (section: string) => ({ kind: 'publication' as const, title: 'Mahjong Competition Rules (2006), European Mahjong Association (EMA) English edition', edition: '2006', year: 2006, section });
 
 export const mcrSliceEClaims = [
   claim({ claimId: 'evidence.pattern.thirteen-orphans.mcr-wmo-2006', subjectId: 'pattern.thirteen-orphans', sourceId, locator: greenBook('§3.8.1 #7; Appendix 1 #7'), status: 'verified', claim: 'The 2006 MCR defines Thirteen Orphans as fan #7.', checkedOn: '2026-09-28', supportsProfile }),

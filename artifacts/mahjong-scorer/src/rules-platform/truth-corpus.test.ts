@@ -36,7 +36,7 @@ describe('current typed truth corpus', () => {
     expect(currentTruthIndex.subjectById('pattern.thirteen-orphans')?.record.kind).toBe('pattern');
     expect(currentTruthIndex.claimById('evidence.pattern.thirteen-orphans.mcr-wmo-2006')?.record).toMatchObject({
       sourceId: 'source.mcr-ema-green-book-2006', supportsProfile: profile,
-      locator: { kind: 'publication', page: '§3.8.1 #7; Appendix 1 #7' },
+      locator: { kind: 'publication', section: '§3.8.1 #7; Appendix 1 #7' },
     });
     const bindingId = 'mcr2006.fan.thirteen-orphans';
     expect(MCR_2006_FAN_BINDINGS.some(({ id }) => id === bindingId)).toBe(true);
