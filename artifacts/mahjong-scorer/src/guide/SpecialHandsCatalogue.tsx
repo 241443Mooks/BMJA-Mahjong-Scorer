@@ -24,6 +24,7 @@ import {
   searchAtlasLearnerEntries,
   selectAtlasLeadExample,
   selectAtlasLeadExampleForTreatment,
+  resolveSpecialHandsTarget,
   type AtlasExample,
   type AtlasLearnerEntry,
   type SpecialHandsAtlasRecord,
@@ -112,6 +113,7 @@ function EntryCard({
   explicitProfile,
   expanded,
   onExpandedChange,
+  targetTreatmentReferenceId,
 }: {
   entry: AtlasLearnerEntry;
   preferredProfile: { id: string; version: string } | null;
@@ -119,8 +121,12 @@ function EntryCard({
   explicitProfile: string | null;
   expanded: boolean;
   onExpandedChange: (open: boolean) => void;
+  targetTreatmentReferenceId?: string;
 }) {
   const [localTreatment, setLocalTreatment] = useState<string | null>(null);
+  useEffect(() => {
+    if (targetTreatmentReferenceId) setLocalTreatment(targetTreatmentReferenceId);
+  }, [targetTreatmentReferenceId]);
   const profileOrder = new Map(CLASSICAL_ATLAS_DISPLAY_PROFILES.map((profile, index) => [`${profile.id}@${profile.version}`, index]));
   const treatments = atlasTreatmentsForEntry(entry).sort((left, right) => (profileOrder.get(`${left.identity.profile.id}@${left.identity.profile.version}`) ?? 99) - (profileOrder.get(`${right.identity.profile.id}@${right.identity.profile.version}`) ?? 99));
   const ownTreatment = preferredProfile && treatments.find(({ identity }) => identity.profile.id === preferredProfile.id && identity.profile.version === preferredProfile.version);
@@ -199,6 +205,7 @@ export function SpecialHandsCatalogue() {
   const [selectedFacets, setSelectedFacets] = useState<string[]>([]);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [expandedEntryId, setExpandedEntryId] = useState<string | null>(null);
+  const [targetTreatmentReferenceId, setTargetTreatmentReferenceId] = useState<string | undefined>();
   const profileForFilter = profileFilter === 'all' ? null : PUBLIC_RULES_DESCRIPTORS.find(({ slug }) => slug === profileFilter)?.profile ?? null;
 
   const entriesForScope = (scope: 'all' | 'my-rules' | { id: string; version: string }, facets: string[] = selectedFacets) => {
@@ -229,11 +236,17 @@ export function SpecialHandsCatalogue() {
     setMyRules(false);
     setProfileFilter('all');
     setQuery('');
+    const target = resolveSpecialHandsTarget(anchor);
+    if (target) {
+      setProfileFilter(target.profileSlug);
+      setTargetTreatmentReferenceId(target.record.referenceId);
+    }
     const entry = ATLAS_LEARNER_ENTRIES.find(({ id, treatmentReferenceIds }) => `atlas-entry-${id}` === anchor || treatmentReferenceIds.some((referenceId) => {
       const record = SPECIAL_HANDS_ATLAS.find((candidate) => candidate.referenceId === referenceId);
       return !!record?.href && treatmentAnchor(record) === anchor;
     }));
-    if (entry) setExpandedEntryId(entry.id);
+    const targetEntry = (target && ATLAS_LEARNER_ENTRIES.find(({ id }) => id === target.entryId)) ?? entry;
+    if (targetEntry) setExpandedEntryId(targetEntry.id);
     requestAnimationFrame(() => requestAnimationFrame(() => document.getElementById(anchor)?.scrollIntoView({ block: 'start' })));
   }, []);
 

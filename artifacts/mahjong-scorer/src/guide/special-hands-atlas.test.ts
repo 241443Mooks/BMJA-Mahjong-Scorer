@@ -5,7 +5,7 @@ import { initialiseCurrentRulesRuntimes } from '../rules-platform/current-runtim
 import { readPreferredRulesProfile, PREFERRED_RULES_PROFILE_STORAGE_KEY } from '../game/preferred-rules-profile';
 import { specialHandBindingsForCurrentClassicalProfile } from '../rules-knowledge/current-classical-special-hand-bindings';
 import { specialHandTreatmentsForProfile } from '../rules-knowledge/special-hand-treatments';
-import { ATLAS_EXAMPLE_BY_ID, ATLAS_FACET_DEFINITIONS, ATLAS_LEARNER_ENTRIES, ATLAS_LEARNER_EXAMPLES, ATLAS_TREATMENT_OWNERSHIP, ATLAS_UNRESOLVED_TREATMENTS, CLASSICAL_ATLAS_DISPLAY_PROFILES, SPECIAL_HANDS_ATLAS, atlasBrowseRecords, atlasExamplesForTreatment, atlasScoreLabel, atlasTreatmentsForEntry, clearAtlasSearchAndProfileFilter, filterAtlasEntriesByFacets, filterSpecialHandsAtlasByProfile, searchAtlasLearnerEntries, searchSpecialHandsAtlas, selectAtlasLeadExample } from './special-hands-atlas';
+import { ATLAS_EXAMPLE_BY_ID, ATLAS_FACET_DEFINITIONS, ATLAS_LEARNER_ENTRIES, ATLAS_LEARNER_EXAMPLES, ATLAS_TREATMENT_OWNERSHIP, ATLAS_UNRESOLVED_TREATMENTS, CLASSICAL_ATLAS_DISPLAY_PROFILES, SPECIAL_HANDS_ATLAS, atlasBrowseRecords, atlasExamplesForTreatment, atlasScoreLabel, atlasTreatmentsForEntry, clearAtlasSearchAndProfileFilter, filterAtlasEntriesByFacets, filterSpecialHandsAtlasByProfile, resolveSpecialHandsTarget, searchAtlasLearnerEntries, searchSpecialHandsAtlas, selectAtlasLeadExample } from './special-hands-atlas';
 import { specialHandExampleProvesBmjaTreatment } from './special-hand-examples';
 import { materializeAtlasGenerator } from './AtlasExampleVisual';
 import { detectSpecialHands } from '../scoring';
@@ -137,10 +137,29 @@ describe('Special Hands Atlas directory projection', () => {
     expect(new Set(samePattern.map(({ referenceId }) => referenceId)).size).toBe(samePattern.length);
   });
 
-  it('shows Western all-pair-honours facts without a borrowed BMJA anchor', () => {
+  it('shows Western all-pair-honours facts with its exact public treatment anchor', () => {
     const western = SPECIAL_HANDS_ATLAS.find(({ referenceId }) => referenceId === 'western-tm@0.1:all-pair-honours')!;
     expect(western).toMatchObject({ name: 'All Pair Honours', scoreModel: 'fixed', winnerValue: 1000, fishingValue: 400 });
-    expect(western.href).toBeUndefined();
+    expect(western.href).toBe('/special-hands#treatment-western-all-pair-honours');
+    expect(resolveSpecialHandsTarget('treatment-western-all-pair-honours')).toMatchObject({
+      entryId: ATLAS_TREATMENT_OWNERSHIP[western.referenceId],
+      profileSlug: 'western',
+      record: { referenceId: western.referenceId },
+    });
+  });
+
+  it('resolves exact owned Club and Buzzard targets using only public rules slugs', () => {
+    for (const slug of ['club', 'buzzard'] as const) {
+      const record = SPECIAL_HANDS_ATLAS.find(({ href }) => href?.startsWith(`/special-hands#treatment-${slug}-`))!;
+      const anchor = record.href!.split('#')[1];
+      expect(resolveSpecialHandsTarget(anchor)).toMatchObject({
+        entryId: ATLAS_TREATMENT_OWNERSHIP[record.referenceId],
+        profileSlug: slug,
+        record: { referenceId: record.referenceId },
+      });
+      expect(record.href).not.toContain('outside-the-box');
+    }
+    expect(resolveSpecialHandsTarget('treatment-club-stale-pattern')).toBeUndefined();
   });
 
   it('describes fixed, calculated and configured-limit score models without inventing numbers', () => {

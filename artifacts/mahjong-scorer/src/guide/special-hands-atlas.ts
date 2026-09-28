@@ -73,13 +73,30 @@ export const ATLAS_EXAMPLE_BY_ID = new Map(ATLAS_LEARNER_EXAMPLES.map((example) 
 export const SPECIAL_HANDS_ATLAS: readonly SpecialHandsAtlasRecord[] = Object.freeze(
   CLASSICAL_ATLAS_PROFILES.flatMap((profile) => {
     const descriptor = descriptorForRulesProfile(profile);
-    return specialHandTreatmentsForProfile(profile).map((treatment) => ({
-      ...treatment,
-      profileTitle: descriptor.title,
-      profileLabel: descriptor.compactLabel,
-    }));
+    return specialHandTreatmentsForProfile(profile).map((treatment) => {
+      const ownerId = atlasContent.treatmentOwnership[treatment.referenceId];
+      const href = treatment.href ?? (ownerId
+        ? `/special-hands#treatment-${descriptor.slug}-${treatment.identity.patternId}`
+        : undefined);
+      return {
+        ...treatment,
+        ...(href ? { href } : {}),
+        profileTitle: descriptor.title,
+        profileLabel: descriptor.compactLabel,
+      };
+    });
   }),
 );
+
+export function resolveSpecialHandsTarget(anchor: string) {
+  const record = SPECIAL_HANDS_ATLAS.find((candidate) => candidate.href?.split('#')[1] === anchor);
+  if (!record) return undefined;
+  const entryId = atlasContent.treatmentOwnership[record.referenceId];
+  const profileSlug = PUBLIC_RULES_DESCRIPTORS.find(({ profile }) =>
+    profile.id === record.identity.profile.id && profile.version === record.identity.profile.version,
+  )?.slug;
+  return entryId && profileSlug ? { record, entryId, profileSlug } : undefined;
+}
 
 const treatmentByReference = new Map(SPECIAL_HANDS_ATLAS.map((record) => [record.referenceId, record]));
 export const atlasTreatmentsForEntry = (entry: AtlasLearnerEntry): SpecialHandsAtlasRecord[] =>
