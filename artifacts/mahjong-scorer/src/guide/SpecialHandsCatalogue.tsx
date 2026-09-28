@@ -205,7 +205,7 @@ export function SpecialHandsCatalogue() {
   const [selectedFacets, setSelectedFacets] = useState<string[]>([]);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [expandedEntryId, setExpandedEntryId] = useState<string | null>(null);
-  const [targetTreatmentReferenceId, setTargetTreatmentReferenceId] = useState<string | undefined>();
+  const [targetTreatment, setTargetTreatment] = useState<{ referenceId: string; entryId: string }>();
   const profileForFilter = profileFilter === 'all' ? null : PUBLIC_RULES_DESCRIPTORS.find(({ slug }) => slug === profileFilter)?.profile ?? null;
 
   const entriesForScope = (scope: 'all' | 'my-rules' | { id: string; version: string }, facets: string[] = selectedFacets) => {
@@ -239,7 +239,7 @@ export function SpecialHandsCatalogue() {
     const target = resolveSpecialHandsTarget(anchor);
     if (target) {
       setProfileFilter(target.profileSlug);
-      setTargetTreatmentReferenceId(target.record.referenceId);
+      setTargetTreatment({ referenceId: target.record.referenceId, entryId: target.entryId });
     }
     const entry = ATLAS_LEARNER_ENTRIES.find(({ id, treatmentReferenceIds }) => `atlas-entry-${id}` === anchor || treatmentReferenceIds.some((referenceId) => {
       const record = SPECIAL_HANDS_ATLAS.find((candidate) => candidate.referenceId === referenceId);
@@ -285,7 +285,7 @@ export function SpecialHandsCatalogue() {
       </section>
 
       <section className="py-5 sm:py-6" aria-label="Special hands">
-        {results.length ? <div className="space-y-3">{results.map((entry) => <EntryCard key={entry.id} entry={entry} preferredProfile={preferredClassical} myRules={myRules} explicitProfile={!myRules && profileForFilter ? `${profileForFilter.id}@${profileForFilter.version}` : null} expanded={expandedEntryId === entry.id} onExpandedChange={(open) => setExpandedEntryId(open ? entry.id : (expandedEntryId === entry.id ? null : expandedEntryId))} />)}</div> : <div className="rounded-xl border border-[#d8ceb8] bg-[#fbf8ed] p-6 text-center"><h2 className="font-serif text-2xl text-[#284d45]">No matching hands</h2><p className="mt-2 text-sm text-[#596b65]">Try another name or filter.</p><button type="button" onClick={clearSearchAndFilter} className="mt-4 min-h-11 rounded-lg border border-[#b8cdbf] px-4 text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">Show all hands</button></div>}
+        {results.length ? <div className="space-y-3">{results.map((entry) => <EntryCard key={entry.id} entry={entry} preferredProfile={preferredClassical} myRules={myRules} explicitProfile={!myRules && profileForFilter ? `${profileForFilter.id}@${profileForFilter.version}` : null} expanded={expandedEntryId === entry.id} onExpandedChange={(open) => setExpandedEntryId(open ? entry.id : (expandedEntryId === entry.id ? null : expandedEntryId))} targetTreatmentReferenceId={targetTreatment?.entryId === entry.id ? targetTreatment.referenceId : undefined} />)}</div> : <div className="rounded-xl border border-[#d8ceb8] bg-[#fbf8ed] p-6 text-center"><h2 className="font-serif text-2xl text-[#284d45]">No matching hands</h2><p className="mt-2 text-sm text-[#596b65]">Try another name or filter.</p><button type="button" onClick={clearSearchAndFilter} className="mt-4 min-h-11 rounded-lg border border-[#b8cdbf] px-4 text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">Show all hands</button></div>}
       </section>
 
       {showBmjaPurity && <section className="mb-8 rounded-2xl border border-[#d8ceb8] bg-[#fbf8ed] p-4 sm:p-5" id="purity">
