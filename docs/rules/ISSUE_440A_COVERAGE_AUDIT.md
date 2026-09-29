@@ -1,0 +1,57 @@
+# Issue 440A — current-corpus coverage and runtime-edge audit
+
+Status: inventory and reconciliation baseline, 29 September 2026. This is a non-authoritative migration ledger. Executable facts remain owned by the exact resolved profile/runtime; source facts remain owned by cited source material and reviewed evidence. No scoring values are copied here.
+
+## Scope and accounting rule
+
+The inventory covers exactly `bmja@1.0`, `western-tm@0.1`, `outside-the-box@0.1`, `buzzard-2000@0.1`, and `mcr-wmo-2006@0.1`. For Classical special hands, the current scorer bindings are the runtime inventory. For MCR, `MCR_2006_FAN_BINDINGS` is the fan inventory. Existing truth records are the migrated inventory. A runtime item with no truth treatment is not automatically verified or migration-eligible: evidence review determines whether it is eligible or blocked. This distinction prevents the ledger from laundering runtime behavior into source truth.
+
+`truth-coverage-440a.test.ts` is the deterministic count/join proof. It reads these inventories and truth records directly, checks profile and runtime identity joins, and contains no scoring values. The Atlas v0.2 final manifest remains the broader Classical catalogue coverage oracle (71 entries / 146 treatment references); it is a coverage/reference inventory, not source authority.
+
+## Current coverage by profile
+
+| Profile | Domain/item inventory | Classification now | Governing source/evidence chain for next batch |
+|---|---|---|---|
+| `bmja@1.0` | Classical special-hand bindings | `migrated-current`: Thirteen Unique Wonders. Other bindings: `eligible-to-migrate` only after exact BMJA governing locator review; otherwise `blocked-evidence`. | `SOURCE_REGISTER.md` + `SPECIAL_HANDS_PROVENANCE.md` + current BMJA special-hands governing material; Atlas exact treatment refs are the checklist, not authority. |
+| `bmja@1.0` | Ordinary score rules, fishing, bonuses, validation/procedure | `eligible-to-migrate` from current BMJA governing material; exact executable treatment is `deferred-runtime-edge` because the truth adapter only resolves special-hand bindings. | BMJA source register and latest BMJA/Western/OTB crosswalk; then exact profile runtime/scorer traces and stable runtime identities. |
+| `bmja@1.0` | Settlement, progression, game-end, hand-mode | `deferred-runtime-edge`; strategy identities are profile-owned. | Resolved profile plus current Classical strategy implementations; do not encode strategy IDs as `policy`. |
+| `western-tm@0.1` | Classical special-hand bindings | `migrated-current`: Unique Wonder. Other items are individually `blocked-evidence` where only Companion/catalogue/secondary evidence exists; only exact primary-supported rows may become `eligible-to-migrate`. | `TM_COMPANION_CATALOGUE_INDEX.md`, Atlas v0.2 batches 1–4 validation, `SOURCE_REGISTER.md`; *The Game of Mah Jong Illustrated* is the missing primary check for ordinary rules. |
+| `western-tm@0.1` | Ordinary scoring, bonuses, validation/procedure | `blocked-evidence` pending direct check of *The Game of Mah Jong Illustrated*. Current compatible runtime reuse is not evidence of equivalence. | `WESTERN_AUSTRALIAN_EVIDENCE_NOTES.md` and the current `SOURCE_REGISTER.md` warning, followed by exact primary pages/locators. |
+| `western-tm@0.1` | Settlement, progression, game-end | `deferred-runtime-edge`; no strategy treatment kind exists. | Resolved profile/strategy implementation; source claims may migrate without executable treatment. |
+| `outside-the-box@0.1` | Club special-hand bindings | `migrated-current`: 13 Unique Wonders. Other guide-listed bindings are `eligible-to-migrate` with precise club-guide locators and reviewed evidence; name-only cross-profile matches remain `blocked-evidence`. | Supplied September 2026 OTB guide, `OUTSIDE_THE_BOX_PROFILE_CROSSWALK.md`, Atlas final treatment references. |
+| `outside-the-box@0.1` | Ordinary rules, Goulash, procedure | Source-supported guide facts are `eligible-to-migrate`; unresolved interpretation and unreviewed cross-profile claims are `blocked-evidence`. Executable hand-mode/incident/settlement treatment is `deferred-runtime-edge`. | OTB guide + current `OUTSIDE_THE_BOX_PROFILE_CROSSWALK.md` and `BMJA_WESTERN_OTB_CROSSWALK.md`; preserve OTB-only decisions. |
+| `outside-the-box@0.1` | Settlement, progression, game-end, Goulash hand-mode, round preparation | `deferred-runtime-edge`; includes incident and strategy identities. | Exact OTB profile and `outside-the-box-strategies.ts`; source facts may migrate without binding these IDs into truth. |
+| `buzzard-2000@0.1` | Classical special-hand bindings | `migrated-current`: Thirteen Unique Wonders. Remaining bindings are `eligible-to-migrate` only where the retained primary snapshot and latest reconciliation give an exact locator; unresolved items are `blocked-evidence`. | `BUZZARD_2000_RULE_EVIDENCE.md` retained PDF snapshot + `ATLAS_BUZZARD_RECONCILIATION_2026.md`; earlier provisional conflict notes do not govern resolved rows. |
+| `buzzard-2000@0.1` | Ordinary scoring, bonuses, validation/procedure | `eligible-to-migrate` when directly supported by the retained primary snapshot; executable ordinary rule/policy treatment remains `deferred-runtime-edge`. | Same retained snapshot and `BUZZARD_2000_COMPATIBILITY_CROSSWALK.md`, checked against the current profile/runtime. |
+| `buzzard-2000@0.1` | Settlement, progression, game-end, preparation incidents | `deferred-runtime-edge`; preparation and settlement are strategy/incident seams. | Exact Buzzard resolved profile and `buzzard-strategies.ts`; source claims remain independently migratable. |
+| `mcr-wmo-2006@0.1` | Fan bindings | 1 of 81 fan identities is `migrated-current` (Thirteen Orphans); the remaining source-addressable fan inventory is `eligible-to-migrate` in cohesive Green Book batches after per-fan evidence/locator checks. | Canonical source `source.mcr-ema-green-book-2006`; `MCR_FAN_CATALOGUE_2006.md`, corpus completeness audit, detector predicates, exact §3.8.1 / Appendix 1 locators. |
+| `mcr-wmo-2006@0.1` | Non-combination and 8-point qualification policies | `migrated-current` (2 treatments); remaining configured scoring stages are `deferred-runtime-edge` unless the existing truth edge already resolves that exact ref. | Green Book §§3.9 and 3.7, `MCR_INTERACTION_POLICY_2006.md`, `MCR_SCORE_EVIDENCE_CONTRACT.md`; use existing policy adapter. |
+| `mcr-wmo-2006@0.1` | Settlement, progression, game-end | `deferred-runtime-edge`; strategy identities are not treatment refs. | Exact resolved MCR profile and strategy implementation; do not force into `policy`. |
+
+## Runtime-edge capability matrix
+
+| Identity area | Current owner and exact seam | Truth treatment capability | 440A result |
+|---|---|---|---|
+| Classical special-hand bindings | Profile-specific arrays in BMJA, Western, OTB, Buzzard scorer/catalogue modules; joined by `specialHandBindingsForCurrentClassicalProfile`. | `binding` refs resolve by exact profile and pattern ID. | Supported; preserve exact profile identity and evidence per treatment. |
+| Ordinary Classical rule/policy identities | `classical.scorer.current`, profile-specific `classical.bindings.*` and `classical.policy.*`; ordinary rules also appear in runtime traces/config. | Not resolved by `currentTruthValidationEnvironment` for Classical `rule`/`policy`; those fall through to MCR adapter. | `deferred-runtime-edge`. Source claims/subjects can be staged; do not add a parallel registry. |
+| MCR fan bindings | `MCR_2006_FAN_BINDINGS`, exact Green Book fan locator, MCR detector. | `binding` refs resolve for exact MCR profile. | Supported; no fan values enter truth records. |
+| MCR scoring policies | Existing configured interaction and qualification policies, checked against exact scorer config and registry revision. | `policy` refs resolve only for configured interaction and qualification IDs. Other accumulator stages are not currently truth-addressable. | Two policy treatments supported; other stage identities deferred unless directly supported by existing edge. |
+| Strategy-only seams | Settlement, progression, game-end, hand-mode, preparation/incidents live in exact resolved profile and family strategy implementations. | `RuntimeTreatmentRef` has no strategy/incident kind. | `deferred-runtime-edge`; retain ownership in profile/runtime. |
+
+## Source reconciliation and batch order
+
+1. **Classical special hands (440B):** Atlas final manifest for completeness and exact treatment refs; profile-specific governing source/reviewed primary evidence for claims; the Classical concept audit only helps group candidate concepts. The Buzzard reconciliation supersedes its earlier provisional Atlas warnings. Western rows without a checked governing/primary source remain blocked.
+2. **BMJA / OTB / Buzzard ordinary material (440C):** current primary/club source artefacts and the latest crosswalks govern. `BMJA_WESTERN_OTB_CROSSWALK.md` contains old provisional rows alongside later resolutions; use its latest per-row status and linked evidence. OTB decisions are not generalized to Western. Buzzard uses the retained snapshot plus 2026 reconciliation.
+3. **Western provisional material (440D):** Companion catalogue supports catalogue facts only. Ordinary rules stay `needs-primary-source` until the exact pages in *The Game of Mah Jong Illustrated* are reviewed. Runtime reuse does not upgrade evidence.
+4. **MCR expansion (440E):** use canonical source ID `source.mcr-ema-green-book-2006`, despite historical `mcr-ema` shorthand in research notes. Green Book 2006 remains exact profile authority; run fan cohorts by cohesive source sections and retain direct locators. No values copied.
+5. **Historical/out-of-scope:** Riichi and future families are not current-corpus rows. EMA 2025 Riichi work remains under #262. Older WRC future-Riichi direction, obsolete source shorthand, pre-#88 gaps, and superseded provisional conflict notes remain historical research context, not current batch authority.
+
+Canonical correction policy: if a current canonical record later proves semantically wrong, retain it as superseded and add a new current version with `supersedes`; never edit its recorded history in place.
+
+## Current totals and limits
+
+The current Classical runtime inventory contains **146 special-hand bindings** across the four profiles: BMJA 18, Western T&M 85, OTB 33, Buzzard 10. Four exact-profile treatments are migrated (one per profile). The MCR runtime inventory contains **81 fan bindings**, of which one is migrated. Two MCR policy treatments are also migrated. Thus the current truth corpus has **7 profile treatments across 3 semantic subjects**, **6 registered sources**, **6 claims for the shared Classical special-hand subject**, and 2 MCR policy subjects. Tests derive these totals from runtime arrays and authored records, without importing scoring values. These are inventory counts, not a percentage-complete migration estimate; runtime presence alone never upgrades a row.
+
+## 440B readiness
+
+**Safe to define as a bounded work package, not safe for automatic bulk generation.** Its coverage oracle, source precedence and supported binding edge are now explicit. Each treatment still needs exact-profile evidence review; Western evidence gaps remain blocked, and unresolved/name-only items must remain unresolved. No schema redesign or production behavior change is indicated by this audit.
