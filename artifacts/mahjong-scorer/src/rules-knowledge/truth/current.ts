@@ -8,12 +8,15 @@ import { mcrSourceRecords } from './sources-mcr';
 import { mcrSliceESubjects } from './subjects/mcr-slice-e';
 import { mcrSliceEClaims } from './claims/mcr-slice-e';
 import { mcrSliceETreatments } from './treatments/mcr-slice-e';
+import { bmjaSpecialHandClaims } from './claims/bmja-special-hands';
+import { bmjaSpecialHandSubjects } from './subjects/bmja-special-hands';
+import { bmjaSpecialHandTreatments } from './treatments/bmja-special-hands';
 
 export const currentTruthCorpus = {
   sources: [...sourceRecords, ...mcrSourceRecords],
-  subjects: [...thirteenUniqueWondersSubjects, ...mcrSliceESubjects],
-  claims: [...thirteenUniqueWondersClaims, ...mcrSliceEClaims],
-  treatments: [...thirteenUniqueWondersTreatments, ...mcrSliceETreatments],
+  subjects: [...thirteenUniqueWondersSubjects, ...bmjaSpecialHandSubjects, ...mcrSliceESubjects],
+  claims: [...thirteenUniqueWondersClaims, ...bmjaSpecialHandClaims, ...mcrSliceEClaims],
+  treatments: [...thirteenUniqueWondersTreatments, ...bmjaSpecialHandTreatments, ...mcrSliceETreatments],
 } as const;
 
 export const currentTruthIndex = createTruthIndex(currentTruthCorpus, currentTruthValidationEnvironment);
