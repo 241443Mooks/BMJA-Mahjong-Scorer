@@ -1,0 +1,73 @@
+# Issue #440B4D — Western T&M calculated special-hand semantic review
+
+Status: **mixed semantic decision; documentation-only review**  
+Baseline: `3ae7a0b990e394c3fe7994afad0a820e17775102` (`origin/main`)  
+Profile: `western-tm@0.1`  
+Authority: Thompson & Maloney, *The Mah Jong Player's Companion* (1997), `TM_COMPANION_CATALOGUE_INDEX.md`, the Issue #440B4 preflight, B4A/B4B/B4C reports, `SOURCE_REGISTER.md`, and the exact current Western bindings/detectors/tests.
+
+## Decision matrix
+
+| Binding ID | Public name | Exact source locator(s) | Concise source proposition | Current runtime proposition | Fishing status | Exposure status | Overlap/dependency notes | Ordinary-rule dependency | Final decision | Reason |
+|---|---|---|---|---|---|---|---|---|---|---|
+| `purity-one-chow` | Purity | Companion p. 48; synopsis calculated-hand entry, pp. 58–59; catalogue index §3 and “Purity” | One suit; four Pungs/Kongs plus a pair, with one Chow allowed in place of one Pung/Kong; `Calculate`; one dot permits represented Pung/Kong exposure at half score. The inspected evidence does not expressly classify an exposed Chow. | Complete winning hand with four melds and a pair, one suit only, at most one Chow; calculated by the ordinary Western scorer; halves for exposed Pung/Kong; rejects the hand if a Chow is exposed. No special fishing match is produced. | Source omits fishing treatment; runtime does not infer or return fishing entitlement. **Unresolved**, not “none.” | Pung/Kong permission and half treatment are source-backed. Exposed-Chow ineligibility is a conservative runtime rule not established by the indexed proposition. | No structural overlap issue material to this decision. Calculated value delegates to ordinary scoring. | Ordinary calculation is downstream/runtime-owned. The unresolved exposed-Chow qualification is part of executable binding meaning, not merely value derivation. | **source-claim-only** | Source proves the named calculated structure, but does not establish the current binding’s exposed-Chow rejection strongly enough to join the full executable binding to that claim. Stage the source claim only; do not migrate a treatment until the Companion marker’s Chow implication is resolved. |
+| `honours-and-one-suit-terminals-pung-kong-hand` | All Honour Hand | Companion p. 44; Full Synopsis p. 58; catalogue index §3, Pass 4I | Four Pungs/Kongs and a pair, all honours except that 1s/9s from at most one suit may appear; `Calculate`; one dot halves the ordinary calculated score when a represented Pung/Kong is exposed. | `groupedShape(hand, 4)` requires four Pung/Kong melds and a pair; all suited tiles must be terminals and from no more than one suit. The profile binding is calculated with a 0.5 adjustment triggered by exposed Pungs/Kongs. No fixed fishing candidate exists. | No fishing value is stated or inferred; runtime has no special fishing match. Source-level fishing is **unspecified**. | Source-backed one-dot Pung/Kong exposure and half adjustment; no Chow qualifies structurally. | The source-defined concept is broader than fixed All Winds and Dragons and includes that fixed hand as a subset. Both predicates may match; scorer selects fixed special scoring and suppresses calculated exposure adjustment. This is overlap/precedence policy, not membership. | The adjustment multiplies the runtime ordinary-calculated score, whose Western primitives remain provisional. The treatment can assert catalogue identity and executable binding without certifying those primitives or the numeric result. | **migrate-current** | Full structure, `Calculate`, and marked exposure treatment align with the current binding. The fixed-hand subset and downstream calculation do not alter the source-defined identity. |
+| `one-suit-with-honours-mostly-pung-kong-hand` | Ordinary Mah Jong | Companion p. 42; Full Synopsis p. 59; catalogue index §3, Pass 4I | One suited family with optional Winds/Dragons; four Pung/Kong melds or three Pung/Kong melds plus one Chow, and a pair; `Calculate`; one dot permits exposed Pung/Kong at half score, with the Chow not marked as an allowed exposure. | Complete winning four-meld-plus-pair shape; one suited family, honours allowed; zero or one Chow, with any Chow restricted to start ranks 1–7; calculated by ordinary Western scoring; exposed Pung/Kong halves the result; exposed Chow is rejected. No special fishing match exists. | No fixed fishing value is stated or inferred; runtime has no special fishing match. Source-level fishing is **unspecified**. | Can overlap Purity on an all-suited one-Chow hand; calculated overlaps share one ordinary calculation and at most one exposure adjustment. This is downstream scoring policy. | Ordinary score primitives determine the calculated result and are provisional. They are not the definition of this separately catalogued `Calculate` hand. | **migrate-current** | The Companion establishes the catalogue identity, qualification, calculated treatment, and one-dot exposure qualification. The title “Ordinary Mah Jong” does not erase its distinct catalogue entry. Treatment need not certify the general ordinary scoring baseline. |
+
+## Layered findings
+
+### 1. Purity — `purity-one-chow`
+
+**Source proposition.** The p. 48 detail and the catalogue index establish the one-suit, four-set-and-pair structure and permit one Chow to replace one Pung/Kong. The synopsis marks its score `Calculate`. The one-dot marker is recorded as permitting represented Pung/Kong exposure at half score. The Companion evidence used here does not say whether that permitted Chow may itself be exposed. It also does not specify fishing.
+
+**Runtime proposition.** The canonical detector requires a winning hand with exactly five represented groups, four melds and one pair, at most one Chow, all tiles in one suit, no extra loose/remaining tiles, and legal tile-copy counts. The profile binding uses calculated scoring, halves exposed Pungs/Kongs, and declares exposed Chows forbidden. `detectSpecialFishing` returns no match because this calculated binding has no fixed fishing value. The ordinary score is calculated first; the special exposure adjustment is applied downstream.
+
+**Boundary and decision.** Membership and calculated status are source-proved, and no fishing entitlement is inferred. The exposed-Chow rejection is a conservative runtime assumption, not a proved source qualification. A treatment that references the whole binding would attach that unresolved exposure behavior to the source claim. Therefore truth may stage the source-defined Purity proposition, but cannot yet assert “executed by `purity-one-chow`.” **Smallest likely resolution seam:** inspect the p. 48 marker/diagram convention or other Companion evidence that explicitly determines whether a Chow can be exposed; if it cannot be established, retain the binding's conservative runtime policy as unresolved and keep treatment deferred. No runtime correction is justified by current evidence.
+
+**Truth boundary question.** The corpus can assert the source-defined calculated Purity identity as a source claim alone. It cannot yet join that claim to the current executable binding, because the binding additionally rejects an exposed Chow and that part of its meaning is not source-established. The unresolved dependency is not the ordinary score formula or fishing; it is the binding's Chow exposure qualification.
+
+### 2. All Honour Hand — `honours-and-one-suit-terminals-pung-kong-hand`
+
+**Source proposition.** The indexed p. 44 detail and Full Synopsis p. 58 support four Pungs/Kongs plus a pair, using honours and optionally terminal tiles from one suit. The synopsis says `Calculate`. The one dot supports halving the ordinary calculated score for a represented exposed Pung/Kong. No fixed fishing entitlement is recorded.
+
+**Runtime proposition.** The detector uses `groupedShape(hand, 4)` and then requires every suited tile to be rank 1 or 9, with no more than one suit represented; the remaining eligible tiles are Winds/Dragons. Thus the four melds are Pungs/Kongs and the pair may be an honour or allowed terminal. The profile binding calculates ordinarily and applies a single 0.5 exposure adjustment for represented Pungs/Kongs. No fixed fishing candidate is generated. The fixed All Winds and Dragons pattern can also match the all-honour subset. Both identities remain visible, while the scorer gives precedence to the fixed special value and skips the calculated exposure adjustment.
+
+**Boundary and decision.** All Winds and Dragons is a structurally narrower fixed hand; its overlap does not collapse All Honour Hand into that identity. Source identity and qualification are complete. The 0.5 multiplier is attached to this hand's dot, while the score being multiplied is downstream ordinary scoring. A treatment can truthfully connect the Companion claim to this exact binding without certifying every ordinary primitive used to obtain the subtotal. Fixed-special precedence is runtime scoring policy, not membership. **Decision: migrate-current.**
+
+**Truth boundary question.** Yes. The claim says Western T&M catalogs this calculated concept and the profile executes its qualification/exposure binding. It does not claim the ordinary subtotal itself is source-certified, nor does it claim a fishing value. The truth treatment model links a source claim and profile-local executable binding; it does not encode or certify the ordinary score components.
+
+### 3. Ordinary Mah Jong — `one-suit-with-honours-mostly-pung-kong-hand`
+
+**Source proposition.** The p. 42 entry and Full Synopsis p. 59 establish one suited family with optional Winds/Dragons, a four-meld-and-pair hand made from four Pungs/Kongs or three Pungs/Kongs plus one Chow, and `Calculate`. Its one-dot policy allows exposed Pungs/Kongs at half score; the Chow is not an allowed exposure under the indexed source marker. No fixed fishing entitlement is recorded.
+
+**Runtime proposition.** The detector requires a complete winning five-set hand, four melds and one pair, at most one Chow, no extra loose/remaining tiles, one suited family, and valid tile-copy/physical counts; a Chow must begin at rank 1 through 7. A Chow's represented tiles therefore stay within ranks 1–9. The binding calculates ordinarily, halves for exposed represented Pungs/Kongs, and rejects an exposed Chow. No fixed fishing match is generated. It can overlap Purity on an all-suited hand with one Chow; current scoring performs one ordinary calculation and at most one calculated-special exposure adjustment.
+
+**Boundary and decision.** “Ordinary Mah Jong” is nevertheless a distinct source-defined catalogue entry: its placement among named special hands, p. 42 detail and calculated synopsis entry distinguish it from unqualified ordinary-hand scoring. The structural “one suited family plus optional honours” condition and the allowed meld counts are part of that identity. Its result is calculated using the Western ordinary scorer, but the source claim can be separated from those downstream components. Ordinary Western score rules remain provisional under `SOURCE_REGISTER.md`; no broad certification follows from this treatment. **Decision: migrate-current.**
+
+**Truth boundary question.** Yes. Truth can identify this Companion-defined calculated special hand and point to its executable binding. That does not establish the accuracy of every ordinary scoring primitive used after qualification. The source-proved claims are catalogue identity, structure, `Calculate`, and marked exposure qualification; ordinary score derivation remains runtime-owned and provisionally supported.
+
+## Runtime comparison summary
+
+- **Detectors:** all three require a complete winning structure with four melds and a pair. Purity and Ordinary Mah Jong allow at most one Chow; All Honour Hand's grouped shape permits only Pung/Kong melds. Suit, terminal and honour constraints match the indexed source propositions.
+- **Exposure:** All Honour Hand and Ordinary Mah Jong's one-dot rules align with the recorded Companion policy. Purity's Pung/Kong half policy aligns, but its additional exposed-Chow rejection is unproved by the evidence currently indexed.
+- **Calculated scoring:** all three use the existing calculated score model, which first invokes ordinary Western scoring and then applies a calculated-special exposure adjustment. This is a downstream scoring seam. The truth treatment for the two ready rows does not certify the ordinary scoring baseline.
+- **Fishing:** all three lack a fixed fishing value, and the exact runtime fishing path only emits fixed-binding fishing candidates. It emits no candidate for these calculated bindings. Absence of a Companion fishing value does **not** prove no fishing entitlement; each source fishing proposition remains unresolved.
+- **Overlap:** All Honour Hand can overlap fixed All Winds and Dragons; fixed scoring wins. Ordinary Mah Jong can overlap Purity; the shared ordinary calculation is not duplicated. These are scorer selection/aggregation behaviors, not hand-membership evidence.
+
+## Closure recommendation
+
+**Outcome B — mixed.** Follow this review with a separate, tiny B4D truth-migration PR for the two ready rows: All Honour Hand and Ordinary Mah Jong, using the Western-local subjects `pattern.western-tm.honours-and-one-suit-terminals-pung-kong-hand` and `pattern.western-tm.one-suit-with-honours-mostly-pung-kong-hand`. Keep Purity explicitly deferred from executable treatment; record its source claim without a treatment until exposed-Chow eligibility is resolved. This review itself leaves coverage unchanged at 82 treatments out of 85 bindings and all three rows untreated. Do not expand the migration into ordinary Western rule certification or fishing policy.
+
+This review itself is documentation-only: no runtime code, tests, truth records, or coverage counts are changed. Current inventory remains 85 bindings, 82 treatments, zero eligible untreated fixed/special-hand bindings, zero evidence-blocked special-hand bindings, and exactly three calculated bindings outside treatment pending this follow-up.
+
+## Verification
+
+Requested checks for this documentation-only review:
+
+- calculated-special-hand model tests;
+- `western-tm-purity-phase3c.test.ts`;
+- Western catalogue tests;
+- Pass 4I and overlap tests;
+- truth coverage, integrity, and corpus tests;
+- `git diff --check`.
+
+Focused verification passed: 10 files, 53 tests, including every named calculated-special, Purity, catalogue, Pass 4I/overlap, truth coverage, integrity, and corpus gate. `git diff --check` also passed. Only this review document changed; no runtime or truth records changed.
