@@ -3,6 +3,7 @@ import { buzzard2000SpecialHandBindings } from '../game/buzzard-2000';
 import { outsideTheBoxSpecialHandBindings } from '../game/outside-the-box-catalogue';
 import { westernTmSpecialHandBindings } from '../game/western-tm-catalogue';
 import { currentTruthCorpus, currentTruthIndex, currentTruthValidationEnvironment } from '../rules-knowledge/truth';
+import { westernTmB4aBindingIds } from '../rules-knowledge/truth/subjects/western-tm-b4a-special-hands';
 import { bmjaSpecialHandBindings } from '../scoring/special-hands';
 import { MCR_2006_FAN_BINDINGS } from './mcr-detectors';
 
@@ -23,8 +24,29 @@ describe('Issue 440A derived coverage accounting', () => {
       for (const id of executableIds) expect(inventoryIds.has(id)).toBe(true);
       expect(bindings.length).toBeGreaterThan(0);
     }
-    expect(classicalInventories.map(({ profile }) => currentTruthIndex.treatmentsForProfile(profile).length)).toEqual([18, 1, 33, 9]);
+    expect(classicalInventories.map(({ profile }) => currentTruthIndex.treatmentsForProfile(profile).length)).toEqual([18, 35, 33, 9]);
     expect(classicalInventories.map(({ bindings }) => bindings.length)).toEqual([18, 85, 33, 10]);
+  });
+
+  it('partitions Western coverage into existing, B4A, remaining eligible B4B/C, and deferred bindings', () => {
+    const profile = { id: 'western-tm', version: '0.1' } as const;
+    const inventoryIds = westernTmSpecialHandBindings.map(({ patternId }) => patternId);
+    const treatments = currentTruthIndex.treatmentsForProfile(profile).map(({ record }) => record);
+    const executableIds = treatments.flatMap(({ runtimeState }) => runtimeState.kind === 'executable' && runtimeState.ref.kind === 'binding' ? [runtimeState.ref.id] : []);
+    const alreadyCurrent = ['thirteen-unique-wonders'];
+    const deferred = ['purity-one-chow', 'honours-and-one-suit-terminals-pung-kong-hand', 'one-suit-with-honours-mostly-pung-kong-hand'];
+    const migratedB4a = new Set<string>(westernTmB4aBindingIds);
+    const remainingEligibleB4bC = inventoryIds.filter((id) => !alreadyCurrent.includes(id) && !migratedB4a.has(id) && !deferred.includes(id));
+
+    expect(westernTmSpecialHandBindings).toHaveLength(85);
+    expect(new Set(westernTmB4aBindingIds).size).toBe(34);
+    expect(new Set(executableIds)).toEqual(new Set([...alreadyCurrent, ...migratedB4a]));
+    expect(remainingEligibleB4bC).toHaveLength(47);
+    expect(deferred).toHaveLength(3);
+    expect(deferred.every((id) => inventoryIds.includes(id))).toBe(true);
+    expect(deferred.some((id) => executableIds.includes(id))).toBe(false);
+    expect(alreadyCurrent.length + migratedB4a.size + remainingEligibleB4bC.length + deferred.length).toBe(85);
+    expect(treatments).toHaveLength(35);
   });
 
   it('accounts for Buzzard special-hand coverage while keeping Concealed Pungs/Kongs visibly deferred', () => {
@@ -62,11 +84,11 @@ describe('Issue 440A derived coverage accounting', () => {
     for (const { runtimeState } of policyTreatments) {
       if (runtimeState.kind === 'executable') expect(currentTruthValidationEnvironment.runtimeTreatmentExists(profile, runtimeState.ref)).toBe(true);
     }
-    expect(currentTruthCorpus.treatments).toHaveLength(64);
-    expect(currentTruthCorpus.subjects).toHaveLength(60);
-    expect(currentTruthCorpus.claims).toHaveLength(65);
+    expect(currentTruthCorpus.treatments).toHaveLength(98);
+    expect(currentTruthCorpus.subjects).toHaveLength(94);
+    expect(currentTruthCorpus.claims).toHaveLength(99);
     expect(currentTruthIndex.treatmentsForProfile({ id: 'bmja', version: '1.0' })).toHaveLength(18);
-    expect(currentTruthIndex.treatmentsForProfile({ id: 'western-tm', version: '0.1' })).toHaveLength(1);
+    expect(currentTruthIndex.treatmentsForProfile({ id: 'western-tm', version: '0.1' })).toHaveLength(35);
     expect(currentTruthIndex.treatmentsForProfile({ id: 'outside-the-box', version: '0.1' })).toHaveLength(33);
     expect(currentTruthIndex.treatmentsForProfile({ id: 'buzzard-2000', version: '0.1' })).toHaveLength(9);
   });
