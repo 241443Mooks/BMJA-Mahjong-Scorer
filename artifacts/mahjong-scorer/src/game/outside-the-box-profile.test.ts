@@ -29,6 +29,13 @@ const grandSequence = (pair: ReturnType<typeof suited> | ReturnType<typeof wind>
 const rubyJade: MahjongHand = { sets: [], looseTiles: [dragon('green'), dragon('green'), dragon('red'), dragon('red'), ...[1, 3, 5, 7, 9].flatMap((rank) => [suited('bamboo', rank as 1 | 3 | 5 | 7 | 9), suited('bamboo', rank as 1 | 3 | 5 | 7 | 9)])], bonusTiles: [], isWinner: true };
 const scholars: MahjongHand = { sets: [set('red', 'pung', dragon('red')), set('green', 'pung', dragon('green')), set('white', 'pung', dragon('white')), set('other', 'pung', suited('circles', 4)), set('pair', 'pair', suited('bamboo', 2))], bonusTiles: [], isWinner: true };
 const purity: MahjongHand = { sets: [set('one', 'pung', suited('bamboo', 1), 'exposed'), set('two', 'pung', suited('bamboo', 2), 'exposed'), set('three', 'pung', suited('bamboo', 3), 'exposed'), set('four', 'pung', suited('bamboo', 4), 'exposed'), set('pair', 'pair', suited('bamboo', 5))], bonusTiles: [], isWinner: true };
+const buriedTreasure = (winningMethod: MahjongHand['winningMethod']): MahjongHand => ({
+  sets: [
+    set('one', 'pung', suited('bamboo', 2)), set('two', 'pung', suited('bamboo', 3)),
+    set('three', 'pung', suited('bamboo', 4)), set('four', 'pung', dragon('red')),
+    set('pair', 'pair', suited('bamboo', 5)),
+  ], bonusTiles: [], isWinner: true, winningMethod,
+});
 
 describe('outside-the-box@0.1 special-hand profile', () => {
   it('resolves only its exact version and has an explicit, canonical inventory', () => {
@@ -44,6 +51,43 @@ describe('outside-the-box@0.1 special-hand profile', () => {
     expect(score(WESTERN_TM_RULESET, scholars).specialHands.find(({ id }) => id === 'three-great-scholars')).toMatchObject({ value: 1500, matched: true });
     expect(outsideTheBoxSpecialHandBindings.find(({ patternId }) => patternId === 'four-bamboo-one-and-five-green-bamboo-pairs')).toMatchObject({ value: 1000, fishingValue: 400, exposure: { allowed: false } });
     for (const patternId of ['green-dragon-pung-with-bamboo-melds', 'red-dragon-pung-with-character-melds', 'white-dragon-pung-with-circle-melds']) expect(outsideTheBoxSpecialHandBindings.find((binding) => binding.patternId === patternId)).toMatchObject({ exposure: { allowed: true, exposedValue: 500, exposedFishingValue: 200 } });
+  });
+
+  it('limits OTB Buried Treasure to wall draws without changing the shared detector or BMJA exception', () => {
+    const binding = outsideTheBoxSpecialHandBindings.find(({ patternId }) => patternId === 'buried-treasure')!;
+    expect(binding).toMatchObject({ value: 1000, fishingValue: 400, exposure: { allowed: false }, winningMethods: ['wall', 'last-wall-tile'] });
+
+    for (const method of ['wall', 'last-wall-tile'] as const) {
+      expect(detectSpecialHands(buriedTreasure(method), undefined, outsideTheBoxSpecialHandBindings)
+        .find(({ id }) => id === 'buried-treasure')?.matched).toBe(true);
+    }
+    for (const method of ['initial-deal', 'discard', 'loose-tile', 'final-discard', 'robbing-kong'] as const) {
+      expect(detectSpecialHands(buriedTreasure(method), undefined, outsideTheBoxSpecialHandBindings)
+        .find(({ id }) => id === 'buried-treasure')?.matched).toBe(false);
+    }
+
+    const pairClaimed = {
+      ...buriedTreasure('discard'),
+      sets: buriedTreasure('discard').sets.map((group) => group.id === 'pair' ? { ...group, visibility: 'exposed' as const } : group),
+      winningTileProvenance: {
+        tile: suited('bamboo', 5),
+        target: { type: 'grouped-set' as const, setId: 'pair' },
+      },
+    };
+    const structuralPattern = canonicalSpecialHandPatterns.find(({ id }) => id === 'buried-treasure')!;
+    expect(structuralPattern.detect(pairClaimed)).toBe(true);
+    expect(detectSpecialHands(pairClaimed).find(({ id }) => id === 'buried-treasure')?.matched).toBe(true);
+    expect(detectSpecialHands(pairClaimed, undefined, outsideTheBoxSpecialHandBindings)
+      .find(({ id }) => id === 'buried-treasure')?.matched).toBe(false);
+    const finalPairClaimed = { ...pairClaimed, winningMethod: 'final-discard' as const };
+    expect(detectSpecialHands(finalPairClaimed).find(({ id }) => id === 'buried-treasure')?.matched).toBe(true);
+    expect(detectSpecialHands(finalPairClaimed, undefined, outsideTheBoxSpecialHandBindings)
+      .find(({ id }) => id === 'buried-treasure')?.matched).toBe(false);
+
+    expect(outsideTheBoxSpecialHandBindings.filter(({ patternId }) => patternId !== 'buried-treasure'))
+      .toHaveLength(32);
+    expect(outsideTheBoxSpecialHandBindings.filter(({ patternId }) => patternId !== 'buried-treasure')
+      .every(({ winningMethods }) => winningMethods === undefined)).toBe(true);
   });
 
   it('matches Club Three Great Scholars only when the remaining set and pair share a numbered suit', () => {
