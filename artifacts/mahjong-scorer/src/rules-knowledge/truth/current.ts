@@ -15,12 +15,15 @@ import { otbSpecialHandClaims, otbSpecialHandSubjects, otbSpecialHandTreatments 
 import { buzzard2000SpecialHandSubjects } from './subjects/buzzard-2000-special-hands';
 import { buzzard2000SpecialHandClaims } from './claims/buzzard-2000-special-hands';
 import { buzzard2000SpecialHandTreatments } from './treatments/buzzard-2000-special-hands';
+import { westernTmB4aSpecialHandSubjects } from './subjects/western-tm-b4a-special-hands';
+import { westernTmB4aSpecialHandClaims } from './claims/western-tm-b4a-special-hands';
+import { westernTmB4aSpecialHandTreatments } from './treatments/western-tm-b4a-special-hands';
 
 export const currentTruthCorpus = {
   sources: [...sourceRecords, ...mcrSourceRecords],
-  subjects: [...thirteenUniqueWondersSubjects, ...bmjaSpecialHandSubjects, ...otbSpecialHandSubjects, ...buzzard2000SpecialHandSubjects, ...mcrSliceESubjects],
-  claims: [...thirteenUniqueWondersClaims, ...bmjaSpecialHandClaims, ...otbSpecialHandClaims, ...buzzard2000SpecialHandClaims, ...mcrSliceEClaims],
-  treatments: [...thirteenUniqueWondersTreatments, ...bmjaSpecialHandTreatments, ...otbSpecialHandTreatments, ...buzzard2000SpecialHandTreatments, ...mcrSliceETreatments],
+  subjects: [...thirteenUniqueWondersSubjects, ...bmjaSpecialHandSubjects, ...otbSpecialHandSubjects, ...buzzard2000SpecialHandSubjects, ...westernTmB4aSpecialHandSubjects, ...mcrSliceESubjects],
+  claims: [...thirteenUniqueWondersClaims, ...bmjaSpecialHandClaims, ...otbSpecialHandClaims, ...buzzard2000SpecialHandClaims, ...westernTmB4aSpecialHandClaims, ...mcrSliceEClaims],
+  treatments: [...thirteenUniqueWondersTreatments, ...bmjaSpecialHandTreatments, ...otbSpecialHandTreatments, ...buzzard2000SpecialHandTreatments, ...westernTmB4aSpecialHandTreatments, ...mcrSliceETreatments],
 } as const;
 
 export const currentTruthIndex = createTruthIndex(currentTruthCorpus, currentTruthValidationEnvironment);
