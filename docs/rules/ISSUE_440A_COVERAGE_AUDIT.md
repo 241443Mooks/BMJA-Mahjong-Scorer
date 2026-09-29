@@ -12,7 +12,7 @@ The inventory covers exactly `bmja@1.0`, `western-tm@0.1`, `outside-the-box@0.1`
 
 | Profile | Domain/item inventory | Classification now | Governing source/evidence chain for next batch |
 |---|---|---|---|
-| `bmja@1.0` | Classical special-hand bindings | `migrated-current`: Thirteen Unique Wonders. Other bindings: `eligible-to-migrate` only after exact BMJA governing locator review; otherwise `blocked-evidence`. | `SOURCE_REGISTER.md` + `SPECIAL_HANDS_PROVENANCE.md` + current BMJA special-hands governing material; Atlas exact treatment refs are the checklist, not authority. |
+| `bmja@1.0` | Classical special-hand bindings | **440B1 result:** all 18 current bindings are `migrated-current`: Thirteen Unique Wonders (pre-existing) plus 17 individually reviewed and migrated candidates. No BMJA special-hand binding remains evidence-blocked or semantic-review-deferred. | Registered source `bmja-special-hands`; each claim uses the exact named section of the BMJA-approved Special Hands source. |
 | `bmja@1.0` | Ordinary score rules, fishing, bonuses, validation/procedure | `eligible-to-migrate` from current BMJA governing material; exact executable treatment is `deferred-runtime-edge` because the truth adapter only resolves special-hand bindings. | BMJA source register and latest BMJA/Western/OTB crosswalk; then exact profile runtime/scorer traces and stable runtime identities. |
 | `bmja@1.0` | Settlement, progression, game-end, hand-mode | `deferred-runtime-edge`; strategy identities are profile-owned. | Resolved profile plus current Classical strategy implementations; do not encode strategy IDs as `policy`. |
 | `western-tm@0.1` | Classical special-hand bindings | `migrated-current`: Unique Wonder. Other items are individually `blocked-evidence` where only Companion/catalogue/secondary evidence exists; only exact primary-supported rows may become `eligible-to-migrate`. | `TM_COMPANION_CATALOGUE_INDEX.md`, Atlas v0.2 batches 1–4 validation, `SOURCE_REGISTER.md`; *The Game of Mah Jong Illustrated* is the missing primary check for ordinary rules. |
@@ -48,9 +48,22 @@ The inventory covers exactly `bmja@1.0`, `western-tm@0.1`, `outside-the-box@0.1`
 
 Canonical correction policy: if a current canonical record later proves semantically wrong, retain it as superseded and add a new current version with `supersedes`; never edit its recorded history in place.
 
+## 440B1 BMJA special-hand accounting
+
+The BMJA inventory is explicitly accounted for as follows. “Previously current” identifies the unchanged Thirteen Unique Wonders truth chain. “Newly migrated” records were created in this slice. Every other listed binding has a current exact-profile executable treatment; the individual source claims and treatment joins are covered by `truth-bmja-special-hands.test.ts` and the derived coverage test.
+
+| Outcome | BMJA binding IDs |
+|---|---|
+| Previously current (1) | `thirteen-unique-wonders` |
+| Newly migrated (17) | `knitting`, `triple-knitting`, `all-pair-honours`, `imperial-jade`, `gates-of-heaven`, `wriggling-snake`, `all-winds-and-dragons`, `heads-and-tails`, `fourfold-plenty`, `three-great-scholars`, `four-blessings`, `buried-treasure`, `heavens-blessing`, `earths-blessing`, `gathering-plum-blossom`, `plucking-moon`, `twofold-fortune` |
+| Evidence-blocked (0) | None |
+| Semantic-review-deferred (0) | None |
+
+The 17 new subjects use BMJA-scoped identities. The existing shared Thirteen Unique Wonders subject is reused only by its previously reviewed chain. No cross-profile relationship is asserted. Claims contain concise project-authored fact summaries, exact source-section locators, and no score values or copied source prose. Treatments contain only the exact profile, subject/evidence IDs, and existing runtime binding references.
+
 ## Current totals and limits
 
-The current Classical runtime inventory contains **146 special-hand bindings** across the four profiles: BMJA 18, Western T&M 85, OTB 33, Buzzard 10. Four exact-profile treatments are migrated (one per profile). The MCR runtime inventory contains **81 fan bindings**, of which one is migrated. Two MCR policy treatments are also migrated. Thus the current truth corpus has **7 profile treatments across 3 semantic subjects**, **6 registered sources**, **6 claims for the shared Classical special-hand subject**, and 2 MCR policy subjects. Tests derive these totals from runtime arrays and authored records, without importing scoring values. These are inventory counts, not a percentage-complete migration estimate; runtime presence alone never upgrades a row.
+The current Classical runtime inventory contains **146 special-hand bindings** across the four profiles: BMJA 18, Western T&M 85, OTB 33, Buzzard 10. **21 exact-profile Classical special-hand treatments** are current: BMJA 18 and one for each other profile. The MCR runtime inventory contains **81 fan bindings**, of which one is migrated. Two MCR policy treatments are also migrated. Thus the current truth corpus has **24 profile treatments across 20 semantic subjects**, **6 registered sources**, **23 claims for Classical special-hand subjects**, and 2 MCR policy subjects. Tests derive these totals from runtime arrays and authored records, without importing scoring values. These are inventory counts, not a percentage-complete migration estimate; runtime presence alone never upgrades a row.
 
 ## 440B readiness
 
