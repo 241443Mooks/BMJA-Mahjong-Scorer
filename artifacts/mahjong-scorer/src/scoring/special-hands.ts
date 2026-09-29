@@ -1112,6 +1112,15 @@ export const canonicalSpecialHandPatterns: CanonicalSpecialHandPattern[] = [
     },
   },
   {
+    id: 'seven-pairs-exactly-one-suit-with-optional-honours',
+    detect: (hand) => {
+      if (!isCompleteLooseLayout(hand)) return false;
+      const all = tiles(hand);
+      const suited = all.filter((tile): tile is Extract<PlayingTile, { family: 'suit' }> => tile.family === 'suit');
+      return new Set(suited.map((tile) => tile.suit)).size === 1 && [...counts(all).values()].every((count) => count % 2 === 0);
+    },
+  },
+  {
     id: 'dragon-pair-with-five-suited-pairs',
     detect: (hand) => {
       if (!isCompleteLooseLayout(hand)) return false;

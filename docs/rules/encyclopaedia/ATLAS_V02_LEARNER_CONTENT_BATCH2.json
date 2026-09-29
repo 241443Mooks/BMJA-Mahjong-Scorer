@@ -8,13 +8,13 @@
     {
       "entryId": "pair-hand-family",
       "addTreatmentReferenceIds": [
-        "outside-the-box@0.1:seven-pairs-one-suit-with-honours",
+        "outside-the-box@0.1:seven-pairs-exactly-one-suit-with-optional-honours",
         "outside-the-box@0.1:seven-pairs-one-suit"
       ],
       "variantExtensions": [
         {
-          "variantId": "all-pair-western",
-          "addTreatmentReferenceIds": ["outside-the-box@0.1:seven-pairs-one-suit-with-honours"]
+          "variantId": "all-pair-outside-the-box",
+          "addTreatmentReferenceIds": ["outside-the-box@0.1:seven-pairs-exactly-one-suit-with-optional-honours"]
         },
         {
           "variantId": "heavenly-twins",

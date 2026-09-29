@@ -32,7 +32,7 @@
         "western-tm@0.1:all-pair-honours",
         "outside-the-box@0.1:all-pair-honours",
         "western-tm@0.1:seven-pairs-one-suit-with-honours",
-        "outside-the-box@0.1:seven-pairs-one-suit-with-honours",
+        "outside-the-box@0.1:seven-pairs-exactly-one-suit-with-optional-honours",
         "western-tm@0.1:seven-pairs-one-suit",
         "outside-the-box@0.1:seven-pairs-one-suit",
         "western-tm@0.1:seven-pairs-all-from-wall"
@@ -44,8 +44,10 @@
           "outside-the-box@0.1:all-pair-honours"
         ],
         "all-pair-western": [
-          "western-tm@0.1:seven-pairs-one-suit-with-honours",
-          "outside-the-box@0.1:seven-pairs-one-suit-with-honours"
+          "western-tm@0.1:seven-pairs-one-suit-with-honours"
+        ],
+        "all-pair-outside-the-box": [
+          "outside-the-box@0.1:seven-pairs-exactly-one-suit-with-optional-honours"
         ],
         "heavenly-twins": [
           "western-tm@0.1:seven-pairs-one-suit",
@@ -126,7 +128,7 @@
     "outside-the-box@0.1:all-pair-honours": "pair-hand-family",
     "outside-the-box@0.1:thirteen-unique-wonders": "thirteen-unique-wonders",
     "outside-the-box@0.1:wriggling-snake": "wriggling-snake-family",
-    "outside-the-box@0.1:seven-pairs-one-suit-with-honours": "pair-hand-family",
+    "outside-the-box@0.1:seven-pairs-exactly-one-suit-with-optional-honours": "pair-hand-family",
     "outside-the-box@0.1:seven-pairs-one-suit": "pair-hand-family",
     "outside-the-box@0.1:all-pair-ruby-jade": "all-pair-ruby-jade",
     "outside-the-box@0.1:four-bamboo-one-and-five-green-bamboo-pairs": "sparrows-sanctuary",

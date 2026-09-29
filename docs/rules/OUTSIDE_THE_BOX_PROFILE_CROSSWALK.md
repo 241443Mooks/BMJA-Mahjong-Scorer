@@ -32,7 +32,7 @@ The transcription has 35 table rows but **33 unique OTB hands**: Hachi Ban and A
 | All Pair Honours | yes | seven pairs of Winds, Dragons, 1s/9s | 500/200 | X | `all-pair-honours` | BMJA / reuse-pattern-override-binding | same canonical structure is Western 1000/400 |
 | 13 Unique Wonders | yes | ESWN, GRW, all suited 1s/9s, any pair | 1000/400 | X | `thirteen-unique-wonders` | BMJA / reuse-pattern-override-binding | Western `Unique Wonder` is 2000/800 |
 | Wriggling Snake | yes | ESWN + 2–9 run + same-suit 1 pair | 1000/400 | X | `wriggling-snake` | BMJA / reuse-identical | distinct from unstarred Wriggly Snake |
-| All Pair | no | seven pairs, one suit; honours allowed | 500/200 | X | `seven-pairs-one-suit-with-honours` | western-tm / reuse-identical | verified-club |
+| All Pair | no | seven pairs using exactly one suited family; Winds/Dragons may also appear | 500/200 | X | `seven-pairs-exactly-one-suit-with-optional-honours` | OTB-local / structurally-distinct | verified-club; unlike Western All Pair, requires a suited family |
 | Heavenly Twins | no | seven pairs in one suit, no honours | 1000/400 | X | `seven-pairs-one-suit` | western-tm / reuse-identical | verified-club |
 | All Pair Ruby Jade | no | GG, RR plus five Bamboo pairs of any ranks | 1000/400 | X | `all-pair-ruby-jade` | western-tm / reuse-identical | resolved for 88B: T&M red and green Bamboo classes together cover ranks 1–9, so the canonical detector is identical |
 | Sparrow's Sanctuary | no | four Bamboo 1s plus pairs of Bamboo 2,3,4,6,8 | 1000/400 | X | `four-bamboo-one-and-five-green-bamboo-pairs` | western-tm / reuse-pattern-override-binding | OTB override: T&M 1500/600 |

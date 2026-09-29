@@ -361,13 +361,15 @@ describe('Special Hands Atlas directory projection', () => {
     const variants = new Map(pairFamily.variants?.map(({ id, treatmentReferenceIds }) => [id, treatmentReferenceIds]));
     expect(variants.get('all-pair-western')).toEqual([
       'western-tm@0.1:seven-pairs-one-suit-with-honours',
-      'outside-the-box@0.1:seven-pairs-one-suit-with-honours',
+    ]);
+    expect(variants.get('all-pair-outside-the-box')).toEqual([
+      'outside-the-box@0.1:seven-pairs-exactly-one-suit-with-optional-honours',
     ]);
     expect(variants.get('heavenly-twins')).toEqual([
       'western-tm@0.1:seven-pairs-one-suit',
       'outside-the-box@0.1:seven-pairs-one-suit',
     ]);
-    expect(atlasExamplesForTreatment(pairFamily, 'outside-the-box@0.1:seven-pairs-one-suit-with-honours').map(({ id }) => id)).toEqual(['example-all-pair-western']);
+    expect(atlasExamplesForTreatment(pairFamily, 'outside-the-box@0.1:seven-pairs-exactly-one-suit-with-optional-honours').map(({ id }) => id)).toEqual(['example-all-pair-western']);
     expect(atlasExamplesForTreatment(pairFamily, 'outside-the-box@0.1:seven-pairs-one-suit').map(({ id }) => id)).toEqual(['example-heavenly-twins']);
   });
 

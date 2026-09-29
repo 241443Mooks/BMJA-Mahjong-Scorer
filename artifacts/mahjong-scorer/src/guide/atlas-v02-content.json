@@ -325,7 +325,7 @@
         "western-tm@0.1:all-pair-honours",
         "outside-the-box@0.1:all-pair-honours",
         "western-tm@0.1:seven-pairs-one-suit-with-honours",
-        "outside-the-box@0.1:seven-pairs-one-suit-with-honours",
+        "outside-the-box@0.1:seven-pairs-exactly-one-suit-with-optional-honours",
         "western-tm@0.1:seven-pairs-one-suit",
         "outside-the-box@0.1:seven-pairs-one-suit",
         "western-tm@0.1:seven-pairs-all-from-wall"
@@ -363,8 +363,7 @@
           "label": "All Pair",
           "relation": "name-collision with All Pair Honours; neither predicate contains the other",
           "treatmentReferenceIds": [
-            "western-tm@0.1:seven-pairs-one-suit-with-honours",
-            "outside-the-box@0.1:seven-pairs-one-suit-with-honours"
+            "western-tm@0.1:seven-pairs-one-suit-with-honours"
           ],
           "facets": [
             "irregular-hand",
@@ -376,6 +375,24 @@
             "example-all-pair-western"
           ],
           "definition": "Seven pairs using at most one numbered suit, with honours allowed."
+        },
+        {
+          "id": "all-pair-outside-the-box",
+          "label": "All Pair with one suit",
+          "relation": "requires a suited family",
+          "treatmentReferenceIds": [
+            "outside-the-box@0.1:seven-pairs-exactly-one-suit-with-optional-honours"
+          ],
+          "facets": [
+            "irregular-hand",
+            "pairs",
+            "one-suit",
+            "honours"
+          ],
+          "exampleIds": [
+            "example-all-pair-western"
+          ],
+          "definition": "Seven pairs using exactly one numbered suit; Winds and Dragons may also appear."
         },
         {
           "id": "heavenly-twins",
@@ -6507,7 +6524,7 @@
     "outside-the-box@0.1:all-pair-honours": "pair-hand-family",
     "outside-the-box@0.1:thirteen-unique-wonders": "thirteen-unique-wonders",
     "outside-the-box@0.1:wriggling-snake": "wriggling-snake-family",
-    "outside-the-box@0.1:seven-pairs-one-suit-with-honours": "pair-hand-family",
+    "outside-the-box@0.1:seven-pairs-exactly-one-suit-with-optional-honours": "pair-hand-family",
     "outside-the-box@0.1:seven-pairs-one-suit": "pair-hand-family",
     "outside-the-box@0.1:all-pair-ruby-jade": "all-pair-ruby-jade",
     "outside-the-box@0.1:four-bamboo-one-and-five-green-bamboo-pairs": "sparrows-sanctuary",
