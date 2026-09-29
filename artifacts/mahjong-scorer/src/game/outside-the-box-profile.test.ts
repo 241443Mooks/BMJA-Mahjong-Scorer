@@ -12,6 +12,7 @@ import {
   WESTERN_TM_RULESET,
 } from './ruleset';
 import { outsideTheBoxSpecialHandBindings } from './outside-the-box-catalogue';
+import { westernTmSpecialHandBindings } from './western-tm-catalogue';
 
 beforeAll(() => initialiseCurrentRulesRuntimes());
 
@@ -35,6 +36,9 @@ const buriedTreasure = (winningMethod: MahjongHand['winningMethod']): MahjongHan
     set('three', 'pung', suited('bamboo', 4)), set('four', 'pung', dragon('red')),
     set('pair', 'pair', suited('bamboo', 5)),
   ], bonusTiles: [], isWinner: true, winningMethod,
+});
+const loosePairs = (tiles: ReturnType<typeof suited | typeof wind | typeof dragon>[]): MahjongHand => ({
+  sets: [], looseTiles: tiles.flatMap((tile) => [tile, tile]), bonusTiles: [], isWinner: true,
 });
 
 describe('outside-the-box@0.1 special-hand profile', () => {
@@ -88,6 +92,53 @@ describe('outside-the-box@0.1 special-hand profile', () => {
       .toHaveLength(32);
     expect(outsideTheBoxSpecialHandBindings.filter(({ patternId }) => patternId !== 'buried-treasure')
       .every(({ winningMethods }) => winningMethods === undefined)).toBe(true);
+  });
+
+  it('gives OTB All Pair exactly one suited family while preserving Western All Pair', () => {
+    const allPairId = 'seven-pairs-exactly-one-suit-with-optional-honours';
+    const allPairBinding = outsideTheBoxSpecialHandBindings.find(({ name }) => name === 'All Pair')!;
+    expect(allPairBinding).toMatchObject({
+      patternId: allPairId, profile: OUTSIDE_THE_BOX_PROFILE_REF, name: 'All Pair',
+      value: 500, fishingValue: 200, exposure: { allowed: false },
+    });
+    expect(outsideTheBoxSpecialHandBindings).toHaveLength(33);
+
+    const optionalHonours = loosePairs([
+      suited('bamboo', 2), suited('bamboo', 4), wind('east'), wind('south'),
+      dragon('green'), dragon('red'), dragon('white'),
+    ]);
+    const allOneSuit = loosePairs([1, 2, 3, 4, 5, 6, 7].map((rank) => suited('bamboo', rank as 1 | 2 | 3 | 4 | 5 | 6 | 7)));
+    const honourOnly = loosePairs([wind('east'), wind('south'), wind('west'), wind('north'), dragon('green'), dragon('red'), dragon('white')]);
+    const groupedHonourOnly: MahjongHand = {
+      sets: [
+        set('east', 'pair', wind('east')), set('south', 'pair', wind('south')),
+        set('west', 'pair', wind('west')), set('north', 'pair', wind('north')),
+        set('green', 'pair', dragon('green')), set('red', 'pair', dragon('red')),
+        set('white', 'pair', dragon('white')),
+      ], bonusTiles: [], isWinner: true,
+    };
+    const twoSuits = loosePairs([
+      suited('bamboo', 1), suited('bamboo', 2), suited('bamboo', 3), suited('bamboo', 4),
+      suited('characters', 1), suited('characters', 2), suited('characters', 3),
+    ]);
+    const findsOtbAllPair = (hand: MahjongHand) => detectSpecialHands(hand, undefined, outsideTheBoxSpecialHandBindings)
+      .find(({ id }) => id === allPairId)?.matched;
+    expect(findsOtbAllPair(optionalHonours)).toBe(true);
+    expect(findsOtbAllPair(allOneSuit)).toBe(true);
+    expect(findsOtbAllPair(honourOnly)).toBe(false);
+    expect(findsOtbAllPair(twoSuits)).toBe(false);
+
+    const westernBinding = westernTmSpecialHandBindings.find(({ patternId }) => patternId === 'seven-pairs-one-suit-with-honours')!;
+    expect(westernBinding).toMatchObject({ patternId: 'seven-pairs-one-suit-with-honours', name: 'All Pair' });
+    const westernPattern = canonicalSpecialHandPatterns.find(({ id }) => id === 'seven-pairs-one-suit-with-honours')!;
+    expect(westernPattern.detect(honourOnly)).toBe(true);
+    expect(score(WESTERN_TM_RULESET, honourOnly).specialHands)
+      .toContainEqual(expect.objectContaining({ id: 'seven-pairs-one-suit-with-honours', matched: true, value: 500 }));
+
+    expect(canonicalSpecialHandPatterns.find(({ id }) => id === 'all-pair-honours')!.detect(groupedHonourOnly)).toBe(true);
+    expect(score(OUTSIDE_THE_BOX_RULESET, groupedHonourOnly).specialHands)
+      .toContainEqual(expect.objectContaining({ id: 'all-pair-honours', matched: true }));
+    expect(canonicalSpecialHandPatterns.find(({ id }) => id === 'seven-pairs-one-suit-with-honours')!.detect(honourOnly)).toBe(true);
   });
 
   it('matches Club Three Great Scholars only when the remaining set and pair share a numbered suit', () => {

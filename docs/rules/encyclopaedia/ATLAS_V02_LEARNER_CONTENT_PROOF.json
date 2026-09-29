@@ -570,6 +570,24 @@
           "definition": "Seven pairs using at most one numbered suit, with honours allowed."
         },
         {
+          "id": "all-pair-outside-the-box",
+          "label": "All Pair with one suit",
+          "relation": "requires a suited family",
+          "treatmentReferenceIds": [
+            "outside-the-box@0.1:seven-pairs-exactly-one-suit-with-optional-honours"
+          ],
+          "facets": [
+            "irregular-hand",
+            "pairs",
+            "one-suit",
+            "honours"
+          ],
+          "exampleIds": [
+            "example-all-pair-western"
+          ],
+          "definition": "Seven pairs using exactly one numbered suit; Winds and Dragons may also appear."
+        },
+        {
           "id": "heavenly-twins",
           "label": "Heavenly Twins",
           "relation": "narrower-than All Pair",

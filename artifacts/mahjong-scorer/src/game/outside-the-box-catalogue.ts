@@ -48,7 +48,7 @@ export const outsideTheBoxSpecialHandBindings: SpecialHandPatternBinding[] = [
   fixed('all-pair-honours', 'All Pair Honours', 500, 200, concealed),
   fixed('thirteen-unique-wonders', '13 Unique Wonders', 1000, 400, concealed),
   fixed('wriggling-snake', 'Wriggling Snake', 1000, 400, concealed),
-  fixed('seven-pairs-one-suit-with-honours', 'All Pair', 500, 200, concealed),
+  fixed('seven-pairs-exactly-one-suit-with-optional-honours', 'All Pair', 500, 200, concealed),
   fixed('seven-pairs-one-suit', 'Heavenly Twins', 1000, 400, concealed),
   fixed('all-pair-ruby-jade', 'All Pair Ruby Jade', 1000, 400, concealed),
   fixed('four-bamboo-one-and-five-green-bamboo-pairs', "Sparrow's Sanctuary", 1000, 400, concealed),
