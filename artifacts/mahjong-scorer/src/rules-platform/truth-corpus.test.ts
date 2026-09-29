@@ -26,7 +26,7 @@ describe('current typed truth corpus', () => {
       'western-tm@0.1:thirteen-unique-wonders',
     ]);
     expect(currentTruthIndex.treatmentsForProfile({ id: 'western-tm', version: '0.2' })).toEqual([]);
-    expect(currentTruthIndex.claimsSupportingProfile({ id: 'outside-the-box', version: '0.1' })).toHaveLength(1);
+    expect(currentTruthIndex.claimsSupportingProfile({ id: 'outside-the-box', version: '0.1' })).toHaveLength(33);
   });
 
   it('joins the MCR truth records to the exact pattern-accumulator bindings and detector', () => {
