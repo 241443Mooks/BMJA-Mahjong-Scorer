@@ -15,6 +15,7 @@ const fixed = (
   value: number,
   fishingValue: number,
   exposure?: FixedSpecialHandPatternBinding['exposure'],
+  winningMethods?: FixedSpecialHandPatternBinding['winningMethods'],
 ): FixedSpecialHandPatternBinding => ({
   patternId,
   profile: OUTSIDE_THE_BOX_PROFILE_REF,
@@ -23,6 +24,7 @@ const fixed = (
   value,
   fishingValue,
   exposure,
+  ...(winningMethods === undefined ? {} : { winningMethods }),
 });
 
 const concealed = { allowed: false } as const;
@@ -32,7 +34,9 @@ const half = (value: number, fishingValue: number) =>
 /** The 33 fixed special-pattern memberships in the verified OTB club guide.
  * Purity is deliberately absent: it remains the BMJA calculated-Purity rule. */
 export const outsideTheBoxSpecialHandBindings: SpecialHandPatternBinding[] = [
-  fixed('buried-treasure', 'Buried Treasure', 1000, 400, concealed),
+  // The OTB guide says every tile is picked from the wall: a live-wall draw
+  // includes the last live-wall tile, but not a discard, roof replacement or deal.
+  fixed('buried-treasure', 'Buried Treasure', 1000, 400, concealed, ['wall', 'last-wall-tile']),
   fixed('imperial-jade', 'Imperial Jade', 1000, 400, half(1000, 400)),
   fixed('heads-and-tails', 'Heads & Tails', 1000, 400, half(1000, 400)),
   fixed('all-winds-and-dragons', 'All Winds & Dragons', 1000, 400, { allowed: true }),
