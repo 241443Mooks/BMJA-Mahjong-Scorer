@@ -98,6 +98,6 @@ describe('Issue #440B4A Western T&M Cohort A truth', () => {
     const treatmentBindingIds = new Set(westernTreatments.flatMap(({ runtimeState }) => runtimeState.kind === 'executable' && runtimeState.ref.kind === 'binding' ? [runtimeState.ref.id] : []));
     expect(deferred.every((id) => westernTmSpecialHandBindings.some(({ patternId }) => patternId === id))).toBe(true);
     expect(deferred.some((id) => treatmentBindingIds.has(id))).toBe(false);
-    expect(currentTruthCorpus.treatments.filter(({ record }) => record.profile.id === 'western-tm')).toHaveLength(56);
+    expect(currentTruthCorpus.treatments.filter(({ record }) => record.profile.id === 'western-tm')).toHaveLength(82);
   });
 });
