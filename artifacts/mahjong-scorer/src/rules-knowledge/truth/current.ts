@@ -18,12 +18,15 @@ import { buzzard2000SpecialHandTreatments } from './treatments/buzzard-2000-spec
 import { westernTmB4aSpecialHandSubjects } from './subjects/western-tm-b4a-special-hands';
 import { westernTmB4aSpecialHandClaims } from './claims/western-tm-b4a-special-hands';
 import { westernTmB4aSpecialHandTreatments } from './treatments/western-tm-b4a-special-hands';
+import { westernTmB4bSpecialHandSubjects } from './subjects/western-tm-b4b-pairs-winds';
+import { westernTmB4bSpecialHandClaims } from './claims/western-tm-b4b-pairs-winds';
+import { westernTmB4bSpecialHandTreatments } from './treatments/western-tm-b4b-pairs-winds';
 
 export const currentTruthCorpus = {
   sources: [...sourceRecords, ...mcrSourceRecords],
-  subjects: [...thirteenUniqueWondersSubjects, ...bmjaSpecialHandSubjects, ...otbSpecialHandSubjects, ...buzzard2000SpecialHandSubjects, ...westernTmB4aSpecialHandSubjects, ...mcrSliceESubjects],
-  claims: [...thirteenUniqueWondersClaims, ...bmjaSpecialHandClaims, ...otbSpecialHandClaims, ...buzzard2000SpecialHandClaims, ...westernTmB4aSpecialHandClaims, ...mcrSliceEClaims],
-  treatments: [...thirteenUniqueWondersTreatments, ...bmjaSpecialHandTreatments, ...otbSpecialHandTreatments, ...buzzard2000SpecialHandTreatments, ...westernTmB4aSpecialHandTreatments, ...mcrSliceETreatments],
+  subjects: [...thirteenUniqueWondersSubjects, ...bmjaSpecialHandSubjects, ...otbSpecialHandSubjects, ...buzzard2000SpecialHandSubjects, ...westernTmB4aSpecialHandSubjects, ...westernTmB4bSpecialHandSubjects, ...mcrSliceESubjects],
+  claims: [...thirteenUniqueWondersClaims, ...bmjaSpecialHandClaims, ...otbSpecialHandClaims, ...buzzard2000SpecialHandClaims, ...westernTmB4aSpecialHandClaims, ...westernTmB4bSpecialHandClaims, ...mcrSliceEClaims],
+  treatments: [...thirteenUniqueWondersTreatments, ...bmjaSpecialHandTreatments, ...otbSpecialHandTreatments, ...buzzard2000SpecialHandTreatments, ...westernTmB4aSpecialHandTreatments, ...westernTmB4bSpecialHandTreatments, ...mcrSliceETreatments],
 } as const;
 
 export const currentTruthIndex = createTruthIndex(currentTruthCorpus, currentTruthValidationEnvironment);

@@ -4,6 +4,7 @@ import { outsideTheBoxSpecialHandBindings } from '../game/outside-the-box-catalo
 import { westernTmSpecialHandBindings } from '../game/western-tm-catalogue';
 import { currentTruthCorpus, currentTruthIndex, currentTruthValidationEnvironment } from '../rules-knowledge/truth';
 import { westernTmB4aBindingIds } from '../rules-knowledge/truth/subjects/western-tm-b4a-special-hands';
+import { westernTmB4bBindingIds } from '../rules-knowledge/truth/subjects/western-tm-b4b-pairs-winds';
 import { bmjaSpecialHandBindings } from '../scoring/special-hands';
 import { MCR_2006_FAN_BINDINGS } from './mcr-detectors';
 
@@ -24,29 +25,48 @@ describe('Issue 440A derived coverage accounting', () => {
       for (const id of executableIds) expect(inventoryIds.has(id)).toBe(true);
       expect(bindings.length).toBeGreaterThan(0);
     }
-    expect(classicalInventories.map(({ profile }) => currentTruthIndex.treatmentsForProfile(profile).length)).toEqual([18, 35, 33, 9]);
+    expect(classicalInventories.map(({ profile }) => currentTruthIndex.treatmentsForProfile(profile).length)).toEqual([18, 56, 33, 9]);
     expect(classicalInventories.map(({ bindings }) => bindings.length)).toEqual([18, 85, 33, 10]);
   });
 
-  it('partitions Western coverage into existing, B4A, remaining eligible B4B/C, and deferred bindings', () => {
+  it('partitions Western coverage into existing, B4A, B4B, B4C, and deferred bindings', () => {
     const profile = { id: 'western-tm', version: '0.1' } as const;
     const inventoryIds = westernTmSpecialHandBindings.map(({ patternId }) => patternId);
     const treatments = currentTruthIndex.treatmentsForProfile(profile).map(({ record }) => record);
     const executableIds = treatments.flatMap(({ runtimeState }) => runtimeState.kind === 'executable' && runtimeState.ref.kind === 'binding' ? [runtimeState.ref.id] : []);
     const alreadyCurrent = ['thirteen-unique-wonders'];
     const deferred = ['purity-one-chow', 'honours-and-one-suit-terminals-pung-kong-hand', 'one-suit-with-honours-mostly-pung-kong-hand'];
+    const b4b = new Set<string>(westernTmB4bBindingIds);
     const migratedB4a = new Set<string>(westernTmB4aBindingIds);
-    const remainingEligibleB4bC = inventoryIds.filter((id) => !alreadyCurrent.includes(id) && !migratedB4a.has(id) && !deferred.includes(id));
+    const remainingEligibleB4c = inventoryIds.filter((id) => !alreadyCurrent.includes(id) && !migratedB4a.has(id) && !b4b.has(id) && !deferred.includes(id));
+    const expectedB4c = [
+      'all-winds-and-dragons', 'east-wind-meld-white-dragon-pair-three-suit-nonterminal-melds',
+      'green-and-white-dragon-melds-with-green-bamboo', 'green-dragon-meld-with-green-bamboo-melds-and-pair-one-chow',
+      'green-dragon-pung-white-dragon-pair-three-circle-melds', 'green-dragon-pung-with-bamboo-melds',
+      'green-dragon-pung-with-blue-circle-melds', 'heads-and-tails', 'one-suit-odd-melds',
+      'own-wind-meld-with-dragon-pair-and-three-suit-chows', 'parallel-suit-rank-melds-with-honours',
+      'red-and-green-dragon-melds-with-bamboo', 'red-and-green-dragon-pungs-with-three-suits',
+      'red-and-white-dragon-melds-with-red-bamboo', 'red-dragon-meld-with-red-bamboo-melds',
+      'red-dragon-pung-with-character-melds', 'red-dragon-pung-with-even-character-melds',
+      'red-white-dragon-pungs-with-seven-tile-character-or-circle-run-pair',
+      'three-dragon-singles-with-one-meld-in-each-suit-and-suited-pair', 'three-great-scholars',
+      'two-odd-suits-and-one-even-suit', 'two-ranks-doubled-across-two-suits-with-honour-pair',
+      'white-dragon-meld-red-dragon-pair-three-suit-nonterminal-melds',
+      'white-dragon-meld-with-even-circle-melds', 'white-dragon-pung-with-circle-melds',
+      'white-dragon-pung-with-odd-character-melds',
+    ];
 
     expect(westernTmSpecialHandBindings).toHaveLength(85);
     expect(new Set(westernTmB4aBindingIds).size).toBe(34);
-    expect(new Set(executableIds)).toEqual(new Set([...alreadyCurrent, ...migratedB4a]));
-    expect(remainingEligibleB4bC).toHaveLength(47);
+    expect(new Set(westernTmB4bBindingIds).size).toBe(21);
+    expect(new Set(executableIds)).toEqual(new Set([...alreadyCurrent, ...migratedB4a, ...b4b]));
+    expect(remainingEligibleB4c.sort()).toEqual(expectedB4c.sort());
+    expect(remainingEligibleB4c).toHaveLength(26);
     expect(deferred).toHaveLength(3);
     expect(deferred.every((id) => inventoryIds.includes(id))).toBe(true);
     expect(deferred.some((id) => executableIds.includes(id))).toBe(false);
-    expect(alreadyCurrent.length + migratedB4a.size + remainingEligibleB4bC.length + deferred.length).toBe(85);
-    expect(treatments).toHaveLength(35);
+    expect(alreadyCurrent.length + migratedB4a.size + b4b.size + remainingEligibleB4c.length + deferred.length).toBe(85);
+    expect(treatments).toHaveLength(56);
   });
 
   it('accounts for Buzzard special-hand coverage while keeping Concealed Pungs/Kongs visibly deferred', () => {
@@ -84,11 +104,11 @@ describe('Issue 440A derived coverage accounting', () => {
     for (const { runtimeState } of policyTreatments) {
       if (runtimeState.kind === 'executable') expect(currentTruthValidationEnvironment.runtimeTreatmentExists(profile, runtimeState.ref)).toBe(true);
     }
-    expect(currentTruthCorpus.treatments).toHaveLength(98);
-    expect(currentTruthCorpus.subjects).toHaveLength(94);
-    expect(currentTruthCorpus.claims).toHaveLength(99);
+    expect(currentTruthCorpus.treatments).toHaveLength(119);
+    expect(currentTruthCorpus.subjects).toHaveLength(115);
+    expect(currentTruthCorpus.claims).toHaveLength(120);
     expect(currentTruthIndex.treatmentsForProfile({ id: 'bmja', version: '1.0' })).toHaveLength(18);
-    expect(currentTruthIndex.treatmentsForProfile({ id: 'western-tm', version: '0.1' })).toHaveLength(35);
+    expect(currentTruthIndex.treatmentsForProfile({ id: 'western-tm', version: '0.1' })).toHaveLength(56);
     expect(currentTruthIndex.treatmentsForProfile({ id: 'outside-the-box', version: '0.1' })).toHaveLength(33);
     expect(currentTruthIndex.treatmentsForProfile({ id: 'buzzard-2000', version: '0.1' })).toHaveLength(9);
   });
