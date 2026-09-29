@@ -23,8 +23,20 @@ describe('Issue 440A derived coverage accounting', () => {
       for (const id of executableIds) expect(inventoryIds.has(id)).toBe(true);
       expect(bindings.length).toBeGreaterThan(0);
     }
-    expect(classicalInventories.map(({ profile }) => currentTruthIndex.treatmentsForProfile(profile).length)).toEqual([18, 1, 33, 1]);
+    expect(classicalInventories.map(({ profile }) => currentTruthIndex.treatmentsForProfile(profile).length)).toEqual([18, 1, 33, 9]);
     expect(classicalInventories.map(({ bindings }) => bindings.length)).toEqual([18, 85, 33, 10]);
+  });
+
+  it('accounts for Buzzard special-hand coverage while keeping Concealed Pungs/Kongs visibly deferred', () => {
+    const profile = { id: 'buzzard-2000', version: '0.1' } as const;
+    const treatments = currentTruthIndex.treatmentsForProfile(profile).map(({ record }) => record);
+    const executableIds = treatments.flatMap(({ runtimeState }) => runtimeState.kind === 'executable' && runtimeState.ref.kind === 'binding' ? [runtimeState.ref.id] : []);
+    const inventoryIds = buzzard2000SpecialHandBindings.map(({ patternId }) => patternId);
+    expect(buzzard2000SpecialHandBindings).toHaveLength(10);
+    expect(treatments).toHaveLength(9);
+    expect([...executableIds].sort()).toEqual(inventoryIds.filter((id) => id !== 'four-concealed-pung-kong-hand').sort());
+    expect(inventoryIds.filter((id) => !executableIds.includes(id))).toEqual(['four-concealed-pung-kong-hand']);
+    expect(treatments.some(({ treatmentId }) => treatmentId === 'buzzard-2000@0.1:thirteen-unique-wonders')).toBe(true);
   });
 
   it('accounts for the complete MCR fan catalogue without copying its scoring values', () => {
@@ -50,10 +62,12 @@ describe('Issue 440A derived coverage accounting', () => {
     for (const { runtimeState } of policyTreatments) {
       if (runtimeState.kind === 'executable') expect(currentTruthValidationEnvironment.runtimeTreatmentExists(profile, runtimeState.ref)).toBe(true);
     }
-    expect(currentTruthCorpus.treatments).toHaveLength(56);
+    expect(currentTruthCorpus.treatments).toHaveLength(64);
+    expect(currentTruthCorpus.subjects).toHaveLength(60);
+    expect(currentTruthCorpus.claims).toHaveLength(65);
     expect(currentTruthIndex.treatmentsForProfile({ id: 'bmja', version: '1.0' })).toHaveLength(18);
     expect(currentTruthIndex.treatmentsForProfile({ id: 'western-tm', version: '0.1' })).toHaveLength(1);
     expect(currentTruthIndex.treatmentsForProfile({ id: 'outside-the-box', version: '0.1' })).toHaveLength(33);
-    expect(currentTruthIndex.treatmentsForProfile({ id: 'buzzard-2000', version: '0.1' })).toHaveLength(1);
+    expect(currentTruthIndex.treatmentsForProfile({ id: 'buzzard-2000', version: '0.1' })).toHaveLength(9);
   });
 });

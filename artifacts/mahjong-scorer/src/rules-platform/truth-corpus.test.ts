@@ -8,9 +8,9 @@ describe('current typed truth corpus', () => {
     const subjectId = 'pattern.thirteen-orphans';
     expect(currentTruthIndex.subjectById(subjectId)?.record.kind).toBe('pattern');
     expect(currentTruthIndex.claimsForSubject(subjectId)).toHaveLength(6);
-    expect(currentTruthIndex.claimsForSource('buzzard-2000-classical').map(({ record }) => record.supportsProfile)).toEqual([
-      { id: 'buzzard-2000', version: '0.1' },
-    ]);
+    const buzzardClaims = currentTruthIndex.claimsForSource('buzzard-2000-classical').map(({ record }) => record);
+    expect(buzzardClaims).toHaveLength(9);
+    expect(buzzardClaims.every(({ supportsProfile }) => supportsProfile?.id === 'buzzard-2000' && supportsProfile.version === '0.1')).toBe(true);
     expect(currentTruthIndex.claimById('evidence.pattern.thirteen-orphans.outside-the-box')?.record.locator).toEqual({
       kind: 'club-material',
       title: 'Outside the Box Mahjong guide supplied by Rachel',
@@ -55,8 +55,16 @@ describe('current typed truth corpus', () => {
   });
 
   it('follows source impact through claims to only the supported treatments', () => {
-    expect(currentTruthIndex.treatmentsDependingOnSource('buzzard-2000-classical').map(({ record }) => record.treatmentId)).toEqual([
+    expect(currentTruthIndex.treatmentsDependingOnSource('buzzard-2000-classical').map(({ record }) => record.treatmentId).sort()).toEqual([
+      'buzzard-2000@0.1:all-winds-and-dragons',
+      'buzzard-2000@0.1:buzzard-three-dragons-winner',
+      'buzzard-2000@0.1:earths-blessing',
+      'buzzard-2000@0.1:east-thirteenth-consecutive-mahjong',
+      'buzzard-2000@0.1:heads-and-tails',
+      'buzzard-2000@0.1:heavens-blessing',
+      'buzzard-2000@0.1:one-suit-nine-gates-any-completion',
       'buzzard-2000@0.1:thirteen-unique-wonders',
+      'buzzard-2000@0.1:three-winds-and-fourth-wind-pair',
     ]);
     expect(currentTruthIndex.treatmentsDependingOnSource('classical-atlas-concept-audit-v1')).toHaveLength(4);
     expect(currentTruthIndex.treatmentsDependingOnSource('source.mcr-ema-green-book-2006').map(({ record }) => record.treatmentId)).toEqual([
@@ -74,11 +82,13 @@ describe('current typed truth corpus', () => {
       { treatmentId: 'western-tm@0.1:thirteen-unique-wonders', projectionId: 'atlas:shared-entry' },
       { treatmentId: 'buzzard-2000@0.1:thirteen-unique-wonders', projectionId: 'atlas:thirteen-unique-wonders' },
     ]);
+    expect(impact.claimIds).toContain('evidence.pattern.thirteen-orphans.buzzard-2000');
+    expect(impact.subjects).toHaveLength(9);
+    expect(impact.subjects.find(({ subjectId }) => subjectId === 'pattern.thirteen-orphans')).toEqual({ subjectId: 'pattern.thirteen-orphans', treatmentIds: ['buzzard-2000@0.1:thirteen-unique-wonders'] });
+    expect(impact.treatments).toHaveLength(9);
+    expect(impact.projections).toEqual([{ treatmentId: 'buzzard-2000@0.1:thirteen-unique-wonders', projectionId: 'atlas:thirteen-unique-wonders' }]);
     expect(impact).toMatchObject({
-      claimIds: ['evidence.pattern.thirteen-orphans.buzzard-2000'],
-      subjects: [{ subjectId: 'pattern.thirteen-orphans', treatmentIds: ['buzzard-2000@0.1:thirteen-unique-wonders'] }],
-      treatments: [{ treatmentId: 'buzzard-2000@0.1:thirteen-unique-wonders', profile: { id: 'buzzard-2000', version: '0.1' }, runtimeState: { kind: 'executable', ref: { kind: 'binding', id: 'thirteen-unique-wonders' } } }],
-      projections: [{ treatmentId: 'buzzard-2000@0.1:thirteen-unique-wonders', projectionId: 'atlas:thirteen-unique-wonders' }],
+      treatments: expect.arrayContaining([{ treatmentId: 'buzzard-2000@0.1:thirteen-unique-wonders', profile: { id: 'buzzard-2000', version: '0.1' }, runtimeState: { kind: 'executable', ref: { kind: 'binding', id: 'thirteen-unique-wonders' } } }]),
     });
     expect(currentTruthIndex.claimsByStatus('secondary-only')).toHaveLength(1);
     expect(currentTruthIndex.unresolvedClaims()).toEqual([]);

@@ -89,7 +89,7 @@ describe('Issue 440B2 Outside the Box special-hand truth migration', () => {
     });
     expect(currentTruthCorpus.treatments.filter(({ recordId }) => recordId === 'outside-the-box@0.1:thirteen-unique-wonders')).toHaveLength(1);
     expect(currentTruthIndex.treatmentsForProfile({ id: 'bmja', version: '1.0' })).toHaveLength(18);
-    expect(currentTruthCorpus.treatments).toHaveLength(56);
-    expect(new Set(currentTruthCorpus.treatments.filter(({ lifecycle }) => lifecycle === 'current').map(({ recordId }) => recordId)).size).toBe(56);
+    expect(currentTruthCorpus.treatments).toHaveLength(64);
+    expect(new Set(currentTruthCorpus.treatments.filter(({ lifecycle }) => lifecycle === 'current').map(({ recordId }) => recordId)).size).toBe(64);
   });
 });
