@@ -5,7 +5,11 @@ import {
   canonicalSpecialHandPatterns,
   resolveSpecialHandBindings,
 } from './special-hands';
+import { outsideTheBoxSpecialHandBindings } from '../game/outside-the-box-catalogue';
+import { westernTmSpecialHandBindings } from '../game/western-tm-catalogue';
+import { buzzard2000SpecialHandBindings } from '../game/buzzard-2000';
 import type { GameContext, HandSet, MahjongHand } from '.';
+import type { SpecialHandPatternBinding } from './special-hands';
 
 const winning = (sets: HandSet[]): MahjongHand => ({
   sets,
@@ -909,5 +913,84 @@ describe('independent special-hand detectors', () => {
     expect(new Set(results.map((result) => result.id)).size).toBe(
       results.length,
     );
+  });
+});
+
+describe('shared complete grouped-hand predicates', () => {
+  const profileBindings = [
+    bmjaSpecialHandBindings,
+    westernTmSpecialHandBindings,
+    outsideTheBoxSpecialHandBindings,
+    buzzard2000SpecialHandBindings,
+  ] as const;
+  const allWinds = winning([
+    set('east', 'pung', wind('east')),
+    set('south', 'pung', wind('south')),
+    set('red', 'pung', dragon('red')),
+    set('green', 'pung', dragon('green')),
+    set('pair', 'pair', dragon('white')),
+  ]);
+  const allWindsWithKong = winning([
+    set('east', 'kong', wind('east')),
+    set('south', 'pung', wind('south')),
+    set('red', 'pung', dragon('red')),
+    set('green', 'pung', dragon('green')),
+    set('pair', 'pair', dragon('white')),
+  ]);
+  const onesAndNines = winning([
+    set('bamboo-one', 'pung', suited('bamboo', 1)),
+    set('bamboo-nine', 'pung', suited('bamboo', 9)),
+    set('characters-one', 'pung', suited('characters', 1)),
+    set('circles-nine', 'pung', suited('circles', 9)),
+    set('pair', 'pair', suited('characters', 9)),
+  ]);
+  const onesAndNinesWithKong = winning([
+    set('bamboo-one', 'kong', suited('bamboo', 1)),
+    set('bamboo-nine', 'pung', suited('bamboo', 9)),
+    set('characters-one', 'pung', suited('characters', 1)),
+    set('circles-nine', 'pung', suited('circles', 9)),
+    set('pair', 'pair', suited('characters', 9)),
+  ]);
+  const byId = (hand: MahjongHand, bindings: readonly SpecialHandPatternBinding[], id: string) =>
+    detectSpecialHands(hand, context('east'), [...bindings]).find((result) => result.id === id)?.matched;
+
+  it.each(profileBindings.map((bindings) => ({ bindings })))('preserves each owning profile’s valid All Winds and Dragons treatment, including a Kong', ({ bindings }) => {
+    expect(byId(allWinds, bindings, 'all-winds-and-dragons')).toBe(true);
+    expect(byId(allWindsWithKong, bindings, 'all-winds-and-dragons')).toBe(true);
+  });
+
+  it.each(profileBindings.map((bindings) => ({ bindings })))('rejects invalid All Winds and Dragons physical/group structure for each owning profile', ({ bindings }) => {
+    expect(byId({ ...allWinds, looseTiles: [wind('north')] }, bindings, 'all-winds-and-dragons')).toBe(false);
+    expect(byId({ ...allWinds, sets: [
+      set('east', 'pung', wind('east')),
+      set('south', 'pung', wind('south')),
+      set('red', 'pung', dragon('red')),
+      set('green', 'pung', dragon('green')),
+      set('pair', 'pair', wind('east')),
+    ] }, bindings, 'all-winds-and-dragons')).toBe(false);
+    expect(byId({ ...allWinds, sets: [
+      ...allWinds.sets.slice(0, 4),
+      { ...allWinds.sets[4]!, kind: 'unknown' as unknown as HandSet['kind'] },
+    ] }, bindings, 'all-winds-and-dragons')).toBe(false);
+  });
+
+  it.each(profileBindings.map((bindings) => ({ bindings })))('preserves each owning profile’s valid All Ones and Nines treatment, including a Kong', ({ bindings }) => {
+    expect(byId(onesAndNines, bindings, 'heads-and-tails')).toBe(true);
+    expect(byId(onesAndNinesWithKong, bindings, 'heads-and-tails')).toBe(true);
+  });
+
+  it.each(profileBindings.map((bindings) => ({ bindings })))('rejects invalid All Ones and Nines physical/group structure for each owning profile', ({ bindings }) => {
+    expect(byId({ ...onesAndNines, remainingTiles: [suited('circles', 1)] }, bindings, 'heads-and-tails')).toBe(false);
+    expect(byId({ ...onesAndNines, sets: [
+      set('bamboo-one', 'pung', suited('bamboo', 1)),
+      set('bamboo-nine', 'pung', suited('bamboo', 9)),
+      set('characters-one', 'pung', suited('characters', 1)),
+      set('circles-nine', 'pung', suited('circles', 9)),
+      set('pair', 'pair', suited('bamboo', 1)),
+    ] }, bindings, 'heads-and-tails')).toBe(false);
+    expect(byId({ ...onesAndNines, sets: [
+      ...onesAndNines.sets.slice(0, 4),
+      { ...onesAndNines.sets[4]!, kind: 'unknown' as unknown as HandSet['kind'] },
+    ] }, bindings, 'heads-and-tails')).toBe(false);
   });
 });

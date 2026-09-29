@@ -1369,30 +1369,15 @@ export const canonicalSpecialHandPatterns: CanonicalSpecialHandPattern[] = [
   {
     id: 'all-winds-and-dragons',
     detect: (hand) => {
-      const all = tiles(hand);
-      return (
-        hand.isWinner &&
-        hand.sets.length === 5 &&
-        hand.sets.filter((set) => set.kind === 'pair').length === 1 &&
-        hand.sets.filter((set) => set.kind === 'pung' || set.kind === 'kong')
-          .length === 4 &&
-        all.length >= 14 &&
-        all.every((tile) => tile.family !== 'suit')
-      );
+      const shape = groupedShape(hand, 4, 1);
+      return shape !== undefined && shape.all.every((tile) => tile.family !== 'suit');
     },
   },
   {
     id: 'heads-and-tails',
     detect: (hand) => {
-      const all = tiles(hand);
-      return (
-        hand.isWinner &&
-        hand.sets.length === 5 &&
-        hand.sets.filter((set) => set.kind === 'pair').length === 1 &&
-        hand.sets.filter((set) => set.kind === 'pung' || set.kind === 'kong')
-          .length === 4 &&
-        all.every(isTerminal)
-      );
+      const shape = groupedShape(hand, 4, 1);
+      return shape !== undefined && shape.all.every(isTerminal);
     },
   },
   {
