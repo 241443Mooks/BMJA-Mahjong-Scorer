@@ -31,7 +31,7 @@ The settlement subjects may be shared only with the independent exact-profile cl
 | East remains East after a draw | `outside-the-box@0.1` | source-ready-runtime-aligned | `otb-guide-2026-09`, supplied guide, draw/round-state section |
 | East remains East after a draw | `buzzard-2000@0.1` | source-ready-runtime-aligned | `buzzard-2000-classical`, p. 7, Rules 11–14 |
 | A draw has no score/settlement | `outside-the-box@0.1` | source-ready-runtime-aligned | `otb-guide-2026-09`, supplied guide, draw/round-state section |
-| A dead hand has no scoring | `buzzard-2000@0.1` | source-ready-runtime-aligned | `buzzard-2000-classical`, p. 7, Rules 11–14 |
+| A dead hand has no settlement/payments/transfers | `buzzard-2000@0.1` | source-unresolved | The available retained evidence ledger transcribes p. 7 as “dead hand: no scoring”; it does not establish a settlement consequence. The snapshot PDF was not available in this checkout and the canonical page fetch failed TLS hostname verification. No claim or treatment is retained for this proposition. |
 | A draw has no settlement transfers | `bmja@1.0` | source-unresolved | Q&A says “No one scores anything”; it does not directly specify transfers. Existing no-transfer behavior is project interpretation, not governing authority. |
 
 ### East, seat and prevailing-Wind progression
@@ -110,15 +110,15 @@ The frozen one-round product policy, unresolved BMJA draw-settlement and OTB ord
 
 ## Final accounting
 
-The frozen C4 inventory contains **23 semantic subjects**, **36 exact-profile source claims**, and **36 exact-profile treatments**. Coverage has **69 subject/profile cells**: 36 source-ready/migrated, 7 source-unresolved with neither claim nor treatment, and 26 not applicable. All 36 treatments are `migration-incomplete`; none is `present-not-modelled`, executable, or value-bearing. The source registry adds only the governing `bmja-settlement` record; progression uses the existing `bmja-qa` and `bmja-approved-site` records.
+The frozen C4 inventory contains **23 semantic subjects**, **35 exact-profile source claims**, and **35 exact-profile treatments**. Coverage has **69 subject/profile cells**: 35 source-ready/migrated, 8 source-unresolved with neither claim nor treatment, and 26 not applicable. All 35 treatments are `migration-incomplete`; none is `present-not-modelled`, executable, or value-bearing. The source registry adds only the governing `bmja-settlement` record; progression uses the existing `bmja-qa` and `bmja-approved-site` records.
 
-Assembled corpus totals are **229 subjects, 293 claims, and 291 treatments**. The exact special-hand executable treatment counts remain BMJA 18, Western T&M 84, OTB 33, and Buzzard 9. C1, C2A, C2B, and C3A inventories and their frozen claim/treatment totals are unchanged.
+Assembled corpus totals are **229 subjects, 292 claims, and 290 treatments**. The exact special-hand executable treatment counts remain BMJA 18, Western T&M 84, OTB 33, and Buzzard 9. C1, C2A, C2B, and C3A inventories and their frozen claim/treatment totals are unchanged.
 
 ## Verification
 
 | Check | Result |
 |---|---|
-| C4 truth/coverage, BMJA settlement/progression, OTB settlement/incidents/Goulash, Buzzard settlement/incidents/non-winner, C1/C2/C3 truth regressions, truth integrity/corpus | PASS — 16 files, 135 tests |
+| C4 truth/coverage, BMJA settlement/progression, OTB settlement/incidents/Goulash, Buzzard settlement/incidents/non-winner, C1/C2/C3 truth regressions, truth integrity/corpus | PASS — 15 files, 129 tests |
 | `pnpm test` | PASS — 133 files, 1,200 tests |
 | `pnpm run typecheck` | PASS |
 | `PORT=5173 BASE_PATH=/ pnpm run build` | PASS — existing sourcemap-location and chunk-size warnings; exit 0 |
@@ -130,7 +130,7 @@ Assembled corpus totals are **229 subjects, 293 claims, and 291 treatments**. Th
 - `bmja-qa`: *Playing-the-game Q&A*, “Winds”, “Drawn game”, and “And East Wind”.
 - `bmja-approved-site`: *Preparing to play*, “Determine the prevailing Wind” and “Changing the prevailing Wind”.
 - `otb-guide-2026-09`: supplied club guide evidence retained and transcribed in `OUTSIDE_THE_BOX_PROFILE_CROSSWALK.md`, §§5–7 and #88D round-state evidence.
-- `buzzard-2000-classical`: retained 13-page primary snapshot; p. 7 Rules 11–14, p. 8 “SETTLEMENT OF SCORES”, pp. 11–12 non-winner limits, and p. 12 “ERRORS AND PENALTIES”.
+- `buzzard-2000-classical`: retained 13-page primary snapshot; p. 7 Rules 11–14, p. 8 “SETTLEMENT OF SCORES”, pp. 11–12 non-winner limits, and p. 12 “ERRORS AND PENALTIES”. The p. 7 wording available in the checked-in ledger establishes “no scoring” only; the settlement proposition stays unresolved.
 
 Pull request [#470](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/pull/470) is open against `main` and remains unmerged.
 

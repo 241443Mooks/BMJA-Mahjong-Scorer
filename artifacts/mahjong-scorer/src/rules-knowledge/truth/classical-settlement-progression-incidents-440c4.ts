@@ -42,8 +42,7 @@ const families: readonly Family[] = [
   ] },
   { id: 'rule.classical.draw-has-no-settlement', rows: [
     otb('A draw produces no score or settlement.', 'Drawn game / round-state'),
-    buzzard('A dead hand has no scoring.', 'Rules 11–14 — dead hand', '7'),
-  ], unresolvedProfiles: ['bmja'] },
+  ], unresolvedProfiles: ['bmja', 'buzzard-2000'] },
   { id: 'rule.classical.east-retained-after-east-win', rows: [
     bmjaQa('If East declares Mah-Jong, East remains East.', 'Winds — When does East Wind move to another player?'),
     buzzard('If East wins, East remains East.', 'Rules 11–14 — East wins', '7'),
