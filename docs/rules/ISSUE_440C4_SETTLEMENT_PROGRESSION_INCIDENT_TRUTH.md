@@ -132,7 +132,7 @@ Assembled corpus totals are **229 subjects, 293 claims, and 291 treatments**. Th
 - `otb-guide-2026-09`: supplied club guide evidence retained and transcribed in `OUTSIDE_THE_BOX_PROFILE_CROSSWALK.md`, §§5–7 and #88D round-state evidence.
 - `buzzard-2000-classical`: retained 13-page primary snapshot; p. 7 Rules 11–14, p. 8 “SETTLEMENT OF SCORES”, pp. 11–12 non-winner limits, and p. 12 “ERRORS AND PENALTIES”.
 
-The requested pull request is opened against `main` and remains unmerged.
+Pull request [#470](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/pull/470) is open against `main` and remains unmerged.
 
 ## Exit
 
