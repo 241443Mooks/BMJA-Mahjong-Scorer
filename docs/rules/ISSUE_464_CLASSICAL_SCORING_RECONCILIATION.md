@@ -28,7 +28,7 @@ This report covers only the four seams in #464. The governing BMJA scoring page 
 - **Previous runtime:** A single `original-call` winner double existed; non-winners received none, and fishing intrinsic-hand construction cleared `originalCall`.
 - **Decision:** Represent the all-player and winner-only awards independently. Preserve `originalCall` in the intrinsic fishing hand. Buzzard continues to disable the inherited BMJA rule.
 - **Result:** A fishing player receives one all-player `original-call` double. A winner with Original Call receives that double and an additional `win-original-call` double. This interpretation is explicitly grounded in the two source headings, not inferred from the existing runtime.
-- **Boundary tests:** `scoring/rules.test.ts` checks non-winner and winner layers; Buzzard profile test confirms it does not inherit Original Call.
+- **Boundary tests:** `scoring/rules.test.ts` checks non-winner and winner layers; `game/buzzard-2000.test.ts` separately asserts Buzzard emits neither `original-call` nor `win-original-call` while retaining the concealed-hand and final-discard exclusions; `scoring/fishing.test.ts` directly verifies `fishingIntrinsicHand` preserves `originalCall: true`.
 - **Classification:** `runtime-corrected-source-equivalent`.
 
 ## 4. BMJA/Buzzard all-majors ordinary double

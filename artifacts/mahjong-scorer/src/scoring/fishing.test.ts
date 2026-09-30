@@ -14,6 +14,7 @@ import type {
   MahjongHand,
   PlayingTile,
 } from '.';
+import { fishingIntrinsicHand } from './fishing';
 
 const fishing = (
   _target: LegacyFishingSpecialId,
@@ -283,6 +284,11 @@ const cases: {
 ];
 
 describe('BMJA special-hand fishing detection', () => {
+  it('preserves Original Call when reconstructing a fishing intrinsic hand', () => {
+    const originalCallHand = { ...cases.find(({ id }) => id === 'knitting')!.hand, originalCall: true };
+    expect(fishingIntrinsicHand(originalCallHand).originalCall).toBe(true);
+  });
+
   it.each(cases)(
     'detects a genuine one-tile-away $name hand',
     ({ id, value, hand }) => {

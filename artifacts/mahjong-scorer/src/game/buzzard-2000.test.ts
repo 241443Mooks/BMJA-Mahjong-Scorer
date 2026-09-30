@@ -31,7 +31,11 @@ describe('Buzzard 2000 ordinary profile policy', () => {
   });
   it('does not inherit BMJA concealed, Original Call, or final-discard doubles', () => {
     const scored = scoreHand({ ...chows, originalCall: true, winningMethod: 'final-discard' }, context, buzzard2000SpecialHandBindings, BUZZARD_2000_SCORING_POLICY);
-    expect(scored.doubleRules.map((rule) => rule.id)).not.toEqual(expect.arrayContaining(['concealed-hand', 'original-call', 'win-final-discard']));
+    const ids = scored.doubleRules.map((rule) => rule.id);
+    expect(ids).not.toContain('concealed-hand');
+    expect(ids).not.toContain('original-call');
+    expect(ids).not.toContain('win-original-call');
+    expect(ids).not.toContain('win-final-discard');
   });
   it.each([
     ['Standing Hand', { classicalEvidence: { standingHand: true } }, 'classical-standing-hand', 100],
