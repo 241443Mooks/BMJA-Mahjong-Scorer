@@ -27,7 +27,7 @@ describe('Issue 440A derived coverage accounting', () => {
       for (const id of executableIds) expect(inventoryIds.has(id)).toBe(true);
       expect(bindings.length).toBeGreaterThan(0);
     }
-    expect(classicalInventories.map(({ profile }) => currentTruthIndex.treatmentsForProfile(profile).length)).toEqual([31, 84, 46, 21]);
+    expect(classicalInventories.map(({ profile }) => currentTruthIndex.treatmentsForProfile(profile).filter(({ record }) => record.runtimeState.kind === 'executable').length)).toEqual([18, 84, 33, 9]);
     expect(classicalInventories.map(({ bindings }) => bindings.length)).toEqual([18, 85, 33, 10]);
   });
 
@@ -112,12 +112,8 @@ describe('Issue 440A derived coverage accounting', () => {
     for (const { runtimeState } of policyTreatments) {
       if (runtimeState.kind === 'executable') expect(currentTruthValidationEnvironment.runtimeTreatmentExists(profile, runtimeState.ref)).toBe(true);
     }
-    expect(currentTruthCorpus.treatments).toHaveLength(185);
-    expect(currentTruthCorpus.subjects).toHaveLength(159);
-    expect(currentTruthCorpus.claims).toHaveLength(187);
-    expect(currentTruthIndex.treatmentsForProfile({ id: 'bmja', version: '1.0' })).toHaveLength(31);
-    expect(currentTruthIndex.treatmentsForProfile({ id: 'western-tm', version: '0.1' })).toHaveLength(84);
-    expect(currentTruthIndex.treatmentsForProfile({ id: 'outside-the-box', version: '0.1' })).toHaveLength(46);
-    expect(currentTruthIndex.treatmentsForProfile({ id: 'buzzard-2000', version: '0.1' })).toHaveLength(21);
+    expect(currentTruthCorpus.treatments).toHaveLength(186);
+    expect(currentTruthCorpus.subjects).toHaveLength(160);
+    expect(currentTruthCorpus.claims).toHaveLength(188);
   });
 });

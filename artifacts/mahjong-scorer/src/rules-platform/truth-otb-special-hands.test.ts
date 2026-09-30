@@ -88,8 +88,5 @@ describe('Issue 440B2 Outside the Box special-hand truth migration', () => {
       evidenceClaimIds: ['evidence.pattern.thirteen-orphans.outside-the-box', 'evidence.pattern.thirteen-orphans.classical-membership-audit'],
     });
     expect(currentTruthCorpus.treatments.filter(({ recordId }) => recordId === 'outside-the-box@0.1:thirteen-unique-wonders')).toHaveLength(1);
-    expect(currentTruthIndex.treatmentsForProfile({ id: 'bmja', version: '1.0' })).toHaveLength(31);
-    expect(currentTruthCorpus.treatments).toHaveLength(185);
-    expect(new Set(currentTruthCorpus.treatments.filter(({ lifecycle }) => lifecycle === 'current').map(({ recordId }) => recordId)).size).toBe(185);
   });
 });

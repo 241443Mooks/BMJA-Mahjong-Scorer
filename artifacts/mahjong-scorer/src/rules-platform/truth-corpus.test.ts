@@ -9,7 +9,7 @@ describe('current typed truth corpus', () => {
     expect(currentTruthIndex.subjectById(subjectId)?.record.kind).toBe('pattern');
     expect(currentTruthIndex.claimsForSubject(subjectId)).toHaveLength(6);
     const buzzardClaims = currentTruthIndex.claimsForSource('buzzard-2000-classical').map(({ record }) => record);
-    expect(buzzardClaims).toHaveLength(21);
+    expect(buzzardClaims).toHaveLength(22);
     expect(buzzardClaims.every(({ supportsProfile }) => supportsProfile?.id === 'buzzard-2000' && supportsProfile.version === '0.1')).toBe(true);
     expect(currentTruthIndex.claimById('evidence.pattern.thirteen-orphans.outside-the-box')?.record.locator).toEqual({
       kind: 'club-material',
@@ -65,6 +65,7 @@ describe('current typed truth corpus', () => {
       'buzzard-2000@0.1:one-suit-nine-gates-any-completion',
       'buzzard-2000@0.1:rule.buzzard-2000.complete-flower-season-set-double',
       'buzzard-2000@0.1:rule.buzzard-2000.ordinary-table-limit',
+      'buzzard-2000@0.1:rule.buzzard-2000.self-draw-winner-bonus',
       'buzzard-2000@0.1:rule.classical.chow-base-scoring',
       'buzzard-2000@0.1:rule.classical.dragon-set-double',
       'buzzard-2000@0.1:rule.classical.flower-season-base-scoring',
@@ -95,9 +96,9 @@ describe('current typed truth corpus', () => {
       { treatmentId: 'buzzard-2000@0.1:thirteen-unique-wonders', projectionId: 'atlas:thirteen-unique-wonders' },
     ]);
     expect(impact.claimIds).toContain('evidence.pattern.thirteen-orphans.buzzard-2000');
-    expect(impact.subjects).toHaveLength(21);
+    expect(impact.subjects).toHaveLength(22);
     expect(impact.subjects.find(({ subjectId }) => subjectId === 'pattern.thirteen-orphans')).toEqual({ subjectId: 'pattern.thirteen-orphans', treatmentIds: ['buzzard-2000@0.1:thirteen-unique-wonders'] });
-    expect(impact.treatments).toHaveLength(21);
+    expect(impact.treatments).toHaveLength(22);
     expect(impact.projections).toEqual([{ treatmentId: 'buzzard-2000@0.1:thirteen-unique-wonders', projectionId: 'atlas:thirteen-unique-wonders' }]);
     expect(impact).toMatchObject({
       treatments: expect.arrayContaining([{ treatmentId: 'buzzard-2000@0.1:thirteen-unique-wonders', profile: { id: 'buzzard-2000', version: '0.1' }, runtimeState: { kind: 'executable', ref: { kind: 'binding', id: 'thirteen-unique-wonders' } } }]),

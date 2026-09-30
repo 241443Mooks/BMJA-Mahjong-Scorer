@@ -6,7 +6,7 @@ Scope: `bmja@1.0`, `outside-the-box@0.1`, `buzzard-2000@0.1`
 
 ## Frozen semantic inventory
 
-This 15-subject inventory is frozen before authoring C1 truth records. Subjects describe durable scoring concepts, not numeric table cells or runtime function names.
+This 16-subject inventory includes the source correction in PR follow-up: Buzzard's independently recorded self-draw bonus is included as a Buzzard-local concept. Subjects describe durable scoring concepts, not numeric table cells or runtime function names.
 
 | Subject | Granularity and initial exact-profile scope |
 |---|---|
@@ -16,7 +16,8 @@ This 15-subject inventory is frozen before authoring C1 truth records. Subjects 
 | `rule.classical.qualifying-honour-pair-scoring` | Dragon, own-Wind and prevailing-Wind qualifying pairs; all three |
 | `rule.classical.flower-season-base-scoring` | One basic bonus-tile family; all three |
 | `rule.classical.mahjong-winner-bonus` | Ordinary winner bonus for making Mah Jong; all three |
-| `rule.classical.live-wall-self-draw-winner-bonus` | Bonus for a winner drawing from the live wall; BMJA and OTB only (Buzzard distinguishes its last-wall event treatment) |
+| `rule.classical.live-wall-self-draw-winner-bonus` | Bonus for a winner drawing from the live wall rather than the Kong box; BMJA and OTB |
+| `rule.buzzard-2000.self-draw-winner-bonus` | Buzzard's independently source-proved self-draw bonus; profile-local because its source does not establish BMJA/OTB's live-wall-versus-Kong-box boundary |
 | `rule.classical.dragon-set-double` | Dragon Pung/Kong double; all three |
 | `rule.classical.own-wind-set-double` | Own-Wind Pung/Kong double; all three |
 | `rule.classical.prevailing-wind-set-double` | Prevailing-Wind Pung/Kong double; all three |
@@ -26,12 +27,12 @@ This 15-subject inventory is frozen before authoring C1 truth records. Subjects 
 | `rule.classical.ordinary-table-cap` | Normal ordinary scoring cap; BMJA and OTB |
 | `rule.buzzard-2000.ordinary-table-limit` | Configured Buzzard table limit; 600 is an example/default, not a universal required value |
 
-The ordinary Pung/Kong/pair basics, Flower/Season basics and ordinary winner basics are shared with OTB because the reviewed #88 conclusions explicitly confirm equivalence. Buzzard claims share a subject only where the source ledger independently confirms the same proposition. Its ordinary Chow, base set/pair/bonus scoring, Mahjong bonus and component set doubles meet that bar. The BMJA/OTB live-wall bonus is kept separate from Buzzard’s last-wall double and additive bonus. The complete-set and limit concepts are profile-local where their proposition or exact relationship differs.
+The ordinary Pung/Kong/pair basics, Flower/Season basics and ordinary winner basics are shared with OTB because the reviewed #88 conclusions explicitly confirm equivalence. Buzzard claims share a subject only where the source ledger independently confirms the same proposition. Its ordinary Chow, base set/pair/bonus scoring, Mahjong bonus and component set doubles meet that bar. Buzzard separately source-proves +2 self-draw, +10 last-wall and +10 Loose-Tile bonuses. The +2 is represented by the Buzzard-local self-draw subject because the retained evidence does not define it as the exact BMJA/OTB live-wall condition; last-wall and Loose-Tile remain excluded from C1. The complete-set and limit concepts are profile-local where their proposition or exact relationship differs.
 
 ## Source chain and locators
 
 - **BMJA**: registered authorities `bmja-scoring` (principal) and `bmja-approved-site` as appropriate. Exact locators are sections on the approved “Working out the scores” page: “Chows”, “Pungs”, “Kongs”, “Pairs of honour tiles”, “Flowers and Seasons”, “For going Mah-Jong”, “Doubling for all players”, and “The limit”. Claims will be `verified`, scoped to `{ id: 'bmja', version: '1.0' }`.
-- **Outside the Box**: `otb-guide-2026-09`, with ordinary treatment cross-checked against the latest reviewed `OUTSIDE_THE_BOX_PROFILE_CROSSWALK.md` / #88 conclusions. Locators identify the exact reviewed ordinary-scoring crosswalk section; page locators are omitted where the reviewed material does not establish a page. Claims will be `verified-club`, scoped to `{ id: 'outside-the-box', version: '0.1' }`.
+- **Outside the Box**: `otb-guide-2026-09`, with ordinary treatment cross-checked against the latest reviewed #88 conclusions. Claims link to the retained #88 issue transcription and identify its exact body heading/table row; the ordinary-cap claim points to the exact 88C clarification comment. The physical guide pages/headings for this ordinary material are not retained in the repository, so no page numbers are invented. Claims are `verified-club`, scoped to `{ id: 'outside-the-box', version: '0.1' }`.
 - **Buzzard 2000**: `buzzard-2000-classical`, retained 13-page source snapshot, corroborated by `BUZZARD_2000_RULE_EVIDENCE.md`. Ordinary base values are pages 9–10; doubles and notes are pages 10–11; the agreed table limit is page 8. Claims will be `verified`, scoped to `{ id: 'buzzard-2000', version: '0.1' }`.
 
 `BMJA_RULES_REFERENCE.md` and `scoring-rules.catalog.json` are implementation/completeness aids only; neither is a source authority. `bmja-settlement` and `bmja-qa` are not needed for this inventory. The scoring catalogue remains unchanged.
@@ -51,6 +52,6 @@ Coverage will be derived at semantic-family × exact-profile treatment grain and
 
 ## Implementation counts and verification
 
-Implemented counts: 15 subjects, 38 claims and 38 treatments (BMJA 13, OTB 13, Buzzard 12). Coverage accounts for 45 family/profile cells: 38 source-ready and migrated into the corpus with `migration-incomplete` runtime status, and 7 not applicable. No source-unresolved or present-not-modelled cells are in the frozen inventory.
+Implemented counts: 16 subjects, 39 claims and 39 treatments (BMJA 13, OTB 13, Buzzard 13). Coverage accounts for 48 family/profile cells: 39 source-ready and migrated into the corpus with `migration-incomplete` runtime status, and 9 not applicable. No source-unresolved or present-not-modelled cells are in the frozen inventory.
 
-Verification at final implementation tree: focused C1/truth/corpus and existing profile scoring checks passed (140 tests); `pnpm test` passed (129 files, 1,170 tests); `pnpm run typecheck` passed; `PORT=5173 BASE_PATH=/ pnpm run build` passed; `git diff --check` passed. Build emitted the existing missing Riichi asset and large-chunk warnings, with successful exit.
+Legacy special-hand regression tests are scoped to executable treatments and their exact special-hand inventories; C1 ordinary treatment counts are asserted only by the C1 tests. Verification at final implementation tree: focused C1/truth/profile scoring checks passed (151 tests); `pnpm test` passed (129 files, 1,170 tests); `pnpm run typecheck` passed; `PORT=5173 BASE_PATH=/ pnpm run build` passed; `git diff --check` passed. The build emitted the existing missing Riichi asset, sourcemap, chunk-size and Vite WebSocket permission warnings, with exit code 0.
