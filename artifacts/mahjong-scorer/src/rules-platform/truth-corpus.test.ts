@@ -9,7 +9,7 @@ describe('current typed truth corpus', () => {
     expect(currentTruthIndex.subjectById(subjectId)?.record.kind).toBe('pattern');
     expect(currentTruthIndex.claimsForSubject(subjectId)).toHaveLength(6);
     const buzzardClaims = currentTruthIndex.claimsForSource('buzzard-2000-classical').map(({ record }) => record);
-    expect(buzzardClaims).toHaveLength(22);
+    expect(buzzardClaims).toHaveLength(37);
     expect(buzzardClaims.every(({ supportsProfile }) => supportsProfile?.id === 'buzzard-2000' && supportsProfile.version === '0.1')).toBe(true);
     expect(currentTruthIndex.claimById('evidence.pattern.thirteen-orphans.outside-the-box')?.record.locator).toEqual({
       kind: 'club-material',
@@ -63,19 +63,34 @@ describe('current typed truth corpus', () => {
       'buzzard-2000@0.1:heads-and-tails',
       'buzzard-2000@0.1:heavens-blessing',
       'buzzard-2000@0.1:one-suit-nine-gates-any-completion',
+      'buzzard-2000@0.1:rule.buzzard-2000.all-chows-nonscoring-pair-double',
       'buzzard-2000@0.1:rule.buzzard-2000.complete-flower-season-set-double',
+      'buzzard-2000@0.1:rule.buzzard-2000.flower-season-set-own-tile-cumulative-doubles',
+      'buzzard-2000@0.1:rule.buzzard-2000.last-wall-additive-bonus',
+      'buzzard-2000@0.1:rule.buzzard-2000.loose-tile-additive-bonus',
+      'buzzard-2000@0.1:rule.buzzard-2000.no-chows-additive-bonus',
+      'buzzard-2000@0.1:rule.buzzard-2000.only-possible-winning-tile-bonus',
       'buzzard-2000@0.1:rule.buzzard-2000.ordinary-table-limit',
+      'buzzard-2000@0.1:rule.buzzard-2000.pure-one-suit-winner-three-doubles',
+      'buzzard-2000@0.1:rule.buzzard-2000.scoreless-hand-bonus',
       'buzzard-2000@0.1:rule.buzzard-2000.self-draw-winner-bonus',
+      'buzzard-2000@0.1:rule.buzzard-2000.standing-hand-winner-bonus',
+      'buzzard-2000@0.1:rule.classical.all-majors-with-honours-double',
       'buzzard-2000@0.1:rule.classical.chow-base-scoring',
       'buzzard-2000@0.1:rule.classical.dragon-set-double',
       'buzzard-2000@0.1:rule.classical.flower-season-base-scoring',
       'buzzard-2000@0.1:rule.classical.kong-base-scoring',
       'buzzard-2000@0.1:rule.classical.mahjong-winner-bonus',
+      'buzzard-2000@0.1:rule.classical.one-suit-with-honours-double',
       'buzzard-2000@0.1:rule.classical.own-flower-season-double',
       'buzzard-2000@0.1:rule.classical.own-wind-set-double',
       'buzzard-2000@0.1:rule.classical.prevailing-wind-set-double',
       'buzzard-2000@0.1:rule.classical.pung-base-scoring',
       'buzzard-2000@0.1:rule.classical.qualifying-honour-pair-scoring',
+      'buzzard-2000@0.1:rule.classical.win-last-wall-double',
+      'buzzard-2000@0.1:rule.classical.win-loose-tile-double',
+      'buzzard-2000@0.1:rule.classical.win-robbing-kong-double',
+      'buzzard-2000@0.1:rule.classical.winner-no-chows-double',
       'buzzard-2000@0.1:thirteen-unique-wonders',
       'buzzard-2000@0.1:three-winds-and-fourth-wind-pair',
     ]);
@@ -96,9 +111,9 @@ describe('current typed truth corpus', () => {
       { treatmentId: 'buzzard-2000@0.1:thirteen-unique-wonders', projectionId: 'atlas:thirteen-unique-wonders' },
     ]);
     expect(impact.claimIds).toContain('evidence.pattern.thirteen-orphans.buzzard-2000');
-    expect(impact.subjects).toHaveLength(22);
+    expect(impact.subjects).toHaveLength(37);
     expect(impact.subjects.find(({ subjectId }) => subjectId === 'pattern.thirteen-orphans')).toEqual({ subjectId: 'pattern.thirteen-orphans', treatmentIds: ['buzzard-2000@0.1:thirteen-unique-wonders'] });
-    expect(impact.treatments).toHaveLength(22);
+    expect(impact.treatments).toHaveLength(37);
     expect(impact.projections).toEqual([{ treatmentId: 'buzzard-2000@0.1:thirteen-unique-wonders', projectionId: 'atlas:thirteen-unique-wonders' }]);
     expect(impact).toMatchObject({
       treatments: expect.arrayContaining([{ treatmentId: 'buzzard-2000@0.1:thirteen-unique-wonders', profile: { id: 'buzzard-2000', version: '0.1' }, runtimeState: { kind: 'executable', ref: { kind: 'binding', id: 'thirteen-unique-wonders' } } }]),
