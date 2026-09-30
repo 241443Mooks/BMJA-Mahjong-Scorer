@@ -84,7 +84,7 @@ describe('Issue #440B4A Western T&M Cohort A truth', () => {
     }
   });
 
-  it('preserves Unique Wonder and leaves the three deferred calculated bindings untreated', () => {
+  it('preserves Unique Wonder and records Purity as the sole treatment-deferred calculated binding', () => {
     const westernTreatments = currentTruthIndex.treatmentsForProfile({ id: 'western-tm', version: '0.1' }).map(({ record }) => record);
     const uniqueWonder = westernTreatments.find(({ treatmentId }) => treatmentId === 'western-tm@0.1:thirteen-unique-wonders');
     expect(uniqueWonder).toEqual({
@@ -94,10 +94,11 @@ describe('Issue #440B4A Western T&M Cohort A truth', () => {
       runtimeState: { kind: 'executable', ref: { kind: 'binding', id: 'thirteen-unique-wonders' } },
       evidenceClaimIds: ['evidence.pattern.thirteen-orphans.western-tm', 'evidence.pattern.thirteen-orphans.classical-membership-audit'],
     });
-    const deferred = ['purity-one-chow', 'honours-and-one-suit-terminals-pung-kong-hand', 'one-suit-with-honours-mostly-pung-kong-hand'];
+    const deferred = ['purity-one-chow'];
     const treatmentBindingIds = new Set(westernTreatments.flatMap(({ runtimeState }) => runtimeState.kind === 'executable' && runtimeState.ref.kind === 'binding' ? [runtimeState.ref.id] : []));
     expect(deferred.every((id) => westernTmSpecialHandBindings.some(({ patternId }) => patternId === id))).toBe(true);
     expect(deferred.some((id) => treatmentBindingIds.has(id))).toBe(false);
-    expect(currentTruthCorpus.treatments.filter(({ record }) => record.profile.id === 'western-tm')).toHaveLength(82);
+    expect(currentTruthIndex.claimsForSubject('pattern.western-tm.purity-one-chow').map(({ record }) => record.claimId)).toEqual(['evidence.pattern.western-tm.purity-one-chow']);
+    expect(currentTruthCorpus.treatments.filter(({ record }) => record.profile.id === 'western-tm')).toHaveLength(84);
   });
 });
