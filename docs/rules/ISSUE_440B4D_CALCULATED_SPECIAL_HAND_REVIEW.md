@@ -55,13 +55,13 @@ Authority: Thompson & Maloney, *The Mah Jong Player's Companion* (1997), `TM_COM
 
 ## Closure recommendation
 
-**Outcome B — mixed.** Follow this review with a separate, tiny B4D truth-migration PR for the two ready rows: All Honour Hand and Ordinary Mah Jong, using the Western-local subjects `pattern.western-tm.honours-and-one-suit-terminals-pung-kong-hand` and `pattern.western-tm.one-suit-with-honours-mostly-pung-kong-hand`. Keep Purity explicitly deferred from executable treatment; record its source claim without a treatment until exposed-Chow eligibility is resolved. This review itself leaves coverage unchanged at 82 treatments out of 85 bindings and all three rows untreated. Do not expand the migration into ordinary Western rule certification or fishing policy.
+**Outcome B — mixed; B4D migration implemented.** Western-local subjects and `tm-companion` claims now cover all three reviewed bindings. Executable treatments target All Honour Hand and Ordinary Mah Jong only. Purity has its verified source claim and subject, with no treatment record pending the exposed-Chow runtime-equivalence question. No ordinary scoring rules or fishing policy are certified by these treatment links.
 
-This review itself is documentation-only: no runtime code, tests, truth records, or coverage counts are changed. Current inventory remains 85 bindings, 82 treatments, zero eligible untreated fixed/special-hand bindings, zero evidence-blocked special-hand bindings, and exactly three calculated bindings outside treatment pending this follow-up.
+Current coverage is **84 executable treatments / 85 Western bindings**. The one remaining untreated binding, Purity, is not an evidence gap: its Companion source claim is present, but its current binding includes an unverified exposed-Chow rejection. There are zero evidence-blocked special-hand bindings; the single remaining row is explicitly deferred for runtime equivalence.
 
 ## Verification
 
-Requested checks for this documentation-only review:
+Verification for the B4D truth migration:
 
 - calculated-special-hand model tests;
 - `western-tm-purity-phase3c.test.ts`;
@@ -70,4 +70,4 @@ Requested checks for this documentation-only review:
 - truth coverage, integrity, and corpus tests;
 - `git diff --check`.
 
-Focused verification passed: 10 files, 53 tests, including every named calculated-special, Purity, catalogue, Pass 4I/overlap, truth coverage, integrity, and corpus gate. `git diff --check` also passed. Only this review document changed; no runtime or truth records changed.
+Typecheck passed. Focused verification passed: 11 files, 55 tests, including the B4D identity/claim/treatment assertions, calculated-special model, Purity, catalogue, Pass 4I/overlap, truth coverage, integrity, and corpus gates. `git diff --check` passed. Runtime scoring remains unchanged.

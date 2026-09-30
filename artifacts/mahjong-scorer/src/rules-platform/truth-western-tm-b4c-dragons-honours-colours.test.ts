@@ -38,8 +38,6 @@ const expectedBindingIds = [
 
 const deferredBindingIds = [
   'purity-one-chow',
-  'honours-and-one-suit-terminals-pung-kong-hand',
-  'one-suit-with-honours-mostly-pung-kong-hand',
 ] as const;
 
 describe('Issue #440B4C Western T&M Dragons, Honours and Suit-colour truth', () => {
@@ -105,7 +103,7 @@ describe('Issue #440B4C Western T&M Dragons, Honours and Suit-colour truth', () 
     }
   });
 
-  it('preserves Unique Wonder, B4A and B4B and leaves only the three deferred calculations untreated', () => {
+  it('preserves earlier cohorts, B4D, and the one treatment-deferred calculation', () => {
     const profile = { id: 'western-tm', version: '0.1' } as const;
     const treatments = currentTruthIndex.treatmentsForProfile(profile).map(({ record }) => record);
     const treatmentIds = new Set(treatments.map(({ treatmentId }) => treatmentId));
@@ -125,6 +123,6 @@ describe('Issue #440B4C Western T&M Dragons, Honours and Suit-colour truth', () 
     const treatedIds = new Set(treatments.flatMap(({ runtimeState }) => runtimeState.kind === 'executable' && runtimeState.ref.kind === 'binding' ? [runtimeState.ref.id] : []));
     const untreated = westernTmSpecialHandBindings.map(({ patternId }) => patternId).filter((id) => !treatedIds.has(id));
     expect(untreated.sort()).toEqual([...deferredBindingIds].sort());
-    expect(currentTruthCorpus.treatments.filter(({ record }) => record.profile.id === 'western-tm')).toHaveLength(82);
+    expect(currentTruthCorpus.treatments.filter(({ record }) => record.profile.id === 'western-tm')).toHaveLength(84);
   });
 });

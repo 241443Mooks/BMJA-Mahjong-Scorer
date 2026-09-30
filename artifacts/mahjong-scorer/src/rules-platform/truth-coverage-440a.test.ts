@@ -6,6 +6,7 @@ import { currentTruthCorpus, currentTruthIndex, currentTruthValidationEnvironmen
 import { westernTmB4aBindingIds } from '../rules-knowledge/truth/subjects/western-tm-b4a-special-hands';
 import { westernTmB4bBindingIds } from '../rules-knowledge/truth/subjects/western-tm-b4b-pairs-winds';
 import { westernTmB4cBindingIds } from '../rules-knowledge/truth/subjects/western-tm-b4c-dragons-honours-colours';
+import { westernTmB4dBindingIds } from '../rules-knowledge/truth/subjects/western-tm-b4d-calculated-special-hands';
 import { bmjaSpecialHandBindings } from '../scoring/special-hands';
 import { MCR_2006_FAN_BINDINGS } from './mcr-detectors';
 
@@ -26,17 +27,18 @@ describe('Issue 440A derived coverage accounting', () => {
       for (const id of executableIds) expect(inventoryIds.has(id)).toBe(true);
       expect(bindings.length).toBeGreaterThan(0);
     }
-    expect(classicalInventories.map(({ profile }) => currentTruthIndex.treatmentsForProfile(profile).length)).toEqual([18, 82, 33, 9]);
+    expect(classicalInventories.map(({ profile }) => currentTruthIndex.treatmentsForProfile(profile).length)).toEqual([18, 84, 33, 9]);
     expect(classicalInventories.map(({ bindings }) => bindings.length)).toEqual([18, 85, 33, 10]);
   });
 
-  it('partitions Western coverage into existing, B4A, B4B, B4C, and deferred bindings', () => {
+  it('partitions Western coverage into existing, B4A, B4B, B4C, B4D, and one documented runtime-equivalence deferral', () => {
     const profile = { id: 'western-tm', version: '0.1' } as const;
     const inventoryIds = westernTmSpecialHandBindings.map(({ patternId }) => patternId);
     const treatments = currentTruthIndex.treatmentsForProfile(profile).map(({ record }) => record);
     const executableIds = treatments.flatMap(({ runtimeState }) => runtimeState.kind === 'executable' && runtimeState.ref.kind === 'binding' ? [runtimeState.ref.id] : []);
     const alreadyCurrent = ['thirteen-unique-wonders'];
-    const deferred = ['purity-one-chow', 'honours-and-one-suit-terminals-pung-kong-hand', 'one-suit-with-honours-mostly-pung-kong-hand'];
+    const deferred = ['purity-one-chow'];
+    const b4d = new Set<string>(westernTmB4dBindingIds.filter((id) => id !== 'purity-one-chow'));
     const b4b = new Set<string>(westernTmB4bBindingIds);
     const b4c = new Set<string>(westernTmB4cBindingIds);
     const migratedB4a = new Set<string>(westernTmB4aBindingIds);
@@ -63,14 +65,16 @@ describe('Issue 440A derived coverage accounting', () => {
     expect(new Set(westernTmB4bBindingIds).size).toBe(21);
     expect(b4c.size).toBe(26);
     expect([...b4c].sort()).toEqual(expectedB4c.sort());
-    expect(new Set(executableIds)).toEqual(new Set([...alreadyCurrent, ...migratedB4a, ...b4b, ...b4c]));
-    expect(deferred).toHaveLength(3);
+    expect(new Set(executableIds)).toEqual(new Set([...alreadyCurrent, ...migratedB4a, ...b4b, ...b4c, ...b4d]));
+    expect(westernTmB4dBindingIds).toHaveLength(3);
+    expect(westernTmB4dBindingIds.every((id) => currentTruthIndex.claimsForSubject(`pattern.western-tm.${id}`).length > 0)).toBe(true);
+    expect(deferred).toHaveLength(1);
     expect(deferred.every((id) => inventoryIds.includes(id))).toBe(true);
     expect(deferred.some((id) => executableIds.includes(id))).toBe(false);
     expect(untreated.sort()).toEqual([...deferred].sort());
-    expect([alreadyCurrent.length, migratedB4a.size, b4b.size, b4c.size, deferred.length]).toEqual([1, 34, 21, 26, 3]);
-    expect(alreadyCurrent.length + migratedB4a.size + b4b.size + b4c.size + deferred.length).toBe(85);
-    expect(treatments).toHaveLength(82);
+    expect([alreadyCurrent.length, migratedB4a.size, b4b.size, b4c.size, b4d.size, deferred.length]).toEqual([1, 34, 21, 26, 2, 1]);
+    expect(alreadyCurrent.length + migratedB4a.size + b4b.size + b4c.size + b4d.size + deferred.length).toBe(85);
+    expect(treatments).toHaveLength(84);
   });
 
   it('accounts for Buzzard special-hand coverage while keeping Concealed Pungs/Kongs visibly deferred', () => {
@@ -108,11 +112,11 @@ describe('Issue 440A derived coverage accounting', () => {
     for (const { runtimeState } of policyTreatments) {
       if (runtimeState.kind === 'executable') expect(currentTruthValidationEnvironment.runtimeTreatmentExists(profile, runtimeState.ref)).toBe(true);
     }
-    expect(currentTruthCorpus.treatments).toHaveLength(145);
-    expect(currentTruthCorpus.subjects).toHaveLength(141);
-    expect(currentTruthCorpus.claims).toHaveLength(146);
+    expect(currentTruthCorpus.treatments).toHaveLength(147);
+    expect(currentTruthCorpus.subjects).toHaveLength(144);
+    expect(currentTruthCorpus.claims).toHaveLength(149);
     expect(currentTruthIndex.treatmentsForProfile({ id: 'bmja', version: '1.0' })).toHaveLength(18);
-    expect(currentTruthIndex.treatmentsForProfile({ id: 'western-tm', version: '0.1' })).toHaveLength(82);
+    expect(currentTruthIndex.treatmentsForProfile({ id: 'western-tm', version: '0.1' })).toHaveLength(84);
     expect(currentTruthIndex.treatmentsForProfile({ id: 'outside-the-box', version: '0.1' })).toHaveLength(33);
     expect(currentTruthIndex.treatmentsForProfile({ id: 'buzzard-2000', version: '0.1' })).toHaveLength(9);
   });

@@ -130,7 +130,7 @@ describe('Issue #440B4B Western T&M Pairs and Winds truth', () => {
       runtimeState: { kind: 'executable', ref: { kind: 'binding', id: 'thirteen-unique-wonders' } },
       evidenceClaimIds: ['evidence.pattern.thirteen-orphans.western-tm', 'evidence.pattern.thirteen-orphans.classical-membership-audit'],
     });
-    const deferred = ['purity-one-chow', 'honours-and-one-suit-terminals-pung-kong-hand', 'one-suit-with-honours-mostly-pung-kong-hand'];
+    const deferred = ['purity-one-chow'];
     const treatedBindingIds = new Set(treatments.flatMap(({ runtimeState }) => runtimeState.kind === 'executable' && runtimeState.ref.kind === 'binding' ? [runtimeState.ref.id] : []));
     expect(deferred.some((id) => treatedBindingIds.has(id))).toBe(false);
     const untreated = westernTmSpecialHandBindings
@@ -138,7 +138,7 @@ describe('Issue #440B4B Western T&M Pairs and Winds truth', () => {
       .filter((id) => !treatedBindingIds.has(id));
     expect(untreated.sort()).toEqual([...deferred].sort());
     expect(expectedB4cBindingIds.every((id) => treatedBindingIds.has(id))).toBe(true);
-    expect(treatments).toHaveLength(82);
-    expect(currentTruthCorpus.treatments.filter(({ record }) => record.profile.id === 'western-tm')).toHaveLength(82);
+    expect(treatments).toHaveLength(84);
+    expect(currentTruthCorpus.treatments.filter(({ record }) => record.profile.id === 'western-tm')).toHaveLength(84);
   });
 });
