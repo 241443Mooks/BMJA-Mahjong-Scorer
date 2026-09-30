@@ -9,7 +9,7 @@ describe('current typed truth corpus', () => {
     expect(currentTruthIndex.subjectById(subjectId)?.record.kind).toBe('pattern');
     expect(currentTruthIndex.claimsForSubject(subjectId)).toHaveLength(6);
     const buzzardClaims = currentTruthIndex.claimsForSource('buzzard-2000-classical').map(({ record }) => record);
-    expect(buzzardClaims).toHaveLength(37);
+    expect(buzzardClaims).toHaveLength(43);
     expect(buzzardClaims.every(({ supportsProfile }) => supportsProfile?.id === 'buzzard-2000' && supportsProfile.version === '0.1')).toBe(true);
     expect(currentTruthIndex.claimById('evidence.pattern.thirteen-orphans.outside-the-box')?.record.locator).toEqual({
       kind: 'club-material',
@@ -26,7 +26,7 @@ describe('current typed truth corpus', () => {
       'western-tm@0.1:thirteen-unique-wonders',
     ]);
     expect(currentTruthIndex.treatmentsForProfile({ id: 'western-tm', version: '0.2' })).toEqual([]);
-    expect(currentTruthIndex.claimsSupportingProfile({ id: 'outside-the-box', version: '0.1' })).toHaveLength(65);
+    expect(currentTruthIndex.claimsSupportingProfile({ id: 'outside-the-box', version: '0.1' })).toHaveLength(72);
   });
 
   it('joins the MCR truth records to the exact pattern-accumulator bindings and detector', () => {
@@ -68,6 +68,7 @@ describe('current typed truth corpus', () => {
       'buzzard-2000@0.1:rule.buzzard-2000.flower-season-set-own-tile-cumulative-doubles',
       'buzzard-2000@0.1:rule.buzzard-2000.last-wall-additive-bonus',
       'buzzard-2000@0.1:rule.buzzard-2000.loose-tile-additive-bonus',
+      'buzzard-2000@0.1:rule.buzzard-2000.multiple-chows-permitted',
       'buzzard-2000@0.1:rule.buzzard-2000.no-chows-additive-bonus',
       'buzzard-2000@0.1:rule.buzzard-2000.only-possible-winning-tile-bonus',
       'buzzard-2000@0.1:rule.buzzard-2000.ordinary-table-limit',
@@ -78,10 +79,15 @@ describe('current typed truth corpus', () => {
       'buzzard-2000@0.1:rule.classical.all-majors-with-honours-double',
       'buzzard-2000@0.1:rule.classical.chow-base-scoring',
       'buzzard-2000@0.1:rule.classical.dragon-set-double',
+      'buzzard-2000@0.1:rule.classical.exposed-concealed-set-meaning',
       'buzzard-2000@0.1:rule.classical.flower-season-base-scoring',
       'buzzard-2000@0.1:rule.classical.kong-base-scoring',
+      'buzzard-2000@0.1:rule.classical.kong-physical-four-structural-one-set',
       'buzzard-2000@0.1:rule.classical.mahjong-winner-bonus',
       'buzzard-2000@0.1:rule.classical.one-suit-with-honours-double',
+      'buzzard-2000@0.1:rule.classical.ordinary-nonwinning-structural-count',
+      'buzzard-2000@0.1:rule.classical.ordinary-winning-four-sets-and-pair',
+      'buzzard-2000@0.1:rule.classical.ordinary-winning-structural-count',
       'buzzard-2000@0.1:rule.classical.own-flower-season-double',
       'buzzard-2000@0.1:rule.classical.own-wind-set-double',
       'buzzard-2000@0.1:rule.classical.prevailing-wind-set-double',
@@ -111,9 +117,9 @@ describe('current typed truth corpus', () => {
       { treatmentId: 'buzzard-2000@0.1:thirteen-unique-wonders', projectionId: 'atlas:thirteen-unique-wonders' },
     ]);
     expect(impact.claimIds).toContain('evidence.pattern.thirteen-orphans.buzzard-2000');
-    expect(impact.subjects).toHaveLength(37);
+    expect(impact.subjects).toHaveLength(43);
     expect(impact.subjects.find(({ subjectId }) => subjectId === 'pattern.thirteen-orphans')).toEqual({ subjectId: 'pattern.thirteen-orphans', treatmentIds: ['buzzard-2000@0.1:thirteen-unique-wonders'] });
-    expect(impact.treatments).toHaveLength(37);
+    expect(impact.treatments).toHaveLength(43);
     expect(impact.projections).toEqual([{ treatmentId: 'buzzard-2000@0.1:thirteen-unique-wonders', projectionId: 'atlas:thirteen-unique-wonders' }]);
     expect(impact).toMatchObject({
       treatments: expect.arrayContaining([{ treatmentId: 'buzzard-2000@0.1:thirteen-unique-wonders', profile: { id: 'buzzard-2000', version: '0.1' }, runtimeState: { kind: 'executable', ref: { kind: 'binding', id: 'thirteen-unique-wonders' } } }]),

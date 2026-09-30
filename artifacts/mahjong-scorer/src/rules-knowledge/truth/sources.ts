@@ -11,4 +11,5 @@ export const sourceRecords = [
   source({ sourceId: 'classical-atlas-concept-audit-v1', citation: 'Current-Classical Atlas concept and facet audit (v1), §1; superseded in part by the 2026 Buzzard reconciliation', authority: 'secondary', authorityForProfileIds: [], publicationVersion: 'v1', recordedOn: '2026-09-28' }),
   source({ sourceId: 'bmja-approved-site', citation: 'British Mahjong Association approved British rules reference', authority: 'governing', authorityForProfileIds: ['bmja'], recordedOn: '2026-09-30' }),
   source({ sourceId: 'bmja-scoring', citation: 'British Mahjong Association, Working out the scores', authority: 'governing', authorityForProfileIds: ['bmja'], recordedOn: '2026-09-30' }),
+  source({ sourceId: 'bmja-qa', citation: 'British Mahjong Association approved rules clarification and playing-the-game Q&A layer', authority: 'governing', authorityForProfileIds: ['bmja'], recordedOn: '2026-09-30' }),
 ];
