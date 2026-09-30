@@ -22,8 +22,10 @@ describe('Issue 440B1 BMJA special-hand truth migration', () => {
   });
 
   it('uses registered BMJA evidence, valid subjects, and unique current record identities', () => {
-    const bmjaClaims = currentTruthIndex.claimsSupportingProfile(profile).map(({ record }) => record).filter(({ sourceId }) => sourceId === 'bmja-special-hands');
     const migrated = currentTruthIndex.treatmentsForProfile(profile).map(({ record }) => record).filter(({ runtimeState }) => runtimeState.kind === 'executable');
+    const bmjaClaims = [...new Set(migrated.flatMap(({ evidenceClaimIds }) => evidenceClaimIds))]
+      .map((claimId) => currentTruthIndex.claimById(claimId)?.record)
+      .filter((record) => record?.sourceId === 'bmja-special-hands');
     expect(bmjaClaims).toHaveLength(18);
     expect(currentTruthIndex.sourceById('bmja-special-hands')?.record.authorityForProfileIds).toContain('bmja');
     expect(new Set(migrated.map(({ treatmentId }) => treatmentId)).size).toBe(18);
