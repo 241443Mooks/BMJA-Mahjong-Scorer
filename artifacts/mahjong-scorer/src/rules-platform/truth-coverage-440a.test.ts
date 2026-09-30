@@ -20,21 +20,21 @@ const classicalInventories = [
 describe('Issue 440A derived coverage accounting', () => {
   it('joins all current Classical special-hand inventory IDs to exact-profile truth or leaves them visibly unrecorded', () => {
     for (const { profile, bindings } of classicalInventories) {
-      const treatments = currentTruthIndex.treatmentsForProfile(profile).map(({ record }) => record);
+      const treatments = currentTruthIndex.treatmentsForProfile(profile).map(({ record }) => record).filter(({ runtimeState }) => runtimeState.kind === 'executable');
       const executableIds = new Set(treatments.flatMap((record) => record.runtimeState.kind === 'executable' && record.runtimeState.ref.kind === 'binding' ? [record.runtimeState.ref.id] : []));
       const inventoryIds = new Set(bindings.map(({ patternId }) => patternId));
       expect(executableIds.size).toBe(treatments.length);
       for (const id of executableIds) expect(inventoryIds.has(id)).toBe(true);
       expect(bindings.length).toBeGreaterThan(0);
     }
-    expect(classicalInventories.map(({ profile }) => currentTruthIndex.treatmentsForProfile(profile).length)).toEqual([18, 84, 33, 9]);
+    expect(classicalInventories.map(({ profile }) => currentTruthIndex.treatmentsForProfile(profile).length)).toEqual([31, 84, 46, 21]);
     expect(classicalInventories.map(({ bindings }) => bindings.length)).toEqual([18, 85, 33, 10]);
   });
 
   it('partitions Western coverage into existing, B4A, B4B, B4C, B4D, and one documented runtime-equivalence deferral', () => {
     const profile = { id: 'western-tm', version: '0.1' } as const;
     const inventoryIds = westernTmSpecialHandBindings.map(({ patternId }) => patternId);
-    const treatments = currentTruthIndex.treatmentsForProfile(profile).map(({ record }) => record);
+    const treatments = currentTruthIndex.treatmentsForProfile(profile).map(({ record }) => record).filter(({ runtimeState }) => runtimeState.kind === 'executable');
     const executableIds = treatments.flatMap(({ runtimeState }) => runtimeState.kind === 'executable' && runtimeState.ref.kind === 'binding' ? [runtimeState.ref.id] : []);
     const alreadyCurrent = ['thirteen-unique-wonders'];
     const deferred = ['purity-one-chow'];
@@ -79,7 +79,7 @@ describe('Issue 440A derived coverage accounting', () => {
 
   it('accounts for Buzzard special-hand coverage while keeping Concealed Pungs/Kongs visibly deferred', () => {
     const profile = { id: 'buzzard-2000', version: '0.1' } as const;
-    const treatments = currentTruthIndex.treatmentsForProfile(profile).map(({ record }) => record);
+    const treatments = currentTruthIndex.treatmentsForProfile(profile).map(({ record }) => record).filter(({ runtimeState }) => runtimeState.kind === 'executable');
     const executableIds = treatments.flatMap(({ runtimeState }) => runtimeState.kind === 'executable' && runtimeState.ref.kind === 'binding' ? [runtimeState.ref.id] : []);
     const inventoryIds = buzzard2000SpecialHandBindings.map(({ patternId }) => patternId);
     expect(buzzard2000SpecialHandBindings).toHaveLength(10);
@@ -112,12 +112,12 @@ describe('Issue 440A derived coverage accounting', () => {
     for (const { runtimeState } of policyTreatments) {
       if (runtimeState.kind === 'executable') expect(currentTruthValidationEnvironment.runtimeTreatmentExists(profile, runtimeState.ref)).toBe(true);
     }
-    expect(currentTruthCorpus.treatments).toHaveLength(147);
-    expect(currentTruthCorpus.subjects).toHaveLength(144);
-    expect(currentTruthCorpus.claims).toHaveLength(149);
-    expect(currentTruthIndex.treatmentsForProfile({ id: 'bmja', version: '1.0' })).toHaveLength(18);
+    expect(currentTruthCorpus.treatments).toHaveLength(185);
+    expect(currentTruthCorpus.subjects).toHaveLength(159);
+    expect(currentTruthCorpus.claims).toHaveLength(187);
+    expect(currentTruthIndex.treatmentsForProfile({ id: 'bmja', version: '1.0' })).toHaveLength(31);
     expect(currentTruthIndex.treatmentsForProfile({ id: 'western-tm', version: '0.1' })).toHaveLength(84);
-    expect(currentTruthIndex.treatmentsForProfile({ id: 'outside-the-box', version: '0.1' })).toHaveLength(33);
-    expect(currentTruthIndex.treatmentsForProfile({ id: 'buzzard-2000', version: '0.1' })).toHaveLength(9);
+    expect(currentTruthIndex.treatmentsForProfile({ id: 'outside-the-box', version: '0.1' })).toHaveLength(46);
+    expect(currentTruthIndex.treatmentsForProfile({ id: 'buzzard-2000', version: '0.1' })).toHaveLength(21);
   });
 });
