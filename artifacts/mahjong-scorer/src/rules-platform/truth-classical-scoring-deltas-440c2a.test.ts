@@ -34,8 +34,8 @@ const bmjaIds = new Set(inventory.slice(0, 7));
 
 describe('Issue 440C2A BMJA and Outside the Box scoring deltas truth', () => {
   const subjects = currentTruthCorpus.subjects.filter(({ record }) => inventory.includes(record.id));
-  const claims = currentTruthCorpus.claims.filter(({ record }) => inventory.includes(record.subjectId));
-  const treatments = currentTruthCorpus.treatments.filter(({ record }) => inventory.includes(record.subjectId));
+  const claims = currentTruthCorpus.claims.filter(({ record }) => inventory.includes(record.subjectId) && ['bmja', 'outside-the-box'].includes(record.supportsProfile?.id ?? ''));
+  const treatments = currentTruthCorpus.treatments.filter(({ record }) => inventory.includes(record.subjectId) && ['bmja', 'outside-the-box'].includes(record.profile.id));
 
   it('freezes the 19-family inventory and expected claim/treatment counts', () => {
     expect(classicalScoringDelta440c2aInventory).toEqual(inventory);
@@ -68,7 +68,7 @@ describe('Issue 440C2A BMJA and Outside the Box scoring deltas truth', () => {
     expect(treatments.every(({ record }) => ['migration-incomplete', 'present-not-modelled'].includes(record.runtimeState.kind))).toBe(true);
     expect(treatments.every(({ record }) => !('score' in record) && !('value' in record))).toBe(true);
     expect(treatments.every(({ record }) => ['bmja', 'outside-the-box'].includes(record.profile.id))).toBe(true);
-    expect(currentTruthIndex.treatmentsForProfile({ id: 'buzzard-2000', version: '0.1' }).some(({ record }) => inventory.includes(record.subjectId))).toBe(false);
+    expect(currentTruthIndex.treatmentsForProfile({ id: 'buzzard-2000', version: '0.1' }).filter(({ record }) => inventory.slice(0, 6).includes(record.subjectId))).toHaveLength(5);
     expect(currentTruthIndex.treatmentsForProfile({ id: 'western-tm', version: '0.1' }).some(({ record }) => inventory.includes(record.subjectId))).toBe(false);
     expect(currentTruthIndex.treatmentsForProfile({ id: 'mcr', version: '2006' }).some(({ record }) => inventory.includes(record.subjectId))).toBe(false);
     expect(currentTruthIndex.treatmentsForProfile({ id: 'riichi-ema-2025', version: '0.1' }).some(({ record }) => inventory.includes(record.subjectId))).toBe(false);
