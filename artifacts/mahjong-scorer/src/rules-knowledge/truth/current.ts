@@ -28,12 +28,13 @@ import { westernTmB4dSpecialHandSubjects } from './subjects/western-tm-b4d-calcu
 import { westernTmB4dSpecialHandClaims } from './claims/western-tm-b4d-calculated-special-hands';
 import { westernTmB4dSpecialHandTreatments } from './treatments/western-tm-b4d-calculated-special-hands';
 import { classicalOrdinaryFoundationClaims, classicalOrdinaryFoundationSubjects, classicalOrdinaryFoundationTreatments } from './classical-ordinary-foundations';
+import { classicalScoringDelta440c2aClaims, classicalScoringDelta440c2aSubjects, classicalScoringDelta440c2aTreatments } from './classical-scoring-deltas-440c2a';
 
 export const currentTruthCorpus = {
   sources: [...sourceRecords, ...mcrSourceRecords],
-  subjects: [...thirteenUniqueWondersSubjects, ...bmjaSpecialHandSubjects, ...otbSpecialHandSubjects, ...buzzard2000SpecialHandSubjects, ...westernTmB4aSpecialHandSubjects, ...westernTmB4bSpecialHandSubjects, ...westernTmB4cSpecialHandSubjects, ...westernTmB4dSpecialHandSubjects, ...mcrSliceESubjects, ...classicalOrdinaryFoundationSubjects],
-  claims: [...thirteenUniqueWondersClaims, ...bmjaSpecialHandClaims, ...otbSpecialHandClaims, ...buzzard2000SpecialHandClaims, ...westernTmB4aSpecialHandClaims, ...westernTmB4bSpecialHandClaims, ...westernTmB4cSpecialHandClaims, ...westernTmB4dSpecialHandClaims, ...mcrSliceEClaims, ...classicalOrdinaryFoundationClaims],
-  treatments: [...thirteenUniqueWondersTreatments, ...bmjaSpecialHandTreatments, ...otbSpecialHandTreatments, ...buzzard2000SpecialHandTreatments, ...westernTmB4aSpecialHandTreatments, ...westernTmB4bSpecialHandTreatments, ...westernTmB4cSpecialHandTreatments, ...westernTmB4dSpecialHandTreatments, ...mcrSliceETreatments, ...classicalOrdinaryFoundationTreatments],
+  subjects: [...thirteenUniqueWondersSubjects, ...bmjaSpecialHandSubjects, ...otbSpecialHandSubjects, ...buzzard2000SpecialHandSubjects, ...westernTmB4aSpecialHandSubjects, ...westernTmB4bSpecialHandSubjects, ...westernTmB4cSpecialHandSubjects, ...westernTmB4dSpecialHandSubjects, ...mcrSliceESubjects, ...classicalOrdinaryFoundationSubjects, ...classicalScoringDelta440c2aSubjects],
+  claims: [...thirteenUniqueWondersClaims, ...bmjaSpecialHandClaims, ...otbSpecialHandClaims, ...buzzard2000SpecialHandClaims, ...westernTmB4aSpecialHandClaims, ...westernTmB4bSpecialHandClaims, ...westernTmB4cSpecialHandClaims, ...westernTmB4dSpecialHandClaims, ...mcrSliceEClaims, ...classicalOrdinaryFoundationClaims, ...classicalScoringDelta440c2aClaims],
+  treatments: [...thirteenUniqueWondersTreatments, ...bmjaSpecialHandTreatments, ...otbSpecialHandTreatments, ...buzzard2000SpecialHandTreatments, ...westernTmB4aSpecialHandTreatments, ...westernTmB4bSpecialHandTreatments, ...westernTmB4cSpecialHandTreatments, ...westernTmB4dSpecialHandTreatments, ...mcrSliceETreatments, ...classicalOrdinaryFoundationTreatments, ...classicalScoringDelta440c2aTreatments],
 } as const;
 
 export const currentTruthIndex = createTruthIndex(currentTruthCorpus, currentTruthValidationEnvironment);
