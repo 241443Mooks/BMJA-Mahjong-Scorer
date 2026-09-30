@@ -391,7 +391,7 @@ describe('BMJA special-hand fishing detection', () => {
     expect(
       detectSpecialFishing({ ...hand, isWinner: true }),
     ).toEqual([]);
-    expect(scoreHand({ ...hand, originalCall: true }).valid).toBe(false);
+    expect(scoreHand({ ...hand, originalCall: true }).valid).toBe(true);
   });
 
   it.each([

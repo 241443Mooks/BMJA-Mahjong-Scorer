@@ -10,6 +10,7 @@ import { compileRulesRuntime } from './classical-runtime';
 import { currentPlayableResolverEnvironment } from './current-profiles';
 import { resolvePlayableProfile } from './resolver';
 import type { ResolvedProfileArtifact } from './types';
+import { getCurrentCompiledRulesRuntime, initialiseCurrentRulesRuntimes } from './current-runtime-registry';
 
 const context: GameContext = { playerWind: 'south', prevailingWind: 'east', limit: 1000, handMode: 'normal' };
 const ordinary: MahjongHand = {
@@ -42,6 +43,12 @@ const bmjaPurityFishing: MahjongHand = {
     set('3', 'kong', suited('bamboo', 6)), set('4', 'pair', suited('bamboo', 8)),
   ], remainingTiles: [suited('bamboo', 4), suited('bamboo', 4)], bonusTiles: [], isWinner: false,
 };
+const bmjaOriginalCallFishing: MahjongHand = {
+  sets: [
+    set('pung-b', 'pung', suited('bamboo', 2)), set('pung-c', 'pung', suited('characters', 4)),
+    set('pung-d', 'pung', suited('circles', 6)), set('pair', 'pair', wind('east')),
+  ], remainingTiles: [suited('bamboo', 7), suited('characters', 8)], bonusTiles: [], isWinner: false,
+};
 const bmjaAllPairHonoursFishing: MahjongHand = {
   sets: [
     set('1', 'pair', wind('east')), set('2', 'pair', wind('south')), set('3', 'pair', dragon('red')),
@@ -60,6 +67,33 @@ const breakdown = (result: ReturnType<ReturnType<typeof compileRulesRuntime>['sc
   (result.result as unknown as { breakdown: ReturnType<typeof scoreHand> }).breakdown;
 
 describe('BMJA compiled current runtime', () => {
+  it('retains Original Call while fishing and applies the all-player and winner layers', async () => {
+    await initialiseCurrentRulesRuntimes();
+    const bmja = getCurrentCompiledRulesRuntime({ id: 'bmja', version: '1.0' });
+    const buzzard = getCurrentCompiledRulesRuntime({ id: 'buzzard-2000', version: '0.1' });
+    if (bmja.grammar !== 'classical-points-doubles' || buzzard.grammar !== 'classical-points-doubles') throw new Error('EXPECTED_CLASSICAL_RUNTIME');
+
+    const fishingHand = { ...bmjaOriginalCallFishing, originalCall: true };
+    expect(bmja.runtime.validateHand({ evidence: fishingHand, context })).toEqual([]);
+    const fishingResult = bmja.runtime.scoreHand({ evidence: fishingHand, context });
+    expect(fishingResult.legal).toBe(true);
+    expect(breakdown(fishingResult).doubleRules.map(({ id }) => id)).toContain('original-call');
+
+    const winningHand = { ...ordinary, originalCall: true };
+    const winnerResult = bmja.runtime.scoreHand({ evidence: winningHand, context });
+    expect(winnerResult.legal).toBe(true);
+    expect(breakdown(winnerResult).doubleRules.map(({ id }) => id)).toEqual(expect.arrayContaining(['original-call', 'win-original-call']));
+
+    const malformedFishingHand = { ...fishingHand, remainingTiles: [...(fishingHand.remainingTiles ?? []), suited('circles', 8)] };
+    expect(bmja.runtime.validateHand({ evidence: malformedFishingHand, context })).toContain('A non-winning hand cannot contain more than 13 structural playing tiles; each represented kong adds one extra physical tile.');
+
+    const buzzardResult = buzzard.runtime.scoreHand({ evidence: winningHand, context });
+    expect(buzzardResult.legal).toBe(true);
+    const buzzardDoubleIds = breakdown(buzzardResult).doubleRules.map(({ id }) => id);
+    expect(buzzardDoubleIds).not.toContain('original-call');
+    expect(buzzardDoubleIds).not.toContain('win-original-call');
+  });
+
   it('preserves ordinary and special legacy scoring through the sealed artifact', async () => {
     const runtime = compileRulesRuntime(await bmjaArtifact());
     expect(breakdown(runtime.scoreHand({ evidence: ordinary, context }))).toEqual(scoreHand(ordinary, context));
