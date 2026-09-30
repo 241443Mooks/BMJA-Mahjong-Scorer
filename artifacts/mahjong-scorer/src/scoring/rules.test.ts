@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   bonus,
+  applyDoubleRules,
   dragon,
   scoreBonusDoubles,
   scoreBonusTiles,
@@ -9,6 +10,7 @@ import {
   scoreKongs,
   scorePungs,
   scoreWinnerDoubles,
+  scoreHand,
   scoreWinningPoints,
   set,
   suited,
@@ -151,8 +153,17 @@ describe('documented double rules', () => {
       'no-chows',
       'mixed-one-suit',
       'concealed-hand',
-      'original-call',
+      'win-original-call',
     ]);
+  });
+
+  it('applies Original Call to every player and adds the winner-only Original Call double', () => {
+    const base: MahjongHand = { sets: [set('1', 'chow', suited('bamboo', 1)), set('2', 'chow', suited('bamboo', 2)), set('3', 'chow', suited('bamboo', 3)), set('4', 'chow', suited('bamboo', 4)), set('p', 'pair', suited('circles', 5))], bonusTiles: [], isWinner: false, originalCall: true };
+    expect(applyDoubleRules(base, context).map(({ id }) => id)).toContain('original-call');
+    const winner = { ...base, isWinner: true };
+    const ids = applyDoubleRules(winner, context).map(({ id }) => id);
+    expect(ids.filter((id) => id === 'original-call')).toHaveLength(1);
+    expect(ids).toContain('win-original-call');
   });
 
   it('gives purity three doubles', () => {
@@ -202,6 +213,22 @@ describe('documented double rules', () => {
     expect(scoreWinnerDoubles(value)).toContainEqual(
       expect.objectContaining({ id: 'all-majors', amount: 1 }),
     );
+  });
+
+  it('requires a suited set and an honour set for the concealed winner double', () => {
+    const make = (sets: MahjongHand['sets']) => scoreWinnerDoubles({ sets, bonusTiles: [], isWinner: true }).map(({ id }) => id);
+    expect(make([set('s', 'pung', suited('bamboo', 5)), set('w', 'pung', wind('south')), set('c', 'pung', suited('circles', 6)), set('d', 'pung', suited('characters', 7)), set('p', 'pair', suited('bamboo', 2))])).toContain('concealed-hand');
+    expect(make([set('a', 'pung', suited('bamboo', 2)), set('b', 'pung', suited('bamboo', 3)), set('c', 'pung', suited('bamboo', 4)), set('d', 'pung', suited('bamboo', 5)), set('p', 'pair', suited('bamboo', 6))])).not.toContain('concealed-hand');
+    expect(make([set('s', 'pung', suited('bamboo', 5)), set('w', 'pung', wind('south')), set('c', 'pung', suited('circles', 6)), set('d', 'pung', suited('characters', 7)), set('p', 'pair', dragon('red'), 'exposed')])).not.toContain('concealed-hand');
+  });
+
+  it('requires suited terminals and honours for ordinary all-majors', () => {
+    const pureTerminals: MahjongHand = { sets: [set('1', 'pung', suited('bamboo', 1)), set('2', 'pung', suited('characters', 9)), set('3', 'pung', suited('circles', 1)), set('4', 'pung', suited('bamboo', 9)), set('5', 'pair', suited('characters', 1))], bonusTiles: [], isWinner: true };
+    expect(scoreWinnerDoubles(pureTerminals).map(({ id }) => id)).toContain('all-majors');
+    const effective = scoreHand(pureTerminals, context);
+    expect(effective.scoringMode).toBe('special');
+    expect(effective.specialHands).toContainEqual(expect.objectContaining({ id: 'heads-and-tails', matched: true }));
+    expect(effective.doubleRules.map(({ id }) => id)).not.toContain('all-majors');
   });
 
   it.each([

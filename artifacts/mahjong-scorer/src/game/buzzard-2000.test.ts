@@ -44,6 +44,20 @@ describe('Buzzard 2000 ordinary profile policy', () => {
     const hand = { ...chows, ...patch } as MahjongHand;
     expect(scoreHand(hand, context, buzzard2000SpecialHandBindings, BUZZARD_2000_SCORING_POLICY).pointRules).toContainEqual(expect.objectContaining({ id, amount }));
   });
+  it('keeps the no-Chows additive points and the independent winner double', () => {
+    const value = { ...chows, sets: [{ ...p('a', suited('bamboo', 1)), visibility: 'exposed' as const }, p('b', suited('bamboo', 2)), p('c', suited('circles', 3)), p('d', suited('characters', 4)), pair(suited('bamboo', 5))] };
+    const scored = scoreHand(value, context, buzzard2000SpecialHandBindings, BUZZARD_2000_SCORING_POLICY);
+    expect(scored.pointRules).toContainEqual(expect.objectContaining({ id: 'classical-no-chows', amount: 10 }));
+    expect(scored.doubleRules).toContainEqual(expect.objectContaining({ id: 'no-chows', amount: 1 }));
+    expect(scoreHand(chows, context, buzzard2000SpecialHandBindings, BUZZARD_2000_SCORING_POLICY).doubleRules).not.toContainEqual(expect.objectContaining({ id: 'no-chows' }));
+  });
+  it('intercepts pure terminal winners as Heads and Tails before ordinary all-majors scoring', () => {
+    const terminalWinner = { ...chows, sets: [p('b1', suited('bamboo', 1)), p('b9', suited('bamboo', 9)), p('c1', suited('characters', 1)), p('c9', suited('characters', 9)), pair(suited('circles', 1))] };
+    const scored = scoreHand(terminalWinner, context, buzzard2000SpecialHandBindings, BUZZARD_2000_SCORING_POLICY);
+    expect(scored.scoringMode).toBe('special');
+    expect(scored.specialHands).toContainEqual(expect.objectContaining({ id: 'heads-and-tails', matched: true }));
+    expect(scored.doubleRules.map(({ id }) => id)).not.toContain('all-majors');
+  });
   it('retains event doubles and validates Buzzard multi-Chow independently from BMJA', async () => {
     for (const method of ['last-wall-tile', 'loose-tile'] as const) expect(scoreHand({ ...chows, winningMethod: method }, context, buzzard2000SpecialHandBindings, BUZZARD_2000_SCORING_POLICY).doubleRules).toContainEqual(expect.objectContaining({ id: `win-${method}`, amount: 1 }));
     const runtime = compileRulesRuntime(await resolvePlayableProfile({ id: 'buzzard-2000', version: '0.1' }, currentPlayableResolverEnvironment));
