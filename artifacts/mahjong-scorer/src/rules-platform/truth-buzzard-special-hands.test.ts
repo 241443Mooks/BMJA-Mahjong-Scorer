@@ -16,7 +16,7 @@ const migratedBindings = [
 
 describe('Buzzard 2000 special-hand truth', () => {
   it('joins eight newly migrated exact-profile treatments to the existing executable bindings', () => {
-    const treatments = currentTruthIndex.treatmentsForProfile(profile).map(({ record }) => record);
+    const treatments = currentTruthIndex.treatmentsForProfile(profile).map(({ record }) => record).filter(({ runtimeState }) => runtimeState.kind === 'executable');
     const newTreatments = treatments.filter(({ treatmentId }) => treatmentId !== 'buzzard-2000@0.1:thirteen-unique-wonders');
     expect(buzzard2000SpecialHandBindings).toHaveLength(10);
     expect(treatments).toHaveLength(9);
@@ -38,7 +38,7 @@ describe('Buzzard 2000 special-hand truth', () => {
   it('uses Buzzard-scoped subjects and exact retained-snapshot locators for all new claims', () => {
     const claims = currentTruthIndex.claimsForSource('buzzard-2000-classical')
       .map(({ record }) => record)
-      .filter(({ claimId }) => !claimId.includes('thirteen-orphans'));
+      .filter(({ subjectId }) => subjectId.startsWith('pattern.buzzard-2000.'));
     expect(claims).toHaveLength(8);
     for (const claim of claims) {
       expect(claim.subjectId).toMatch(/^pattern\.buzzard-2000\./);

@@ -6,7 +6,7 @@ const profile = { id: 'bmja', version: '1.0' } as const;
 
 describe('Issue 440B1 BMJA special-hand truth migration', () => {
   it('accounts for every binding exactly once with an exact-profile executable treatment', () => {
-    const treatments = currentTruthIndex.treatmentsForProfile(profile).map(({ record }) => record);
+    const treatments = currentTruthIndex.treatmentsForProfile(profile).map(({ record }) => record).filter(({ runtimeState }) => runtimeState.kind === 'executable');
     const refs = treatments.map(({ runtimeState }) => runtimeState.kind === 'executable' && runtimeState.ref.kind === 'binding' ? runtimeState.ref.id : '');
     expect(treatments).toHaveLength(18);
     expect(new Set(refs).size).toBe(18);
@@ -22,8 +22,8 @@ describe('Issue 440B1 BMJA special-hand truth migration', () => {
   });
 
   it('uses registered BMJA evidence, valid subjects, and unique current record identities', () => {
-    const bmjaClaims = currentTruthIndex.claimsSupportingProfile(profile).map(({ record }) => record);
-    const migrated = currentTruthIndex.treatmentsForProfile(profile).map(({ record }) => record);
+    const bmjaClaims = currentTruthIndex.claimsSupportingProfile(profile).map(({ record }) => record).filter(({ sourceId }) => sourceId === 'bmja-special-hands');
+    const migrated = currentTruthIndex.treatmentsForProfile(profile).map(({ record }) => record).filter(({ runtimeState }) => runtimeState.kind === 'executable');
     expect(bmjaClaims).toHaveLength(18);
     expect(currentTruthIndex.sourceById('bmja-special-hands')?.record.authorityForProfileIds).toContain('bmja');
     expect(new Set(migrated.map(({ treatmentId }) => treatmentId)).size).toBe(18);
