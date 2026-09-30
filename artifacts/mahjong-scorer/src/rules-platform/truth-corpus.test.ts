@@ -9,7 +9,7 @@ describe('current typed truth corpus', () => {
     expect(currentTruthIndex.subjectById(subjectId)?.record.kind).toBe('pattern');
     expect(currentTruthIndex.claimsForSubject(subjectId)).toHaveLength(6);
     const buzzardClaims = currentTruthIndex.claimsForSource('buzzard-2000-classical').map(({ record }) => record);
-    expect(buzzardClaims).toHaveLength(43);
+    expect(buzzardClaims).toHaveLength(57);
     expect(buzzardClaims.every(({ supportsProfile }) => supportsProfile?.id === 'buzzard-2000' && supportsProfile.version === '0.1')).toBe(true);
     expect(currentTruthIndex.claimById('evidence.pattern.thirteen-orphans.outside-the-box')?.record.locator).toEqual({
       kind: 'club-material',
@@ -26,7 +26,7 @@ describe('current typed truth corpus', () => {
       'western-tm@0.1:thirteen-unique-wonders',
     ]);
     expect(currentTruthIndex.treatmentsForProfile({ id: 'western-tm', version: '0.2' })).toEqual([]);
-    expect(currentTruthIndex.claimsSupportingProfile({ id: 'outside-the-box', version: '0.1' })).toHaveLength(72);
+    expect(currentTruthIndex.claimsSupportingProfile({ id: 'outside-the-box', version: '0.1' })).toHaveLength(85);
   });
 
   it('joins the MCR truth records to the exact pattern-accumulator bindings and detector', () => {
@@ -65,7 +65,11 @@ describe('current typed truth corpus', () => {
       'buzzard-2000@0.1:one-suit-nine-gates-any-completion',
       'buzzard-2000@0.1:rule.buzzard-2000.all-chows-nonscoring-pair-double',
       'buzzard-2000@0.1:rule.buzzard-2000.complete-flower-season-set-double',
+      'buzzard-2000@0.1:rule.buzzard-2000.dangerous-discard-liability-suppresses-pairwise-settlement',
+      'buzzard-2000@0.1:rule.buzzard-2000.false-mahjong-exposure-penalty',
       'buzzard-2000@0.1:rule.buzzard-2000.flower-season-set-own-tile-cumulative-doubles',
+      'buzzard-2000@0.1:rule.buzzard-2000.incomplete-wind-dragon-limit-settles-as-nonwinner',
+      'buzzard-2000@0.1:rule.buzzard-2000.incorrect-tile-count-settlement',
       'buzzard-2000@0.1:rule.buzzard-2000.last-wall-additive-bonus',
       'buzzard-2000@0.1:rule.buzzard-2000.loose-tile-additive-bonus',
       'buzzard-2000@0.1:rule.buzzard-2000.multiple-chows-permitted',
@@ -77,13 +81,22 @@ describe('current typed truth corpus', () => {
       'buzzard-2000@0.1:rule.buzzard-2000.self-draw-winner-bonus',
       'buzzard-2000@0.1:rule.buzzard-2000.standing-hand-winner-bonus',
       'buzzard-2000@0.1:rule.classical.all-majors-with-honours-double',
+      'buzzard-2000@0.1:rule.classical.all-players-serve-and-lose-east-before-prevailing-advances',
       'buzzard-2000@0.1:rule.classical.chow-base-scoring',
       'buzzard-2000@0.1:rule.classical.dragon-set-double',
+      'buzzard-2000@0.1:rule.classical.draw-has-no-settlement',
+      'buzzard-2000@0.1:rule.classical.draw-retains-east',
+      'buzzard-2000@0.1:rule.classical.east-payment-doubles',
+      'buzzard-2000@0.1:rule.classical.east-retained-after-east-win',
       'buzzard-2000@0.1:rule.classical.exposed-concealed-set-meaning',
       'buzzard-2000@0.1:rule.classical.flower-season-base-scoring',
+      'buzzard-2000@0.1:rule.classical.full-game-four-prevailing-wind-rounds',
       'buzzard-2000@0.1:rule.classical.kong-base-scoring',
       'buzzard-2000@0.1:rule.classical.kong-physical-four-structural-one-set',
+      'buzzard-2000@0.1:rule.classical.loser-pays-winner-score',
       'buzzard-2000@0.1:rule.classical.mahjong-winner-bonus',
+      'buzzard-2000@0.1:rule.classical.non-east-win-rotates-seats',
+      'buzzard-2000@0.1:rule.classical.nonwinners-settle-pairwise-score-differences',
       'buzzard-2000@0.1:rule.classical.one-suit-with-honours-double',
       'buzzard-2000@0.1:rule.classical.ordinary-nonwinning-structural-count',
       'buzzard-2000@0.1:rule.classical.ordinary-winning-four-sets-and-pair',
@@ -91,6 +104,7 @@ describe('current typed truth corpus', () => {
       'buzzard-2000@0.1:rule.classical.own-flower-season-double',
       'buzzard-2000@0.1:rule.classical.own-wind-set-double',
       'buzzard-2000@0.1:rule.classical.prevailing-wind-set-double',
+      'buzzard-2000@0.1:rule.classical.prevailing-winds-east-south-west-north',
       'buzzard-2000@0.1:rule.classical.pung-base-scoring',
       'buzzard-2000@0.1:rule.classical.qualifying-honour-pair-scoring',
       'buzzard-2000@0.1:rule.classical.win-last-wall-double',
@@ -117,9 +131,9 @@ describe('current typed truth corpus', () => {
       { treatmentId: 'buzzard-2000@0.1:thirteen-unique-wonders', projectionId: 'atlas:thirteen-unique-wonders' },
     ]);
     expect(impact.claimIds).toContain('evidence.pattern.thirteen-orphans.buzzard-2000');
-    expect(impact.subjects).toHaveLength(43);
+    expect(impact.subjects).toHaveLength(57);
     expect(impact.subjects.find(({ subjectId }) => subjectId === 'pattern.thirteen-orphans')).toEqual({ subjectId: 'pattern.thirteen-orphans', treatmentIds: ['buzzard-2000@0.1:thirteen-unique-wonders'] });
-    expect(impact.treatments).toHaveLength(43);
+    expect(impact.treatments).toHaveLength(57);
     expect(impact.projections).toEqual([{ treatmentId: 'buzzard-2000@0.1:thirteen-unique-wonders', projectionId: 'atlas:thirteen-unique-wonders' }]);
     expect(impact).toMatchObject({
       treatments: expect.arrayContaining([{ treatmentId: 'buzzard-2000@0.1:thirteen-unique-wonders', profile: { id: 'buzzard-2000', version: '0.1' }, runtimeState: { kind: 'executable', ref: { kind: 'binding', id: 'thirteen-unique-wonders' } } }]),
