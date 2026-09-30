@@ -224,7 +224,7 @@ export const fishingIntrinsicHand = (hand: MahjongHand): MahjongHand => {
     looseTiles: undefined,
     remainingTiles: undefined,
     isWinner: false,
-    originalCall: false,
+    originalCall: hand.originalCall,
     winningMethod: undefined,
   };
 };

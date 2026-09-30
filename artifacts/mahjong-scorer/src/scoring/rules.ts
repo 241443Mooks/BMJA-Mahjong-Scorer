@@ -282,6 +282,8 @@ export const scoreWinnerDoubles = (hand: MahjongHand): RuleResult[] => {
   if (
     !purity &&
     hand.sets.length > 0 &&
+    hand.sets.some((set) => set.kind !== 'pair' && set.tile.family === 'suit') &&
+    hand.sets.some((set) => set.kind !== 'pair' && set.tile.family !== 'suit') &&
     hand.sets.every((set) => set.visibility === 'concealed')
   ) {
     rules.push(
@@ -312,7 +314,7 @@ export const scoreWinnerDoubles = (hand: MahjongHand): RuleResult[] => {
   if (hand.originalCall) {
     rules.push(
       double(
-        'original-call',
+        'win-original-call',
         'Original call',
         'Fishing after the first discard without altering the hand.',
       ),
@@ -338,5 +340,6 @@ export const applyDoubleRules = (
 ): RuleResult[] => [
   ...scoreHonorDoubles(hand, context),
   ...scoreBonusDoubles(hand, context),
+  ...(hand.originalCall ? [double('original-call', 'Original call', 'Fishing after the first discard without altering the hand.')] : []),
   ...scoreWinnerDoubles(hand),
 ];
