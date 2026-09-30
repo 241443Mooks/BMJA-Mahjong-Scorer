@@ -178,10 +178,6 @@ export const validateHand = (
     );
   }
 
-  if (hand.originalCall && !hand.isWinner) {
-    errors.push('Original Call applies only to a winning hand.');
-  }
-
   if (hand.winningMethod === 'initial-deal') {
     if (!hand.isWinner || context?.playerWind !== 'east') {
       errors.push(
