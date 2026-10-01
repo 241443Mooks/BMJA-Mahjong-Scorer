@@ -8,6 +8,9 @@ import { mcrSourceRecords } from './sources-mcr';
 import { mcrSliceESubjects } from './subjects/mcr-slice-e';
 import { mcrSliceEClaims } from './claims/mcr-slice-e';
 import { mcrSliceETreatments } from './treatments/mcr-slice-e';
+import { mcrFanE1Subjects } from './subjects/mcr-fan-e1';
+import { mcrFanE1Claims } from './claims/mcr-fan-e1';
+import { mcrFanE1Treatments } from './treatments/mcr-fan-e1';
 import { bmjaSpecialHandClaims } from './claims/bmja-special-hands';
 import { bmjaSpecialHandSubjects } from './subjects/bmja-special-hands';
 import { bmjaSpecialHandTreatments } from './treatments/bmja-special-hands';
@@ -35,9 +38,9 @@ import { classicalSettlementProgressionIncident440c4Claims, classicalSettlementP
 
 export const currentTruthCorpus = {
   sources: [...sourceRecords, ...mcrSourceRecords],
-  subjects: [...thirteenUniqueWondersSubjects, ...bmjaSpecialHandSubjects, ...otbSpecialHandSubjects, ...buzzard2000SpecialHandSubjects, ...westernTmB4aSpecialHandSubjects, ...westernTmB4bSpecialHandSubjects, ...westernTmB4cSpecialHandSubjects, ...westernTmB4dSpecialHandSubjects, ...mcrSliceESubjects, ...classicalOrdinaryFoundationSubjects, ...classicalScoringDelta440c2aSubjects, ...classicalScoringDelta440c2bSubjects, ...classicalHandValidation440c3aSubjects, ...classicalSettlementProgressionIncident440c4Subjects],
-  claims: [...thirteenUniqueWondersClaims, ...bmjaSpecialHandClaims, ...otbSpecialHandClaims, ...buzzard2000SpecialHandClaims, ...westernTmB4aSpecialHandClaims, ...westernTmB4bSpecialHandClaims, ...westernTmB4cSpecialHandClaims, ...westernTmB4dSpecialHandClaims, ...mcrSliceEClaims, ...classicalOrdinaryFoundationClaims, ...classicalScoringDelta440c2aClaims, ...classicalScoringDelta440c2bClaims, ...classicalHandValidation440c3aClaims, ...classicalSettlementProgressionIncident440c4Claims],
-  treatments: [...thirteenUniqueWondersTreatments, ...bmjaSpecialHandTreatments, ...otbSpecialHandTreatments, ...buzzard2000SpecialHandTreatments, ...westernTmB4aSpecialHandTreatments, ...westernTmB4bSpecialHandTreatments, ...westernTmB4cSpecialHandTreatments, ...westernTmB4dSpecialHandTreatments, ...mcrSliceETreatments, ...classicalOrdinaryFoundationTreatments, ...classicalScoringDelta440c2aTreatments, ...classicalScoringDelta440c2bTreatments, ...classicalHandValidation440c3aTreatments, ...classicalSettlementProgressionIncident440c4Treatments],
+  subjects: [...thirteenUniqueWondersSubjects, ...bmjaSpecialHandSubjects, ...otbSpecialHandSubjects, ...buzzard2000SpecialHandSubjects, ...westernTmB4aSpecialHandSubjects, ...westernTmB4bSpecialHandSubjects, ...westernTmB4cSpecialHandSubjects, ...westernTmB4dSpecialHandSubjects, ...mcrSliceESubjects, ...mcrFanE1Subjects, ...classicalOrdinaryFoundationSubjects, ...classicalScoringDelta440c2aSubjects, ...classicalScoringDelta440c2bSubjects, ...classicalHandValidation440c3aSubjects, ...classicalSettlementProgressionIncident440c4Subjects],
+  claims: [...thirteenUniqueWondersClaims, ...bmjaSpecialHandClaims, ...otbSpecialHandClaims, ...buzzard2000SpecialHandClaims, ...westernTmB4aSpecialHandClaims, ...westernTmB4bSpecialHandClaims, ...westernTmB4cSpecialHandClaims, ...westernTmB4dSpecialHandClaims, ...mcrSliceEClaims, ...mcrFanE1Claims, ...classicalOrdinaryFoundationClaims, ...classicalScoringDelta440c2aClaims, ...classicalScoringDelta440c2bClaims, ...classicalHandValidation440c3aClaims, ...classicalSettlementProgressionIncident440c4Claims],
+  treatments: [...thirteenUniqueWondersTreatments, ...bmjaSpecialHandTreatments, ...otbSpecialHandTreatments, ...buzzard2000SpecialHandTreatments, ...westernTmB4aSpecialHandTreatments, ...westernTmB4bSpecialHandTreatments, ...westernTmB4cSpecialHandTreatments, ...westernTmB4dSpecialHandTreatments, ...mcrSliceETreatments, ...mcrFanE1Treatments, ...classicalOrdinaryFoundationTreatments, ...classicalScoringDelta440c2aTreatments, ...classicalScoringDelta440c2bTreatments, ...classicalHandValidation440c3aTreatments, ...classicalSettlementProgressionIncident440c4Treatments],
 } as const;
 
 export const currentTruthIndex = createTruthIndex(currentTruthCorpus, currentTruthValidationEnvironment);

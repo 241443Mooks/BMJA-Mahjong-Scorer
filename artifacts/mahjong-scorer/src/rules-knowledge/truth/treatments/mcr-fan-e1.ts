@@ -1,0 +1,15 @@
+import type { ProfileTreatment } from '../../../rules-platform/truth-model';
+import { versioned } from '../records';
+import { mcrFanE1Bindings } from '../subjects/mcr-fan-e1';
+
+const profile = { id: 'mcr-wmo-2006', version: '0.1' } as const;
+
+export const mcrFanE1Treatments = mcrFanE1Bindings.map(({ binding, subjectId, claimId, treatmentId }) =>
+  versioned<ProfileTreatment>(treatmentId, {
+    treatmentId,
+    profile,
+    subjectId,
+    runtimeState: { kind: 'executable', ref: { kind: 'binding', id: binding.id } },
+    evidenceClaimIds: [claimId],
+  }),
+);
