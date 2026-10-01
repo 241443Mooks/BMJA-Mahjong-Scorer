@@ -7,8 +7,8 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const output = path.join(root, 'dist/public');
 const marker = /<!-- seo:metadata:start -->[\s\S]*?<!-- seo:metadata:end -->/;
 const rootMarker = '<div id="root"></div>';
-const seo = JSON.parse(await readFile(path.join(root, 'src/site-seo.json'), 'utf8'));
-const socialImage = `${seo.siteUrl}${seo.socialImagePath}`;
+let seo;
+let socialImage;
 
 function escapeHtml(value) {
   return value.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -62,12 +62,16 @@ if (!shell.includes(rootMarker)) throw new Error('Empty root marker was not foun
 
 const vite = await createServer({
   root,
-  server: { middlewareMode: true },
+  server: { middlewareMode: true, hmr: false },
   appType: 'custom',
   logLevel: 'error',
 });
 const renderedRoutes = new Map();
 try {
+  const { default: siteSeo } = await vite.ssrLoadModule('/src/site-seo.ts');
+  seo = siteSeo;
+  socialImage = `${seo.siteUrl}${seo.socialImagePath}`;
+
   const { initialiseCurrentRulesRuntimes } = await vite.ssrLoadModule('/src/rules-platform/current-runtime-registry.ts');
   await initialiseCurrentRulesRuntimes();
   const { renderRoute } = await vite.ssrLoadModule('/src/prerender.tsx');

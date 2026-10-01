@@ -1,5 +1,5 @@
 import {
-  ArrowUpRight,
+  ArrowRight,
   BookOpen,
   Boxes,
   CheckCheck,
@@ -13,16 +13,14 @@ import {
 import { SiteHeader } from '../components/SiteHeader';
 import { ReturnToGame } from '../components/ReturnToGame';
 
-const repository = 'https://github.com/241443Mooks/BMJA-Mahjong-Scorer/blob/main/';
-
 const evidence = {
-  stress: `${repository}docs/rules/EIGHT_RULESET_ARCHITECTURE_STRESS_TEST.md`,
-  manifests: `${repository}docs/rules/EIGHT_RULESET_PAPER_MANIFESTS.md`,
-  comparator: `${repository}docs/rules/CLASSICAL_COMPARATOR_AUDIT_V1.md`,
-  coverage: `${repository}docs/rules/ISSUE_440A_COVERAGE_AUDIT.md`,
-  provenance: `${repository}docs/rules/BUZZARD_2000_RULE_EVIDENCE.md`,
-  knowledge: `${repository}docs/product/REFERENCE_KNOWLEDGE_ARCHITECTURE.md`,
-  quality: `${repository}package.json`,
+  stress: '/evidence/eight-ruleset-architecture-stress-test',
+  manifests: '/evidence/eight-ruleset-paper-manifests',
+  comparator: '/evidence/classical-comparator-audit',
+  coverage: '/evidence/final-truth-corpus-closeout',
+  provenance: '/evidence/buzzard-2000-rule-evidence',
+  knowledge: '/evidence/reference-knowledge-architecture',
+  methods: '/evidence/assurance-verification-methods',
 };
 
 const stages = [
@@ -49,16 +47,17 @@ const families = [
 
 const checks = [
   { title: 'Source review', text: 'Rule claims are tied to identified sources and precise locations. The evidence ledger also records when a source is provisional or unresolved.', href: evidence.provenance, label: 'View a source evidence ledger' },
-  { title: 'Behaviour checks', text: 'Focused fixtures exercise concrete profile behaviour and edge cases. Passing tests show what the current code does; they do not establish what a source says.', href: evidence.coverage, label: 'View a coverage audit' },
+  { title: 'Human interpretation review', text: 'A reviewer checks the source wording and locator, then keeps unsupported or ambiguous conclusions provisional or unresolved.', href: evidence.methods, label: 'See what human review establishes' },
+  { title: 'Behaviour checks', text: 'Focused fixtures exercise concrete profile behaviour and edge cases. Passing tests show what the current code does; they do not establish what a source says.', href: evidence.coverage, label: 'View the corpus closeout' },
   { title: 'Architecture checks', text: 'Paper manifests and stress tests ask whether materially different rule families can be represented without forcing them into one scoring model.', href: evidence.manifests, label: 'View the paper manifests' },
   { title: 'Comparator review', text: 'Comparisons distinguish source-established rules from runtime similarity, provisional reuse and unknowns.', href: evidence.comparator, label: 'View the comparator audit' },
-  { title: 'Release gates', text: 'The repository defines automated test, TypeScript typecheck and production build commands.', href: evidence.quality, label: 'View the quality gates' },
+  { title: 'Release gates', text: 'The repository defines automated test, TypeScript typecheck and production build commands. Run results belong to the exact revision checked.', href: evidence.methods, label: 'See the verification methods' },
 ];
 
 function EvidenceLink({ href, children }: { href: string; children: string }) {
   return (
-    <a href={href} target="_blank" rel="noreferrer" className="inline-flex min-h-9 items-center gap-1.5 text-[11px] font-semibold text-[#284d45] underline decoration-[#cfa58f] underline-offset-4 hover:text-[#ae6249] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">
-      {children}<ArrowUpRight size={13} aria-hidden="true" />
+    <a href={href} className="inline-flex min-h-9 items-center gap-1.5 text-[11px] font-semibold text-[#284d45] underline decoration-[#cfa58f] underline-offset-4 hover:text-[#ae6249] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">
+      {children}<ArrowRight size={13} aria-hidden="true" />
     </a>
   );
 }
@@ -83,8 +82,8 @@ export function UnderTheHoodPage() {
               ))}
             </ul>
             <div className="mt-7 flex flex-wrap gap-3">
-              <a href="/rules" className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md bg-[#284d45] px-4 text-[11px] font-semibold text-[#f8f4e9] transition hover:bg-[#23443d] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249] focus-visible:ring-offset-2">Explore supported rules <ArrowUpRight size={14} aria-hidden="true" /></a>
-              <a href="/how-it-works" className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-[#c9b99d] bg-[#fdfbf5] px-4 text-[11px] font-semibold text-[#284d45] transition hover:bg-[#fffaf0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">See the product walkthrough <ArrowUpRight size={14} aria-hidden="true" /></a>
+              <a href="/rules" className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md bg-[#284d45] px-4 text-[11px] font-semibold text-[#f8f4e9] transition hover:bg-[#23443d] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249] focus-visible:ring-offset-2">Explore supported rules <ArrowRight size={14} aria-hidden="true" /></a>
+              <a href="/how-it-works" className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-[#c9b99d] bg-[#fdfbf5] px-4 text-[11px] font-semibold text-[#284d45] transition hover:bg-[#fffaf0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">See the product walkthrough <ArrowRight size={14} aria-hidden="true" /></a>
             </div>
           </section>
 
@@ -180,8 +179,8 @@ export function UnderTheHoodPage() {
               <h2 className="mt-2 max-w-[760px] font-serif text-[32px] leading-tight">One recorded state. One story.</h2>
               <p className="mt-3 max-w-[800px] text-[13px] leading-6 text-[#c8d5d0]">The reference layer is designed to be a view over structured, reviewed facts. Scores, settlements and game progress each keep their own rules while remaining connected in the saved record.</p>
               <div className="mt-6 flex flex-wrap gap-3">
-                <a href="/help" className="inline-flex min-h-10 items-center gap-2 rounded-md bg-[#f3e8d4] px-4 text-[11px] font-semibold text-[#284d45] transition hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d7a287]">Open User Guide <ArrowUpRight size={14} aria-hidden="true" /></a>
-                <a href="/features" className="inline-flex min-h-10 items-center gap-2 rounded-md border border-[#55756c] px-4 text-[11px] font-semibold text-[#f8f4e9] transition hover:bg-[#355950] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d7a287]">See product features <ArrowUpRight size={14} aria-hidden="true" /></a>
+                <a href="/help" className="inline-flex min-h-10 items-center gap-2 rounded-md bg-[#f3e8d4] px-4 text-[11px] font-semibold text-[#284d45] transition hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d7a287]">Open User Guide <ArrowRight size={14} aria-hidden="true" /></a>
+                <a href="/features" className="inline-flex min-h-10 items-center gap-2 rounded-md border border-[#55756c] px-4 text-[11px] font-semibold text-[#f8f4e9] transition hover:bg-[#355950] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d7a287]">See product features <ArrowRight size={14} aria-hidden="true" /></a>
               </div>
             </div>
           </section>

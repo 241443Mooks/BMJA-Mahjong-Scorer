@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { RouteContent } from './RouteContent';
 import { initialiseCurrentRulesRuntimes } from './rules-platform/current-runtime-registry';
-import siteSeo from './site-seo.json';
+import siteSeo from './site-seo';
 import { canonicalPublicGamePath } from './game/rules-presentation';
 
 import './index.css';

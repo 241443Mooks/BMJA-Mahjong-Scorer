@@ -1,6 +1,8 @@
 import type { ReactNode } from 'react';
 import App from './App';
 import { SiteFooter } from './components/SiteFooter';
+import { EvidenceDocumentPage } from './evidence/EvidenceDocumentPage';
+import { publicEvidenceDocumentForSlug } from './evidence/public-evidence';
 import { BeginnerGuide } from './guide/BeginnerGuide';
 import { GameplayBasics } from './guide/GameplayBasics';
 import { SpecialHandsCatalogue } from './guide/SpecialHandsCatalogue';
@@ -45,6 +47,11 @@ export function RouteContent({ path, prerender = false }: { path: string; preren
   if (path === '/help') return withFullFooter(<HelpPage />);
   if (path === '/how-it-works') return withFullFooter(<HowItWorksPage />);
   if (path === '/under-the-hood') return withFullFooter(<UnderTheHoodPage />);
+  if (path.startsWith('/evidence/')) {
+    const slug = path.slice('/evidence/'.length);
+    const document = publicEvidenceDocumentForSlug(slug);
+    return document ? withFullFooter(<EvidenceDocumentPage document={document} />) : <NotFound />;
+  }
   if (path === '/mahjong-rules-compared') return withFullFooter(<MahjongRulesComparedPage />);
   if (path === '/mahjong-settlement') return withFullFooter(<MahjongSettlementPage />);
   if (path === '/rules') return withFullFooter(<RulesHubPage />);

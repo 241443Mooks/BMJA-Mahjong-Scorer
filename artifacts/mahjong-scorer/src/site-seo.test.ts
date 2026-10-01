@@ -1,4 +1,4 @@
-import siteSeo from './site-seo.json';
+import siteSeo from './site-seo';
 import { describe, expect, it } from 'vitest';
 
 describe('public SEO configuration', () => {
@@ -6,7 +6,18 @@ describe('public SEO configuration', () => {
     const paths = siteSeo.routes.map((route) => route.path);
     const titles = siteSeo.routes.map((route) => route.title);
 
-    expect(siteSeo.routes).toHaveLength(21);
+    expect(siteSeo.routes).toHaveLength(28);
+    for (const slug of [
+      'eight-ruleset-architecture-stress-test',
+      'eight-ruleset-paper-manifests',
+      'classical-comparator-audit',
+      'final-truth-corpus-closeout',
+      'buzzard-2000-rule-evidence',
+      'reference-knowledge-architecture',
+      'assurance-verification-methods',
+    ]) {
+      expect(siteSeo.routes.find((route) => route.path === `/evidence/${slug}`)?.title).toContain('Mahjong Reference');
+    }
     expect(siteSeo.routes.find((route) => route.path === '/privacy')?.title).toContain('Privacy & Analytics');
     for (const path of ['/rules/club', '/rules/buzzard', '/rules/mcr', '/under-the-hood']) {
       const route = siteSeo.routes.find((candidate) => candidate.path === path);
