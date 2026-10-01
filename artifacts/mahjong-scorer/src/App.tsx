@@ -1489,7 +1489,7 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
               {standaloneHand && !hasContext && !example && !practice && <div className="max-w-[900px]">
                 {compiledRuntime.grammar === 'classical-points-doubles' && compiledRuntime.runtime.supportedCapabilities().includes('hand.goulash') && <label className="mb-6 block rounded-lg border border-[#d8ceb8] bg-[#fbf8ed] p-4 text-[12px] text-[#284d45]"><span className="mb-2 block font-semibold">Hand mode</span><select data-testid="select-standalone-hand-mode" value={handMode} onChange={(event) => setHandMode(event.target.value as 'normal' | 'goulash')} className="w-full rounded-md border border-[#cfc3aa] bg-[#fdfbf5] px-3 py-2"><option value="normal">Normal hand</option><option value="goulash">Goulash hand (blank tiles; no chows)</option></select></label>}</div>}
               {compiledRuntime.grammar === 'classical-points-doubles' && (classicalMaterialFacts.standingHand || classicalMaterialFacts.onlyPossibleWinningTile || classicalMaterialFacts.eastThirteenth) && <section data-testid="profile-hand-evidence" className="mx-auto mb-5 max-w-[900px] rounded-lg border border-[#d8ceb8] bg-[#fbf8ed] p-4 text-[12px] text-[#284d45]"><h2 className="font-serif text-[20px]">Scoring evidence</h2>{classicalMaterialFacts.standingHand && <div className="mt-3"><p>Was this Standing Hand locked in?</p><div className="mt-1 flex flex-wrap gap-2">{[['yes', 'Yes'], ['no', 'No'], ['unknown', 'I’m not sure']].map(([value, label]) => <button key={value} type="button" data-testid={`standing-hand-${value}`} aria-pressed={profileFactOrigins.standingHand === (value === 'unknown' ? 'unknown' : 'confirmed') && standingHand === (value === 'yes')} onClick={() => { setStandingHand(value === 'yes'); setProfileFactOrigins((current) => ({ ...current, standingHand: value === 'unknown' ? 'unknown' : 'confirmed' })); }} className="rounded border border-[#cfc3aa] px-2 py-1">{label}</button>)}</div></div>}{classicalMaterialFacts.onlyPossibleWinningTile && <div className="mt-3"><p>Was this the only possible winning tile?</p><div className="mt-1 flex flex-wrap gap-2">{[['yes', 'Yes'], ['no', 'No'], ['unknown', 'I’m not sure']].map(([value, label]) => <button key={value} type="button" data-testid={`only-possible-tile-${value}`} aria-pressed={profileFactOrigins.onlyPossibleWinningTile === (value === 'unknown' ? 'unknown' : 'confirmed') && onlyPossibleWinningTile === (value === 'yes')} onClick={() => { setOnlyPossibleWinningTile(value === 'yes'); setProfileFactOrigins((current) => ({ ...current, onlyPossibleWinningTile: value === 'unknown' ? 'unknown' : 'confirmed' })); }} className="rounded border border-[#cfc3aa] px-2 py-1">{label}</button>)}</div></div>}{classicalMaterialFacts.eastThirteenth && <div className="mt-3"><p>Was East’s thirteenth consecutive Mahjong?</p><div className="mt-1 flex flex-wrap gap-2">{[['yes', 'Yes'], ['no', 'No'], ['unknown', 'I’m not sure']].map(([value, label]) => <button key={value} type="button" data-testid={`east-thirteenth-${value}`} aria-pressed={profileFactOrigins.eastThirteenth === (value === 'unknown' ? 'unknown' : 'confirmed') && eastThirteenthConsecutiveMahjong === (value === 'yes')} onClick={() => { setEastThirteenthConsecutiveMahjong(value === 'yes'); setProfileFactOrigins((current) => ({ ...current, eastThirteenth: value === 'unknown' ? 'unknown' : 'confirmed' })); }} className="rounded border border-[#cfc3aa] px-2 py-1">{label}</button>)}</div></div>}</section>}
-              {hasContext && <section className="rounded-xl border border-[#d8ceb8] bg-[#e8e1d1] p-4 sm:hidden" data-testid="mobile-hand-context">
+              {hasContext && isMcr && <section className="rounded-xl border border-[#d8ceb8] bg-[#e8e1d1] p-4 sm:hidden" data-testid="mobile-hand-context">
                 <h2 className="font-serif text-[22px] leading-tight text-[#284d45]">Hand context</h2>
                 <p className="mt-1 text-[11px] leading-5 text-[#66746e]">{hasContext ? 'Your game has supplied these facts.' : 'Review or set the scoring context below.'}</p>
                 <div className="mt-3 space-y-3">
@@ -1500,10 +1500,12 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
 
             <aside className="min-w-0 space-y-5">
               {!isMcr && score && <>
-              <section id="game-status-controls" className={`animate-rise animate-rise-delay-1 min-w-0 rounded-xl border border-[#d8ceb8] bg-[#e8e1d1] p-5 sm:p-6 ${hasContext ? 'hidden sm:block' : ''}`}>
-                <SectionLabel eyebrow="05 / context" title="Game status" />
+              <section id="game-status-controls" data-testid={hasContext ? 'mobile-winner-evidence' : undefined} className={`animate-rise animate-rise-delay-1 min-w-0 rounded-xl border border-[#d8ceb8] bg-[#e8e1d1] p-4 sm:p-6 ${hasContext ? 'block sm:block' : ''}`}>
+                {hasContext && <div data-testid="mobile-hand-context" className="mb-3 sm:hidden"><h2 className="font-serif text-[22px] leading-tight text-[#284d45]">Hand context</h2><p className="mt-1 text-[11px] leading-5 text-[#66746e]">Your game has supplied these facts.</p><p data-testid="mobile-inherited-context" className="mt-3 rounded-md border border-[#cfc3aa] bg-[#f4eddf] px-3 py-2 text-[10px] leading-4 text-[#66746e]">{context.playerName} · {playerWind} player · {prevailingWind} prevailing · {limit} limit<br />{descriptorForRulesProfile(context.rulesProfile).compactLabel} · {isWinner ? 'Winner' : 'Non-winner'} · inherited from game</p></div>}
+                <div className={hasContext ? 'hidden sm:block' : ''}><SectionLabel eyebrow="05 / context" title="Game status" /></div>
+                {hasContext && <h3 className="mb-3 font-serif text-[19px] leading-tight text-[#284d45] sm:hidden">How did this hand win?</h3>}
                 <div className="space-y-4">
-                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <div className={`grid grid-cols-1 gap-3 sm:grid-cols-2 ${hasContext ? 'hidden sm:grid' : ''}`}>
                     <label className="block min-w-0">
                       <span className="mb-1.5 block font-mono text-[10px] uppercase tracking-[.15em] text-[#7a7769]">Player wind</span>
                       {hasContext ? (
@@ -1536,8 +1538,8 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
                     </label>
                   </div>
                   
-                  <div className="space-y-2 border-t border-[#d1c7b4] pt-4">
-                    <label className={`flex items-center justify-between rounded-md bg-[#f4eddf] px-3 py-2.5 text-[12px] font-semibold text-[#284d45] ${hasContext ? 'cursor-not-allowed' : 'cursor-pointer'}`}>
+                  <div className={`space-y-2 border-t border-[#d1c7b4] pt-4 ${hasContext ? 'border-t-0 pt-0 sm:border-t sm:pt-4' : ''}`}>
+                    {!hasContext && <label className="flex items-center justify-between rounded-md bg-[#f4eddf] px-3 py-2.5 text-[12px] font-semibold text-[#284d45] cursor-pointer">
                       <span>
                         Hand is winner
                         {hasContext && (
@@ -1566,7 +1568,7 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
                         }}
                         className="h-4 w-4 accent-[#284d45] disabled:cursor-not-allowed"
                       />
-                    </label>
+                    </label>}
                     {isWinner && !isMcr && (
                       <div className="mt-2 space-y-4">
                         {classicalMaterialFacts.winningMethod && !hybridActive && <label className="block min-w-0">
@@ -1673,7 +1675,7 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
                     {isWinner && classicalMaterialFacts.originalCall && <div data-testid="original-call-question" className="rounded-md bg-[#f4eddf] px-3 py-2.5 text-[12px] font-semibold text-[#284d45]"><div className="flex items-center justify-between gap-2"><p>Was this Original Call?</p><details data-testid="original-call-help" className="min-w-0"><summary aria-label="What is Original Call?" className="ml-auto flex h-7 w-7 cursor-pointer list-none items-center justify-center rounded-full border border-[#cfc3aa] text-[#284d45] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]"><Info size={14} aria-hidden="true" /></summary><p className="mt-2 rounded-md border border-[#d8ceb8] bg-[#fdfbf5] px-3 py-2 text-[11px] font-normal leading-4 text-[#284d45]"><span className="font-semibold">What is Original Call?</span> You were already one tile away from Mahjong after your first discard, and your hand then stayed unchanged until you went Mahjong.</p></details></div><div className="mt-2 flex flex-wrap gap-2">{[['yes', 'Yes'], ['no', 'No'], ['unknown', 'I’m not sure']].map(([value, label]) => { const isSelected = originalCallStatus === (value === 'unknown' ? 'unknown' : 'confirmed') && originalCall === (value === 'yes'); return <button key={value} type="button" data-testid={`original-call-${value}`} aria-pressed={isSelected} onClick={() => { setOriginalCall(value === 'yes'); setOriginalCallStatus(value === 'unknown' ? 'unknown' : 'confirmed'); }} className={`rounded border px-2 py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249] ${isSelected ? 'border-[#284d45] bg-[#284d45] text-[#f8f4e9]' : 'border-[#cfc3aa] bg-[#fdfbf5] text-[#284d45]'}`}>{label}</button>; })}</div></div>}
                   </div>
 
-                  <label className="block border-t border-[#d1c7b4] pt-4">
+                  <label className={`block border-t border-[#d1c7b4] pt-4 ${hasContext ? 'hidden sm:block' : ''}`}>
                     <span className="mb-1.5 block font-mono text-[10px] uppercase tracking-[.15em] text-[#7a7769]">Table Limit</span>
                     {hasContext ? (
                       <div className="w-full rounded-md border border-[#cfc3aa] bg-[#f0e9da] px-3 py-2.5 text-[12px] font-semibold text-[#66746e]">
@@ -1757,6 +1759,7 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
                 <div className="border-t border-[#55756c] bg-[#1f3f38] p-5 sm:hidden">
                   {hasContext ? (
                     <>
+                      {unresolvedMaterialEvidence && <p data-testid="apply-score-evidence-needed" className="mb-3 rounded-md border border-[#8b977d] bg-[#f4eddf] px-3 py-2 text-[11px] leading-5 text-[#284d45]">Complete the win details above to apply this score: {pendingMaterialEvidence.join(', ')}.</p>}
                       <button type="button" data-testid="button-apply-score-mobile" disabled={!score!.valid || unresolvedMaterialEvidence} onClick={applyScore} className="flex w-full items-center justify-center rounded-md bg-[#f3e8d4] px-4 py-3 text-[13px] font-bold text-[#284d45] disabled:cursor-not-allowed disabled:opacity-40">
                         Apply {score!.finalScore} to {context.playerName}
                       </button>

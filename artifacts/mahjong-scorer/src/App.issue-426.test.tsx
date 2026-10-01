@@ -6,11 +6,11 @@ import { beforeAll, describe, expect, it, vi } from 'vitest';
 import { HandScorer } from './App';
 import { createBmjaGame } from './game/game';
 import { applyHandScorerResult, createHandScorerContext } from './game/hand-scorer-handoff';
-import { BMJA_PROFILE_REF } from './game/ruleset';
+import { BMJA_PROFILE_REF, OUTSIDE_THE_BOX_PROFILE_REF } from './game/ruleset';
 import { BUZZARD_2000_PROFILE_REF } from './game/buzzard-2000';
 import { mapCurrentClassicalScoreBreakdown } from './rules-platform/current-runtime-compat';
 import { getCurrentCompiledRulesRuntime, initialiseCurrentRulesRuntimes } from './rules-platform/current-runtime-registry';
-import { dragon, set, suited, type MahjongHand } from './scoring';
+import { dragon, set, suited, wind, type MahjongHand } from './scoring';
 import type { DetailedHandRecord } from './game/types';
 import type { HandScorerResult } from './game/types';
 
@@ -49,6 +49,53 @@ describe('issue 426 winning-tile evidence integration', () => {
   it('omits the question for an ordinary completed hand with no tile-sensitive result', () => {
     const ordinary: MahjongHand = { sets: [set('a', 'pung', suited('characters', 2)), set('b', 'pung', suited('circles', 4)), set('c', 'pung', suited('bamboo', 7)), set('d', 'pung', dragon('red')), set('pair', 'pair', suited('characters', 9))], bonusTiles: [], isWinner: true, winningMethod: 'wall' };
     expect(renderScorer(scorerContext(ordinary))).not.toContain('data-testid="button-winning-tile-');
+  });
+
+  it('keeps inherited fields read-only and exposes material questions in mobile Hand context', () => {
+    const html = renderScorer(scorerContext(buriedHand()));
+    expect(html).toContain('data-testid="mobile-hand-context"');
+    expect(html).toContain('data-testid="mobile-inherited-context"');
+    expect(html).toContain('inherited from game');
+    expect(html).toContain('data-testid="mobile-winner-evidence"');
+    expect(html).toContain('How did this hand win?');
+    expect(html).toContain('data-testid="select-winning-method"');
+  });
+
+  it('resolves Club Rules material winning method from mobile context and enables Apply', async () => {
+    vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
+    const previousGame = game;
+    game = createBmjaGame(players, seats, undefined, 'full-game', OUTSIDE_THE_BOX_PROFILE_REF);
+    const clubHand: MahjongHand = {
+      sets: [set('pung', 'pung', suited('bamboo', 2)), set('chow', 'chow', suited('characters', 1)), set('dragon', 'pung', dragon('red')),
+        set('wind', 'pung', wind('east')), set('pair', 'pair', suited('circles', 5))],
+      bonusTiles: [], isWinner: true,
+    };
+    let applied: HandScorerResult | undefined;
+    const container = document.createElement('div'); document.body.append(container);
+    const root = createRoot(container);
+    await act(async () => root.render(<HandScorer context={scorerContext(clubHand, OUTSIDE_THE_BOX_PROFILE_REF)} onClose={(result) => { applied = result; }} standaloneHand={false} standaloneRulesProfile={OUTSIDE_THE_BOX_PROFILE_REF} onStandaloneRulesProfileChange={vi.fn()} />));
+    const click = async (element: Element | null) => { expect(element).not.toBeNull(); await act(async () => element!.dispatchEvent(new MouseEvent('click', { bubbles: true }))); };
+    try {
+      expect(container.querySelector('[data-testid="mobile-inherited-context"]')?.textContent).toContain('Club');
+      const method = container.querySelector<HTMLSelectElement>('[data-testid="select-winning-method"]');
+      expect(method).not.toBeNull();
+      expect(container.querySelector('[data-testid="conservative-score-notice-mobile"]')?.textContent).toContain('Winning method');
+      expect(container.querySelector('[data-testid="apply-score-evidence-needed"]')?.textContent).toContain('Winning method');
+      expect(container.querySelector<HTMLButtonElement>('[data-testid="button-apply-score-mobile"]')?.disabled).toBe(true);
+      await act(async () => { method!.value = 'wall'; method!.dispatchEvent(new Event('change', { bubbles: true })); });
+      for (const selector of ['[data-testid="button-discard-answer-no"]', '[data-testid="button-replacement-answer-no"]', '[data-testid="original-call-no"]', '[data-testid="standing-hand-no"]', '[data-testid="only-possible-tile-no"]', '[data-testid="east-thirteenth-no"]']) {
+        const answer = container.querySelector<HTMLButtonElement>(selector);
+        if (answer) await click(answer);
+      }
+      expect(container.querySelector('[data-testid="apply-score-evidence-needed"]')).toBeNull();
+      expect(container.querySelector('[data-testid="current-score-value"]')).not.toBeNull();
+      const apply = container.querySelector<HTMLButtonElement>('[data-testid="button-apply-score-mobile"]');
+      expect(apply?.disabled).toBe(false);
+      await click(apply ?? null);
+      expect(applied?.grammar).toBe('classical-points-doubles');
+    } finally {
+      await act(async () => root.unmount()); container.remove(); game = previousGame; vi.unstubAllGlobals();
+    }
   });
 
   it('renders the question for a real tile-sensitive BMJA winner', () => {
@@ -260,6 +307,7 @@ describe('issue 426 winning-tile evidence integration', () => {
     try {
       expect(handWithoutStandingEvidence.classicalEvidence?.standingHand).toBeUndefined();
       expect(container.querySelector('[data-testid="standing-hand-no"]')).not.toBeNull();
+      expect(container.querySelector('[data-testid="original-call-question"]')).toBeNull();
       expect(container.querySelector('[data-testid="current-score-value"]')).not.toBeNull();
       expect(container.querySelector<HTMLButtonElement>('[data-testid="button-apply-score-mobile"]')?.disabled).toBe(true);
 
