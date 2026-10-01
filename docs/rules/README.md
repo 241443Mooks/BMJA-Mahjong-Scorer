@@ -154,6 +154,8 @@ Before an Outside the Box production profile is considered version 1.0, confirm 
 
 ## Six-pass programme status
 
+- [ISSUE_440F_FINAL_CORPUS_CLOSEOUT.md](./ISSUE_440F_FINAL_CORPUS_CLOSEOUT.md) — final deterministic accounting and completion proof for the reviewed #440 current corpus.
+
 The research/planning programme is now complete:
 
 1. research baseline — complete;

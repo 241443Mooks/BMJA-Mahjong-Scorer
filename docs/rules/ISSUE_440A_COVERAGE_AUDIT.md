@@ -1,5 +1,7 @@
 # Issue 440A — current-corpus coverage and runtime-edge audit
 
+> Historical migration baseline. Final post-migration corpus accounting and #440 completion status are owned by [ISSUE_440F_FINAL_CORPUS_CLOSEOUT.md](./ISSUE_440F_FINAL_CORPUS_CLOSEOUT.md).
+
 Status: inventory and reconciliation baseline established 29 September 2026, updated with the 440B3 Buzzard migration. This is a non-authoritative migration ledger. Executable facts remain owned by the exact resolved profile/runtime; source facts remain owned by cited source material and reviewed evidence. No scoring values are copied here.
 
 ## Scope and accounting rule
