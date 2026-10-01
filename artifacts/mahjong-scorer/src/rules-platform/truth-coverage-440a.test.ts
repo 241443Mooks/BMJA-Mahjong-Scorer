@@ -95,7 +95,7 @@ describe('Issue 440A derived coverage accounting', () => {
     const treatments = currentTruthIndex.treatmentsForProfile(profile).map(({ record }) => record);
     const migratedFanIds = treatments.flatMap((record) => record.runtimeState.kind === 'executable' && record.runtimeState.ref.kind === 'binding' ? [record.runtimeState.ref.id] : []);
     expect(MCR_2006_FAN_BINDINGS).toHaveLength(81);
-    expect(new Set(migratedFanIds).size).toBe(27);
+    expect(new Set(migratedFanIds).size).toBe(54);
     expect(migratedFanIds.every((id) => bindings.has(id))).toBe(true);
     expect(currentTruthValidationEnvironment.runtimeTreatmentExists(profile, { kind: 'binding', id: migratedFanIds[0]! })).toBe(true);
   });
@@ -112,8 +112,8 @@ describe('Issue 440A derived coverage accounting', () => {
     for (const { runtimeState } of policyTreatments) {
       if (runtimeState.kind === 'executable') expect(currentTruthValidationEnvironment.runtimeTreatmentExists(profile, runtimeState.ref)).toBe(true);
     }
-    expect(currentTruthCorpus.treatments).toHaveLength(316);
-    expect(currentTruthCorpus.subjects).toHaveLength(255);
-    expect(currentTruthCorpus.claims).toHaveLength(318);
+    expect(currentTruthCorpus.treatments).toHaveLength(343);
+    expect(currentTruthCorpus.subjects).toHaveLength(282);
+    expect(currentTruthCorpus.claims).toHaveLength(345);
   });
 });
