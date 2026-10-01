@@ -14,6 +14,9 @@ import { mcrFanE1Treatments } from './treatments/mcr-fan-e1';
 import { mcrFanE2Subjects } from './subjects/mcr-fan-e2';
 import { mcrFanE2Claims } from './claims/mcr-fan-e2';
 import { mcrFanE2Treatments } from './treatments/mcr-fan-e2';
+import { mcrFanE3Subjects } from './subjects/mcr-fan-e3';
+import { mcrFanE3Claims } from './claims/mcr-fan-e3';
+import { mcrFanE3Treatments } from './treatments/mcr-fan-e3';
 import { bmjaSpecialHandClaims } from './claims/bmja-special-hands';
 import { bmjaSpecialHandSubjects } from './subjects/bmja-special-hands';
 import { bmjaSpecialHandTreatments } from './treatments/bmja-special-hands';
@@ -41,9 +44,9 @@ import { classicalSettlementProgressionIncident440c4Claims, classicalSettlementP
 
 export const currentTruthCorpus = {
   sources: [...sourceRecords, ...mcrSourceRecords],
-  subjects: [...thirteenUniqueWondersSubjects, ...bmjaSpecialHandSubjects, ...otbSpecialHandSubjects, ...buzzard2000SpecialHandSubjects, ...westernTmB4aSpecialHandSubjects, ...westernTmB4bSpecialHandSubjects, ...westernTmB4cSpecialHandSubjects, ...westernTmB4dSpecialHandSubjects, ...mcrSliceESubjects, ...mcrFanE1Subjects, ...mcrFanE2Subjects, ...classicalOrdinaryFoundationSubjects, ...classicalScoringDelta440c2aSubjects, ...classicalScoringDelta440c2bSubjects, ...classicalHandValidation440c3aSubjects, ...classicalSettlementProgressionIncident440c4Subjects],
-  claims: [...thirteenUniqueWondersClaims, ...bmjaSpecialHandClaims, ...otbSpecialHandClaims, ...buzzard2000SpecialHandClaims, ...westernTmB4aSpecialHandClaims, ...westernTmB4bSpecialHandClaims, ...westernTmB4cSpecialHandClaims, ...westernTmB4dSpecialHandClaims, ...mcrSliceEClaims, ...mcrFanE1Claims, ...mcrFanE2Claims, ...classicalOrdinaryFoundationClaims, ...classicalScoringDelta440c2aClaims, ...classicalScoringDelta440c2bClaims, ...classicalHandValidation440c3aClaims, ...classicalSettlementProgressionIncident440c4Claims],
-  treatments: [...thirteenUniqueWondersTreatments, ...bmjaSpecialHandTreatments, ...otbSpecialHandTreatments, ...buzzard2000SpecialHandTreatments, ...westernTmB4aSpecialHandTreatments, ...westernTmB4bSpecialHandTreatments, ...westernTmB4cSpecialHandTreatments, ...westernTmB4dSpecialHandTreatments, ...mcrSliceETreatments, ...mcrFanE1Treatments, ...mcrFanE2Treatments, ...classicalOrdinaryFoundationTreatments, ...classicalScoringDelta440c2aTreatments, ...classicalScoringDelta440c2bTreatments, ...classicalHandValidation440c3aTreatments, ...classicalSettlementProgressionIncident440c4Treatments],
+  subjects: [...thirteenUniqueWondersSubjects, ...bmjaSpecialHandSubjects, ...otbSpecialHandSubjects, ...buzzard2000SpecialHandSubjects, ...westernTmB4aSpecialHandSubjects, ...westernTmB4bSpecialHandSubjects, ...westernTmB4cSpecialHandSubjects, ...westernTmB4dSpecialHandSubjects, ...mcrSliceESubjects, ...mcrFanE1Subjects, ...mcrFanE2Subjects, ...mcrFanE3Subjects, ...classicalOrdinaryFoundationSubjects, ...classicalScoringDelta440c2aSubjects, ...classicalScoringDelta440c2bSubjects, ...classicalHandValidation440c3aSubjects, ...classicalSettlementProgressionIncident440c4Subjects],
+  claims: [...thirteenUniqueWondersClaims, ...bmjaSpecialHandClaims, ...otbSpecialHandClaims, ...buzzard2000SpecialHandClaims, ...westernTmB4aSpecialHandClaims, ...westernTmB4bSpecialHandClaims, ...westernTmB4cSpecialHandClaims, ...westernTmB4dSpecialHandClaims, ...mcrSliceEClaims, ...mcrFanE1Claims, ...mcrFanE2Claims, ...mcrFanE3Claims, ...classicalOrdinaryFoundationClaims, ...classicalScoringDelta440c2aClaims, ...classicalScoringDelta440c2bClaims, ...classicalHandValidation440c3aClaims, ...classicalSettlementProgressionIncident440c4Claims],
+  treatments: [...thirteenUniqueWondersTreatments, ...bmjaSpecialHandTreatments, ...otbSpecialHandTreatments, ...buzzard2000SpecialHandTreatments, ...westernTmB4aSpecialHandTreatments, ...westernTmB4bSpecialHandTreatments, ...westernTmB4cSpecialHandTreatments, ...westernTmB4dSpecialHandTreatments, ...mcrSliceETreatments, ...mcrFanE1Treatments, ...mcrFanE2Treatments, ...mcrFanE3Treatments, ...classicalOrdinaryFoundationTreatments, ...classicalScoringDelta440c2aTreatments, ...classicalScoringDelta440c2bTreatments, ...classicalHandValidation440c3aTreatments, ...classicalSettlementProgressionIncident440c4Treatments],
 } as const;
 
 export const currentTruthIndex = createTruthIndex(currentTruthCorpus, currentTruthValidationEnvironment);

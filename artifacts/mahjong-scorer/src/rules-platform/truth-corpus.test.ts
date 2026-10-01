@@ -118,8 +118,8 @@ describe('current typed truth corpus', () => {
     expect(mcrSourceTreatmentIds).toContain('mcr-wmo-2006@0.1:eight-point-qualification');
     expect(mcrSourceTreatmentIds).toContain('mcr-wmo-2006@0.1:non-combination');
     expect(mcrSourceTreatmentIds).toContain('mcr-wmo-2006@0.1:thirteen-orphans');
-    expect(mcrSourceTreatmentIds).toHaveLength(56);
-    expect(currentTruthIndex.treatmentsDependingOnSource('source.mcr-ema-green-book-2006', { id: 'mcr-wmo-2006', version: '0.1' })).toHaveLength(56);
+    expect(mcrSourceTreatmentIds).toHaveLength(83);
+    expect(currentTruthIndex.treatmentsDependingOnSource('source.mcr-ema-green-book-2006', { id: 'mcr-wmo-2006', version: '0.1' })).toHaveLength(83);
     expect(currentTruthIndex.treatmentsDependingOnSource('source.mcr-ema-green-book-2006', { id: 'mcr-wmo-2006', version: '0.2' })).toEqual([]);
     expect(currentTruthIndex.treatmentsDependingOnSource('classical-atlas-concept-audit-v1', { id: 'western-tm', version: '0.1' }).map(({ record }) => record.treatmentId)).toEqual([
       'western-tm@0.1:thirteen-unique-wonders',
