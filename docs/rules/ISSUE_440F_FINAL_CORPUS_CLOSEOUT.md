@@ -131,7 +131,7 @@ Runtime remains authoritative for executable behavior. Truth is a provenance and
 
 ## Final verification
 
-Verified in the clean 440F worktree based on `df9d5375f0cdffbe58093732fb1664ace55bebb0`; PR head SHA will be recorded after commit:
+Verified in the clean 440F worktree based on `df9d5375f0cdffbe58093732fb1664ace55bebb0`; the PR head SHA is recorded in the delivery summary:
 
 - Focused requested coverage: **22 files passed, 127 tests passed** (440F, 440A, Western 440D, MCR E1/E2/E3/E4, C1/C2A/C2B/C3A/C4, Classical special suites, corpus, integrity and resolver).
 - `pnpm test`: **139 files passed, 1,221 tests passed**.
