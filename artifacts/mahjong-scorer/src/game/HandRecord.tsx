@@ -14,8 +14,10 @@ import type { HandSet, MahjongHand, PlayingTile } from "../scoring";
 import type {
   DetailedHandRecord,
   GamePlayer,
+  RulesProfileRef,
   SettlementTransaction,
 } from "./types";
+import { RuntimeExplanationDisclosure } from './RuntimeExplanation';
 
 export const settlementDescription = (
   transaction: SettlementTransaction,
@@ -170,11 +172,16 @@ function ScoreEvidence({ record }: { record: DetailedHandRecord }) {
 export function HandRecord({
   playerName,
   record,
+  profile,
+  rulesetLabel,
 }: {
   playerName: string;
   record: DetailedHandRecord;
+  profile?: RulesProfileRef;
+  rulesetLabel?: string;
 }) {
   const { hand } = record;
+  const matchedHands = record.breakdown.specialHands.filter(({ matched }) => matched);
   return (
     <section
       className="recorded-hand mt-3 rounded-lg border border-[#e2d9c7] bg-[#fbf8ed] p-3"
@@ -196,6 +203,7 @@ export function HandRecord({
           Only the tiles recorded while scoring are shown.
         </p>
       )}
+      {profile && matchedHands.filter(({ id }) => record.matchedRuntimeBindingIds?.includes(id)).map((matchedHand) => <RuntimeExplanationDisclosure key={matchedHand.id} profile={profile} bindingId={matchedHand.id} title={matchedHand.name} rulesetLabel={rulesetLabel ?? 'this ruleset'} summary="Why this result?" />)}
       <ScoreEvidence record={record} />
     </section>
   );

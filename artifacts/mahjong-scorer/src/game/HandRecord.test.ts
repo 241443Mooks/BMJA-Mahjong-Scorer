@@ -103,6 +103,28 @@ describe("game-record presentation", () => {
     expect(partial).toContain("Remaining tiles recorded");
   });
 
+  it('renders a collapsed, keyboard-navigable score explanation with source details on demand', () => {
+    const explained = record();
+    explained.breakdown.specialHands = [{ id: 'buried-treasure', name: 'Buried Treasure', description: '', matched: true, scoreModel: 'fixed', value: 1000 }];
+    explained.matchedRuntimeBindingIds = ['buried-treasure'];
+    const html = renderToStaticMarkup(createElement(HandRecord, {
+      playerName: 'Jenn', record: explained,
+      profile: { id: 'outside-the-box', version: '0.1' },
+      rulesetLabel: 'Outside the Box',
+    }));
+    expect(html).toContain('<summary class="min-h-11');
+    expect(html).toContain('Why this result?');
+    expect(html).toContain('Buried Treasure');
+    expect(html).toContain('Recognised under Outside the Box rules.');
+    expect(html).toContain('The OTB guide lists Buried Treasure');
+    expect(html).toContain('<summary class="min-h-11 cursor-pointer py-2 font-semibold text-[#284d45] focus-visible:outline');
+    expect(html).toContain('Outside the Box club guide');
+    expect(html).toContain('p. 12');
+    expect(html).not.toMatch(/bmja@1\.0|pattern\.otb|evidence\.pattern|buried-treasure"/);
+    expect(html.match(/<details/g)).toHaveLength(2);
+    expect(html).not.toMatch(/<details[^>]+open/);
+  });
+
   it("only marks the exact chow occurrence and describes ambiguous winning groups honestly", () => {
     const chow = renderToStaticMarkup(createElement(HandRecord, { playerName: "Jenn", record: record() }));
     expect((chow.match(/winning tile/g) ?? [])).toHaveLength(1);
