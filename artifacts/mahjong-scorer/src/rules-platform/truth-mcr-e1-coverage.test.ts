@@ -9,16 +9,20 @@ describe('Issue 440E1 MCR fan truth coverage', () => {
   it('covers formal fan positions 1–27 from the canonical runtime inventory', () => {
     const cohort = MCR_2006_FAN_BINDINGS.slice(0, 27);
     const profileTreatments = currentTruthIndex.treatmentsForProfile(profile).map(({ record }) => record);
-    const fanTreatments = profileTreatments.filter((record) => record.runtimeState.kind === 'executable' && record.runtimeState.ref.kind === 'binding');
+    const e1BindingIds = new Set(MCR_2006_FAN_BINDINGS.slice(0, 27).map(({ id }) => id));
+    const fanTreatments = profileTreatments.filter((record) => record.runtimeState.kind === 'executable' && record.runtimeState.ref.kind === 'binding' && e1BindingIds.has(record.runtimeState.ref.id));
     const fanBindings = fanTreatments.flatMap(({ runtimeState }) => runtimeState.kind === 'executable' && runtimeState.ref.kind === 'binding' ? [runtimeState.ref.id] : []);
     const claims = currentTruthIndex.claimsSupportingProfile(profile).map(({ record }) => record);
+    const e1Subjects = new Set(MCR_2006_FAN_BINDINGS.slice(0, 27).map((binding, index) => index === 6 ? 'pattern.thirteen-orphans' : `pattern.mcr-wmo-2006.${binding.id.slice('mcr2006.fan.'.length)}`));
 
     expect(MCR_2006_FAN_BINDINGS).toHaveLength(81);
     expect(cohort).toHaveLength(27);
     expect(new Set(fanBindings)).toEqual(new Set(cohort.map(({ id }) => id)));
     expect(mcrFanE1Bindings).toHaveLength(26);
     expect(fanTreatments).toHaveLength(27);
-    expect(claims.filter(({ sourceId }) => sourceId === 'source.mcr-ema-green-book-2006')).toHaveLength(29);
+    const e1Claims = claims.filter(({ sourceId, subjectId }) => sourceId === 'source.mcr-ema-green-book-2006'
+      && (e1Subjects.has(subjectId) || subjectId === 'rule.mcr-2006-non-combination' || subjectId === 'rule.mcr-8-before-flowers'));
+    expect(e1Claims).toHaveLength(29);
 
     for (const [index, binding] of cohort.entries()) {
       const number = index + 1;
