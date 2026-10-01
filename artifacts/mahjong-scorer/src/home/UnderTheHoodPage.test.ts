@@ -1,6 +1,7 @@
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
+import { publicEvidenceDocuments } from '../evidence/public-evidence';
 import { UnderTheHoodPage } from './UnderTheHoodPage';
 
 describe('UnderTheHoodPage', () => {
@@ -18,14 +19,20 @@ describe('UnderTheHoodPage', () => {
     expect(markup).toContain('Riichi han + fu');
     expect(markup).toContain('Versioned target catalogue');
     expect(markup).toContain('Source review');
+    expect(markup).toContain('Human interpretation review');
     expect(markup).toContain('Behaviour checks');
     expect(markup).toContain('Architecture checks');
     expect(markup).toContain('Release gates');
     expect(markup).toContain('Three layers, with different authority');
     expect(markup).toContain('What this does not claim');
     expect(markup).toContain('A rule does not become true merely because it appears in the code.');
-    expect(markup).toContain('EIGHT_RULESET_ARCHITECTURE_STRESS_TEST.md');
-    expect(markup).toContain('REFERENCE_KNOWLEDGE_ARCHITECTURE.md');
+    expect(markup).toContain('href="/evidence/eight-ruleset-architecture-stress-test"');
+    expect(markup).toContain('href="/evidence/reference-knowledge-architecture"');
+    expect(markup).toContain('href="/evidence/assurance-verification-methods"');
+    expect(markup).not.toContain('github.com/241443Mooks/BMJA-Mahjong-Scorer');
+    for (const document of publicEvidenceDocuments) {
+      expect(markup).toContain(`href="/evidence/${document.slug}"`);
+    }
     expect(markup).toContain('href="/rules"');
     expect(markup).toContain('href="/how-it-works"');
     expect(markup).toContain('href="/help"');

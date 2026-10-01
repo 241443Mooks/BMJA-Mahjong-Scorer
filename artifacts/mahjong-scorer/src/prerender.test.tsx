@@ -1,5 +1,5 @@
 import { beforeAll, describe, expect, it } from 'vitest';
-import siteSeo from './site-seo.json';
+import siteSeo from './site-seo';
 import { renderRoute } from './prerender';
 import { initialiseCurrentRulesRuntimes } from './rules-platform/current-runtime-registry';
 
