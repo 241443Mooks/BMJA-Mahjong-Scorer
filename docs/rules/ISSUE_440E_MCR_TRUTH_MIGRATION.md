@@ -14,7 +14,7 @@ Governing source: `source.mcr-ema-green-book-2006` — World Mahjong Organizatio
 - [x] **E1:** fan 1–27.
 - [x] **E2:** fan 28–54.
 - [x] **E3:** fan 55–81.
-- [ ] **E4:** non-catalogue/profile semantic closeout.
+- [x] **E4:** non-catalogue/profile semantic closeout.
 
 The batching is a review and migration device only. It does not alter Green Book scoring or interaction semantics.
 
@@ -123,6 +123,44 @@ E3 verification:
 - `git diff --check`: **passed**.
 
 ## Verification
+
+## E4 source review and frozen disposition ledger
+
+E4 starts from freshly fetched, clean `origin/main` at `53f2c19b589daee80bc006817d09c19c90ed2339`, containing merged #475 / completed E3. The eight migrated families below were checked against the registered 2006 Green Book authority. Claims use concise project wording, exact section locators, and exact support for `mcr-wmo-2006@0.1`.
+
+| Source family | Green Book locator | Runtime seam retained | Truth treatment |
+| --- | --- | --- | --- |
+| Permitted winning structures | §3.7.2 | `validation.mcr-winning-shape` | `migration-incomplete` |
+| Basic Points from lawfully counted fan | §3.9.1(2), §3.9.1(5) | conversion / lawful-interpretation and accumulator seams | `migration-incomplete` |
+| Discard-win settlement | §3.9.1(2)–(3) | `settlement.mcr-2006` | `migration-incomplete` |
+| Self-draw settlement | §3.9.1(2)–(3) | `settlement.mcr-2006` | `migration-incomplete` |
+| Dealer always passes | §3.4.8 | `progression.always-pass` | `migration-incomplete` |
+| Four dealer positions complete a round | §3.4.3 | `progression.always-pass` | `migration-incomplete` |
+| Prevailing-Wind order East → South → West → North | §3.4.5 | `progression.always-pass` | `migration-incomplete` |
+| Four prevailing-Wind rounds complete the normal full game | §3.4.4–3.4.5 | `game-end.four-round-always-pass` | `migration-incomplete` |
+
+All eight treatments are `migration-incomplete` because the source propositions are verified and current runtime behavior exists, while the executable implementation belongs to validation, conversion/interpretation, settlement, progression, or game-end seams not represented by truth refs. No runtime behavior is downgraded and no unsupported ref kind is introduced. The permitted-structure claim deliberately does not duplicate the 81 fan definitions. The Basic Points claim stores no fan point values and does not duplicate `rule.mcr-2006-non-combination`. Discard and self-draw settlement remain separate from fan #80 Self-Drawn.
+
+The frozen four additional ledger rows are:
+
+| Family | E4 disposition |
+| --- | --- |
+| Draw has no settlement | `source-unresolved`; no evidence claim or treatment. §3.4.2 defines a hand as ending in a win or a Draw Game, but that does not establish that a draw has no payment or settlement. |
+| Highest-lawful interpretation | `product/runtime-policy-not-separate-source-truth`; existing fan definitions and §3.9.1 interaction/counting remain authoritative. No E4 treatment or adapter expansion. |
+| Minimal input/evidence policy | `product-contract-not-source-truth`; the concrete input fields and minimum-question policy belong to product/runtime contracts. |
+| Tournament penalties/referee procedure | `reference-only-out-of-product-scope`; no umbrella treatment, foul detection, umpire decisions, clocks, post-session Table Points, or automatic penalty transactions. |
+
+The E4 source-truth inventory is exactly eight subjects, eight verified claims, and eight profile treatments. The assembled corpus is **317 subjects, 380 claims, and 378 treatments** (delta +8/+8/+8 from E3). Exact-profile MCR treatment coverage is now 91: 81 fan bindings, two existing executable policies, and eight migration-incomplete semantic treatments. MCR remains `mcr-wmo-2006@0.1`, provisional, and absent from the public/current playable profile set. The E4 regression suite preserves the four runtime IDs and checks existing MCR structure validation, scoring, settlement, draw, always-pass progression, wind advancement, full-game completion, interaction, and qualification behavior.
+
+E4 verification:
+
+- Focused E4 coverage, E1/E2/E3 coverage, MCR profile/runtime, validation, scoring, settlement, progression/game-end, truth integrity/corpus, and 440A coverage: **passed, 115 tests across 13 files**.
+- `pnpm test`: **passed, 1,211 tests across 138 files**.
+- `pnpm run typecheck`: **passed**.
+- `PORT=5173 BASE_PATH=/ pnpm run build`: **passed**. Vite emitted the existing tile-asset resolution, tooltip sourcemap, and large-chunk warnings; the build exited successfully.
+- `git diff --check`: **passed**.
+
+E4 completes the non-catalogue/profile semantic closeout only. **440F remains the final corpus/accounting closeout; #440 is not declared closed.**
 
 Pre-authoring focused checks on the clean baseline passed: 76 tests across `mcr-detectors.test.ts`, `mcr-interaction.test.ts`, `truth-corpus.test.ts`, `truth-integrity.test.ts`, and `truth-coverage-440a.test.ts`.
 

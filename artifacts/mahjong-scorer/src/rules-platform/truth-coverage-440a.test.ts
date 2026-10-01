@@ -112,8 +112,8 @@ describe('Issue 440A derived coverage accounting', () => {
     for (const { runtimeState } of policyTreatments) {
       if (runtimeState.kind === 'executable') expect(currentTruthValidationEnvironment.runtimeTreatmentExists(profile, runtimeState.ref)).toBe(true);
     }
-    expect(currentTruthCorpus.treatments).toHaveLength(370);
-    expect(currentTruthCorpus.subjects).toHaveLength(309);
-    expect(currentTruthCorpus.claims).toHaveLength(372);
+    expect(currentTruthCorpus.treatments).toHaveLength(378);
+    expect(currentTruthCorpus.subjects).toHaveLength(317);
+    expect(currentTruthCorpus.claims).toHaveLength(380);
   });
 });
