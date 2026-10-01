@@ -21,7 +21,7 @@ const migrated = [
   { slug: 'four-wind-rounds-complete-game', locator: '§3.4.4–3.4.5', runtime: 'game-end.four-round-always-pass' },
 ] as const;
 
-const ledger = [
+export const mcrE4CloseoutLedger = [
   ...migrated.map(({ slug }) => ({ family: slug, disposition: 'source-ready/migrated' })),
   { family: 'draw-has-no-settlement', disposition: 'source-unresolved' },
   { family: 'highest-lawful-interpretation', disposition: 'product/runtime-policy-not-separate-source-truth' },
@@ -31,11 +31,11 @@ const ledger = [
 
 describe('Issue 440E4 MCR non-catalogue/profile truth closeout', () => {
   it('freezes exactly eight migrated source families and four explicit dispositions', () => {
-    expect(ledger).toHaveLength(12);
-    expect(ledger.filter(({ disposition }) => disposition === 'source-ready/migrated')).toHaveLength(8);
-    expect(ledger.filter(({ disposition }) => disposition === 'source-unresolved')).toHaveLength(1);
-    expect(ledger.filter(({ disposition }) => disposition === 'product/runtime-policy-not-separate-source-truth' || disposition === 'product-contract-not-source-truth')).toHaveLength(2);
-    expect(ledger.filter(({ disposition }) => disposition === 'reference-only-out-of-product-scope')).toHaveLength(1);
+    expect(mcrE4CloseoutLedger).toHaveLength(12);
+    expect(mcrE4CloseoutLedger.filter(({ disposition }) => disposition === 'source-ready/migrated')).toHaveLength(8);
+    expect(mcrE4CloseoutLedger.filter(({ disposition }) => disposition === 'source-unresolved')).toHaveLength(1);
+    expect(mcrE4CloseoutLedger.filter(({ disposition }) => disposition === 'product/runtime-policy-not-separate-source-truth' || disposition === 'product-contract-not-source-truth')).toHaveLength(2);
+    expect(mcrE4CloseoutLedger.filter(({ disposition }) => disposition === 'reference-only-out-of-product-scope')).toHaveLength(1);
     expect(mcrE4ProfileSubjects).toHaveLength(8);
     expect(mcrE4ProfileClaims).toHaveLength(8);
     expect(mcrE4ProfileTreatments).toHaveLength(8);
@@ -63,7 +63,7 @@ describe('Issue 440E4 MCR non-catalogue/profile truth closeout', () => {
       expect(currentTruthCorpus.claims.some(({ record }) => record.claimId.includes(`mcr-e4-${excluded}`))).toBe(false);
       expect(currentTruthCorpus.treatments.some(({ record }) => record.treatmentId.includes(`e4-${excluded}`))).toBe(false);
     }
-    expect(ledger.find(({ family }) => family === 'draw-has-no-settlement')?.disposition).toBe('source-unresolved');
+    expect(mcrE4CloseoutLedger.find(({ family }) => family === 'draw-has-no-settlement')?.disposition).toBe('source-unresolved');
     expect(currentTruthIndex.claimsSupportingProfile(profile).some(({ record }) => record.subjectId.includes('draw-has-no-settlement'))).toBe(false);
     expect(currentTruthIndex.treatmentsForProfile(profile).some(({ record }) => record.subjectId.includes('draw-has-no-settlement'))).toBe(false);
   });
