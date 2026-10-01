@@ -125,7 +125,7 @@ describe('issue 426 winning-tile evidence integration', () => {
     }
   });
 
-  it('fails closed for default and unknown material facts, then accepts a confirmed No', async () => {
+  it('shows conditional outcomes for unknown material facts, then accepts a confirmed No', async () => {
     vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
     let appliedResult: HandScorerResult | undefined;
     const onClose = (result?: HandScorerResult) => { appliedResult = result; };
@@ -151,10 +151,15 @@ describe('issue 426 winning-tile evidence integration', () => {
       const originalCallUnknown = container.querySelector('[data-testid="original-call-unknown"]');
       expect(originalCallUnknown).not.toBeNull();
       await click(originalCallUnknown);
-      expect(container.querySelector('[data-testid="pending-material-evidence"]')).not.toBeNull();
-      expect(container.querySelector('[data-testid="current-score-value"]')).toBeNull();
+      const methodWithTwoUnknowns = container.querySelector<HTMLSelectElement>('[data-testid="select-winning-method"]');
+      if (methodWithTwoUnknowns) await act(async () => { methodWithTwoUnknowns.value = ''; methodWithTwoUnknowns.dispatchEvent(new Event('change', { bubbles: true })); });
+      expect(container.querySelector('[data-testid="conditional-score-result"]')).not.toBeNull();
+      expect(container.querySelector('[data-testid="conditional-score-result"]')?.textContent).toContain('Winning method');
+      expect(container.querySelector('[data-testid="conditional-score-result"]')?.textContent).toContain('Original Call');
+      expect(container.querySelector('[data-testid="current-score-value"], [data-testid="conditional-score-result"]')).not.toBeNull();
       expect(container.querySelector('[data-testid^="button-apply-score"]')).toBeNull();
 
+      if (methodWithTwoUnknowns) await act(async () => { methodWithTwoUnknowns.value = 'wall'; methodWithTwoUnknowns.dispatchEvent(new Event('change', { bubbles: true })); });
       await click(container.querySelector('[data-testid="original-call-no"]'));
       expect(container.querySelector('[data-testid="current-score-value"]')).not.toBeNull();
       const applyButton = container.querySelector<HTMLButtonElement>('[data-testid="button-apply-score-mobile"]');

@@ -66,7 +66,7 @@ describe('Classical hybrid winner integration', () => {
       const concealed = Array.from(container.querySelectorAll<HTMLButtonElement>('[data-testid="hybrid-winner-resolution"] button')).find((button) => button.textContent === 'Concealed');
       if (concealed) await act(async () => concealed.click());
       expect(container.querySelector('[data-testid="hybrid-winner-resolution"]')?.textContent).toContain('How I read this hand');
-      expect(container.querySelector('[data-testid="current-score-value"], [data-testid="pending-material-evidence"]')).not.toBeNull();
+      expect(container.querySelector('[data-testid="current-score-value"], [data-testid="conditional-score-result"], [data-testid="conditional-score-mobile"]')).not.toBeNull();
       expect(container.querySelector('#game-status-controls [data-testid="hybrid-rest-tile-entry"]')).toBeNull();
     } finally {
       await act(async () => root.unmount());
@@ -111,7 +111,7 @@ describe('Classical hybrid winner integration', () => {
       expect(groupPicker?.hasAttribute('open')).toBe(false);
       const status = container.querySelector('#game-status-controls')!;
       expect(status.querySelector('[data-testid="hybrid-rest-tile-entry"]')).toBeNull();
-      expect(container.querySelector('[data-testid="current-score-value"], [data-testid="pending-material-evidence"]')).not.toBeNull();
+      expect(container.querySelector('[data-testid="current-score-value"], [data-testid="conditional-score-result"], [data-testid="conditional-score-mobile"]')).not.toBeNull();
     } finally {
       await act(async () => root.unmount());
       container.remove();
