@@ -3,7 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
-import { Check, ChevronDown, Copy, RotateCcw, Sparkles, X, AlertCircle } from 'lucide-react';
+import { Check, ChevronDown, Copy, RotateCcw, Sparkles, X, AlertCircle, Info } from 'lucide-react';
 import { GameScorer } from './game/GameScorer';
 import { SiteHeader } from './components/SiteHeader';
 import { specialHandReferenceHref } from './guide/special-hand-references';
@@ -1670,7 +1670,7 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
                       </div>
                     )}
                     {hybridNonWinnerPanel}
-                    {isWinner && classicalMaterialFacts.originalCall && <div data-testid="original-call-question" className="rounded-md bg-[#f4eddf] px-3 py-2.5 text-[12px] font-semibold text-[#284d45]"><p>Was this Original Call?</p><div className="mt-2 flex flex-wrap gap-2">{[['yes', 'Yes'], ['no', 'No'], ['unknown', 'I’m not sure']].map(([value, label]) => <button key={value} type="button" data-testid={`original-call-${value}`} aria-pressed={originalCallStatus === (value === 'unknown' ? 'unknown' : 'confirmed') && originalCall === (value === 'yes')} onClick={() => { setOriginalCall(value === 'yes'); setOriginalCallStatus(value === 'unknown' ? 'unknown' : 'confirmed'); }} className="rounded border border-[#cfc3aa] px-2 py-1">{label}</button>)}</div></div>}
+                    {isWinner && classicalMaterialFacts.originalCall && <div data-testid="original-call-question" className="rounded-md bg-[#f4eddf] px-3 py-2.5 text-[12px] font-semibold text-[#284d45]"><div className="flex items-center justify-between gap-2"><p>Was this Original Call?</p><details data-testid="original-call-help" className="min-w-0"><summary aria-label="What is Original Call?" className="ml-auto flex h-7 w-7 cursor-pointer list-none items-center justify-center rounded-full border border-[#cfc3aa] text-[#284d45] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]"><Info size={14} aria-hidden="true" /></summary><p className="mt-2 rounded-md border border-[#d8ceb8] bg-[#fdfbf5] px-3 py-2 text-[11px] font-normal leading-4 text-[#284d45]"><span className="font-semibold">What is Original Call?</span> You were already one tile away from Mahjong after your first discard, and your hand then stayed unchanged until you went Mahjong.</p></details></div><div className="mt-2 flex flex-wrap gap-2">{[['yes', 'Yes'], ['no', 'No'], ['unknown', 'I’m not sure']].map(([value, label]) => { const isSelected = originalCallStatus === (value === 'unknown' ? 'unknown' : 'confirmed') && originalCall === (value === 'yes'); return <button key={value} type="button" data-testid={`original-call-${value}`} aria-pressed={isSelected} onClick={() => { setOriginalCall(value === 'yes'); setOriginalCallStatus(value === 'unknown' ? 'unknown' : 'confirmed'); }} className={`rounded border px-2 py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249] ${isSelected ? 'border-[#284d45] bg-[#284d45] text-[#f8f4e9]' : 'border-[#cfc3aa] bg-[#fdfbf5] text-[#284d45]'}`}>{label}</button>; })}</div></div>}
                   </div>
 
                   <label className="block border-t border-[#d1c7b4] pt-4">

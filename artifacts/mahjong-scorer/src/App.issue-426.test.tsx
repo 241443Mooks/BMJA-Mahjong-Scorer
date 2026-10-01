@@ -55,6 +55,47 @@ describe('issue 426 winning-tile evidence integration', () => {
     expect(renderScorer(scorerContext(buriedHand()))).toContain('Which tile completed Mah Jong?');
   });
 
+  it('shows Original Call selection clearly and keeps its help disclosure presentation-only', async () => {
+    vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
+    const container = document.createElement('div'); document.body.append(container);
+    const root = createRoot(container);
+    await act(async () => root.render(<HandScorer context={scorerContext(buriedHand())} onClose={vi.fn()} standaloneHand={false} standaloneRulesProfile={BMJA_PROFILE_REF} onStandaloneRulesProfileChange={vi.fn()} />));
+    const click = async (element: Element | null) => { expect(element).not.toBeNull(); await act(async () => element!.dispatchEvent(new MouseEvent('click', { bubbles: true }))); };
+    const choices = ['yes', 'no', 'unknown'] as const;
+    const scoreBeforeHelp = container.querySelector('[data-testid="current-score-value"]')?.textContent;
+    const uncertaintyBeforeHelp = container.querySelector('[data-testid="conservative-score-notice"]')?.textContent;
+    try {
+      const help = container.querySelector<HTMLDetailsElement>('[data-testid="original-call-help"]');
+      expect(help?.open).toBe(false);
+      expect(help?.querySelector('summary')?.getAttribute('aria-label')).toBe('What is Original Call?');
+      await click(help?.querySelector('summary') ?? null);
+      expect(help?.open).toBe(true);
+      expect(help?.textContent).toContain('What is Original Call?');
+      expect(help?.textContent).toContain('You were already one tile away from Mahjong after your first discard, and your hand then stayed unchanged until you went Mahjong.');
+      expect(container.querySelector('[data-testid="current-score-value"]')?.textContent).toBe(scoreBeforeHelp);
+      expect(container.querySelector('[data-testid="conservative-score-notice"]')?.textContent).toBe(uncertaintyBeforeHelp);
+      await click(help?.querySelector('summary') ?? null);
+      expect(help?.open).toBe(false);
+      expect(container.querySelector('[data-testid="current-score-value"]')?.textContent).toBe(scoreBeforeHelp);
+      expect(container.querySelector('[data-testid="conservative-score-notice"]')?.textContent).toBe(uncertaintyBeforeHelp);
+      for (const selected of choices) {
+        await click(container.querySelector(`[data-testid="original-call-${selected}"]`));
+        const pressed = choices.filter((value) => container.querySelector<HTMLButtonElement>(`[data-testid="original-call-${value}"]`)?.getAttribute('aria-pressed') === 'true');
+        expect(pressed).toEqual([selected]);
+        const selectedButton = container.querySelector<HTMLButtonElement>(`[data-testid="original-call-${selected}"]`);
+        expect(selectedButton?.className).toContain('bg-[#284d45]');
+        expect(selectedButton?.className).toContain('text-[#f8f4e9]');
+        for (const other of choices.filter((value) => value !== selected)) {
+          const unselectedButton = container.querySelector<HTMLButtonElement>(`[data-testid="original-call-${other}"]`);
+          expect(unselectedButton?.className).toContain('border-[#cfc3aa]');
+          expect(unselectedButton?.className).not.toContain('bg-[#284d45]');
+        }
+      }
+    } finally {
+      await act(async () => root.unmount()); container.remove(); vi.unstubAllGlobals();
+    }
+  });
+
   it('leaves MCR on its existing evidence and result path without a Classical tile question', () => {
     const html = renderToStaticMarkup(<HandScorer context={null} onClose={vi.fn()} standaloneHand standaloneRulesProfile={MCR_PROFILE} onStandaloneRulesProfileChange={vi.fn()} />);
     expect(html).toContain('data-testid="mcr-evidence-controls"');
