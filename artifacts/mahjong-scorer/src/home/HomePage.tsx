@@ -23,14 +23,14 @@ function PrimaryAction({
   return (
     <a
       href={href}
-      className={`group flex min-h-[190px] flex-col justify-between rounded-2xl border p-6 shadow-[var(--shadow-sm)] transition duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249] focus-visible:ring-offset-2 sm:p-7 ${
+      className={`group flex min-w-0 min-h-[156px] flex-col justify-between rounded-2xl border p-4 shadow-[var(--shadow-sm)] transition duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249] focus-visible:ring-offset-2 sm:min-h-[190px] sm:p-7 ${
         dark
           ? 'border-[#284d45] bg-[#284d45] text-[#f8f4e9] hover:-translate-y-0.5 hover:bg-[#23443d]'
           : 'border-[#cfc3aa] bg-[#fbf8ed] text-[#284d45] hover:-translate-y-0.5 hover:border-[#ae6249] hover:bg-[#fffaf0]'
       }`}
     >
       <div className="flex items-start justify-between gap-4">
-        <div className={`flex h-11 w-11 items-center justify-center rounded-xl ${dark ? 'bg-[#3b5e55] text-[#f3d8c7]' : 'bg-[#efe8da] text-[#ae6249]'}`}>
+        <div className={`flex h-10 w-10 items-center justify-center rounded-xl sm:h-11 sm:w-11 ${dark ? 'bg-[#3b5e55] text-[#f3d8c7]' : 'bg-[#efe8da] text-[#ae6249]'}`}>
           <Icon size={20} strokeWidth={1.8} />
         </div>
         <ArrowRight
@@ -38,9 +38,9 @@ function PrimaryAction({
           className={`mt-1 shrink-0 transition-transform group-hover:translate-x-1 ${dark ? 'text-[#d7a287]' : 'text-[#ae6249]'}`}
         />
       </div>
-      <div className="mt-8">
-        <h2 className="font-serif text-[30px] leading-tight">{title}</h2>
-        <p className={`mt-2 max-w-[470px] text-[15px] leading-6 ${dark ? 'text-[#c8d8d1]' : 'text-[#66746e]'}`}>
+      <div className="mt-3 sm:mt-8">
+        <h2 className="font-serif text-[23px] leading-tight sm:text-[30px]">{title}</h2>
+        <p className={`mt-1.5 min-w-0 max-w-[470px] break-words text-[13px] leading-5 sm:mt-2 sm:text-[15px] sm:leading-6 ${dark ? 'text-[#c8d8d1]' : 'text-[#66746e]'}`}>
           {description}
         </p>
       </div>
@@ -64,15 +64,15 @@ export function HomePage() {
     <div className="mahjong-shell min-h-screen">
       <SiteHeader />
 
-      <main className="mx-auto max-w-[1100px] px-5 py-9 lg:px-8 lg:py-14">
-        <section className="max-w-[760px]">
-          <p className="mb-3 font-mono text-[12px] uppercase tracking-[.14em] text-[#ae6249]">Rules, scoring and play — made clear.</p>
-          <h1 className="font-serif text-[clamp(38px,6vw,58px)] leading-[1.02] text-[#284d45]">
+      <main className="mx-auto flex max-w-[1100px] flex-col px-4 py-4 sm:px-5 sm:py-9 lg:px-8 lg:py-14">
+        <section className="order-1 max-w-[760px] sm:order-none">
+          <p className="mb-3 hidden font-mono text-[12px] uppercase tracking-[.14em] text-[#ae6249] sm:block">Rules, scoring and play — made clear.</p>
+          <h1 className="font-serif text-[clamp(31px,8.3vw,40px)] leading-[1] text-[#284d45] sm:text-[clamp(38px,6vw,58px)] sm:leading-[1.02]">
             Your Mahjong table companion.
           </h1>
         </section>
 
-        <section className="mt-6 grid gap-4 md:grid-cols-2" aria-label="Scoring actions">
+        <section data-testid="home-primary-actions" className="order-2 mt-3 grid w-full min-w-0 grid-cols-1 gap-3 sm:mt-6 sm:gap-4 sm:order-none md:grid-cols-2" aria-label="Scoring actions">
           {recovered ? (
             <div className="rounded-2xl border border-[#284d45] bg-[#284d45] p-6 text-[#f8f4e9] shadow-[var(--shadow-sm)] sm:p-7">
               <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#3b5e55] text-[#f3d8c7]">
@@ -115,11 +115,16 @@ export function HomePage() {
           />
         </section>
 
-        <section className="mt-6 max-w-[760px]" aria-label="About the Table Companion">
+        <section data-testid="home-free-use" className="order-3 mt-3 max-w-[760px] sm:mt-6 sm:order-none" aria-label="Free to use">
+          <p className="block w-fit max-w-full break-words rounded-xl border border-[#cfc3aa] bg-[#fbf8ed] px-4 py-2 text-[14px] font-semibold leading-5 text-[#284d45] sm:rounded-full">Free · No signup required · Works in your browser</p>
+        </section>
+
+        <p className="order-4 mb-2 mt-3 font-mono text-[11px] uppercase tracking-[.14em] text-[#ae6249] sm:hidden">Rules, scoring and play — made clear.</p>
+
+        <section data-testid="home-introduction" className="order-5 mt-0 max-w-[760px] sm:order-none" aria-label="About the Table Companion">
           <p className="max-w-[620px] text-[15px] leading-7 text-[#66746e]">
             Score a hand, track the whole game, see who pays whom and use the rules your table actually plays.
           </p>
-          <p className="mt-4 inline-flex rounded-full border border-[#cfc3aa] bg-[#fbf8ed] px-4 py-2 text-[14px] font-semibold text-[#284d45]">Free · No signup required · Works in your browser</p>
           <p className="mt-3 max-w-[620px] text-[14px] leading-6 text-[#66746e]">
             If you refresh or close the browser, you can usually pick up your game again on this device. It is saved in this browser, not to an account.
           </p>
