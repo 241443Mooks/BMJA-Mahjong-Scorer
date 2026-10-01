@@ -313,7 +313,6 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
     onlyPossibleWinningTile: knownFactOrigin(initialHand?.classicalEvidenceOrigins?.onlyPossibleWinningTile) ?? (initialHand?.classicalEvidence?.onlyPossibleWinningTile !== undefined ? 'inherited' : 'default'),
     eastThirteenth: 'eastThirteenthConsecutiveMahjong' in initialContext && typeof initialContext.eastThirteenthConsecutiveMahjong === 'boolean' ? 'inherited' : knownFactOrigin(initialHand?.classicalEvidenceOrigins?.eastThirteenth) ?? 'default',
   });
-  const [windFactOrigins, setWindFactOrigins] = useState<Record<'playerWind' | 'prevailingWind', 'default' | 'confirmed' | 'unknown' | 'inherited'>>({ playerWind: context ? 'inherited' : knownFactOrigin(initialHand?.classicalEvidenceOrigins?.playerWind) ?? 'default', prevailingWind: context ? 'inherited' : knownFactOrigin(initialHand?.classicalEvidenceOrigins?.prevailingWind) ?? 'default' });
   const [winningTileProvenance, setWinningTileProvenance] = useState<WinningTileProvenance | undefined>(
     initialHand?.winningTileProvenance
       ? {
@@ -466,10 +465,6 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
       standingHand: knownFactOrigin(savedHand?.classicalEvidenceOrigins?.standingHand) ?? (savedHand?.classicalEvidence?.standingHand !== undefined ? 'inherited' : 'default'),
       onlyPossibleWinningTile: knownFactOrigin(savedHand?.classicalEvidenceOrigins?.onlyPossibleWinningTile) ?? (savedHand?.classicalEvidence?.onlyPossibleWinningTile !== undefined ? 'inherited' : 'default'),
       eastThirteenth: 'eastThirteenthConsecutiveMahjong' in nextContext && typeof nextContext.eastThirteenthConsecutiveMahjong === 'boolean' ? 'inherited' : knownFactOrigin(savedHand?.classicalEvidenceOrigins?.eastThirteenth) ?? 'default',
-    });
-    setWindFactOrigins({
-      playerWind: context ? 'inherited' : knownFactOrigin(savedHand?.classicalEvidenceOrigins?.playerWind) ?? 'default',
-      prevailingWind: context ? 'inherited' : knownFactOrigin(savedHand?.classicalEvidenceOrigins?.prevailingWind) ?? 'default',
     });
     setEastThirteenthConsecutiveMahjong(('eastThirteenthConsecutiveMahjong' in nextContext ? nextContext.eastThirteenthConsecutiveMahjong : undefined) ?? false);
     setWinningTileProvenance(
@@ -672,12 +667,11 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
     const resolvedHybrid = !hybridActive || hybridResolution?.kind === 'ready';
     if (compiledRuntime.grammar !== 'classical-points-doubles' || !resolvedHybrid || structuralCount !== (isWinner ? 14 : 13)) return {
       winningMethod: false, originalCall: false, standingHand: false, onlyPossibleWinningTile: false,
-      eastThirteenth: false, firstDiscard: false, replacementChain: false, playerWind: false, prevailingWind: false,
+      eastThirteenth: false, firstDiscard: false, replacementChain: false,
     };
     const methodChoices = availableWinningMethods.map(({ value }) => ({ hand: { ...scoredHand, winningMethod: value } }));
     const eventCandidate = { isWinner, playerWind, winningMethod, completedKongs: scoredHand.sets.filter(({ kind }) => kind === 'kong').length };
     const eventAlternatives = (evidence?: WinningEventEvidence) => [undefined, evidence].map((winningEventEvidence) => ({ hand: { ...scoredHand, winningEventEvidence } }));
-    const windValues: Wind[] = ['east', 'south', 'west', 'north'];
     return {
       winningMethod: isWinner && methodChoices.length > 1 && classicalFactIsMaterial(activeProfile, scoredHand, gameContext, methodChoices),
       originalCall: isWinner && classicalFactIsMaterial(activeProfile, scoredHand, gameContext, [
@@ -699,28 +693,20 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
         eventAlternatives({ type: 'discard', discardedBy: 'east', handDiscardOrdinal: 1 })),
       replacementChain: isReplacementSequenceEvidenceCandidate(eventCandidate) && classicalFactIsMaterial(activeProfile, scoredHand, gameContext,
         eventAlternatives({ type: 'replacement-chain', kongDeclarations: 2 })),
-      playerWind: !context && classicalFactIsMaterial(activeProfile, scoredHand, gameContext,
-        windValues.map((playerWind) => ({ context: { ...gameContext, playerWind } }))),
-      prevailingWind: !context && classicalFactIsMaterial(activeProfile, scoredHand, gameContext,
-        windValues.map((prevailingWind) => ({ context: { ...gameContext, prevailingWind } }))),
     };
   }, [activeProfile, availableWinningMethods, compiledRuntime, context, gameContext, scoredHand, isWinner, playerWind, winningMethod, hybridActive, hybridResolution]);
   const shouldAskFirstDiscard = classicalMaterialFacts.firstDiscard;
   const shouldAskReplacementSequence = classicalMaterialFacts.replacementChain;
   const pendingMaterialEvidence = [
-    classicalMaterialFacts.winningMethod && !factOriginIsResolved(hybridMethodStatus) ? 'winning method' : undefined,
+    classicalMaterialFacts.winningMethod && !factOriginIsResolved(hybridMethodStatus) ? 'Winning method' : undefined,
     classicalMaterialFacts.originalCall && !factOriginIsResolved(originalCallStatus) ? 'Original Call' : undefined,
     classicalMaterialFacts.standingHand && !factOriginIsResolved(profileFactOrigins.standingHand) ? 'Standing Hand' : undefined,
-    classicalMaterialFacts.onlyPossibleWinningTile && !factOriginIsResolved(profileFactOrigins.onlyPossibleWinningTile) ? 'only possible winning tile' : undefined,
+    classicalMaterialFacts.onlyPossibleWinningTile && !factOriginIsResolved(profileFactOrigins.onlyPossibleWinningTile) ? 'Only possible winning tile' : undefined,
     classicalMaterialFacts.eastThirteenth && !factOriginIsResolved(profileFactOrigins.eastThirteenth) ? 'East’s thirteenth consecutive Mahjong' : undefined,
-    classicalMaterialFacts.firstDiscard && (discardAnswer === null || discardAnswer === 'unsure') ? 'first discard' : undefined,
-    classicalMaterialFacts.replacementChain && (replacementAnswer === null || replacementAnswer === 'unsure') ? 'replacement sequence' : undefined,
-    classicalMaterialFacts.playerWind && !factOriginIsResolved(windFactOrigins.playerWind) ? 'player Wind' : undefined,
-    classicalMaterialFacts.prevailingWind && !factOriginIsResolved(windFactOrigins.prevailingWind) ? 'prevailing Wind' : undefined,
+    classicalMaterialFacts.firstDiscard && (discardAnswer === null || discardAnswer === 'unsure') ? 'First discard' : undefined,
+    classicalMaterialFacts.replacementChain && (replacementAnswer === null || replacementAnswer === 'unsure') ? 'Replacement sequence' : undefined,
   ].filter((fact): fact is string => !!fact);
   const unresolvedMaterialEvidence = pendingMaterialEvidence.length > 0;
-  const unresolvedStandaloneWind = (classicalMaterialFacts.playerWind && !factOriginIsResolved(windFactOrigins.playerWind))
-    || (classicalMaterialFacts.prevailingWind && !factOriginIsResolved(windFactOrigins.prevailingWind));
 
   const uncertaintyAxes = useMemo(() => {
     const axes = [] as Parameters<typeof resolveClassicalScoreUncertainty>[3][number][];
@@ -731,14 +717,20 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
     if (classicalMaterialFacts.eastThirteenth && !factOriginIsResolved(profileFactOrigins.eastThirteenth)) axes.push({ id: 'eastThirteenth', label: 'East’s thirteenth consecutive Mahjong', alternatives: [false, true].map((value) => ({ label: value ? 'Yes' : 'No', context: { ...gameContext, eastThirteenthConsecutiveMahjong: value } })) });
     if (classicalMaterialFacts.firstDiscard && (discardAnswer === null || discardAnswer === 'unsure')) axes.push({ id: 'firstDiscard', label: 'First discard', alternatives: [{ label: 'Yes', hand: { ...scoredHand, winningEventEvidence: { type: 'discard', discardedBy: 'east', handDiscardOrdinal: 1 } } }, { label: 'No', hand: { ...scoredHand, winningEventEvidence: undefined } }] });
     if (classicalMaterialFacts.replacementChain && (replacementAnswer === null || replacementAnswer === 'unsure')) axes.push({ id: 'replacementChain', label: 'Replacement sequence', alternatives: [{ label: 'Yes', hand: { ...scoredHand, winningEventEvidence: { type: 'replacement-chain', kongDeclarations: 2 } } }, { label: 'No', hand: { ...scoredHand, winningEventEvidence: undefined } }] });
-    if (classicalMaterialFacts.playerWind && !factOriginIsResolved(windFactOrigins.playerWind)) axes.push({ id: 'playerWind', label: 'Player Wind', alternatives: (['east', 'south', 'west', 'north'] as Wind[]).map((value) => ({ label: value, context: { ...gameContext, playerWind: value } })) });
-    if (classicalMaterialFacts.prevailingWind && !factOriginIsResolved(windFactOrigins.prevailingWind)) axes.push({ id: 'prevailingWind', label: 'Prevailing Wind', alternatives: (['east', 'south', 'west', 'north'] as Wind[]).map((value) => ({ label: value, context: { ...gameContext, prevailingWind: value } })) });
     return axes;
-  }, [classicalMaterialFacts, hybridMethodStatus, availableWinningMethods, scoredHand, originalCallStatus, profileFactOrigins, gameContext, discardAnswer, replacementAnswer, windFactOrigins]);
+  }, [classicalMaterialFacts, hybridMethodStatus, availableWinningMethods, scoredHand, originalCallStatus, profileFactOrigins, gameContext, discardAnswer, replacementAnswer]);
   const uncertaintyScenarios = useMemo(() => unresolvedMaterialEvidence
     ? resolveClassicalScoreUncertainty(activeProfile, scoredHand, gameContext, uncertaintyAxes)
     : [], [unresolvedMaterialEvidence, activeProfile, scoredHand, gameContext, uncertaintyAxes]);
-  const materialUncertaintyDisagrees = uncertaintyScenarios.length > 1;
+  const conservativeScenario = useMemo(() => uncertaintyScenarios.reduce<{
+    scenario: (typeof uncertaintyScenarios)[number];
+    breakdown: ReturnType<typeof mapCurrentClassicalScoreBreakdown>;
+  } | undefined>((best, scenario) => {
+    const breakdown = mapCurrentClassicalScoreBreakdown(scenario.result);
+    if (!scenario.result.legal || scenario.result.disposition.kind !== 'scored' || !breakdown.valid) return best;
+    // Ties retain deterministic axis order, where exceptional boolean facts list No first.
+    return !best || breakdown.finalScore < best.breakdown.finalScore ? { scenario, breakdown } : best;
+  }, undefined), [uncertaintyScenarios]);
 
   const isStructureComplete = useMemo(() => {
     if (!isWinner) return false;
@@ -773,21 +765,24 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
       eastThirteenth: classicalMaterialFacts.eastThirteenth ? profileFactOrigins.eastThirteenth : 'absent',
       firstDiscard: classicalMaterialFacts.firstDiscard ? (discardAnswer === 'unsure' ? 'unknown' : discardAnswer ? 'confirmed' : 'default') : 'absent',
       replacementChain: classicalMaterialFacts.replacementChain ? (replacementAnswer === 'unsure' ? 'unknown' : replacementAnswer ? 'confirmed' : 'default') : 'absent',
-      playerWind: context ? 'inherited' : classicalMaterialFacts.playerWind ? windFactOrigins.playerWind : 'absent',
-      prevailingWind: context ? 'inherited' : classicalMaterialFacts.prevailingWind ? windFactOrigins.prevailingWind : 'absent',
+      playerWind: context ? 'inherited' : 'confirmed',
+      prevailingWind: context ? 'inherited' : 'confirmed',
     },
     ...(scoredHand.winningTileProvenance && scoredHand.winningTileEvidenceOrigin !== 'confirmed' ? { winningTileEvidenceOrigin: 'confirmed' as const } : {}),
   };
 
-  const scoreResult = useMemo(
-    () => hybridActive
-      ? hybridResolution?.kind === 'ready' && scoringRuntime ? scoringRuntime.scoreHand({ evidence: handForScoring, context: gameContext }) : undefined
-      : hybridNonWinnerResolution ? hybridNonWinnerResolution.scoreResult
-      : scoringRuntime ? scoringRuntime.scoreHand({ evidence: handForScoring, context: gameContext }) : undefined,
-    [hybridActive, hybridResolution, hybridNonWinnerResolution, gameContext, handForScoring, scoringRuntime],
-  );
+  const scoreResult = useMemo(() => {
+    if (hybridActive) return hybridResolution?.kind === 'ready' && scoringRuntime
+      ? conservativeScenario?.scenario.result ?? scoringRuntime.scoreHand({ evidence: handForScoring, context: gameContext })
+      : undefined;
+    if (hybridNonWinnerResolution) return hybridNonWinnerResolution.scoreResult;
+    if (conservativeScenario) return conservativeScenario.scenario.result;
+    return scoringRuntime ? scoringRuntime.scoreHand({ evidence: handForScoring, context: gameContext }) : undefined;
+  }, [hybridActive, hybridResolution, hybridNonWinnerResolution, gameContext, handForScoring, scoringRuntime, conservativeScenario]);
   const score = useMemo(() => scoreResult ? mapCurrentClassicalScoreBreakdown(scoreResult) : undefined, [scoreResult]);
-  const scoreResultVisible = !materialUncertaintyDisagrees && !hybridNonWinnerResolution?.kongConfirmationRequired?.length;
+  const scoreResultVisible = !hybridNonWinnerResolution?.kongConfirmationRequired?.length;
+  const conservativeScoreNotice = unresolvedMaterialEvidence && <p data-testid="conservative-score-notice" className="mt-3 hidden text-[12px] leading-5 text-[#d7a287] sm:block">Some details are unknown, so this is a conservative score. Could change if: {pendingMaterialEvidence.join(' · ')}.{hasContext ? ' Resolve those details before applying a score to the game.' : ''}</p>;
+  const mobileConservativeScoreNotice = unresolvedMaterialEvidence && <p data-testid="conservative-score-notice-mobile" className="mt-2 text-[10px] leading-4 text-[#66746e] sm:hidden">Some details are unknown, so this is a conservative score. Could change if: {pendingMaterialEvidence.join(' · ')}.{hasContext ? ' Resolve them to apply it.' : ''}</p>;
   const mcrPass = useMemo(() => {
     if (!isMcr || compiledRuntime.grammar !== 'pattern-accumulator' || !mcrWinSource || !mcrResolvedWinEvent) return undefined;
     const adapted = toMcrScoringInput(hand, { winSource: mcrWinSource, resolvedWinEvent: mcrResolvedWinEvent, lastVisibleCopy: mcrLastVisibleCopy, seatWind: mcrSeatWind, prevailingWind: mcrPrevailingWind });
@@ -1030,7 +1025,7 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
   }
 
   function applyScore() {
-    if (isMcr || !context || example || !score?.valid || materialUncertaintyDisagrees || (hybridActive && hybridResolution?.kind !== 'ready')) return;
+    if (isMcr || !context || example || !score?.valid || unresolvedMaterialEvidence || (hybridActive && hybridResolution?.kind !== 'ready')) return;
       onClose({
       grammar: 'classical-points-doubles',
       playerId: context.playerId,
@@ -1175,7 +1170,7 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
 
   const mobileLiveResult = isMcr
     ? <details data-testid="mobile-live-result" className="mt-3 rounded-md border border-[#b8cdbf] bg-[#edf3ed] px-3 py-2 sm:hidden"><summary className="cursor-pointer text-[11px] font-semibold text-[#284d45]">{mcrResult?.kind === 'scored' ? `${mcrResult.basicPoints} Basic Points` : mcrResult?.kind === 'not-qualifying' ? 'Not qualifying' : 'MCR evidence needed'}</summary><div className="mt-2 text-[10px]">Fan · qualifying subtotal · Flowers · Basic Points</div></details>
-    : !scoreResultVisible ? materialUncertaintyDisagrees ? <section data-testid="conditional-score-mobile" className="mt-3 rounded-md border border-[#d8ceb8] bg-[#fbf8ed] px-3 py-2 text-[11px] leading-5 text-[#284d45]"><b>Score depends on {pendingMaterialEvidence.join(' and ')}</b><ul className="mt-2 space-y-1">{uncertaintyScenarios.map((scenario) => { const outcome = mapCurrentClassicalScoreBreakdown(scenario.result); return <li key={scenario.conclusion}>{scenario.conditions[0]}{scenario.conditions.length > 1 ? ` (${scenario.conditions.length} combinations)` : ''}: {outcome.valid ? `${outcome.finalScore} points` : 'not a supported score'}</li>; })}</ul>{hasContext && <p className="mt-2">Choose the details above before applying a score to the game.</p>}</section> : <p data-testid="pending-material-evidence" className="mt-3 rounded-md border border-[#d8ceb8] bg-[#fbf8ed] px-3 py-2 text-[11px] leading-5 text-[#66746e]">{unresolvedStandaloneWind ? 'The wind is unknown; wind-sensitive score details are unavailable.' : 'Confirm how these four tiles were declared to show a supported score.'}</p> : score && <details data-testid="mobile-live-result" className="mt-3 rounded-md border border-[#b8cdbf] bg-[#edf3ed] px-3 py-2 sm:hidden"><summary className="cursor-pointer text-[11px] font-semibold text-[#284d45]">{score.valid ? `${score.finalScore} pts · ${score.basePoints} base · ${score.doubles} doubles${score.evidenceCompleteness === 'partial' ? ' · Partial evidence' : ''}` : structuralTileCount === structuralTarget && score.validationErrors[0] ? score.validationErrors[0] : tileProgressLabel}</summary><div className="mt-2 text-[10px] leading-4 text-[#66746e]">{score.valid ? score.evidenceCompleteness === 'partial' ? 'Score from entered evidence; add remaining tiles for whole-hand checks.' : 'Open for the full score breakdown below.' : 'Keep adding or correcting evidence; partial hands remain supported.'}</div>{score.valid && scoreResult?.grammar === 'classical-points-doubles' && score.specialHands.filter(({ matched }) => matched).filter(({ id }) => runtimeBindingIds.includes(id)).map((special) => <RuntimeExplanationDisclosure key={special.id} profile={scoreResult.profile} bindingId={special.id} title={special.name} rulesetLabel={descriptorForRulesProfile(scoreResult.profile).title} summary="Why this result?" />)}{hasContext && score.valid && <button type="button" data-testid="button-apply-score-compact" onClick={applyScore} className="mt-2 rounded bg-[#284d45] px-3 py-2 text-[11px] font-semibold text-[#f8f4e9]">Apply {score.finalScore} to {context.playerName}</button>}</details>;
+    : !scoreResultVisible ? <p data-testid="pending-material-evidence" className="mt-3 rounded-md border border-[#d8ceb8] bg-[#fbf8ed] px-3 py-2 text-[11px] leading-5 text-[#66746e]">Confirm how these four tiles were declared to show a supported score.</p> : score && <><details data-testid="mobile-live-result" className="mt-3 rounded-md border border-[#b8cdbf] bg-[#edf3ed] px-3 py-2 sm:hidden"><summary className="cursor-pointer text-[11px] font-semibold text-[#284d45]">{score.valid ? `${score.finalScore} pts · ${score.basePoints} base · ${score.doubles} doubles${score.evidenceCompleteness === 'partial' ? ' · Partial evidence' : ''}` : structuralTileCount === structuralTarget && score.validationErrors[0] ? score.validationErrors[0] : tileProgressLabel}</summary><div className="mt-2 text-[10px] leading-4 text-[#66746e]">{score.valid ? score.evidenceCompleteness === 'partial' ? 'Score from entered evidence; add remaining tiles for whole-hand checks.' : 'Open for the full score breakdown below.' : 'Keep adding or correcting evidence; partial hands remain supported.'}</div>{score.valid && scoreResult?.grammar === 'classical-points-doubles' && score.specialHands.filter(({ matched }) => matched).filter(({ id }) => runtimeBindingIds.includes(id)).map((special) => <RuntimeExplanationDisclosure key={special.id} profile={scoreResult.profile} bindingId={special.id} title={special.name} rulesetLabel={descriptorForRulesProfile(scoreResult.profile).title} summary="Why this result?" />)}{hasContext && score.valid && !unresolvedMaterialEvidence && <button type="button" data-testid="button-apply-score-compact" onClick={applyScore} className="mt-2 rounded bg-[#284d45] px-3 py-2 text-[11px] font-semibold text-[#f8f4e9]">Apply {score.finalScore} to {context.playerName}</button>}</details>{mobileConservativeScoreNotice}</>;
 
   const hybridResolutionPanel = hybridActive && <section data-testid="hybrid-winner-resolution" className="mt-3 rounded-md border border-[#d8ceb8] bg-[#fbf8ed] p-3 text-[11px]">
     <h3 className="font-semibold text-[#284d45]">Reading the rest of these tiles</h3>
@@ -1516,8 +1511,7 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
                           {playerWind.charAt(0).toUpperCase() + playerWind.slice(1)} (Inherited)
                         </div>
                       ) : (
-                          <select data-testid="select-player-wind" value={classicalMaterialFacts.playerWind && windFactOrigins.playerWind !== 'confirmed' ? (windFactOrigins.playerWind === 'unknown' ? 'unknown' : '') : playerWind} onChange={(e) => { if (e.target.value === 'unknown') { setWindFactOrigins((current) => ({ ...current, playerWind: 'unknown' })); return; } if (!e.target.value) { setWindFactOrigins((current) => ({ ...current, playerWind: 'default' })); return; } setPlayerWind(e.target.value as Wind); setWindFactOrigins((current) => ({ ...current, playerWind: 'confirmed' })); }} className="w-full min-w-0 rounded-md border border-[#cfc3aa] bg-[#fdfbf5] px-3 py-2.5 text-[12px] font-semibold text-[#284d45] focus:ring-2">
-                          {classicalMaterialFacts.playerWind && <><option value="">Choose player Wind</option><option value="unknown">I’m not sure</option></>}
+                          <select data-testid="select-player-wind" value={playerWind} onChange={(e) => setPlayerWind(e.target.value as Wind)} className="w-full min-w-0 rounded-md border border-[#cfc3aa] bg-[#fdfbf5] px-3 py-2.5 text-[12px] font-semibold text-[#284d45] focus:ring-2">
                           <option value="east">East</option>
                           <option value="south">South</option>
                           <option value="west">West</option>
@@ -1532,8 +1526,7 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
                           {prevailingWind.charAt(0).toUpperCase() + prevailingWind.slice(1)} (Inherited)
                         </div>
                       ) : (
-                          <select data-testid="select-prevailing-wind" value={classicalMaterialFacts.prevailingWind && windFactOrigins.prevailingWind !== 'confirmed' ? (windFactOrigins.prevailingWind === 'unknown' ? 'unknown' : '') : prevailingWind} onChange={(e) => { if (e.target.value === 'unknown') { setWindFactOrigins((current) => ({ ...current, prevailingWind: 'unknown' })); return; } if (!e.target.value) { setWindFactOrigins((current) => ({ ...current, prevailingWind: 'default' })); return; } setPrevailingWind(e.target.value as Wind); setWindFactOrigins((current) => ({ ...current, prevailingWind: 'confirmed' })); }} className="w-full min-w-0 rounded-md border border-[#cfc3aa] bg-[#fdfbf5] px-3 py-2.5 text-[12px] font-semibold text-[#284d45] focus:ring-2">
-                          {classicalMaterialFacts.prevailingWind && <><option value="">Choose prevailing Wind</option><option value="unknown">I’m not sure</option></>}
+                          <select data-testid="select-prevailing-wind" value={prevailingWind} onChange={(e) => setPrevailingWind(e.target.value as Wind)} className="w-full min-w-0 rounded-md border border-[#cfc3aa] bg-[#fdfbf5] px-3 py-2.5 text-[12px] font-semibold text-[#284d45] focus:ring-2">
                           <option value="east">East</option>
                           <option value="south">South</option>
                           <option value="west">West</option>
@@ -1697,7 +1690,7 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
 
               {mobileLiveResult}
 
-              {!scoreResultVisible && (materialUncertaintyDisagrees ? <section data-testid="conditional-score-result" className="rounded-xl border border-[#d8ceb8] bg-[#fbf8ed] p-5 text-[#284d45]"><h2 className="font-serif text-2xl">Score depends on {pendingMaterialEvidence.join(' and ')}</h2><p className="mt-2 text-sm">The hand is scored under each lawful alternative using the selected rules profile.</p><ul className="mt-4 space-y-3">{uncertaintyScenarios.map((scenario) => { const outcome = mapCurrentClassicalScoreBreakdown(scenario.result); return <li key={scenario.conclusion} className="rounded-md border border-[#e2d9c7] bg-[#fdfbf5] p-3"><div className="font-semibold">{scenario.conditions[0]}{scenario.conditions.length > 1 ? ` (${scenario.conditions.length} combinations)` : ''}</div><div className="mt-1">{outcome.valid ? `${outcome.finalScore.toLocaleString()} points` : 'No supported score under this alternative'}</div></li>; })}</ul>{hasContext && <p className="mt-4 text-sm">Resolve the difference before applying a score to {context.playerName}.</p>}</section> : <p data-testid="pending-material-evidence" className="rounded-md border border-[#d8ceb8] bg-[#fbf8ed] p-5 text-sm text-[#66746e]">Confirm how these four tiles were declared to show a supported score.</p>)}
+              {!scoreResultVisible && <p data-testid="pending-material-evidence" className="rounded-md border border-[#d8ceb8] bg-[#fbf8ed] p-5 text-sm text-[#66746e]">Confirm how these four tiles were declared to show a supported score.</p>}
 
               {scoreResultVisible && <>
               <section className="animate-rise animate-rise-delay-2 overflow-hidden rounded-xl bg-[#284d45] text-[#f8f4e9] shadow-[var(--shadow-lg)]">
@@ -1720,7 +1713,7 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
                     )}
                     {score!.limitApplied && <span className="text-[#d7a287]">Limit applied ({limit})</span>}
                   </div>
-                  {unresolvedMaterialEvidence && <p data-testid="immaterial-unknown-evidence" className="mt-3 text-[12px] text-[#d7a287]">{pendingMaterialEvidence.join(', ')} unknown; it does not change this score.</p>}
+                  {conservativeScoreNotice}
                   {standaloneCalculatorFlow && scoreResult?.grammar === 'classical-points-doubles' && score!.specialHands.filter(({ matched }) => matched).filter(({ id }) => runtimeBindingIds.includes(id)).map((special) => <RuntimeExplanationDisclosure key={special.id} profile={scoreResult.profile} bindingId={special.id} title={special.name} rulesetLabel={descriptorForRulesProfile(scoreResult.profile).title} summary="Why this result?" dark />)}
                 </div>
                 
@@ -1764,7 +1757,7 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
                 <div className="border-t border-[#55756c] bg-[#1f3f38] p-5 sm:hidden">
                   {hasContext ? (
                     <>
-                      <button type="button" data-testid="button-apply-score-mobile" disabled={!score!.valid} onClick={applyScore} className="flex w-full items-center justify-center rounded-md bg-[#f3e8d4] px-4 py-3 text-[13px] font-bold text-[#284d45] disabled:cursor-not-allowed disabled:opacity-40">
+                      <button type="button" data-testid="button-apply-score-mobile" disabled={!score!.valid || unresolvedMaterialEvidence} onClick={applyScore} className="flex w-full items-center justify-center rounded-md bg-[#f3e8d4] px-4 py-3 text-[13px] font-bold text-[#284d45] disabled:cursor-not-allowed disabled:opacity-40">
                         Apply {score!.finalScore} to {context.playerName}
                       </button>
                       <button type="button" onClick={leaveHand} className="mt-3 flex w-full items-center justify-center rounded-md border border-[#45665d] py-3 text-[13px] font-semibold text-[#c8d8d1]">

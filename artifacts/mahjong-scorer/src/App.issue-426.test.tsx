@@ -62,6 +62,24 @@ describe('issue 426 winning-tile evidence integration', () => {
     expect(html).not.toContain('Which tile completed Mah Jong?');
   });
 
+  it('keeps standalone winds concrete and defaults the prevailing wind to East', async () => {
+    vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
+    const container = document.createElement('div'); document.body.append(container);
+    const root = createRoot(container);
+    await act(async () => root.render(<HandScorer context={null} onClose={vi.fn()} standaloneHand standaloneRulesProfile={BMJA_PROFILE_REF} onStandaloneRulesProfileChange={vi.fn()} />));
+    try {
+      const playerWind = container.querySelector<HTMLSelectElement>('[data-testid="select-player-wind"]');
+      const prevailingWind = container.querySelector<HTMLSelectElement>('[data-testid="select-prevailing-wind"]');
+      expect(playerWind?.value).toBe('east');
+      expect(prevailingWind?.value).toBe('east');
+      for (const select of [playerWind, prevailingWind]) {
+        expect(Array.from(select?.options ?? []).map(({ value }) => value)).toEqual(['east', 'south', 'west', 'north']);
+      }
+    } finally {
+      await act(async () => root.unmount()); container.remove(); vi.unstubAllGlobals();
+    }
+  });
+
   it('keeps explicit uncertainty unknown and applies/reopens without a guessed provenance', async () => {
     vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
     let appliedResult: HandScorerResult | undefined;
@@ -125,7 +143,7 @@ describe('issue 426 winning-tile evidence integration', () => {
     }
   });
 
-  it('shows conditional outcomes for unknown material facts, then accepts a confirmed No', async () => {
+  it('shows one conservative result for unknown material facts, then accepts a confirmed No', async () => {
     vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
     let appliedResult: HandScorerResult | undefined;
     const onClose = (result?: HandScorerResult) => { appliedResult = result; };
@@ -144,8 +162,10 @@ describe('issue 426 winning-tile evidence integration', () => {
       }
     };
     try {
-      expect(container.querySelector('[data-testid="current-score-value"]')).toBeNull();
-      expect(container.querySelector('[data-testid^="button-apply-score"]')).toBeNull();
+      expect(container.querySelector('[data-testid="current-score-value"]')).not.toBeNull();
+      expect(container.querySelector('[data-testid="conservative-score-notice"]')?.textContent).toContain('conservative score');
+      expect(container.querySelector('[data-testid^="button-apply-score"]')).not.toBeNull();
+      expect(container.querySelector<HTMLButtonElement>('[data-testid="button-apply-score-mobile"]')?.disabled).toBe(true);
       await chooseAllMaterialFactsNo();
 
       const originalCallUnknown = container.querySelector('[data-testid="original-call-unknown"]');
@@ -153,11 +173,11 @@ describe('issue 426 winning-tile evidence integration', () => {
       await click(originalCallUnknown);
       const methodWithTwoUnknowns = container.querySelector<HTMLSelectElement>('[data-testid="select-winning-method"]');
       if (methodWithTwoUnknowns) await act(async () => { methodWithTwoUnknowns.value = ''; methodWithTwoUnknowns.dispatchEvent(new Event('change', { bubbles: true })); });
-      expect(container.querySelector('[data-testid="conditional-score-result"]')).not.toBeNull();
-      expect(container.querySelector('[data-testid="conditional-score-result"]')?.textContent).toContain('Winning method');
-      expect(container.querySelector('[data-testid="conditional-score-result"]')?.textContent).toContain('Original Call');
-      expect(container.querySelector('[data-testid="current-score-value"], [data-testid="conditional-score-result"]')).not.toBeNull();
-      expect(container.querySelector('[data-testid^="button-apply-score"]')).toBeNull();
+      expect(container.querySelector('[data-testid="current-score-value"]')).not.toBeNull();
+      expect(container.querySelector('[data-testid="conservative-score-notice"]')?.textContent).toContain('Winning method');
+      expect(container.querySelector('[data-testid="conservative-score-notice"]')?.textContent).toContain('Original Call');
+      expect(container.querySelector('[data-testid="conditional-score-result"]')).toBeNull();
+      expect(container.querySelector<HTMLButtonElement>('[data-testid="button-apply-score-mobile"]')?.disabled).toBe(true);
 
       if (methodWithTwoUnknowns) await act(async () => { methodWithTwoUnknowns.value = 'wall'; methodWithTwoUnknowns.dispatchEvent(new Event('change', { bubbles: true })); });
       await click(container.querySelector('[data-testid="original-call-no"]'));
@@ -199,8 +219,8 @@ describe('issue 426 winning-tile evidence integration', () => {
     try {
       expect(handWithoutStandingEvidence.classicalEvidence?.standingHand).toBeUndefined();
       expect(container.querySelector('[data-testid="standing-hand-no"]')).not.toBeNull();
-      expect(container.querySelector('[data-testid="current-score-value"]')).toBeNull();
-      expect(container.querySelector('[data-testid^="button-apply-score"]')).toBeNull();
+      expect(container.querySelector('[data-testid="current-score-value"]')).not.toBeNull();
+      expect(container.querySelector<HTMLButtonElement>('[data-testid="button-apply-score-mobile"]')?.disabled).toBe(true);
 
       await click(container.querySelector('[data-testid="standing-hand-no"]'));
       expect(container.querySelector('[data-testid="current-score-value"]')).not.toBeNull();
