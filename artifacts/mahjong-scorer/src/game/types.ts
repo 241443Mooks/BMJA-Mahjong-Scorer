@@ -250,6 +250,8 @@ export type DetailedHandRecord = {
   hand: MahjongHand;
   context: GameContext;
   breakdown: ScoreBreakdown;
+  /** Runtime emitted identities retained for exact-profile explanation lookup. */
+  matchedRuntimeBindingIds?: readonly string[];
   finalScore: number;
   interpretation?: import('./classical-hybrid-winner-entry').HybridWinnerAudit;
   requiresRecalculation?: boolean;

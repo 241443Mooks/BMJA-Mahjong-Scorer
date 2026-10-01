@@ -1,4 +1,6 @@
 export { currentTruthCorpus, currentTruthIndex } from './current';
+export { explainRuntimeTreatment, formatSourceLocator } from './explain-runtime-treatment';
+export type { RuntimeBindingRef, RuntimeTreatmentExplanation } from './explain-runtime-treatment';
 export { createTruthIndex } from './queries';
 export type { TruthIndex } from './queries';
 export { assertTruthCorpusIntegrity, TruthCorpusIntegrityError, validateTruthCorpus } from './integrity';

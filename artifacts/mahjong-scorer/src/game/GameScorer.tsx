@@ -1111,7 +1111,7 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
                     {game.players.map((player) => {
                       const record = hand.scoreRecords[player.id];
                       return record?.source === 'detailed-scorer'
-                        ? <HandRecord key={player.id} playerName={player.name} record={record} />
+                        ? <HandRecord key={player.id} playerName={player.name} record={record} profile={game.setup.rulesProfile} rulesetLabel={descriptorForRulesProfile(game.setup.rulesProfile).title} />
                         : <div key={player.id} className="manual-score-record rounded-lg border border-[#e2d9c7] bg-[#fbf8ed] p-3 text-[10px] text-[#66746e]"><b>{player.name} · Score entered manually</b><br />No detailed hand was recorded.</div>;
                     })}
                   </div>

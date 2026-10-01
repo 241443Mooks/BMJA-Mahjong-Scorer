@@ -20,6 +20,8 @@ import { specialHandExampleProvesTreatment } from './guide/special-hand-examples
 import { resolveAtlasScorerExample } from './guide/atlas-scorer-handoff';
 import { getCurrentCompiledRulesRuntime } from './rules-platform/current-runtime-registry';
 import { mapCurrentClassicalScoreBreakdown } from './rules-platform/current-runtime-compat';
+import { matchedClassicalBindingIds } from './game/runtime-explanation-adapter';
+import { RuntimeExplanationDisclosure } from './game/RuntimeExplanation';
 import { classicalFactIsMaterial } from './rules-platform/classical-materiality';
 import { interpretClassicalHand } from './rules-platform/classical-interpretation';
 import { requireClassicalWinningTile } from './rules-platform/classical-winning-tile-requirement';
@@ -759,13 +761,14 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
     ...(scoredHand.winningTileProvenance && scoredHand.winningTileEvidenceOrigin !== 'confirmed' ? { winningTileEvidenceOrigin: 'confirmed' as const } : {}),
   };
 
-  const score = useMemo(
+  const scoreResult = useMemo(
     () => hybridActive
-      ? hybridResolution?.kind === 'ready' && scoringRuntime ? mapCurrentClassicalScoreBreakdown(scoringRuntime.scoreHand({ evidence: handForScoring, context: gameContext })) : undefined
-      : hybridNonWinnerResolution ? mapCurrentClassicalScoreBreakdown(hybridNonWinnerResolution.scoreResult)
-      : scoringRuntime ? mapCurrentClassicalScoreBreakdown(scoringRuntime.scoreHand({ evidence: handForScoring, context: gameContext })) : undefined,
+      ? hybridResolution?.kind === 'ready' && scoringRuntime ? scoringRuntime.scoreHand({ evidence: handForScoring, context: gameContext }) : undefined
+      : hybridNonWinnerResolution ? hybridNonWinnerResolution.scoreResult
+      : scoringRuntime ? scoringRuntime.scoreHand({ evidence: handForScoring, context: gameContext }) : undefined,
     [hybridActive, hybridResolution, hybridNonWinnerResolution, gameContext, handForScoring, scoringRuntime],
   );
+  const score = useMemo(() => scoreResult ? mapCurrentClassicalScoreBreakdown(scoreResult) : undefined, [scoreResult]);
   const scoreResultVisible = !unresolvedMaterialEvidence && !unresolvedStandaloneWind && !hybridNonWinnerResolution?.kongConfirmationRequired?.length;
   const mcrPass = useMemo(() => {
     if (!isMcr || compiledRuntime.grammar !== 'pattern-accumulator' || !mcrWinSource || !mcrResolvedWinEvent) return undefined;
@@ -777,6 +780,7 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
   const mcrResult = mcrPass?.view;
   const mcrCanApply = !!(lockedMcrContext && context && mcrPass && mcrPass.view.kind === 'scored' && mcrPass.result.grammar === 'pattern-accumulator' && mcrPass.result.legal && mcrPass.result.disposition.kind === 'scored' && mcrPass.result.result.unit === 'points' && Number.isInteger(mcrPass.result.result.total) && mcrPass.result.result.total === mcrPass.view.basicPoints && mcrPass.input.context.winSource === context.mcr?.winSource && mcrPass.input.context.seatWind === context.playerWind && mcrPass.input.context.prevailingWind === context.prevailingWind);
   const patterns = useMemo(() => score ? detectedPatterns(score) : [], [score]);
+  const runtimeBindingIds = useMemo(() => scoreResult ? matchedClassicalBindingIds(scoreResult) : [], [scoreResult]);
 
   const enteredSets = sets.filter((s): s is HandSet => s.tile !== null);
   const representedKongs =
@@ -1039,6 +1043,7 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
         },
         context: { ...gameContext },
         breakdown: score,
+        matchedRuntimeBindingIds: scoreResult ? matchedClassicalBindingIds(scoreResult) : [],
         finalScore: score!.finalScore,
         ...(hybridActive && hybridResolution?.kind === 'ready'
           ? { interpretation: { schemaVersion: 1, c1: hybridResolution.provenance, factOrigins: { ...handForScoring.classicalEvidenceOrigins, winningTile: handForScoring.winningTileEvidenceOrigin ?? 'absent' } } satisfies HybridWinnerAudit }
@@ -1152,7 +1157,7 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
 
   const mobileLiveResult = isMcr
     ? <details data-testid="mobile-live-result" className="mt-3 rounded-md border border-[#b8cdbf] bg-[#edf3ed] px-3 py-2 sm:hidden"><summary className="cursor-pointer text-[11px] font-semibold text-[#284d45]">{mcrResult?.kind === 'scored' ? `${mcrResult.basicPoints} Basic Points` : mcrResult?.kind === 'not-qualifying' ? 'Not qualifying' : 'MCR evidence needed'}</summary><div className="mt-2 text-[10px]">Fan · qualifying subtotal · Flowers · Basic Points</div></details>
-    : !scoreResultVisible ? <p data-testid="pending-material-evidence" className="mt-3 rounded-md border border-[#d8ceb8] bg-[#fbf8ed] px-3 py-2 text-[11px] leading-5 text-[#66746e]">{unresolvedStandaloneWind ? 'The wind is unknown; wind-sensitive score details are unavailable.' : unresolvedMaterialEvidence ? `Confirm ${pendingMaterialEvidence.join(', ')} to show a supported score.` : 'Confirm how these four tiles were declared to show a supported score.'}</p> : score && <details data-testid="mobile-live-result" className="mt-3 rounded-md border border-[#b8cdbf] bg-[#edf3ed] px-3 py-2 sm:hidden"><summary className="cursor-pointer text-[11px] font-semibold text-[#284d45]">{score.valid ? `${score.finalScore} pts · ${score.basePoints} base · ${score.doubles} doubles${score.evidenceCompleteness === 'partial' ? ' · Partial evidence' : ''}` : structuralTileCount === structuralTarget && score.validationErrors[0] ? score.validationErrors[0] : tileProgressLabel}</summary><div className="mt-2 text-[10px] leading-4 text-[#66746e]">{score.valid ? score.evidenceCompleteness === 'partial' ? 'Score from entered evidence; add remaining tiles for whole-hand checks.' : 'Open for the full score breakdown below.' : 'Keep adding or correcting evidence; partial hands remain supported.'}</div>{hasContext && score.valid && <button type="button" data-testid="button-apply-score-compact" onClick={applyScore} className="mt-2 rounded bg-[#284d45] px-3 py-2 text-[11px] font-semibold text-[#f8f4e9]">Apply {score.finalScore} to {context.playerName}</button>}</details>;
+    : !scoreResultVisible ? <p data-testid="pending-material-evidence" className="mt-3 rounded-md border border-[#d8ceb8] bg-[#fbf8ed] px-3 py-2 text-[11px] leading-5 text-[#66746e]">{unresolvedStandaloneWind ? 'The wind is unknown; wind-sensitive score details are unavailable.' : unresolvedMaterialEvidence ? `Confirm ${pendingMaterialEvidence.join(', ')} to show a supported score.` : 'Confirm how these four tiles were declared to show a supported score.'}</p> : score && <details data-testid="mobile-live-result" className="mt-3 rounded-md border border-[#b8cdbf] bg-[#edf3ed] px-3 py-2 sm:hidden"><summary className="cursor-pointer text-[11px] font-semibold text-[#284d45]">{score.valid ? `${score.finalScore} pts · ${score.basePoints} base · ${score.doubles} doubles${score.evidenceCompleteness === 'partial' ? ' · Partial evidence' : ''}` : structuralTileCount === structuralTarget && score.validationErrors[0] ? score.validationErrors[0] : tileProgressLabel}</summary><div className="mt-2 text-[10px] leading-4 text-[#66746e]">{score.valid ? score.evidenceCompleteness === 'partial' ? 'Score from entered evidence; add remaining tiles for whole-hand checks.' : 'Open for the full score breakdown below.' : 'Keep adding or correcting evidence; partial hands remain supported.'}</div>{score.valid && scoreResult?.grammar === 'classical-points-doubles' && score.specialHands.filter(({ matched }) => matched).filter(({ id }) => runtimeBindingIds.includes(id)).map((special) => <RuntimeExplanationDisclosure key={special.id} profile={scoreResult.profile} bindingId={special.id} title={special.name} rulesetLabel={descriptorForRulesProfile(scoreResult.profile).title} summary="Why this result?" />)}{hasContext && score.valid && <button type="button" data-testid="button-apply-score-compact" onClick={applyScore} className="mt-2 rounded bg-[#284d45] px-3 py-2 text-[11px] font-semibold text-[#f8f4e9]">Apply {score.finalScore} to {context.playerName}</button>}</details>;
 
   const hybridResolutionPanel = hybridActive && <section data-testid="hybrid-winner-resolution" className="mt-3 rounded-md border border-[#d8ceb8] bg-[#fbf8ed] p-3 text-[11px]">
     <h3 className="font-semibold text-[#284d45]">Reading the rest of these tiles</h3>
@@ -1695,6 +1700,7 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
                     )}
                     {score!.limitApplied && <span className="text-[#d7a287]">Limit applied ({limit})</span>}
                   </div>
+                  {standaloneCalculatorFlow && scoreResult?.grammar === 'classical-points-doubles' && score!.specialHands.filter(({ matched }) => matched).filter(({ id }) => runtimeBindingIds.includes(id)).map((special) => <RuntimeExplanationDisclosure key={special.id} profile={scoreResult.profile} bindingId={special.id} title={special.name} rulesetLabel={descriptorForRulesProfile(scoreResult.profile).title} summary="Why this result?" dark />)}
                 </div>
                 
                 <div className="p-5 sm:p-6">
@@ -1759,9 +1765,11 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
                   <div className="space-y-2">
                     {patterns.map((pattern) => {
                       const referenceHref = patternReferenceHref(pattern, context?.rulesProfile ?? standaloneRulesProfile);
+                      const specialBindingId = pattern.type === 'special' ? pattern.id.slice('special-'.length) : undefined;
                       return <div key={pattern.id} data-testid={`pattern-${pattern.id}`} className={`rounded-md border p-3 ${pattern.selected ? 'border-[#ae6249]/60 bg-[#fff4e8]' : 'border-[#b8cdbf] bg-[#edf3ed]'}`}>
                         <div className="flex flex-wrap items-center gap-2 text-[12px] font-semibold text-[#284d45]"><Check size={14} className="text-[#477562]" />{referenceHref ? <a href={referenceHref} className="underline decoration-[#ae6249] underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">{pattern.name}</a> : pattern.name}<span className="ml-auto font-mono text-[9px] uppercase tracking-wider text-[#477562]">{pattern.effect}{pattern.selected ? ' · used' : ''}</span></div>
                         <p className="mt-1 pl-5 text-[10px] leading-4 text-[#7a7769]">{pattern.explanation}</p>
+                        {specialBindingId && runtimeBindingIds.includes(specialBindingId) && <RuntimeExplanationDisclosure profile={scoreResult!.profile} bindingId={specialBindingId} title={pattern.name} rulesetLabel={descriptorForRulesProfile(scoreResult!.profile).title} />}
                       </div>;
                     })}
                   </div>
