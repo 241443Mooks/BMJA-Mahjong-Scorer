@@ -1,103 +1,121 @@
-import { Coffee, ExternalLink, Palette } from 'lucide-react';
+import { Coffee, ExternalLink } from 'lucide-react';
 import { SiteHeader } from '../components/SiteHeader';
+
+const textLinkClass = 'font-semibold text-[#284d45] underline decoration-[#cfa58f] underline-offset-4 transition hover:text-[#ae6249] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]';
+
+function TextLink({ href, children }: { href: string; children: React.ReactNode }) {
+  return <a href={href} className={textLinkClass}>{children}</a>;
+}
 
 function ExternalTextLink({ href, children }: { href: string; children: React.ReactNode }) {
   return (
-    <a
-      href={href}
-      target="_blank"
-      rel="noreferrer"
-      className="inline-flex items-center gap-1 font-semibold text-[#284d45] underline decoration-[#cfa58f] underline-offset-4 transition hover:text-[#ae6249] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]"
-    >
-      {children}
-      <ExternalLink size={12} />
+    <a href={href} target="_blank" rel="noreferrer" className={textLinkClass}>
+      {children}<ExternalLink className="ml-1 inline" size={12} aria-hidden="true" />
     </a>
   );
 }
+
+const sectionClass = 'max-w-[680px] pb-12 sm:pb-16';
+const headingClass = 'font-serif text-[30px] leading-tight text-[#284d45] sm:text-[35px]';
+const proseClass = 'mt-5 space-y-4 text-[16px] leading-7 text-[#596b65] sm:mt-6 sm:space-y-5 sm:text-[17px] sm:leading-8';
 
 export function AboutPage() {
   return (
     <div className="mahjong-shell min-h-screen">
       <SiteHeader />
 
-      <main className="mx-auto max-w-[1100px] px-5 py-9 lg:px-8 lg:py-14">
-        <article className="overflow-hidden rounded-2xl border border-[#d8ceb8] bg-[#fbf8ed] shadow-[var(--shadow-sm)]">
-          <header className="border-b border-[#ddd3bf] px-5 py-10 sm:px-8 sm:py-14 lg:px-12 lg:py-16">
-            <h1 className="max-w-[820px] font-serif text-[clamp(38px,6vw,62px)] leading-[.98] text-[#284d45]">
-              About Mahjong Reference
-            </h1>
-            <div className="mt-7 max-w-[760px] space-y-5 text-[16px] leading-8 text-[#596b65]">
-              <p>In early September 2026, I joined some friends for our first Mahjong game without an expert helper at the table.</p>
-              <p>Then we got to scoring.</p>
-              <p>None of us could prove that I&apos;d absolutely won, despite me forgetting the names of tiles, suits, groups and concepts constantly.</p>
-              <p>So I wondered whether I could make something that would help.</p>
-              <p>I thought I was building a calculator.</p>
-              <p className="font-serif text-[30px] font-semibold leading-tight text-[#ae6249]">One question kept creating another.</p>
+      <main className="mx-auto max-w-[1100px] px-5 py-8 sm:py-12 lg:px-8 lg:py-16">
+        <article className="mx-auto max-w-[860px]">
+          <header className="pb-12 sm:pb-16">
+            <h1 className="max-w-[760px] font-serif text-[clamp(39px,7vw,66px)] leading-[1.04] text-[#284d45]">Useful at the table. Quite a lot going on underneath.</h1>
+            <div className="mt-7 max-w-[680px] space-y-4 text-[16px] leading-7 text-[#596b65] sm:mt-9 sm:space-y-5 sm:text-[17px] sm:leading-8">
+              <p>Mahjong Reference is a table companion for scoring hands, tracking games and making sense of the rules your table actually plays.</p>
+              <p>It is meant to feel simple when you are using it.</p>
+              <p>The difficult bit can stay underneath.</p>
             </div>
           </header>
 
-          <section className="border-b border-[#ddd3bf] px-5 py-10 sm:px-8 sm:py-12 lg:px-12" aria-labelledby="questions-heading">
-            <div className="max-w-[760px]">
-              <h2 id="questions-heading" className="font-serif text-[34px] leading-tight text-[#284d45]">What if?</h2>
-              <div className="mt-6 space-y-5 text-[15px] leading-7 text-[#596b65]">
-                <p>Could it explain the score as well as calculate it?</p>
-                <p>Could it keep track of a whole game?</p>
-                <p>Could it remember who pays whom, which Wind comes next and what needs carrying forward?</p>
-                <p>Could it cope with the slightly inconvenient fact that Mahjong players do not all play the same Mahjong?</p>
-                <p>Could it show where a rule came from, where versions differ, and where the answer is not completely clear?</p>
-                <p>That last question turned out to be quite a large one.</p>
-                <p>I started looking at rule books, club guides, old documents and websites. The same ideas had different names. Rules changed between versions. Sources sometimes disagreed. Things I assumed would be easy to look up were occasionally surprisingly difficult to pin down.</p>
-                <p>And I found that fascinating.</p>
-                <p>Somewhere along the way, the little scoring calculator became Mahjong Reference.</p>
-              </div>
+          <section className={sectionClass} aria-labelledby="different-rules-heading">
+            <h2 id="different-rules-heading" className={headingClass}>Mahjong is slightly inconvenient</h2>
+            <div className={proseClass}>
+              <p>There is not one set of Mahjong rules. Different traditions score differently. Clubs have their own conventions. Similar-looking hands can mean different things. The same idea can have different names, and occasionally two perfectly respectable sources disagree.</p>
+              <p>That makes a universal “Mahjong calculator” rather more interesting than it first appears.</p>
+              <p>So Mahjong Reference does not try to squash everything into one giant set of switches. Where rules genuinely share something, the system can share it. Where they are different, they stay different.</p>
+              <p>Use the rules your table actually plays, from the <TextLink href="/rules">profiles currently supported</TextLink>.</p>
             </div>
           </section>
 
-          <section className="border-b border-[#ddd3bf] px-5 py-10 sm:px-8 sm:py-12 lg:px-12">
-            <div className="max-w-[760px] space-y-5 text-[15px] leading-7 text-[#596b65]">
-              <h2 className="font-serif text-[34px] leading-tight text-[#284d45]">I&apos;m learning as I build it</h2>
-              <p>I&apos;m not a Mahjong expert. I&apos;m learning as I build this.</p>
-              <p>What I can do is take something confusing, work through it carefully, and try to make it easier to use.</p>
-              <p>So that is what I&apos;ve been doing here: checking sources, keeping different rules separate, recording uncertainty rather than filling the gaps, and turning what I learn into something useful at the table.</p>
-              <p>Sometimes that becomes a calculator. Sometimes it becomes a rules page. Sometimes it just creates another question I hadn&apos;t realised existed.</p>
-              <p>There is considerably more of the third category than I expected.</p>
+          <section className={sectionClass} aria-labelledby="score-heading">
+            <h2 id="score-heading" className={headingClass}>The score is only part of it</h2>
+            <div className={proseClass}>
+              <p>A hand has a rules context. It has evidence: the tiles, how the hand was won, the Winds, exposure and whatever else matters under those rules.</p>
+              <p>Then there is the score. Then settlement: who actually pays whom. Then progression: who is East, what Wind comes next, whether the game continues.</p>
+              <p>Those things are connected, but they are not the same thing.</p>
+              <p>Keeping them separate makes the thing on screen simpler — and gives the system somewhere sensible to grow when another ruleset does something completely different.</p>
+              <p>There is a short <TextLink href="/how-it-works">walkthrough of the table companion</TextLink> if you want to see it in use.</p>
             </div>
           </section>
 
-          <section className="border-b border-[#ddd3bf] px-5 py-10 sm:px-8 sm:py-12 lg:px-12">
-            <div className="max-w-[760px] space-y-5 text-[15px] leading-7 text-[#596b65]">
-              <h2 className="font-serif text-[34px] leading-tight text-[#284d45]">Where it is now</h2>
-              <p>Mahjong Reference can score hands, explain scores, track a game and help you explore different rules.</p>
+          <section className={sectionClass} aria-labelledby="explain-heading">
+            <h2 id="explain-heading" className={headingClass}>It should be able to explain itself</h2>
+            <div className={proseClass}>
+              <p>I don&apos;t particularly like software producing a number and expecting you to believe it.</p>
+              <p>The longer-term idea behind Mahjong Reference is fairly simple: keep the rules, the source and the result connected.</p>
+              <p>If the system knows something, it should be possible to see why. If two rulesets differ, that difference should survive. If a source is unclear, the software should not quietly make the uncertainty disappear.</p>
+              <p>And if I have misunderstood something, I would much rather make that easy to find and correct than confidently bake it into everything else.</p>
+              <p>There is considerably more machinery behind that idea than I expected. You can <TextLink href="/under-the-hood">look under the hood</TextLink> if that sort of thing interests you.</p>
             </div>
           </section>
 
-          <section className="px-5 py-8 sm:px-8 sm:py-10 lg:px-12">
-            <div className="max-w-[760px]">
-              <h2 className="font-serif text-[29px] leading-tight text-[#284d45]">Rules and sources</h2>
-              <div className="mt-5 space-y-3 text-[14px] leading-6 text-[#596b65]">
-                <p>The <a href="/rules" className="font-semibold text-[#284d45] underline decoration-[#cfa58f] underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">Rules area</a> shows the versions currently supported, what is known about them and the sources used.</p>
-                <p>Where sources disagree or something is not yet known, I would rather show that uncertainty than invent certainty to fill the gap.</p>
-              </div>
+          <section className={sectionClass} aria-labelledby="grow-heading">
+            <h2 id="grow-heading" className={headingClass}>Built to grow without becoming a mess</h2>
+            <div className={proseClass}>
+              <p>The useful bit of having all this underneath is that Mahjong Reference does not have to remain the thing it is today.</p>
+              <p>A new ruleset does not necessarily need a new app. A different scoring system does not have to pretend to be British Mahjong with different numbers. A reference page, worked example, comparison or future table tool should not need its own private copy of the rules.</p>
+              <p>The aim is to establish things once, keep their context attached, and then use them wherever they are useful.</p>
+              <p>That leaves quite a lot of room: more rules, different scoring systems, local ways of playing, better explanations, deeper reference material and things I have not thought of yet.</p>
+              <p>Not everything is implemented, and not every kind of Mahjong will fit neatly into the same shape. That is rather the point.</p>
+            </div>
+          </section>
 
-              <div className="mt-6 grid gap-4 sm:grid-cols-2">
-                <section className="rounded-xl border border-[#ddd3bf] bg-[#fdfbf5] p-5">
-                  <div className="flex items-center gap-3">
-                    <Palette size={18} className="text-[#477562]" />
-                    <h3 className="font-serif text-[21px] text-[#284d45]">Tile artwork</h3>
-                  </div>
-                  <p className="mt-3 text-[13px] leading-6 text-[#596b65]">Tile illustrations use the Regular SVG set from <strong className="text-[#284d45]">xhokir/riichi-mahjong-tiles</strong>, based on <strong className="text-[#284d45]">FluffyStuff/riichi-mahjong-tiles</strong>, under the <ExternalTextLink href="https://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution 4.0 International licence</ExternalTextLink>.</p>
-                </section>
-                <section className="rounded-xl border border-[#ddd3bf] bg-[#fdfbf5] p-5">
-                  <div className="flex items-center gap-3">
-                    <Coffee size={18} className="text-[#ae6249]" />
-                    <h3 className="font-serif text-[21px] text-[#284d45]">Support the project</h3>
-                  </div>
-                  <p className="mt-3 text-[13px] leading-6 text-[#596b65]">If Mahjong Reference has helped you understand a rule, score a hand or avoid an argument around the table, you can support its continued development. There is absolutely no requirement to do so.</p>
-                  <a href="https://buymeacoffee.com/sharronmo" target="_blank" rel="noreferrer" className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-md bg-[#284d45] px-4 py-2.5 text-[14px] font-semibold text-[#f8f4e9] transition hover:bg-[#23443d] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249] focus-visible:ring-offset-2">
-                    <Coffee size={15} /> Buy me a coffee
-                  </a>
-                </section>
-              </div>
+          <section className={sectionClass} aria-labelledby="started-heading">
+            <h2 id="started-heading" className={headingClass}>How this started</h2>
+            <div className={proseClass}>
+              <p>I joined some friends for a game of Mahjong without our usual expert helper.</p>
+              <p>Then we got to scoring.</p>
+              <p>We could all do the maths. Remembering all the rules, exceptions and what happened next was the difficult bit. So I wondered whether I could make something that helped.</p>
+              <p>I thought I was building a calculator. Apparently not.</p>
+            </div>
+          </section>
+
+          <section className={sectionClass} aria-labelledby="learning-heading">
+            <h2 id="learning-heading" className={headingClass}>Still learning</h2>
+            <div className={proseClass}>
+              <p>I am learning Mahjong as I build this.</p>
+              <p>What I am quite good at is taking something complicated, pulling it apart until I understand how the pieces relate, and putting it back together in a way that is easier to use.</p>
+              <p>Here, that means checking sources, keeping different rules separate, testing what the software actually does and leaving uncertainty visible when I cannot resolve it.</p>
+              <p>There will be things to correct. The system should make that easier, not embarrassing.</p>
+            </div>
+          </section>
+
+          <section className="max-w-[680px] pb-12 sm:pb-16" aria-labelledby="useful-heading">
+            <h2 id="useful-heading" className={headingClass}>Use whatever bit is useful</h2>
+            <nav aria-label="Explore Mahjong Reference" className="mt-5 text-[14px] leading-8 sm:mt-6 sm:text-[15px]">
+              <TextLink href="/hand">Score a hand</TextLink><span aria-hidden="true" className="px-2 text-[#9b9a8d]">·</span>
+              <TextLink href="/game">Track a game</TextLink><span aria-hidden="true" className="px-2 text-[#9b9a8d]">·</span>
+              <TextLink href="/rules">Explore the rules</TextLink><span aria-hidden="true" className="px-2 text-[#9b9a8d]">·</span>
+              <TextLink href="/how-it-works">See how it works</TextLink><span aria-hidden="true" className="px-2 text-[#9b9a8d]">·</span>
+              <TextLink href="/under-the-hood">Look under the hood</TextLink>
+            </nav>
+          </section>
+
+          <section className="border-t border-[#ddd3bf] pt-8 pb-8 sm:pt-10 sm:pb-10" aria-labelledby="practical-heading">
+            <h2 id="practical-heading" className="font-serif text-[25px] leading-tight text-[#284d45]">A few practical details</h2>
+            <div className="mt-4 max-w-[680px] space-y-4 text-[14px] leading-6 text-[#596b65] sm:text-[15px]">
+              <p>Mahjong Reference is free to use in your browser and does not require an account. An in-progress game can be recovered from this browser on this device; it is saved locally rather than to an account. See the <TextLink href="/help#account">help and common questions</TextLink> for more about game recovery.</p>
+              <p>I haven&apos;t got round to making a feedback or contact form for this yet. If you love it or hate it, tell your friends and one day I may find out.</p>
+              <p>Tile illustrations use the Regular SVG set from <strong className="text-[#284d45]">xhokir/riichi-mahjong-tiles</strong>, based on <strong className="text-[#284d45]">FluffyStuff/riichi-mahjong-tiles</strong>, under the <ExternalTextLink href="https://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution 4.0 International licence</ExternalTextLink>.</p>
+              <p>If Mahjong Reference has helped, you can <a href="https://buymeacoffee.com/sharronmo" target="_blank" rel="noreferrer" className={textLinkClass}>support its continued development</a>. There is absolutely no requirement to do so.</p>
             </div>
           </section>
         </article>
