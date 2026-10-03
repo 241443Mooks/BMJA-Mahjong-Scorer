@@ -89,7 +89,7 @@ The delivered path includes:
 
 The standalone hand calculator was then simplified through real-phone QA in [#411](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/411), and the shared shell gained a state-safe canonical Share action in [#400](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/400).
 
-## Machine-readable rules truth — architecture complete, corpus expansion next
+## Machine-readable rules truth — architecture and current corpus migration complete
 
 The [#399](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/399) architecture programme is complete and closed.
 
@@ -109,7 +109,7 @@ real source
 
 The model has been proved vertically on Classical and MCR, with fail-closed integrity checks and a passing pre-Riichi readiness audit. This remains deliberately **not** a generic rules language and not a second score database.
 
-The next bounded rules-truth work is [#440](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/440): expand the reviewed corpus through the existing typed/sharded authority model without redesigning it or copying executable score truth.
+The bounded [#440](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/440) corpus-expansion programme is now complete. The reviewed current truth corpus has been migrated through the existing typed/sharded authority model, with final accounting at 317 subjects, 380 claims and 378 treatments. Two Classical special-hand bindings remain deliberately deferred under #461/#462, and the 66-row source-blocked ledger remains explicit rather than being guessed into authority.
 
 Closely related projections consume the same truth rather than forking it:
 
