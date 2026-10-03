@@ -22,7 +22,7 @@ For a bounded task, start with the named issue or PR. Then use only the relevant
 - **Durable Table Companion direction:** `product/TABLE_COMPANION_TRANSFORMATION.md`.
 - **Search/acquisition strategy:** `product/SEO_GROWTH_STRATEGY.md`.
 - **Structured reference knowledge:** `product/REFERENCE_KNOWLEDGE_ARCHITECTURE.md` and #251. Public pages are views over source/runtime-backed concepts, profile treatments, relationships and evidence; they are not a wiki or a second rules database.
-- **Machine-readable rules truth:** #399 is the completed governed source → evidence → semantic identity → exact profile treatment → runtime architecture; #440 owns the next bounded corpus expansion through that model.
+- **Machine-readable rules truth:** #399 is the completed governed source → evidence → semantic identity → exact profile treatment → runtime architecture; #440's bounded Classical/MCR corpus expansion is complete (317 subjects, 380 claims, 378 treatments, zero unknown treatment states).
 - **Rules comparison/profile reporting:** #296 owns the shared comparison direction; #405 consumes the same profile × dimension contract for one-profile human-readable reports. #406 established the shared substrate and is complete.
 - **Ruleset authoring/compiler:** #447 records the future source-document → structured-claims → reviewed candidate-profile pipeline; it is parked, not current authority for implementation.
 - **Analytics/privacy measurement:** `product/ANALYTICS_MEASUREMENT_PLAN.md` and #246.
@@ -40,7 +40,7 @@ The cross-family rules platform, permanent parity/replay harness, current caller
 
 MCR `0.1` Provisional is implemented for hand scoring and Table Companion; experienced-player review remains its `1.0` gate.
 
-The Classical hybrid evidence-first hand-entry programme (#386) is complete and closed. The machine-readable rules-truth programme (#399) is also complete, including Classical/MCR proof and the pre-Riichi readiness gate. Riichi correctness research is complete and the architecture gate has passed, but Riichi runtime implementation still starts with a fresh preflight against current production `main`.
+The Classical hybrid evidence-first hand-entry programme (#386), rules-truth architecture (#399), and bounded truth-corpus expansion (#440) are complete. Riichi preflight #491 is also complete: A is a small runtime-registration gap tracked by #494; B passes with no B0 prerequisite. The public assurance surfaces and score-to-evidence explanation work are live; see the changelog for merged milestones.
 
 For programme state, use #105 and the dated `product/WHATS_NEXT_ROADMAP.md` rather than freezing child-issue sequencing into this file.
 

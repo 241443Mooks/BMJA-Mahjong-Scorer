@@ -1,7 +1,7 @@
 # What's next — project handoff roadmap
 
-**Snapshot:** 28 September 2026 — end of day  
-**Purpose:** a calm restart point after completing the rules-truth vertical architecture and tightening the Special Hands truth-to-user path.  
+**Snapshot:** 3 October 2026
+**Purpose:** current restart point after truth-corpus closeout, Riichi preflight and recent product-assurance work.
 **Live authority:** issue #105 remains the programme map; this file is the dated handoff companion, not a second backlog.
 
 ## Where Mahjong Reference is now
@@ -21,9 +21,9 @@ Production `main` has:
 - the completed #399 machine-readable rules-truth architecture, with typed source/evidence/treatment records, fail-closed integrity gates and Classical + MCR proof;
 - the shared #406 profile × dimension contract for #296/#405 projections.
 
-The production baseline before this docs-only housekeeping branch is `381f4a1f7b98a5aa5521e7b5f9c129415d77712a`.
+Verified production baseline for this reconciliation: `718bdc496983a249ef714d090872075116fce6a0`.
 
-## Major programme completed today — #399 rules truth
+## Completed architecture programme — #399 rules truth
 
 **#399 is closed complete.**
 
@@ -50,7 +50,7 @@ real source
 
 The important boundary is that #399 proved this **vertically**. It did not turn into the bulk migration it was designed to avoid.
 
-## User-facing truth path tightened today
+## User-facing truth path tightened after the architecture work
 
 Two small but important Special Hands improvements also landed:
 
@@ -59,31 +59,9 @@ Two small but important Special Hands improvements also landed:
 
 This is useful evidence that the source/treatment/runtime/reference model is producing practical user-facing value rather than remaining an internal architecture exercise.
 
-## NEXT deliberate batch — #440 truth corpus expansion
+## Completed bounded truth-corpus expansion — #440
 
-#440's start gate is now satisfied. #399C/D are on `main`, MCR has proved the second family, and #399 is complete.
-
-The next job is therefore **not** another architecture redesign. It is to populate the architecture with more of the reviewed knowledge already in the repository.
-
-Work in bounded, reviewable batches through the existing corpus/query surface.
-
-Suggested order:
-
-1. remaining Classical special-hand truth across BMJA / Western T&M / Club / Buzzard;
-2. broader Classical rule/evidence subjects beyond special hands;
-3. remaining MCR evidence/treatments;
-4. Riichi corpus during its fresh preflight/implementation programme;
-5. later Hong Kong / Taiwanese / Zung Jung / American-NMJL-style / club variants as those profiles become implementation-ready.
-
-Guardrails:
-
-- do not redesign the storage/query contract simply because migration is larger;
-- do not copy executable scoring arithmetic or qualification truth into a second facts database;
-- do not infer relationships from similar names;
-- keep unresolved/conflicted/secondary-only evidence explicit;
-- retain exact profile/version identity;
-- keep copyright-sensitive source text out of the corpus; store project-authored claims + locators/provenance instead;
-- migrate in batches small enough to review and roll back independently.
+#440 is complete and closed. Final closeout records **317 semantic subjects, 380 evidence claims, 378 exact-profile treatments and zero unknown treatment states**. Classical and MCR expansion reached the deliberately bounded closeout; unresolved and source-blocked material remains explicit rather than guessed. #399 remains historical and complete.
 
 ## #405 / #296 projection substrate — foundation complete, stream not current priority
 
@@ -112,27 +90,21 @@ runtime/profile truth + reviewed evidence
 
 Do not build a separate report facts database.
 
-## Riichi — architecture gate passed; fresh preflight remains the next Riichi action
+## Riichi — fresh preflight complete; #494 is the next prerequisite
 
-The EMA Riichi 2025 source/correctness corpus is complete. Runtime implementation is not started.
-
-#399 is no longer a blocker: its readiness gate passed. But that does **not** make #262 the immediate next action.
-
-The next Riichi action is the already-planned fresh preflight against the current production system:
+The EMA Riichi 2025 source/correctness corpus is complete and runtime implementation has not started. Required fresh preflight **#491 is complete** against `main@718bdc496983a249ef714d090872075116fce6a0`:
 
 ```text
-fresh Riichi preflight
-→ optional bounded A0 grammar/runtime seam
+A — scoring/runtime: SMALL GAP → #494
+B — neutral table-state: PASS; no B0 prerequisite currently required
+→ #494 grammar-extensible compiled-runtime registration seam
 → #262 scoring core
-→ optional neutral B0 state seam
 → #263 settlement/progression/finalisation
-→ #264 public integration
+→ #264 selectable product integration + Riichi-owned persisted strategy state
 → experienced EMA/European Riichi review before 1.0
 ```
 
-The preflight should verify actual current gaps around `riichi-han-fu`, multi-winner outcomes, honba, riichi pot and profile-owned table state. Add only seams proved necessary by that evidence.
-
-Broad Riichi research should reopen only for an exact source/fixture contradiction.
+#494 is a small neutral registration change; it must not implement Riichi rules. The current profile/resolver/schema supports `riichi-han-fu`; the remaining gap is the production compiled-runtime registry's Classical/MCR-only dispatch assumption. Do not describe #491 as future work or insert a B0 issue without new evidence.
 
 ## American / NMJL-style — #434
 
@@ -193,19 +165,18 @@ Rules:
 - never force a branch to `main` as a substitute for deletion;
 - if merge status is ambiguous, leave it.
 
-There were no open PRs when this housekeeping pass began. Today's #399 and #432/#433 branches have been added to the high-confidence merged deletion queue. The available ChatGPT GitHub connector still does not expose safe ref deletion, so #398 remains the honest mechanical cleanup queue rather than pretending those refs were removed.
+There were no open PRs when this reconciliation began. Branches were not deleted: the available safe ref-deletion capability was not established, and branch names alone do not prove merge status. Preserve `main`, open-PR heads, unique/unmerged work, #167 parking-lot branches and ambiguous refs. In particular, `docs/2026-10-03-eod-housekeeping` was not present among fetched refs; no similarly named branch was moved or reset. Record proven cleanup candidates in #398 for a safe deletion-capable pass.
 
-## Tomorrow restart order
+## Current next-step position
 
 Unless new evidence changes the priority:
 
-1. **Confirm clean production baseline** after this docs-only housekeeping PR is merged.
-2. **Start #440 in a bounded first batch** from exact current `main`; use the existing truth corpus/query/integrity architecture rather than redesigning it.
-3. Keep **#407** available as a later consumer of the shared profile × dimension substrate, not as a distraction from the chosen #440 batch.
-4. Use **#429** or **#412** when a bounded product-facing task is useful.
-5. Keep **#434** at N0 evidence/architecture and **#447** parked unless priority deliberately changes.
-6. Continue #253 / #89 / #246 / MCR review in parallel.
-7. When Riichi becomes the chosen family task, begin with the **fresh preflight**, not direct #262 implementation.
+1. Product validation: **#253 current-production QA → #89 real-table validation on 10 October 2026**; continue #246 analytics observation and experienced-player MCR review.
+2. Riichi: **#494 → #262 → #263 → #264 → experienced EMA/European player review**.
+3. Suitable independent bounded work: **#412** public What's New and **#429** MCR evidence UX.
+4. Keep **#434** at American/NMJL-style N0 evidence + architecture.
+5. Keep **#447 parked** until real ruleset onboarding/migration pain provides evidence for the authoring workflow.
+6. #407 remains technically available but is not automatically next. #167 remains the parking-lot index.
 
 ## Things not to do on restart
 
@@ -215,7 +186,7 @@ Unless new evidence changes the priority:
 - Do not build a second rules-facts database for #296, #405, #251 or SEO.
 - Do not let learner/reference prose become scoring authority.
 - Do not make AI calculate rules or invent missing material evidence.
-- Do not jump straight into Riichi runtime implementation without its fresh preflight.
+- Do not skip #494 before #262; #491 is already complete and B passed without a B0 prerequisite.
 - Do not encode an NMJL annual card in code, fixtures, screenshots or hidden data.
 - Do not pull #447 forward merely because automated ingestion is attractive; let real migration/onboarding evidence shape it.
 - Do not make accounts/network services a dependency for ordinary free table play.
@@ -229,7 +200,7 @@ Read, in order:
 
 1. this file;
 2. issue #105;
-3. issue #440 for the next bounded batch;
+3. the exact active issue from the current programme map (currently #253 validation or #494 Riichi prerequisite, by chosen track);
 4. only the current `main` code/tests and authority documents needed by that batch.
 
 Then do one bounded thing.

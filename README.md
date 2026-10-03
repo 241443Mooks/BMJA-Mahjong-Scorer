@@ -61,7 +61,7 @@ The platform therefore uses one profile envelope above a small number of scoring
 3. **Riichi han + fu** — Riichi-family architecture; EMA Riichi runtime is not implemented yet;
 4. **Target catalogue / external target evidence** — architecture for American/NMJL-style target-value families, with any proprietary annual card remaining outside the product.
 
-The shared rules platform, permanent parity/replay harness and caller cutover are **live on production `main`**. Buzzard 2000 and MCR/WMO 2006 are also live. The complete EMA Riichi 2025 source/correctness corpus is ready; the pre-Riichi architecture gate has now passed, but Riichi runtime is still not implemented and begins with a fresh preflight against current `main`.
+The shared rules platform, permanent parity/replay harness and caller cutover are **live on production `main`**. Buzzard 2000 and MCR/WMO 2006 are also live. The EMA Riichi 2025 source/correctness corpus is ready. Fresh preflight #491 is complete: the neutral state seam passes, while a small grammar-extensible compiled-runtime registration seam (#494) must land before scoring work (#262).
 
 The durable rules rollout tracker is [#275](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/275). The live programme map is [#105](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/105).
 
@@ -89,7 +89,7 @@ The delivered path includes:
 
 The standalone hand calculator was then simplified through real-phone QA in [#411](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/411), and the shared shell gained a state-safe canonical Share action in [#400](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/400).
 
-## Machine-readable rules truth — architecture complete, corpus expansion next
+## Machine-readable rules truth — architecture and bounded expansion complete
 
 The [#399](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/399) architecture programme is complete and closed.
 
@@ -109,7 +109,7 @@ real source
 
 The model has been proved vertically on Classical and MCR, with fail-closed integrity checks and a passing pre-Riichi readiness audit. This remains deliberately **not** a generic rules language and not a second score database.
 
-The next bounded rules-truth work is [#440](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/440): expand the reviewed corpus through the existing typed/sharded authority model without redesigning it or copying executable score truth.
+The bounded [#440](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/440) expansion is complete and closed. Its final corpus contains 317 semantic subjects, 380 evidence claims and 378 exact-profile treatments, with zero unknown treatment states. Classical and MCR expansion reached the deliberately bounded closeout; unresolved or source-blocked material remains explicit rather than guessed. #399 remains historical and complete.
 
 Closely related projections consume the same truth rather than forking it:
 
@@ -122,7 +122,7 @@ A [#434](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/434) umbrella
 
 [#447](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/447) records a future ruleset compiler/authoring pipeline for turning source documents into structured, auditable candidate profiles. It is intentionally parked until real corpus-migration and family-onboarding evidence justifies the next level of automation.
 
-For current sequencing, use [#105](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/105) and `docs/product/WHATS_NEXT_ROADMAP.md`.
+For current sequencing, use [#105](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/105) and `docs/product/WHATS_NEXT_ROADMAP.md`. Riichi proceeds #494 → #262 → #263 → #264; product validation continues through #253 and #89.
 
 ## Structured Mahjong knowledge
 
