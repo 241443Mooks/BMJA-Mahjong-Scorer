@@ -1,6 +1,6 @@
 # Platform + ruleset build sequence
 
-Status: **historical/readiness guide — refreshed 28 September 2026**  
+Status: **historical/readiness guide — refreshed 3 October 2026**
 Live programme authority: #105  
 Current restart sequence: `WHATS_NEXT_ROADMAP.md`
 
@@ -15,9 +15,9 @@ Current production truth:
 - MCR / WMO 2006 `0.1` — **complete and live**, with experienced-player review remaining before a future `1.0`;
 - Classical hybrid evidence-first hand entry — **complete** under #386;
 - machine-readable rules truth architecture — **complete** under #399, with Classical + MCR vertical proof and fail-closed integrity gates;
-- truth-corpus expansion — **ready** under #440;
+- truth-corpus expansion — **complete** under #440: 317 subjects, 380 claims, 378 exact-profile treatments, zero unknown treatment states;
 - shared profile × dimension substrate for #296/#405 — **complete** under #406;
-- EMA Riichi 2025 source/correctness corpus — complete; architecture gate passed; runtime not implemented and fresh preflight still required;
+- EMA Riichi 2025 source/correctness corpus — complete; #491 preflight complete (A: small gap → #494; B: pass, no B0); runtime not implemented;
 - #434 American/NMJL-style — umbrella at evidence/architecture preflight stage;
 - #447 ruleset compiler/authoring pipeline — parked future batch.
 
@@ -36,8 +36,8 @@ That approach has now been exercised successfully:
 3. MCR proved a materially different `pattern-accumulator` grammar;
 4. #386 proved that evidence-first hand interpretation can remain exact-profile and fail closed;
 5. #399 proved that source, evidence, semantic identity, exact treatments and executable runtime can be joined and checked across Classical and MCR;
-6. #440 can now expand the reviewed corpus without redesigning the architecture;
-7. the next new-family architecture test is a fresh Riichi preflight against the resulting production system.
+6. #440 completed the bounded reviewed corpus expansion without redesigning the architecture;
+7. #491 tested the Riichi seams against current production and identified only the compiled-runtime registration prerequisite #494.
 
 ## Current rules-family sequence
 
@@ -78,23 +78,22 @@ source
 
 Truth Model v0, Classical Special Hands proof, typed source/evidence continuity, integrity gates, MCR second-family proof and the pre-Riichi readiness audit are all complete.
 
-### Current bounded corpus expansion — #440
+### Completed bounded corpus expansion — #440
 
-The vertical architecture proof deliberately stopped before wholesale migration. #440 now owns expansion of reviewed rules knowledge through the existing typed/sharded corpus and query surface.
+The vertical architecture proof deliberately stopped before wholesale migration. #440 completed the deliberately bounded Classical and MCR expansion through the existing typed/sharded corpus and query surface. Final accounting: 317 semantic subjects, 380 evidence claims, 378 exact-profile treatments and zero unknown treatment states. Source-blocked material remains explicit.
 
 Use bounded reviewable batches and keep runtime score/qualification truth in the runtime rather than copying it into reference data.
 
 ### EMA Riichi 2025
 
-The source/correctness corpus is complete and #399's readiness gate passed. Runtime implementation still starts only after a fresh preflight against current production architecture.
+The source/correctness corpus is complete. Fresh preflight #491 is complete against production `main`.
 
 Planned sequence:
 
 ```text
-fresh Riichi preflight
-→ optional bounded grammar/runtime seam
+#491 complete: A SMALL GAP → #494; B PASS, no B0
+→ #494 grammar-extensible compiled-runtime registration seam
 → #262 scoring core
-→ optional neutral state seam
 → #263 settlement/progression/finalisation
 → #264 public integration
 → experienced EMA/European Riichi review before 1.0
