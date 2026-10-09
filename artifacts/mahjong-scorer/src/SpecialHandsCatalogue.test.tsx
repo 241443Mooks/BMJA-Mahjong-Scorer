@@ -9,11 +9,17 @@ vi.mock('./game/preferred-rules-profile', async (importOriginal) => {
   return { ...actual, readPreferredRulesProfile: () => preference.profile };
 });
 
-import { SpecialHandsCatalogue } from './guide/SpecialHandsCatalogue';
+import { SpecialHandsCatalogue, shouldShowAtlasFacet } from './guide/SpecialHandsCatalogue';
 
 beforeAll(() => initialiseCurrentRulesRuntimes());
 
 describe('Special Hands Catalogue rendering', () => {
+  it('hides zero-count facet filters unless they are already selected', () => {
+    expect(shouldShowAtlasFacet(0, false)).toBe(false);
+    expect(shouldShowAtlasFacet(1, false)).toBe(true);
+    expect(shouldShowAtlasFacet(0, true)).toBe(true);
+  });
+
   it('keeps the BMJA legacy treatment anchor in the DOM with Western as My rules', () => {
     const html = renderToStaticMarkup(<SpecialHandsCatalogue />);
     expect(html.match(/id="thirteen-unique-wonders"/g)).toHaveLength(1);
