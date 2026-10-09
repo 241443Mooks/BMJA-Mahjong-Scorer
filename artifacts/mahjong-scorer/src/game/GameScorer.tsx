@@ -13,7 +13,7 @@ import {
 import { HandRecord, settlementDescription } from './HandRecord';
 import { McrHandRecord, mcrSettlementDescription } from './McrPresentation';
 import { presentMcrScore } from './mcr-score-presentation';
-import { incidentDescription } from './outside-the-box-incidents';
+import { incidentDescription, incidentExplanation, incidentTitle } from './outside-the-box-incidents';
 import { SiteHeader } from '../components/SiteHeader';
 import {
   applyManualScore,
@@ -875,8 +875,11 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
                     </div>
                     <p className="mt-2 text-[10px] text-[#7a7769]">Ordinary pickup penalty: 50 documented; recipient still awaiting source confirmation.</p>
                     {incidents.length > 0 && <div className="mt-3 space-y-2">
-                      {incidents.map((incident, index) => <div key={index} className="flex flex-wrap items-center gap-2 rounded bg-[#f7f1e3] p-2 text-[10px] text-[#284d45]">
-                        <span className="font-semibold">{incident.type.replaceAll('-', ' ')}</span>
+                      {incidents.map((incident, index) => <div key={index} className="flex flex-wrap items-start gap-2 rounded bg-[#f7f1e3] p-2 text-[10px] text-[#284d45]">
+                        <details className="min-w-[8rem] max-w-full">
+                          <summary className="cursor-pointer list-none font-semibold underline decoration-[#cfc3aa] underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">{incidentTitle(incident)}</summary>
+                          <p className="mt-1 max-w-[18rem] leading-4 text-[#66746e]">{incidentExplanation(incident)}</p>
+                        </details>
                         <select value={'playerId' in incident ? incident.playerId : 'declarerId' in incident ? incident.declarerId : 'liablePlayerId' in incident ? incident.liablePlayerId : incident.discarderId} onChange={(event) => setIncidents((current) => current.map((item, itemIndex) => itemIndex !== index ? item : 'playerId' in item ? { ...item, playerId: event.target.value } : 'declarerId' in item ? { ...item, declarerId: event.target.value } : 'liablePlayerId' in item ? { ...item, liablePlayerId: event.target.value } : { ...item, discarderId: event.target.value }))}>{game.players.map((player) => <option key={player.id} value={player.id}>{player.name}</option>)}</select>
                         {incident.type === 'incorrect-hand' && <select value={incident.condition} onChange={(event) => setIncidents((current) => current.map((item, itemIndex) => itemIndex === index && item.type === 'incorrect-hand' ? { ...item, condition: event.target.value as 'too-few' | 'too-many' } : item))}><option value="too-few">too few</option><option value="too-many">too many</option></select>}
                         {incident.type === 'false-discard-name' && <><select value={incident.claimantId} onChange={(event) => setIncidents((current) => current.map((item, itemIndex) => itemIndex === index && item.type === 'false-discard-name' ? { ...item, claimantId: event.target.value } : item))}>{game.players.map((player) => <option key={player.id} value={player.id}>{player.name}</option>)}</select><span>caused Mah Jong</span></>}
