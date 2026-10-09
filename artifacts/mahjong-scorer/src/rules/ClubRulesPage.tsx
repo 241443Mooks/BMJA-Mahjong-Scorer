@@ -50,6 +50,7 @@ export function ClubRulesPage() {
             </article>
             <article id="cannon" className="scroll-mt-24 rounded-xl border border-[#d8ceb8] bg-[#fdfbf5] p-4 sm:col-span-2">
               <h3 className="font-serif text-[22px] text-[#284d45]">Cannon</h3>
+              <p className="mt-2 text-[13px] leading-6"><strong>A Cannon happens when you discard a tile that is already visibly dangerous and it completes another player’s special Mah Jong.</strong></p>
               <p className="mt-2 text-[13px] leading-6">When Cannon applies, the cannoner covers all winner-payment shares and the normal loser-to-loser settlement is suppressed.</p>
               <p className="mt-2 text-[13px] leading-6"><strong>No choice!</strong> cancels Cannon liability when the table accepts it, so ordinary settlement applies instead.</p>
             </article>
