@@ -46,7 +46,8 @@ describe('Classical hybrid non-winner integration', () => {
       const addTile = first.container.querySelector<HTMLButtonElement>('[data-testid="button-add-remaining-tile"]')!;
       for (let index = 0; index < 3; index += 1) await act(async () => addTile.click());
 
-      expect(first.container.querySelector('[data-testid="hybrid-inferred-score"]')?.textContent).toContain('pung Green Dragon');
+      expect(first.container.textContent).not.toContain('Rest-tile analysis');
+      expect(first.container.textContent).not.toContain('Special fishing is detected automatically');
       const liveScore = first.container.querySelector('[data-testid="current-score-value"]')?.textContent ?? '';
       expect(Number.parseInt(liveScore, 10)).toBeGreaterThan(0);
 
@@ -62,7 +63,8 @@ describe('Classical hybrid non-winner integration', () => {
       const reopenedContext = createHandScorerContext(game, 'bill', { type: 'draw' }, applied.detailedHand);
       const reopened = await renderScorer(reopenedContext, vi.fn());
       try {
-        expect(reopened.container.querySelector('[data-testid="hybrid-inferred-score"]')?.textContent).toContain('pung Green Dragon');
+        expect(reopened.container.textContent).not.toContain('Rest-tile analysis');
+        expect(reopened.container.textContent).not.toContain('Special fishing is detected automatically');
         expect(reopened.container.textContent).toContain('Remaining tiles · 3 entered');
         expect(reopened.container.querySelector('[data-testid="card-set-1"]')).toBeNull();
         expect(reopened.container.querySelector('[data-testid="current-score-value"]')?.textContent).toContain(`${applied.score}pts`);
