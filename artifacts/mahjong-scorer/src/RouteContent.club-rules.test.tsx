@@ -10,5 +10,8 @@ describe('Club rules route', () => {
     expect(markup).toContain('configured local club profile');
     expect(markup).toContain('href="/game/club"');
     expect(markup).toContain('A local club rules profile');
+    expect(markup).toContain('Penalties and incidents');
+    expect(markup).toContain('id="cannon"');
+    expect(markup).toContain('No choice!');
   });
 });
