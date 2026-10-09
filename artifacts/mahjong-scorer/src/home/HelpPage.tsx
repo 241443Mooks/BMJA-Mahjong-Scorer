@@ -48,9 +48,9 @@ const groups: HelpGroup[] = [
       },
       {
         id: 'mix-score-entry',
-        question: 'Do all four players have to use the detailed scorer?',
-        answer: 'No. Manual and detailed scores can coexist in the same hand.',
-        detail: 'One player can enter every tile, another can enter only scoring parts of a losing hand, and another can type the number they already know. The ledger keeps those evidence differences visible.',
+        question: 'How do I enter the table scores?',
+        answer: 'Choose Mah Jong or Draw, select the winner if needed, then type each player’s score or use Calculate.',
+        detail: 'Manual and calculated scores can be used together in the same hand. The ledger keeps the difference visible.',
       },
       {
         id: 'manual-score',
