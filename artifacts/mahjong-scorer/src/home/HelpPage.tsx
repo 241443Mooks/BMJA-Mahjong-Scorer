@@ -65,6 +65,12 @@ const groups: HelpGroup[] = [
         detail: 'Where the selected rules require East or dealer effects, the scorer applies the relevant adjustment. The ledger retains the actual transactions so you can see who paid whom rather than only a net change.',
       },
       {
+        id: 'cannon',
+        question: 'What is Cannon?',
+        answer: 'In the Club rules, Cannon is a table-resolved liability: one player becomes responsible for the winner’s payments.',
+        detail: 'Record it only when the table has already decided Cannon applies. If No choice! is accepted, ordinary settlement applies instead.',
+      },
+      {
         id: 'correct-hand',
         question: 'I made a mistake in a confirmed hand. Do I have to restart?',
         answer: 'No. Use the game correction or undo flow.',
