@@ -168,7 +168,9 @@ export const incidentTitle = (incident: RoundIncident) => {
 export const incidentExplanation = (incident: RoundIncident) => {
   switch (incident.type) {
     case 'incorrect-hand': return 'The hand has the wrong number of tiles.';
-    case 'false-discard-name': return 'A discard was named incorrectly and the mistake led to Mah Jong.';
+    case 'false-discard-name': return incident.result === 'mah-jong'
+      ? 'A discard was named incorrectly and the mistake led to Mah Jong.'
+      : 'A discard was named incorrectly and another player claimed the tile.';
     case 'false-mah-jong': return 'Mah Jong was declared, but the hand was not valid.';
     case 'wrong-tile-claim': return 'A player claimed a tile incorrectly.';
     case 'cannon': return 'A table-resolved Cannon can make one player cover the winner’s payments.';
