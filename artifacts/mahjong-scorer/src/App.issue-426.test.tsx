@@ -51,6 +51,17 @@ describe('issue 426 winning-tile evidence integration', () => {
     expect(renderScorer(scorerContext(ordinary))).not.toContain('data-testid="button-winning-tile-');
   });
 
+  it('does not assume a live-wall win before a tracked Club hand is complete', () => {
+    const clubGame = createBmjaGame(players, seats, undefined, 'full-game', OUTSIDE_THE_BOX_PROFILE_REF);
+    const context = createHandScorerContext(clubGame, 'south', winning);
+    const html = renderToStaticMarkup(
+      <HandScorer context={context} onClose={vi.fn()} standaloneHand={false} standaloneRulesProfile={OUTSIDE_THE_BOX_PROFILE_REF} onStandaloneRulesProfileChange={vi.fn()} />,
+    );
+    expect(html).toContain('How did this hand win?');
+    expect(html).toContain('data-testid="select-winning-method"');
+    expect(html).not.toContain('Winning from the live wall');
+  });
+
   it('keeps inherited fields read-only and exposes material questions in mobile Hand context', () => {
     const html = renderScorer(scorerContext(buriedHand()));
     expect(html).toContain('data-testid="mobile-hand-context"');
