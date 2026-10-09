@@ -29,6 +29,32 @@ export function ClubRulesPage() {
         <Section title="How scoring works"><p>The scorer uses this configured profile rather than silently falling back to the British profile. Special-hand recognition and other profile-owned treatments remain attached to the exact Club rules profile and version used by the hand or game.</p></Section>
         <Section title="What happens after a hand"><p>The game tracker uses the same configured profile for settlement and progression, including the profile’s Goulash behaviour after a draw. The resulting settlement, next-hand state and recorded history stay tied to that profile.</p></Section>
         <Section title="Distinctive mechanics"><p>The public descriptor currently records a club-specific special-hand catalogue, Goulash with physical blank tiles after draws, and table incidents/liability that are entered as resolved facts. These are local configuration choices, not claims about all Mahjong clubs.</p></Section>
+        <Section title="Penalties and incidents">
+          <p>These are Club-specific table rules. Mahjong Reference records the incident once the table has decided what happened; it does not reconstruct or referee the play itself.</p>
+          <div id="penalties" className="mt-5 grid gap-3 sm:grid-cols-2">
+            <article id="incorrect-hand" className="scroll-mt-24 rounded-xl border border-[#d8ceb8] bg-[#fdfbf5] p-4">
+              <h3 className="font-serif text-[22px] text-[#284d45]">Incorrect hand</h3>
+              <p className="mt-2 text-[13px] leading-6">A wrong tile count means the player cannot Mah Jong. Too few tiles may keep a score; too many tiles score zero.</p>
+            </article>
+            <article id="false-discard-name" className="scroll-mt-24 rounded-xl border border-[#d8ceb8] bg-[#fdfbf5] p-4">
+              <h3 className="font-serif text-[22px] text-[#284d45]">False discard name</h3>
+              <p className="mt-2 text-[13px] leading-6">If a wrongly named discard causes Mah Jong, the discarder covers the winner’s three loser shares and no other settlement is made.</p>
+            </article>
+            <article id="false-mah-jong" className="scroll-mt-24 rounded-xl border border-[#d8ceb8] bg-[#fdfbf5] p-4">
+              <h3 className="font-serif text-[22px] text-[#284d45]">False Mah Jong</h3>
+              <p className="mt-2 text-[13px] leading-6">No exposed hand means no penalty. After exposure, the declarer pays each other player half the table limit.</p>
+            </article>
+            <article id="wrong-tile-claim" className="scroll-mt-24 rounded-xl border border-[#d8ceb8] bg-[#fdfbf5] p-4">
+              <h3 className="font-serif text-[22px] text-[#284d45]">Wrong tile claim</h3>
+              <p className="mt-2 text-[13px] leading-6">Correct it before the next draw and there is no penalty. Otherwise, that player cannot Mah Jong.</p>
+            </article>
+            <article id="cannon" className="scroll-mt-24 rounded-xl border border-[#d8ceb8] bg-[#fdfbf5] p-4 sm:col-span-2">
+              <h3 className="font-serif text-[22px] text-[#284d45]">Cannon</h3>
+              <p className="mt-2 text-[13px] leading-6">When Cannon applies, the cannoner covers all winner-payment shares and the normal loser-to-loser settlement is suppressed.</p>
+              <p className="mt-2 text-[13px] leading-6"><strong>No choice!</strong> cancels Cannon liability when the table accepts it, so ordinary settlement applies instead.</p>
+            </article>
+          </div>
+        </Section>
         <Section title="Use these rules"><div className="flex flex-wrap gap-3"><a href="/game/club" className={actionClass}>Track a Club rules game <ArrowRight size={16} aria-hidden="true" /></a><a href={`/hand?rules=${descriptor.slug}`} className={secondaryActionClass}>Score a hand <ArrowRight size={16} aria-hidden="true" /></a><a href="/rules" className={secondaryActionClass}>All supported rules <ArrowRight size={16} aria-hidden="true" /></a></div></Section>
         <Section title="Sources and provenance"><div className="rounded-xl border border-[#d8ceb8] bg-[#fdfbf5] p-5 sm:p-6"><p><strong className="text-[#284d45]">Reference basis:</strong> {descriptor.support.authority}.</p><p className="mt-4">Mahjong Reference treats this as a configured local profile. Its source status is kept separate from the published British, Thompson &amp; Maloney, Buzzard and MCR source traditions, so local house rules are not presented as though they were universal published rules.</p></div></Section>
       </article>
