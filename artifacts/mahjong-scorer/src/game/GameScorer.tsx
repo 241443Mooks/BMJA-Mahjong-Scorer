@@ -711,23 +711,21 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
           {!game.isComplete && <details ref={tableScoresRef} data-testid="section-table-scores" open={shouldKeepScoreEntryOpen(workspaceStage, editingHand)} onToggle={(event) => {
             if (workspaceStage === 'settlement') setEditingHand(event.currentTarget.open);
           }} className="screen-only scroll-mt-4 rounded-xl border border-[#d8ceb8] bg-[#fbf8ed] p-5 sm:p-6">
-            {shouldShowEditCurrentHandSummary(workspaceStage, editingHand) && <summary className="mb-5 cursor-pointer font-mono text-[10px] uppercase tracking-[.16em] text-[#ae6249]">Edit current hand</summary>}
+            {shouldShowEditCurrentHandSummary(workspaceStage, editingHand)
+              ? <summary className="mb-5 cursor-pointer font-mono text-[10px] uppercase tracking-[.16em] text-[#ae6249]">Edit current hand</summary>
+              : <summary className="sr-only">Current hand score entry</summary>}
             <div className="mb-5">
-              <div className="font-mono text-[10px] uppercase tracking-[.2em] text-[#ae6249]">
-                Current hand
-              </div>
-              <h1 className="mt-1 font-serif text-[30px] text-[#284d45]">
-                {game.isComplete ? 'Game complete' : 'Enter the table scores'}
-              </h1>
-              {game.isComplete ? (
-                <p className="mt-2 text-[12px] text-[#7a7769]">
-                  The final hand has been recorded. Undo the last hand to continue playing, or refresh to start a new game.
-                </p>
-              ) : (
-                <p className="mt-2 max-w-[680px] text-[15px] leading-6 text-[#66746e]">
-                  <strong>Hand score</strong> is what each player’s hand is worth. <strong>Settlement</strong> works out who pays whom under these rules; it is not the score you enter.
-                </p>
-              )}
+              <details data-testid="table-score-help">
+                <summary className="cursor-pointer list-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">
+                  <h1 className="font-serif text-[30px] text-[#284d45] underline decoration-[#d8ceb8] decoration-1 underline-offset-4">
+                    Enter the table scores
+                  </h1>
+                </summary>
+                <div className="mt-2 max-w-[520px] text-[12px] leading-5 text-[#66746e]">
+                  <p>Choose Mah Jong or Draw, then enter each player’s score or tap Calculate.</p>
+                  <a href="/help#mix-score-entry" className="mt-1 inline-flex font-semibold text-[#477562] underline decoration-[#cfc3aa] underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">Show me in the User Guide</a>
+                </div>
+              </details>
             </div>
 
             {!game.isComplete && (
