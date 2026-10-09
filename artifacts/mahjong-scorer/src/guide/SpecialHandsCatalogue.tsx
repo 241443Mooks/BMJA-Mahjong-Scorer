@@ -32,6 +32,7 @@ import {
 } from './special-hands-atlas';
 
 const displayFacets = Object.entries(ATLAS_FACET_DEFINITIONS);
+export const shouldShowAtlasFacet = (count: number, selected: boolean) => selected || count > 0;
 const publicClubCopy = (value: string) => value.replaceAll('Outside the Box', 'Club - Bramhall 2026').replaceAll('outside-the-box', 'Club - Bramhall 2026');
 const facetName = (id: string) => id.replaceAll('-', ' ').replace(/\b\w/g, (char) => char.toLocaleUpperCase('en-GB'));
 function treatmentAnchor(record: SpecialHandsAtlasRecord) {
@@ -354,7 +355,7 @@ export function SpecialHandsCatalogue() {
         </div>
         {filtersOpen && <section className="mt-4" aria-labelledby="atlas-facets-heading">
           <h2 id="atlas-facets-heading" className="text-sm font-semibold text-[#284d45]">More ways to find a hand</h2>
-          <div className="mt-2 flex flex-wrap gap-2">{displayFacets.filter(([facet]) => ATLAS_LEARNER_ENTRIES.some((entry) => entry.facets?.includes(facet))).map(([facet, description]) => { const next = selectedFacets.includes(facet) ? selectedFacets : [...selectedFacets, facet]; const count = selectedFacets.includes(facet) ? results.length : entriesForScope(myRules && preferredClassical ? 'my-rules' : profileForFilter ?? 'all', next).length; return <button key={facet} type="button" aria-label={`${facetName(facet)}, ${count} matching hands`} aria-pressed={selectedFacets.includes(facet)} title={description} onClick={() => setSelectedFacets((current) => current.includes(facet) ? current.filter((item) => item !== facet) : [...current, facet])} className={`min-h-10 rounded-full border px-3 text-xs font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249] ${selectedFacets.includes(facet) ? 'border-[#284d45] bg-[#284d45] text-white' : 'border-[#b8cdbf] bg-white text-[#284d45]'}`}>{facetName(facet)} ({count})</button>; })}</div>
+          <div className="mt-2 flex flex-wrap gap-2">{displayFacets.filter(([facet]) => ATLAS_LEARNER_ENTRIES.some((entry) => entry.facets?.includes(facet))).map(([facet, description]) => { const selected = selectedFacets.includes(facet); const next = selected ? selectedFacets : [...selectedFacets, facet]; const count = selected ? results.length : entriesForScope(myRules && preferredClassical ? 'my-rules' : profileForFilter ?? 'all', next).length; return { facet, description, count, selected }; }).filter(({ count, selected }) => shouldShowAtlasFacet(count, selected)).map(({ facet, description, count, selected }) => <button key={facet} type="button" aria-label={`${facetName(facet)}, ${count} matching hands`} aria-pressed={selected} title={description} onClick={() => setSelectedFacets((current) => current.includes(facet) ? current.filter((item) => item !== facet) : [...current, facet])} className={`min-h-10 rounded-full border px-3 text-xs font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249] ${selected ? 'border-[#284d45] bg-[#284d45] text-white' : 'border-[#b8cdbf] bg-white text-[#284d45]'}`}>{facetName(facet)} ({count})</button>)}</div>
         </section>
         }
         <p className="mt-4 text-sm text-[#596b65]" aria-live="polite">{results.length} {results.length === 1 ? 'hand' : 'hands'}</p>
