@@ -2,6 +2,7 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import { initialiseCurrentRulesRuntimes } from '../rules-platform/current-runtime-registry';
 import { confirmHand, createBmjaGame, replayGame, undoLastHand } from './game';
 import { OUTSIDE_THE_BOX_PROFILE_REF } from './ruleset';
+import { incidentExplanation, incidentTitle } from './outside-the-box-incidents';
 import { previewRoundSettlement } from './GameScorer';
 
 beforeAll(() => initialiseCurrentRulesRuntimes());
@@ -12,6 +13,24 @@ const scores = { east: 100, south: 30, west: 20, north: 10 };
 const game = () => createBmjaGame(players, seats, undefined, 'full-game', OUTSIDE_THE_BOX_PROFILE_REF);
 
 describe('Outside the Box round incidents', () => {
+  it('provides very short player-facing incident labels and explanations', () => {
+    const incidents = [
+      { type: 'incorrect-hand', playerId: 'east', condition: 'too-few' },
+      { type: 'false-discard-name', discarderId: 'east', claimantId: 'south', result: 'mah-jong' },
+      { type: 'false-mah-jong', declarerId: 'east', anyHandExposed: false },
+      { type: 'wrong-tile-claim', playerId: 'east', correctedBeforeNextDraw: true },
+      { type: 'cannon', liablePlayerId: 'east', noChoiceAccepted: false },
+    ] as const;
+    expect(incidents.map(incidentTitle)).toEqual(['Incorrect hand', 'False discard name', 'False Mah Jong', 'Wrong tile claim', 'Cannon']);
+    expect(incidents.map(incidentExplanation)).toEqual([
+      'The hand has the wrong number of tiles.',
+      'A discard was named incorrectly and the mistake led to Mah Jong.',
+      'Mah Jong was declared, but the hand was not valid.',
+      'A player claimed a tile incorrectly.',
+      'A table-resolved Cannon can make one player cover the winner’s payments.',
+    ]);
+  });
+
   it('normalises a too-many score and preserves it through replay and undo', () => {
     const first = confirmHand(game(), { outcome: { type: 'win', winnerId: 'east' }, scores, scoreRecords: { south: { source: 'manual', finalScore: 30 } }, incidents: [{ type: 'incorrect-hand', playerId: 'south', condition: 'too-many' }] });
     expect(first.handHistory[0].scores.south).toBe(0);
