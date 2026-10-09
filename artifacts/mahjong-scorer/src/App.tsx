@@ -409,7 +409,7 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
   const winningEventCandidate = {
     isWinner,
     playerWind,
-    winningMethod: isWinner && !(remainingTiles.length > 0 && getCurrentCompiledRulesRuntime(context?.rulesProfile ?? standaloneRulesProfile).grammar === 'classical-points-doubles' && (hybridMethodStatus === 'default' || hybridMethodStatus === 'unknown')) ? winningMethod : undefined,
+    winningMethod: isWinner && (!hasContext || factOriginIsResolved(hybridMethodStatus)) && !(remainingTiles.length > 0 && getCurrentCompiledRulesRuntime(context?.rulesProfile ?? standaloneRulesProfile).grammar === 'classical-points-doubles' && (hybridMethodStatus === 'default' || hybridMethodStatus === 'unknown')) ? winningMethod : undefined,
     completedKongs: numberOfKongs,
   };
   const effectiveWinningEventEvidence =
@@ -532,6 +532,10 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
   const isMcr = compiledRuntime.grammar === 'pattern-accumulator'
     && compiledRuntime.artifact.profile.identity.familyId === 'family.mcr';
 
+  const resolvedWinningMethod = isWinner && (!hasContext || factOriginIsResolved(hybridMethodStatus))
+    ? winningMethod
+    : undefined;
+
   const hand = useMemo<MahjongHand>(() => {
     const validSets = sets.filter((s): s is HandSet => s.tile !== null);
     return {
@@ -548,14 +552,14 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
         ...seasons.map(n => bonus('season', n as BonusTile['number']))
       ],
       isWinner,
-      winningMethod: isWinner ? winningMethod : undefined,
-      winningTileProvenance: isWinner && winningMethod !== 'initial-deal' ? winningTileProvenance : undefined,
-      winningTileEvidenceOrigin: isWinner && winningMethod !== 'initial-deal' ? winningTileProvenance ? 'confirmed' : winningTileEvidenceOrigin : undefined,
+      winningMethod: resolvedWinningMethod,
+      winningTileProvenance: resolvedWinningMethod && resolvedWinningMethod !== 'initial-deal' ? winningTileProvenance : undefined,
+      winningTileEvidenceOrigin: resolvedWinningMethod && resolvedWinningMethod !== 'initial-deal' ? winningTileProvenance ? 'confirmed' : winningTileEvidenceOrigin : undefined,
       winningEventEvidence: effectiveWinningEventEvidence,
       originalCall: isWinner && factOriginIsResolved(originalCallStatus) ? originalCall : undefined,
       classicalEvidence: classicalEvidenceForFacts({ standingHand, onlyPossibleWinningTile }, profileFactOrigins),
     };
-  }, [sets, looseTiles, remainingTiles, ungroupedBlankTiles, layoutMode, flowers, seasons, isWinner, winningMethod, originalCall, standingHand, onlyPossibleWinningTile, winningTileProvenance, winningTileEvidenceOrigin, effectiveWinningEventEvidence]);
+  }, [sets, looseTiles, remainingTiles, ungroupedBlankTiles, layoutMode, flowers, seasons, isWinner, resolvedWinningMethod, originalCall, standingHand, onlyPossibleWinningTile, winningTileProvenance, winningTileEvidenceOrigin, effectiveWinningEventEvidence]);
 
   useEffect(() => {
     if (isMcr) return;
@@ -745,9 +749,9 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
     return scoringRuntime ? scoringRuntime.validateHand({ evidence: tempHand, context: gameContext }).length === 0 : physical - represented === 14;
   }, [hand, isWinner, gameContext, scoringRuntime, layoutMode, sets, looseTiles, remainingTiles, hybridActive, hybridResolution]);
   const winningTileRequirement = useMemo(() => {
-    if (!isWinner || !isStructureComplete || isMcr || winningMethod === 'initial-deal') return undefined;
+    if (!isWinner || !isStructureComplete || isMcr || (hasContext && !factOriginIsResolved(hybridMethodStatus)) || winningMethod === 'initial-deal') return undefined;
     return requireClassicalWinningTile(activeProfile, scoredHand, gameContext);
-  }, [isWinner, isStructureComplete, isMcr, winningMethod, activeProfile, scoredHand, gameContext]);
+  }, [isWinner, isStructureComplete, isMcr, hasContext, hybridMethodStatus, winningMethod, activeProfile, scoredHand, gameContext]);
   const shouldAskWinningTile = isMcr || winningTileRequirement?.kind === 'required' || winningTileRequirement?.kind === 'unknown';
   const handForScoring: MahjongHand = {
     ...scoredHand,
@@ -1503,7 +1507,7 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
               <section id="game-status-controls" data-testid={hasContext ? 'mobile-winner-evidence' : undefined} className={`animate-rise animate-rise-delay-1 min-w-0 rounded-xl border border-[#d8ceb8] bg-[#e8e1d1] p-4 sm:p-6 ${hasContext ? 'block sm:block' : ''}`}>
                 {hasContext && <div data-testid="mobile-hand-context" className="mb-3 sm:hidden"><h2 className="font-serif text-[22px] leading-tight text-[#284d45]">Hand context</h2><p className="mt-1 text-[11px] leading-5 text-[#66746e]">Your game has supplied these facts.</p><p data-testid="mobile-inherited-context" className="mt-3 rounded-md border border-[#cfc3aa] bg-[#f4eddf] px-3 py-2 text-[10px] leading-4 text-[#66746e]">{context.playerName} · {playerWind} player · {prevailingWind} prevailing · {limit} limit<br />{descriptorForRulesProfile(context.rulesProfile).compactLabel} · {isWinner ? 'Winner' : 'Non-winner'} · inherited from game</p></div>}
                 <div className={hasContext ? 'hidden sm:block' : ''}><SectionLabel eyebrow="05 / context" title="Game status" /></div>
-                {hasContext && <h3 className="mb-3 font-serif text-[19px] leading-tight text-[#284d45] sm:hidden">How did this hand win?</h3>}
+                {hasContext && isWinner && <h3 className="mb-3 font-serif text-[19px] leading-tight text-[#284d45] sm:hidden">How did this hand win?</h3>}
                 <div className="space-y-4">
                   <div className={`grid grid-cols-1 gap-3 sm:grid-cols-2 ${hasContext ? 'hidden sm:grid' : ''}`}>
                     <label className="block min-w-0">
@@ -1571,7 +1575,7 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
                     </label>}
                     {isWinner && !isMcr && (
                       <div className="mt-2 space-y-4">
-                        {classicalMaterialFacts.winningMethod && !hybridActive && <label className="block min-w-0">
+                        {(classicalMaterialFacts.winningMethod || (hasContext && !isStructureComplete)) && !hybridActive && <label className="block min-w-0">
                           <span className="mb-1.5 block font-mono text-[10px] uppercase tracking-[.15em] text-[#7a7769]">Winning method</span>
                           <select data-testid="select-winning-method" value={hybridMethodStatus === 'default' || hybridMethodStatus === 'unknown' ? '' : winningMethod} onChange={(e) => { if (!e.target.value) { setHybridMethodStatus('unknown'); return; } setWinningMethod(e.target.value as WinningMethod); setHybridMethodStatus('confirmed'); }} className="w-full min-w-0 rounded-md border border-[#cfc3aa] bg-[#fdfbf5] px-3 py-2.5 text-[12px] font-semibold text-[#284d45] focus:ring-2">
                             <option value="">I’m not sure</option>
