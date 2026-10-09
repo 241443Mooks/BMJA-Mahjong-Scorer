@@ -155,6 +155,28 @@ export const settleOutsideTheBoxRound = (
   return { transactions, changes, zeroSum: true };
 };
 
+export const incidentTitle = (incident: RoundIncident) => {
+  switch (incident.type) {
+    case 'incorrect-hand': return 'Incorrect hand';
+    case 'false-discard-name': return 'False discard name';
+    case 'false-mah-jong': return 'False Mah Jong';
+    case 'wrong-tile-claim': return 'Wrong tile claim';
+    case 'cannon': return 'Cannon';
+  }
+};
+
+export const incidentExplanation = (incident: RoundIncident) => {
+  switch (incident.type) {
+    case 'incorrect-hand': return 'The hand has the wrong number of tiles.';
+    case 'false-discard-name': return incident.result === 'mah-jong'
+      ? 'A discard was named incorrectly and the mistake led to Mah Jong.'
+      : 'A discard was named incorrectly and another player claimed the tile.';
+    case 'false-mah-jong': return 'Mah Jong was declared, but the hand was not valid.';
+    case 'wrong-tile-claim': return 'A player claimed a tile incorrectly.';
+    case 'cannon': return 'A table-resolved Cannon can make one player cover the winner’s payments.';
+  }
+};
+
 export const incidentDescription = (incident: RoundIncident, players: GamePlayer[]) => {
   const name = (id: string) => players.find((player) => player.id === id)?.name ?? 'Unknown player';
   switch (incident.type) {
