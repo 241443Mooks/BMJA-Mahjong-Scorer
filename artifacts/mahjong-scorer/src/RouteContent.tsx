@@ -16,6 +16,7 @@ import { MahjongRulesComparedPage } from './home/MahjongRulesComparedPage';
 import { MahjongSettlementPage } from './home/MahjongSettlementPage';
 import { PrivacyPage } from './home/PrivacyPage';
 import { UnderTheHoodPage } from './home/UnderTheHoodPage';
+import { WhatsNewPage } from './home/WhatsNewPage';
 import NotFound from './pages/not-found';
 import { ClubRulesPage } from './rules/ClubRulesPage';
 import { RulesHubPage, RulesProfilePage } from './rules/RulesReference';
@@ -47,6 +48,7 @@ export function RouteContent({ path, prerender = false }: { path: string; preren
   if (path === '/help') return withFooter(<HelpPage />);
   if (path === '/how-it-works') return withFooter(<HowItWorksPage />);
   if (path === '/under-the-hood') return withFooter(<UnderTheHoodPage />);
+  if (path === '/whats-new') return withFooter(<WhatsNewPage />);
   if (path.startsWith('/evidence/')) {
     const slug = path.slice('/evidence/'.length);
     const document = publicEvidenceDocumentForSlug(slug);

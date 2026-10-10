@@ -25,6 +25,7 @@ describe('site footer', () => {
         label: 'Project',
         links: [
           ['About', '/about'],
+          ["What’s new", '/whats-new'],
           ['Privacy & analytics', '/privacy'],
         ],
       },
@@ -49,6 +50,7 @@ describe('site footer', () => {
     expect(markup).toContain('© 2026 SMooks');
     expect(markup).not.toContain('not an official BMJA publication');
     expect(markup).toContain('Privacy &amp; analytics');
+    expect(markup).toContain('What’s new');
     expect(markup).not.toContain('Source on GitHub');
     expect(markup).toContain('Support the project');
     expect(markup.indexOf('© 2026 SMooks')).toBeLessThan(markup.indexOf('Support the project'));

@@ -105,7 +105,8 @@ export function AboutPage() {
               <TextLink href="/game">Track a game</TextLink><span aria-hidden="true" className="px-2 text-[#9b9a8d]">·</span>
               <TextLink href="/rules">Explore the rules</TextLink><span aria-hidden="true" className="px-2 text-[#9b9a8d]">·</span>
               <TextLink href="/how-it-works">See how it works</TextLink><span aria-hidden="true" className="px-2 text-[#9b9a8d]">·</span>
-              <TextLink href="/under-the-hood">Look under the hood</TextLink>
+              <TextLink href="/under-the-hood">Look under the hood</TextLink><span aria-hidden="true" className="px-2 text-[#9b9a8d]">·</span>
+              <TextLink href="/whats-new">See what’s new</TextLink>
             </nav>
           </section>
 

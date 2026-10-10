@@ -33,6 +33,7 @@ describe('AboutPage', () => {
     expect(markup).toContain('href="/rules"');
     expect(markup).toContain('href="/how-it-works"');
     expect(markup).toContain('href="/under-the-hood"');
+    expect(markup).toContain('href="/whats-new"');
     expect(markup).toContain('saved locally rather than to an account');
     expect(markup).toContain('does not require an account');
     expect(markup).toContain('feedback or contact form');

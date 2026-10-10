@@ -28,6 +28,7 @@ export const footerGroups: readonly FooterGroup[] = [
     label: 'Project',
     links: [
       ['About', '/about'],
+      ["What’s new", '/whats-new'],
       ['Privacy & analytics', '/privacy'],
     ],
   },

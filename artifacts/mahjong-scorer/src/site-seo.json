@@ -50,6 +50,7 @@
     { "path": "/help", "title": "User Guide & Help | Mahjong Reference", "description": "Use Mahjong Reference to track a game, score hands, understand settlement, recover play and save records, with practical help for supported Table Companion workflows.", "indexable": true },
     { "path": "/mahjong-rules-compared", "title": "British vs Riichi vs Hong Kong vs American Mahjong Rules | Mahjong Reference", "description": "Compare British, Hong Kong, Japanese Riichi, Chinese Official/MCR and American Mahjong. See how winning hands, scoring, Chows, Flowers, Jokers and special rules differ.", "indexable": true },
     { "path": "/about", "title": "About Mahjong Reference | Mahjong Table Companion", "description": "The story of how a Mahjong scoring question grew into a rules-aware Mahjong Table Companion and a project to structure Mahjong knowledge.", "indexable": true },
+    { "path": "/whats-new", "title": "What’s New | Mahjong Reference", "description": "A short history of the things that have changed as Mahjong Reference has grown.", "indexable": true },
     { "path": "/privacy", "title": "Privacy & Analytics | Mahjong Reference", "description": "See what Mahjong Reference measures, how privacy-conscious cookieless analytics are configured, and what game data stays in your browser.", "indexable": true }
   ],
   "aliases": [
