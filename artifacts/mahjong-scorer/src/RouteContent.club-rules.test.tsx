@@ -13,5 +13,7 @@ describe('Club rules route', () => {
     expect(markup).toContain('Penalties and incidents');
     expect(markup).toContain('id="cannon"');
     expect(markup).toContain('No choice!');
+    expect(markup).toContain('id="settlement"');
+    expect(markup).toContain('After a draw there are no payments');
   });
 });
