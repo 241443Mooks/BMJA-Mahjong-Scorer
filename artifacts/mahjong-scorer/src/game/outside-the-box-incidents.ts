@@ -169,7 +169,7 @@ export const incidentPickerConsequence = (type: RoundIncident['type'], limit: nu
   switch (type) {
     case 'incorrect-hand': return '0 score if too many';
     case 'false-discard-name': return 'covers winner';
-    case 'false-mah-jong': return `−${(limit * 3) / 2} if exposed`;
+    case 'false-mah-jong': return `−${((limit * 3) / 2).toLocaleString('en-GB')} if exposed`;
     case 'wrong-tile-claim': return 'cannot Mah Jong';
     case 'cannon': return 'covers winner';
   }
