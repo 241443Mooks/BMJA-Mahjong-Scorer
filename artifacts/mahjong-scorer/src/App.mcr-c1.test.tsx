@@ -1,5 +1,8 @@
+// @vitest-environment happy-dom
 import { beforeAll, describe, expect, it, vi } from 'vitest';
+import { act } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
+import { createRoot } from 'react-dom/client';
 import { HandScorer } from './App';
 import { initialiseCurrentRulesRuntimes } from './rules-platform/current-runtime-registry';
 import { RulesProfilePicker } from './game/RulesProfilePicker';
@@ -47,7 +50,7 @@ describe('C1 shared standalone scorer workspace', () => {
   it('places MCR hand entry first and keeps the collapsed picker and supporting material below the task header', () => {
     const html = renderToStaticMarkup(<HandScorer context={null} onClose={vi.fn()} standaloneHand standaloneRulesProfile={mcrProfile} onStandaloneRulesProfileChange={vi.fn()} />);
     expect(html).toContain('<h1 data-testid="hand-scorer-title"');
-    expect(html).toContain('Mahjong hand calculator');
+    expect(html).toContain('Score a hand with confidence.');
     expect(html).toContain('Change rules');
     expect(html).toContain('data-testid="standalone-rules-row"');
     expect(html).toMatch(/data-testid="standalone-rules-row"[^>]*>.*?data-testid="active-rules".*?Change rules/s);
@@ -77,7 +80,7 @@ describe('C1 shared standalone scorer workspace', () => {
   it('opens Classical standalone on a compact task header with supporting links after the scorer', () => {
     const html = renderToStaticMarkup(<HandScorer context={null} onClose={vi.fn()} standaloneHand standaloneRulesProfile={BMJA_PROFILE_REF} onStandaloneRulesProfileChange={vi.fn()} />);
     expect(html.match(/<h1\b/g)).toHaveLength(1);
-    expect(html).toContain('Mahjong hand calculator');
+    expect(html).toContain('Score a hand with confidence.');
     expect(html).toContain('Rules:');
     expect(html).toContain('Change rules');
     expect(html).not.toContain('New hand · ready to enter');
@@ -97,6 +100,67 @@ describe('C1 shared standalone scorer workspace', () => {
     expect(html).toMatch(/data-testid="completed-groups-empty-state" class="[^"]*hidden sm:block/);
   });
 
+  it('uses the existing game context for a compact title and collapsed hand details', () => {
+    const game = createGame([{ id: 'A', name: 'Anna' }, { id: 'B', name: 'B' }, { id: 'C', name: 'C' }, { id: 'D', name: 'D' }], { A: 'east', B: 'south', C: 'west', D: 'north' }, undefined, 'full-game', BMJA_PROFILE_REF);
+    const context = createHandScorerContext(game, 'A', null);
+    const renderContext = (playerName: string) => renderToStaticMarkup(<HandScorer context={{ ...context, playerName }} onClose={vi.fn()} standaloneHand={false} standaloneRulesProfile={BMJA_PROFILE_REF} onStandaloneRulesProfileChange={vi.fn()} />);
+    const named = renderContext('Anna');
+    expect(named).toContain('Score Anna’s hand with confidence.');
+    expect(named).toContain('Anna’s Tiles');
+    expect(named).not.toContain('What are you entering?');
+    expect(named).toContain('Anna’s current score');
+    expect(named).toMatch(/<details data-testid="hand-details"[^>]*><summary[^>]*>Hand details<\/summary>/);
+    expect(named).toContain('Seat wind:</strong> east');
+    expect(named).toContain('Prevailing wind:</strong> east');
+    expect(named).toContain('active game');
+    expect(named).toContain('Inherited ruleset:');
+    expect(named).not.toContain('data-testid="button-load-example"');
+    expect(named).toContain('Back to game without applying a score');
+    expect(named).toContain('data-testid="button-clear-hand"');
+    expect(named).not.toContain('data-testid="mobile-hand-context"');
+
+    const unnamed = renderContext('   ');
+    expect(unnamed).toContain('Score this hand with confidence.');
+    expect(unnamed).toContain('Name not provided');
+    expect(unnamed).toContain('Arrange the tiles');
+
+    const namedWinner = renderToStaticMarkup(<HandScorer context={{ ...context, playerName: 'Anna', isWinner: true }} onClose={vi.fn()} standaloneHand={false} standaloneRulesProfile={BMJA_PROFILE_REF} onStandaloneRulesProfileChange={vi.fn()} />);
+    expect(namedWinner).toContain('How did Anna win?');
+    const unnamedWinner = renderToStaticMarkup(<HandScorer context={{ ...context, playerName: '   ', isWinner: true }} onClose={vi.fn()} standaloneHand={false} standaloneRulesProfile={BMJA_PROFILE_REF} onStandaloneRulesProfileChange={vi.fn()} />);
+    expect(unnamedWinner).toContain('How did this hand win?');
+
+    const standalone = renderToStaticMarkup(<HandScorer context={null} onClose={vi.fn()} standaloneHand standaloneRulesProfile={BMJA_PROFILE_REF} onStandaloneRulesProfileChange={vi.fn()} />);
+    expect(standalone).toContain('Score a hand with confidence.');
+    expect(standalone).toContain('data-testid="button-load-example"');
+    expect(standalone).not.toContain('data-testid="hand-details"');
+  });
+
+  it('opens Hand details and keeps Clear and return-to-game actions working', async () => {
+    vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
+    const game = createGame([{ id: 'A', name: 'Anna' }, { id: 'B', name: 'B' }, { id: 'C', name: 'C' }, { id: 'D', name: 'D' }], { A: 'east', B: 'south', C: 'west', D: 'north' }, undefined, 'full-game', BMJA_PROFILE_REF);
+    const context = createHandScorerContext(game, 'A', null);
+    const onClose = vi.fn();
+    const container = document.createElement('div');
+    const root = createRoot(container);
+    try {
+      await act(async () => root.render(<HandScorer context={context} onClose={onClose} standaloneHand={false} standaloneRulesProfile={BMJA_PROFILE_REF} onStandaloneRulesProfileChange={vi.fn()} />));
+      const details = container.querySelector<HTMLDetailsElement>('[data-testid="hand-details"]')!;
+      expect(details.open).toBe(false);
+      await act(async () => details.querySelector('summary')!.click());
+      expect(details.open).toBe(true);
+      expect(details.textContent).toContain('Rules: British / BMJA-style.');
+      await act(async () => container.querySelector<HTMLButtonElement>('[data-testid="button-clear-hand"]')!.click());
+      expect(onClose).not.toHaveBeenCalled();
+      await act(async () => [...container.querySelectorAll('button')].find((button) => button.textContent?.includes('Back to game without applying a score'))!.click());
+      expect(onClose).toHaveBeenCalledTimes(1);
+      expect(onClose).toHaveBeenCalledWith();
+    } finally {
+      await act(async () => root.unmount());
+      container.remove();
+      vi.unstubAllGlobals();
+    }
+  });
+
   it('locks table-owned MCR context while preserving editable scorer evidence', () => {
     const game = createGame([{ id: 'A', name: 'A' }, { id: 'B', name: 'B' }, { id: 'C', name: 'C' }, { id: 'D', name: 'D' }], { A: 'east', B: 'south', C: 'west', D: 'north' }, undefined, 'full-game', mcrProfile);
     const context = createHandScorerContext(game, 'B', { type: 'mcr-win', winnerId: 'B', winSource: 'discard' });
@@ -105,8 +169,8 @@ describe('C1 shared standalone scorer workspace', () => {
     expect(html).not.toContain('data-testid="mcr-seat-wind"');
     expect(html).not.toContain('data-testid="mcr-prevailing-wind"');
     expect(html).toContain('data-testid="mcr-locked-table-context"');
-    expect(html).toContain('data-testid="mobile-hand-context"');
-    expect(html).toContain('data-testid="mobile-inherited-context"');
+    expect(html).toContain('data-testid="hand-details"');
+    expect(html).not.toContain('data-testid="mobile-hand-context"');
     expect(html).toContain('Discard'); expect(html).toContain('south'); expect(html).toContain('east');
     expect(html).toContain('data-testid="mcr-win-event"');
     expect(html).toContain('Last visible copy');
