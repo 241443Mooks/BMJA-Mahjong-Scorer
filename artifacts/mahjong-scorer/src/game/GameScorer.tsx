@@ -729,7 +729,6 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
           <h1>Mahjong Reference — {activeRulesCopy(game.setup.rulesProfile)} game record</h1>
           <p>{game.isComplete ? 'Game complete' : 'Game in progress'} · {handCountLabel(game.handHistory.length)}</p>
           <p>Rules: {gameRecordRulesLabel(game.setup.rulesProfile)}</p>
-          <p>Generated {new Date().toLocaleDateString('en-GB')}</p>
         </div>
         <section className="min-w-0">
           {!game.isComplete && <details ref={tableScoresRef} data-testid="section-table-scores" open={shouldKeepScoreEntryOpen(workspaceStage, editingHand)} onToggle={(event) => {
@@ -1135,7 +1134,7 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
                   </details>
                 ))}
               </div>
-              <div className="mt-5 grid gap-2 border-t border-[#ddd3bf] pt-4 sm:grid-cols-2">
+              <div className="screen-only mt-5 grid gap-2 border-t border-[#ddd3bf] pt-4 sm:grid-cols-2">
                 <button
                   type="button"
                   data-testid="ledger-print-summary"
@@ -1156,7 +1155,11 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
             </>
           )}
         </details>
-        <footer className="game-record-footer print-only"><span>mahjong.smooks.co.uk</span><span>Mahjong tile artwork from xhokir/riichi-mahjong-tiles, based on FluffyStuff/riichi-mahjong-tiles, used under CC BY 4.0.</span><a href="https://buymeacoffee.com/sharronmo">Buy me a coffee</a></footer>
+        <footer className="game-record-footer print-only">
+          <span className="w-full">mahjong.smooks.co.uk</span>
+          {printMode === 'full' && <span className="w-full">Mahjong tile artwork from xhokir/riichi-mahjong-tiles, based on FluffyStuff/riichi-mahjong-tiles, used under CC BY 4.0.</span>}
+          <span className="w-full">Thank you for using mahjong.smooks.co.uk. If you have found it helpful, please keep using it and share it with your friends. To support ongoing development, <a href="https://buymeacoffee.com/sharronmo">buy me a coffee</a>.</span>
+        </footer>
       </main>
     </div>
   );
