@@ -31,12 +31,17 @@ describe('site footer', () => {
     ]);
   });
 
-  it('keeps the compact variant deliberately small', () => {
+  it('keeps the compact variant closed and quiet by default', () => {
     expect(compactFooterLinks).toEqual([
       ['User Guide', '/help'],
       ['About', '/about'],
       ['Privacy', '/privacy'],
     ]);
+    const markup = renderToStaticMarkup(SiteFooter({ variant: 'compact' }));
+    expect(markup).toContain('Site links');
+    expect(markup).toContain('© 2026 SMooks');
+    expect(markup).toContain('Support the project');
+    expect(markup).not.toContain('Mahjong tile artwork');
   });
 
   it('shows project ownership without exposing the repository link', () => {
@@ -48,5 +53,12 @@ describe('site footer', () => {
     expect(markup).toContain('Support the project');
     expect(markup.indexOf('© 2026 SMooks')).toBeLessThan(markup.indexOf('Support the project'));
     expect(markup).toContain('justify-between');
+  });
+
+  it('shows tile artwork credit only when requested', () => {
+    const credited = renderToStaticMarkup(SiteFooter({ showTileCredit: true }));
+    const plain = renderToStaticMarkup(SiteFooter({}));
+    expect(credited).toContain('Mahjong tile artwork from xhokir/riichi-mahjong-tiles');
+    expect(plain).not.toContain('Mahjong tile artwork from xhokir/riichi-mahjong-tiles');
   });
 });
