@@ -184,6 +184,9 @@ export const shouldKeepScoreEntryOpen = (stage: GameWorkspaceStage, editingHand:
 export const shouldShowEditCurrentHandSummary = (stage: GameWorkspaceStage, editingHand: boolean) =>
   stage === 'settlement' && !editingHand;
 
+export const incidentsForOutcome = <T,>(outcome: HandOutcome, incidents: T[]) =>
+  outcome.type === 'draw' ? [] : incidents;
+
 export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedScore, initialRulesProfile, initialRulesProfileIsExplicit = false }: GameScorerProps) {
   const [recovered, setRecovered] = useState(() => {
     const storage = preferredRulesProfileStorage();
@@ -241,7 +244,13 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
     }
     const currentRound = gameScorerCurrentRound(
       game, recovered?.currentRound ?? null, outcomeType, winnerId,
-      { scores, scoreRecords, incidents, buzzardIncidents, profileScoreResults },
+      {
+        scores,
+        scoreRecords,
+        incidents: outcomeType === 'draw' ? [] : incidents,
+        buzzardIncidents: outcomeType === 'draw' ? [] : buzzardIncidents,
+        profileScoreResults: outcomeType === 'draw' ? {} : profileScoreResults,
+      },
       mcrTableProfile(game.setup.rulesProfile) ? mcrRoute : undefined,
     );
     saveGameRecoveryV2(storage, game, currentRound);
@@ -339,6 +348,9 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
     setScoreRecords(reconciled.scoreRecords);
     setOutcomeType(nextOutcome.type);
     if (nextOutcome.type === 'win') setWinnerId(nextOutcome.winnerId);
+    setIncidents((current) => incidentsForOutcome(nextOutcome, current));
+    setBuzzardIncidents((current) => incidentsForOutcome(nextOutcome, current));
+    setProfileScoreResults((current) => nextOutcome.type === 'draw' ? {} : current);
     setSettlementReviewRequested(nextOutcome.type === 'draw');
     setError(
       invalidated
@@ -349,7 +361,14 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
 
   const preview = useMemo(() => {
     if (!game || !outcome) return { settlement: null, error: null };
-    return getRoundSettlementPreview(game, outcome, scores, incidents, buzzardIncidents, profileScoreResults);
+    return getRoundSettlementPreview(
+      game,
+      outcome,
+      scores,
+      incidentsForOutcome(outcome, incidents),
+      incidentsForOutcome(outcome, buzzardIncidents),
+      outcome.type === 'draw' ? {} : profileScoreResults,
+    );
   }, [game, outcome, scores, incidents, buzzardIncidents, profileScoreResults]);
   const previewPresentation = game
     ? settlementPreviewPresentation(game, outcome, scores)
@@ -456,7 +475,9 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
         outcome,
         scores: fullScores,
         scoreRecords: outcome.type === 'draw' ? {} : scoreRecords,
-        incidents, buzzardIncidents, profileScoreResults,
+        incidents: incidentsForOutcome(outcome, incidents),
+        buzzardIncidents: incidentsForOutcome(outcome, buzzardIncidents),
+        profileScoreResults: outcome.type === 'draw' ? {} : profileScoreResults,
       });
       setGame(next);
       resetRoundEntry(next);
@@ -853,7 +874,7 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
                     </label>
                   ))}
                 </div>}
-                {supports(game.setup.rulesProfile, 'table.round-incidents') && (
+                {outcomeType === 'win' && supports(game.setup.rulesProfile, 'table.round-incidents') && (
                   <section data-testid="section-round-incidents" className="mt-5 border-t border-[#d8ceb8] pt-5">
                     <details>
                       <summary className="cursor-pointer list-none font-mono text-[10px] uppercase tracking-[.15em] text-[#ae6249] underline decoration-[#d8ceb8] underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">Round incidents / penalties</summary>
@@ -891,14 +912,14 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
                         {incident.type === 'incorrect-hand' && <select value={incident.condition} onChange={(event) => setIncidents((current) => current.map((item, itemIndex) => itemIndex === index && item.type === 'incorrect-hand' ? { ...item, condition: event.target.value as 'too-few' | 'too-many' } : item))}><option value="too-few">too few</option><option value="too-many">too many</option></select>}
                         {incident.type === 'false-discard-name' && <><select value={incident.claimantId} onChange={(event) => setIncidents((current) => current.map((item, itemIndex) => itemIndex === index && item.type === 'false-discard-name' ? { ...item, claimantId: event.target.value } : item))}>{game.players.map((player) => <option key={player.id} value={player.id}>{player.name}</option>)}</select><span>caused Mah Jong</span></>}
                         {incident.type === 'false-mah-jong' && <label><input type="checkbox" checked={incident.anyHandExposed} onChange={(event) => setIncidents((current) => current.map((item, itemIndex) => itemIndex === index && item.type === 'false-mah-jong' ? { ...item, anyHandExposed: event.target.checked } : item))} /> hand exposed</label>}
-                        {incident.type === 'wrong-tile-claim' && <label><input type="checkbox" checked={incident.correctedBeforeNextDraw} onChange={(event) => setIncidents((current) => current.map((item, itemIndex) => itemIndex === index && item.type === 'wrong-tile-claim' ? { ...item, correctedBeforeNextDraw: event.target.checked } : item))} /> corrected in time</label>}
+                        {incident.type === 'wrong-tile-claim' && <label><input type="checkbox" checked={incident.correctedBeforeNextDraw} onChange={(event) => setIncidents((current) => current.map((item, itemIndex) => itemIndex === index && item.type === 'wrong-tile-claim' ? { ...item, correctedBeforeNextDraw: event.target.checked } : item))} /> corrected before next draw</label>}
                         {incident.type === 'cannon' && <label><input type="checkbox" checked={incident.noChoiceAccepted} onChange={(event) => setIncidents((current) => current.map((item, itemIndex) => itemIndex === index && item.type === 'cannon' ? { ...item, noChoiceAccepted: event.target.checked } : item))} /> No choice! accepted</label>}
                         <button type="button" onClick={() => setIncidents((current) => current.filter((_, itemIndex) => itemIndex !== index))}>Remove</button>
                       </div>)}
                     </div>}
                   </section>
                 )}
-                {(supports(game.setup.rulesProfile, 'table.buzzard-profile-results') || supports(game.setup.rulesProfile, 'table.buzzard-dangerous-discard') || supports(game.setup.rulesProfile, 'table.buzzard-false-mah-jong') || supports(game.setup.rulesProfile, 'table.incorrect-hand')) && <section data-testid="section-buzzard-round-facts" className="mt-5 border-t border-[#d8ceb8] pt-5">
+                {outcomeType === 'win' && (supports(game.setup.rulesProfile, 'table.buzzard-profile-results') || supports(game.setup.rulesProfile, 'table.buzzard-dangerous-discard') || supports(game.setup.rulesProfile, 'table.buzzard-false-mah-jong') || supports(game.setup.rulesProfile, 'table.incorrect-hand')) && <section data-testid="section-buzzard-round-facts" className="mt-5 border-t border-[#d8ceb8] pt-5">
                   <div className="font-mono text-[10px] uppercase tracking-[.15em] text-[#ae6249]">Buzzard round facts</div>
                   <p className="mt-1 text-[11px] text-[#7a7769]">Record table-resolved incidents and non-winner results; the runtime remains the settlement authority.</p>
                   <div className="mt-3 grid gap-3 sm:grid-cols-2">
@@ -985,7 +1006,7 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
                     {preview.error}
                   </p>
                 )}
-                {incidents.length > 0 && (
+                {outcomeType === 'win' && incidents.length > 0 && (
                   <div className="mt-3 rounded-md bg-[#355e54] px-3 py-2 text-[10px] leading-5 text-[#c8d8d1]">
                     {incidents.map((incident, index) => <div key={index}>{incidentDescription(incident, game.players)}</div>)}
                   </div>
