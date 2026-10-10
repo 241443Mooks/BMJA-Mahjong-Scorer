@@ -1130,7 +1130,7 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
             </div>
           )}
         </details>
-        <footer className="game-record-footer"><span>mahjong.smooks.co.uk</span><span>Mahjong tile artwork from xhokir/riichi-mahjong-tiles, based on FluffyStuff/riichi-mahjong-tiles, used under CC BY 4.0.</span><a href="https://buymeacoffee.com/sharronmo">Buy me a coffee</a></footer>
+        <footer className="game-record-footer print-only"><span>mahjong.smooks.co.uk</span><span>Mahjong tile artwork from xhokir/riichi-mahjong-tiles, based on FluffyStuff/riichi-mahjong-tiles, used under CC BY 4.0.</span><a href="https://buymeacoffee.com/sharronmo">Buy me a coffee</a></footer>
       </main>
     </div>
   );
