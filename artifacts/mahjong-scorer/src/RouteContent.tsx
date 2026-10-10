@@ -36,9 +36,9 @@ export function RouteContent({ path, prerender = false }: { path: string; preren
   if (path === '/game' || path.startsWith('/game/')) {
     const slug = publicRulesSlugFromGamePath(path);
     const explicitProfile = path === '/game' ? undefined : slug ? descriptorForSlug(slug).profile : undefined;
-    return slug ? <App initialRulesProfile={explicitProfile} prerenderOnly={prerender} /> : <NotFound />;
+    return slug ? withFullFooter(<App initialRulesProfile={explicitProfile} prerenderOnly={prerender} />) : <NotFound />;
   }
-  if (path === '/hand') return <App initialView="hand" standaloneHand prerenderOnly={prerender} />;
+  if (path === '/hand') return withFullFooter(<App initialView="hand" standaloneHand prerenderOnly={prerender} />);
   if (path === '/scoring-examples') return withFullFooter(<ScoringExamplesPage />);
   if (path === '/guide' || path === '/beginner-guide') return withFullFooter(<BeginnerGuide onClose={returnHome} />);
   if (path === '/special-hands' || path === '/special-hand-catalogue') return withFullFooter(<SpecialHandsCatalogue />);
