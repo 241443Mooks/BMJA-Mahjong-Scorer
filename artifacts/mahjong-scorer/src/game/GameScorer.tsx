@@ -862,9 +862,9 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
                         <a href="/rules/club#penalties" className="mt-1 inline-flex font-semibold text-[#477562] underline decoration-[#cfc3aa] underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">See Club penalties and incidents</a>
                       </div>
                     </details>
-                    <div className="mt-3 grid grid-cols-2 gap-2">
+                    <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
                       {(['incorrect-hand', 'false-discard-name', 'false-mah-jong', 'wrong-tile-claim', 'cannon'] as const).map((type) => (
-                        <button key={type} type="button" className={`flex min-h-14 items-center justify-between gap-2 rounded-lg border border-[#cfc3aa] bg-[#fdfbf5] px-3 py-2 text-left text-[#284d45] transition hover:bg-[#f7f1e3] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249] ${type === 'false-discard-name' ? 'col-span-2' : ''}`} onClick={() => {
+                        <button key={type} type="button" className={`grid min-h-12 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-lg border border-[#cfc3aa] bg-[#fdfbf5] px-3.5 py-2.5 text-left text-[#284d45] transition hover:bg-[#f7f1e3] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249] ${type === 'false-discard-name' ? 'sm:col-span-2' : ''}`} onClick={() => {
                           const first = game.players[0].id;
                           const second = game.players[1].id;
                           const incident: RoundIncident = type === 'incorrect-hand' ? { type, playerId: first, condition: 'too-few' }
@@ -874,8 +874,8 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
                             : { type, liablePlayerId: first, noChoiceAccepted: false };
                           setIncidents((current) => [...current, incident]);
                         }}>
-                          <span className="text-[10px] font-semibold leading-4">{incidentPickerLabel(type)}</span>
-                          <span className="shrink-0 text-right font-mono text-[9px] font-bold leading-4 text-[#a34f45]">{incidentPickerConsequence(type, game.setup.tableLimit ?? 1000)}</span>
+                          <span className="min-w-0 text-[11px] font-semibold leading-4">{incidentPickerLabel(type)}</span>
+                          <span className="max-w-[9.5rem] text-right font-mono text-[9px] font-semibold leading-4 text-[#a34f45]">{incidentPickerConsequence(type, game.setup.tableLimit ?? 1000)}</span>
                         </button>
                       ))}
                     </div>
