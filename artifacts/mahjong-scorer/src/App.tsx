@@ -249,6 +249,7 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
   const hasContext = !!context && !example;
   const plainStandaloneHand = standaloneHand && !hasContext && !example && !practice;
   const compactTaskHeader = plainStandaloneHand || hasContext;
+  const contextualPlayerName = hasContext && context.playerName.trim() ? context.playerName.trim() : undefined;
   const standaloneCalculatorFlow = standaloneHand && !example && !practice;
   const practiceContext = practiceScorerContext(example);
   const initialContext = practice ? practiceContext : handScorerLocalContext(context, standaloneRulesProfile);
@@ -1264,7 +1265,7 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
           <div className="grid min-w-0 grid-cols-1 gap-5">
             <div className="min-w-0 space-y-5">
               <section data-testid="tile-entry-shell" className={`animate-rise animate-rise-delay-1 ${plainStandaloneHand ? 'rounded-none border-0 bg-transparent p-0 shadow-none sm:rounded-xl sm:border sm:border-[#d8ceb8] sm:bg-[#fbf8ed] sm:p-6 sm:shadow-[var(--shadow-sm)]' : 'rounded-xl border border-[#d8ceb8] bg-[#fbf8ed] p-5 shadow-[var(--shadow-sm)] sm:p-6'}`}>
-                <SectionLabel eyebrow="01 / hand" title="Arrange the tiles" count={tileProgressLabel} hideOnMobile={plainStandaloneHand} />
+                <SectionLabel eyebrow="01 / hand" title={contextualPlayerName ? `${contextualPlayerName}’s Tiles` : 'Arrange the tiles'} count={tileProgressLabel} hideOnMobile={plainStandaloneHand} />
                 {layoutMode !== 'sets' && (
                   <div className="mb-4 flex flex-col gap-3 rounded-lg border border-[#d8ceb8] bg-[#f7f1e3] p-3 sm:flex-row sm:items-center sm:justify-between">
                     <div className="min-w-0">
@@ -1331,7 +1332,7 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
                 <>
                   <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(280px,.8fr)]">
                     <section data-testid="working-picker" className="min-w-0 rounded-lg border border-[#ae6249]/60 bg-[#f7f1e3] p-3 sm:p-4">
-                      <div className="mb-3 flex items-center justify-between gap-2"><div><div className="font-mono text-[10px] uppercase tracking-[.15em] text-[#ae6249]">Working picker</div><h3 className="font-serif text-[20px] text-[#284d45]">{selectedSet === 'remaining-tiles' ? 'Add tiles' : 'What are you entering?'}</h3></div><div className="text-right"><span className="block text-[10px] text-[#66746e]">{selectedSet === 'remaining-tiles' ? 'Enter tiles individually' : 'Choose details, then a tile'}</span>{plainStandaloneHand && <span data-testid="mobile-tile-progress" className="block text-[10px] font-mono text-[#7a7769] sm:hidden">{tileProgressLabel}</span>}</div></div>
+                      <div className="mb-3 flex items-center justify-between gap-2">{selectedSet === 'remaining-tiles' ? <h3 className="font-serif text-[20px] text-[#284d45]">Add tiles</h3> : <span className="text-[10px] text-[#66746e]">Choose details, then a tile</span>}<div className="text-right">{selectedSet === 'remaining-tiles' && <span className="block text-[10px] text-[#66746e]">Enter tiles individually</span>}{plainStandaloneHand && <span data-testid="mobile-tile-progress" className="block text-[10px] font-mono text-[#7a7769] sm:hidden">{tileProgressLabel}</span>}</div></div>
                       {!isMcr && !isWinner && <div className="mb-3 grid grid-cols-2 gap-2" role="group" aria-label="Choose hand evidence to add"><button type="button" data-testid="button-add-group-mode" aria-pressed={selectedSet !== 'remaining-tiles'} onClick={() => { startNormalGroup(); setRemainingTilesExpanded(false); }} className={`rounded-md border px-3 py-2 text-[12px] font-semibold ${selectedSet !== 'remaining-tiles' ? 'border-[#284d45] bg-[#284d45] text-[#f8f4e9]' : 'border-[#cfc3aa] bg-[#fdfbf5] text-[#284d45]'}`}>Add a group</button><button type="button" data-testid="button-add-remaining-tiles-mode" aria-pressed={selectedSet === 'remaining-tiles'} onClick={() => { setSelectedSet('remaining-tiles'); setRemainingTilesExpanded(false); }} className={`rounded-md border px-3 py-2 text-[12px] font-semibold ${selectedSet === 'remaining-tiles' ? 'border-[#284d45] bg-[#284d45] text-[#f8f4e9]' : 'border-[#cfc3aa] bg-[#fdfbf5] text-[#284d45]'}`}>Add tiles</button></div>}
                       {selectedSet === 'remaining-tiles' && <div data-testid="remaining-tile-picker-controls" className="mt-3">{remainingTileControls}</div>}
                       {selectedSet !== 'remaining-tiles' && activeSet && <div data-testid={activeSet.tile === null ? 'working-group-draft' : undefined} className="grid min-w-0 grid-cols-2 gap-2">
@@ -1506,7 +1507,7 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
               {!isMcr && score && <>
               <section id="game-status-controls" data-testid={hasContext ? 'mobile-winner-evidence' : undefined} className={`animate-rise animate-rise-delay-1 min-w-0 rounded-xl border border-[#d8ceb8] bg-[#e8e1d1] p-4 sm:p-6 ${hasContext ? 'block sm:block' : ''}`}>
                 <div className={hasContext ? 'hidden sm:block' : ''}><SectionLabel eyebrow="05 / context" title="Game status" /></div>
-                {hasContext && isWinner && <h3 className="mb-3 font-serif text-[19px] leading-tight text-[#284d45] sm:hidden">How did this hand win?</h3>}
+                {hasContext && isWinner && <h3 className="mb-3 font-serif text-[19px] leading-tight text-[#284d45] sm:hidden">{contextualPlayerName ? `How did ${contextualPlayerName} win?` : 'How did this hand win?'}</h3>}
                 <div className="space-y-4">
                   <div className={`grid grid-cols-1 gap-3 sm:grid-cols-2 ${hasContext ? 'hidden sm:grid' : ''}`}>
                     <label className="block min-w-0">
@@ -1687,7 +1688,7 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
                 <div className="border-b border-[#55756c] px-5 pb-4 pt-5 sm:px-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <div className="font-mono text-[10px] uppercase tracking-[.2em] text-[#d7a287]">Current score</div>
+                      <div className="font-mono text-[10px] uppercase tracking-[.2em] text-[#d7a287]">{contextualPlayerName ? `${contextualPlayerName}’s current score` : 'Current score'}</div>
                       <div data-testid="current-score-value" className="mt-2 font-serif text-[60px] leading-none">{score!.finalScore}<span className="ml-2 text-[17px] text-[#b4c4bd]">pts</span></div>
                     </div>
                     <div className="flex h-11 w-11 items-center justify-center rounded-full border border-[#6e8d84] text-[#d7a287]"><Check size={22} /></div>

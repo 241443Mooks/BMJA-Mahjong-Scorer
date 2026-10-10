@@ -57,7 +57,7 @@ describe('issue 426 winning-tile evidence integration', () => {
     const html = renderToStaticMarkup(
       <HandScorer context={context} onClose={vi.fn()} standaloneHand={false} standaloneRulesProfile={OUTSIDE_THE_BOX_PROFILE_REF} onStandaloneRulesProfileChange={vi.fn()} />,
     );
-    expect(html).toContain('How did this hand win?');
+    expect(html).toContain('How did South win?');
     expect(html).toContain('data-testid="select-winning-method"');
     expect(html).not.toContain('Winning from the live wall');
   });
@@ -69,7 +69,7 @@ describe('issue 426 winning-tile evidence integration', () => {
     expect(html).toContain('Hand details');
     expect(html).toContain('Inherited from this game.');
     expect(html).toContain('data-testid="mobile-winner-evidence"');
-    expect(html).toContain('How did this hand win?');
+    expect(html).toContain('How did South win?');
     expect(html).toContain('data-testid="select-winning-method"');
   });
 

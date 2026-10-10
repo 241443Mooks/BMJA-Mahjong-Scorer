@@ -106,6 +106,9 @@ describe('C1 shared standalone scorer workspace', () => {
     const renderContext = (playerName: string) => renderToStaticMarkup(<HandScorer context={{ ...context, playerName }} onClose={vi.fn()} standaloneHand={false} standaloneRulesProfile={BMJA_PROFILE_REF} onStandaloneRulesProfileChange={vi.fn()} />);
     const named = renderContext('Anna');
     expect(named).toContain('Score Anna’s hand with confidence.');
+    expect(named).toContain('Anna’s Tiles');
+    expect(named).not.toContain('What are you entering?');
+    expect(named).toContain('Anna’s current score');
     expect(named).toMatch(/<details data-testid="hand-details"[^>]*><summary[^>]*>Hand details<\/summary>/);
     expect(named).toContain('Seat wind:</strong> east');
     expect(named).toContain('Prevailing wind:</strong> east');
@@ -119,6 +122,12 @@ describe('C1 shared standalone scorer workspace', () => {
     const unnamed = renderContext('   ');
     expect(unnamed).toContain('Score this hand with confidence.');
     expect(unnamed).toContain('Name not provided');
+    expect(unnamed).toContain('Arrange the tiles');
+
+    const namedWinner = renderToStaticMarkup(<HandScorer context={{ ...context, playerName: 'Anna', isWinner: true }} onClose={vi.fn()} standaloneHand={false} standaloneRulesProfile={BMJA_PROFILE_REF} onStandaloneRulesProfileChange={vi.fn()} />);
+    expect(namedWinner).toContain('How did Anna win?');
+    const unnamedWinner = renderToStaticMarkup(<HandScorer context={{ ...context, playerName: '   ', isWinner: true }} onClose={vi.fn()} standaloneHand={false} standaloneRulesProfile={BMJA_PROFILE_REF} onStandaloneRulesProfileChange={vi.fn()} />);
+    expect(unnamedWinner).toContain('How did this hand win?');
 
     const standalone = renderToStaticMarkup(<HandScorer context={null} onClose={vi.fn()} standaloneHand standaloneRulesProfile={BMJA_PROFILE_REF} onStandaloneRulesProfileChange={vi.fn()} />);
     expect(standalone).toContain('Score a hand with confidence.');
