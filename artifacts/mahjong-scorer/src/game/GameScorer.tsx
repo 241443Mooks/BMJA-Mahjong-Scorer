@@ -244,7 +244,13 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
     }
     const currentRound = gameScorerCurrentRound(
       game, recovered?.currentRound ?? null, outcomeType, winnerId,
-      { scores, scoreRecords, incidents, buzzardIncidents, profileScoreResults },
+      {
+        scores,
+        scoreRecords,
+        incidents: outcomeType === 'draw' ? [] : incidents,
+        buzzardIncidents: outcomeType === 'draw' ? [] : buzzardIncidents,
+        profileScoreResults: outcomeType === 'draw' ? {} : profileScoreResults,
+      },
       mcrTableProfile(game.setup.rulesProfile) ? mcrRoute : undefined,
     );
     saveGameRecoveryV2(storage, game, currentRound);
@@ -913,7 +919,7 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
                     </div>}
                   </section>
                 )}
-                {(supports(game.setup.rulesProfile, 'table.buzzard-profile-results') || supports(game.setup.rulesProfile, 'table.buzzard-dangerous-discard') || supports(game.setup.rulesProfile, 'table.buzzard-false-mah-jong') || supports(game.setup.rulesProfile, 'table.incorrect-hand')) && <section data-testid="section-buzzard-round-facts" className="mt-5 border-t border-[#d8ceb8] pt-5">
+                {outcomeType === 'win' && (supports(game.setup.rulesProfile, 'table.buzzard-profile-results') || supports(game.setup.rulesProfile, 'table.buzzard-dangerous-discard') || supports(game.setup.rulesProfile, 'table.buzzard-false-mah-jong') || supports(game.setup.rulesProfile, 'table.incorrect-hand')) && <section data-testid="section-buzzard-round-facts" className="mt-5 border-t border-[#d8ceb8] pt-5">
                   <div className="font-mono text-[10px] uppercase tracking-[.15em] text-[#ae6249]">Buzzard round facts</div>
                   <p className="mt-1 text-[11px] text-[#7a7769]">Record table-resolved incidents and non-winner results; the runtime remains the settlement authority.</p>
                   <div className="mt-3 grid gap-3 sm:grid-cols-2">
@@ -1000,7 +1006,7 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
                     {preview.error}
                   </p>
                 )}
-                {incidents.length > 0 && (
+                {outcomeType === 'win' && incidents.length > 0 && (
                   <div className="mt-3 rounded-md bg-[#355e54] px-3 py-2 text-[10px] leading-5 text-[#c8d8d1]">
                     {incidents.map((incident, index) => <div key={index}>{incidentDescription(incident, game.players)}</div>)}
                   </div>
