@@ -26,7 +26,6 @@ describe('site footer', () => {
         links: [
           ['About', '/about'],
           ['Privacy & analytics', '/privacy'],
-          ['Support the project', 'https://buymeacoffee.com/sharronmo'],
         ],
       },
     ]);
@@ -47,5 +46,7 @@ describe('site footer', () => {
     expect(markup).toContain('Privacy &amp; analytics');
     expect(markup).not.toContain('Source on GitHub');
     expect(markup).toContain('Support the project');
+    expect(markup.indexOf('© 2026 SMooks')).toBeLessThan(markup.indexOf('Support the project'));
+    expect(markup).toContain('justify-between');
   });
 });

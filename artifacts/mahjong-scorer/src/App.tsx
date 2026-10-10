@@ -1803,7 +1803,6 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
           </div>}
         </section>
       </main>
-      <footer className="mx-auto flex max-w-[1440px] flex-wrap items-center justify-between gap-3 border-t border-[#d8ceb8] px-5 py-5 lg:px-8"><p className="font-mono text-[10px] uppercase tracking-[.12em] text-[#8c8a7f]">Local tool · no hand data leaves this device</p><p className="text-[11px] text-[#8c8a7f]">Built for the quiet moment before the next deal.</p></footer>
     </div>
   );
 }
