@@ -1060,10 +1060,11 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
               Confirm the first hand to begin the ledger.
             </p>
           ) : (
-            <div className="space-y-3">
-              {[...game.handHistory].reverse().map((hand) => (
-                <details
-                  key={hand.handNumber}
+            <>
+              <div className="space-y-3">
+                {[...game.handHistory].reverse().map((hand) => (
+                  <details
+                    key={hand.handNumber}
                   ref={(element) => {
                     if (element) ledgerDetailsRefs.current.set(hand.handNumber, element);
                     else ledgerDetailsRefs.current.delete(hand.handNumber);
@@ -1123,9 +1124,28 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
                         : <div key={player.id} className="manual-score-record rounded-lg border border-[#e2d9c7] bg-[#fbf8ed] p-3 text-[10px] text-[#66746e]"><b>{player.name} · Score entered manually</b><br />No detailed hand was recorded.</div>;
                     })}
                   </div>
-                </details>
-              ))}
-            </div>
+                  </details>
+                ))}
+              </div>
+              <div className="mt-5 grid gap-2 border-t border-[#ddd3bf] pt-4 sm:grid-cols-2">
+                <button
+                  type="button"
+                  data-testid="ledger-print-summary"
+                  onClick={() => printGame('summary')}
+                  className="rounded-md border border-[#cfc3aa] bg-[#fdfbf5] px-3 py-3 text-[11px] font-bold text-[#284d45] hover:bg-[#f7f1e3] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]"
+                >
+                  Print / Save summary
+                </button>
+                <button
+                  type="button"
+                  data-testid="ledger-print-full"
+                  onClick={() => printGame('full')}
+                  className="rounded-md bg-[#284d45] px-3 py-3 text-[11px] font-bold text-[#f8f4e9] hover:bg-[#23443d] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]"
+                >
+                  Print / Save full record
+                </button>
+              </div>
+            </>
           )}
         </details>
         <footer className="game-record-footer print-only"><span>mahjong.smooks.co.uk</span><span>Mahjong tile artwork from xhokir/riichi-mahjong-tiles, based on FluffyStuff/riichi-mahjong-tiles, used under CC BY 4.0.</span><a href="https://buymeacoffee.com/sharronmo">Buy me a coffee</a></footer>
