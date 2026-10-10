@@ -29,7 +29,6 @@ export const footerGroups: readonly FooterGroup[] = [
     links: [
       ['About', '/about'],
       ['Privacy & analytics', '/privacy'],
-      ['Support the project', 'https://buymeacoffee.com/sharronmo'],
     ],
   },
 ] as const;
@@ -87,7 +86,17 @@ export function SiteFooter({ variant = 'full' }: { variant?: 'full' | 'compact' 
 
         <div className="mt-7 border-t border-[#ddd3bf] pt-5">
           <p className="font-serif text-[18px] font-semibold text-[#284d45]">Mahjong Reference</p>
-          <p className="mt-1 text-[13px] leading-5 text-[#7a7769]">© 2026 SMooks</p>
+          <div className="mt-1 flex items-center justify-between gap-4">
+            <p className="text-[13px] leading-5 text-[#7a7769]">© 2026 SMooks</p>
+            <a
+              href="https://buymeacoffee.com/sharronmo"
+              target="_blank"
+              rel="noreferrer"
+              className="text-right text-[13px] font-semibold leading-5 text-[#596b65] underline decoration-[#cdbfa7] underline-offset-4 transition hover:text-[#284d45] hover:decoration-[#ae6249] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249] focus-visible:ring-offset-2"
+            >
+              Support the project
+            </a>
+          </div>
         </div>
       </div>
     </footer>
