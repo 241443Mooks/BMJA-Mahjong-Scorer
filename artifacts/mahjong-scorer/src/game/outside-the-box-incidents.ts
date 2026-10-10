@@ -169,7 +169,7 @@ export const incidentPickerConsequence = (type: RoundIncident['type'], limit: nu
   switch (type) {
     case 'incorrect-hand': return '0 score if too many';
     case 'false-discard-name': return 'Mah Jong → covers winner';
-    case 'false-mah-jong': return `−${((limit * 3) / 2).toLocaleString('en-GB')} if exposed`;
+    case 'false-mah-jong': return `−${(limit / 2).toLocaleString('en-GB')} each if exposed`;
     case 'wrong-tile-claim': return 'cannot Mah Jong';
     case 'cannon': return 'covers winner';
   }
@@ -192,7 +192,7 @@ export const incidentExplanation = (incident: RoundIncident) => {
       ? 'A discard was named incorrectly and the mistake led to Mah Jong.'
       : 'A discard was named incorrectly and another player claimed the tile.';
     case 'false-mah-jong': return 'Mah Jong was declared, but the hand was not valid.';
-    case 'wrong-tile-claim': return 'A player claimed a tile incorrectly.';
+    case 'wrong-tile-claim': return 'Corrected in time means the mistake is fixed before the next tile is drawn. After the next draw, it is too late and that player cannot Mah Jong.';
     case 'cannon': return 'A table-resolved Cannon can make one player cover the winner’s payments.';
   }
 };
