@@ -904,20 +904,28 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
                       ))}
                     </div>
                     {incidents.length > 0 && <div className="mt-3 space-y-2">
-                      {incidents.map((incident, index) => <div key={index} className="flex flex-wrap items-start gap-2 rounded bg-[#f7f1e3] p-2 text-[10px] text-[#284d45]">
-                        <details className="min-w-[8rem] max-w-full">
-                          <summary className="cursor-pointer list-none font-semibold underline decoration-[#cfc3aa] underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">{incidentTitle(incident)}</summary>
-                          <p className="mt-1 max-w-[18rem] leading-4 text-[#66746e]">{incident.type === 'cannon'
-                            ? <>A <a href="/rules/club#cannon" className="font-semibold text-[#477562] underline decoration-[#cfc3aa] underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">Cannon</a> happens when you discard a tile that is already visibly dangerous and it completes another player’s special Mah Jong.</>
-                            : incidentExplanation(incident)}</p>
-                        </details>
-                        <select value={'playerId' in incident ? incident.playerId : 'declarerId' in incident ? incident.declarerId : 'liablePlayerId' in incident ? incident.liablePlayerId : incident.discarderId} onChange={(event) => setIncidents((current) => current.map((item, itemIndex) => itemIndex !== index ? item : 'playerId' in item ? { ...item, playerId: event.target.value } : 'declarerId' in item ? { ...item, declarerId: event.target.value } : 'liablePlayerId' in item ? { ...item, liablePlayerId: event.target.value } : { ...item, discarderId: event.target.value }))}>{game.players.map((player) => <option key={player.id} value={player.id}>{player.name}</option>)}</select>
-                        {incident.type === 'incorrect-hand' && <select value={incident.condition} onChange={(event) => setIncidents((current) => current.map((item, itemIndex) => itemIndex === index && item.type === 'incorrect-hand' ? { ...item, condition: event.target.value as 'too-few' | 'too-many' } : item))}><option value="too-few">too few</option><option value="too-many">too many</option></select>}
-                        {incident.type === 'false-discard-name' && <><select value={incident.claimantId} onChange={(event) => setIncidents((current) => current.map((item, itemIndex) => itemIndex === index && item.type === 'false-discard-name' ? { ...item, claimantId: event.target.value } : item))}>{game.players.map((player) => <option key={player.id} value={player.id}>{player.name}</option>)}</select><span>caused Mah Jong</span></>}
-                        {incident.type === 'false-mah-jong' && <label><input type="checkbox" checked={incident.anyHandExposed} onChange={(event) => setIncidents((current) => current.map((item, itemIndex) => itemIndex === index && item.type === 'false-mah-jong' ? { ...item, anyHandExposed: event.target.checked } : item))} /> hand exposed</label>}
-                        {incident.type === 'wrong-tile-claim' && <label><input type="checkbox" checked={incident.correctedBeforeNextDraw} onChange={(event) => setIncidents((current) => current.map((item, itemIndex) => itemIndex === index && item.type === 'wrong-tile-claim' ? { ...item, correctedBeforeNextDraw: event.target.checked } : item))} /> corrected before next draw</label>}
-                        {incident.type === 'cannon' && <label><input type="checkbox" checked={incident.noChoiceAccepted} onChange={(event) => setIncidents((current) => current.map((item, itemIndex) => itemIndex === index && item.type === 'cannon' ? { ...item, noChoiceAccepted: event.target.checked } : item))} /> No choice! accepted</label>}
-                        <button type="button" onClick={() => setIncidents((current) => current.filter((_, itemIndex) => itemIndex !== index))}>Remove</button>
+                      {incidents.map((incident, index) => <div key={index} className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3 rounded bg-[#f7f1e3] p-2 text-[10px] text-[#284d45]">
+                        <div className="flex min-w-0 flex-wrap items-start gap-2">
+                          <details className="min-w-[8rem] max-w-full">
+                            <summary className="cursor-pointer list-none font-semibold underline decoration-[#cfc3aa] underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">{incidentTitle(incident)}</summary>
+                            <p className="mt-1 max-w-[18rem] leading-4 text-[#66746e]">{incident.type === 'cannon'
+                              ? <>A <a href="/rules/club#cannon" className="font-semibold text-[#477562] underline decoration-[#cfc3aa] underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">Cannon</a> happens when you discard a tile that is already visibly dangerous and it completes another player’s special Mah Jong.</>
+                              : incidentExplanation(incident)}</p>
+                          </details>
+                          <select value={'playerId' in incident ? incident.playerId : 'declarerId' in incident ? incident.declarerId : 'liablePlayerId' in incident ? incident.liablePlayerId : incident.discarderId} onChange={(event) => setIncidents((current) => current.map((item, itemIndex) => itemIndex !== index ? item : 'playerId' in item ? { ...item, playerId: event.target.value } : 'declarerId' in item ? { ...item, declarerId: event.target.value } : 'liablePlayerId' in item ? { ...item, liablePlayerId: event.target.value } : { ...item, discarderId: event.target.value }))}>{game.players.map((player) => <option key={player.id} value={player.id}>{player.name}</option>)}</select>
+                          {incident.type === 'incorrect-hand' && <select value={incident.condition} onChange={(event) => setIncidents((current) => current.map((item, itemIndex) => itemIndex === index && item.type === 'incorrect-hand' ? { ...item, condition: event.target.value as 'too-few' | 'too-many' } : item))}><option value="too-few">too few</option><option value="too-many">too many</option></select>}
+                          {incident.type === 'false-discard-name' && <><select value={incident.claimantId} onChange={(event) => setIncidents((current) => current.map((item, itemIndex) => itemIndex === index && item.type === 'false-discard-name' ? { ...item, claimantId: event.target.value } : item))}>{game.players.map((player) => <option key={player.id} value={player.id}>{player.name}</option>)}</select><span>caused Mah Jong</span></>}
+                          {incident.type === 'false-mah-jong' && <label><input type="checkbox" checked={incident.anyHandExposed} onChange={(event) => setIncidents((current) => current.map((item, itemIndex) => itemIndex === index && item.type === 'false-mah-jong' ? { ...item, anyHandExposed: event.target.checked } : item))} /> hand exposed</label>}
+                          {incident.type === 'wrong-tile-claim' && <label><input type="checkbox" checked={incident.correctedBeforeNextDraw} onChange={(event) => setIncidents((current) => current.map((item, itemIndex) => itemIndex === index && item.type === 'wrong-tile-claim' ? { ...item, correctedBeforeNextDraw: event.target.checked } : item))} /> corrected before next draw</label>}
+                          {incident.type === 'cannon' && <label><input type="checkbox" checked={incident.noChoiceAccepted} onChange={(event) => setIncidents((current) => current.map((item, itemIndex) => itemIndex === index && item.type === 'cannon' ? { ...item, noChoiceAccepted: event.target.checked } : item))} /> No choice! accepted</label>}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setIncidents((current) => current.filter((_, itemIndex) => itemIndex !== index))}
+                          className="min-w-[4rem] justify-self-end text-right font-semibold text-[#596b65] underline decoration-[#cfc3aa] underline-offset-4 hover:text-[#284d45] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]"
+                        >
+                          Remove
+                        </button>
                       </div>)}
                     </div>}
                   </section>
