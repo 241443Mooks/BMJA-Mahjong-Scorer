@@ -77,6 +77,16 @@ describe('public game route seam', () => {
     expect(homeHtml).not.toContain('/hand?rules=');
   });
 
+  it('uses the shared site footer on game and hand routes', () => {
+    for (const path of ['/game/club', '/hand']) {
+      const html = renderToStaticMarkup(<RouteContent path={path} />);
+      expect(html).toContain('Mahjong Reference');
+      expect(html).toContain('© 2026 SMooks');
+      expect(html).toContain('Support the project');
+      expect(html).not.toContain('Local tool · no hand data leaves this device');
+    }
+  });
+
   it('loads the scorer when the browser storage getter itself throws', () => {
     vi.stubGlobal('window', { get localStorage() { throw new Error('blocked'); }, location: { search: '' } });
     expect(() => renderToStaticMarkup(<RouteContent path="/hand" />)).not.toThrow();
