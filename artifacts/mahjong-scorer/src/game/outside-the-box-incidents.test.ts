@@ -2,8 +2,11 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import { initialiseCurrentRulesRuntimes } from '../rules-platform/current-runtime-registry';
 import { confirmHand, createBmjaGame, replayGame, undoLastHand } from './game';
 import { OUTSIDE_THE_BOX_PROFILE_REF } from './ruleset';
-import { incidentExplanation, incidentTitle   incidentPickerConsequence,
+import {
+  incidentExplanation,
+  incidentPickerConsequence,
   incidentPickerLabel,
+  incidentTitle,
 } from './outside-the-box-incidents';
 import { previewRoundSettlement } from './GameScorer';
 
