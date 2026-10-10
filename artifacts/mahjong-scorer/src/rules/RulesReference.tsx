@@ -32,8 +32,8 @@ function PageFrame({ eyebrow, title, intro, children }: { eyebrow: string; title
   return <div className="mahjong-shell min-h-screen"><SiteHeader /><main className="mx-auto max-w-[1180px] px-5 py-9 lg:px-8 lg:py-14"><article className="overflow-hidden rounded-2xl border border-[#d8ceb8] bg-[#fbf8ed] shadow-[var(--shadow-sm)]"><section className="border-b border-[#ddd3bf] px-5 py-9 sm:px-8 sm:py-12 lg:px-12 lg:py-14"><div className="fine-rule mb-4 w-10" /><p className="font-mono text-[12px] font-semibold uppercase tracking-[.16em] text-[#ae6249]">{eyebrow}</p><h1 className="mt-3 max-w-[900px] font-serif text-[clamp(38px,6vw,62px)] leading-[.98] text-[#284d45]">{title}</h1><p className="mt-5 max-w-[790px] text-[17px] leading-8 text-[#405650]">{intro}</p></section>{children}</article></main></div>;
 }
 
-function Section({ title, children }: { title: string; children: ReactNode }) {
-  return <section className="border-b border-[#ddd3bf] px-5 py-9 sm:px-8 sm:py-11 lg:px-12"><h2 className="font-serif text-[30px] leading-tight text-[#284d45]">{title}</h2><div className="mt-4 max-w-[820px] text-[16px] leading-7 text-[#405650]">{children}</div></section>;
+function Section({ title, children, id }: { title: string; children: ReactNode; id?: string }) {
+  return <section id={id} className="scroll-mt-24 border-b border-[#ddd3bf] px-5 py-9 sm:px-8 sm:py-11 lg:px-12"><h2 className="font-serif text-[30px] leading-tight text-[#284d45]">{title}</h2><div className="mt-4 max-w-[820px] text-[16px] leading-7 text-[#405650]">{children}</div></section>;
 }
 
 const pageCopy: Record<Exclude<PublicRulesSlug, 'club'>, { eyebrow: string; intro: string; identity: ReactNode; table: ReactNode; scoring: ReactNode; after: ReactNode; distinctive: ReactNode; provenance: ReactNode; links: readonly [string, string][] }> = {
@@ -89,7 +89,7 @@ export function RulesProfilePage({ slug }: { slug: Exclude<PublicRulesSlug, 'clu
     <Section title="Identity and authority"><p>{copy.identity}</p></Section>
     <Section title="At the table"><p>{copy.table}</p></Section>
     <Section title="How scoring works"><p>{copy.scoring}</p></Section>
-    <Section title="What happens after a hand"><p>{copy.after}</p></Section>
+    <Section id="settlement" title="What happens after a hand"><p>{copy.after}</p>{slug === 'british' && <p className="mt-3"><a href="/mahjong-settlement" className="font-semibold text-[#284d45] underline decoration-[#ae6249] underline-offset-4">See the worked British settlement explainer</a>.</p>}</Section>
     <Section title="Distinctive mechanics"><p>{copy.distinctive}</p></Section>
     <Section title="Use these rules"><div className="flex flex-wrap gap-3">{copy.links.map(([label, href]) => <a key={href} href={href} className={href.startsWith('/game') ? actionClass : secondaryActionClass}>{label}<ArrowRight size={16} aria-hidden="true" /></a>)}</div></Section>
     <Section title="Sources and provenance"><div className="rounded-xl border border-[#d8ceb8] bg-[#fdfbf5] p-5 sm:p-6"><p><strong className="text-[#284d45]">Reference basis:</strong> {descriptor.support.authority}.</p><p className="mt-4">{copy.provenance}</p></div></Section>

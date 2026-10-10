@@ -7,8 +7,8 @@ import { RulesSupportStatus } from './RulesReference';
 const actionClass = 'inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-[#284d45] px-4 py-2.5 text-[15px] font-semibold text-[#f8f4e9] transition hover:bg-[#23443d] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249] focus-visible:ring-offset-2';
 const secondaryActionClass = 'inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-[#b8c8c1] bg-white px-4 py-2.5 text-[15px] font-semibold text-[#284d45] transition hover:bg-[#f2f6f3] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249] focus-visible:ring-offset-2';
 
-function Section({ title, children }: { title: string; children: ReactNode }) {
-  return <section className="border-b border-[#ddd3bf] px-5 py-9 sm:px-8 sm:py-11 lg:px-12"><h2 className="font-serif text-[30px] leading-tight text-[#284d45]">{title}</h2><div className="mt-4 max-w-[820px] text-[16px] leading-7 text-[#405650]">{children}</div></section>;
+function Section({ title, children, id }: { title: string; children: ReactNode; id?: string }) {
+  return <section id={id} className="scroll-mt-24 border-b border-[#ddd3bf] px-5 py-9 sm:px-8 sm:py-11 lg:px-12"><h2 className="font-serif text-[30px] leading-tight text-[#284d45]">{title}</h2><div className="mt-4 max-w-[820px] text-[16px] leading-7 text-[#405650]">{children}</div></section>;
 }
 
 export function ClubRulesPage() {
@@ -27,7 +27,7 @@ export function ClubRulesPage() {
         <Section title="Identity and authority"><p>This is a named local configuration in Mahjong Reference. It should not be read as authority for other clubs, Western Mahjong generally, or British / BMJA-style play. Where another table uses different house rules, that table needs its own explicit amendments or profile.</p></Section>
         <Section title="At the table"><p>The profile carries the club-specific special-hand catalogue and supports a Goulash hand after a draw. It also records table-resolved incidents and liability where those facts affect settlement. Mahjong Reference records those decisions; it does not attempt to referee physical play after the event.</p></Section>
         <Section title="How scoring works"><p>The scorer uses this configured profile rather than silently falling back to the British profile. Special-hand recognition and other profile-owned treatments remain attached to the exact Club rules profile and version used by the hand or game.</p></Section>
-        <Section title="What happens after a hand"><p>The game tracker uses the same configured profile for settlement and progression, including the profile’s Goulash behaviour after a draw. The resulting settlement, next-hand state and recorded history stay tied to that profile.</p></Section>
+        <Section id="settlement" title="What happens after a hand"><p>The game tracker uses this Club profile to turn confirmed hand scores into who pays whom. Winner payments, East/dealer effects, loser-to-loser differences and any recorded Club liability are applied under these rules. After a draw there are no payments; East and the prevailing Wind stay unchanged and the next hand becomes Goulash.</p></Section>
         <Section title="Distinctive mechanics"><p>The public descriptor currently records a club-specific special-hand catalogue, Goulash with physical blank tiles after draws, and table incidents/liability that are entered as resolved facts. These are local configuration choices, not claims about all Mahjong clubs.</p></Section>
         <Section title="Penalties and incidents">
           <p>These are Club-specific table rules. Mahjong Reference records the incident once the table has decided what happened; it does not reconstruct or referee the play itself.</p>
