@@ -13,7 +13,7 @@ import {
 import { HandRecord, settlementDescription } from './HandRecord';
 import { McrHandRecord, mcrSettlementDescription } from './McrPresentation';
 import { presentMcrScore } from './mcr-score-presentation';
-import { incidentDescription, incidentExplanation, incidentTitle } from './outside-the-box-incidents';
+import { incidentDescription, incidentExplanation, incidentPickerConsequence, incidentPickerLabel, incidentTitle } from './outside-the-box-incidents';
 import { SiteHeader } from '../components/SiteHeader';
 import {
   applyManualScore,
@@ -855,11 +855,16 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
                 </div>}
                 {supports(game.setup.rulesProfile, 'table.round-incidents') && (
                   <section data-testid="section-round-incidents" className="mt-5 border-t border-[#d8ceb8] pt-5">
-                    <div className="font-mono text-[10px] uppercase tracking-[.15em] text-[#ae6249]">Round incidents / penalties</div>
-                    <p className="mt-1 text-[11px] text-[#7a7769]">No incidents unless the table records one. These are manual end-of-round evidence, not simulated play.</p>
-                    <div className="mt-3 flex flex-wrap gap-2">
+                    <details>
+                      <summary className="cursor-pointer list-none font-mono text-[10px] uppercase tracking-[.15em] text-[#ae6249] underline decoration-[#d8ceb8] underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">Round incidents / penalties</summary>
+                      <div className="mt-2 max-w-[560px] text-[11px] leading-5 text-[#7a7769]">
+                        <p>Only add one when something unusual happened at the table. Mahjong Reference records what the table decided; it does not simulate play.</p>
+                        <a href="/rules/club#penalties" className="mt-1 inline-flex font-semibold text-[#477562] underline decoration-[#cfc3aa] underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">See Club penalties and incidents</a>
+                      </div>
+                    </details>
+                    <div className="mt-3 grid grid-cols-2 gap-2">
                       {(['incorrect-hand', 'false-discard-name', 'false-mah-jong', 'wrong-tile-claim', 'cannon'] as const).map((type) => (
-                        <button key={type} type="button" className="rounded border border-[#cfc3aa] px-2 py-1 text-[10px] text-[#284d45]" onClick={() => {
+                        <button key={type} type="button" className={`flex min-h-14 items-center justify-between gap-2 rounded-lg border border-[#cfc3aa] bg-[#fdfbf5] px-3 py-2 text-left text-[#284d45] transition hover:bg-[#f7f1e3] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249] ${type === 'false-discard-name' ? 'col-span-2' : ''}`} onClick={() => {
                           const first = game.players[0].id;
                           const second = game.players[1].id;
                           const incident: RoundIncident = type === 'incorrect-hand' ? { type, playerId: first, condition: 'too-few' }
@@ -868,10 +873,12 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
                             : type === 'wrong-tile-claim' ? { type, playerId: first, correctedBeforeNextDraw: true }
                             : { type, liablePlayerId: first, noChoiceAccepted: false };
                           setIncidents((current) => [...current, incident]);
-                        }}>{type === 'false-discard-name' ? 'False discard name — caused Mah Jong' : type.replaceAll('-', ' ')}</button>
+                        }}>
+                          <span className="text-[10px] font-semibold leading-4">{incidentPickerLabel(type)}</span>
+                          <span className="shrink-0 text-right font-mono text-[9px] font-bold leading-4 text-[#a34f45]">{incidentPickerConsequence(type, game.setup.tableLimit ?? 1000)}</span>
+                        </button>
                       ))}
                     </div>
-                    <p className="mt-2 text-[10px] text-[#7a7769]">Ordinary pickup penalty: 50 documented; recipient still awaiting source confirmation.</p>
                     {incidents.length > 0 && <div className="mt-3 space-y-2">
                       {incidents.map((incident, index) => <div key={index} className="flex flex-wrap items-start gap-2 rounded bg-[#f7f1e3] p-2 text-[10px] text-[#284d45]">
                         <details className="min-w-[8rem] max-w-full">

@@ -2,7 +2,12 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import { initialiseCurrentRulesRuntimes } from '../rules-platform/current-runtime-registry';
 import { confirmHand, createBmjaGame, replayGame, undoLastHand } from './game';
 import { OUTSIDE_THE_BOX_PROFILE_REF } from './ruleset';
-import { incidentExplanation, incidentTitle } from './outside-the-box-incidents';
+import {
+  incidentExplanation,
+  incidentPickerConsequence,
+  incidentPickerLabel,
+  incidentTitle,
+} from './outside-the-box-incidents';
 import { previewRoundSettlement } from './GameScorer';
 
 beforeAll(() => initialiseCurrentRulesRuntimes());
@@ -13,6 +18,16 @@ const scores = { east: 100, south: 30, west: 20, north: 10 };
 const game = () => createBmjaGame(players, seats, undefined, 'full-game', OUTSIDE_THE_BOX_PROFILE_REF);
 
 describe('Outside the Box round incidents', () => {
+  it('presents compact source-backed picker consequences', () => {
+    expect(incidentPickerLabel('false-discard-name')).toBe('False discard name — caused Mah Jong');
+    expect(incidentPickerConsequence('incorrect-hand', 1000)).toBe('0 score if too many');
+    expect(incidentPickerConsequence('false-discard-name', 1000)).toBe('covers winner');
+    expect(incidentPickerConsequence('false-mah-jong', 1000)).toBe('−1,500 if exposed');
+    expect(incidentPickerConsequence('wrong-tile-claim', 1000)).toBe('cannot Mah Jong');
+    expect(incidentPickerConsequence('cannon', 1000)).toBe('covers winner');
+  });
+
+
   it('provides very short player-facing incident labels and explanations', () => {
     const incidents = [
       { type: 'incorrect-hand', playerId: 'east', condition: 'too-few' },
