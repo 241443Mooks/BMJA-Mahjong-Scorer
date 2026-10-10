@@ -42,11 +42,11 @@ export function ClubRulesPage() {
             </article>
             <article id="false-mah-jong" className="scroll-mt-24 rounded-xl border border-[#d8ceb8] bg-[#fdfbf5] p-4">
               <h3 className="font-serif text-[22px] text-[#284d45]">False Mah Jong</h3>
-              <p className="mt-2 text-[13px] leading-6">No exposed hand means no penalty. After exposure, the declarer pays each other player half the table limit.</p>
+              <p className="mt-2 text-[13px] leading-6">No exposed hand means no penalty. After exposure, the declarer pays each other player half the table limit — 500 each at a 1,000-point limit.</p>
             </article>
             <article id="wrong-tile-claim" className="scroll-mt-24 rounded-xl border border-[#d8ceb8] bg-[#fdfbf5] p-4">
               <h3 className="font-serif text-[22px] text-[#284d45]">Wrong tile claim</h3>
-              <p className="mt-2 text-[13px] leading-6">Correct it before the next draw and there is no penalty. Otherwise, that player cannot Mah Jong.</p>
+              <p className="mt-2 text-[13px] leading-6"><strong>Corrected in time</strong> means the mistake is fixed before the next tile is drawn. If the next draw has already happened, it is too late and that player cannot Mah Jong.</p>
             </article>
             <article id="cannon" className="scroll-mt-24 rounded-xl border border-[#d8ceb8] bg-[#fdfbf5] p-4 sm:col-span-2">
               <h3 className="font-serif text-[22px] text-[#284d45]">Cannon</h3>
