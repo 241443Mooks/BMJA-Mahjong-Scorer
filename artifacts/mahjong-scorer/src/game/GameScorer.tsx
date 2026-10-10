@@ -716,10 +716,24 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
             </details>
           </div>
           <div className="mt-2 grid grid-cols-2 gap-1 sm:mt-3 sm:gap-2 sm:grid-cols-4">
-            {game.players.map((player) => <div key={player.id} className={`rounded-md border px-2 py-1 sm:px-3 sm:py-2 ${game.seats[player.id] === 'east' ? 'border-[#ae6249] bg-[#f5eadb]' : 'border-[#d8ceb8] bg-[#fbf8ed]'}`}>
-              <div className="font-mono text-[7px] uppercase tracking-[.08em] text-[#ae6249] sm:text-[8px] sm:tracking-[.12em]">{windLabel(game.seats[player.id])}{game.seats[player.id] === 'east' ? ' · Dealer' : ''}</div>
-              <div className="flex items-baseline justify-between gap-1 sm:gap-2"><span className="truncate font-serif text-[13px] leading-tight text-[#284d45] sm:text-[16px]">{player.name}</span><span className="font-mono text-[12px] font-bold text-[#284d45] sm:text-[14px]">{formatChange(game.balances[player.id])}</span></div>
-            </div>)}
+            {game.players.map((player) => {
+              const scorerAvailable = !game.isComplete && outcomeType === 'win' && !!outcome;
+              return <button
+                key={player.id}
+                type="button"
+                data-testid={`button-player-scorer-${player.id}`}
+                disabled={!scorerAvailable}
+                aria-label={scorerAvailable ? `Open scorer for ${player.name}` : undefined}
+                onClick={() => {
+                  if (!scorerAvailable || !outcome) return;
+                  onOpenHandScorer(createHandScorerContext(game, player.id, outcome, scoreRecords[player.id]));
+                }}
+                className={`w-full rounded-md border px-2 py-1 text-left transition sm:px-3 sm:py-2 ${game.seats[player.id] === 'east' ? 'border-[#ae6249] bg-[#f5eadb]' : 'border-[#d8ceb8] bg-[#fbf8ed]'} ${scorerAvailable ? 'cursor-pointer hover:bg-[#efe8da] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249] focus-visible:ring-offset-1' : 'cursor-default'}`}
+              >
+                <div className="font-mono text-[7px] uppercase tracking-[.08em] text-[#ae6249] sm:text-[8px] sm:tracking-[.12em]">{windLabel(game.seats[player.id])}{game.seats[player.id] === 'east' ? ' · Dealer' : ''}</div>
+                <div className="flex items-baseline justify-between gap-1 sm:gap-2"><span className="truncate font-serif text-[13px] leading-tight text-[#284d45] sm:text-[16px]">{player.name}</span><span className="font-mono text-[12px] font-bold text-[#284d45] sm:text-[14px]">{formatChange(game.balances[player.id])}</span></div>
+              </button>;
+            })}
           </div>
         </div>
       </div>
@@ -788,9 +802,9 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
                 </div>
 
                 {outcomeType === 'win' && (
-                  <label className="mb-5 block">
-                    <span className="mb-1.5 block font-mono text-[10px] uppercase tracking-[.15em] text-[#7a7769]">
-                      Player who went Mah Jong
+                  <label className="mb-5 block rounded-lg border border-[#ae6249] bg-[#f5eadb] p-3">
+                    <span className="mb-2 block font-mono text-[10px] font-semibold uppercase tracking-[.15em] text-[#9a4d3a]">
+                      Who went Mah Jong?
                     </span>
                     <select
                       data-testid="select-round-winner"
@@ -801,7 +815,7 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
                           winnerId: event.target.value,
                         })
                       }
-                      className="w-full rounded-md border border-[#cfc3aa] bg-[#fdfbf5] px-3 py-3 text-[13px] font-semibold text-[#284d45]"
+                      className="w-full rounded-md border border-[#ae6249] bg-[#fdfbf5] px-3 py-3 text-[15px] font-bold text-[#284d45] outline-none focus:ring-2 focus:ring-[#ae6249]"
                     >
                       {game.players.map((player) => (
                         <option key={player.id} value={player.id}>
