@@ -26,41 +26,41 @@ function returnHome() {
   if (typeof window !== 'undefined') window.location.assign('/');
 }
 
-function withFullFooter(content: ReactNode) {
-  return <>{content}<SiteFooter /></>;
+function withFooter(content: ReactNode, options: { variant?: 'full' | 'compact'; showTileCredit?: boolean } = {}) {
+  return <>{content}<SiteFooter variant={options.variant} showTileCredit={options.showTileCredit} /></>;
 }
 
 export function RouteContent({ path, prerender = false }: { path: string; prerender?: boolean }) {
   if (import.meta.env.DEV && path === '/__fixtures/rules-profile-picker') return <RulesProfilePickerScalabilityFixture />;
-  if (path === '/') return withFullFooter(<HomePage />);
+  if (path === '/') return withFooter(<HomePage />);
   if (path === '/game' || path.startsWith('/game/')) {
     const slug = publicRulesSlugFromGamePath(path);
     const explicitProfile = path === '/game' ? undefined : slug ? descriptorForSlug(slug).profile : undefined;
-    return slug ? withFullFooter(<App initialRulesProfile={explicitProfile} prerenderOnly={prerender} />) : <NotFound />;
+    return slug ? withFooter(<App initialRulesProfile={explicitProfile} prerenderOnly={prerender} />, { variant: 'compact' }) : <NotFound />;
   }
-  if (path === '/hand') return withFullFooter(<App initialView="hand" standaloneHand prerenderOnly={prerender} />);
-  if (path === '/scoring-examples') return withFullFooter(<ScoringExamplesPage />);
-  if (path === '/guide' || path === '/beginner-guide') return withFullFooter(<BeginnerGuide onClose={returnHome} />);
-  if (path === '/special-hands' || path === '/special-hand-catalogue') return withFullFooter(<SpecialHandsCatalogue />);
-  if (path === '/gameplay-basics') return withFullFooter(<GameplayBasics />);
-  if (path === '/features') return withFullFooter(<FeaturesPage />);
-  if (path === '/help') return withFullFooter(<HelpPage />);
-  if (path === '/how-it-works') return withFullFooter(<HowItWorksPage />);
-  if (path === '/under-the-hood') return withFullFooter(<UnderTheHoodPage />);
+  if (path === '/hand') return withFooter(<App initialView="hand" standaloneHand prerenderOnly={prerender} />, { showTileCredit: true });
+  if (path === '/scoring-examples') return withFooter(<ScoringExamplesPage />, { showTileCredit: true });
+  if (path === '/guide' || path === '/beginner-guide') return withFooter(<BeginnerGuide onClose={returnHome} />, { showTileCredit: true });
+  if (path === '/special-hands' || path === '/special-hand-catalogue') return withFooter(<SpecialHandsCatalogue />, { showTileCredit: true });
+  if (path === '/gameplay-basics') return withFooter(<GameplayBasics />, { showTileCredit: true });
+  if (path === '/features') return withFooter(<FeaturesPage />);
+  if (path === '/help') return withFooter(<HelpPage />);
+  if (path === '/how-it-works') return withFooter(<HowItWorksPage />);
+  if (path === '/under-the-hood') return withFooter(<UnderTheHoodPage />);
   if (path.startsWith('/evidence/')) {
     const slug = path.slice('/evidence/'.length);
     const document = publicEvidenceDocumentForSlug(slug);
-    return document ? withFullFooter(<EvidenceDocumentPage document={document} />) : <NotFound />;
+    return document ? withFooter(<EvidenceDocumentPage document={document} />) : <NotFound />;
   }
-  if (path === '/mahjong-rules-compared') return withFullFooter(<MahjongRulesComparedPage />);
-  if (path === '/mahjong-settlement') return withFullFooter(<MahjongSettlementPage />);
-  if (path === '/rules') return withFullFooter(<RulesHubPage />);
-  if (path === '/rules/british') return withFullFooter(<RulesProfilePage slug="british" />);
-  if (path === '/rules/western') return withFullFooter(<RulesProfilePage slug="western" />);
-  if (path === '/rules/club') return withFullFooter(<ClubRulesPage />);
-  if (path === '/rules/buzzard') return withFullFooter(<RulesProfilePage slug="buzzard" />);
-  if (path === '/rules/mcr') return withFullFooter(<RulesProfilePage slug="mcr" />);
-  if (path === '/about') return withFullFooter(<AboutPage />);
-  if (path === '/privacy') return withFullFooter(<PrivacyPage />);
+  if (path === '/mahjong-rules-compared') return withFooter(<MahjongRulesComparedPage />);
+  if (path === '/mahjong-settlement') return withFooter(<MahjongSettlementPage />);
+  if (path === '/rules') return withFooter(<RulesHubPage />);
+  if (path === '/rules/british') return withFooter(<RulesProfilePage slug="british" />);
+  if (path === '/rules/western') return withFooter(<RulesProfilePage slug="western" />);
+  if (path === '/rules/club') return withFooter(<ClubRulesPage />);
+  if (path === '/rules/buzzard') return withFooter(<RulesProfilePage slug="buzzard" />);
+  if (path === '/rules/mcr') return withFooter(<RulesProfilePage slug="mcr" />);
+  if (path === '/about') return withFooter(<AboutPage />);
+  if (path === '/privacy') return withFooter(<PrivacyPage />);
   return <NotFound />;
 }

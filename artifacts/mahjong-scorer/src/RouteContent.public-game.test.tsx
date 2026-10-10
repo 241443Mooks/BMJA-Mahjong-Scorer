@@ -77,14 +77,22 @@ describe('public game route seam', () => {
     expect(homeHtml).not.toContain('/hand?rules=');
   });
 
-  it('uses the shared site footer on game and hand routes', () => {
-    for (const path of ['/game/club', '/hand']) {
-      const html = renderToStaticMarkup(<RouteContent path={path} />);
-      expect(html).toContain('Mahjong Reference');
-      expect(html).toContain('© 2026 SMooks');
-      expect(html).toContain('Support the project');
-      expect(html).not.toContain('Local tool · no hand data leaves this device');
-    }
+  it('uses a quiet compact footer on game routes and artwork credit on the hand scorer', () => {
+    const game = renderToStaticMarkup(<RouteContent path="/game/club" />);
+    expect(game).toContain('Site links');
+    expect(game).toContain('© 2026 SMooks');
+    expect(game).toContain('Support the project');
+    expect(game).not.toContain('Mahjong tile artwork from xhokir/riichi-mahjong-tiles');
+    expect(game).not.toContain('Local tool · no hand data leaves this device');
+
+    const hand = renderToStaticMarkup(<RouteContent path="/hand" />);
+    expect(hand).toContain('© 2026 SMooks');
+    expect(hand).toContain('Support the project');
+    expect(hand).toContain('Mahjong tile artwork from xhokir/riichi-mahjong-tiles');
+  });
+
+  it.each(['/guide', '/gameplay-basics', '/scoring-examples', '/special-hands'])('%s credits tile artwork when it uses tile visuals', (path) => {
+    expect(renderToStaticMarkup(<RouteContent path={path} />)).toContain('Mahjong tile artwork from xhokir/riichi-mahjong-tiles');
   });
 
   it('loads the scorer when the browser storage getter itself throws', () => {
