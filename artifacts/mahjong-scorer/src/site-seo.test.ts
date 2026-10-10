@@ -6,7 +6,7 @@ describe('public SEO configuration', () => {
     const paths = siteSeo.routes.map((route) => route.path);
     const titles = siteSeo.routes.map((route) => route.title);
 
-    expect(siteSeo.routes).toHaveLength(28);
+    expect(siteSeo.routes).toHaveLength(29);
     for (const slug of [
       'eight-ruleset-architecture-stress-test',
       'eight-ruleset-paper-manifests',
@@ -19,6 +19,7 @@ describe('public SEO configuration', () => {
       expect(siteSeo.routes.find((route) => route.path === `/evidence/${slug}`)?.title).toContain('Mahjong Reference');
     }
     expect(siteSeo.routes.find((route) => route.path === '/privacy')?.title).toContain('Privacy & Analytics');
+    expect(siteSeo.routes.find((route) => route.path === '/whats-new')?.title).toBe('What’s New | Mahjong Reference');
     for (const path of ['/rules/club', '/rules/buzzard', '/rules/mcr', '/under-the-hood']) {
       const route = siteSeo.routes.find((candidate) => candidate.path === path);
       expect(route).toBeDefined();
