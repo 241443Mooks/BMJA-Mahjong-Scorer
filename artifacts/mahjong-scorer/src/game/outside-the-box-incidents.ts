@@ -170,7 +170,7 @@ export const incidentPickerConsequence = (type: RoundIncident['type'], limit: nu
     case 'incorrect-hand': return '0 score if too many';
     case 'false-discard-name': return 'Mah Jong → covers winner';
     case 'false-mah-jong': return `−${(limit / 2).toLocaleString('en-GB')} each if exposed`;
-    case 'wrong-tile-claim': return 'cannot Mah Jong';
+    case 'wrong-tile-claim': return 'late → cannot Mah Jong';
     case 'cannon': return 'covers winner';
   }
 };
