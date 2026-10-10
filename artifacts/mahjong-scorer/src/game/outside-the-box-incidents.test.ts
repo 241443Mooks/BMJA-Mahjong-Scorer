@@ -19,9 +19,9 @@ const game = () => createBmjaGame(players, seats, undefined, 'full-game', OUTSID
 
 describe('Outside the Box round incidents', () => {
   it('presents compact source-backed picker consequences', () => {
-    expect(incidentPickerLabel('false-discard-name')).toBe('False discard name — caused Mah Jong');
+    expect(incidentPickerLabel('false-discard-name')).toBe('False discard name');
     expect(incidentPickerConsequence('incorrect-hand', 1000)).toBe('0 score if too many');
-    expect(incidentPickerConsequence('false-discard-name', 1000)).toBe('covers winner');
+    expect(incidentPickerConsequence('false-discard-name', 1000)).toBe('Mah Jong → covers winner');
     expect(incidentPickerConsequence('false-mah-jong', 1000)).toBe('−1,500 if exposed');
     expect(incidentPickerConsequence('wrong-tile-claim', 1000)).toBe('cannot Mah Jong');
     expect(incidentPickerConsequence('cannon', 1000)).toBe('covers winner');

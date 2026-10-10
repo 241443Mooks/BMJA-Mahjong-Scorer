@@ -158,7 +158,7 @@ export const settleOutsideTheBoxRound = (
 export const incidentPickerLabel = (type: RoundIncident['type']) => {
   switch (type) {
     case 'incorrect-hand': return 'Incorrect hand';
-    case 'false-discard-name': return 'False discard name — caused Mah Jong';
+    case 'false-discard-name': return 'False discard name';
     case 'false-mah-jong': return 'False Mah Jong';
     case 'wrong-tile-claim': return 'Wrong tile claim';
     case 'cannon': return 'Cannon';
@@ -168,7 +168,7 @@ export const incidentPickerLabel = (type: RoundIncident['type']) => {
 export const incidentPickerConsequence = (type: RoundIncident['type'], limit: number) => {
   switch (type) {
     case 'incorrect-hand': return '0 score if too many';
-    case 'false-discard-name': return 'covers winner';
+    case 'false-discard-name': return 'Mah Jong → covers winner';
     case 'false-mah-jong': return `−${((limit * 3) / 2).toLocaleString('en-GB')} if exposed`;
     case 'wrong-tile-claim': return 'cannot Mah Jong';
     case 'cannon': return 'covers winner';
