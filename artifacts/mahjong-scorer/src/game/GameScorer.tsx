@@ -74,6 +74,9 @@ const formatChange = (value: number) =>
 
 const activeRulesCopy = (profile: RulesProfileRef) => descriptorForRulesProfile(profile).title;
 
+export const settlementRulesHref = (profile: RulesProfileRef) =>
+  `/rules/${descriptorForRulesProfile(profile).slug}#settlement`;
+
 export const gameRecordRulesLabel = (profile: GameState['setup']['rulesProfile']) =>
   `${activeRulesCopy(profile)} · Profile version: ${profile.version}`;
 
@@ -958,73 +961,47 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
               <div className="mt-2 font-serif text-[27px]">
                 {game.isComplete ? 'Game Complete' : outcomeType === 'draw' ? 'No payments this hand' : 'Who pays whom'}
               </div>
-              {!game.isComplete && <a href="/help#settlement" className="mt-2 inline-flex text-[11px] font-semibold text-[#e8eee9] underline decoration-[#d7a287] underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d7a287]">How settlement works</a>}
+              {!game.isComplete && outcomeType !== 'draw' && <a href={settlementRulesHref(game.setup.rulesProfile)} className="mt-2 inline-flex text-[11px] font-semibold text-[#e8eee9] underline decoration-[#d7a287] underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d7a287]">How settlement works</a>}
             </div>
 
             {!game.isComplete ? (
               <div className="p-5">
-                {previewPresentation === 'no-payments' ? <p className="rounded-md bg-[#355e54] px-3 py-3 text-[15px] leading-6 text-[#c8d8d1]">This draw has no payments. East and the prevailing Wind remain unchanged.</p> : <div className="space-y-2 rounded-md bg-[#355e54] p-3 text-[14px] leading-6 text-[#e5eee9]">
-                  {previewPresentation === 'transactions' ? preview.settlement?.transactions.map((transaction, index) => <p key={`${transaction.fromPlayerId}-${transaction.toPlayerId}-${index}`}>{settlementDescription(transaction, game.players, currentEastId ?? '')}</p>) : <p>Enter complete hand scores to see who pays whom.</p>}
-                </div>}
-                <div className="mt-5"><div className="mb-2 font-mono text-[10px] uppercase tracking-[.16em] text-[#d7a287]">Net change</div><div className="space-y-3">
-                  {game.players.map((player) => {
-                    const change = preview.settlement?.changes[player.id] ?? 0;
-                    return (
-                      <div
-                        key={player.id}
-                        className="flex items-center justify-between border-b border-[#45665d] pb-3 last:border-0"
-                      >
-                        <div>
-                          <div className="text-[12px] font-semibold">
-                            {player.name}
+                {outcomeType === 'draw' ? (
+                  <>
+                    <p className="rounded-md bg-[#355e54] px-3 py-3 text-[15px] leading-6 text-[#c8d8d1]">This draw has no payments. East and the prevailing Wind remain unchanged.</p>
+                    <button
+                      type="button"
+                      data-testid="button-confirm-hand"
+                      onClick={confirmRound}
+                      className="mt-4 flex w-full items-center justify-center gap-2 rounded-md bg-[#f3e8d4] px-4 py-3 text-[12px] font-bold text-[#284d45]"
+                    >
+                      Record hand and advance <ArrowRight size={15} />
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <div className="space-y-2 rounded-md bg-[#355e54] p-3 text-[14px] leading-6 text-[#e5eee9]">
+                      {previewPresentation === 'transactions' ? preview.settlement?.transactions.map((transaction, index) => <p key={`${transaction.fromPlayerId}-${transaction.toPlayerId}-${index}`}>{settlementDescription(transaction, game.players, currentEastId ?? '')}</p>) : <p>Enter complete hand scores to see who pays whom.</p>}
+                    </div>
+                    <div className="mt-5"><div className="mb-2 font-mono text-[10px] uppercase tracking-[.16em] text-[#d7a287]">Net change</div><div className="space-y-3">
+                      {game.players.map((player) => {
+                        const change = preview.settlement?.changes[player.id] ?? 0;
+                        return (
+                          <div key={player.id} className="flex items-center justify-between border-b border-[#45665d] pb-3 last:border-0">
+                            <div><div className="text-[12px] font-semibold">{player.name}</div><div className="font-mono text-[8px] uppercase tracking-wider text-[#b4c4bd]">{windLabel(game.seats[player.id])}</div></div>
+                            <div className={`font-mono text-[18px] font-bold ${change > 0 ? 'text-[#b8d5c5]' : change < 0 ? 'text-[#e6a48d]' : 'text-[#b4c4bd]'}`}>{formatChange(change)}</div>
                           </div>
-                          <div className="font-mono text-[8px] uppercase tracking-wider text-[#b4c4bd]">
-                            {windLabel(game.seats[player.id])}
-                          </div>
-                        </div>
-                        <div
-                          className={`font-mono text-[18px] font-bold ${
-                            change > 0
-                              ? 'text-[#b8d5c5]'
-                              : change < 0
-                                ? 'text-[#e6a48d]'
-                                : 'text-[#b4c4bd]'
-                          }`}
-                        >
-                          {formatChange(change)}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div></div>
-                <div className="mt-5 flex items-center gap-2 rounded-md bg-[#355e54] px-3 py-2 text-[10px] text-[#c8d8d1]">
-                  <Check size={13} />
-                  Changes total {preview.settlement?.zeroSum ? 'zero' : '—'}
-                </div>
-                {preview.error && (
-                  <p role="alert" data-testid="preview-domain-error" className="mt-3 rounded-md bg-[#6b3a36] px-3 py-2 text-[11px] font-semibold leading-5 text-[#ffe5db]">
-                    {preview.error}
-                  </p>
+                        );
+                      })}
+                    </div></div>
+                    <div className="mt-5 flex items-center gap-2 rounded-md bg-[#355e54] px-3 py-2 text-[10px] text-[#c8d8d1]"><Check size={13} />Changes total {preview.settlement?.zeroSum ? 'zero' : '—'}</div>
+                    {preview.error && <p role="alert" data-testid="preview-domain-error" className="mt-3 rounded-md bg-[#6b3a36] px-3 py-2 text-[11px] font-semibold leading-5 text-[#ffe5db]">{preview.error}</p>}
+                    {incidents.length > 0 && <div className="mt-3 rounded-md bg-[#355e54] px-3 py-2 text-[10px] leading-5 text-[#c8d8d1]">{incidents.map((incident, index) => <div key={index}>{incidentDescription(incident, game.players)}</div>)}</div>}
+                    {error && <p role="alert" className="mt-3 text-[11px] font-semibold text-[#e6a48d]">{error}</p>}
+                    <button type="button" data-testid="button-confirm-hand" onClick={confirmRound} className="mt-4 flex w-full items-center justify-center gap-2 rounded-md bg-[#f3e8d4] px-4 py-3 text-[12px] font-bold text-[#284d45]">Record hand and advance <ArrowRight size={15} /></button>
+                    <p className="mt-2 text-center text-[13px] leading-5 text-[#c8d8d1]">Records this settlement, updates totals, and advances East, Wind and hand state when the active rules require it.</p>
+                  </>
                 )}
-                {outcomeType === 'win' && incidents.length > 0 && (
-                  <div className="mt-3 rounded-md bg-[#355e54] px-3 py-2 text-[10px] leading-5 text-[#c8d8d1]">
-                    {incidents.map((incident, index) => <div key={index}>{incidentDescription(incident, game.players)}</div>)}
-                  </div>
-                )}
-                {error && (
-                  <p role="alert" className="mt-3 text-[11px] font-semibold text-[#e6a48d]">
-                    {error}
-                  </p>
-                )}
-                <button
-                  type="button"
-                  data-testid="button-confirm-hand"
-                  onClick={confirmRound}
-                  className="mt-4 flex w-full items-center justify-center gap-2 rounded-md bg-[#f3e8d4] px-4 py-3 text-[12px] font-bold text-[#284d45]"
-                >
-                  Record hand and advance <ArrowRight size={15} />
-                </button>
-                <p className="mt-2 text-center text-[13px] leading-5 text-[#c8d8d1]">Records this settlement, updates totals, and advances East, Wind and hand state when the active rules require it.</p>
               </div>
             ) : (
               <div className="p-5">
