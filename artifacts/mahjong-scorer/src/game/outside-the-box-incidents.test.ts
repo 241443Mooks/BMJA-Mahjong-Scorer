@@ -8,7 +8,7 @@ import {
   incidentPickerLabel,
   incidentTitle,
 } from './outside-the-box-incidents';
-import { previewRoundSettlement } from './GameScorer';
+import { incidentsForOutcome, previewRoundSettlement } from './GameScorer';
 
 beforeAll(() => initialiseCurrentRulesRuntimes());
 
@@ -18,12 +18,19 @@ const scores = { east: 100, south: 30, west: 20, north: 10 };
 const game = () => createBmjaGame(players, seats, undefined, 'full-game', OUTSIDE_THE_BOX_PROFILE_REF);
 
 describe('Outside the Box round incidents', () => {
+  it('treats Draw / wash-out as a no-incident table outcome', () => {
+    const cannon = [{ type: 'cannon', liablePlayerId: 'east', noChoiceAccepted: false }] as const;
+    expect(incidentsForOutcome({ type: 'draw' }, [...cannon])).toEqual([]);
+    expect(incidentsForOutcome({ type: 'win', winnerId: 'south' }, [...cannon])).toEqual(cannon);
+  });
+
+
   it('presents compact source-backed picker consequences', () => {
     expect(incidentPickerLabel('false-discard-name')).toBe('False discard name');
     expect(incidentPickerConsequence('incorrect-hand', 1000)).toBe('0 score if too many');
     expect(incidentPickerConsequence('false-discard-name', 1000)).toBe('Mah Jong → covers winner');
     expect(incidentPickerConsequence('false-mah-jong', 1000)).toBe('−500 each if exposed');
-    expect(incidentPickerConsequence('wrong-tile-claim', 1000)).toBe('cannot Mah Jong');
+    expect(incidentPickerConsequence('wrong-tile-claim', 1000)).toBe('late → cannot Mah Jong');
     expect(incidentPickerConsequence('cannon', 1000)).toBe('covers winner');
   });
 
