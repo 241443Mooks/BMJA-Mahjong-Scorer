@@ -62,11 +62,12 @@ describe('issue 426 winning-tile evidence integration', () => {
     expect(html).not.toContain('Winning from the live wall');
   });
 
-  it('keeps inherited fields read-only and exposes material questions in mobile Hand context', () => {
+  it('keeps inherited fields read-only and exposes material questions beside collapsed Hand details', () => {
     const html = renderScorer(scorerContext(buriedHand()));
-    expect(html).toContain('data-testid="mobile-hand-context"');
-    expect(html).toContain('data-testid="mobile-inherited-context"');
-    expect(html).toContain('inherited from game');
+    expect(html).toContain('data-testid="hand-details"');
+    expect(html).not.toContain('data-testid="mobile-hand-context"');
+    expect(html).toContain('Hand details');
+    expect(html).toContain('Inherited from this game.');
     expect(html).toContain('data-testid="mobile-winner-evidence"');
     expect(html).toContain('How did this hand win?');
     expect(html).toContain('data-testid="select-winning-method"');
@@ -87,7 +88,7 @@ describe('issue 426 winning-tile evidence integration', () => {
     await act(async () => root.render(<HandScorer context={scorerContext(clubHand, OUTSIDE_THE_BOX_PROFILE_REF)} onClose={(result) => { applied = result; }} standaloneHand={false} standaloneRulesProfile={OUTSIDE_THE_BOX_PROFILE_REF} onStandaloneRulesProfileChange={vi.fn()} />));
     const click = async (element: Element | null) => { expect(element).not.toBeNull(); await act(async () => element!.dispatchEvent(new MouseEvent('click', { bubbles: true }))); };
     try {
-      expect(container.querySelector('[data-testid="mobile-inherited-context"]')?.textContent).toContain('Club');
+      expect(container.querySelector('[data-testid="hand-details"]')?.textContent).toContain('Club');
       const method = container.querySelector<HTMLSelectElement>('[data-testid="select-winning-method"]');
       expect(method).not.toBeNull();
       expect(container.querySelector('[data-testid="conservative-score-notice-mobile"]')?.textContent).toContain('Winning method');
