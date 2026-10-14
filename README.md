@@ -157,7 +157,8 @@ Source/provenance work remains deliberately separate from retail or marketing me
 - **Analytics** is deliberately limited and cookieless. See `docs/product/ANALYTICS_MEASUREMENT_PLAN.md` and #246.
 - **Search/content growth** is evidence-led. The current strategy is `docs/product/SEO_GROWTH_STRATEGY.md`; reference expansion is sequenced around verified rules identities rather than speculative page generation.
 - **Contact and feedback** remain a low-friction public-product stream under #393.
-- **Production confidence** continues through #253, #89 real-table validation on 10 October 2026, analytics observation and experienced-player MCR review.
+- **Real-table validation** took place across three tables on 10 October (#89). Current priority: simplify repeated full-hand scoring, verify the merged October scorer/ledger improvements, and make tile-group terminology clearer (#519). A wind-identification reference panel is an investigation, not a committed camera detector.
+- **Production confidence** continues through #253 fresh production QA, follow-ups from #89, analytics observation and experienced-player MCR review.
 
 ## Repository map
 
