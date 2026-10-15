@@ -1,4 +1,5 @@
 import { beforeAll, describe, expect, it } from 'vitest';
+import { readFileSync } from 'node:fs';
 import { initialiseCurrentRulesRuntimes } from '../rules-platform/current-runtime-registry';
 import { confirmHand, createBmjaGame } from './game';
 import { createGameScorerGame, gameScorerCurrentRound, gameScorerSetup, gameScorerSupports } from './game-scorer-setup';
@@ -160,4 +161,16 @@ describe('game settlement preview', () => {
     expect(settlementPreviewPresentation(game, { type: 'draw' }, {})).toBe('no-payments');
   });
 
+});
+
+
+describe('completed game standings UX', () => {
+  it('opens final standings and only permits a new game after archiving the finished record', () => {
+    const source = readFileSync(new URL('./GameScorer.tsx', import.meta.url), 'utf8');
+    expect(source).toContain('ref={finalStandingsRef} open={game.isComplete} data-testid="settlement-details"');
+    expect(source).toContain('if (game?.isComplete && finalStandingsRef.current) finalStandingsRef.current.open = true');
+    expect(source).toContain('data-testid="link-start-new-game-after-completion"');
+    expect(source).toContain('!archivedGameRef.current || storageWarning');
+    expect(source).toContain('startOver(true)');
+  });
 });
