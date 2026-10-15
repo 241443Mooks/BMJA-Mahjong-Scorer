@@ -4,6 +4,15 @@ This file records meaningful changes to **Mahjong Reference** at product-milesto
 
 ## Unreleased
 
+### October 2026 — table-play usability and durable game records
+
+- **Improved repeated hand recording:** players explicitly choose Mah Jong or draw, select the winner when applicable, and record a validated hand directly; detailed settlement remains available on demand and in the ledger, with saved confirmation and Undo. The settlement engine and progression checks remain authoritative. [#525](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/pull/525)
+- **Preserved finished games:** dated completed ledgers are available in Previous games, read-only by default with print/save, browser-local recovery guidance and second-tab protection for active play. This is not cloud backup. [#521](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/pull/521)
+- **Refined table interactions:** contextual hand-scoring headings and player-card scoring shortcuts support more natural navigation. [#517](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/pull/517) [#518](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/pull/518)
+- **Field validation:** three tables on 10 October found the companion useful and exposed remaining full-calculator, tile identification, terminology and progression friction. Evidence and follow-ups: [#89](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/89), [#519](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/519), [#522](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/522). Mobile full-calculator and browser-restart checks remain outstanding; see #253.
+
+
+
 ### Added
 
 - Completed the deliberately bounded Classical/MCR truth-corpus expansion in #440: **317 semantic subjects, 380 evidence claims, 378 exact-profile treatments and zero unknown treatment states**. Unresolved/source-blocked material remains explicit. [#477](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/pull/477)
