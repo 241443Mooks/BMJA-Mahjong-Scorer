@@ -23,6 +23,8 @@ describe('homepage front door', () => {
     expect(markup).toContain('saved in this browser, not to an account');
     expect(markup).toContain('href="/features"');
     expect(markup).toContain('href="/previous-games"');
+    expect(markup).toContain('See your previous games');
+    expect(markup).toContain('Revisit scores and finished game ledgers.');
     expect(markup).toContain('See what the Table Companion can do');
   });
 
@@ -50,6 +52,21 @@ describe('homepage front door', () => {
     expect(markup).toContain('order-2 mt-3');
     expect(markup).toContain('order-3 mt-3');
     expect(markup).toContain('order-4 mb-2');
+  });
+
+  it('makes the compact previous-games card a single keyboard-focusable link', () => {
+    const markup = homeBody();
+    const cardMatch = markup.match(/<a href="\/previous-games"[\s\S]*?<\/a>/);
+    const card = cardMatch?.[0] ?? '';
+
+    expect(cardMatch).not.toBeNull();
+    expect(card).toContain('data-testid="link-previous-games"');
+    expect(card).toContain('See your previous games');
+    expect(card).toContain('Revisit scores and finished game ledgers.');
+    expect(card).toContain('focus-visible:ring-2');
+    expect(card).not.toContain('<button');
+    expect(card.match(/<a\b/g)).toHaveLength(1);
+    expect(card).toContain('order-4 mt-3');
   });
 
   it('ends after orientation without duplicating Rules, Learn or trust content', () => {
