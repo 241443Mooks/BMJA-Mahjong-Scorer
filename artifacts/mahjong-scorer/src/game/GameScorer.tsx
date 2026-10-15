@@ -229,12 +229,17 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
   const tableScoresRef = useRef<HTMLElement>(null);
   const tableToolsRef = useRef<HTMLDetailsElement>(null);
   const gameLedgerRef = useRef<HTMLDetailsElement>(null);
+  const finalStandingsRef = useRef<HTMLDetailsElement>(null);
   const ledgerDetailsRefs = useRef(new Map<number, HTMLDetailsElement>());
 
   const currentEastId = game
     ? Object.entries(game.seats).find(([, seat]) => seat === 'east')?.[0]
     : undefined;
   const canMutateGame = gameLease === 'owned' && !finishedLedger;
+
+  useEffect(() => {
+    if (game?.isComplete && finalStandingsRef.current) finalStandingsRef.current.open = true;
+  }, [game?.isComplete]);
   const recoveredProfileConflictsWithRoute = !!recovered && initialRulesProfileIsExplicit && recoveredGameConflictsWithRoute(recovered.game, initialRulesProfile);
 
   const outcome = useMemo<HandOutcome | null>(
@@ -448,9 +453,9 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
     setError('');
   };
 
-  const startOver = () => {
+  const startOver = (skipConfirmation = false) => {
     if (!canMutateGame) { setError('This game is open in another tab. Close the other game tab and reload before starting over.'); return; }
-    if (typeof window !== 'undefined' && !window.confirm('Start over? Your current saved game will be discarded.')) return;
+    if (!skipConfirmation && typeof window !== 'undefined' && !window.confirm('Start over? Your current saved game will be discarded.')) return;
     const storage = preferredRulesProfileStorage();
     if (storage) clearGameRecovery(storage);
     setRecovered(null);
@@ -686,7 +691,7 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
       {gameLease !== 'owned' && <p role="status" className="screen-only mx-auto mt-3 max-w-[900px] rounded-md border border-[#dfc3ac] bg-[#fff3e8] px-4 py-3 text-sm text-[#70432f]">{gameLease === 'checking' ? 'Checking whether another tab is using this game…' : gameLease === 'another-tab' ? 'This game is already open in another tab. This copy is read only to protect the saved scores.' : 'This browser cannot coordinate game edits across tabs. This copy is read only; open it in a browser with cross-tab protection to continue scoring.'}</p>}
       {storageWarning && <p role="alert" className="screen-only mx-auto mt-3 max-w-[900px] rounded-md border border-[#dfc3ac] bg-[#fff3e8] px-4 py-3 text-sm text-[#70432f]">{storageWarning}</p>}
       {recordedHandNotice}
-      <section className="screen-only mx-auto flex max-w-[900px] flex-wrap gap-2 px-5 pt-4"><a href="/previous-games" className="rounded border px-3 py-2 text-sm">Previous games</a><a href="/rules/mcr" className="rounded border px-3 py-2 text-sm">Rules reference</a><a href="#game-ledger" className="rounded border px-3 py-2 text-sm">History / ledger</a>{!finishedLedger && <><button data-testid="mcr-undo" disabled={!game.handHistory.length || !canMutateGame} onClick={undo} className="rounded border px-3 py-2 text-sm">Undo last hand</button><button data-testid="mcr-start-over" disabled={!canMutateGame} onClick={startOver} className="rounded border px-3 py-2 text-sm">Start over</button></>}<button data-testid="mcr-print-full" onClick={() => printGame('full')} className="rounded border px-3 py-2 text-sm">Print / Save full game record</button><button data-testid="mcr-print-summary" onClick={() => printGame('summary')} className="rounded border px-3 py-2 text-sm">Print / Save summary</button></section>
+      <section className="screen-only mx-auto flex max-w-[900px] flex-wrap gap-2 px-5 pt-4"><a href="/previous-games" className="rounded border px-3 py-2 text-sm">Previous games</a><a href="/rules/mcr" className="rounded border px-3 py-2 text-sm">Rules reference</a><a href="#game-ledger" className="rounded border px-3 py-2 text-sm">History / ledger</a>{!finishedLedger && <><button data-testid="mcr-undo" disabled={!game.handHistory.length || !canMutateGame} onClick={undo} className="rounded border px-3 py-2 text-sm">Undo last hand</button><button data-testid="mcr-start-over" disabled={!canMutateGame} onClick={() => startOver()} className="rounded border px-3 py-2 text-sm">Start over</button></>}<button data-testid="mcr-print-full" onClick={() => printGame('full')} className="rounded border px-3 py-2 text-sm">Print / Save full game record</button><button data-testid="mcr-print-summary" onClick={() => printGame('summary')} className="rounded border px-3 py-2 text-sm">Print / Save summary</button></section>
       <main inert={!canMutateGame} className="mx-auto max-w-[900px] space-y-5 px-5 py-8">
         <section className="rounded-xl border border-[#d8ceb8] bg-[#fbf8ed] p-5 sm:p-7">
           {finishedLedger && <p className="mb-3 rounded-md bg-[#edf3ed] px-3 py-2 text-sm font-semibold text-[#284d45]">Finished game record · read only · completed {new Intl.DateTimeFormat(undefined, { dateStyle: 'long' }).format(new Date(finishedLedger.finishedAt))}</p>}
@@ -787,7 +792,7 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
               type="button"
               data-testid="button-start-over"
               disabled={!canMutateGame}
-              onClick={startOver}
+              onClick={() => startOver()}
               className="flex items-center gap-2 rounded-md px-3 py-2 text-left text-[11px] font-semibold text-[#284d45] hover:bg-[#efe8da]"
             >
               <RotateCcw size={14} /> {recoveredProfileConflictsWithRoute ? `Start a new ${descriptorForRulesProfile(initialRulesProfile).compactLabel} game` : 'Start over'}
@@ -1061,7 +1066,7 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
 
         </section>
 
-        <details data-testid="settlement-details" className="screen-only overflow-hidden rounded-xl bg-[#284d45] text-[#f8f4e9] shadow-[var(--shadow-lg)]">
+        <details ref={finalStandingsRef} open={game.isComplete} data-testid="settlement-details" className="screen-only overflow-hidden rounded-xl bg-[#284d45] text-[#f8f4e9] shadow-[var(--shadow-lg)]">
           <summary className="cursor-pointer border-b border-[#55756c] p-4 font-semibold">{game.isComplete ? 'View final standings' : 'View settlement'}</summary>
           <section data-testid="section-settlement-stage">
             <div className="border-b border-[#55756c] p-5">
@@ -1136,6 +1141,7 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
                   <button type="button" onClick={() => printGame('summary')} className="rounded-md border border-[#b4c4bd] px-3 py-3 text-[11px] font-bold text-[#f8f4e9] hover:bg-[#355e54]">Print / Save summary</button>
                   <button type="button" onClick={() => printGame('full')} className="rounded-md bg-[#f3e8d4] px-3 py-3 text-[11px] font-bold text-[#284d45]">Print / Save full record</button>
                 </div>
+                {!finishedLedger && <button type="button" onClick={() => { if (!archivedGameRef.current || storageWarning) { setError("Save the completed game before starting a new one."); return; } startOver(true); }} data-testid="link-start-new-game-after-completion" className="mt-4 flex min-h-11 w-full items-center justify-center gap-2 rounded-md border border-[#b4c4bd] px-3 py-3 text-[13px] font-bold text-[#f8f4e9] hover:bg-[#355e54] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d7a287]">Start a new game <ArrowRight size={16} aria-hidden="true" /></button>}
               </div>
             )}
           </section>
