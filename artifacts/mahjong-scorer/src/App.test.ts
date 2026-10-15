@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { readFileSync } from 'node:fs';
 import { patternReferenceHref } from './App';
 import { BMJA_PROFILE_REF, OUTSIDE_THE_BOX_PROFILE_REF, WESTERN_TM_PROFILE_REF } from './game/ruleset';
 import { BUZZARD_2000_PROFILE_REF } from './game/buzzard-2000';
@@ -29,5 +30,23 @@ describe('detected-pattern references', () => {
     expect(patternReferenceHref(specialPattern, BMJA_PROFILE_REF)).toBe('/special-hands#all-pair-honours');
     expect(patternReferenceHref({ id: 'special-unknown-stale-pattern', type: 'special' }, WESTERN_TM_PROFILE_REF)).toBeUndefined();
     expect(patternReferenceHref({ id: 'special-unknown-stale-pattern', type: 'special' }, { id: 'mcr-wmo-2006', version: '0.1' })).toBeUndefined();
+  });
+});
+
+
+describe('plain-language working group choices (#519)', () => {
+  it('preserves group values and disabled Chow guard while improving option labels', () => {
+    const source = readFileSync(new URL('./App.tsx', import.meta.url), 'utf8');
+    const options = [...source.matchAll(/<option value="(pung|chow|kong|pair)"[^>]*>([^<]*)<\/option>/g)];
+    const labels = Object.fromEntries(options.map((match) => [match[1], match[2]]));
+    expect(labels).toEqual({
+      pung: 'Three matching (Pung)',
+      chow: 'Three in a run (Chow)',
+      kong: 'Four matching (Kong)',
+      pair: 'Two matching (Pair)',
+    });
+    expect(options.find((match) => match[1] === 'chow')?.[0]).toContain('disabled={handMode');
+    expect(source).toContain('data-testid="select-working-set-type"');
+    expect(source).toContain('aria-label="Working group type"');
   });
 });
