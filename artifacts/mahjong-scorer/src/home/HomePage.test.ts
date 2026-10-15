@@ -67,7 +67,7 @@ describe('homepage front door', () => {
 
   it('makes the compact previous-games card a single keyboard-focusable link', () => {
     const markup = homeBody(true);
-    const cardMatch = markup.match(/<a href="\\/previous-games"[\\s\\S]*?<\\/a>/);
+    const cardMatch = markup.match(/<a href="\/previous-games"[\s\S]*?<\/a>/);
     const card = cardMatch?.[0] ?? '';
     expect(cardMatch).not.toBeNull();
     expect(card).toContain('data-testid="link-previous-games"');
