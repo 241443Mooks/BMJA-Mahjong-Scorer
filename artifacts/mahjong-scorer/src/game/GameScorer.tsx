@@ -229,12 +229,17 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
   const tableScoresRef = useRef<HTMLElement>(null);
   const tableToolsRef = useRef<HTMLDetailsElement>(null);
   const gameLedgerRef = useRef<HTMLDetailsElement>(null);
+  const finalStandingsRef = useRef<HTMLDetailsElement>(null);
   const ledgerDetailsRefs = useRef(new Map<number, HTMLDetailsElement>());
 
   const currentEastId = game
     ? Object.entries(game.seats).find(([, seat]) => seat === 'east')?.[0]
     : undefined;
   const canMutateGame = gameLease === 'owned' && !finishedLedger;
+
+  useEffect(() => {
+    if (game?.isComplete && finalStandingsRef.current) finalStandingsRef.current.open = true;
+  }, [game?.isComplete]);
   const recoveredProfileConflictsWithRoute = !!recovered && initialRulesProfileIsExplicit && recoveredGameConflictsWithRoute(recovered.game, initialRulesProfile);
 
   const outcome = useMemo<HandOutcome | null>(
@@ -1061,7 +1066,7 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
 
         </section>
 
-        <details data-testid="settlement-details" className="screen-only overflow-hidden rounded-xl bg-[#284d45] text-[#f8f4e9] shadow-[var(--shadow-lg)]">
+        <details ref={finalStandingsRef} open={game.isComplete} data-testid="settlement-details" className="screen-only overflow-hidden rounded-xl bg-[#284d45] text-[#f8f4e9] shadow-[var(--shadow-lg)]">
           <summary className="cursor-pointer border-b border-[#55756c] p-4 font-semibold">{game.isComplete ? 'View final standings' : 'View settlement'}</summary>
           <section data-testid="section-settlement-stage">
             <div className="border-b border-[#55756c] p-5">
@@ -1136,6 +1141,7 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
                   <button type="button" onClick={() => printGame('summary')} className="rounded-md border border-[#b4c4bd] px-3 py-3 text-[11px] font-bold text-[#f8f4e9] hover:bg-[#355e54]">Print / Save summary</button>
                   <button type="button" onClick={() => printGame('full')} className="rounded-md bg-[#f3e8d4] px-3 py-3 text-[11px] font-bold text-[#284d45]">Print / Save full record</button>
                 </div>
+                {!finishedLedger && <a href="/game" data-testid="link-start-new-game-after-completion" className="mt-4 flex min-h-11 w-full items-center justify-center gap-2 rounded-md border border-[#b4c4bd] px-3 py-3 text-[13px] font-bold text-[#f8f4e9] hover:bg-[#355e54] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d7a287]">Start a new game <ArrowRight size={16} aria-hidden="true" /></a>}
               </div>
             )}
           </section>
