@@ -1,17 +1,28 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { createElement } from 'react';
 import { RouteContent } from '../RouteContent';
+import { loadFinishedGameLedgers } from '../game';
 import { HomePage } from './HomePage';
 
-function homeBody() {
+vi.mock('../game', async () => {
+  const actual = await vi.importActual<typeof import('../game')>('../game');
+  return { ...actual, loadFinishedGameLedgers: vi.fn(() => []) };
+});
+
+function homeBody(previousGamesExist = false) {
+  vi.stubGlobal('window', {
+    localStorage: { getItem: () => null, setItem: () => {}, removeItem: () => {} },
+  });
+  const ledgerPlaceholder = {} as ReturnType<typeof loadFinishedGameLedgers>[number];
+  vi.mocked(loadFinishedGameLedgers).mockReturnValue(previousGamesExist ? [ledgerPlaceholder] : []);
   const markup = renderToStaticMarkup(createElement(HomePage));
   return markup.slice(markup.indexOf('<main'), markup.indexOf('</main>'));
 }
 
 describe('homepage front door', () => {
   it('keeps the hero, primary actions, local recovery reassurance and Features link', () => {
-    const markup = homeBody();
+    const markup = homeBody(true);
 
     expect(markup.match(/<h1\b/g)).toHaveLength(1);
     expect(markup).toContain('Rules, scoring and play — made clear.');
@@ -23,11 +34,13 @@ describe('homepage front door', () => {
     expect(markup).toContain('saved in this browser, not to an account');
     expect(markup).toContain('href="/features"');
     expect(markup).toContain('href="/previous-games"');
+    expect(markup).toContain('See your previous games');
+    expect(markup).toContain('Revisit scores and finished game ledgers.');
     expect(markup).toContain('See what the Table Companion can do');
   });
 
   it('prioritises the heading, actions and free-use message before introductory copy', () => {
-    const markup = homeBody();
+    const markup = homeBody(true);
     const heading = markup.indexOf('Your Mahjong table companion.');
     const actions = markup.indexOf('data-testid="home-primary-actions"');
     const reassurance = markup.indexOf('data-testid="home-free-use"');
@@ -52,6 +65,21 @@ describe('homepage front door', () => {
     expect(markup).toContain('order-4 mb-2');
   });
 
+  it('makes the compact previous-games card a single keyboard-focusable link', () => {
+    const markup = homeBody(true);
+    const cardMatch = markup.match(/<a href="\/previous-games"[\s\S]*?<\/a>/);
+    const card = cardMatch?.[0] ?? '';
+
+    expect(cardMatch).not.toBeNull();
+    expect(card).toContain('data-testid="link-previous-games"');
+    expect(card).toContain('See your previous games');
+    expect(card).toContain('Revisit scores and finished game ledgers.');
+    expect(card).toContain('focus-visible:ring-2');
+    expect(card).not.toContain('<button');
+    expect(card.match(/<a\b/g)).toHaveLength(1);
+    expect(card).toContain('order-4 mt-3');
+  });
+
   it('ends after orientation without duplicating Rules, Learn or trust content', () => {
     const markup = homeBody();
 
@@ -68,9 +96,11 @@ describe('homepage front door', () => {
   });
 
   it('lets the shared footer follow the shortened Home body', () => {
+    vi.mocked(loadFinishedGameLedgers).mockReturnValue([]);
     const markup = renderToStaticMarkup(createElement(RouteContent, { path: '/' }));
 
     expect(markup.indexOf('</main>')).toBeGreaterThan(-1);
     expect(markup.indexOf('<footer')).toBeGreaterThan(markup.indexOf('</main>'));
+    expect(markup).not.toContain('data-testid="link-previous-games"');
   });
 });
