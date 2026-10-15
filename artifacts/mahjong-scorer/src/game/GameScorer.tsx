@@ -26,7 +26,10 @@ import {
   returnAppliedScoreToTable,
   undoLastHand,
   clearGameRecovery,
+  finishGameLedger,
+  loadFinishedGameLedger,
   loadInProgressGameRecoveryCore,
+  ACTIVE_GAME_LOCK_NAME,
   saveGameRecoveryV2,
 } from '.';
 import { mapCurrentRuntimeSettlement } from '../rules-platform/current-runtime-compat';
@@ -64,6 +67,7 @@ type GameScorerProps = {
   onClearReturnedScore: () => void;
   initialRulesProfile: RulesProfileRef;
   initialRulesProfileIsExplicit?: boolean;
+  finishedLedgerId?: string;
 };
 
 const windLabel = (wind: Wind) =>
@@ -190,14 +194,35 @@ export const shouldShowEditCurrentHandSummary = (stage: GameWorkspaceStage, edit
 export const incidentsForOutcome = <T,>(outcome: HandOutcome, incidents: T[]) =>
   outcome.type === 'draw' ? [] : incidents;
 
-export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedScore, initialRulesProfile, initialRulesProfileIsExplicit = false }: GameScorerProps) {
+export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedScore, initialRulesProfile, initialRulesProfileIsExplicit = false, finishedLedgerId }: GameScorerProps) {
+  const [finishedLedger] = useState(() => {
+    const storage = preferredRulesProfileStorage();
+    return finishedLedgerId && storage ? loadFinishedGameLedger(storage, finishedLedgerId) : null;
+  });
+  const [gameLease, setGameLease] = useState<'checking' | 'owned' | 'another-tab' | 'unsupported'>(finishedLedger ? 'owned' : 'checking');
+  useEffect(() => {
+    if (finishedLedger) { setGameLease('owned'); return; }
+    if (import.meta.env.MODE === 'test') { setGameLease('owned'); return; }
+    const locks = typeof navigator !== 'undefined' ? navigator.locks : undefined;
+    if (!locks) { setGameLease('unsupported'); return; }
+    let release: (() => void) | undefined;
+    let disposed = false;
+    void locks.request(ACTIVE_GAME_LOCK_NAME, { ifAvailable: true }, async (lock) => {
+      if (disposed) return;
+      if (!lock) { setGameLease('another-tab'); return; }
+      setGameLease('owned');
+      await new Promise<void>((resolve) => { release = resolve; });
+    }).catch(() => { if (!disposed) setGameLease('unsupported'); });
+    return () => { disposed = true; release?.(); };
+  }, [finishedLedger]);
   const [recovered, setRecovered] = useState(() => {
+    if (finishedLedger) return null;
     const storage = preferredRulesProfileStorage();
     return storage ? loadInProgressGameRecoveryCore(storage) : null;
   });
   const [names, setNames] = useState(['', '', '', '']);
   const [gameLength, setGameLength] = useState<GameLength>(recovered?.game.setup.gameLength ?? gameScorerSetup(initialRulesProfile, 'one-round').gameLength);
-  const [game, setGame] = useState<GameState | null>(recovered?.game ?? null);
+  const [game, setGame] = useState<GameState | null>(finishedLedger?.game ?? recovered?.game ?? null);
   const [selectedRulesProfile, setSelectedRulesProfile] = useState<RulesProfileRef>(() => recovered?.game.setup.rulesProfile ?? initialRulesProfile);
   const recoveredClassical = recovered?.currentRound.grammar === 'classical-points-doubles' ? recovered.currentRound : null;
   const [outcomeType, setOutcomeType] = useState<'win' | 'draw'>(recoveredClassical?.outcomeType ?? (recovered?.currentRound.grammar === 'pattern-accumulator' ? recovered.currentRound.outcomeType ?? 'win' : 'win'));
@@ -213,7 +238,9 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
   const [profileScoreResults, setProfileScoreResults] = useState<Partial<Record<string, ProfileScoreResult>>>(recoveredDraft && 'profileScoreResults' in recoveredDraft ? recoveredDraft.profileScoreResults ?? {} : {});
   const [tableLimit, setTableLimit] = useState<number | undefined>(() => recovered?.game.setup.tableLimit ?? gameScorerSetup(initialRulesProfile, 'one-round').tableLimit);
   const [error, setError] = useState('');
+  const [storageWarning, setStorageWarning] = useState('');
   const [printMode, setPrintMode] = useState<'summary' | 'full' | null>(null);
+  const archivedGameRef = useRef(false);
   const [editingHand, setEditingHand] = useState(false);
   const [settlementReviewRequested, setSettlementReviewRequested] = useState(false);
   const tableScoresRef = useRef<HTMLDetailsElement>(null);
@@ -224,6 +251,7 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
   const currentEastId = game
     ? Object.entries(game.seats).find(([, seat]) => seat === 'east')?.[0]
     : undefined;
+  const canMutateGame = gameLease === 'owned' && !finishedLedger;
   const recoveredProfileConflictsWithRoute = !!recovered && initialRulesProfileIsExplicit && recoveredGameConflictsWithRoute(recovered.game, initialRulesProfile);
 
   const outcome = useMemo<HandOutcome | null>(
@@ -240,11 +268,7 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
 
   useEffect(() => {
     const storage = preferredRulesProfileStorage();
-    if (!game || !storage) return;
-    if (game.isComplete) {
-      clearGameRecovery(storage);
-      return;
-    }
+    if (!game || !storage || finishedLedger || gameLease !== 'owned') return;
     const currentRound = gameScorerCurrentRound(
       game, recovered?.currentRound ?? null, outcomeType, winnerId,
       {
@@ -256,8 +280,17 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
       },
       mcrTableProfile(game.setup.rulesProfile) ? mcrRoute : undefined,
     );
-    saveGameRecoveryV2(storage, game, currentRound);
-  }, [game, outcomeType, scoreRecords, scores, incidents, buzzardIncidents, profileScoreResults, winnerId, recovered, mcrRoute]);
+    if (game.isComplete) {
+      if (!archivedGameRef.current) {
+        const saved = finishGameLedger(storage, game, currentRound);
+        setStorageWarning(saved ? '' : 'This finished game could not be saved in browser storage. Use Print / Save full game record to keep a copy, and check that browser storage is available.');
+        archivedGameRef.current = true;
+      }
+      return;
+    }
+    const saved = saveGameRecoveryV2(storage, game, currentRound);
+    setStorageWarning(saved ? '' : 'Your latest game changes could not be saved in browser storage. Use Print / Save full game record to keep a copy, and check that browser storage is available.');
+  }, [game, outcomeType, scoreRecords, scores, incidents, buzzardIncidents, profileScoreResults, winnerId, recovered, mcrRoute, finishedLedger, gameLease]);
 
   useEffect(() => {
     if (!printMode || typeof window === 'undefined') return;
@@ -387,6 +420,7 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
     : 'entry';
 
   const startGame = () => {
+    if (!canMutateGame) { setError('This game is open in another tab, or this browser cannot safely protect game storage across tabs. Close the other game tab and reload to continue.'); return; }
     const trimmed = names.map((name) => name.trim());
     if (trimmed.some((name) => !name)) {
       setError('Enter a name for all four seats.');
@@ -403,12 +437,13 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
     const seats = Object.fromEntries(
       players.map((player, index) => [player.id, GAME_WINDS[index]]),
     ) as SeatAssignments;
-    const storage = preferredRulesProfileStorage();
-    if (storage) clearGameRecovery(storage);
-    setRecovered(null);
     const setup = gameScorerSetup(selectedRulesProfile, gameLength, tableLimit);
     if (setup.grammar === 'classical-points-doubles' && (!Number.isFinite(setup.tableLimit) || setup.tableLimit! <= 0)) { setError('Enter a positive table limit.'); return; }
     const started = createGameScorerGame(players, seats, gameLength, selectedRulesProfile, setup.tableLimit);
+    const storage = preferredRulesProfileStorage();
+    if (storage) clearGameRecovery(storage);
+    setRecovered(null);
+    archivedGameRef.current = false;
     setGame(started);
     setScores({});
     setScoreRecords({});
@@ -423,6 +458,7 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
   };
 
   const startOver = () => {
+    if (!canMutateGame) { setError('This game is open in another tab. Close the other game tab and reload before starting over.'); return; }
     if (typeof window !== 'undefined' && !window.confirm('Start over? Your current saved game will be discarded.')) return;
     const storage = preferredRulesProfileStorage();
     if (storage) clearGameRecovery(storage);
@@ -517,6 +553,7 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
               Enter players in their starting seats. Your game stays in this
               browser so you can continue after a refresh. <a href="/help#refresh-game" className="font-semibold text-[#284d45] underline decoration-[#cfa58f] underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">How recovery works</a>
             </p>
+            {gameLease !== 'owned' && <p role="status" className="mt-3 max-w-[620px] rounded-md border border-[#dfc3ac] bg-[#fff3e8] px-3 py-2 text-sm text-[#70432f]">{gameLease === 'checking' ? 'Checking whether another tab is using game storage…' : gameLease === 'another-tab' ? 'A game is open in another tab. Close that game tab before starting here.' : 'This browser cannot protect game storage across tabs, so a game cannot be started safely here.'}</p>}
             {recovered && <div data-testid="recovered-game-conflict" className="mt-4 max-w-[620px] rounded-md border border-[#b8cdbf] bg-[#edf3ed] p-3 text-[14px] leading-6 text-[#284d45]"><strong>Saved game: {activeRulesCopy(recovered.game.setup.rulesProfile)}.</strong> Continue it safely; rules from this route do not change a saved game. Starting a new game below replaces this local recovery.</div>}
           </div>
 
@@ -568,6 +605,7 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
             <button
               type="button"
               data-testid="button-start-game"
+              disabled={gameLease === 'checking' || gameLease !== 'owned'}
               onClick={startGame}
               className="mt-6 flex w-full items-center justify-center gap-2 rounded-md bg-[#284d45] px-4 py-3 text-[12px] font-semibold text-[#f8f4e9]"
             >
@@ -599,12 +637,15 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
     };
     return <div className={`mahjong-shell ${printMode === 'summary' ? 'print-summary' : ''}`}>
       <div className="screen-only"><SiteHeader /></div>
-      <div className="print-only game-print-heading"><h1>MCR / WMO 2006 game record</h1><p>Profile {game.setup.rulesProfile.id} · Version {game.setup.rulesProfile.version}</p><p>Runtime fingerprint: {game.runtimeFingerprint}</p><p>{game.isComplete ? 'Game complete' : 'Game in progress'} · {handCountLabel(game.handHistory.length)}</p></div>
+      <div className="print-only game-print-heading"><h1>MCR / WMO 2006 game record</h1><p>Profile {game.setup.rulesProfile.id} · Version {game.setup.rulesProfile.version}</p><p>Runtime fingerprint: {game.runtimeFingerprint}</p><p>{game.isComplete ? 'Game complete' : 'Game in progress'} · {handCountLabel(game.handHistory.length)}</p>{finishedLedger && <p>Completed {new Intl.DateTimeFormat(undefined, { dateStyle: 'long' }).format(new Date(finishedLedger.finishedAt))}</p>}</div>
       <div className="screen-only sticky top-0 z-20 border-b border-[#d8ceb8] bg-[#f5f1e6]/95 px-5 py-3 text-[#284d45]">{game.isComplete ? 'Game complete' : `Hand ${game.handHistory.length + 1}`} · {windLabel(game.prevailingWind)} prevailing · {game.players.find((player) => game.seats[player.id] === 'east')?.name} is East</div>
-      <section className="screen-only mx-auto flex max-w-[900px] flex-wrap gap-2 px-5 pt-4"><a href="/rules/mcr" className="rounded border px-3 py-2 text-sm">Rules reference</a><a href="#game-ledger" className="rounded border px-3 py-2 text-sm">History / ledger</a><button data-testid="mcr-undo" disabled={!game.handHistory.length} onClick={() => { const previous = undoLastHand(game); setGame(previous); setMcrRoute({ draft: { scores: {}, scoreRecords: {} } }); }} className="rounded border px-3 py-2 text-sm">Undo last hand</button><button data-testid="mcr-start-over" onClick={startOver} className="rounded border px-3 py-2 text-sm">Start over</button><button data-testid="mcr-print-full" onClick={() => printGame('full')} className="rounded border px-3 py-2 text-sm">Print / Save full game record</button><button data-testid="mcr-print-summary" onClick={() => printGame('summary')} className="rounded border px-3 py-2 text-sm">Print / Save summary</button></section>
-      <main className="mx-auto max-w-[900px] space-y-5 px-5 py-8">
+      {gameLease !== 'owned' && <p role="status" className="screen-only mx-auto mt-3 max-w-[900px] rounded-md border border-[#dfc3ac] bg-[#fff3e8] px-4 py-3 text-sm text-[#70432f]">{gameLease === 'checking' ? 'Checking whether another tab is using this game…' : gameLease === 'another-tab' ? 'This game is already open in another tab. This copy is read only to protect the saved scores.' : 'This browser cannot coordinate game edits across tabs. This copy is read only; open it in a browser with cross-tab protection to continue scoring.'}</p>}
+      {storageWarning && <p role="alert" className="screen-only mx-auto mt-3 max-w-[900px] rounded-md border border-[#dfc3ac] bg-[#fff3e8] px-4 py-3 text-sm text-[#70432f]">{storageWarning}</p>}
+      <section className="screen-only mx-auto flex max-w-[900px] flex-wrap gap-2 px-5 pt-4"><a href="/previous-games" className="rounded border px-3 py-2 text-sm">Previous games</a><a href="/rules/mcr" className="rounded border px-3 py-2 text-sm">Rules reference</a><a href="#game-ledger" className="rounded border px-3 py-2 text-sm">History / ledger</a>{!finishedLedger && <><button data-testid="mcr-undo" disabled={!game.handHistory.length || !canMutateGame} onClick={() => { const previous = undoLastHand(game); setGame(previous); setMcrRoute({ draft: { scores: {}, scoreRecords: {} } }); }} className="rounded border px-3 py-2 text-sm">Undo last hand</button><button data-testid="mcr-start-over" disabled={!canMutateGame} onClick={startOver} className="rounded border px-3 py-2 text-sm">Start over</button></>}<button data-testid="mcr-print-full" onClick={() => printGame('full')} className="rounded border px-3 py-2 text-sm">Print / Save full game record</button><button data-testid="mcr-print-summary" onClick={() => printGame('summary')} className="rounded border px-3 py-2 text-sm">Print / Save summary</button></section>
+      <main inert={!canMutateGame} className="mx-auto max-w-[900px] space-y-5 px-5 py-8">
         <section className="rounded-xl border border-[#d8ceb8] bg-[#fbf8ed] p-5 sm:p-7">
-          {game.isComplete ? <h1 className="font-serif text-3xl text-[#284d45]">Game complete</h1> : <>
+          {finishedLedger && <p className="mb-3 rounded-md bg-[#edf3ed] px-3 py-2 text-sm font-semibold text-[#284d45]">Finished game record · read only · completed {new Intl.DateTimeFormat(undefined, { dateStyle: 'long' }).format(new Date(finishedLedger.finishedAt))}</p>}
+          {game.isComplete ? <><h1 className="font-serif text-3xl text-[#284d45]">Game complete</h1><p className="mt-2 text-sm leading-6 text-[#66746e]">This game has reached its configured ending. No next hand will be added to this record.</p></> : <>
           <h1 className="font-serif text-3xl text-[#284d45]">MCR round</h1>
           <p className="mt-2 text-sm text-[#66746e]">Choose the table outcome, then score the winner’s hand with the MCR scorer. A discard source identifies the discarder for settlement.</p>
           <div className="mt-5 flex gap-2">
@@ -659,9 +700,11 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
                 {game.players.find((player) => player.id === currentEastId)?.name} is East
                 {game.currentHandMode === 'goulash' ? ' · Goulash hand' : ''}
               </div>
-              {recovered && <p data-testid="recovered-game-conflict" className={`mt-0.5 text-[10px] font-semibold leading-4 sm:mt-1 sm:text-[11px] ${recoveredProfileConflictsWithRoute ? 'text-[#9a4d3a]' : 'text-[#3f6556]'}`}>
+              {finishedLedger && <p className="mt-1 text-[11px] font-semibold text-[#284d45]">Finished game record · read only · completed {new Intl.DateTimeFormat(undefined, { dateStyle: 'long' }).format(new Date(finishedLedger.finishedAt))}</p>}
+          {recovered && <p data-testid="recovered-game-conflict" className={`mt-0.5 text-[10px] font-semibold leading-4 sm:mt-1 sm:text-[11px] ${recoveredProfileConflictsWithRoute ? 'text-[#9a4d3a]' : 'text-[#3f6556]'}`}>
                 {recoveredProfileConflictsWithRoute ? `Saved ${activeRulesCopy(game.setup.rulesProfile)} game; this route does not change its rules.` : 'Saved game recovered.'}
               </p>}
+              {game.isComplete && <p className="mt-1 text-[11px] font-semibold text-[#66746e]">This game has reached its configured ending. No next hand will be added to this record.</p>}
             </div>
             <details ref={tableToolsRef} className="table-tools relative">
               <summary className="flex cursor-pointer list-none items-center gap-2 rounded-md border border-[#cfc3aa] bg-[#fbf8ed] px-2.5 py-1.5 text-[11px] font-semibold text-[#284d45] sm:px-3 sm:py-2">Table tools</summary>
@@ -682,24 +725,25 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
                     <X size={15} aria-hidden="true" /> Close
                   </button>
                 </div>
-            <button
+            {!finishedLedger && <button
               type="button"
               data-testid="button-undo-hand"
-              disabled={game.handHistory.length === 0}
+              disabled={game.handHistory.length === 0 || !canMutateGame}
               onClick={undo}
               className="flex items-center gap-2 rounded-md px-3 py-2 text-left text-[11px] font-semibold text-[#284d45] hover:bg-[#efe8da] disabled:opacity-40"
             >
               <Undo2 size={14} /> Undo last hand
-            </button>
+            </button>}
             <a href="/help#correct-hand" className="rounded-md px-3 py-2 text-[11px] font-semibold text-[#477562] underline decoration-[#cfc3aa] underline-offset-4 hover:bg-[#efe8da] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">Help correcting a hand</a>
-            <button
+            {!finishedLedger && <button
               type="button"
               data-testid="button-start-over"
+              disabled={!canMutateGame}
               onClick={startOver}
               className="flex items-center gap-2 rounded-md px-3 py-2 text-left text-[11px] font-semibold text-[#284d45] hover:bg-[#efe8da]"
             >
               <RotateCcw size={14} /> {recoveredProfileConflictsWithRoute ? `Start a new ${descriptorForRulesProfile(initialRulesProfile).compactLabel} game` : 'Start over'}
-            </button>
+            </button>}
             <button
               type="button"
               onClick={() => onOpenHandScorer()}
@@ -708,6 +752,7 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
               <Sparkles size={14} /> Detailed hand scorer
             </button>
                 <a href="/rules" className="rounded-md px-3 py-2 text-[11px] font-semibold text-[#284d45] hover:bg-[#efe8da]">Rules reference</a>
+                <a href="/previous-games" className="rounded-md px-3 py-2 text-[11px] font-semibold text-[#284d45] hover:bg-[#efe8da]">Previous games</a>
                 <a href="#game-ledger" className="rounded-md px-3 py-2 text-[11px] font-semibold text-[#284d45] hover:bg-[#efe8da]">History / confirmed ledger</a>
                 <button type="button" data-testid="button-print-full" onClick={() => printGame('full')} className="rounded-md px-3 py-2 text-left text-[11px] font-semibold text-[#284d45] hover:bg-[#efe8da]">Print / Save full game record</button>
                 <button type="button" data-testid="button-print-summary" onClick={() => printGame('summary')} className="rounded-md px-3 py-2 text-left text-[11px] font-semibold text-[#284d45] hover:bg-[#efe8da]">Print / Save game summary</button>
@@ -738,10 +783,14 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
         </div>
       </div>
 
-      <main className="mx-auto max-w-[1120px] space-y-5 px-4 py-5 sm:px-5 lg:px-8">
+      {gameLease !== 'owned' && <p role="status" className="screen-only mx-auto mt-3 max-w-[1120px] rounded-md border border-[#dfc3ac] bg-[#fff3e8] px-4 py-3 text-sm text-[#70432f]">{gameLease === 'checking' ? 'Checking whether another tab is using this game…' : gameLease === 'another-tab' ? 'This game is already open in another tab. This copy is read only to protect the saved scores.' : 'This browser cannot coordinate game edits across tabs. This copy is read only; open it in a browser with cross-tab protection to continue scoring.'}</p>}
+      {storageWarning && <p role="alert" className="screen-only mx-auto mt-3 max-w-[1120px] rounded-md border border-[#dfc3ac] bg-[#fff3e8] px-4 py-3 text-sm text-[#70432f]">{storageWarning}</p>}
+
+      <main inert={!canMutateGame} className="mx-auto max-w-[1120px] space-y-5 px-4 py-5 sm:px-5 lg:px-8">
         <div className="print-only game-print-heading">
           <h1>Mahjong Reference — {activeRulesCopy(game.setup.rulesProfile)} game record</h1>
           <p>{game.isComplete ? 'Game complete' : 'Game in progress'} · {handCountLabel(game.handHistory.length)}</p>
+          {finishedLedger && <p>Completed {new Intl.DateTimeFormat(undefined, { dateStyle: 'long' }).format(new Date(finishedLedger.finishedAt))}</p>}
           <p>Rules: {gameRecordRulesLabel(game.setup.rulesProfile)}</p>
         </div>
         <section className="min-w-0">

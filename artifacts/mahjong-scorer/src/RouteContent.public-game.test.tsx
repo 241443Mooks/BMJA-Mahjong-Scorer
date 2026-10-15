@@ -3,6 +3,8 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { RouteContent } from './RouteContent';
 import { initialiseCurrentRulesRuntimes } from './rules-platform/current-runtime-registry';
 import { PREFERRED_RULES_PROFILE_STORAGE_KEY } from './game/preferred-rules-profile';
+import { confirmHand, createBmjaGame } from './game/game';
+import { finishGameLedger, loadFinishedGameLedgers, saveGameRecovery } from './game/persistence';
 
 describe('public game route seam', () => {
   beforeAll(() => initialiseCurrentRulesRuntimes());
@@ -53,6 +55,34 @@ describe('public game route seam', () => {
     vi.stubGlobal('window', { localStorage: browserStorage(null), location: { search: '' } });
     expect(renderToStaticMarkup(<RouteContent path="/game" />)).toMatch(/data-testid="rules-card-british"[\s\S]*?checked=""/);
     expect(renderToStaticMarkup(<RouteContent path="/hand" />)).toMatch(/data-testid="rules-card-british"[\s\S]*?checked=""/);
+  });
+
+  it('routes Previous games to a local-history page with clear recovery limits', () => {
+    const html = renderToStaticMarkup(<RouteContent path="/previous-games" />);
+    expect(html).toContain('<h1');
+    expect(html).toContain('Previous games');
+    expect(html).toContain('this browser on this device');
+    expect(html).toContain('Browser storage is limited');
+  });
+
+  it('opens a completed local ledger as a read-only printable game record', () => {
+    const storage = browserStorage(null);
+    const players = ['A', 'B', 'C', 'D'].map((id) => ({ id, name: `Player ${id}` }));
+    let game = createBmjaGame(players, { A: 'east', B: 'south', C: 'west', D: 'north' }, undefined, 'full-game');
+    saveGameRecovery(storage, game, 'win', 'A', { scores: {}, scoreRecords: {} });
+    for (let hand = 0; hand < 16; hand += 1) {
+      const south = Object.entries(game.seats).find(([, seat]) => seat === 'south')![0];
+      game = confirmHand(game, { outcome: { type: 'win', winnerId: south }, scores: { A: 0, B: 0, C: 0, D: 0 } });
+    }
+    finishGameLedger(storage, game, { grammar: 'classical-points-doubles', outcomeType: 'win', winnerId: 'A', draft: { scores: {}, scoreRecords: {} } });
+    const ledger = loadFinishedGameLedgers(storage)[0]!;
+    vi.stubGlobal('window', { localStorage: storage, location: { search: '' } });
+
+    const html = renderToStaticMarkup(<RouteContent path={`/previous-games/${ledger.id}`} />);
+    expect(html).toContain('Finished game record');
+    expect(html).toContain('Game complete');
+    expect(html).toContain('Player A');
+    expect(html).toContain('Print / Save full game record');
   });
 
   it.each(['british', 'western', 'club', 'buzzard', 'mcr'] as const)('links the %s rules reference to its exact hand context', (slug) => {

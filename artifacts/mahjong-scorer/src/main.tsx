@@ -19,6 +19,7 @@ function setMeta(selector: string, attribute: string, value: string) {
 
 function canonicalPathFor(currentPath: string) {
   if (canonicalPublicGamePath(currentPath)) return '/game';
+  if (currentPath.startsWith('/previous-games/')) return '/previous-games';
   return aliases.find((alias) => alias.path === currentPath)?.target ?? currentPath;
 }
 

@@ -35,7 +35,7 @@ export function PrivacyPage() {
           <section className="rounded-xl border border-[#d8ceb8] bg-[#fbf8ed] p-5 sm:p-6">
             <h2 className="font-serif text-[26px] text-[#284d45]">Game recovery</h2>
             <p className="mt-3">
-              The Table Companion can keep an in-progress game in your browser so a refresh does not lose the table. That browser-side recovery data is separate from analytics and is not used to identify you in PostHog.
+              In-progress games and finished ledgers are kept in this browser on this device. They are separate from analytics and are not used to identify you in PostHog. Clearing site data, using private browsing, switching browser or device, or running out of browser storage can remove or prevent access. Print or save finished ledgers to keep a separate copy.
             </p>
           </section>
 

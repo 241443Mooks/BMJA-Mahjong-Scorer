@@ -22,6 +22,7 @@ describe('homepage front door', () => {
     expect(markup).toContain('you can usually pick up your game again on this device');
     expect(markup).toContain('saved in this browser, not to an account');
     expect(markup).toContain('href="/features"');
+    expect(markup).toContain('href="/previous-games"');
     expect(markup).toContain('See what the Table Companion can do');
   });
 

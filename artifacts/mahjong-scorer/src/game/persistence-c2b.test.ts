@@ -34,6 +34,17 @@ const memoryStorage = () => {
   const values = new Map<string, string>();
   return { getItem: (key: string) => values.get(key) ?? null, setItem: (key: string, value: string) => values.set(key, value), removeItem: (key: string) => values.delete(key), values };
 };
+const readSnapshot = (storage: ReturnType<typeof memoryStorage>) => {
+  const parsed = JSON.parse(storage.values.get(GAME_SNAPSHOT_STORAGE_KEY)!);
+  return parsed.version === 3 ? parsed.active?.snapshot : parsed;
+};
+const writeSnapshot = (storage: ReturnType<typeof memoryStorage>, snapshot: any) => {
+  const parsed = JSON.parse(storage.values.get(GAME_SNAPSHOT_STORAGE_KEY)!);
+  if (snapshot.version === 2 && parsed.version === 3 && parsed.active) {
+    parsed.active.snapshot = snapshot;
+    storage.setItem(GAME_SNAPSHOT_STORAGE_KEY, JSON.stringify(parsed));
+  } else storage.setItem(GAME_SNAPSHOT_STORAGE_KEY, JSON.stringify(snapshot));
+};
 const save = (storage: ReturnType<typeof memoryStorage>, game: GameState, currentRound: PersistedCurrentRoundV2 = { grammar: 'pattern-accumulator', draft: { scores: {}, scoreRecords: {} } }) => saveGameRecoveryV2(storage, game, currentRound);
 const load = (storage: ReturnType<typeof memoryStorage>) => loadGameRecoveryCore(storage);
 const rotatedGame = () => confirmHand(createGame(players, seats, undefined, 'full-game', ref), draw);
@@ -66,7 +77,9 @@ describe('C2B MCR persistence/recovery v2', () => {
       const storage = memoryStorage();
       const game = confirmHand(createGame(players, seats, undefined, 'full-game', ref), input);
       save(storage, game);
-      const envelope = JSON.parse(storage.values.get(GAME_SNAPSHOT_STORAGE_KEY)!);
+      const repository = JSON.parse(storage.values.get(GAME_SNAPSHOT_STORAGE_KEY)!);
+      const envelope = repository.active.snapshot;
+      expect(repository.version).toBe(3);
       expect(envelope.version).toBe(2);
       expect([...storage.values.keys()]).toEqual([GAME_SNAPSHOT_STORAGE_KEY]);
       expect(envelope.game.rounds[0].input.mcrOutcome).toEqual(expectedOutcome);
@@ -130,9 +143,9 @@ describe('C2B MCR persistence/recovery v2', () => {
     const game = rotatedGame();
     const record = accepted('A', 'self-draw', { seatWind: game.seats.A, prevailingWind: game.prevailingWind });
     const storage = memoryStorage(); save(storage, game, activeWin(record));
-    const snapshot = JSON.parse(storage.values.get(GAME_SNAPSHOT_STORAGE_KEY)!);
+    const snapshot = readSnapshot(storage);
     rescorePersistedRecord(snapshot, 'A', 'seatWind', 'south');
-    storage.setItem(GAME_SNAPSHOT_STORAGE_KEY, JSON.stringify(snapshot));
+    writeSnapshot(storage, snapshot);
     expect(load(storage)).toBeNull(); expect(storage.getItem(GAME_SNAPSHOT_STORAGE_KEY)).toBeNull();
   });
 
@@ -140,9 +153,9 @@ describe('C2B MCR persistence/recovery v2', () => {
     const game = rotatedGame();
     const record = accepted('A', 'self-draw', { seatWind: game.seats.A, prevailingWind: game.prevailingWind });
     const storage = memoryStorage(); save(storage, game, activeWin(record));
-    const snapshot = JSON.parse(storage.values.get(GAME_SNAPSHOT_STORAGE_KEY)!);
+    const snapshot = readSnapshot(storage);
     rescorePersistedRecord(snapshot, 'A', 'prevailingWind', 'south');
-    storage.setItem(GAME_SNAPSHOT_STORAGE_KEY, JSON.stringify(snapshot));
+    writeSnapshot(storage, snapshot);
     expect(load(storage)).toBeNull(); expect(storage.getItem(GAME_SNAPSHOT_STORAGE_KEY)).toBeNull();
   });
 
@@ -183,7 +196,7 @@ describe('C2B MCR persistence/recovery v2', () => {
     ];
     for (const mutate of mutations) {
       const storage = memoryStorage(); save(storage, game);
-      const snapshot = JSON.parse(storage.values.get(GAME_SNAPSHOT_STORAGE_KEY)!); mutate(snapshot); storage.setItem(GAME_SNAPSHOT_STORAGE_KEY, JSON.stringify(snapshot));
+      const snapshot = readSnapshot(storage); mutate(snapshot); writeSnapshot(storage, snapshot);
       expect(load(storage)).toBeNull(); expect(storage.getItem(GAME_SNAPSHOT_STORAGE_KEY)).toBeNull();
     }
   });
@@ -199,12 +212,12 @@ describe('C2B MCR persistence/recovery v2', () => {
     ];
     for (const mutate of mutations) {
       const storage = memoryStorage(); save(storage, game);
-      const snapshot = JSON.parse(storage.values.get(GAME_SNAPSHOT_STORAGE_KEY)!); mutate(snapshot); storage.setItem(GAME_SNAPSHOT_STORAGE_KEY, JSON.stringify(snapshot));
+      const snapshot = readSnapshot(storage); mutate(snapshot); writeSnapshot(storage, snapshot);
       expect(load(storage)).toBeNull(); expect(storage.getItem(GAME_SNAPSHOT_STORAGE_KEY)).toBeNull();
     }
     const validGame = confirmHand(createGame(players, seats, undefined, 'full-game', ref), win(accepted('A', 'discard'), 'discard', 'B'));
     const storage = memoryStorage(); save(storage, validGame);
-    const snapshot = JSON.parse(storage.values.get(GAME_SNAPSHOT_STORAGE_KEY)!);
+    const snapshot = readSnapshot(storage);
     const persisted = snapshot.game.rounds[0].input.scoreRecords.A;
     persisted.input.context.seatWind = 'south';
     persisted.input.context.prevailingWind = 'east';
@@ -213,7 +226,7 @@ describe('C2B MCR persistence/recovery v2', () => {
     persisted.result = compiled.runtime.scoreHand(persisted.input);
     persisted.finalScore = persisted.result.result.total;
     snapshot.game.rounds[0].input.scores.A = persisted.finalScore;
-    storage.setItem(GAME_SNAPSHOT_STORAGE_KEY, JSON.stringify(snapshot));
+    writeSnapshot(storage, snapshot);
     expect(load(storage)).toBeNull(); expect(storage.getItem(GAME_SNAPSHOT_STORAGE_KEY)).toBeNull();
   });
 

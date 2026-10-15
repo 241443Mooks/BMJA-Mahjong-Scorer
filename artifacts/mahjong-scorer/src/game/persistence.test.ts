@@ -5,6 +5,8 @@ import {
   clearGameRecovery,
   GAME_SNAPSHOT_STORAGE_KEY,
   gameProgressSummary,
+  finishGameLedger,
+  loadFinishedGameLedgers,
   loadGameRecovery,
   loadInProgressGameRecovery,
   loadInProgressGameRecoveryCore,
@@ -23,6 +25,17 @@ const memoryStorage = () => {
     setItem: (key: string, value: string) => values.set(key, value),
     removeItem: (key: string) => values.delete(key),
   };
+};
+const readStoredSnapshot = (storage: ReturnType<typeof memoryStorage>) => {
+  const parsed = JSON.parse(storage.getItem(GAME_SNAPSHOT_STORAGE_KEY)!);
+  return parsed.version === 3 ? parsed.active?.snapshot : parsed;
+};
+const writeStoredSnapshot = (storage: ReturnType<typeof memoryStorage>, snapshot: Record<string, unknown>) => {
+  const parsed = JSON.parse(storage.getItem(GAME_SNAPSHOT_STORAGE_KEY)!);
+  if (snapshot.version === 2 && parsed.version === 3 && parsed.active) {
+    parsed.active.snapshot = snapshot;
+    storage.setItem(GAME_SNAPSHOT_STORAGE_KEY, JSON.stringify(parsed));
+  } else storage.setItem(GAME_SNAPSHOT_STORAGE_KEY, JSON.stringify(snapshot));
 };
 
 const newGame = () =>
@@ -53,14 +66,14 @@ describe("game recovery persistence", () => {
     const storage = memoryStorage();
     const buzzard = createBmjaGame(newGame().players, newGame().seats, undefined, 'full-game', BUZZARD_2000_PROFILE_REF);
     saveGameRecovery(storage, buzzard, 'win', 'east', { scores: {}, scoreRecords: {} });
-    const snapshot = JSON.parse(storage.getItem(GAME_SNAPSHOT_STORAGE_KEY)!);
+    const snapshot = readStoredSnapshot(storage);
     snapshot.version = 1;
     snapshot.game.rounds = snapshot.game.rounds.map((round: { input: unknown }) => round.input);
     delete snapshot.game.setup.tableLimit;
-    storage.setItem(GAME_SNAPSHOT_STORAGE_KEY, JSON.stringify(snapshot));
+    writeStoredSnapshot(storage, snapshot);
     expect(loadGameRecovery(storage)?.game.setup.tableLimit).toBe(600);
     snapshot.game.setup.tableLimit = 0;
-    storage.setItem(GAME_SNAPSHOT_STORAGE_KEY, JSON.stringify(snapshot));
+    writeStoredSnapshot(storage, snapshot);
     expect(loadGameRecovery(storage)).toBeNull();
   });
   it('preserves a non-default Buzzard limit and exceptional liability through recovery, replay, and undo', () => {
@@ -95,9 +108,9 @@ describe("game recovery persistence", () => {
     const confirmed = confirmHand(otb, { outcome: { type: 'win', winnerId: 'east' }, scores: { east: 100, south: 0, west: 0, north: 0 }, incidents: [{ type: 'cannon', liablePlayerId: 'south', danger: 'one-suit', noChoiceAccepted: true }] });
     saveGameRecovery(storage, confirmed, 'win', 'east', { scores: {}, scoreRecords: {}, incidents: [{ type: 'cannon', liablePlayerId: 'south', noChoiceAccepted: true }] });
     expect(loadGameRecovery(storage)?.game.handHistory[0].incidents[0]).toMatchObject({ danger: 'one-suit' });
-    const malformed = JSON.parse(storage.getItem(GAME_SNAPSHOT_STORAGE_KEY)!);
+    const malformed = readStoredSnapshot(storage);
     malformed.currentRound.draft.incidents[0].danger = 'invented-danger';
-    storage.setItem(GAME_SNAPSHOT_STORAGE_KEY, JSON.stringify(malformed));
+    writeStoredSnapshot(storage, malformed);
     expect(loadGameRecovery(storage)).toBeNull();
   });
   it("saves and restores the replayed game plus the active round draft", () => {
@@ -159,7 +172,9 @@ describe("game recovery persistence", () => {
       scoreRecords: {},
     });
 
-    const saved = JSON.parse(storage.getItem(GAME_SNAPSHOT_STORAGE_KEY)!);
+    const persisted = JSON.parse(storage.getItem(GAME_SNAPSHOT_STORAGE_KEY)!);
+    const saved = persisted.active.snapshot;
+    expect(persisted.version).toBe(3);
     expect(saved.version).toBe(2);
     expect(saved.game.setup.rulesProfile).toEqual(BMJA_PROFILE_REF);
     expect(saved.game.runtimeFingerprint).toBe(game.runtimeFingerprint);
@@ -175,11 +190,11 @@ describe("game recovery persistence", () => {
       scores: {},
       scoreRecords: {},
     });
-    const legacy = JSON.parse(storage.getItem(GAME_SNAPSHOT_STORAGE_KEY)!);
+    const legacy = readStoredSnapshot(storage);
     legacy.version = 1;
     legacy.game.rounds = legacy.game.rounds.map((round: { input: unknown }) => round.input);
     delete legacy.game.setup.rulesProfile;
-    storage.setItem(GAME_SNAPSHOT_STORAGE_KEY, JSON.stringify(legacy));
+    writeStoredSnapshot(storage, legacy);
 
     const recovered = loadGameRecovery(storage);
     expect(recovered?.game.setup.rulesProfile).toEqual(BMJA_PROFILE_REF);
@@ -193,11 +208,11 @@ describe("game recovery persistence", () => {
       const setup = createBmjaGame(newGame().players, newGame().seats, undefined, 'full-game', profile);
       const game = confirmHand(setup, { outcome: { type: 'win', winnerId: 'east' }, scores: { east: 0, south: 0, west: 0, north: 0 } });
       saveGameRecovery(storage, game, 'win', 'east', { scores: {}, scoreRecords: {} });
-      const snapshot = JSON.parse(storage.getItem(GAME_SNAPSHOT_STORAGE_KEY)!);
+      const snapshot = readStoredSnapshot(storage);
       snapshot.version = 1;
       delete snapshot.game.runtimeFingerprint;
       snapshot.game.rounds = snapshot.game.rounds.map((round: { input: unknown }) => round.input);
-      storage.setItem(GAME_SNAPSHOT_STORAGE_KEY, JSON.stringify(snapshot));
+      writeStoredSnapshot(storage, snapshot);
       const original = storage.getItem(GAME_SNAPSHOT_STORAGE_KEY);
       expect(loadGameRecovery(storage)?.game.setup.rulesProfile).toEqual(profile);
       expect(loadGameRecovery(storage)?.game.handHistory).toEqual(game.handHistory);
@@ -211,21 +226,21 @@ describe("game recovery persistence", () => {
       scores: {},
       scoreRecords: {},
     });
-    const saved = JSON.parse(storage.getItem(GAME_SNAPSHOT_STORAGE_KEY)!);
+    const saved = readStoredSnapshot(storage);
     saved.game.setup.rulesProfile = { id: "bmja", version: "999" };
-    storage.setItem(GAME_SNAPSHOT_STORAGE_KEY, JSON.stringify(saved));
+    writeStoredSnapshot(storage, saved);
 
     expect(loadGameRecovery(storage)).toBeNull();
     expect(storage.getItem(GAME_SNAPSHOT_STORAGE_KEY)).toBeNull();
 
     const legacyStorage = memoryStorage();
     saveGameRecovery(legacyStorage, newGame(), 'win', 'east', { scores: {}, scoreRecords: {} });
-    const legacy = JSON.parse(legacyStorage.getItem(GAME_SNAPSHOT_STORAGE_KEY)!);
+    const legacy = readStoredSnapshot(legacyStorage);
     legacy.version = 1;
     delete legacy.game.runtimeFingerprint;
     legacy.game.rounds = legacy.game.rounds.map((round: { input: unknown }) => round.input);
     legacy.game.setup.rulesProfile = { id: 'bmja', version: '999' };
-    legacyStorage.setItem(GAME_SNAPSHOT_STORAGE_KEY, JSON.stringify(legacy));
+    writeStoredSnapshot(legacyStorage, legacy);
     expect(loadGameRecovery(legacyStorage)).toBeNull();
     expect(legacyStorage.getItem(GAME_SNAPSHOT_STORAGE_KEY)).toBeNull();
   });
@@ -263,12 +278,12 @@ describe("game recovery persistence", () => {
       scores: { east: 100 },
       scoreRecords: { east: { source: "manual", finalScore: 100 } },
     });
-    const saved = JSON.parse(storage.getItem(GAME_SNAPSHOT_STORAGE_KEY)!);
+    const saved = readStoredSnapshot(storage);
     saved.currentRound.draft.scoreRecords.east = {
       source: "detailed-scorer",
       finalScore: 100,
     };
-    storage.setItem(GAME_SNAPSHOT_STORAGE_KEY, JSON.stringify(saved));
+    writeStoredSnapshot(storage, saved);
 
     expect(loadGameRecovery(storage)).toBeNull();
     expect(storage.getItem(GAME_SNAPSHOT_STORAGE_KEY)).toBeNull();
@@ -283,8 +298,9 @@ describe("game recovery persistence", () => {
     expect(gameProgressSummary(afterFirstHand)).toBe("Round 1 · Hand 2");
   });
 
-  it("clears completed games instead of offering recovery", () => {
+  it("archives a completed dated ledger and keeps it when active recovery is cleared", () => {
     const storage = memoryStorage();
+    saveGameRecovery(storage, newGame(), 'win', 'east', { scores: {}, scoreRecords: {} });
     let game = newGame();
     for (let hand = 0; hand < 16; hand += 1) {
       const south = Object.entries(game.seats).find(
@@ -296,13 +312,17 @@ describe("game recovery persistence", () => {
       });
     }
     expect(game.isComplete).toBe(true);
-    saveGameRecovery(storage, game, "win", "east", {
-      scores: {},
-      scoreRecords: {},
-    });
+    finishGameLedger(storage, game, { grammar: 'classical-points-doubles', outcomeType: 'win', winnerId: 'east', draft: { scores: {}, scoreRecords: {} } });
 
     expect(loadInProgressGameRecovery(storage)).toBeNull();
-    expect(storage.getItem(GAME_SNAPSHOT_STORAGE_KEY)).toBeNull();
+    const finished = loadFinishedGameLedgers(storage);
+    expect(finished).toHaveLength(1);
+    expect(finished[0]).toMatchObject({ game: { isComplete: true, handHistory: game.handHistory } });
+    expect(Number.isNaN(Date.parse(finished[0]!.startedAt))).toBe(false);
+    expect(Number.isNaN(Date.parse(finished[0]!.finishedAt))).toBe(false);
+    clearGameRecovery(storage);
+    expect(loadFinishedGameLedgers(storage)).toHaveLength(1);
+    expect(loadInProgressGameRecovery(storage)).toBeNull();
   });
 
   it("reads a recoverable game without changing its saved snapshot", () => {
