@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ArrowRight, Calculator, Gamepad2 } from 'lucide-react';
 import { SiteHeader } from '../components/SiteHeader';
 import { useInProgressGameRecovery } from '../components/ReturnToGame';
@@ -6,6 +6,7 @@ import {
   ACTIVE_GAME_LOCK_NAME,
   clearGameRecovery,
   gameProgressSummary,
+  loadFinishedGameLedgers,
 } from '../game';
 
 type HomeLink = {
@@ -53,6 +54,25 @@ function PrimaryAction({
 export function HomePage() {
   const recovered = useInProgressGameRecovery();
   const [tabMessage, setTabMessage] = useState('');
+  const [hasPreviousGames, setHasPreviousGames] = useState(() => {
+    try {
+      return typeof window !== 'undefined' && loadFinishedGameLedgers(window.localStorage).length > 0;
+    } catch {
+      return false;
+    }
+  });
+
+  useEffect(() => {
+    const refreshPreviousGames = () => {
+      try {
+        setHasPreviousGames(loadFinishedGameLedgers(window.localStorage).length > 0);
+      } catch {
+        setHasPreviousGames(false);
+      }
+    };
+    window.addEventListener('storage', refreshPreviousGames);
+    return () => window.removeEventListener('storage', refreshPreviousGames);
+  }, []);
 
   const startNewGame = async () => {
     if (!recovered || typeof window === 'undefined') return;
@@ -132,7 +152,20 @@ export function HomePage() {
           <p className="block w-fit max-w-full break-words rounded-xl border border-[#cfc3aa] bg-[#fbf8ed] px-4 py-2 text-[14px] font-semibold leading-5 text-[#284d45] sm:rounded-full">Free · No signup required · Works in your browser</p>
         </section>
 
-        <a href="/previous-games" className="order-4 mt-3 inline-flex w-fit items-center gap-2 rounded-md px-1 py-2 text-sm font-semibold text-[#284d45] underline decoration-[#cfa58f] underline-offset-4 hover:text-[#ae6249] sm:mt-5 sm:order-none" data-testid="link-previous-games"><Gamepad2 size={16} aria-hidden="true" /> Previous games</a>
+        {hasPreviousGames && <a
+          href="/previous-games"
+          data-testid="link-previous-games"
+          className="group order-4 mt-3 flex min-h-0 w-full max-w-[760px] items-center gap-3 rounded-xl border border-[#cfc3aa] bg-[#fbf8ed] px-4 py-3 text-[#284d45] shadow-[var(--shadow-sm)] transition hover:border-[#ae6249] hover:bg-[#fffaf0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249] focus-visible:ring-offset-2 sm:mt-5 sm:gap-4 sm:px-5 sm:py-3.5 sm:order-none"
+        >
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#efe8da] text-[#ae6249]">
+            <Gamepad2 size={19} strokeWidth={1.8} aria-hidden="true" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block font-serif text-[20px] leading-tight">See your previous games</span>
+            <span className="mt-1 block text-[13px] leading-5 text-[#66746e]">Revisit scores and finished game ledgers.</span>
+          </span>
+          <ArrowRight size={19} aria-hidden="true" className="shrink-0 text-[#ae6249] transition-transform group-hover:translate-x-1" />
+        </a>}
         {tabMessage && <p role="status" className="order-4 max-w-[680px] rounded-md bg-[#fff3e8] px-3 py-2 text-sm text-[#70432f] sm:order-none">{tabMessage}</p>}
 
         <p className="order-4 mb-2 mt-3 font-mono text-[11px] uppercase tracking-[.14em] text-[#ae6249] sm:hidden">Rules, scoring and play — made clear.</p>
