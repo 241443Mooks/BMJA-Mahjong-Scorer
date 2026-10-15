@@ -1,7 +1,9 @@
+import { useState } from 'react';
 import { ArrowRight, Calculator, Gamepad2 } from 'lucide-react';
 import { SiteHeader } from '../components/SiteHeader';
 import { useInProgressGameRecovery } from '../components/ReturnToGame';
 import {
+  ACTIVE_GAME_LOCK_NAME,
   clearGameRecovery,
   gameProgressSummary,
 } from '../game';
@@ -50,14 +52,25 @@ function PrimaryAction({
 
 export function HomePage() {
   const recovered = useInProgressGameRecovery();
+  const [tabMessage, setTabMessage] = useState('');
 
-  const startNewGame = () => {
+  const startNewGame = async () => {
     if (!recovered || typeof window === 'undefined') return;
     if (!window.confirm('Start a new game? Your current game will be replaced.')) {
       return;
     }
-    clearGameRecovery(window.localStorage);
-    window.location.assign('/game');
+    if (!navigator.locks) {
+      setTabMessage('This browser cannot safely start a replacement game while another game tab may be open. Close other game tabs and open Track a game.');
+      return;
+    }
+    await navigator.locks.request(ACTIVE_GAME_LOCK_NAME, { ifAvailable: true }, (lock) => {
+      if (!lock) {
+        setTabMessage('This game is open in another tab. Close that tab before starting a new game.');
+        return;
+      }
+      clearGameRecovery(window.localStorage);
+      window.location.assign('/game');
+    });
   };
 
   return (
@@ -118,6 +131,9 @@ export function HomePage() {
         <section data-testid="home-free-use" className="order-3 mt-3 max-w-[760px] sm:mt-6 sm:order-none" aria-label="Free to use">
           <p className="block w-fit max-w-full break-words rounded-xl border border-[#cfc3aa] bg-[#fbf8ed] px-4 py-2 text-[14px] font-semibold leading-5 text-[#284d45] sm:rounded-full">Free · No signup required · Works in your browser</p>
         </section>
+
+        <a href="/previous-games" className="order-4 mt-3 inline-flex w-fit items-center gap-2 rounded-md px-1 py-2 text-sm font-semibold text-[#284d45] underline decoration-[#cfa58f] underline-offset-4 hover:text-[#ae6249] sm:mt-5 sm:order-none" data-testid="link-previous-games"><Gamepad2 size={16} aria-hidden="true" /> Previous games</a>
+        {tabMessage && <p role="status" className="order-4 max-w-[680px] rounded-md bg-[#fff3e8] px-3 py-2 text-sm text-[#70432f] sm:order-none">{tabMessage}</p>}
 
         <p className="order-4 mb-2 mt-3 font-mono text-[11px] uppercase tracking-[.14em] text-[#ae6249] sm:hidden">Rules, scoring and play — made clear.</p>
 

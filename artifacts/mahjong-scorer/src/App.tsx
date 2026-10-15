@@ -1811,7 +1811,7 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
   );
 }
 
-export default function App({ initialView = 'game', standaloneHand = false, initialRulesProfile, prerenderOnly = false }: { initialView?: 'game' | 'hand'; standaloneHand?: boolean; initialRulesProfile?: import('./game').RulesProfileRef; prerenderOnly?: boolean }) {
+export default function App({ initialView = 'game', standaloneHand = false, initialRulesProfile, prerenderOnly = false, finishedLedgerId }: { initialView?: 'game' | 'hand'; standaloneHand?: boolean; initialRulesProfile?: import('./game').RulesProfileRef; prerenderOnly?: boolean; finishedLedgerId?: string }) {
   const search = standaloneHand && typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : undefined;
   const practice = !!search?.get('practice');
   const requestedDescriptor = search?.get('rules') ? PUBLIC_RULES_DESCRIPTORS.find(({ slug }) => slug === search.get('rules')) : undefined;
@@ -1863,6 +1863,7 @@ export default function App({ initialView = 'game', standaloneHand = false, init
                 onClearReturnedScore={() => setReturnedScore(undefined)}
                 initialRulesProfile={resolvedInitialRulesProfile}
                 initialRulesProfileIsExplicit={initialRulesProfile !== undefined}
+                finishedLedgerId={finishedLedgerId}
               />
             </div>
           )}

@@ -174,7 +174,9 @@ describe('C2A profile-aware MCR game runtime', () => {
       scores: { ...zeroes, A: accepted.finalScore }, scoreRecords: { A: accepted },
     });
     saveGameRecoveryV2(storage, game, { grammar: 'pattern-accumulator', outcomeType: 'win', winnerId: 'A', winSource: 'discard', discarderId: 'B', draft: { scores: { A: accepted.finalScore }, scoreRecords: { A: accepted } } });
-    const snapshot = JSON.parse(storage.values.get(GAME_SNAPSHOT_STORAGE_KEY)!);
+    const repository = JSON.parse(storage.values.get(GAME_SNAPSHOT_STORAGE_KEY)!);
+    const snapshot = repository.active.snapshot;
+    expect(repository.version).toBe(3);
     expect(snapshot.version).toBe(2);
     expect(snapshot.game.rounds[0].grammar).toBe('pattern-accumulator');
     expect(snapshot.game.rounds[0].input).toEqual(game.handHistory[0]!.mcrReplay);

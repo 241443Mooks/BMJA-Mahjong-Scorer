@@ -14,6 +14,10 @@ const storage = () => {
   const values = new Map<string, string>();
   return { getItem: (key: string) => values.get(key) ?? null, setItem: (key: string, value: string) => values.set(key, value), removeItem: (key: string) => values.delete(key) };
 };
+const readSnapshot = (saved: ReturnType<typeof storage>) => {
+  const parsed = JSON.parse(saved.getItem(GAME_SNAPSHOT_STORAGE_KEY)!);
+  return parsed.version === 3 ? parsed.active?.snapshot : parsed;
+};
 
 describe('ReturnToGame public profile routing', () => {
   beforeAll(() => initialiseCurrentRulesRuntimes());
@@ -37,7 +41,7 @@ describe('ReturnToGame public profile routing', () => {
     try { expect(renderToStaticMarkup(createElement(ReturnToGame))).toContain('href="/game/british"'); }
     finally { vi.unstubAllGlobals(); }
 
-    const legacy = JSON.parse(saved.getItem(GAME_SNAPSHOT_STORAGE_KEY)!);
+    const legacy = readSnapshot(saved);
     legacy.version = 1;
     legacy.game.rounds = legacy.game.rounds.map((round: { input: unknown }) => round.input);
     legacy.currentRound = { outcomeType: 'draw', winnerId: 'A', draft: { scores: {}, scoreRecords: {} } };
@@ -51,7 +55,7 @@ describe('ReturnToGame public profile routing', () => {
     const saved = storage();
     const game = createBmjaGame(players, seats, undefined, 'full-game', BMJA_PROFILE_REF);
     saveGameRecovery(saved, game, 'draw', 'A', { scores: {}, scoreRecords: {} });
-    const invalid = JSON.parse(saved.getItem(GAME_SNAPSHOT_STORAGE_KEY)!);
+    const invalid = readSnapshot(saved);
     invalid.game.runtimeFingerprint = 'tampered';
     saved.setItem(GAME_SNAPSHOT_STORAGE_KEY, JSON.stringify(invalid));
     vi.stubGlobal('window', { localStorage: saved });

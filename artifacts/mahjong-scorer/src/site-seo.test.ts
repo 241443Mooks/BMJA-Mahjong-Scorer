@@ -2,11 +2,11 @@ import siteSeo from './site-seo';
 import { describe, expect, it } from 'vitest';
 
 describe('public SEO configuration', () => {
-  it('defines unique canonical, indexable routes', () => {
+  it('defines unique canonical routes with explicit indexability', () => {
     const paths = siteSeo.routes.map((route) => route.path);
     const titles = siteSeo.routes.map((route) => route.title);
 
-    expect(siteSeo.routes).toHaveLength(29);
+    expect(siteSeo.routes).toHaveLength(30);
     for (const slug of [
       'eight-ruleset-architecture-stress-test',
       'eight-ruleset-paper-manifests',
@@ -19,6 +19,7 @@ describe('public SEO configuration', () => {
       expect(siteSeo.routes.find((route) => route.path === `/evidence/${slug}`)?.title).toContain('Mahjong Reference');
     }
     expect(siteSeo.routes.find((route) => route.path === '/privacy')?.title).toContain('Privacy & Analytics');
+    expect(siteSeo.routes.find((route) => route.path === '/previous-games')?.indexable).toBe(false);
     expect(siteSeo.routes.find((route) => route.path === '/whats-new')?.title).toBe('What’s New | Mahjong Reference');
     for (const path of ['/rules/club', '/rules/buzzard', '/rules/mcr', '/under-the-hood']) {
       const route = siteSeo.routes.find((candidate) => candidate.path === path);
@@ -33,7 +34,8 @@ describe('public SEO configuration', () => {
     expect(siteSeo.routes.find((route) => route.path === '/under-the-hood')?.title).toContain('Under the Hood');
     expect(new Set(paths).size).toBe(paths.length);
     expect(new Set(titles).size).toBe(titles.length);
-    expect(siteSeo.routes.every((route) => route.indexable)).toBe(true);
+    expect(siteSeo.routes.filter((route) => route.path !== '/previous-games').every((route) => route.indexable)).toBe(true);
+    expect(siteSeo.routes.find((route) => route.path === '/previous-games')?.indexable).toBe(false);
     expect(siteSeo.routes.find((route) => route.path === '/')?.title).toContain('Mahjong Table Companion');
     expect(siteSeo.routes.find((route) => route.path === '/hand')?.title).toContain('Mahjong Hand Calculator');
     expect(siteSeo.routes.find((route) => route.path === '/mahjong-settlement')?.title).toContain('Mahjong Settlement Explained');

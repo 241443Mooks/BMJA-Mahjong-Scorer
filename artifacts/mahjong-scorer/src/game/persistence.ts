@@ -20,8 +20,17 @@ import { validateMcrScoringInput } from '../rules-platform/mcr-scoring-input';
 import type { HandScoreResult } from '../rules-platform/types';
 
 export const GAME_SNAPSHOT_STORAGE_KEY = "bmja-mahjong-scorer/game-snapshot";
+export const ACTIVE_GAME_LOCK_NAME = "bmja-mahjong-scorer/active-game-owner";
 const LEGACY_GAME_SNAPSHOT_VERSION = 1;
 const GAME_SNAPSHOT_VERSION = 2;
+const GAME_LEDGER_VERSION = 3;
+
+export type FinishedGameLedger = {
+  id: string;
+  startedAt: string;
+  finishedAt: string;
+  game: GameState;
+};
 
 type PersistedGameSetup = Omit<GameSetup, "rulesProfile"> & {
   rulesProfile?: RulesProfileRef;
@@ -51,6 +60,17 @@ type PersistedGameSnapshotV2 = {
   version: typeof GAME_SNAPSHOT_VERSION;
   game: { setup: GameSetup; runtimeFingerprint: string; rounds: PersistedRoundV2[] };
   currentRound: PersistedCurrentRoundV2;
+};
+type PersistedFinishedLedger = {
+  id: string;
+  startedAt: string;
+  finishedAt: string;
+  game: PersistedGameSnapshotV2['game'];
+};
+type PersistedGameLedgerStore = {
+  version: typeof GAME_LEDGER_VERSION;
+  active: { id: string; startedAt: string; snapshot: PersistedGameSnapshotV2 } | null;
+  finished: PersistedFinishedLedger[];
 };
 
 export type RecoveredGame = {
@@ -177,6 +197,41 @@ const stableJson = (value: unknown): string => {
   return JSON.stringify(value);
 };
 
+const emptyLedgerStore = (): PersistedGameLedgerStore => ({ version: GAME_LEDGER_VERSION, active: null, finished: [] });
+const legacyActiveSnapshot = (value: unknown): PersistedGameSnapshotV2 | null => {
+  if (!isValidV2SnapshotShape(value)) return null;
+  return value;
+};
+const readLedgerStore = (storage: StorageLike): PersistedGameLedgerStore => {
+  let parsed: unknown;
+  try {
+    const raw = storage.getItem(GAME_SNAPSHOT_STORAGE_KEY);
+    if (!raw) return emptyLedgerStore();
+    parsed = JSON.parse(raw);
+  } catch { return emptyLedgerStore(); }
+  if (isRecord(parsed) && parsed.version === GAME_LEDGER_VERSION && Array.isArray(parsed.finished)) {
+    const store = parsed as unknown as PersistedGameLedgerStore;
+    const finished = store.finished.filter((entry) => isRecord(entry) && typeof entry.id === 'string' && entry.id.length > 0 && typeof entry.startedAt === 'string' && Number.isFinite(Date.parse(entry.startedAt)) && typeof entry.finishedAt === 'string' && Number.isFinite(Date.parse(entry.finishedAt)) && isRecord(entry.game) && validFinishedGame(entry.game));
+    const active = isRecord(store.active) && typeof store.active.id === 'string' && typeof store.active.startedAt === 'string' && legacyActiveSnapshot(store.active.snapshot) ? store.active : null;
+    return { version: GAME_LEDGER_VERSION, active, finished };
+  }
+  const snapshot = legacyActiveSnapshot(parsed) ?? (isRecord(parsed) && parsed.version === 1 ? parsed : null);
+  if (!snapshot) return emptyLedgerStore();
+  const now = new Date().toISOString();
+  return {
+    version: GAME_LEDGER_VERSION,
+    active: { id: createLedgerId(), startedAt: now, snapshot: snapshot as PersistedGameSnapshotV2 },
+    finished: [],
+  };
+};
+const validFinishedGame = (game: unknown) => {
+  return isRecord(game) && validV2Setup(game.setup) && typeof game.runtimeFingerprint === 'string' && !!game.runtimeFingerprint && Array.isArray(game.rounds);
+};
+const createLedgerId = () => typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `game-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+const writeLedgerStore = (storage: StorageLike, store: PersistedGameLedgerStore) => {
+  try { storage.setItem(GAME_SNAPSHOT_STORAGE_KEY, JSON.stringify(store)); return true; } catch { return false; }
+};
+
 const validateMcrRecord = (
   value: unknown,
   profile: RulesProfileRef,
@@ -274,14 +329,55 @@ const roundsFrom = (game: GameState): PersistedRoundV2[] => game.handHistory.map
   } };
 });
 
-export const saveGameRecoveryV2 = (storage: StorageLike, game: GameState, currentRound: PersistedCurrentRoundV2): void => {
+export const saveGameRecoveryV2 = (storage: StorageLike, game: GameState, currentRound: PersistedCurrentRoundV2): boolean => {
   const snapshot: PersistedGameSnapshotV2 = {
     version: GAME_SNAPSHOT_VERSION,
     game: { setup: structuredClone(game.setup), runtimeFingerprint: game.runtimeFingerprint, rounds: roundsFrom(game) },
     currentRound: structuredClone(currentRound),
   };
-  try { storage.setItem(GAME_SNAPSHOT_STORAGE_KEY, JSON.stringify(snapshot)); } catch { /* Browser storage may be unavailable or full. */ }
+  const store = readLedgerStore(storage);
+  const active = store.active && store.active.snapshot.game.setup.players.map(({ id }) => id).join('|') === game.setup.players.map(({ id }) => id).join('|') && store.active.snapshot.game.setup.rulesProfile.id === game.setup.rulesProfile.id
+    ? { ...store.active, snapshot }
+    : { id: createLedgerId(), startedAt: new Date().toISOString(), snapshot };
+  return writeLedgerStore(storage, { ...store, active });
 };
+
+export const finishGameLedger = (storage: StorageLike, game: GameState, currentRound: PersistedCurrentRoundV2): boolean => {
+  if (!game.isComplete) return false;
+  const store = readLedgerStore(storage);
+  const active = store.active;
+  const snapshot: PersistedGameSnapshotV2 = {
+    version: GAME_SNAPSHOT_VERSION,
+    game: { setup: structuredClone(game.setup), runtimeFingerprint: game.runtimeFingerprint, rounds: roundsFrom(game) },
+    currentRound: structuredClone(currentRound),
+  };
+  try {
+    const replayed = replayGame(snapshot.game.setup, snapshot.game.rounds.map(({ input }) => input));
+    if (!replayed.isComplete) return false;
+    const id = active?.id ?? createLedgerId();
+    if (!active && store.finished.some((entry) => stableJson(entry.game) === stableJson(snapshot.game))) return true;
+    if (!store.finished.some((entry) => entry.id === id)) {
+      store.finished.unshift({ id, startedAt: active?.startedAt ?? new Date().toISOString(), finishedAt: new Date().toISOString(), game: snapshot.game });
+    }
+    return writeLedgerStore(storage, { ...store, active: null });
+  } catch { return false; }
+};
+
+export const loadFinishedGameLedgers = (storage: StorageLike): FinishedGameLedger[] => {
+  const store = readLedgerStore(storage);
+  return store.finished.flatMap((entry) => {
+    try {
+      const compiled = getCurrentCompiledRulesRuntime(entry.game.setup.rulesProfile);
+      if (compiled.artifact.rulesFingerprint !== entry.game.runtimeFingerprint) return [];
+      const game = replayGame(entry.game.setup, entry.game.rounds.map(({ input }) => input));
+      if (!game.isComplete) return [];
+      return [{ id: entry.id, startedAt: entry.startedAt, finishedAt: entry.finishedAt, game }];
+    } catch { return []; }
+  });
+};
+
+export const loadFinishedGameLedger = (storage: StorageLike, id: string): FinishedGameLedger | null =>
+  loadFinishedGameLedgers(storage).find((entry) => entry.id === id) ?? null;
 
 export const saveGameRecovery = (
   storage: StorageLike,
@@ -297,7 +393,9 @@ export const saveGameRecovery = (
 
 export const clearGameRecovery = (storage: StorageLike): void => {
   try {
-    storage.removeItem(GAME_SNAPSHOT_STORAGE_KEY);
+    const store = readLedgerStore(storage);
+    if (store.finished.length) writeLedgerStore(storage, { ...store, active: null });
+    else storage.removeItem(GAME_SNAPSHOT_STORAGE_KEY);
   } catch {
     // Clearing recovery must never interrupt the game UI.
   }
@@ -312,6 +410,10 @@ const readSnapshot = (storage: StorageLike): unknown | null => {
   } catch {
     clearGameRecovery(storage);
     return null;
+  }
+  if (isRecord(parsed) && parsed.version === GAME_LEDGER_VERSION) {
+    if (!Array.isArray(parsed.finished) || parsed.active !== null && !isRecord(parsed.active)) { clearGameRecovery(storage); return null; }
+    return isRecord(parsed.active) ? parsed.active.snapshot : null;
   }
   return parsed;
 };

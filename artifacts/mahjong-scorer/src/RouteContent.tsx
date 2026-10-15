@@ -22,6 +22,7 @@ import { ClubRulesPage } from './rules/ClubRulesPage';
 import { RulesHubPage, RulesProfilePage } from './rules/RulesReference';
 import { descriptorForSlug, publicRulesSlugFromGamePath } from './game/rules-presentation';
 import { RulesProfilePickerScalabilityFixture } from './game/RulesProfilePicker';
+import { PreviousGamesPage } from './game/PreviousGamesPage';
 
 function returnHome() {
   if (typeof window !== 'undefined') window.location.assign('/');
@@ -34,6 +35,11 @@ function withFooter(content: ReactNode, options: { variant?: 'full' | 'compact';
 export function RouteContent({ path, prerender = false }: { path: string; prerender?: boolean }) {
   if (import.meta.env.DEV && path === '/__fixtures/rules-profile-picker') return <RulesProfilePickerScalabilityFixture />;
   if (path === '/') return withFooter(<HomePage />);
+  if (path === '/previous-games') return withFooter(<PreviousGamesPage />);
+  if (path.startsWith('/previous-games/')) {
+    const id = decodeURIComponent(path.slice('/previous-games/'.length));
+    return id ? withFooter(<App finishedLedgerId={id} prerenderOnly={prerender} />, { variant: 'compact' }) : <NotFound />;
+  }
   if (path === '/game' || path.startsWith('/game/')) {
     const slug = publicRulesSlugFromGamePath(path);
     const explicitProfile = path === '/game' ? undefined : slug ? descriptorForSlug(slug).profile : undefined;
