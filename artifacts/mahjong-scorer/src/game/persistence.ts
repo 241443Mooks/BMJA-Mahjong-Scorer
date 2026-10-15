@@ -54,7 +54,7 @@ export type PersistedRoundV2 =
   | { grammar: 'pattern-accumulator'; input: McrRoundInput };
 export type McrRoundScoringDraft = Pick<RoundScoringDraft, 'scores' | 'scoreRecords'>;
 export type PersistedCurrentRoundV2 =
-  | { grammar: 'classical-points-doubles'; outcomeType: 'win' | 'draw'; winnerId: string; draft: RoundScoringDraft }
+  | { grammar: 'classical-points-doubles'; outcomeType?: 'win' | 'draw'; winnerId?: string; draft: RoundScoringDraft }
   | { grammar: 'pattern-accumulator'; outcomeType?: 'win' | 'draw'; winnerId?: string; winSource?: 'discard' | 'self-draw'; discarderId?: string; draft: McrRoundScoringDraft };
 type PersistedGameSnapshotV2 = {
   version: typeof GAME_SNAPSHOT_VERSION;
@@ -296,7 +296,10 @@ const isValidV2SnapshotShape = (value: unknown): value is PersistedGameSnapshotV
   const grammar = compiled.grammar;
   if (('tableLimit' in setup) !== (grammar === 'classical-points-doubles')) return false;
   if (grammar === 'classical-points-doubles') {
-    if (snapshot.currentRound.grammar !== grammar || !['win', 'draw'].includes(snapshot.currentRound.outcomeType as string) || typeof snapshot.currentRound.winnerId !== 'string' || Object.entries(snapshot.currentRound.draft.scoreRecords).some(([id, record]) => !players.has(id) || !isValidScoreRecord(record))) return false;
+    const { outcomeType, winnerId } = snapshot.currentRound;
+    const hasDraftScores = Object.keys(snapshot.currentRound.draft.scores).length > 0;
+    const hasScoreRecords = Object.keys(snapshot.currentRound.draft.scoreRecords).length > 0;
+    if (snapshot.currentRound.grammar !== grammar || (outcomeType !== undefined && !['win', 'draw'].includes(outcomeType)) || (winnerId !== undefined && (typeof winnerId !== 'string' || !players.has(winnerId))) || (outcomeType === undefined && (winnerId !== undefined || hasDraftScores || hasScoreRecords)) || (outcomeType === 'win' && winnerId === undefined && (hasDraftScores || hasScoreRecords)) || Object.entries(snapshot.currentRound.draft.scoreRecords).some(([id, record]) => !players.has(id) || !isValidScoreRecord(record))) return false;
     if (snapshot.currentRound.draft.incidents !== undefined && (!Array.isArray(snapshot.currentRound.draft.incidents) || !snapshot.currentRound.draft.incidents.every((incident) => isValidIncident(incident, players)))) return false;
     if (snapshot.currentRound.draft.buzzardIncidents !== undefined && (!Array.isArray(snapshot.currentRound.draft.buzzardIncidents) || !snapshot.currentRound.draft.buzzardIncidents.every((incident) => isValidBuzzardIncident(incident, players)))) return false;
     if (snapshot.currentRound.draft.profileScoreResults !== undefined && !isValidProfileResults(snapshot.currentRound.draft.profileScoreResults, players)) return false;
@@ -361,6 +364,28 @@ export const finishGameLedger = (storage: StorageLike, game: GameState, currentR
     }
     return writeLedgerStore(storage, { ...store, active: null });
   } catch { return false; }
+};
+
+export const reopenFinishedGameAfterUndo = (
+  storage: StorageLike,
+  completedGame: GameState,
+  undoneGame: GameState,
+  currentRound: PersistedCurrentRoundV2,
+): boolean => {
+  if (!completedGame.isComplete || undoneGame.isComplete || completedGame.handHistory.length !== undoneGame.handHistory.length + 1) return false;
+  const completedRecord = { setup: structuredClone(completedGame.setup), runtimeFingerprint: completedGame.runtimeFingerprint, rounds: roundsFrom(completedGame) };
+  const undoneSnapshot: PersistedGameSnapshotV2 = {
+    version: GAME_SNAPSHOT_VERSION,
+    game: { setup: structuredClone(undoneGame.setup), runtimeFingerprint: undoneGame.runtimeFingerprint, rounds: roundsFrom(undoneGame) },
+    currentRound: structuredClone(currentRound),
+  };
+  const persistedJson = (value: unknown) => stableJson(JSON.parse(JSON.stringify(value)));
+  if (persistedJson(undoneSnapshot.game.rounds) !== persistedJson(completedRecord.rounds.slice(0, -1))) return false;
+  const store = readLedgerStore(storage);
+  const finished = store.finished.find((entry) => persistedJson(entry.game) === persistedJson(completedRecord));
+  if (!finished) return false;
+  const active = { id: finished.id, startedAt: finished.startedAt, snapshot: undoneSnapshot };
+  return writeLedgerStore(storage, { ...store, active, finished: store.finished.filter((entry) => entry.id !== finished.id) });
 };
 
 export const loadFinishedGameLedgers = (storage: StorageLike): FinishedGameLedger[] => {
@@ -455,6 +480,7 @@ export const loadGameRecoveryCore = (storage: StorageLike): RecoveredGameV2 | nu
 export const loadGameRecovery = (storage: StorageLike): RecoveredGame | null => {
   const core = loadGameRecoveryCore(storage);
   if (!core || core.currentRound.grammar !== 'classical-points-doubles') return null;
+  if (!core.currentRound.outcomeType || !core.currentRound.winnerId) return null;
   if (getCurrentCompiledRulesRuntime(core.game.setup.rulesProfile).grammar !== 'classical-points-doubles' || core.game.setup.tableLimit === undefined) return null;
   return { game: core.game as ClassicalGameState, outcomeType: core.currentRound.outcomeType, winnerId: core.currentRound.winnerId, draft: core.currentRound.draft };
 };

@@ -29,6 +29,7 @@ import {
   finishGameLedger,
   loadFinishedGameLedger,
   loadInProgressGameRecoveryCore,
+  reopenFinishedGameAfterUndo,
   ACTIVE_GAME_LOCK_NAME,
   saveGameRecoveryV2,
 } from '.';
@@ -173,24 +174,6 @@ export const selectProfileScoreResult = (
   };
 };
 
-export const gameWorkspaceStage = (
-  game: GameState,
-  presentation: ReturnType<typeof settlementPreviewPresentation>,
-  settlementReviewRequested = true,
-) => {
-  if (game.isComplete) return 'complete' as const;
-  if (presentation === 'awaiting-scores') return 'entry' as const;
-  return settlementReviewRequested ? 'settlement' as const : 'entry' as const;
-};
-
-type GameWorkspaceStage = ReturnType<typeof gameWorkspaceStage>;
-
-export const shouldKeepScoreEntryOpen = (stage: GameWorkspaceStage, editingHand: boolean) =>
-  stage === 'entry' || editingHand;
-
-export const shouldShowEditCurrentHandSummary = (stage: GameWorkspaceStage, editingHand: boolean) =>
-  stage === 'settlement' && !editingHand;
-
 export const incidentsForOutcome = <T,>(outcome: HandOutcome, incidents: T[]) =>
   outcome.type === 'draw' ? [] : incidents;
 
@@ -225,7 +208,7 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
   const [game, setGame] = useState<GameState | null>(finishedLedger?.game ?? recovered?.game ?? null);
   const [selectedRulesProfile, setSelectedRulesProfile] = useState<RulesProfileRef>(() => recovered?.game.setup.rulesProfile ?? initialRulesProfile);
   const recoveredClassical = recovered?.currentRound.grammar === 'classical-points-doubles' ? recovered.currentRound : null;
-  const [outcomeType, setOutcomeType] = useState<'win' | 'draw'>(recoveredClassical?.outcomeType ?? (recovered?.currentRound.grammar === 'pattern-accumulator' ? recovered.currentRound.outcomeType ?? 'win' : 'win'));
+  const [outcomeType, setOutcomeType] = useState<'win' | 'draw' | null>(recoveredClassical?.outcomeType ?? null);
   const [winnerId, setWinnerId] = useState(recoveredClassical?.winnerId ?? (recovered?.currentRound.grammar === 'pattern-accumulator' ? recovered.currentRound.winnerId ?? '' : ''));
   const recoveredDraft = recovered?.currentRound.draft;
   const [scores, setScores] = useState<RoundScoreDraft>(recoveredDraft?.scores ?? {});
@@ -241,9 +224,9 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
   const [storageWarning, setStorageWarning] = useState('');
   const [printMode, setPrintMode] = useState<'summary' | 'full' | null>(null);
   const archivedGameRef = useRef(false);
-  const [editingHand, setEditingHand] = useState(false);
-  const [settlementReviewRequested, setSettlementReviewRequested] = useState(false);
-  const tableScoresRef = useRef<HTMLDetailsElement>(null);
+  const [recordedHandNumber, setRecordedHandNumber] = useState<number | null>(null);
+  const committedGameRef = useRef<GameState | null>(null);
+  const tableScoresRef = useRef<HTMLElement>(null);
   const tableToolsRef = useRef<HTMLDetailsElement>(null);
   const gameLedgerRef = useRef<HTMLDetailsElement>(null);
   const ledgerDetailsRefs = useRef(new Map<number, HTMLDetailsElement>());
@@ -256,7 +239,7 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
 
   const outcome = useMemo<HandOutcome | null>(
     () =>
-      game
+      game && outcomeType
         ? outcomeType === 'draw'
           ? { type: 'draw' }
           : winnerId
@@ -343,8 +326,6 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
       );
       setScores(returned.draft.scores);
       setScoreRecords(returned.draft.scoreRecords);
-      setEditingHand(true);
-      setSettlementReviewRequested(false);
       setError('');
       returnAppliedScoreToTable(returnedScore, tableScoresRef.current);
     } catch (caught) {
@@ -383,16 +364,32 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
     setScores(reconciled.scores);
     setScoreRecords(reconciled.scoreRecords);
     setOutcomeType(nextOutcome.type);
-    if (nextOutcome.type === 'win') setWinnerId(nextOutcome.winnerId);
+    setWinnerId(nextOutcome.type === 'win' ? nextOutcome.winnerId : '');
+    setRecordedHandNumber(null);
     setIncidents((current) => incidentsForOutcome(nextOutcome, current));
     setBuzzardIncidents((current) => incidentsForOutcome(nextOutcome, current));
     setProfileScoreResults((current) => nextOutcome.type === 'draw' ? {} : current);
-    setSettlementReviewRequested(nextOutcome.type === 'draw');
     setError(
       invalidated
         ? 'Winner changed. Recalculate the affected detailed hands before confirming.'
         : '',
     );
+  };
+
+  const selectOutcomeType = (nextType: 'win' | 'draw') => {
+    if (!game) return;
+    if (nextType === 'draw') {
+      changeRoundOutcome({ type: 'draw' });
+      return;
+    }
+    if (outcomeType === 'win') return;
+    setOutcomeType('win');
+    setWinnerId('');
+    setRecordedHandNumber(null);
+    setIncidents([]);
+    setBuzzardIncidents([]);
+    setProfileScoreResults({});
+    setError('');
   };
 
   const preview = useMemo(() => {
@@ -409,15 +406,9 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
   const previewPresentation = game
     ? settlementPreviewPresentation(game, outcome, scores)
     : 'awaiting-scores';
+  const canRecordRound = !!game && canMutateGame && !!outcome && !preview.error && committedGameRef.current !== game &&
+    (outcome.type === 'draw' || game.players.every((player) => scores[player.id] !== undefined));
   const selectedProfileResult = Object.entries(profileScoreResults)[0];
-  const settlementReadyForReview = previewPresentation !== 'awaiting-scores';
-  const workspaceStage = game
-    ? gameWorkspaceStage(
-        game,
-        previewPresentation,
-        settlementReviewRequested || outcomeType === 'draw',
-      )
-    : 'entry';
 
   const startGame = () => {
     if (!canMutateGame) { setError('This game is open in another tab, or this browser cannot safely protect game storage across tabs. Close the other game tab and reload to continue.'); return; }
@@ -450,9 +441,9 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
     setIncidents([]);
     setBuzzardIncidents([]);
     setProfileScoreResults({});
-    setEditingHand(false);
-    setSettlementReviewRequested(false);
-    setWinnerId(players[0].id);
+    setRecordedHandNumber(null);
+    setWinnerId('');
+    setOutcomeType(null);
     setMcrRoute({ draft: { scores: {}, scoreRecords: {} } });
     setError('');
   };
@@ -473,9 +464,8 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
     setProfileScoreResults({});
     setWinnerId('');
     setMcrRoute({ draft: { scores: {}, scoreRecords: {} } });
-    setOutcomeType('win');
-    setEditingHand(false);
-    setSettlementReviewRequested(false);
+    setOutcomeType(null);
+    setRecordedHandNumber(null);
     setError('');
   };
 
@@ -485,20 +475,48 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
     setIncidents([]);
     setBuzzardIncidents([]);
     setProfileScoreResults({});
-    setEditingHand(false);
-    setSettlementReviewRequested(false);
-    const east = Object.entries(nextGame.seats).find(
-      ([, seat]) => seat === 'east',
-    )?.[0];
-    setWinnerId(east ?? nextGame.players[0].id);
-    setOutcomeType('win');
+    setRecordedHandNumber(null);
+    setWinnerId('');
+    setOutcomeType(null);
+  };
+
+  const persistCommittedGame = (nextGame: GameState, previousCompletedGame?: GameState) => {
+    const storage = preferredRulesProfileStorage();
+    if (!storage) return true;
+    const emptyDraft = { scores: {}, scoreRecords: {} };
+    const nextRound = gameScorerCurrentRound(nextGame, null, null, '', emptyDraft, { draft: emptyDraft });
+    if (previousCompletedGame && !nextGame.isComplete) {
+      const saved = reopenFinishedGameAfterUndo(storage, previousCompletedGame, nextGame, nextRound);
+      if (saved) archivedGameRef.current = false;
+      return saved;
+    }
+    if (nextGame.isComplete) {
+      const saved = finishGameLedger(storage, nextGame, nextRound);
+      if (saved) archivedGameRef.current = true;
+      return saved;
+    }
+    return saveGameRecoveryV2(storage, nextGame, nextRound);
   };
 
   const confirmRound = () => {
-    if (!game || !outcome) {
-      setError('Choose a winner and enter a score for every player.');
+    if (!game) return;
+    if (!outcomeType) {
+      setError('Choose how the hand ended.');
       return;
     }
+    if (outcomeType === 'win' && !winnerId) {
+      setError('Choose who went Mah Jong.');
+      return;
+    }
+    if (!outcome) {
+      setError('Choose an outcome and complete the hand details.');
+      return;
+    }
+    if (!canMutateGame) {
+      setError('This game is open in another tab or cannot be safely changed here.');
+      return;
+    }
+    if (committedGameRef.current === game) return;
     if (preview.error) {
       setError(preview.error);
       return;
@@ -509,6 +527,7 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
       return;
     }
     const fullScores = Object.fromEntries(game.players.map(p => [p.id, outcome.type === 'draw' ? 0 : scores[p.id] ?? 0])) as PlayerAmounts;
+    committedGameRef.current = game;
     try {
       const next = confirmHand(game, {
         outcome,
@@ -518,10 +537,16 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
         buzzardIncidents: incidentsForOutcome(outcome, buzzardIncidents),
         profileScoreResults: outcome.type === 'draw' ? {} : profileScoreResults,
       });
+      const saved = persistCommittedGame(next);
       setGame(next);
       resetRoundEntry(next);
+      setStorageWarning(saved ? '' : next.isComplete
+        ? 'This finished game could not be saved in browser storage. Use Print / Save full game record to keep a copy, and check that browser storage is available.'
+        : 'The recorded hand could not be saved in browser storage. Check that browser storage is available.');
+      setRecordedHandNumber(next.handHistory.at(-1)?.handNumber ?? null);
       setError('');
     } catch (caught) {
+      committedGameRef.current = null;
       setError(caught instanceof Error ? caught.message : 'This round cannot be confirmed.');
     }
   };
@@ -529,11 +554,21 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
   const undo = () => {
     if (!game || game.handHistory.length === 0) return;
     const next = undoLastHand(game);
+    committedGameRef.current = null;
+    const saved = persistCommittedGame(next, game.isComplete ? game : undefined);
     setGame(next);
     resetRoundEntry(next);
+    setMcrRoute({ draft: { scores: {}, scoreRecords: {} } });
+    setStorageWarning(saved ? '' : 'Undo is shown, but this change could not be saved in browser storage. Check that browser storage is available.');
+    setRecordedHandNumber(null);
   };
 
   const printGame = (mode: 'summary' | 'full') => setPrintMode(mode);
+  const recordedHandNotice = recordedHandNumber !== null && <div role="status" className="screen-only mx-auto mt-3 flex max-w-[1120px] flex-wrap items-center gap-3 rounded-md border border-[#b8cdbf] bg-[#edf3ed] px-4 py-3 text-sm text-[#284d45]">
+    <span>Hand {recordedHandNumber} recorded.</span>
+    {!finishedLedger && <button type="button" data-testid="button-undo-last-recorded-hand" onClick={undo} className="font-semibold underline decoration-[#477562] underline-offset-4">Undo last hand</button>}
+    <a href="#game-ledger" className="font-semibold underline decoration-[#477562] underline-offset-4">View ledger</a>
+  </div>;
 
   if (!game) {
     return (
@@ -631,8 +666,17 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
     const acceptedView = winnerRecord && 'source' in winnerRecord && winnerRecord.source === 'mcr-detailed-scorer' ? presentMcrScore(winnerRecord.result) : null;
     const recordMcrHand = () => {
       if (!prospective) { setError(routeError); return; }
-      setGame(prospective);
+      if (!canMutateGame) { setError('This game is open in another tab or cannot be safely changed here.'); return; }
+      if (committedGameRef.current === game) return;
+      committedGameRef.current = game;
+      const next = prospective;
+      const saved = persistCommittedGame(next);
+      setGame(next);
       setMcrRoute({ draft: { scores: {}, scoreRecords: {} } });
+      setStorageWarning(saved ? '' : next.isComplete
+        ? 'This finished game could not be saved in browser storage. Use Print / Save full game record to keep a copy, and check that browser storage is available.'
+        : 'The recorded hand could not be saved in browser storage. Check that browser storage is available.');
+      setRecordedHandNumber(next.handHistory.at(-1)?.handNumber ?? null);
       setError('');
     };
     return <div className={`mahjong-shell ${printMode === 'summary' ? 'print-summary' : ''}`}>
@@ -641,17 +685,21 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
       <div className="screen-only sticky top-0 z-20 border-b border-[#d8ceb8] bg-[#f5f1e6]/95 px-5 py-3 text-[#284d45]">{game.isComplete ? 'Game complete' : `Hand ${game.handHistory.length + 1}`} · {windLabel(game.prevailingWind)} prevailing · {game.players.find((player) => game.seats[player.id] === 'east')?.name} is East</div>
       {gameLease !== 'owned' && <p role="status" className="screen-only mx-auto mt-3 max-w-[900px] rounded-md border border-[#dfc3ac] bg-[#fff3e8] px-4 py-3 text-sm text-[#70432f]">{gameLease === 'checking' ? 'Checking whether another tab is using this game…' : gameLease === 'another-tab' ? 'This game is already open in another tab. This copy is read only to protect the saved scores.' : 'This browser cannot coordinate game edits across tabs. This copy is read only; open it in a browser with cross-tab protection to continue scoring.'}</p>}
       {storageWarning && <p role="alert" className="screen-only mx-auto mt-3 max-w-[900px] rounded-md border border-[#dfc3ac] bg-[#fff3e8] px-4 py-3 text-sm text-[#70432f]">{storageWarning}</p>}
-      <section className="screen-only mx-auto flex max-w-[900px] flex-wrap gap-2 px-5 pt-4"><a href="/previous-games" className="rounded border px-3 py-2 text-sm">Previous games</a><a href="/rules/mcr" className="rounded border px-3 py-2 text-sm">Rules reference</a><a href="#game-ledger" className="rounded border px-3 py-2 text-sm">History / ledger</a>{!finishedLedger && <><button data-testid="mcr-undo" disabled={!game.handHistory.length || !canMutateGame} onClick={() => { const previous = undoLastHand(game); setGame(previous); setMcrRoute({ draft: { scores: {}, scoreRecords: {} } }); }} className="rounded border px-3 py-2 text-sm">Undo last hand</button><button data-testid="mcr-start-over" disabled={!canMutateGame} onClick={startOver} className="rounded border px-3 py-2 text-sm">Start over</button></>}<button data-testid="mcr-print-full" onClick={() => printGame('full')} className="rounded border px-3 py-2 text-sm">Print / Save full game record</button><button data-testid="mcr-print-summary" onClick={() => printGame('summary')} className="rounded border px-3 py-2 text-sm">Print / Save summary</button></section>
+      {recordedHandNotice}
+      <section className="screen-only mx-auto flex max-w-[900px] flex-wrap gap-2 px-5 pt-4"><a href="/previous-games" className="rounded border px-3 py-2 text-sm">Previous games</a><a href="/rules/mcr" className="rounded border px-3 py-2 text-sm">Rules reference</a><a href="#game-ledger" className="rounded border px-3 py-2 text-sm">History / ledger</a>{!finishedLedger && <><button data-testid="mcr-undo" disabled={!game.handHistory.length || !canMutateGame} onClick={undo} className="rounded border px-3 py-2 text-sm">Undo last hand</button><button data-testid="mcr-start-over" disabled={!canMutateGame} onClick={startOver} className="rounded border px-3 py-2 text-sm">Start over</button></>}<button data-testid="mcr-print-full" onClick={() => printGame('full')} className="rounded border px-3 py-2 text-sm">Print / Save full game record</button><button data-testid="mcr-print-summary" onClick={() => printGame('summary')} className="rounded border px-3 py-2 text-sm">Print / Save summary</button></section>
       <main inert={!canMutateGame} className="mx-auto max-w-[900px] space-y-5 px-5 py-8">
         <section className="rounded-xl border border-[#d8ceb8] bg-[#fbf8ed] p-5 sm:p-7">
           {finishedLedger && <p className="mb-3 rounded-md bg-[#edf3ed] px-3 py-2 text-sm font-semibold text-[#284d45]">Finished game record · read only · completed {new Intl.DateTimeFormat(undefined, { dateStyle: 'long' }).format(new Date(finishedLedger.finishedAt))}</p>}
           {game.isComplete ? <><h1 className="font-serif text-3xl text-[#284d45]">Game complete</h1><p className="mt-2 text-sm leading-6 text-[#66746e]">This game has reached its configured ending. No next hand will be added to this record.</p></> : <>
-          <h1 className="font-serif text-3xl text-[#284d45]">MCR round</h1>
-          <p className="mt-2 text-sm text-[#66746e]">Choose the table outcome, then score the winner’s hand with the MCR scorer. A discard source identifies the discarder for settlement.</p>
-          <div className="mt-5 flex gap-2">
-            <button data-testid="mcr-outcome-win" aria-pressed={mcrRoute.outcomeType === 'win'} onClick={() => setMcrRoute((route) => transitionMcrRouting(route, { outcomeType: 'win' }))} className="rounded bg-[#284d45] px-4 py-2 text-white">Win</button>
-            <button data-testid="mcr-outcome-draw" aria-pressed={mcrRoute.outcomeType === 'draw'} onClick={() => setMcrRoute((route) => transitionMcrRouting(route, { outcomeType: 'draw' }))} className="rounded border px-4 py-2">Draw</button>
-          </div>
+          <h1 className="font-serif text-3xl text-[#284d45]">Enter hand {game.handHistory.length + 1} scores</h1>
+          <p className="mt-2 text-sm text-[#66746e]">Score the winning hand with the MCR scorer. A discard source identifies the discarder for settlement.</p>
+          <fieldset className="mt-5">
+            <legend className="mb-2 text-sm font-semibold text-[#284d45]">How did the hand end?</legend>
+            <div className="flex gap-2">
+              <button type="button" data-testid="mcr-outcome-win" aria-pressed={mcrRoute.outcomeType === 'win'} onClick={() => setMcrRoute((route) => transitionMcrRouting(route, { outcomeType: 'win' }))} className={`rounded px-4 py-2 ${mcrRoute.outcomeType === 'win' ? 'bg-[#284d45] text-white' : 'border border-[#cfc3aa] text-[#284d45]'}`}>Mah Jong</button>
+              <button type="button" data-testid="mcr-outcome-draw" aria-pressed={mcrRoute.outcomeType === 'draw'} onClick={() => setMcrRoute((route) => transitionMcrRouting(route, { outcomeType: 'draw' }))} className={`rounded px-4 py-2 ${mcrRoute.outcomeType === 'draw' ? 'bg-[#284d45] text-white' : 'border border-[#cfc3aa] text-[#284d45]'}`}>Draw</button>
+            </div>
+          </fieldset>
           {mcrRoute.outcomeType === 'win' && <div className="mt-4 grid gap-3 sm:grid-cols-2">
             <label className="text-sm">Winner<select data-testid="mcr-winner" value={mcrRoute.winnerId ?? ''} onChange={(event) => setMcrRoute((route) => transitionMcrRouting(route, { winnerId: event.target.value || undefined }))} className="mt-1 block w-full rounded border p-2"><option value="">Choose winner</option>{game.players.map((player) => <option key={player.id} value={player.id}>{player.name} · {windLabel(game.seats[player.id])}</option>)}</select></label>
             <label className="text-sm">Win source<select data-testid="mcr-win-source" value={mcrRoute.winSource ?? ''} onChange={(event) => setMcrRoute((route) => transitionMcrRouting(route, { winSource: (event.target.value || undefined) as McrRoutingState['winSource'], ...(event.target.value === 'self-draw' ? { discarderId: undefined } : {}) }))} className="mt-1 block w-full rounded border p-2"><option value="">Choose source</option><option value="discard">Discard</option><option value="self-draw">Self-draw</option></select></label>
@@ -664,8 +712,8 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
           </div>}
           {routeError && <p className="mt-4 text-sm text-[#9a4d3a]">{routeError}</p>}
           {error && <p role="alert" className="mt-3 text-sm text-[#9a4d3a]">{error}</p>}
-          {prospective && previewHand && <section data-testid="mcr-settlement-preview" className="mt-5 rounded-lg bg-[#284d45] p-4 text-white"><h2 className="font-serif text-xl">Settlement preview</h2>{previewWin ? <p className="mt-1">{game.players.find((player) => player.id === previewWin.winnerId)?.name} wins by {previewWin.winSource === 'self-draw' ? 'self-draw' : `discard${previewWin.discarderId ? ` · ${game.players.find((player) => player.id === previewWin.discarderId)?.name} discarded` : ''}`} · {acceptedView?.kind === 'scored' ? `${acceptedView.basicPoints} Basic Points` : 'Accepted Basic Points unavailable'}</p> : <p className="mt-1">No payments. Dealer passes and seats rotate.</p>}<div className="mt-3 space-y-1 text-sm">{settlement && 'transactions' in settlement && settlement.transactions.map((transaction, index) => <p key={index}>{mcrSettlementDescription(transaction, game.players)}</p>)}{(!settlement || !('transactions' in settlement) || settlement.transactions.length === 0) && <p>No payments.</p>}</div><div className="mt-3 grid grid-cols-2 gap-2">{game.players.map((player) => <div key={player.id} className="rounded bg-white/10 p-2">{player.name}: net {formatChange(settlement?.changes[player.id] ?? 0)}</div>)}</div><p className="mt-3 text-sm">Next East: {nextEast?.name} · Next prevailing wind: {windLabel(prospective.prevailingWind)}{previewHand.progressionAfter.prevailingWind !== previewHand.prevailingWind ? ` (advanced from ${windLabel(previewHand.prevailingWind)})` : ''}{prospective.isComplete ? ' · Game complete' : ''}</p></section>}
-          {!game.isComplete && <button data-testid="mcr-record-hand" disabled={!prospective} onClick={recordMcrHand} className="mt-5 w-full rounded bg-[#ae6249] px-4 py-3 font-semibold text-white">Record hand / advance</button>}
+          {!game.isComplete && <details data-testid="mcr-settlement-details" className="mt-5 rounded-lg border border-[#d8ceb8] bg-[#f7f1e3] p-3"><summary className="cursor-pointer font-semibold text-[#284d45]">View settlement</summary>{prospective && previewHand && <section data-testid="mcr-settlement-preview" className="mt-5 rounded-lg bg-[#284d45] p-4 text-white"><h2 className="font-serif text-xl">Settlement preview</h2>{previewWin ? <p className="mt-1">{game.players.find((player) => player.id === previewWin.winnerId)?.name} wins by {previewWin.winSource === 'self-draw' ? 'self-draw' : `discard${previewWin.discarderId ? ` · ${game.players.find((player) => player.id === previewWin.discarderId)?.name} discarded` : ''}`} · {acceptedView?.kind === 'scored' ? `${acceptedView.basicPoints} Basic Points` : 'Accepted Basic Points unavailable'}</p> : <p className="mt-1">No payments. Dealer passes and seats rotate.</p>}<div className="mt-3 space-y-1 text-sm">{settlement && 'transactions' in settlement && settlement.transactions.map((transaction, index) => <p key={index}>{mcrSettlementDescription(transaction, game.players)}</p>)}{(!settlement || !('transactions' in settlement) || settlement.transactions.length === 0) && <p>No payments.</p>}</div><div className="mt-3 grid grid-cols-2 gap-2">{game.players.map((player) => <div key={player.id} className="rounded bg-white/10 p-2">{player.name}: net {formatChange(settlement?.changes[player.id] ?? 0)}</div>)}</div><p className="mt-3 text-sm">Next East: {nextEast?.name} · Next prevailing wind: {windLabel(prospective.prevailingWind)}{previewHand.progressionAfter.prevailingWind !== previewHand.prevailingWind ? ` (advanced from ${windLabel(previewHand.prevailingWind)})` : ''}{prospective.isComplete ? ' · Game complete' : ''}</p></section>}</details>}
+          {!game.isComplete && <button data-testid="mcr-record-hand" disabled={!prospective || !canMutateGame} onClick={recordMcrHand} className="mt-5 w-full rounded bg-[#ae6249] px-4 py-3 font-semibold text-white">Record hand and continue</button>}
           </>}
         </section>
         <section data-testid="mcr-balances" className="rounded-xl border border-[#d8ceb8] bg-[#fbf8ed] p-5"><h2 className="font-serif text-xl text-[#284d45]">{game.isComplete ? 'Final balances' : 'Current balances'}</h2><div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">{game.players.map((player) => <div key={player.id} className="rounded bg-[#f7f1e3] p-3"><b>{player.name}</b><div>{formatChange(game.balances[player.id])}</div></div>)}</div></section>
@@ -785,6 +833,7 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
 
       {gameLease !== 'owned' && <p role="status" className="screen-only mx-auto mt-3 max-w-[1120px] rounded-md border border-[#dfc3ac] bg-[#fff3e8] px-4 py-3 text-sm text-[#70432f]">{gameLease === 'checking' ? 'Checking whether another tab is using this game…' : gameLease === 'another-tab' ? 'This game is already open in another tab. This copy is read only to protect the saved scores.' : 'This browser cannot coordinate game edits across tabs. This copy is read only; open it in a browser with cross-tab protection to continue scoring.'}</p>}
       {storageWarning && <p role="alert" className="screen-only mx-auto mt-3 max-w-[1120px] rounded-md border border-[#dfc3ac] bg-[#fff3e8] px-4 py-3 text-sm text-[#70432f]">{storageWarning}</p>}
+      {recordedHandNotice}
 
       <main inert={!canMutateGame} className="mx-auto max-w-[1120px] space-y-5 px-4 py-5 sm:px-5 lg:px-8">
         <div className="print-only game-print-heading">
@@ -794,17 +843,12 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
           <p>Rules: {gameRecordRulesLabel(game.setup.rulesProfile)}</p>
         </div>
         <section className="min-w-0">
-          {!game.isComplete && <details ref={tableScoresRef} data-testid="section-table-scores" open={shouldKeepScoreEntryOpen(workspaceStage, editingHand)} onToggle={(event) => {
-            if (workspaceStage === 'settlement') setEditingHand(event.currentTarget.open);
-          }} className="screen-only scroll-mt-4 rounded-xl border border-[#d8ceb8] bg-[#fbf8ed] p-5 sm:p-6">
-            {shouldShowEditCurrentHandSummary(workspaceStage, editingHand)
-              ? <summary className="mb-5 cursor-pointer font-mono text-[10px] uppercase tracking-[.16em] text-[#ae6249]">Edit current hand</summary>
-              : <summary className="sr-only">Current hand score entry</summary>}
+          {!game.isComplete && <section ref={tableScoresRef} data-testid="section-table-scores" className="screen-only scroll-mt-4 rounded-xl border border-[#d8ceb8] bg-[#fbf8ed] p-5 sm:p-6">
             <div className="mb-5">
               <details data-testid="table-score-help">
                 <summary className="cursor-pointer list-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">
                   <h1 className="font-serif text-[30px] text-[#284d45] underline decoration-[#d8ceb8] decoration-1 underline-offset-4">
-                    Enter the table scores
+                    Enter hand {game.handHistory.length + 1} scores
                   </h1>
                 </summary>
                 <div className="mt-2 max-w-[520px] text-[12px] leading-5 text-[#66746e]">
@@ -816,15 +860,14 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
 
             {!game.isComplete && (
               <>
-                <div className="mb-5 flex gap-2">
+                <fieldset className="mb-5">
+                  <legend className="mb-2 text-[12px] font-semibold text-[#284d45]">How did the hand end?</legend>
+                  <div className="flex gap-2">
                   <button
                     type="button"
                     data-testid="button-outcome-win"
                     aria-pressed={outcomeType === 'win'}
-                    onClick={() =>
-                      winnerId &&
-                      changeRoundOutcome({ type: 'win', winnerId })
-                    }
+                    onClick={() => selectOutcomeType('win')}
                     className={`inline-flex items-center gap-1.5 rounded-md px-4 py-2 text-[11px] font-semibold ${
                       outcomeType === 'win'
                         ? 'bg-[#284d45] text-[#f8f4e9]'
@@ -838,7 +881,7 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
                     type="button"
                     data-testid="button-outcome-draw"
                     aria-pressed={outcomeType === 'draw'}
-                    onClick={() => changeRoundOutcome({ type: 'draw' })}
+                    onClick={() => selectOutcomeType('draw')}
                     className={`inline-flex items-center gap-1.5 rounded-md px-4 py-2 text-[11px] font-semibold ${
                       outcomeType === 'draw'
                         ? 'bg-[#284d45] text-[#f8f4e9]'
@@ -848,7 +891,8 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
                     {outcomeType === 'draw' && <Check size={13} aria-hidden="true" />}
                     Draw / wash-out
                   </button>
-                </div>
+                  </div>
+                </fieldset>
 
                 {outcomeType === 'win' && (
                   <label className="mb-5 block rounded-lg border border-[#ae6249] bg-[#f5eadb] p-3">
@@ -866,6 +910,7 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
                       }
                       className="w-full rounded-md border border-[#ae6249] bg-[#fdfbf5] px-3 py-3 text-[15px] font-bold text-[#284d45] outline-none focus:ring-2 focus:ring-[#ae6249]"
                     >
+                      <option value="">Choose winner</option>
                       {game.players.map((player) => (
                         <option key={player.id} value={player.id}>
                           {player.name} · {windLabel(game.seats[player.id])}
@@ -875,8 +920,12 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
                   </label>
                 )}
 
-                {outcomeType === 'draw' ? (
+                {!outcomeType ? (
+                  <p className="rounded-md bg-[#f7f1e3] px-3 py-3 text-[11px] leading-5 text-[#66746e]">Choose how the hand ended to enter scores.</p>
+                ) : outcomeType === 'draw' ? (
                   <p className="rounded-md bg-[#f7f1e3] px-3 py-3 text-[11px] leading-5 text-[#66746e]">A draw records no scores and no payments. East and the prevailing wind remain unchanged.</p>
+                ) : !winnerId ? (
+                  <p className="rounded-md bg-[#f7f1e3] px-3 py-3 text-[11px] leading-5 text-[#66746e]">Choose who went Mah Jong to enter scores.</p>
                 ) : <div className="grid gap-4 sm:grid-cols-2">
                   {game.players.map((player) => (
                     <label key={player.id} className="block">
@@ -901,7 +950,6 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
                            placeholder="Enter score"
                           data-testid={`input-score-${player.id}`}
                           value={scores[player.id] === undefined ? '' : scores[player.id]}
-                          onFocus={() => setEditingHand(true)}
                            onChange={(event) => {
                              const value = event.target.value;
                              const next: RoundScoringDraft = applyManualScore(
@@ -912,7 +960,6 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
                              );
                              setScores(next.scores);
                              setScoreRecords(next.scoreRecords);
-                             setSettlementReviewRequested(false);
                            }}
                           className="w-full min-w-0 rounded-md border border-[#cfc3aa] bg-[#fdfbf5] px-3 py-3 font-mono text-[16px] text-[#284d45] outline-none focus:ring-2 focus:ring-[#ae6249]"
                         />
@@ -1005,25 +1052,18 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
                   {buzzardIncidents.map((incident, index) => <div key={index} className="mt-2 flex flex-wrap gap-2 rounded bg-[#f7f1e3] p-2 text-[11px]"><span>{incident.type === 'buzzard-dangerous-discard' ? 'Dangerous discard' : 'False Mah Jong'}</span><select value={'liablePlayerId' in incident ? incident.liablePlayerId : incident.declarerId} onChange={(event) => setBuzzardIncidents((current) => current.map((item, itemIndex) => itemIndex !== index ? item : 'liablePlayerId' in item ? { ...item, liablePlayerId: event.target.value } : { ...item, declarerId: event.target.value }))}>{game.players.map((player) => <option key={player.id} value={player.id}>{player.name}</option>)}</select>{incident.type === 'buzzard-dangerous-discard' ? <select value={incident.reason} onChange={(event) => setBuzzardIncidents((current) => current.map((item, itemIndex) => itemIndex === index && item.type === 'buzzard-dangerous-discard' ? { ...item, reason: event.target.value as typeof item.reason } : item))}><option value="one-suit">one suit</option><option value="three-dragons">three dragons</option><option value="all-winds">all winds</option><option value="ones-and-nines">ones and nines</option></select> : <select value={incident.exposure} onChange={(event) => setBuzzardIncidents((current) => current.map((item, itemIndex) => itemIndex === index && item.type === 'buzzard-false-mah-jong' ? { ...item, exposure: event.target.value as typeof item.exposure } : item))}><option value="not-fully-exposed">not fully exposed</option><option value="fully-exposed">fully exposed</option></select>}<button type="button" onClick={() => setBuzzardIncidents((current) => current.filter((_, itemIndex) => itemIndex !== index))}>Remove</button></div>)}
                   {incidents.filter((incident) => incident.type === 'incorrect-hand').map((incident) => <div key={incident.playerId} className="mt-2 flex flex-wrap gap-2 rounded bg-[#f7f1e3] p-2 text-[11px]"><span>Incorrect hand</span><select value={incident.playerId} onChange={(event) => setIncidents([{ ...incident, playerId: event.target.value }])}>{game.players.filter((player) => player.id !== winnerId).map((player) => <option key={player.id} value={player.id}>{player.name}</option>)}</select><select value={incident.condition} onChange={(event) => setIncidents([{ ...incident, condition: event.target.value as 'too-few' | 'too-many' }])}><option value="too-few">too few</option><option value="too-many">too many</option></select><button type="button" onClick={() => setIncidents([])}>Remove</button></div>)}
                 </section>}
-                {outcomeType === 'win' && settlementReadyForReview && workspaceStage === 'entry' && (
-                  <div className="mt-5 flex justify-end">
-                    <button
-                      type="button"
-                      data-testid="button-review-settlement"
-                      onClick={() => setSettlementReviewRequested(true)}
-                      className="inline-flex min-h-11 items-center gap-2 rounded-md bg-[#284d45] px-4 py-2 text-[12px] font-semibold text-[#f8f4e9] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249] focus-visible:ring-offset-2"
-                    >
-                      Review settlement <ArrowRight size={15} aria-hidden="true" />
-                    </button>
-                  </div>
-                )}
+                {preview.error && <p role="alert" data-testid="preview-domain-error-entry" className="mt-4 rounded-md bg-[#6b3a36] px-3 py-2 text-[11px] font-semibold leading-5 text-[#ffe5db]">{preview.error}</p>}
+                {error && <p role="alert" className="mt-3 text-[11px] font-semibold text-[#ae6249]">{error}</p>}
+                <button type="button" data-testid="button-confirm-hand" disabled={!canRecordRound} onClick={confirmRound} className="mt-5 flex min-h-12 w-full items-center justify-center gap-2 rounded-md bg-[#ae6249] px-4 py-3 text-[13px] font-bold text-white disabled:cursor-not-allowed disabled:opacity-45">Record hand and continue <ArrowRight size={15} /></button>
               </>
             )}
-          </details>}
+          </section>}
 
         </section>
 
-        {workspaceStage !== 'entry' && <section data-testid="section-settlement-stage" className="screen-only overflow-hidden rounded-xl bg-[#284d45] text-[#f8f4e9] shadow-[var(--shadow-lg)]">
+        <details data-testid="settlement-details" className="screen-only overflow-hidden rounded-xl bg-[#284d45] text-[#f8f4e9] shadow-[var(--shadow-lg)]">
+          <summary className="cursor-pointer border-b border-[#55756c] p-4 font-semibold">{game.isComplete ? 'View final standings' : 'View settlement'}</summary>
+          <section data-testid="section-settlement-stage">
             <div className="border-b border-[#55756c] p-5">
               <div className="font-mono text-[10px] uppercase tracking-[.2em] text-[#d7a287]">
                 {game.isComplete ? 'Final Standings' : 'Round settlement'}
@@ -1039,14 +1079,6 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
                 {outcomeType === 'draw' ? (
                   <>
                     <p className="rounded-md bg-[#355e54] px-3 py-3 text-[15px] leading-6 text-[#c8d8d1]">This draw has no payments. East and the prevailing Wind remain unchanged.</p>
-                    <button
-                      type="button"
-                      data-testid="button-confirm-hand"
-                      onClick={confirmRound}
-                      className="mt-4 flex w-full items-center justify-center gap-2 rounded-md bg-[#f3e8d4] px-4 py-3 text-[12px] font-bold text-[#284d45]"
-                    >
-                      Record hand and advance <ArrowRight size={15} />
-                    </button>
                   </>
                 ) : (
                   <>
@@ -1068,7 +1100,6 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
                     {preview.error && <p role="alert" data-testid="preview-domain-error" className="mt-3 rounded-md bg-[#6b3a36] px-3 py-2 text-[11px] font-semibold leading-5 text-[#ffe5db]">{preview.error}</p>}
                     {incidents.length > 0 && <div className="mt-3 rounded-md bg-[#355e54] px-3 py-2 text-[10px] leading-5 text-[#c8d8d1]">{incidents.map((incident, index) => <div key={index}>{incidentDescription(incident, game.players)}</div>)}</div>}
                     {error && <p role="alert" className="mt-3 text-[11px] font-semibold text-[#e6a48d]">{error}</p>}
-                    <button type="button" data-testid="button-confirm-hand" onClick={confirmRound} className="mt-4 flex w-full items-center justify-center gap-2 rounded-md bg-[#f3e8d4] px-4 py-3 text-[12px] font-bold text-[#284d45]">Record hand and advance <ArrowRight size={15} /></button>
                     <p className="mt-2 text-center text-[13px] leading-5 text-[#c8d8d1]">Records this settlement, updates totals, and advances East, Wind and hand state when the active rules require it.</p>
                   </>
                 )}
@@ -1107,7 +1138,8 @@ export function GameScorer({ onOpenHandScorer, returnedScore, onClearReturnedSco
                 </div>
               </div>
             )}
-          </section>}
+          </section>
+        </details>
           <section className="print-only game-print-standings">
             <div className="font-mono text-[10px] uppercase tracking-[.2em]">{game.isComplete ? 'Final standings' : 'Confirmed standings'}</div>
             <div className="mt-2 grid grid-cols-2 gap-x-5 gap-y-2 sm:grid-cols-4">
