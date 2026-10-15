@@ -10,6 +10,8 @@ import {
   loadGameRecovery,
   loadInProgressGameRecovery,
   loadInProgressGameRecoveryCore,
+  reopenFinishedGameAfterUndo,
+  saveGameRecoveryV2,
   recoverableGameForReturn,
   saveGameRecovery,
 } from "./persistence";
@@ -52,6 +54,23 @@ const newGame = () =>
   );
 
 describe("game recovery persistence", () => {
+  it('moves a completed game back to the active ledger when its final hand is undone', () => {
+    const storage = memoryStorage();
+    let completed = newGame();
+    for (let hand = 0; hand < 16; hand += 1) {
+      const south = Object.entries(completed.seats).find(([, wind]) => wind === 'south');
+      completed = confirmHand(completed, { outcome: { type: 'win', winnerId: south![0] }, scores: { east: 0, south: 0, west: 0, north: 0 } });
+    }
+    expect(completed.isComplete).toBe(true);
+    saveGameRecoveryV2(storage, newGame(), { grammar: 'classical-points-doubles', draft: { scores: {}, scoreRecords: {} } });
+    expect(finishGameLedger(storage, completed, { grammar: 'classical-points-doubles', draft: { scores: {}, scoreRecords: {} } })).toBe(true);
+    expect(loadFinishedGameLedgers(storage)).toHaveLength(1);
+
+    const undone = undoLastHand(completed);
+    expect(reopenFinishedGameAfterUndo(storage, completed, undone, { grammar: 'classical-points-doubles', draft: { scores: {}, scoreRecords: {} } })).toBe(true);
+    expect(loadFinishedGameLedgers(storage)).toHaveLength(0);
+    expect(loadInProgressGameRecoveryCore(storage)?.game).toEqual(undone);
+  });
   it('recovers the same Classical game and current draft through the grammar-neutral core seam', () => {
     const storage = memoryStorage();
     const game = newGame();
@@ -61,6 +80,16 @@ describe("game recovery persistence", () => {
     const core = loadInProgressGameRecoveryCore(storage)!;
     expect(core.game).toEqual(legacyView.game);
     expect(core.currentRound).toEqual({ grammar: 'classical-points-doubles', outcomeType: 'win', winnerId: 'east', draft });
+  });
+  it('preserves a neutral Classical hand draft and rejects scores before an outcome is selected', () => {
+    const storage = memoryStorage();
+    const game = newGame();
+    saveGameRecoveryV2(storage, game, { grammar: 'classical-points-doubles', draft: { scores: {}, scoreRecords: {} } });
+    expect(loadInProgressGameRecoveryCore(storage)?.currentRound).toEqual({ grammar: 'classical-points-doubles', draft: { scores: {}, scoreRecords: {} } });
+    const snapshot = readStoredSnapshot(storage);
+    snapshot.currentRound.draft.scoreRecords.east = { source: 'manual', finalScore: 10 };
+    writeStoredSnapshot(storage, snapshot);
+    expect(loadInProgressGameRecoveryCore(storage)).toBeNull();
   });
   it('migrates a missing Buzzard limit to 600 and rejects an explicit invalid limit', () => {
     const storage = memoryStorage();

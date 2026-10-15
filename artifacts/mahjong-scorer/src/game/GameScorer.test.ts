@@ -3,7 +3,7 @@ import { initialiseCurrentRulesRuntimes } from '../rules-platform/current-runtim
 import { confirmHand, createBmjaGame } from './game';
 import { createGameScorerGame, gameScorerCurrentRound, gameScorerSetup, gameScorerSupports } from './game-scorer-setup';
 import { getCurrentCompiledRulesRuntime } from '../rules-platform/current-runtime-registry';
-import { gameRecordRulesLabel, gameWorkspaceStage, getRoundSettlementPreview, previewRoundSettlement, recoveredGameConflictsWithRoute, selectProfileScoreResult, settlementPreviewPresentation, shouldKeepScoreEntryOpen, shouldShowBritishSetupHelper, shouldShowEditCurrentHandSummary } from './GameScorer';
+import { gameRecordRulesLabel, getRoundSettlementPreview, previewRoundSettlement, recoveredGameConflictsWithRoute, selectProfileScoreResult, settlementPreviewPresentation, shouldShowBritishSetupHelper } from './GameScorer';
 import { BMJA_PROFILE_REF, OUTSIDE_THE_BOX_PROFILE_REF, resolveRulesProfile, WESTERN_TM_PROFILE_REF } from './ruleset';
 import { BUZZARD_2000_PROFILE_REF } from './buzzard-2000';
 import type { PlayerAmounts, PlayerScoreRecords } from './types';
@@ -35,6 +35,7 @@ describe('game settlement preview', () => {
     const draft = { scores: { A: 20 }, scoreRecords: { A: { source: 'manual' as const, finalScore: 20 } } };
     const current = gameScorerCurrentRound(classical, null, 'win', 'A', draft);
     expect(current).toEqual({ grammar: 'classical-points-doubles', outcomeType: 'win', winnerId: 'A', draft });
+    expect(gameScorerCurrentRound(classical, null, null, '', { scores: {}, scoreRecords: {} })).toEqual({ grammar: 'classical-points-doubles', draft: { scores: {}, scoreRecords: {} } });
     expect(gameScorerCurrentRound(mcrGame, { grammar: 'pattern-accumulator', draft: { scores: { C: 7 }, scoreRecords: {} } }, 'win', 'A', draft)).toEqual({ grammar: 'pattern-accumulator', draft: { scores: { C: 7 }, scoreRecords: {} } });
   });
   it('keeps a selected non-winner profile result, forced score, and score record as one transition', () => {
@@ -159,24 +160,4 @@ describe('game settlement preview', () => {
     expect(settlementPreviewPresentation(game, { type: 'draw' }, {})).toBe('no-payments');
   });
 
-  it('keeps manual score entry structurally stable until settlement is deliberately reviewed', () => {
-    expect(shouldKeepScoreEntryOpen('entry', false)).toBe(true);
-    expect(shouldKeepScoreEntryOpen('settlement', true)).toBe(true);
-    expect(shouldKeepScoreEntryOpen('settlement', false)).toBe(false);
-    expect(shouldShowEditCurrentHandSummary('settlement', true)).toBe(false);
-    expect(shouldShowEditCurrentHandSummary('settlement', false)).toBe(true);
-  });
-
-  it('uses a deliberate settlement-review boundary instead of changing context on score input', () => {
-    const game = createBmjaGame(
-      ['east', 'south', 'west', 'north'].map((id) => ({ id, name: id })),
-      { east: 'east', south: 'south', west: 'west', north: 'north' },
-    );
-    expect(gameWorkspaceStage(game, 'awaiting-scores', false)).toBe('entry');
-    expect(gameWorkspaceStage(game, 'transactions', false)).toBe('entry');
-    expect(gameWorkspaceStage(game, 'transactions', true)).toBe('settlement');
-    expect(gameWorkspaceStage(game, 'no-payments', true)).toBe('settlement');
-
-    expect(gameWorkspaceStage({ ...game, isComplete: true }, 'awaiting-scores', false)).toBe('complete');
-  });
 });

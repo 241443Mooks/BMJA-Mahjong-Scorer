@@ -29,11 +29,11 @@ export const createGameScorerGame = (
 };
 
 export const gameScorerCurrentRound = (
-  game: GameState, existing: PersistedCurrentRoundV2 | null, outcomeType: 'win' | 'draw', winnerId: string, draft: RoundScoringDraft, mcrRoute?: McrRoutingState,
+  game: GameState, existing: PersistedCurrentRoundV2 | null, outcomeType: 'win' | 'draw' | null, winnerId: string, draft: RoundScoringDraft, mcrRoute?: McrRoutingState,
 ): PersistedCurrentRoundV2 => {
   const compiled = getCurrentCompiledRulesRuntime(game.setup.rulesProfile);
   if (compiled.grammar === 'classical-points-doubles') {
-    return { grammar: compiled.grammar, outcomeType, winnerId, draft: structuredClone(draft) };
+    return { grammar: compiled.grammar, ...(outcomeType ? { outcomeType } : {}), ...(winnerId ? { winnerId } : {}), draft: structuredClone(draft) };
   }
   if (mcrRoute) return {
     grammar: 'pattern-accumulator',
