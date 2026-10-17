@@ -14,6 +14,12 @@ export type PublicUpdate = {
 export const publicUpdates = [
   {
     date: '2026-10',
+    category: 'New',
+    title: 'Revisit your finished games',
+    summary: 'Finished games now appear in Previous games, with records you can review, print or save. History stays in this browser, not across devices.',
+  },
+  {
+    date: '2026-10',
     category: 'Fixed',
     title: 'Tracked games keep the winner’s scoring context',
     summary: 'Game scoring now carries the evidence needed to score a winning hand, so the recorded result reflects how that hand was won.',
