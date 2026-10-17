@@ -12,9 +12,9 @@ No account is required. Current play is local-first and deterministic: the physi
 
 Three tables used Mahjong Reference during the 10 October club validation (#89). Players found the product useful, while repeated full-hand calculation, terminology, tile identification and end-of-hand scrolling exposed practical friction. Experienced players also depended on the full calculator, so fast repeated use is a core requirement, not an advanced path.
 
-Merged improvements include contextual scoring and player shortcuts (#517/#518), **dated, locally retained completed-game ledgers** with read-only history and print/save (#521), and **explicit hand outcome selection with direct recording**, optional settlement details, confirmation and undo (#525). Settlement remains deterministically validated before recording; the preview is no longer a compulsory separate confirmation screen.
+Merged improvements include contextual scoring and player shortcuts (#517/#518), **dated, locally retained completed-game ledgers** with read-only history and print/save (#521), a compact Previous games homepage card (#527), and **explicit hand outcome selection with direct recording**, optional settlement details, confirmation and undo (#525). Tile-group choices now use plain language alongside Mahjong terms (#528), and completed games open their final standings automatically with a Start a new game action (#529). Settlement remains deterministically validated before recording; the preview is no longer a compulsory separate confirmation screen.
 
-Local history is scoped to the same browser/profile/device, not cloud sync or guaranteed backup. Players should export important records. Outstanding confidence work includes real-phone full-calculator review, full browser-process restart recovery and current-production QA (#253). The live priorities and handoff are #105 and `docs/product/WHATS_NEXT_ROADMAP.md`.
+Local history is scoped to the same browser/profile/device, not cloud sync or guaranteed backup. Players should export important records. Outstanding formal confidence work includes full browser-process restart recovery and current-production QA (#253); owner phone feedback does not replace the complete #253 verification gate. The live priorities and handoff are #105 and `docs/product/WHATS_NEXT_ROADMAP.md`.
 
 ## The problem
 
