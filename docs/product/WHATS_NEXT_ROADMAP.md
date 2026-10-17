@@ -4,15 +4,15 @@
 **Purpose:** current restart point after truth-corpus closeout, Riichi preflight and recent product-assurance work.
 **Live authority:** issue #105 remains the programme map; this file is the dated handoff companion, not a second backlog.
 
-## 15 October 2026 — post-table validation handoff (supersedes the 3 October priority snapshot below)
+## 17 October 2026 — post-table validation handoff (supersedes the 3 October priority snapshot below)
 
 **Authority:** live programme tracker #105 and current `main`. The sections below preserve the earlier architectural context; this section is the current product handoff.
 
 - **10 October field validation (#89):** three real tables used the app; players valued it. Repeated full-hand calculation and end-of-hand scrolling were major friction, including for experienced players. Terminology, identifying winds/flowers/seasons and progression clarity also need attention.
-- **Merged:** #521 preserves finished games as dated local, read-only ledgers with print/save and second-tab protection. #525 makes hand outcome/winner explicit, records directly after deterministic settlement validation, leaves settlement details optional and supports Undo. #517/#518 improved player entry and contextual hand scoring.
+- **Merged:** #521 preserves finished games as dated local, read-only ledgers with print/save and second-tab protection. #525 makes hand outcome/winner explicit, records directly after deterministic settlement validation, leaves settlement details optional and supports Undo. #517/#518 improved player entry and contextual hand scoring. #527 adds the compact Previous games homepage card, #528 uses plain-language tile-group labels, and #529 opens final standings at completion and offers Start a new game.
 - **Not cloud storage:** previous games persist in the same browser/profile/device subject to site-data clearing and browser limitations. Important records should be exported.
-- **Next product QA:** real-phone full-calculator → record → undo → next hand; finished-game history and browser-process restart recovery; production verification #253. Do not treat desktop-only checks as mobile signoff.
-- **Next bounded UX:** #519 plain-language group labels; #522 compact homepage Previous games card; investigate wind/flower/season reference assistance and seating/progression clarity using #89 evidence before creating implementation contracts.
+- **Next product QA:** formal end-to-end production verification #253, including the full calculator → record → undo → next hand journey, finished-game history and browser-process restart recovery. Owner phone feedback is positive, but does not satisfy the formal #253 gate.
+- **Next bounded UX:** #519 terminology and #522 Previous games homepage card are implemented by merged #528/#527; do not reopen them. Investigate wind/flower/season reference assistance and seating/progression clarity using #89 evidence before creating implementation contracts.
 - **Public What's New:** maintain a curated outcome-level history, not one entry per PR. Review a coherent October milestone after verification; minor polish alone does not warrant publication.
 - **Independent rules work:** Riichi remains #494 → #262 → #263 → #264, with experienced-player validation before stable release. MCR remains provisional.
 
