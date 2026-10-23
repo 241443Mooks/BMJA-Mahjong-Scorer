@@ -177,7 +177,7 @@ Rules:
 - never force a branch to `main` as a substitute for deletion;
 - if merge status is ambiguous, leave it.
 
-There are no open PRs as of 23 October. No branches were deleted: the available connector has no safe ref-deletion operation, and branch names alone do not prove merge status. #398 now records seven verified current tips matching merged PR heads (#524–#530). Preserve `main`, future open-PR heads, unique/unmerged work, #167 parking-lot branches and ambiguous refs. In particular, `docs/2026-10-03-eod-housekeeping` **is present** with a unique README commit and must not be deleted without review; `codex/issue-520` has post-merge work. Reverify immediately before any manual deletion.
+At the start of the 23 October review there were no open PRs; draft #531 is now open for this roadmap correction. No branches were deleted: the available connector has no safe ref-deletion operation, and branch names alone do not prove merge status. #398 now records seven verified current tips matching merged PR heads (#524–#530). Preserve `main`, open-PR heads, unique/unmerged work, #167 parking-lot branches and ambiguous refs. In particular, `docs/2026-10-03-eod-housekeeping` **is present** with a unique README commit and must not be deleted without review; `codex/issue-520` has post-merge work. Reverify immediately before any manual deletion.
 
 ## Current next-step position
 
