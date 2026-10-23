@@ -45,7 +45,7 @@ const runtimeStatusLabel: Record<ProfileDimensionValue['runtimeSupport'], string
   executable: 'In the current scorer',
   partial: 'Partly represented by the scorer',
   'reference-only': 'Reference only',
-  'not-modelled': 'Not represented by the scorer model',
+  'not-modelled': 'Not established by this report',
   'not-applicable': 'Not an executable rule',
 };
 
@@ -78,7 +78,7 @@ function readerValue(row: ProfileDimensionValue): string {
       return value === 'settlement.classical-pairwise' ? 'Classical pairwise settlement'
         : 'Value not translated';
     case 'round.draw-follow-up':
-      return value === 'hand-mode.none' ? 'No automatic alternate hand mode configured'
+      return value === 'hand-mode.none' ? 'The scorer does not switch hand mode automatically'
         : 'An alternate hand mode is configured';
     case 'progression.dealer-retention':
       return value === 'progression.classical-east-cycle' ? 'Classical East-cycle strategy' : 'Value not translated';
@@ -127,7 +127,8 @@ export function RulesetProfileReport({ profile }: { profile: RulesProfileRef }) 
       <summary className="cursor-pointer font-semibold text-[#284d45]">See the detailed profile and what it doesn't yet cover</summary>
       <p className="mt-4 text-[14px] leading-6 text-[#405650]">
         The shared report currently defines {values.length} dimensions. {gaps} do not yet have a mapped value for this profile.
-        That is a gap in the report, <strong>not evidence that a rule is absent</strong>. A working scorer also does not, by itself, verify a published source.
+        That is a gap in this summary, <strong>not evidence that a rule is absent or unsupported by the scorer</strong>.
+        Other parts of the scorer may already implement the rule. A working scorer also does not, by itself, verify a published source.
       </p>
       <p className="mt-3 break-all text-[12px] leading-5 text-[#536860]">
         Configuration fingerprint: <code>{artifact.rulesFingerprint}</code>
