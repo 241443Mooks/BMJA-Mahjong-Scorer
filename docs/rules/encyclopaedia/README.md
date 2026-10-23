@@ -45,9 +45,11 @@ Current inventory records include:
 
 `SOURCE_INVENTORY_V4.md` is the current coverage manifest. It points back to source/profile indexes rather than duplicating all rules data.
 
-### 251A2 — concept crosswalk — held until runtime profiles exist
+### 251A2 — incremental concept crosswalk — active
 
-After Buzzard 2000, MCR and Riichi are executable on the shared rules platform, compare implemented profile/catalogue identities and classify relationships such as:
+Start with current executable/source-backed Classical + MCR truth. Riichi is a later conformance/extension test, not a start prerequisite. See [`ISSUE_251A2_PREFLIGHT_2026-10-01.md`](ISSUE_251A2_PREFLIGHT_2026-10-01.md) for the current bounded proof set.
+
+Compare exact profile/catalogue identities and classify only reviewed relationships such as:
 
 - exact same implemented concept;
 - sourced alias;
