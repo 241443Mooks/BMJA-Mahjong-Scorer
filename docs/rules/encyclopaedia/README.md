@@ -45,7 +45,7 @@ Current inventory records include:
 
 `SOURCE_INVENTORY_V4.md` is the current coverage manifest. It points back to source/profile indexes rather than duplicating all rules data.
 
-### 251A2 — incremental concept crosswalk — active
+### 251A2 — incremental concept crosswalk — implemented
 
 Start with current executable/source-backed Classical + MCR truth. Riichi is a later conformance/extension test, not a start prerequisite. See [`ISSUE_251A2_PREFLIGHT_2026-10-01.md`](ISSUE_251A2_PREFLIGHT_2026-10-01.md) for the current bounded proof set.
 
@@ -60,6 +60,14 @@ Compare exact profile/catalogue identities and classify only reviewed relationsh
 - unrelated lookalike.
 
 That is the point at which a neutral public concept identity can safely be assigned.
+
+The initial sparse crosswalk is implemented in `artifacts/mahjong-scorer/src/rules-knowledge/reference-crosswalk.ts`. Its representative relationship proof reuses the governed treatment IDs and #406 dimension IDs.
+
+### 251B/251C — public proof and browse hub — implemented as a bounded vertical
+
+The current public routes are `/encyclopaedia`, `/encyclopaedia/thirteen-orphans`, `/encyclopaedia/imperial-jade`, `/encyclopaedia/wriggling-snake`, and `/encyclopaedia/scoring-systems`. They project existing Atlas learning content, governed treatment/provenance and #406 runtime dimensions. Publication policy remains separate; MCR treatments and unresolved cross-family claims are withheld from treatment cards. `/special-hands` remains the searchable Classical discovery guide and links to the Encyclopaedia.
+
+This is a useful initial slice, not completion of the researched corpus or later 251D/251E work.
 
 ## Why this split exists
 

@@ -86,22 +86,22 @@ The durable namespace should be broad enough for concepts that are called a `han
 Current preferred route direction for the vertical proof:
 
 ```text
-/reference/<concept-slug>
+/encyclopaedia/<concept-slug>
 ```
 
 Examples might eventually include:
 
 ```text
-/reference/thirteen-orphans
-/reference/big-three-dragons
-/reference/nine-gates
+/encyclopaedia/thirteen-orphans
+/encyclopaedia/big-three-dragons
+/encyclopaedia/nine-gates
 ```
 
-This is deliberately broader than `/hands/<slug>` and more user-oriented than making `encyclopaedia` part of every URL.
+The namespace is deliberately broad enough for concepts called a hand, fan, yaku, pattern, limit or event in different rulesets.
 
 The **page title/H1** should use the language people search for, for example `Thirteen Orphans Mahjong hand`, regardless of the neutral route namespace.
 
-Do not freeze this route until the 251B vertical proof confirms that it works cleanly with current routing/prerender/search conventions.
+The 251B/251C vertical proof uses this namespace with the existing route, metadata and prerender conventions.
 
 ### Collection views, not duplicate concept pages
 
