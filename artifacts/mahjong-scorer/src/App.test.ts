@@ -37,15 +37,12 @@ describe('detected-pattern references', () => {
 describe('plain-language working group choices (#519)', () => {
   it('preserves group values and disabled Chow guard while improving option labels', () => {
     const source = readFileSync(new URL('./App.tsx', import.meta.url), 'utf8');
-    const options = [...source.matchAll(/<option value="(pung|chow|kong|pair)"[^>]*>([^<]*)<\/option>/g)];
-    const labels = Object.fromEntries(options.map((match) => [match[1], match[2]]));
-    expect(labels).toEqual({
-      pung: 'Three matching (Pung)',
-      chow: 'Three in a run (Chow)',
-      kong: 'Four matching (Kong)',
-      pair: 'Two matching (Pair)',
-    });
-    expect(options.find((match) => match[1] === 'chow')?.[0]).toContain('disabled={handMode');
+    expect(source).toContain('<option value="pung">Three matching (Pung)</option>');
+    expect(source).toContain('Three in a run (Chow)</option>');
+    expect(source).toContain('<option value="kong">Four matching (Kong)</option>');
+    expect(source).toContain('<option value="pair">Two matching (Pair)</option>');
+    const chowOption = source.match(/<option value="chow"[\s\S]*?<\/option>/)?.[0] ?? '';
+    expect(chowOption).toContain('disabled={handMode');
     expect(source).toContain('data-testid="select-working-set-type"');
     expect(source).toContain('aria-label="Working group type"');
   });

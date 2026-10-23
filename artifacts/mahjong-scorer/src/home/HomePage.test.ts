@@ -75,7 +75,7 @@ describe('homepage front door', () => {
     expect(card).toContain('Revisit scores and finished game ledgers.');
     expect(card).toContain('focus-visible:ring-2');
     expect(card).not.toContain('<button');
-    expect(card.match(/<a\\b/g)).toHaveLength(1);
+    expect(card.match(/<a\b/g)).toHaveLength(1);
   });
 
   it('hides the card when no finished games are saved', () => {
