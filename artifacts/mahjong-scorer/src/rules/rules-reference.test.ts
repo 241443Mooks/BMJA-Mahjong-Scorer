@@ -160,6 +160,7 @@ describe('public rules reference model', () => {
     expect(british).toContain('Points and doubles');
     expect(british).toContain('1,000 points (configured default)');
     expect(british).toContain('Classical pairwise settlement');
+    expect(british).toContain('In the current scorer · Source checked');
     expect(british).toContain('Source checked');
     expect(british).toContain('Source finding not recorded');
     expect(british).toContain('Not established by this report');
@@ -167,6 +168,9 @@ describe('public rules reference model', () => {
     expect(british).toContain('not evidence that a rule is absent');
     expect(british).toContain('Configuration fingerprint');
     expect(british).toContain('What happens after a hand');
+    expect(british.match(/<details/g)).toHaveLength(7);
+    expect(british.indexOf('Table and tiles')).toBeLessThan(british.indexOf('Hand structure and play'));
+    expect(british.indexOf('Hand structure and play')).toBeLessThan(british.indexOf('Ready and waiting'));
 
     // First slice is a single-profile proof; other profiles are #408.
     const mcr = renderToStaticMarkup(createElement(RulesProfilePage, { slug: 'mcr' }));

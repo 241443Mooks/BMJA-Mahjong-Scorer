@@ -85,7 +85,7 @@ function readerValue(row: ProfileDimensionValue): string {
     case 'progression.game-end':
       return value === 'game-end.classical-east-cycle' ? 'Classical East-cycle game end' : 'Value not translated';
     default:
-      return 'Not yet translated into a reader-friendly value';
+      return 'A configured value is recorded; a plain-language summary is not available here yet';
   }
 }
 
@@ -119,7 +119,7 @@ export function RulesetProfileReport({ profile }: { profile: RulesProfileRef }) 
         return <div key={id} className="rounded-xl border border-[#d8ceb8] bg-[#fdfbf5] p-4">
           <dt className="text-[13px] font-semibold text-[#536860]">{definition.label}</dt>
           <dd className="mt-2 text-[18px] font-semibold leading-6 text-[#284d45]">{readerValue(row)}</dd>
-          <dd className="mt-2 text-[12px] text-[#536860]">{sourceStatusLabel[row.sourceStatus]}</dd>
+          <dd className="mt-2 text-[12px] leading-5 text-[#536860]">{runtimeStatusLabel[row.runtimeSupport]} · {sourceStatusLabel[row.sourceStatus]}</dd>
         </div>;
       })}
     </dl>
@@ -135,12 +135,13 @@ export function RulesetProfileReport({ profile }: { profile: RulesProfileRef }) 
       </p>
       {groups.map((group) => {
         const rows = values.filter((row) => RULES_DIMENSIONS.find((definition) => definition.id === row.dimensionId)?.group === group.id);
-        return <section key={group.id} className="mt-6">
-          <h3 className="font-serif text-[22px] text-[#284d45]">{group.title}</h3>
-          <dl className="mt-2 text-[14px] leading-6 text-[#405650]">
+        const mapped = rows.filter(({ value }) => value.status !== 'unknown').length;
+        return <details key={group.id} className="mt-3 rounded-lg border border-[#e4dccd] bg-[#fdfbf5] p-4">
+          <summary className="cursor-pointer font-serif text-[20px] text-[#284d45] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">{group.title}<span className="ml-2 font-sans text-[12px] text-[#536860]">{mapped} of {rows.length} values recorded</span></summary>
+          <dl className="mt-3 text-[14px] leading-6 text-[#405650]">
             {rows.map((row) => <DimensionDetail key={row.dimensionId} row={row} />)}
           </dl>
-        </section>;
+        </details>;
       })}
       <p className="mt-6 text-[13px] leading-6 text-[#405650]">
         Source references and limitations for this ruleset are explained below. The same shared dimensions will also power comparisons with other exact profiles.

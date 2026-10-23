@@ -1,8 +1,8 @@
 # Rules reference, comparison and Encyclopaedia — delivery plan
 
-Date: 23 October 2026  
-Baseline: `main@95063f380660ab5ce7ebdd069936aed5dc1675c4`  
-Programme: #105  
+Date: 23 October 2026
+Baseline: `main@95063f380660ab5ce7ebdd069936aed5dc1675c4`
+Programme: #105
 Existing work: #405 (profile report), #407–#409 (profile slices), #296 (comparator), #251 (Encyclopaedia), #406 (shared dimension model, closed), #399/#440 (governed source-linked truth, closed).
 
 ## Outcome
