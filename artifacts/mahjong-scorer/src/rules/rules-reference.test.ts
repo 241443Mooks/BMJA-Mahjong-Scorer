@@ -162,6 +162,8 @@ describe('public rules reference model', () => {
     expect(british).toContain('Classical pairwise settlement');
     expect(british).toContain('Source checked');
     expect(british).toContain('Source finding not recorded');
+    expect(british).toContain('Not established by this report');
+    expect(british).toContain('not evidence that a rule is absent or unsupported by the scorer');
     expect(british).toContain('not evidence that a rule is absent');
     expect(british).toContain('Configuration fingerprint');
     expect(british).toContain('What happens after a hand');
