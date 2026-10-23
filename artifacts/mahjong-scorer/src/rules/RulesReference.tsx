@@ -4,6 +4,7 @@ import type { ReactNode } from 'react';
 import { SiteHeader } from '../components/SiteHeader';
 import { descriptorForSlug, PUBLIC_RULES_DESCRIPTORS, type PublicRulesSlug, type RulesDescriptor } from '../game/rules-presentation';
 import { clearPreferredRulesProfile, readPreferredRulesProfile, setPreferredRulesProfile } from '../game/preferred-rules-profile';
+import { RulesetProfileReport } from './RulesetProfileReport';
 import { familiesBySupportedProfileCount, MAHJONG_FAMILIES, PROFILE_LEARNING_LINKS, supportedProfilesForFamily } from '../home/mahjong-family-presentation';
 
 const actionClass = 'inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-[#284d45] px-4 py-2.5 text-[15px] font-semibold text-[#f8f4e9] transition hover:bg-[#23443d] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249] focus-visible:ring-offset-2';
@@ -86,6 +87,7 @@ export function RulesProfilePage({ slug }: { slug: Exclude<PublicRulesSlug, 'clu
   const copy = pageCopy[slug];
   return <PageFrame eyebrow={copy.eyebrow} title={descriptor.title} intro={copy.intro}>
     <section className="px-5 py-7 sm:px-8 lg:px-12"><RulesSupportStatus descriptor={descriptor} /></section>
+    {slug === 'british' && <RulesetProfileReport profile={descriptor.profile} />}
     <Section title="Identity and authority"><p>{copy.identity}</p></Section>
     <Section title="At the table"><p>{copy.table}</p></Section>
     <Section title="How scoring works"><p>{copy.scoring}</p></Section>
