@@ -6,7 +6,7 @@ describe('public SEO configuration', () => {
     const paths = siteSeo.routes.map((route) => route.path);
     const titles = siteSeo.routes.map((route) => route.title);
 
-    expect(siteSeo.routes).toHaveLength(30);
+    expect(siteSeo.routes).toHaveLength(35);
     for (const slug of [
       'eight-ruleset-architecture-stress-test',
       'eight-ruleset-paper-manifests',
@@ -21,7 +21,7 @@ describe('public SEO configuration', () => {
     expect(siteSeo.routes.find((route) => route.path === '/privacy')?.title).toContain('Privacy & Analytics');
     expect(siteSeo.routes.find((route) => route.path === '/previous-games')?.indexable).toBe(false);
     expect(siteSeo.routes.find((route) => route.path === '/whats-new')?.title).toBe('What’s New | Mahjong Reference');
-    for (const path of ['/rules/club', '/rules/buzzard', '/rules/mcr', '/under-the-hood']) {
+    for (const path of ['/rules/club', '/rules/buzzard', '/rules/mcr', '/under-the-hood', '/encyclopaedia', '/encyclopaedia/thirteen-orphans', '/encyclopaedia/imperial-jade', '/encyclopaedia/wriggling-snake', '/encyclopaedia/scoring-systems']) {
       const route = siteSeo.routes.find((candidate) => candidate.path === path);
       expect(route).toBeDefined();
       expect(route?.title).toContain('Mahjong Reference');
