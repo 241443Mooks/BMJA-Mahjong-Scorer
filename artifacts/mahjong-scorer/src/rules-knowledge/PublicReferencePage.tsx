@@ -238,7 +238,7 @@ export function PublicScoringConceptPage() {
       <ul className="mt-4 grid gap-3 sm:grid-cols-2">{rows.map(({ descriptor, projected }) => <li id={`profile-${descriptor.profile.id}-${descriptor.profile.version}`} key={`${descriptor.profile.id}@${descriptor.profile.version}`} className="scroll-mt-24 rounded-lg border border-[#cbd8d0] bg-white p-4">
         <p className="font-semibold">{descriptor.compactLabel}</p><p className="mt-1">{projected.displayValue}</p>
         {descriptor.availability.handScorer ? <a className="mt-3 inline-block underline" href={`/hand?rules=${descriptor.slug}`}>Open this profile’s hand scorer</a> : null}
-        <details className="mt-3"><summary className="cursor-pointer font-medium">Sources and checking</summary><p className="mt-2 text-sm">{friendlySourceStatus(projected.sourceStatus)}</p><ul className="mt-1 list-disc pl-5 text-sm">{projected.provenanceIds.map((id) => <li key={id}>{id}</li>)}</ul></details>
+        <details className="mt-3"><summary className="cursor-pointer font-medium">Sources and checking</summary><p className="mt-2 text-sm">{friendlySourceStatus(projected.sourceStatus)}</p><ul className="mt-1 list-disc break-all pl-5 text-sm">{projected.provenanceIds.map((id) => <li key={id}>{id}</li>)}</ul></details>
       </li>)}</ul>
     </section>
   </main>;
