@@ -132,9 +132,10 @@ const auditFact = (
 });
 
 /**
- * Reviewed, profile-local answers from the Classical comparator matrix.
- * The comparison key carries meaning independently of the English wording;
- * audit prose is never compared as though it were a rule value.
+ * Curated, profile-local reader copy from the Classical comparator matrix.
+ * Scorer-owned numeric summaries are drift-checked against executable scoring
+ * functions in profile-dimensions.test.ts; catalogue counts remain inventory
+ * claims. The comparison key carries meaning independently of the wording.
  */
 export const CLASSICAL_COMPARATOR_PLAYER_FACTS: Readonly<Record<string, Partial<Record<RulesDimensionId, PlayerFact>>>> = Object.freeze({
   'bmja@1.0': {
@@ -311,9 +312,16 @@ export const projectProfileDimensions = (
     const data = runtimeValue(artifact, id);
     const evidence = evidenceStatus(reviewedEvidence, profile, id);
     const playerFact = CLASSICAL_COMPARATOR_PLAYER_FACTS[`${profile.id}@${profile.version}`]?.[id];
-    const flowersAnswer = profile.id === 'bmja' && profile.version === '1.0' && id === 'tiles.bonus-tiles'
-      ? describeBonusTileScoring(BMJA_BONUS_TILE_SCORING).summary : undefined;
-    const flowersKey = flowersAnswer ? `bonus-tiles:${BMJA_BONUS_TILE_SCORING.pointsEach}-points-${BMJA_BONUS_TILE_SCORING.ownTileDoubles}-own-double-${BMJA_BONUS_TILE_SCORING.completeSetDoubles}-complete-set-doubles` : undefined;
+    const bonusScoring = profile.id === 'bmja' && profile.version === '1.0'
+      ? describeBonusTileScoring(BMJA_BONUS_TILE_SCORING) : undefined;
+    const flowersSummary = id === 'tiles.bonus-tiles' ? bonusScoring?.summary : undefined;
+    const flowersComposition = id === 'scoring.limit-composition' ? bonusScoring?.behavior.fixedSpecial : undefined;
+    const flowersAnswer = flowersSummary ?? flowersComposition;
+    const flowersKey = flowersSummary
+      ? `bonus-tiles:${BMJA_BONUS_TILE_SCORING.pointsEach}-points-${BMJA_BONUS_TILE_SCORING.ownTileDoubles}-own-double-${BMJA_BONUS_TILE_SCORING.completeSetDoubles}-complete-set-doubles`
+      : flowersComposition
+        ? `fixed-special-bonus:${BMJA_BONUS_TILE_SCORING.modes.fixedSpecial.points}:${BMJA_BONUS_TILE_SCORING.modes.fixedSpecial.doubles}:${BMJA_BONUS_TILE_SCORING.modes.fixedSpecial.finalDiscardDoubles}-final-discard-doubles`
+        : undefined;
     const value = flowersKey
       ? present({ reviewedMeaning: flowersKey })
       : data !== undefined
