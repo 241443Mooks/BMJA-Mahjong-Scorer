@@ -155,11 +155,11 @@ describe('public rules reference model', () => {
     const british = renderToStaticMarkup(createElement(RulesProfilePage, { slug: 'british' }));
     expect(british).toContain('Rules at a glance');
     expect(british).toContain('bmja@1.0');
-    expect(british).toContain('144 tiles, including Flowers and Seasons');
-    expect(british).toContain('Four sets and a pair');
-    expect(british).toContain('Points and doubles');
+    expect(british).toContain('The profile uses a 144-tile set, including Flowers and Seasons.');
+    expect(british).toContain('A normal winning hand has four sets and a pair.');
+    expect(british).toContain('Ordinary hands score points, then apply doubles.');
     expect(british).toContain('1,000 points (configured default)');
-    expect(british).toContain('Classical pairwise settlement');
+    expect(british).toContain('Each losing player pays the winner according to the hand score.');
     expect(british).toContain('In the current scorer · Source checked');
     expect(british).toContain('Source checked');
     expect(british).toContain('Source finding not recorded');

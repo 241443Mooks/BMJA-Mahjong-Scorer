@@ -6,6 +6,7 @@ import { currentPlayableResolverEnvironment, currentPlayableProfiles } from '../
 import { projectProfileDimensions, RULES_DIMENSIONS, CLASSICAL_COMPARATOR_REVIEWED_EVIDENCE, type ProfileDimensionValue, type RulesDimensionGroup, type RulesDimensionId } from '../rules-platform/profile-dimensions';
 import type { RulesProfileRef } from '../rules-platform/types';
 import { readGovernedFacts } from '../rules-knowledge/truth/read-contract';
+import { GOVERNED_DIMENSION_LINKS } from '../rules-platform/governed-dimension-links';
 
 const profiles: { ref: RulesProfileRef; name: string; slug?: string; mcr?: boolean; status?: string }[] = [
   ...[...currentPlayableProfiles.map(({ identity }) => ({ id: identity.id, version: identity.version })), { id: MCR_WMO_2006_PROFILE.identity.id, version: MCR_WMO_2006_PROFILE.identity.version }].map((ref) => {
@@ -16,27 +17,6 @@ const profiles: { ref: RulesProfileRef; name: string; slug?: string; mcr?: boole
 const groupNames: Record<RulesDimensionGroup, string> = {
   'identity-table-tiles': 'Identity, table & tiles', 'hand-play': 'Hand & play', 'ready-declarations': 'Ready & declarations',
   scoring: 'Scoring', 'settlement-incidents': 'Settlement & incidents', 'draws-progression': 'Draws & progression',
-};
-
-/** Explicit dimension-to-subject links: only these rows claim canonical fact support. */
-const governedDimensionSubjects: Partial<Record<RulesDimensionId, Partial<Record<string, readonly string[]>>>> = {
-  'scoring.ordinary-base': {
-    'bmja@1.0': ['rule.classical.flower-season-base-scoring'],
-    'outside-the-box@0.1': ['rule.classical.flower-season-base-scoring'],
-    'buzzard-2000@0.1': ['rule.classical.flower-season-base-scoring'],
-  },
-  'scoring.multiplier-bonus-policy': {
-    'bmja@1.0': ['rule.classical.own-flower-season-double', 'rule.classical.complete-flower-season-set-double'],
-    'outside-the-box@0.1': ['rule.classical.own-flower-season-double', 'rule.classical.complete-flower-season-set-double'],
-    'buzzard-2000@0.1': ['rule.classical.own-flower-season-double', 'rule.buzzard-2000.complete-flower-season-set-double'],
-  },
-  'round.draw-follow-up': {
-    'bmja@1.0': ['rule.classical.goulash-round-transition'],
-    'outside-the-box@0.1': ['rule.otb.goulash-round-transition'],
-  },
-  'play.ordinary-chow-policy': {
-    'bmja@1.0': ['rule.classical.normal-hand-at-most-one-chow'],
-  },
 };
 
 type ComparisonState = 'different' | 'same' | 'needs-checking';
@@ -101,7 +81,7 @@ export function ExactProfileComparator() {
   const governedLeft = readGovernedFacts(selectedLeft.ref);
   const governedRight = readGovernedFacts(selectedRight.ref);
   const relevantFacts = (profile: typeof selectedLeft, facts: typeof governedLeft) => facts.filter(({ subject }) =>
-    Object.values(governedDimensionSubjects).some((profilesById) => profilesById?.[`${profile.ref.id}@${profile.ref.version}`]?.includes(subject.id)));
+    Object.values(GOVERNED_DIMENSION_LINKS).some((profilesById) => profilesById?.[`${profile.ref.id}@${profile.ref.version}`]?.subjectIds.includes(subject.id)));
   const relevantLeft = relevantFacts(selectedLeft, governedLeft);
   const relevantRight = relevantFacts(selectedRight, governedRight);
 
@@ -155,7 +135,7 @@ export function ExactProfileComparator() {
       <section aria-labelledby="differences-heading"><h3 id="differences-heading" className="mb-3 font-serif text-2xl text-[#284d45]">What differs?</h3>{differentRows.length ? <div className="space-y-5">{groupedRows(differentRows)}</div> : <p className="rounded-lg bg-[#efe8da] p-4 text-sm leading-6 text-[#405650]">No differences are established in the rules shown here.</p>}</section>
       {!differencesOnly && sameRows.length > 0 && <section aria-labelledby="same-heading"><h3 id="same-heading" className="mb-3 font-serif text-2xl text-[#284d45]">Same in both</h3><div className="space-y-5">{groupedRows(sameRows)}</div></section>}
       {checkingRows.length > 0 && <details className="rounded-lg border border-[#d8ceb8] bg-[#fbf8ed] p-4"><summary className="min-h-11 cursor-pointer font-serif text-xl text-[#284d45] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">Other rules and qualifications ({checkingRows.length})</summary><p className="mb-3 mt-2 text-sm leading-6 text-[#596b65]">These topics do not have comparable answers for both versions. An incomplete comparison does not mean a rule is absent.</p><ul className="space-y-3 text-sm leading-6">{checkingRows.map(({ definition, a, b }) => <li key={definition.id}><strong>{definition.label}</strong><p>{selectedLeft.name}: {a.playerAnswer ?? (a.value.status === 'unknown' ? 'No answer is available.' : readableValue(a, selectedLeft.name))}</p><p>{selectedRight.name}: {b.playerAnswer ?? (b.value.status === 'unknown' ? 'No answer is available.' : readableValue(b, selectedRight.name))}</p></li>)}</ul></details>}
-      <details className="rounded-lg border border-[#d8ceb8] bg-white p-4"><summary className="min-h-11 cursor-pointer font-serif text-xl text-[#284d45]">Governed evidence linked to compared dimensions ({relevantLeft.length + relevantRight.length})</summary><p className="mt-2 text-sm leading-6 text-[#596b65]">Only dimensions with explicit canonical subject links are listed here. Other comparison answers retain their separate reviewed-audit evidence and are not implied to have a canonical fact connection.</p><div className="mt-3 grid gap-4 sm:grid-cols-2">{[[selectedLeft, relevantLeft], [selectedRight, relevantRight]].map(([profile, facts]) => <div key={(profile as typeof selectedLeft).ref.id}><h4 className="font-semibold">{(profile as typeof selectedLeft).name}</h4><ul className="mt-2 space-y-2 text-xs leading-5">{(facts as typeof relevantLeft).map((fact) => <li key={fact.factId} className="border-t border-[#e5dccb] pt-2"><strong className="break-all">{fact.subject.id}</strong><p>Dimensions: {RULES_DIMENSIONS.filter(({ id }) => governedDimensionSubjects[id]?.[`${fact.profile.id}@${fact.profile.version}`]?.includes(fact.subject.id)).map(({ label }) => label).join(', ')}</p><p>Treatment: {fact.treatment ? `${fact.treatment.recordId} v${fact.treatment.recordVersion}` : 'missing'} · scorer mapping: {fact.runtime.mappingState}{fact.runtime.ref ? ` · ${fact.runtime.ref.kind}:${fact.runtime.ref.id}` : ''} · capability: {fact.runtime.capability} · conformance: {fact.runtime.conformance}</p>{fact.claims.map((claim) => <p key={claim.recordId}>{claim.recordId} v{claim.recordVersion} · {claim.status} · {claim.source?.recordId ?? 'source missing'} v{claim.source?.recordVersion ?? '—'} · {claim.source?.citation ?? 'Source unavailable'} · {claim.source?.locator.label ?? 'Locator unavailable'}</p>)}</li>)}</ul></div>)}</div></details>
+      <details className="rounded-lg border border-[#d8ceb8] bg-white p-4"><summary className="min-h-11 cursor-pointer font-serif text-xl text-[#284d45]">Governed evidence linked to compared dimensions ({relevantLeft.length + relevantRight.length})</summary><p className="mt-2 text-sm leading-6 text-[#596b65]">The links identify supported components of broader dimensions. They do not claim that one fact covers an entire scoring or play policy. Other comparison answers retain their separate reviewed-audit evidence.</p><div className="mt-3 grid gap-4 sm:grid-cols-2">{[[selectedLeft, relevantLeft], [selectedRight, relevantRight]].map(([profile, facts]) => <div key={(profile as typeof selectedLeft).ref.id}><h4 className="font-semibold">{(profile as typeof selectedLeft).name}</h4><ul className="mt-2 space-y-2 text-xs leading-5">{(facts as typeof relevantLeft).map((fact) => <li key={fact.factId} className="border-t border-[#e5dccb] pt-2"><strong className="break-all">{fact.subject.id}</strong><p>Dimensions: {RULES_DIMENSIONS.filter(({ id }) => GOVERNED_DIMENSION_LINKS[id]?.[`${fact.profile.id}@${fact.profile.version}`]?.subjectIds.includes(fact.subject.id)).map(({ label }) => label).join(', ')} (component coverage)</p><p>Treatment: {fact.treatment ? `${fact.treatment.recordId} v${fact.treatment.recordVersion}` : 'missing'} · scorer mapping: {fact.runtime.mappingState}{fact.runtime.ref ? ` · ${fact.runtime.ref.kind}:${fact.runtime.ref.id}` : ''} · capability: {fact.runtime.capability} · conformance: {fact.runtime.conformance}</p>{fact.claims.map((claim) => <p key={claim.recordId}>{claim.recordId} v${claim.recordVersion} · {claim.status} · {claim.source?.recordId ?? 'source missing'} v{claim.source?.recordVersion ?? '—'} · {claim.source?.citation ?? 'Source unavailable'} · {claim.source?.locator.label ?? 'Locator unavailable'}</p>)}</li>)}</ul></div>)}</div></details>
     </div>}
   </section>;
 }

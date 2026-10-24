@@ -69,7 +69,7 @@ describe('exact profile comparator', () => {
     expect(node.textContent).toContain('A waiting hand needs one tile to complete it.');
     expect(node.textContent).not.toContain('Losing players settle score differences with each other.');
     expect(node.textContent).not.toContain('Same in both');
-    expect(node.textContent).not.toContain('Nobody pays anything after a drawn hand.');
+    expect(node.textContent).toContain('A drawn BMJA hand scores nothing and has no settlement.');
     expect(node.textContent).toContain('rule.classical.goulash-round-transition');
     expect(node.textContent).toContain('rule.otb.goulash-round-transition');
     expect(node.textContent).toContain('scoring.scoreBonusTiles');

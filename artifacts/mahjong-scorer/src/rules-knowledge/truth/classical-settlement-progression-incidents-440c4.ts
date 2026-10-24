@@ -1,6 +1,7 @@
 import type { EvidenceClaim, ProfileTreatment, SemanticSubject } from '../../rules-platform/truth-model';
 import { versioned } from './records';
 import { profileRuntimeRefByFact } from './classical-scoring-runtime';
+import { classicalRuntimeRefBySubject } from './classical-scoring-runtime';
 
 type ProfileId = 'bmja' | 'outside-the-box' | 'buzzard-2000';
 type Row = {
@@ -46,8 +47,9 @@ const families: readonly Family[] = [
     buzzard('After a dead hand, East remains East.', 'Rules 11–14 — dead hand', '7'),
   ] },
   { id: 'rule.classical.draw-has-no-settlement', rows: [
+    bmjaQa('No one scores anything when the game is drawn.', 'Drawn game'),
     otb('A draw produces no score or settlement.', 'Drawn game / round-state'),
-  ], unresolvedProfiles: ['bmja', 'buzzard-2000'] },
+  ], unresolvedProfiles: ['buzzard-2000'], runtimeStateByProfile: { bmja: { kind: 'executable', ref: classicalRuntimeRefBySubject['rule.classical.draw-has-no-settlement'] } } },
   { id: 'rule.classical.east-retained-after-east-win', rows: [
     bmjaQa('If East declares Mah-Jong, East remains East.', 'Winds — When does East Wind move to another player?'),
     buzzard('If East wins, East remains East.', 'Rules 11–14 — East wins', '7'),

@@ -1,4 +1,5 @@
 import type { JsonValue, ResolvedProfileArtifact, RulesProfileRef } from './types';
+import { BMJA_BONUS_TILE_SCORING, describeBonusTileScoring } from '../scoring/rules';
 
 export type RulesDimensionGroup =
   | 'identity-table-tiles' | 'hand-play' | 'ready-declarations' | 'scoring'
@@ -140,7 +141,6 @@ export const CLASSICAL_COMPARATOR_PLAYER_FACTS: Readonly<Record<string, Partial<
     'table.player-count': auditFact('Four players.', 'table:four-players', 'source-verified', 'executable'),
     'table.seat-model': auditFact('Players sit at East, South, West and North.', 'seats:east-south-west-north', 'source-verified', 'executable'),
     'tiles.physical-set': auditFact('The profile uses a 144-tile set, including Flowers and Seasons.', 'tiles:flowers-144', 'source-verified', 'executable'),
-    'tiles.bonus-tiles': auditFact('Each Flower and Season adds 4 points. Your own-number tile gives one double; a complete bouquet gives two doubles total, including the own-tile double.', 'bonus-tiles:classical-four-points-and-profile-doubles', 'source-verified', 'executable'),
     'tiles.substitute-special': auditFact('The British rules do not use substitute tiles.', 'substitutes:none-normal-british-play', 'source-unknown', 'not-modelled'),
     'hand.structural-size': auditFact('A hand has 13 tiles while waiting and 14 when complete. A Kong uses four physical tiles but remains one set.', 'hand-size:13-waiting-14-complete-kong-is-one-set', 'source-verified', 'executable'),
     'hand.normal-winning-shape': auditFact('A normal winning hand has four sets and a pair.', 'winning-shape:four-sets-pair', 'source-verified', 'executable'),
@@ -161,7 +161,7 @@ export const CLASSICAL_COMPARATOR_PLAYER_FACTS: Readonly<Record<string, Partial<
     'settlement.winner-payments': auditFact('Each losing player pays the winner according to the hand score.', 'winner-payments:each-loser-pays-winner', 'source-verified', 'executable'),
     'settlement.loser-to-loser': auditFact('Losing players settle score differences with each other.', 'loser-settlement:pairwise-score-differences', 'source-verified', 'executable'),
     'settlement.dealer-multiplier': auditFact('East pays or receives double.', 'dealer-payment:double', 'source-verified', 'executable'),
-    'round.draw-settlement': auditFact('Nobody pays anything after a drawn hand.', 'draw-settlement:no-payments', 'source-unknown', 'executable', 'Check your table’s agreed rules for any local variation.'),
+    'round.draw-settlement': auditFact('A drawn BMJA hand scores nothing and has no settlement.', 'draw-settlement:no-score-or-payments', 'source-verified', 'executable'),
     'round.draw-follow-up': auditFact('The published rules restart as Goulash after a drawn hand; the current scorer does not switch hand mode automatically.', 'draw-follow-up:goulash-source-not-modelled', 'source-verified', 'partial', 'Published source and current scorer behaviour differ here.'),
     'progression.dealer-retention': auditFact('East stays East after an East win or a draw.', 'dealer-retention:east-win-or-draw', 'source-verified', 'executable'),
     'progression.seat-rotation': auditFact('After another player wins, the deal moves to the next seat.', 'seat-rotation:after-non-east-win', 'source-verified', 'executable'),
@@ -172,7 +172,7 @@ export const CLASSICAL_COMPARATOR_PLAYER_FACTS: Readonly<Record<string, Partial<
     'table.player-count': auditFact('This profile uses four players.', 'table:four-players', 'source-provisional', 'executable', 'Check your table’s agreed rules for local variations.'),
     'table.seat-model': auditFact('This profile uses East, South, West and North seats.', 'seats:east-south-west-north', 'source-provisional', 'executable', 'Check your table’s agreed rules for local variations.'),
     'tiles.physical-set': auditFact('This profile uses a 144-tile set, including Flowers and Seasons.', 'tiles:flowers-144', 'source-provisional', 'executable', 'Check your table’s agreed rules for local variations.'),
-    'tiles.bonus-tiles': auditFact('This profile adds 4 points for each Flower and Season and applies its profile bonus doubles.', 'bonus-tiles:classical-four-points-and-profile-doubles', 'source-provisional', 'executable', 'Check your table’s agreed rules for local variations.'),
+    'tiles.bonus-tiles': auditFact('The current scorer reuses BMJA bonus-tile scoring for this profile; source equivalence remains provisional.', 'bonus-tiles:shared-runtime-provisional-source', 'source-provisional', 'executable', 'Check your table’s agreed rules for local variations.'),
     'tiles.substitute-special': auditFact('The current scorer has no substitute-tile mechanic for this profile.', 'substitutes:unmodelled', 'source-unknown', 'not-modelled', 'The profile’s ordinary source rules have not established whether substitutes are used.'),
     'hand.structural-size': auditFact('This profile uses 13 tiles while waiting and 14 when complete. A Kong uses four physical tiles but remains one set.', 'hand-size:13-waiting-14-complete-kong-is-one-set', 'source-provisional', 'executable', 'Check your table’s agreed rules for local variations.'),
     'hand.normal-winning-shape': auditFact('A normal winning hand in this profile has four sets and a pair.', 'winning-shape:four-sets-pair', 'source-provisional', 'executable', 'Check your table’s agreed rules for local variations.'),
@@ -204,7 +204,7 @@ export const CLASSICAL_COMPARATOR_PLAYER_FACTS: Readonly<Record<string, Partial<
     'table.player-count': auditFact('Four players.', 'table:four-players', 'verified-club', 'executable'),
     'table.seat-model': auditFact('Players sit at East, South, West and North.', 'seats:east-south-west-north', 'verified-club', 'executable'),
     'tiles.physical-set': auditFact('The profile uses a 144-tile set, including Flowers and Seasons.', 'tiles:flowers-144', 'verified-club', 'executable'),
-    'tiles.bonus-tiles': auditFact('Flowers and Seasons are used as bonus tiles; the current scorer adds 4 points for each and applies the profile’s bonus doubles.', 'bonus-tiles:classical-four-points-and-profile-doubles', 'verified-club', 'executable', 'Check the club sheet for the complete bonus treatment.'),
+    'tiles.bonus-tiles': auditFact('Flowers and Seasons are bonus tiles; the scorer applies the profile’s bonus treatment.', 'bonus-tiles:profile-points-and-doubles', 'verified-club', 'executable', 'Check the club sheet for the complete bonus treatment.'),
     'tiles.substitute-special': auditFact('Goulash uses four blank substitute tiles; ordinary play does not use them.', 'substitutes:four-blanks-goulash-only', 'verified-club', 'executable'),
     'hand.structural-size': auditFact('A hand has 13 tiles while waiting and 14 when complete. A Kong uses four physical tiles but remains one set.', 'hand-size:13-waiting-14-complete-kong-is-one-set', 'verified-club', 'executable'),
     'hand.normal-winning-shape': auditFact('A normal winning hand has four sets and a pair.', 'winning-shape:four-sets-pair', 'verified-club', 'executable'),
@@ -237,7 +237,7 @@ export const CLASSICAL_COMPARATOR_PLAYER_FACTS: Readonly<Record<string, Partial<
     'table.player-count': auditFact('Four players.', 'table:four-players', 'source-verified', 'executable'),
     'table.seat-model': auditFact('Players sit at East, South, West and North.', 'seats:east-south-west-north', 'source-verified', 'executable'),
     'tiles.physical-set': auditFact('The profile uses a 144-tile set, including Flowers and Seasons.', 'tiles:flowers-144', 'source-verified', 'executable'),
-    'tiles.bonus-tiles': auditFact('Flowers and Seasons are used as bonus tiles; the Buzzard policy can award doubles for your own tile and a complete bouquet.', 'bonus-tiles:buzzard-bonus-policy', 'source-verified', 'executable'),
+    'tiles.bonus-tiles': auditFact('The Buzzard policy can award doubles for your own tile and a complete bouquet.', 'bonus-tiles:buzzard-bonus-policy', 'source-verified', 'executable'),
     'tiles.substitute-special': auditFact('The available Buzzard source does not establish whether substitute tiles are used in ordinary play.', undefined, 'source-unknown', 'not-modelled'),
     'hand.structural-size': auditFact('A hand has 13 tiles while waiting and 14 when complete. A Kong uses four physical tiles but remains one set.', 'hand-size:13-waiting-14-complete-kong-is-one-set', 'source-verified', 'executable'),
     'hand.normal-winning-shape': auditFact('A normal winning hand has four sets and a pair.', 'winning-shape:four-sets-pair', 'source-verified', 'executable'),
@@ -311,22 +311,27 @@ export const projectProfileDimensions = (
     const data = runtimeValue(artifact, id);
     const evidence = evidenceStatus(reviewedEvidence, profile, id);
     const playerFact = CLASSICAL_COMPARATOR_PLAYER_FACTS[`${profile.id}@${profile.version}`]?.[id];
-    const value = data !== undefined
+    const flowersAnswer = profile.id === 'bmja' && profile.version === '1.0' && id === 'tiles.bonus-tiles'
+      ? describeBonusTileScoring(BMJA_BONUS_TILE_SCORING).summary : undefined;
+    const flowersKey = flowersAnswer ? `bonus-tiles:${BMJA_BONUS_TILE_SCORING.pointsEach}-points-${BMJA_BONUS_TILE_SCORING.ownTileDoubles}-own-double-${BMJA_BONUS_TILE_SCORING.completeSetDoubles}-complete-set-doubles` : undefined;
+    const value = flowersKey
+      ? present({ reviewedMeaning: flowersKey })
+      : data !== undefined
       ? present(data)
       : playerFact
         ? present({ reviewedMeaning: playerFact.comparisonKey ?? 'unresolved' })
         : { status: 'unknown' as const };
     return {
-      profile, dimensionId: id, value, displayValue: playerFact?.playerAnswer ?? display(value),
-      runtimeSupport: playerFact?.runtimeSupport ?? (id === 'profile.identity' || id === 'profile.authority-status'
+      profile, dimensionId: id, value, displayValue: flowersAnswer ?? playerFact?.playerAnswer ?? display(value),
+      runtimeSupport: flowersAnswer ? 'executable' : playerFact?.runtimeSupport ?? (id === 'profile.identity' || id === 'profile.authority-status'
         ? 'not-applicable'
         : data === undefined ? 'not-modelled' : id === 'round.draw-follow-up' ? 'partial' : 'executable'),
-      sourceStatus: playerFact?.sourceStatus ?? evidence.sourceStatus,
+      sourceStatus: flowersAnswer ? 'source-verified' : playerFact?.sourceStatus ?? evidence.sourceStatus,
       ...(evidence.caveat ? { caveat: evidence.caveat } : {}),
-      ...(playerFact?.playerAnswer ? { playerAnswer: playerFact.playerAnswer } : {}),
-      ...(playerFact?.comparisonKey ? { comparisonKey: playerFact.comparisonKey } : {}),
+      ...(flowersAnswer ? { playerAnswer: flowersAnswer } : playerFact?.playerAnswer ? { playerAnswer: playerFact.playerAnswer } : {}),
+      ...(flowersKey ? { comparisonKey: flowersKey } : playerFact?.comparisonKey ? { comparisonKey: playerFact.comparisonKey } : {}),
       ...(playerFact?.playerQualification ? { playerQualification: playerFact.playerQualification } : {}),
-      provenanceIds: playerFact?.provenanceIds ?? evidence.provenanceIds ?? artifact.profile.provenance.sources ?? [],
+      provenanceIds: flowersAnswer ? ['rule.classical.flower-season-base-scoring', 'rule.classical.own-flower-season-double', 'rule.classical.complete-flower-season-set-double'] : playerFact?.provenanceIds ?? evidence.provenanceIds ?? artifact.profile.provenance.sources ?? [],
     };
   });
 };

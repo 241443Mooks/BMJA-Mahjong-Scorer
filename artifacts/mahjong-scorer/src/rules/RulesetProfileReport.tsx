@@ -53,6 +53,7 @@ const runtimeStatusLabel: Record<ProfileDimensionValue['runtimeSupport'], string
 };
 
 function readerValue(row: ProfileDimensionValue): string {
+  if (row.playerAnswer) return row.playerAnswer;
   if (row.value.status === 'unknown') return 'Not yet established in this report';
   if (row.value.status === 'absent') return 'Established as absent under these exact rules';
   if (row.value.status === 'not-applicable') return 'Not applicable';
@@ -88,7 +89,9 @@ function readerValue(row: ProfileDimensionValue): string {
     case 'progression.game-end':
       return value === 'game-end.classical-east-cycle' ? 'Classical East-cycle game end' : 'Value not translated';
     default:
-      return 'A configured value is recorded; a plain-language summary is not available here yet';
+      return typeof value === 'string' || typeof value === 'number'
+        ? `Configured as ${String(value)}; this report does not interpret that setting.`
+        : `A value is recorded (${row.displayValue}); this report does not interpret that setting.`;
   }
 }
 

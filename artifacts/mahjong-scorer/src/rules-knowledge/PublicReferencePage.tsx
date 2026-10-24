@@ -6,6 +6,7 @@ import { profileDimensionValue, projectProfileDimensions, rulesDimension } from 
 import { readGovernedFacts } from './truth/read-contract';
 import { publicDimensionConcepts, projectPublicConcept, publicProfiles } from './reference-publication';
 import { unresolvedReferenceRelationships, type ReferenceConceptId } from './reference-crosswalk';
+import { explainBritishFlowersAndSeasons } from './truth/explain-british-flowers-seasons';
 
 export const PUBLIC_CONCEPT_ROUTES: Readonly<Record<string, ReferenceConceptId>> = Object.freeze({
   '/encyclopaedia/thirteen-orphans': 'pattern.thirteen-orphans',
@@ -27,6 +28,10 @@ export function EncyclopaediaHubPage() {
     <section className="mt-8" aria-labelledby="concept-list-heading">
       <h2 id="concept-list-heading" className="font-serif text-2xl text-[#284d45]">Browse concepts</h2>
       <ul className="mt-4 grid gap-4 sm:grid-cols-2">
+        <li className="rounded-lg border border-[#cbd8d0] bg-white p-4">
+          <h3 className="text-lg font-semibold"><a className="underline underline-offset-4" href="/encyclopaedia/flowers-and-seasons">Flowers and Seasons</a></h3>
+          <p className="mt-2 text-sm">A source-linked explanation of the British bonus points and doubles, connected to the scorer.</p>
+        </li>
         {conceptLinks.map(({ href, conceptId }) => <li key={conceptId} className="rounded-lg border border-[#cbd8d0] bg-white p-4">
           <h3 className="text-lg font-semibold"><a className="underline underline-offset-4" href={href}>{titleFor(conceptId)}</a></h3>
           <p className="mt-2 text-sm">{conceptId === 'pattern.thirteen-orphans' ? 'An irregular hand made from the thirteen terminal and honour tile types, plus one duplicate.' : conceptId === 'pattern.bmja.imperial-jade' ? 'A green-tile hand whose exact permitted groups depend on the profile.' : 'A profile-specific irregular hand built from one suit and the four Winds.'}</p>
@@ -42,6 +47,18 @@ export function EncyclopaediaHubPage() {
       {unresolvedReferenceRelationships().map(({ id }) => <p key={id} className="mt-2 text-sm">The relationship between Gates of Heaven and Nine Gates remains unresolved; no equivalence is asserted.</p>)}
     </section>
     <p className="mt-8 text-sm">Looking for the established searchable British and Western hand guide? Visit <a className="font-semibold underline" href="/special-hands">Special Hands</a>.</p>
+  </main>;
+}
+
+/** Reader page and profile report consume the same exact-profile governed-fact explanation. */
+export function FlowersAndSeasonsReferencePage() {
+  const explanation = explainBritishFlowersAndSeasons({ id: 'bmja', version: '1.0' });
+  if (!explanation.available) return <main className="mx-auto max-w-4xl px-5 py-12"><h1>Flowers and Seasons</h1><p>The source-to-scorer explanation is unavailable because one or more exact-profile evidence links need review.</p></main>;
+  return <main className="mx-auto max-w-4xl px-5 py-10 text-[#253b35]">
+    <nav aria-label="Breadcrumb" className="text-sm"><a className="underline" href="/">Mahjong Reference</a> / <a className="underline" href="/encyclopaedia">Encyclopaedia</a></nav>
+    <header className="mt-5 border-b border-[#cbd8d0] pb-6"><p className="text-sm font-semibold uppercase tracking-wide text-[#47695d]">British Mahjong · BMJA 1.0</p><h1 className="mt-2 font-serif text-4xl text-[#284d45]">{explanation.title}</h1><p className="mt-4 max-w-3xl text-lg leading-8">{explanation.summary}</p><p className="mt-3 max-w-3xl text-sm">This wording comes from the scorer’s bonus-tile contract. The source claims, exact profile treatment and test links are available below.</p></header>
+    <section className="mt-8" aria-labelledby="flower-behaviour"><h2 id="flower-behaviour" className="font-serif text-2xl text-[#284d45]">How they are scored</h2><ul className="mt-4 space-y-3">{explanation.scorerBehaviour.map((text, index) => <li className="rounded-lg border border-[#cbd8d0] bg-white p-4" key={index}><h3 className="font-semibold">{['Ordinary hands', 'Fixed special hands', 'Fishing'][index]}</h3><p className="mt-1 text-sm leading-6">{text}</p></li>)}</ul></section>
+    <details className="mt-8 rounded-lg border border-[#cbd8d0] bg-[#f5f8f5] p-4"><summary className="min-h-11 cursor-pointer font-semibold">Sources and scorer evidence</summary><h2 className="mt-3 font-semibold">Published claims</h2><ul className="mt-2 list-disc space-y-3 pl-5 text-sm leading-6">{explanation.sourceFacts.map(({ claim, source }) => <li key={claim.recordId}><p>{claim.text}</p><p className="text-xs">Claim {claim.recordId} v{claim.recordVersion} · {claim.reviewStatus} · {source.citation} · {source.locator.url ? <a className="underline" href={source.locator.url} target="_blank" rel="noreferrer">{source.locator.label}</a> : source.locator.label} · source {source.recordId} v{source.recordVersion}</p></li>)}</ul><h2 className="mt-5 font-semibold">Exact profile treatments and behaviour tests</h2><ul className="mt-2 list-disc space-y-2 pl-5 text-sm">{explanation.technical.map(({ subjectId, treatment, mapping, fixtures }) => <li key={subjectId}><code>{subjectId}</code> · {treatment.recordId} v{treatment.recordVersion} · {mapping.ruleRef.id} · {fixtures.join(', ')}</li>)}</ul><p className="mt-4 text-xs">Tests cover ordinary scoring, fixed special-hand bonus treatment, fishing, and the shared own-tile / complete-set double contract.</p></details>
   </main>;
 }
 

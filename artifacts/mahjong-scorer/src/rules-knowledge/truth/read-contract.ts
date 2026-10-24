@@ -54,19 +54,13 @@ const current = <T>(records: readonly VersionedTruthRecord<T>[]) => records.filt
 const sorted = <T>(items: T[], id: (value: T) => string) => items.sort((a, b) => id(a).localeCompare(id(b)));
 const one = <T>(items: readonly T[]) => items.length === 1 ? items[0] : undefined;
 
-/** Mechanism-level fixtures are deliberately not represented as proof of every individual rule. */
-export const RUNTIME_MECHANISM_FIXTURES: Readonly<Record<RuntimeTreatmentRef['kind'], readonly string[]>> = Object.freeze({
-  rule: ['src/scoring/rules.test.ts', 'src/rules-platform/truth-british-flowers-seasons.test.ts'],
-  binding: ['src/scoring/special-hands.test.ts', 'src/scoring/golden-fixtures.test.ts'],
-  'hand-mode': ['src/rules-platform/outside-the-box-strategies.test.ts'],
-  policy: ['src/rules-platform/mcr-scoring.test.ts'],
-});
-
+/** Exact fixtures are the only tests reported as fact conformance. Mechanism tests are not guessed from ref kind. */
 export const EXACT_FACT_FIXTURES: Readonly<Record<string, readonly string[]>> = Object.freeze({
   'bmja@1.0:rule.classical.flower-season-base-scoring': ['src/rules-platform/truth-british-flowers-seasons.test.ts'],
   'bmja@1.0:rule.classical.own-flower-season-double': ['src/rules-platform/truth-british-flowers-seasons.test.ts'],
   'bmja@1.0:rule.classical.complete-flower-season-set-double': ['src/rules-platform/truth-british-flowers-seasons.test.ts'],
   'bmja@1.0:rule.classical.normal-hand-at-most-one-chow': ['src/rules-platform/truth-classical-hand-validation-440c3a.test.ts'],
+  'bmja@1.0:rule.classical.draw-has-no-settlement': ['src/game/settlement.test.ts'],
   'outside-the-box@0.1:rule.otb.goulash-round-transition': ['src/rules-platform/outside-the-box-strategies.test.ts'],
 });
 
@@ -133,14 +127,13 @@ const runtimeFor = (
   const connected = currentTruthValidationEnvironment.runtimeTreatmentExists(profile, state.ref);
   const factId = `${profile.id}@${profile.version}:${subjectId}`;
   const exactFixtures = EXACT_FACT_FIXTURES[factId] ?? [];
-  const fixturePaths = connected ? [...new Set([...exactFixtures, ...RUNTIME_MECHANISM_FIXTURES[state.ref.kind]])] : [];
+  const fixturePaths = connected ? exactFixtures : [];
   return {
     state,
     mappingState: connected ? 'complete' as const : 'incomplete' as const,
     capability: 'executable' as const,
     ref: state.ref,
-    conformance: connected && exactFixtures.length > 0 ? 'exact-fact-fixture' as const
-      : connected && fixturePaths.length > 0 ? 'representative-mechanism-fixture' as const : 'not-established' as const,
+    conformance: connected && exactFixtures.length > 0 ? 'exact-fact-fixture' as const : 'not-established' as const,
     fixturePaths,
   };
 };

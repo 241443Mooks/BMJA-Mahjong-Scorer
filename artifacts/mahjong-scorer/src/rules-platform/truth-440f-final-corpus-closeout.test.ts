@@ -52,29 +52,29 @@ const profileTreatmentCounts = Object.fromEntries(profiles.map((profile) => [
 describe('Issue 440F final truth-corpus closeout', () => {
   it('freezes the assembled corpus and deterministic treatment accounting', () => {
     expect(currentTruthCorpus.subjects).toHaveLength(318);
-    expect(currentTruthCorpus.claims).toHaveLength(381);
-    expect(currentTruthCorpus.treatments).toHaveLength(379);
+    expect(currentTruthCorpus.claims).toHaveLength(382);
+    expect(currentTruthCorpus.treatments).toHaveLength(380);
     expect(currentTruthCorpus.sources).toHaveLength(10);
     expect(new Set(treatmentStates).size).toBe(6);
-    expect(Object.values(treatmentStateCounts).reduce((sum, count) => sum + count, 0)).toBe(379);
+    expect(Object.values(treatmentStateCounts).reduce((sum, count) => sum + count, 0)).toBe(380);
     expect(treatmentStateCounts.unknown).toBe(0);
     expect(profileTreatmentCounts).toEqual({
-      'bmja@1.0': 63,
+      'bmja@1.0': 64,
       'western-tm@0.1': 84,
       'outside-the-box@0.1': 85,
       'buzzard-2000@0.1': 56,
       'mcr-wmo-2006@0.1': 91,
     });
-    expect(Object.values(profileTreatmentCounts).reduce((sum, count) => sum + count, 0)).toBe(379);
+    expect(Object.values(profileTreatmentCounts).reduce((sum, count) => sum + count, 0)).toBe(380);
     expect(treatmentStateCounts).toEqual({
-      executable: 232,
+      executable: 233,
       'absent-by-rule': 0,
       'present-not-modelled': 6,
       unknown: 0,
       'not-applicable': 0,
       'migration-incomplete': 141,
     });
-    expect(executableByRefKind).toEqual({ binding: 225, 'hand-mode': 1, policy: 2, rule: 4 });
+    expect(executableByRefKind).toEqual({ binding: 225, 'hand-mode': 1, policy: 2, rule: 5 });
     expect(treatments.filter(({ runtimeState }) => runtimeState.kind === 'present-not-modelled').map(({ treatmentId, subjectId }) => ({ treatmentId, subjectId })).sort((a, b) => a.treatmentId.localeCompare(b.treatmentId))).toEqual([
       { treatmentId: 'bmja@1.0:rule.bmja.dead-wanted-tile-does-not-remove-fishing-eligibility', subjectId: 'rule.bmja.dead-wanted-tile-does-not-remove-fishing-eligibility' },
       { treatmentId: 'bmja@1.0:rule.classical.goulash-round-transition', subjectId: 'rule.classical.goulash-round-transition' },
@@ -133,7 +133,7 @@ describe('Issue 440F final truth-corpus closeout', () => {
     expect(currentPlayableProfiles.some(({ identity }) => identity.id === 'mcr-wmo-2006')).toBe(false);
   });
 
-  it('derives the 66 source-blocked rows from the frozen Western, C3A, C4 and E4 inventories', () => {
+  it('derives the 65 remaining source-blocked rows from the frozen Western, C3A, C4 and E4 inventories', () => {
     const western = westernTm440dOrdinaryCoverage.filter(([, , , disposition]) => disposition === 'needs-primary-source');
     const c3a = classicalHandValidation440c3aUnresolved;
     const c4 = classicalSettlementProgressionIncident440c4Unresolved;
@@ -148,11 +148,11 @@ describe('Issue 440F final truth-corpus closeout', () => {
       'Setup and hand model': 7,
     });
     expect(c3a).toHaveLength(3);
-    expect(c4).toHaveLength(8);
+    expect(c4).toHaveLength(7);
     expect(e4).toHaveLength(1);
-    expect(western.length + c3a.length + c4.length + e4.length).toBe(66);
+    expect(western.length + c3a.length + c4.length + e4.length).toBe(65);
     expect(classicalHandValidation440c3aCoverage.filter(({ evidenceStatus }) => evidenceStatus === 'source-unresolved')).toHaveLength(3);
-    expect(classicalSettlementProgressionIncident440c4Coverage.filter(({ evidenceStatus }) => evidenceStatus === 'source-unresolved')).toHaveLength(8);
+    expect(classicalSettlementProgressionIncident440c4Coverage.filter(({ evidenceStatus }) => evidenceStatus === 'source-unresolved')).toHaveLength(7);
     for (const row of c3a) {
       expect(currentTruthCorpus.claims.some(({ record }) => record.subjectId === row.subjectId && record.supportsProfile?.id === row.profile.id)).toBe(false);
       expect(currentTruthCorpus.treatments.some(({ record }) => record.subjectId === row.subjectId && record.profile.id === row.profile.id)).toBe(false);
@@ -167,8 +167,8 @@ describe('Issue 440F final truth-corpus closeout', () => {
 
   it('proves uniqueness, evidence, exact-profile, executable-edge and lifecycle integrity', () => {
     expect(new Set(currentTruthCorpus.subjects.map(({ record }) => record.id)).size).toBe(318);
-    expect(new Set(currentTruthCorpus.claims.map(({ record }) => record.claimId)).size).toBe(381);
-    expect(new Set(treatments.map(({ treatmentId }) => treatmentId)).size).toBe(379);
+    expect(new Set(currentTruthCorpus.claims.map(({ record }) => record.claimId)).size).toBe(382);
+    expect(new Set(treatments.map(({ treatmentId }) => treatmentId)).size).toBe(380);
     expect(validateTruthCorpus(currentTruthCorpus, currentTruthValidationEnvironment)).toEqual([]);
     expect(() => assertTruthCorpusIntegrity(currentTruthCorpus, currentTruthValidationEnvironment)).not.toThrow();
     for (const { record } of currentTruthCorpus.claims) expect(currentTruthIndex.sourceById(record.sourceId)).toBeDefined();

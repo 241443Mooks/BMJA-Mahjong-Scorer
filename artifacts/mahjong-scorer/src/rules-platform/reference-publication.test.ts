@@ -14,9 +14,23 @@ describe('Issue 251B public reference projection', () => {
     const hub = renderToStaticMarkup(React.createElement(RouteContent, { path: '/encyclopaedia' }));
     expect(hub).toContain('Mahjong concepts across rules');
     expect(hub).toContain('/encyclopaedia/thirteen-orphans');
+    expect(hub).toContain('/encyclopaedia/flowers-and-seasons');
     expect(hub).toContain('Gates of Heaven and Nine Gates remains unresolved');
     const guide = renderToStaticMarkup(React.createElement(RouteContent, { path: '/special-hands' }));
     expect(guide).toContain('href="/encyclopaedia"');
+  });
+
+  it('publishes the source-to-scorer Flowers and Seasons explanation from governed facts', () => {
+    const html = renderToStaticMarkup(React.createElement(RouteContent, { path: '/encyclopaedia/flowers-and-seasons' }));
+    expect(html).toContain('Each Flower or Season adds 4 points');
+    expect(html).toContain('matching Flower or Season gives 1 double');
+    expect(html).toContain('including that matching-tile double');
+    expect(html).toContain('ordinary hand');
+    expect(html).toContain('fixed special hand');
+    expect(html).toContain('fishing');
+    expect(html).toContain('British Mahjong Association, Working out the scores');
+    expect(html).toContain('scoreBonusDoubles');
+    expect(html).not.toContain('The source-to-scorer explanation is unavailable');
   });
 
   it('publishes the Thirteen Orphans vertical while withholding the governed MCR treatment', () => {

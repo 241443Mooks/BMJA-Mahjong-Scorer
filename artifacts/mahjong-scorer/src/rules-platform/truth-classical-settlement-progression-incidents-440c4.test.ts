@@ -43,16 +43,16 @@ describe('Issue 440C4 Classical settlement, progression and incident truth', () 
   it('freezes the source inventory and exact row counts', () => {
     expect(classicalSettlementProgressionIncident440c4Inventory).toEqual(expectedInventory);
     expect(classicalSettlementProgressionIncident440c4Coverage).toHaveLength(72);
-    expect(classicalSettlementProgressionIncident440c4Coverage.filter(({ evidenceStatus }) => evidenceStatus === 'source-ready')).toHaveLength(36);
-    expect(classicalSettlementProgressionIncident440c4Coverage.filter(({ evidenceStatus }) => evidenceStatus === 'source-unresolved')).toHaveLength(8);
+    expect(classicalSettlementProgressionIncident440c4Coverage.filter(({ evidenceStatus }) => evidenceStatus === 'source-ready')).toHaveLength(37);
+    expect(classicalSettlementProgressionIncident440c4Coverage.filter(({ evidenceStatus }) => evidenceStatus === 'source-unresolved')).toHaveLength(7);
     expect(classicalSettlementProgressionIncident440c4Coverage.filter(({ evidenceStatus }) => evidenceStatus === 'not-applicable')).toHaveLength(28);
     expect(classicalSettlementProgressionIncident440c4Coverage.filter(({ treatmentStatus }) => treatmentStatus === 'runtime-edge-migration-incomplete')).toHaveLength(34);
     expect(classicalSettlementProgressionIncident440c4Coverage.filter(({ treatmentStatus }) => treatmentStatus === 'present-not-modelled')).toHaveLength(1);
-    expect(classicalSettlementProgressionIncident440c4Coverage.filter(({ treatmentStatus }) => treatmentStatus === 'migrated')).toHaveLength(1);
+    expect(classicalSettlementProgressionIncident440c4Coverage.filter(({ treatmentStatus }) => treatmentStatus === 'migrated')).toHaveLength(2);
     expect(c4Subjects).toHaveLength(24);
-    expect(c4Claims).toHaveLength(36);
-    expect(c4Treatments).toHaveLength(36);
-    expect(classicalSettlementProgressionIncident440c4Unresolved).toHaveLength(8);
+    expect(c4Claims).toHaveLength(37);
+    expect(c4Treatments).toHaveLength(37);
+    expect(classicalSettlementProgressionIncident440c4Unresolved).toHaveLength(7);
   });
 
   it('keeps ordinary settlement subjects shared only across independently sourced exact profiles', () => {
@@ -68,9 +68,8 @@ describe('Issue 440C4 Classical settlement, progression and incident truth', () 
     }
   });
 
-  it('leaves unresolved BMJA and Buzzard draw settlement, OTB progression and false-discard recipient claim-free and treatment-free', () => {
+  it('leaves Buzzard draw settlement, OTB progression and false-discard recipient claim-free and treatment-free', () => {
     expect(classicalSettlementProgressionIncident440c4Unresolved).toEqual([
-      { subjectId: 'rule.classical.draw-has-no-settlement', profile: 'bmja' },
       { subjectId: 'rule.classical.draw-has-no-settlement', profile: 'buzzard-2000' },
       { subjectId: 'rule.classical.east-retained-after-east-win', profile: 'outside-the-box' },
       { subjectId: 'rule.classical.non-east-win-rotates-seats', profile: 'outside-the-box' },
@@ -135,7 +134,7 @@ describe('Issue 440C4 Classical settlement, progression and incident truth', () 
   it('registers BMJA settlement authority and has no executable strategy refs', () => {
     const source = currentTruthCorpus.sources.find(({ record }) => record.sourceId === 'bmja-settlement')?.record;
     expect(source).toMatchObject({ authority: 'governing', authorityForProfileIds: ['bmja'] });
-    expect(c4Treatments.filter(({ record }) => record.runtimeState.kind === 'executable').map(({ record }) => record.subjectId)).toEqual(['rule.otb.goulash-round-transition']);
+    expect(c4Treatments.filter(({ record }) => record.runtimeState.kind === 'executable').map(({ record }) => record.subjectId)).toEqual(['rule.classical.draw-has-no-settlement', 'rule.otb.goulash-round-transition']);
     expect(c4Claims.find(({ record }) => record.subjectId === 'rule.classical.draw-has-no-settlement' && record.supportsProfile?.id === 'outside-the-box')?.record.sourceId).toBe('otb-guide-2026-09');
   });
 });

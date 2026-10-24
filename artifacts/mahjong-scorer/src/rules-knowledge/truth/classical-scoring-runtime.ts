@@ -1,5 +1,6 @@
 import { scoreBonusDoubles, scoreBonusTiles } from '../../scoring/rules';
 import { validateHand } from '../../scoring/validation';
+import { settleBmjaRound } from '../../game/settlement';
 import type { RuntimeTreatmentRef } from '../../rules-platform/truth-model';
 import type { RulesProfileRef } from '../../rules-platform/types';
 
@@ -8,6 +9,7 @@ export const classicalScoringRuleOwners = Object.freeze({
   'scoring.scoreBonusTiles': scoreBonusTiles,
   'scoring.scoreBonusDoubles': scoreBonusDoubles,
   'scoring.validateHand': validateHand,
+  'settlement.settleBmjaRound': settleBmjaRound,
 });
 
 export const flowerSeasonRuntimeRefBySubject = Object.freeze({
@@ -19,6 +21,7 @@ export const flowerSeasonRuntimeRefBySubject = Object.freeze({
 export const classicalRuntimeRefBySubject = Object.freeze({
   ...flowerSeasonRuntimeRefBySubject,
   'rule.classical.normal-hand-at-most-one-chow': { kind: 'rule', id: 'scoring.validateHand' },
+  'rule.classical.draw-has-no-settlement': { kind: 'rule', id: 'settlement.settleBmjaRound' },
 } satisfies Record<string, RuntimeTreatmentRef>);
 
 /** Exact-profile owner links for non-scoring executable policies. */

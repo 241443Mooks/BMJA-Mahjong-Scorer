@@ -51,12 +51,13 @@ describe('British Flowers and Seasons source-to-scorer proof', () => {
         expect.stringContaining('fishing'),
       ],
       technical: [
-        { subjectId: subjectIds[0], treatment: { recordId: `bmja@1.0:${subjectIds[0]}`, recordVersion: 1, runtimeState: { kind: 'executable', ref: { kind: 'rule', id: 'scoring.scoreBonusTiles' } } }, mapping: { state: 'connected', ruleRef: { kind: 'rule', id: 'scoring.scoreBonusTiles' } }, fixtures: ['src/rules-platform/truth-british-flowers-seasons.test.ts', 'src/scoring/rules.test.ts'] },
-        { subjectId: subjectIds[1], treatment: { recordId: `bmja@1.0:${subjectIds[1]}`, recordVersion: 1, runtimeState: { kind: 'executable', ref: { kind: 'rule', id: 'scoring.scoreBonusDoubles' } } }, mapping: { state: 'connected', ruleRef: { kind: 'rule', id: 'scoring.scoreBonusDoubles' } }, fixtures: ['src/rules-platform/truth-british-flowers-seasons.test.ts', 'src/scoring/rules.test.ts'] },
-        { subjectId: subjectIds[2], treatment: { recordId: `bmja@1.0:${subjectIds[2]}`, recordVersion: 1, runtimeState: { kind: 'executable', ref: { kind: 'rule', id: 'scoring.scoreBonusDoubles' } } }, mapping: { state: 'connected', ruleRef: { kind: 'rule', id: 'scoring.scoreBonusDoubles' } }, fixtures: ['src/rules-platform/truth-british-flowers-seasons.test.ts', 'src/scoring/rules.test.ts'] },
+        { subjectId: subjectIds[0], treatment: { recordId: `bmja@1.0:${subjectIds[0]}`, recordVersion: 1, runtimeState: { kind: 'executable', ref: { kind: 'rule', id: 'scoring.scoreBonusTiles' } } }, mapping: { state: 'connected', ruleRef: { kind: 'rule', id: 'scoring.scoreBonusTiles' } }, fixtures: ['src/rules-platform/truth-british-flowers-seasons.test.ts'] },
+        { subjectId: subjectIds[1], treatment: { recordId: `bmja@1.0:${subjectIds[1]}`, recordVersion: 1, runtimeState: { kind: 'executable', ref: { kind: 'rule', id: 'scoring.scoreBonusDoubles' } } }, mapping: { state: 'connected', ruleRef: { kind: 'rule', id: 'scoring.scoreBonusDoubles' } }, fixtures: ['src/rules-platform/truth-british-flowers-seasons.test.ts'] },
+        { subjectId: subjectIds[2], treatment: { recordId: `bmja@1.0:${subjectIds[2]}`, recordVersion: 1, runtimeState: { kind: 'executable', ref: { kind: 'rule', id: 'scoring.scoreBonusDoubles' } } }, mapping: { state: 'connected', ruleRef: { kind: 'rule', id: 'scoring.scoreBonusDoubles' } }, fixtures: ['src/rules-platform/truth-british-flowers-seasons.test.ts'] },
       ],
     });
     if (explanation.available) {
+      expect(explanation.scorerBehaviour[1]).toContain('separate bonus subtotal');
       expect(explanation.technical.map(({ subjectId }) => subjectId)).toEqual(subjectIds);
       expect(explanation.technical.map(({ mapping }) => mapping.ruleRef.id)).toEqual([
         'scoring.scoreBonusTiles', 'scoring.scoreBonusDoubles', 'scoring.scoreBonusDoubles',
