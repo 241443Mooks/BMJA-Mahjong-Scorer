@@ -140,7 +140,7 @@ export const CLASSICAL_COMPARATOR_PLAYER_FACTS: Readonly<Record<string, Partial<
   'bmja@1.0': {
     'table.player-count': auditFact('Four players.', 'table:four-players', 'source-verified', 'executable'),
     'table.seat-model': auditFact('Players sit at East, South, West and North.', 'seats:east-south-west-north', 'source-verified', 'executable'),
-    'tiles.physical-set': auditFact('The set has 144 tiles, including Flowers and Seasons.', 'tiles:flowers-144', 'source-verified', 'executable'),
+    'tiles.physical-set': auditFact('The profile uses a 144-tile set, including Flowers and Seasons.', 'tiles:flowers-144', 'source-verified', 'executable'),
     'tiles.substitute-special': auditFact('The British rules do not use substitute tiles.', 'substitutes:none-normal-british-play', 'source-unknown', 'not-modelled'),
     'hand.structural-size': auditFact('A hand has 13 tiles while waiting and 14 when complete. A Kong uses four physical tiles but remains one set.', 'hand-size:13-waiting-14-complete-kong-is-one-set', 'source-verified', 'executable'),
     'hand.normal-winning-shape': auditFact('A normal winning hand has four sets and a pair.', 'winning-shape:four-sets-pair', 'source-verified', 'executable'),
@@ -203,7 +203,7 @@ export const CLASSICAL_COMPARATOR_PLAYER_FACTS: Readonly<Record<string, Partial<
   'outside-the-box@0.1': {
     'table.player-count': auditFact('Four players.', 'table:four-players', 'verified-club', 'executable'),
     'table.seat-model': auditFact('Players sit at East, South, West and North.', 'seats:east-south-west-north', 'verified-club', 'executable'),
-    'tiles.physical-set': auditFact('The set has 144 tiles, including Flowers and Seasons.', 'tiles:flowers-144', 'verified-club', 'executable'),
+    'tiles.physical-set': auditFact('The profile uses a 144-tile set, including Flowers and Seasons.', 'tiles:flowers-144', 'verified-club', 'executable'),
     'tiles.bonus-tiles': auditFact('Flowers and Seasons are bonus tiles; the scorer applies the profile’s bonus treatment.', 'bonus-tiles:profile-points-and-doubles', 'verified-club', 'executable', 'Check the club sheet for the complete bonus treatment.'),
     'tiles.substitute-special': auditFact('Goulash uses four blank substitute tiles; ordinary play does not use them.', 'substitutes:four-blanks-goulash-only', 'verified-club', 'executable'),
     'hand.structural-size': auditFact('A hand has 13 tiles while waiting and 14 when complete. A Kong uses four physical tiles but remains one set.', 'hand-size:13-waiting-14-complete-kong-is-one-set', 'verified-club', 'executable'),
@@ -236,7 +236,7 @@ export const CLASSICAL_COMPARATOR_PLAYER_FACTS: Readonly<Record<string, Partial<
   'buzzard-2000@0.1': {
     'table.player-count': auditFact('Four players.', 'table:four-players', 'source-verified', 'executable'),
     'table.seat-model': auditFact('Players sit at East, South, West and North.', 'seats:east-south-west-north', 'source-verified', 'executable'),
-    'tiles.physical-set': auditFact('The set has 144 tiles, including Flowers and Seasons.', 'tiles:flowers-144', 'source-verified', 'executable'),
+    'tiles.physical-set': auditFact('The profile uses a 144-tile set, including Flowers and Seasons.', 'tiles:flowers-144', 'source-verified', 'executable'),
     'tiles.bonus-tiles': auditFact('The Buzzard policy can award doubles for your own tile and a complete bouquet.', 'bonus-tiles:buzzard-bonus-policy', 'source-verified', 'executable'),
     'tiles.substitute-special': auditFact('The available Buzzard source does not establish whether substitute tiles are used in ordinary play.', undefined, 'source-unknown', 'not-modelled'),
     'hand.structural-size': auditFact('A hand has 13 tiles while waiting and 14 when complete. A Kong uses four physical tiles but remains one set.', 'hand-size:13-waiting-14-complete-kong-is-one-set', 'source-verified', 'executable'),

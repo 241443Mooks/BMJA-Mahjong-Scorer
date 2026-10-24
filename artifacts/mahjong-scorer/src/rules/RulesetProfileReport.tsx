@@ -54,6 +54,9 @@ const runtimeStatusLabel: Record<ProfileDimensionValue['runtimeSupport'], string
 };
 
 function readerValue(row: ProfileDimensionValue): string {
+  if (row.dimensionId === 'tiles.physical-set' && row.value.status === 'present' && row.value.data === 'tiles.flowers-144') {
+    return 'The set has 144 tiles, including Flowers and Seasons.';
+  }
   if (row.playerAnswer) return row.playerAnswer;
   if (row.value.status === 'unknown') return 'Not yet established in this report';
   if (row.value.status === 'absent') return 'Established as absent under these exact rules';
