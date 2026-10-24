@@ -1,10 +1,11 @@
+import { PUBLIC_CONCEPT_ROUTES } from './rules-knowledge/reference-topics';
 import type { ReactNode } from 'react';
 import App from './App';
 import { SiteFooter } from './components/SiteFooter';
 import { EvidenceDocumentPage } from './evidence/EvidenceDocumentPage';
 import { publicEvidenceDocumentForSlug } from './evidence/public-evidence';
-import { BeginnerGuide } from './guide/BeginnerGuide';
-import { GameplayBasics } from './guide/GameplayBasics';
+import { ProfileLearningPage } from './guide/ProfileLearningPage';
+import { ReaderRulesProvider } from './guide/ReaderRulesContext';
 import { SpecialHandsCatalogue } from './guide/SpecialHandsCatalogue';
 import { ScoringExamplesPage } from './guide/ScoringExamplesPage';
 import { AboutPage } from './home/AboutPage';
@@ -20,14 +21,10 @@ import { WhatsNewPage } from './home/WhatsNewPage';
 import NotFound from './pages/not-found';
 import { ClubRulesPage } from './rules/ClubRulesPage';
 import { RulesHubPage, RulesProfilePage } from './rules/RulesReference';
-import { descriptorForSlug, publicRulesSlugFromGamePath } from './game/rules-presentation';
+import { descriptorForSlug, PUBLIC_RULES_DESCRIPTORS, publicRulesSlugFromGamePath } from './game/rules-presentation';
 import { RulesProfilePickerScalabilityFixture } from './game/RulesProfilePicker';
 import { PreviousGamesPage } from './game/PreviousGamesPage';
-import { EncyclopaediaHubPage, FlowersAndSeasonsReferencePage, PUBLIC_CONCEPT_ROUTES, PublicReferencePage, PublicScoringConceptPage } from './rules-knowledge/PublicReferencePage';
-
-function returnHome() {
-  if (typeof window !== 'undefined') window.location.assign('/');
-}
+import { EncyclopaediaHubPage, FlowersAndSeasonsReferencePage, PublicReferencePage, PublicScoringConceptPage } from './rules-knowledge/PublicReferencePage';
 
 function withFooter(content: ReactNode, options: { variant?: 'full' | 'compact'; showTileCredit?: boolean } = {}) {
   return <>{content}<SiteFooter variant={options.variant} showTileCredit={options.showTileCredit} /></>;
@@ -48,13 +45,13 @@ export function RouteContent({ path, prerender = false }: { path: string; preren
   }
   if (path === '/hand') return withFooter(<App initialView="hand" standaloneHand prerenderOnly={prerender} />, { showTileCredit: true });
   if (path === '/scoring-examples') return withFooter(<ScoringExamplesPage />, { showTileCredit: true });
-  if (path === '/guide' || path === '/beginner-guide') return withFooter(<BeginnerGuide onClose={returnHome} />, { showTileCredit: true });
-  if (path === '/special-hands' || path === '/special-hand-catalogue') return withFooter(<SpecialHandsCatalogue />, { showTileCredit: true });
-  if (path === '/encyclopaedia') return withFooter(<EncyclopaediaHubPage />);
-  if (PUBLIC_CONCEPT_ROUTES[path]) return withFooter(<PublicReferencePage conceptId={PUBLIC_CONCEPT_ROUTES[path]!} />);
-  if (path === '/encyclopaedia/flowers-and-seasons') return withFooter(<FlowersAndSeasonsReferencePage />);
-  if (path === '/encyclopaedia/scoring-systems') return withFooter(<PublicScoringConceptPage />);
-  if (path === '/gameplay-basics') return withFooter(<GameplayBasics />, { showTileCredit: true });
+  if (path === '/guide' || path === '/beginner-guide') return withFooter(<ReaderRulesProvider><ProfileLearningPage topic="scoring" /></ReaderRulesProvider>, { showTileCredit: true });
+  if (path === '/special-hands' || path === '/special-hand-catalogue') return withFooter(<ReaderRulesProvider specialHands><SpecialHandsCatalogue /></ReaderRulesProvider>, { showTileCredit: true });
+  if (path === '/encyclopaedia') return withFooter(<ReaderRulesProvider><EncyclopaediaHubPage /></ReaderRulesProvider>);
+  if (PUBLIC_CONCEPT_ROUTES[path]) return withFooter(<ReaderRulesProvider><PublicReferencePage conceptId={PUBLIC_CONCEPT_ROUTES[path]!} /></ReaderRulesProvider>);
+  if (path === '/encyclopaedia/flowers-and-seasons') return withFooter(<ReaderRulesProvider><FlowersAndSeasonsReferencePage /></ReaderRulesProvider>);
+  if (path === '/encyclopaedia/scoring-systems') return withFooter(<ReaderRulesProvider><PublicScoringConceptPage /></ReaderRulesProvider>);
+  if (path === '/gameplay-basics') return withFooter(<ReaderRulesProvider><ProfileLearningPage topic="gameplay" /></ReaderRulesProvider>, { showTileCredit: true });
   if (path === '/features') return withFooter(<FeaturesPage />);
   if (path === '/help') return withFooter(<HelpPage />);
   if (path === '/how-it-works') return withFooter(<HowItWorksPage />);
@@ -68,11 +65,12 @@ export function RouteContent({ path, prerender = false }: { path: string; preren
   if (path === '/mahjong-rules-compared') return withFooter(<MahjongRulesComparedPage />);
   if (path === '/mahjong-settlement') return withFooter(<MahjongSettlementPage />);
   if (path === '/rules') return withFooter(<RulesHubPage />);
-  if (path === '/rules/british') return withFooter(<RulesProfilePage slug="british" />);
-  if (path === '/rules/western') return withFooter(<RulesProfilePage slug="western" />);
-  if (path === '/rules/club') return withFooter(<ClubRulesPage />);
-  if (path === '/rules/buzzard') return withFooter(<RulesProfilePage slug="buzzard" />);
-  if (path === '/rules/mcr') return withFooter(<RulesProfilePage slug="mcr" />);
+  if (path.startsWith('/rules/')) {
+    const slug = path.slice('/rules/'.length);
+    const descriptor = PUBLIC_RULES_DESCRIPTORS.find((item) => item.slug === slug && item.availability.rulesReference);
+    if (!descriptor) return <NotFound />;
+    return withFooter(<ReaderRulesProvider pageProfile={descriptor}>{slug === 'club' ? <ClubRulesPage /> : <RulesProfilePage slug={slug} descriptor={descriptor} />}</ReaderRulesProvider>);
+  }
   if (path === '/about') return withFooter(<AboutPage />);
   if (path === '/privacy') return withFooter(<PrivacyPage />);
   return <NotFound />;

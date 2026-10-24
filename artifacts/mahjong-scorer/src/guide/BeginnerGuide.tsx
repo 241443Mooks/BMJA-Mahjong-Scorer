@@ -72,13 +72,14 @@ function Callout({ children }: { children: React.ReactNode }) {
   );
 }
 
-export function BeginnerGuide({ onClose }: { onClose: () => void }) {
+export function BeginnerGuide({ onClose, readerControl }: { onClose: () => void; readerControl?: React.ReactNode }) {
   return (
     <div className="mahjong-shell">
       <SiteHeader />
 
       <main className="mx-auto max-w-[1180px] px-5 py-8 lg:px-8 lg:py-12">
         <ReturnToGame />
+        {readerControl}
         <div className="grid gap-8 lg:grid-cols-[250px_minmax(0,1fr)] lg:gap-12">
           <aside className="lg:sticky lg:top-5 lg:self-start">
             <div className="rounded-xl border border-[#d8ceb8] bg-[#fbf8ed] p-4 shadow-[var(--shadow-sm)]">
@@ -106,7 +107,7 @@ export function BeginnerGuide({ onClose }: { onClose: () => void }) {
               </div>
               <h1 className="max-w-[720px] font-serif text-[clamp(38px,6vw,62px)] leading-[.98] text-[#284d45]">How British Mahjong scoring works.</h1>
               <p className="mt-5 max-w-[720px] text-[15px] leading-7 text-[#596b65]">
-                Use this guide for points, doubles, fishing and the questions the scorer asks. For turn order, claims, replacement tiles and how play moves around the table, start with <a href="/gameplay-basics" className="font-semibold text-[#284d45] underline decoration-[#cfa58f] underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">how to play a British hand</a>.
+                Use this guide for points, doubles, fishing and the questions the scorer asks. For turn order, claims, replacement tiles and how play moves around the table, start with <a href="/gameplay-basics?rules=british" className="font-semibold text-[#284d45] underline decoration-[#cfa58f] underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">how to play a British hand</a>.
               </p>
               <p className="mt-2 text-[11px] leading-5 text-[#8c8a7f]">For the full rule reference, see <a href="/rules/british" className="font-semibold text-[#284d45] underline decoration-[#cfa58f] underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">British Mahjong rules</a>.</p>
               <div className="mt-6 flex items-start gap-3 rounded-xl bg-[#284d45] p-5 text-[#f8f4e9]">
@@ -116,7 +117,7 @@ export function BeginnerGuide({ onClose }: { onClose: () => void }) {
                   <p className="mt-1 text-[12px] leading-5 text-[#c8d8d1]">The scorer can classify major and minor tiles, apply the arithmetic and detect many special patterns for you.</p>
                 </div>
               </div>
-              <a href="/hand" className="mt-5 inline-flex min-h-10 items-center rounded-md border border-[#c9b99d] bg-[#fdfbf5] px-4 text-[12px] font-semibold text-[#284d45] transition hover:bg-[#fffaf0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">Try this in the British Mahjong hand calculator</a>
+              <a href="/hand?rules=british" className="mt-5 inline-flex min-h-10 items-center rounded-md border border-[#c9b99d] bg-[#fdfbf5] px-4 text-[12px] font-semibold text-[#284d45] transition hover:bg-[#fffaf0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">Try this in the British Mahjong hand calculator</a>
               <p className="mt-5 text-[11px] leading-5 text-[#8c8a7f]">This is an independent learner guide. It is not an official BMJA publication.</p>
             </section>
 
@@ -184,7 +185,7 @@ export function BeginnerGuide({ onClose }: { onClose: () => void }) {
             </GuideSection>
 
             <GuideSection id="visibility" number="06" title="Exposed and concealed sets">
-              <p>Whether a set is <strong className="text-[#284d45]">concealed</strong> or <strong className="text-[#284d45]">exposed</strong> changes its point value. <a href="/gameplay-basics#visibility" className="font-semibold text-[#284d45] underline decoration-[#cfa58f] underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">See how a claim exposes a set</a> in the table guide.</p>
+              <p>Whether a set is <strong className="text-[#284d45]">concealed</strong> or <strong className="text-[#284d45]">exposed</strong> changes its point value. <a href="/gameplay-basics?rules=british#visibility" className="font-semibold text-[#284d45] underline decoration-[#cfa58f] underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">See how a claim exposes a set</a> in the table guide.</p>
               <p>Concealed Pungs and Kongs normally score more than exposed ones, which is why the scorer asks which applies. When the final winning tile creates a special exception, the app asks which tile completed Mah Jong rather than expecting you to know the rule.</p>
             </GuideSection>
 
@@ -251,7 +252,7 @@ export function BeginnerGuide({ onClose }: { onClose: () => void }) {
               <p>British Mahjong includes named special hands that do not use ordinary scoring in the usual way.</p>
               <p>Some are unusual tile patterns — such as Thirteen Unique Wonders, Knitting, Triple Knitting, Gates of Heaven and Wriggling Snake. Others depend on the circumstances of the win.</p>
               <p>The scorer detects these where it can. If it needs information that cannot be seen from the tiles, it asks a short factual question about what happened rather than asking you to identify the special by name.</p>
-              <a href="/special-hands" className="block rounded-xl border border-[#b8cdbf] bg-[#edf3ed] p-5 transition hover:bg-[#e3eee6] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">
+              <a href="/special-hands?rules=british" className="block rounded-xl border border-[#b8cdbf] bg-[#edf3ed] p-5 transition hover:bg-[#e3eee6] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">
                 <div className="flex items-center justify-between gap-3">
                   <div>
                     <div className="flex items-center gap-2 font-serif text-[19px] text-[#284d45]"><Sparkles size={16} className="text-[#477562]" /> Browse the visual special-hand catalogue</div>
@@ -288,7 +289,7 @@ export function BeginnerGuide({ onClose }: { onClose: () => void }) {
               <div className="rounded-xl bg-[#284d45] p-6 text-[#f8f4e9] sm:p-7">
                 <div className="font-mono text-[9px] uppercase tracking-[.2em] text-[#d7a287]">The main idea</div>
                 <h2 className="mt-2 font-serif text-[28px]">You do not need to learn the scoring engine to use it.</h2>
-                <p className="mt-3 max-w-[650px] text-[12px] leading-6 text-[#c8d8d1]">Use the <a href="/hand" className="font-semibold text-[#f8f4e9] underline decoration-[#d7a287] underline-offset-4">hand scorer</a> as the working tool and this guide as the explanation layer. When you want to practise the connection, the <a href="/scoring-examples" className="font-semibold text-[#f8f4e9] underline decoration-[#d7a287] underline-offset-4">worked scoring examples</a> use the real scorer.</p>
+                <p className="mt-3 max-w-[650px] text-[12px] leading-6 text-[#c8d8d1]">Use the <a href="/hand?rules=british" className="font-semibold text-[#f8f4e9] underline decoration-[#d7a287] underline-offset-4">hand scorer</a> as the working tool and this guide as the explanation layer. When you want to practise the connection, the <a href="/scoring-examples" className="font-semibold text-[#f8f4e9] underline decoration-[#d7a287] underline-offset-4">worked scoring examples</a> use the real scorer.</p>
               </div>
             </section>
           </article>

@@ -9,8 +9,8 @@ export const navigationGroups: readonly NavigationGroup[] = [
   {
     label: 'Learn',
     destinations: [
-      ['British gameplay basics', '/gameplay-basics'],
-      ['British scoring guide', '/guide'],
+      ['Gameplay basics', '/gameplay-basics'],
+      ['Scoring guide', '/guide'],
       ['Special Hands', '/special-hands'],
       ['Scoring examples', '/scoring-examples'],
     ],

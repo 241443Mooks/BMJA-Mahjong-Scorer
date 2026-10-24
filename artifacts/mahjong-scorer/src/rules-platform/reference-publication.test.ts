@@ -1,5 +1,7 @@
-import { describe, expect, it, beforeAll } from 'vitest';
-import React from 'react';
+// @vitest-environment happy-dom
+import { describe, expect, it, beforeAll, afterEach, vi } from 'vitest';
+import React, { act } from 'react';
+import { createRoot, type Root } from 'react-dom/client';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { RouteContent } from '../RouteContent';
 import { initialiseCurrentRulesRuntimes } from './current-runtime-registry';
@@ -7,11 +9,22 @@ import { referencePublicationPolicy, projectPublicConcept } from '../rules-knowl
 import { referenceConceptsForDimension, unresolvedReferenceRelationships } from '../rules-knowledge/reference-crosswalk';
 import { PublicTreatmentCard } from '../rules-knowledge/PublicReferencePage';
 
-beforeAll(() => initialiseCurrentRulesRuntimes());
+beforeAll(() => { vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true); return initialiseCurrentRulesRuntimes(); });
+let root: Root | undefined;
+let container: HTMLDivElement | undefined;
+afterEach(async () => { if (root) await act(async () => root!.unmount()); container?.remove(); root = undefined; window.localStorage.clear(); });
+async function page(path: string) {
+  window.history.replaceState(null, '', path);
+  if (root) await act(async () => root!.unmount());
+  container?.remove();
+  container = document.createElement('div'); document.body.append(container); root = createRoot(container);
+  await act(async () => root!.render(React.createElement(RouteContent, { path: path.split('?')[0] })));
+  return container.innerHTML;
+}
 
 describe('Issue 251B public reference projection', () => {
-  it('provides an Encyclopaedia hub and keeps the established Special Hands guide discoverable', () => {
-    const hub = renderToStaticMarkup(React.createElement(RouteContent, { path: '/encyclopaedia' }));
+  it('provides an Encyclopaedia hub and keeps the established Special Hands guide discoverable', async () => {
+    const hub = await page('/encyclopaedia');
     expect(hub).toContain('Mahjong concepts across rules');
     expect(hub).toContain('/encyclopaedia/thirteen-orphans');
     expect(hub).toContain('/encyclopaedia/flowers-and-seasons');
@@ -19,12 +32,12 @@ describe('Issue 251B public reference projection', () => {
     expect(hub).toContain('A plain-language guide to how the listed rulesets build an ordinary hand’s score.');
     expect(hub).toContain('The relationship between Gates of Heaven and Nine Gates is unresolved');
     expect(hub).not.toContain('scoring.grammar');
-    const guide = renderToStaticMarkup(React.createElement(RouteContent, { path: '/special-hands' }));
-    expect(guide).toContain('href="/encyclopaedia"');
+    const guide = await page('/special-hands');
+    expect(guide).toContain('href="/encyclopaedia?rules=all"');
   });
 
-  it('publishes the source-to-scorer Flowers and Seasons explanation from governed facts', () => {
-    const html = renderToStaticMarkup(React.createElement(RouteContent, { path: '/encyclopaedia/flowers-and-seasons' }));
+  it('publishes the source-to-scorer Flowers and Seasons explanation from governed facts', async () => {
+    const html = await page('/encyclopaedia/flowers-and-seasons?rules=british');
     expect(html).toContain('Encyclopaedia</a> / <a class="underline" href="/rules/british">British Mahjong');
     expect((html.match(/<img\b/g) ?? [])).toHaveLength(8);
     for (const tile of [
@@ -51,12 +64,12 @@ describe('Issue 251B public reference projection', () => {
     expect(html).not.toContain('The source-to-scorer explanation is unavailable');
   });
 
-  it('publishes the Thirteen Orphans vertical while withholding the governed MCR treatment', () => {
-    const html = renderToStaticMarkup(React.createElement(RouteContent, { path: '/encyclopaedia/thirteen-orphans' }));
+  it('publishes the Thirteen Orphans vertical while withholding the governed MCR treatment', async () => {
+    const html = await page('/encyclopaedia/thirteen-orphans');
     expect(html).toContain('Thirteen Unique Wonders');
-    expect(html).toContain('What it looks like');
+    expect(html).toContain('Tile examples');
     expect(html).toContain('How to make the hand');
-    expect(html).toContain('How each ruleset scores it');
+    expect(html).toContain('Published treatments across rules');
     expect(html).toContain('British / BMJA-style');
     expect(html).toContain('Western — T&amp;M');
     expect(html).toContain('Club - Bramhall 2026');
@@ -68,11 +81,11 @@ describe('Issue 251B public reference projection', () => {
     expect(html).toContain('Fixed');
     expect(html).toContain('Thirteen unique wonders');
     expect(html).toContain('/hand?rules=british');
-    expect(html).not.toContain('MCR');
+    expect(container!.querySelector('#treatments')!.innerHTML).not.toContain('MCR');
   });
 
-  it('publishes Imperial Jade and Wriggling Snake without leaking withheld MCR relationships', () => {
-    const jade = renderToStaticMarkup(React.createElement(RouteContent, { path: '/encyclopaedia/imperial-jade' }));
+  it('publishes Imperial Jade and Wriggling Snake without leaking withheld MCR relationships', async () => {
+    const jade = await page('/encyclopaedia/imperial-jade');
     expect(jade).toContain('Imperial Jade');
     expect(jade).toContain('British / BMJA-style');
     expect(jade).not.toContain('All Green');
@@ -85,20 +98,20 @@ describe('Issue 251B public reference projection', () => {
     expect(jade).not.toContain('broader than imperial jade no chow');
     expect(jade).not.toContain('profile treatments');
 
-    const snake = renderToStaticMarkup(React.createElement(RouteContent, { path: '/encyclopaedia/wriggling-snake' }));
+    const snake = await page('/encyclopaedia/wriggling-snake');
     expect(snake).toContain('Wriggling Snake');
     expect(snake).toContain('Wriggly Snake');
     expect(snake).toContain('with the suited 1 duplicated');
     expect(snake).toContain('with any one tile in that thirteen-tile base duplicated');
-    expect(snake).toContain('How each ruleset scores it');
+    expect(snake).toContain('Published treatments across rules');
     expect(snake).toContain('British / BMJA-style');
-    expect(snake).not.toContain('MCR');
+    expect(container!.querySelector('#treatments')!.innerHTML).not.toContain('MCR');
   });
 
-  it('explains ordinary scoring in plain language and keeps profile evidence optional', () => {
-    const html = renderToStaticMarkup(React.createElement(RouteContent, { path: '/encyclopaedia/scoring-systems' }));
+  it('explains ordinary scoring in plain language and keeps profile evidence optional', async () => {
+    const html = await page('/encyclopaedia/scoring-systems');
     expect(html).toContain('Scoring system');
-    expect(html).toContain('A ruleset first awards points for the hand, then applies any doubles that hand qualifies for.');
+    expect(html).toContain('MCR uses fan patterns, with an 8-point qualifying minimum before Flowers.');
     expect(html).toContain('How the listed rulesets score ordinary hands');
     expect(html).toContain('Ordinary hands score points, then apply doubles.');
     expect(html).toContain('Sources and checking');

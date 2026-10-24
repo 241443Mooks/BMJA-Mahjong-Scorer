@@ -7,7 +7,8 @@ import { getCurrentRulesRuntime } from '../rules-platform/current-runtime-regist
 import type { HandMode } from './types';
 import type { RulesProfileRef } from './types';
 
-export type PublicRulesSlug = 'british' | 'western' | 'club' | 'buzzard' | 'mcr';
+// Public routing derives supported slugs from the registry, not a closed page union.
+export type PublicRulesSlug = string;
 
 export type RulesDescriptor = {
   profile: RulesProfileRef;

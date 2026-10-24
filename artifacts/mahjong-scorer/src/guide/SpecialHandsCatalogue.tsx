@@ -1,9 +1,10 @@
+import { hasPublishedSpecialHands } from '../rules-knowledge/reference-topics';
 import { useEffect, useMemo, useState } from 'react';
 import { BookOpen, Search, X, Check } from 'lucide-react';
 import { SiteHeader } from '../components/SiteHeader';
 import { ReturnToGame } from '../components/ReturnToGame';
-import { descriptorForRulesProfile, publicRulesEditionLabel, PUBLIC_RULES_DESCRIPTORS } from '../game/rules-presentation';
-import { readPreferredRulesProfile } from '../game/preferred-rules-profile';
+import { descriptorForRulesProfile, publicRulesEditionLabel, PUBLIC_RULES_DESCRIPTORS, publicRulesDescriptorsNewestFirst } from '../game/rules-presentation';
+import { ReaderRulesControl, browseReaderRules, readerHref, useReaderRules } from './ReaderRulesContext';
 import { atlasExampleProvesTreatment } from './atlas-scorer-handoff';
 import { SPECIAL_HAND_ANCHORS } from './special-hand-references';
 import { AtlasExampleVisual } from './AtlasExampleVisual';
@@ -19,7 +20,6 @@ import {
   atlasScoreLabel,
   atlasExamplesForTreatment,
   atlasTreatmentsForEntry,
-  clearAtlasSearchAndProfileFilter,
   filterAtlasEntriesByFacets,
   atlasEntriesForProfile,
   searchAtlasLearnerEntries,
@@ -212,8 +212,9 @@ function EntryCard({
   };
   const prominentProfileKey = prominentTreatment ? `${prominentTreatment.identity.profile.id}@${prominentTreatment.identity.profile.version}` : null;
   const sameProfileTreatments = prominentProfileKey ? treatments.filter(({ identity }) => `${identity.profile.id}@${identity.profile.version}` === prominentProfileKey) : [];
-  const leadExample = prominentTreatment ? selectAtlasLeadExampleForTreatment(entry, prominentTreatment.referenceId) : selectAtlasLeadExample(entry, myRules ? preferredProfile : null);
+  const candidateExample = prominentTreatment ? selectAtlasLeadExampleForTreatment(entry, prominentTreatment.referenceId) : selectAtlasLeadExample(entry, myRules ? preferredProfile : null);
   const remainingTreatments = prominentTreatment ? treatments.filter(({ referenceId, identity }) => referenceId !== prominentTreatment.referenceId && (!explicitProfile || `${identity.profile.id}@${identity.profile.version}` === explicitProfile)) : treatments;
+  const leadExample = candidateExample && (candidateExample.example.kind !== 'tile-hand' || (prominentTreatment && atlasExampleProvesTreatment(candidateExample.example.id, prominentTreatment.referenceId))) ? candidateExample : undefined;
   const linkedEntries = (entry.relatedEntryIds ?? []).flatMap((id) => {
     const related = ATLAS_LEARNER_ENTRIES.find((item) => item.id === id);
     return related ? [related] : [];
@@ -229,10 +230,10 @@ function EntryCard({
           <span className="rounded-full bg-[#efe8da] px-2 py-1 text-xs font-semibold text-[#596b65]">{entry.state === 'reviewed-concept' ? 'Special hand group' : entry.state === 'reviewed-family-topic' ? 'Related hands' : entry.state === 'standalone-unresolved' ? 'Reference note' : 'Special hand'}</span>
         </div>
         <p className="mt-2 text-sm font-semibold leading-6 text-[#284d45]">{publicClubCopy(entry.summary)}</p>
-        <p className="mt-1 text-sm leading-6 text-[#596b65]">{publicClubCopy(entry.whatItIs)}</p>
+        <p className="mt-1 text-sm leading-6 text-[#596b65]">{publicClubCopy(prominentTreatment ? treatmentDefinition(entry, prominentTreatment) ?? prominentTreatment.description : entry.whatItIs)}</p>
     </div>
 
-    <section className="mt-3" aria-label={`Rules and score for ${publicClubCopy(entry.displayName)}`}>
+    <section className="mt-3" aria-label={`Rules and score for ${publicClubCopy(entry.displayName)}`}><h3 className="mb-2 font-semibold text-[#284d45]">How it works for these rules</h3>
       <div className="flex max-w-full flex-wrap items-center gap-2" role="group" aria-label={`Choose rules for ${publicClubCopy(entry.displayName)}`}>
         {profileChoices.map((record) => { const selected = prominentProfileKey === `${record.identity.profile.id}@${record.identity.profile.version}`; const key = `${record.identity.profile.id}@${record.identity.profile.version}`; const label = publicClubCopy(publicRulesEditionLabel(descriptorForRulesProfile(record.identity.profile))); return <button key={key} type="button" aria-pressed={selected} onClick={() => setLocalTreatment(record.referenceId)} className={`inline-flex min-h-11 items-center gap-1.5 rounded-md border px-3 py-2 font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249] ${selected ? 'border-[#284d45] bg-[#284d45] text-white' : 'min-h-10 rounded-full border-[#b8cdbf] bg-white px-2.5 py-1 text-xs text-[#284d45]'}`}><span>{label}</span>{selected && <Check size={14} aria-hidden="true" />}</button>; })}
       </div>
@@ -258,7 +259,7 @@ function EntryCard({
         <section><h3 className="font-serif text-lg text-[#284d45]">What it means</h3><p className="mt-1 text-sm leading-6 text-[#596b65]">{publicClubCopy(entry.whatItMeans)}</p></section>
         <section><h3 className="font-serif text-lg text-[#284d45]">Why it is special</h3><p className="mt-1 text-sm leading-6 text-[#596b65]">{publicClubCopy(entry.whySpecial)}</p></section>
       </div>
-      {entry.howItWorks?.length ? <section className="mt-4"><h3 className="font-serif text-lg text-[#284d45]">How it works</h3><ol className="mt-2 list-inside list-decimal space-y-1 text-sm leading-6 text-[#596b65]">{entry.howItWorks.map((step) => <li key={step}>{publicClubCopy(step)}</li>)}</ol></section> : null}
+      {(!preferredProfile && !explicitProfile || entry.treatmentReferenceIds.length === 1) && entry.howItWorks?.length ? <section className="mt-4"><h3 className="font-serif text-lg text-[#284d45]">How it works</h3><ol className="mt-2 list-inside list-decimal space-y-1 text-sm leading-6 text-[#596b65]">{entry.howItWorks.map((step) => <li key={step}>{publicClubCopy(step)}</li>)}</ol></section> : null}
       {entry.watchOutFor?.length ? <section className="mt-4"><h3 className="font-serif text-lg text-[#284d45]">Watch out for</h3><ul className="mt-2 list-inside list-disc space-y-1 text-sm leading-6 text-[#596b65]">{entry.watchOutFor.map((note) => <li key={note}>{publicClubCopy(note)}</li>)}</ul></section> : null}
       {entry.referenceNote && <section className="mt-4 rounded-lg border-l-4 border-[#ae6249] bg-[#f5f1e6] p-3"><h3 className="font-serif text-lg text-[#284d45]">Reference note</h3><p className="mt-1 text-sm leading-6 text-[#596b65]">{publicClubCopy(entry.referenceNote)}</p></section>}
       {entry.localNames?.length ? <p className="mt-4 text-sm leading-6 text-[#596b65]"><strong>Also called:</strong> {publicClubCopy(entry.localNames.join(' · '))}</p> : null}
@@ -274,10 +275,11 @@ function EntryCard({
 }
 
 export function SpecialHandsCatalogue() {
-  const [preferred] = useState(() => readPreferredRulesProfile());
+  const reader = useReaderRules(true);
+  const preferred = reader.selected?.profile ?? null;
   const preferredClassical = preferred && CLASSICAL_ATLAS_PROFILES.some(({ id, version }) => id === preferred.id && version === preferred.version) ? preferred : null;
-  const [myRules, setMyRules] = useState(Boolean(preferredClassical));
-  const [profileFilter, setProfileFilter] = useState('all');
+  const myRules = !!preferred && !reader.explicit;
+  const profileFilter = reader.selected?.slug ?? 'all';
   const [query, setQuery] = useState('');
   const [selectedFacets, setSelectedFacets] = useState<string[]>([]);
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -286,38 +288,32 @@ export function SpecialHandsCatalogue() {
   const profileForFilter = profileFilter === 'all' ? null : PUBLIC_RULES_DESCRIPTORS.find(({ slug }) => slug === profileFilter)?.profile ?? null;
 
   const entriesForScope = (scope: 'all' | 'my-rules' | { id: string; version: string }, facets: string[] = selectedFacets) => {
-    const profile = scope === 'all' ? null : scope === 'my-rules' ? preferredClassical : scope;
+    const profile = scope === 'all' ? null : scope === 'my-rules' ? preferred : scope;
     let entries = searchAtlasLearnerEntries(ATLAS_LEARNER_ENTRIES, query);
     if (profile) entries = atlasEntriesForProfile(entries, profile);
     return filterAtlasEntriesByFacets(entries, facets);
   };
 
   const results = useMemo(() => {
-    return entriesForScope(myRules ? (preferredClassical ? 'my-rules' : 'all') : profileForFilter ?? 'all');
-  }, [myRules, profileForFilter, query, selectedFacets]);
+    return reader.ready ? entriesForScope(myRules ? 'my-rules' : profileForFilter ?? 'all') : [];
+  }, [reader.ready, preferred?.id, preferred?.version, myRules, profileForFilter, query, selectedFacets]);
 
   useEffect(() => {
     if (expandedEntryId && !results.some(({ id }) => id === expandedEntryId)) setExpandedEntryId(null);
   }, [expandedEntryId, results]);
 
   const clearSearchAndFilter = () => {
-    const cleared = clearAtlasSearchAndProfileFilter({ mode: myRules ? 'my-rules' : 'all-rules', query, profileFilter });
-    setQuery(cleared.query);
-    setProfileFilter(cleared.profileFilter);
+    setQuery('');
     setSelectedFacets([]);
   };
 
   useEffect(() => {
-    const anchor = window.location.hash.slice(1);
-    if (!anchor) return;
-    setMyRules(false);
-    setProfileFilter('all');
+    const anchor = reader.anchor;
+    if (!reader.ready) return;
+    if (!anchor) { setTargetTreatment(undefined); return; }
     setQuery('');
     const target = resolveSpecialHandsTarget(anchor);
-    if (target) {
-      setProfileFilter(target.profileSlug);
-      setTargetTreatment({ referenceId: target.record.referenceId, entryId: target.entryId });
-    }
+    setTargetTreatment(target ? { referenceId: target.record.referenceId, entryId: target.entryId } : undefined);
     const entry = ATLAS_LEARNER_ENTRIES.find(({ id, treatmentReferenceIds }) => `atlas-entry-${id}` === anchor || treatmentReferenceIds.some((referenceId) => {
       const record = SPECIAL_HANDS_ATLAS.find((candidate) => candidate.referenceId === referenceId);
       return !!record?.href && treatmentAnchor(record) === anchor;
@@ -325,10 +321,10 @@ export function SpecialHandsCatalogue() {
     const targetEntry = (target && ATLAS_LEARNER_ENTRIES.find(({ id }) => id === target.entryId)) ?? entry;
     if (targetEntry) setExpandedEntryId(targetEntry.id);
     requestAnimationFrame(() => requestAnimationFrame(() => document.getElementById(anchor)?.scrollIntoView({ block: 'start' })));
-  }, []);
+  }, [reader.ready, reader.anchor]);
 
-  const mcrPreference = preferred?.id === 'mcr-wmo-2006' && preferred.version === '0.1';
-  const showBmjaPurity = myRules ? preferredClassical?.id === 'bmja' : !profileForFilter || profileForFilter.id === 'bmja';
+  const catalogueAvailable = !preferred || hasPublishedSpecialHands(preferred);
+  const showBmjaPurity = reader.ready && (myRules ? preferred?.id === 'bmja' : !profileForFilter || profileForFilter.id === 'bmja');
 
   return <div className="mahjong-shell">
     <SiteHeader />
@@ -338,33 +334,37 @@ export function SpecialHandsCatalogue() {
         <div className="mb-2 flex items-center gap-3"><div className="fine-rule w-10" /><span className="font-mono text-xs uppercase tracking-[.18em] text-[#ae6249]">Special Hands Guide</span></div>
         <h1 className="max-w-[800px] font-serif text-[clamp(34px,6vw,58px)] leading-[.98] text-[#284d45]">Find a special hand.</h1>
         <p className="mt-2 max-w-[780px] text-sm leading-6 text-[#596b65]">Find, understand and compare special hands across different Mahjong rules.</p>
-        <p className="mt-3 text-sm leading-6 text-[#596b65]">For source-linked explanations across rules, browse the <a className="font-semibold text-[#284d45] underline underline-offset-4" href="/encyclopaedia">Mahjong Encyclopaedia</a>.</p>
-        {mcrPreference && <p role="status" className="mt-4 rounded-lg bg-[#edf3ed] p-3 text-sm leading-6 text-[#284d45]">Your remembered rules are MCR. This guide currently covers the supported Classical rules; choose All rules to browse them.</p>}
-        {preferred && !preferredClassical && !mcrPreference && <p role="status" className="mt-4 rounded-lg bg-[#edf3ed] p-3 text-sm leading-6 text-[#284d45]">Your remembered rules do not have a special-hands list yet. Choose All rules to browse the supported Classical rules.</p>}
+        <p className="mt-3 text-sm leading-6 text-[#596b65]">For source-linked explanations across rules, browse the <a className="font-semibold text-[#284d45] underline underline-offset-4" href={readerHref('/encyclopaedia', reader.selected)}>Mahjong Encyclopaedia</a>.</p>
+        <ReaderRulesControl />
+        {reader.ready && catalogueAvailable && <>
         <label className="sr-only" htmlFor="atlas-search">Search hand names and patterns</label>
         <div className="mt-2 flex flex-col gap-2">
           <div className="flex min-h-12 w-full min-w-0 items-center gap-2 rounded-lg border border-[#b8cdbf] bg-white px-3 focus-within:ring-2 focus-within:ring-[#ae6249]"><Search size={18} aria-hidden="true" className="shrink-0 text-[#596b65]" /><input id="atlas-search" type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Try Unique Wonder, Imperial Jade or Seven Twins" className="min-h-11 min-w-0 flex-1 border-0 bg-transparent text-base text-[#284d45] outline-none" /></div>
           <div className="flex min-w-0 items-center gap-2">
-          <select aria-label="Rules" value={myRules && preferredClassical ? 'my-rules' : profileFilter} onChange={(event) => { if (event.target.value === 'my-rules') { setMyRules(true); setProfileFilter('all'); } else { setMyRules(false); setProfileFilter(event.target.value); } }} className="min-h-12 min-w-0 flex-1 rounded-lg border border-[#b8cdbf] bg-white px-3 text-sm font-semibold text-[#284d45] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">
+          <select aria-label="Rules" value={myRules ? 'my-rules' : profileFilter} onChange={(event) => browseReaderRules(event.target.value === 'my-rules' ? reader.selected!.slug : event.target.value)} className="min-h-12 min-w-0 flex-1 rounded-lg border border-[#b8cdbf] bg-white px-3 text-sm font-semibold text-[#284d45] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">
             <option value="all">Rules: All rules ({entriesForScope('all').length})</option>
-            {preferredClassical && <option value="my-rules">My rules — {publicRulesEditionLabel(descriptorForRulesProfile(preferredClassical))} ({entriesForScope('my-rules').length})</option>}
-            {CLASSICAL_ATLAS_DISPLAY_PROFILES.map((profile) => { const descriptor = descriptorForRulesProfile(profile); const slug = descriptor.slug; return <option key={slug} value={slug}>{publicRulesEditionLabel(descriptor)} ({entriesForScope(profile).length})</option>; })}
+            {preferred && <option value="my-rules">Selected rules — {publicRulesEditionLabel(descriptorForRulesProfile(preferred))} ({entriesForScope('my-rules').length})</option>}
+            {publicRulesDescriptorsNewestFirst().map(({ profile }) => { const descriptor = descriptorForRulesProfile(profile); const slug = descriptor.slug; return <option key={slug} value={slug}>{publicRulesEditionLabel(descriptor)} ({entriesForScope(profile).length})</option>; })}
           </select>
           <button type="button" aria-expanded={filtersOpen} onClick={() => setFiltersOpen((open) => !open)} className="inline-flex min-h-12 items-center gap-2 rounded-lg border border-[#b8cdbf] bg-white px-3 text-sm font-semibold text-[#284d45] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">Filters{selectedFacets.length > 0 ? ` (${selectedFacets.length})` : ''}</button>
-          {(query || profileFilter !== 'all' || selectedFacets.length > 0 || myRules) && <button type="button" onClick={clearSearchAndFilter} aria-label="Clear search and filters" className="inline-flex min-h-10 items-center gap-1 rounded px-2 text-xs font-semibold text-[#596b65] underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]"><X size={14} aria-hidden="true" />Clear</button>}
+          {(query || selectedFacets.length > 0) && <button type="button" onClick={clearSearchAndFilter} aria-label="Clear search and filters" className="inline-flex min-h-10 items-center gap-1 rounded px-2 text-xs font-semibold text-[#596b65] underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]"><X size={14} aria-hidden="true" />Clear</button>}
           </div>
         </div>
         {filtersOpen && <section className="mt-4" aria-labelledby="atlas-facets-heading">
           <h2 id="atlas-facets-heading" className="text-sm font-semibold text-[#284d45]">More ways to find a hand</h2>
-          <div className="mt-2 flex flex-wrap gap-2">{displayFacets.filter(([facet]) => ATLAS_LEARNER_ENTRIES.some((entry) => entry.facets?.includes(facet))).map(([facet, description]) => { const selected = selectedFacets.includes(facet); const next = selected ? selectedFacets : [...selectedFacets, facet]; const count = selected ? results.length : entriesForScope(myRules && preferredClassical ? 'my-rules' : profileForFilter ?? 'all', next).length; return { facet, description, count, selected }; }).filter(({ count, selected }) => shouldShowAtlasFacet(count, selected)).map(({ facet, description, count, selected }) => <button key={facet} type="button" aria-label={`${facetName(facet)}, ${count} matching hands`} aria-pressed={selected} title={description} onClick={() => setSelectedFacets((current) => current.includes(facet) ? current.filter((item) => item !== facet) : [...current, facet])} className={`min-h-10 rounded-full border px-3 text-xs font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249] ${selected ? 'border-[#284d45] bg-[#284d45] text-white' : 'border-[#b8cdbf] bg-white text-[#284d45]'}`}>{facetName(facet)} ({count})</button>)}</div>
+          <div className="mt-2 flex flex-wrap gap-2">{displayFacets.filter(([facet]) => ATLAS_LEARNER_ENTRIES.some((entry) => entry.facets?.includes(facet))).map(([facet, description]) => { const selected = selectedFacets.includes(facet); const next = selected ? selectedFacets : [...selectedFacets, facet]; const count = selected ? results.length : entriesForScope(myRules ? 'my-rules' : profileForFilter ?? 'all', next).length; return { facet, description, count, selected }; }).filter(({ count, selected }) => shouldShowAtlasFacet(count, selected)).map(({ facet, description, count, selected }) => <button key={facet} type="button" aria-label={`${facetName(facet)}, ${count} matching hands`} aria-pressed={selected} title={description} onClick={() => setSelectedFacets((current) => current.includes(facet) ? current.filter((item) => item !== facet) : [...current, facet])} className={`min-h-10 rounded-full border px-3 text-xs font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249] ${selected ? 'border-[#284d45] bg-[#284d45] text-white' : 'border-[#b8cdbf] bg-white text-[#284d45]'}`}>{facetName(facet)} ({count})</button>)}</div>
         </section>
         }
         <p className="mt-4 text-sm text-[#596b65]" aria-live="polite">{results.length} {results.length === 1 ? 'hand' : 'hands'}</p>
+        </>}
       </section>
 
-      <section className="py-5 sm:py-6" aria-label="Special hands">
-        {results.length ? <div className="space-y-3">{results.map((entry) => <EntryCard key={entry.id} entry={entry} preferredProfile={preferredClassical} myRules={myRules} explicitProfile={!myRules && profileForFilter ? `${profileForFilter.id}@${profileForFilter.version}` : null} expanded={expandedEntryId === entry.id} onExpandedChange={(open) => setExpandedEntryId(open ? entry.id : (expandedEntryId === entry.id ? null : expandedEntryId))} targetTreatmentReferenceId={targetTreatment?.entryId === entry.id ? targetTreatment.referenceId : undefined} />)}</div> : <div className="rounded-xl border border-[#d8ceb8] bg-[#fbf8ed] p-6 text-center"><h2 className="font-serif text-2xl text-[#284d45]">No matching hands</h2><p className="mt-2 text-sm text-[#596b65]">Try another name or filter.</p><button type="button" onClick={clearSearchAndFilter} className="mt-4 min-h-11 rounded-lg border border-[#b8cdbf] px-4 text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">Show all hands</button></div>}
-      </section>
+      {reader.ready && !catalogueAvailable ? <section className="py-6" aria-label="Continue learning">
+        <p className="text-sm leading-6 text-[#596b65]">For {reader.selected!.compactLabel}, start with the available scoring guide. Explore all rules to compare published special-hand treatments from other traditions.</p>
+        <div className="mt-4 flex flex-wrap gap-4"><a className="inline-block py-2 font-semibold underline" href={readerHref('/guide', reader.selected)}>Continue with the scoring guide</a><a className="inline-block py-2 underline" href="?rules=all">Explore all rules</a></div>
+      </section> : reader.ready ? <section className="py-5 sm:py-6" aria-label="Special hands">
+        {results.length ? <div className="space-y-3">{results.map((entry) => <EntryCard key={entry.id} entry={entry} preferredProfile={preferredClassical} myRules={myRules} explicitProfile={!myRules && profileForFilter ? `${profileForFilter.id}@${profileForFilter.version}` : null} expanded={expandedEntryId === entry.id} onExpandedChange={(open) => setExpandedEntryId(open ? entry.id : (expandedEntryId === entry.id ? null : expandedEntryId))} targetTreatmentReferenceId={targetTreatment?.entryId === entry.id ? targetTreatment.referenceId : undefined} />)}</div> : <div className="rounded-xl border border-[#d8ceb8] bg-[#fbf8ed] p-6 text-center"><h2 className="font-serif text-2xl text-[#284d45]">No matching hands</h2><p className="mt-2 text-sm text-[#596b65]">Try another name or filter.</p><button type="button" onClick={clearSearchAndFilter} className="mt-4 min-h-11 rounded-lg border border-[#b8cdbf] px-4 text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">Clear search and filters</button><a href="?rules=all" className="ml-3 inline-block py-2 font-semibold underline">Explore all rules</a></div>}
+      </section> : null}
 
       {showBmjaPurity && <section className="mb-8 rounded-2xl border border-[#d8ceb8] bg-[#fbf8ed] p-4 sm:p-5" id="purity">
         <div className="font-mono text-xs uppercase tracking-[.16em] text-[#ae6249]">British scoring note</div>
@@ -373,10 +373,10 @@ export function SpecialHandsCatalogue() {
         <p className="mt-2 text-sm leading-6 text-[#596b65]">Other rules may score Purity differently. Choose a rules version above to see how it works.</p>
       </section>}
 
-      <footer className="border-t border-[#d8ceb8] py-5 text-sm leading-6 text-[#596b65]">
+      {catalogueAvailable && <footer className="border-t border-[#d8ceb8] py-5 text-sm leading-6 text-[#596b65]">
         <p>Each rules version keeps its own scoring and hand rules.</p>
         <p className="mt-1">For worked British scoring examples, <a href="/scoring-examples" className="font-semibold underline decoration-[#ae6249] underline-offset-4">visit the scoring guide</a>; to score a hand, <a href="/hand" className="font-semibold underline decoration-[#ae6249] underline-offset-4">open the hand scorer</a>.</p>
-      </footer>
+      </footer>}
     </main>
   </div>;
 }

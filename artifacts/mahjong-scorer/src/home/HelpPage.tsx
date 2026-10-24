@@ -370,7 +370,7 @@ export function HelpPage() {
             <h2 className="font-serif text-[28px] text-[#284d45]">Need rules or learning rather than product help?</h2>
             <div className="mt-5 grid gap-3 md:grid-cols-2 lg:grid-cols-4">
               {[
-                ['/guide', BookOpen, 'British scoring guide', 'Learn British points, doubles and scoring progressively.'],
+                ['/guide?rules=british', BookOpen, 'British scoring guide', 'Learn British points, doubles and scoring progressively.'],
                 ['/special-hands', Sparkles, 'British special hands', 'Browse the current British visual special-hand catalogue.'],
                 ['/rules', CircleHelp, 'Supported rules', 'See all five current profiles and the support boundary for each one.'],
                 ['/how-it-works', CircleHelp, 'How the Table Companion works', 'See the current product flow from rules and evidence through score, settlement and record.'],

@@ -1,3 +1,4 @@
+import { ReaderRulesControl } from '../guide/ReaderRulesContext';
 import { ArrowRight } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { SiteHeader } from '../components/SiteHeader';
@@ -23,6 +24,7 @@ export function ClubRulesPage() {
           <p className="font-mono text-[12px] font-semibold uppercase tracking-[.16em] text-[#ae6249]">Rules reference</p>
           <h1 className="mt-3 max-w-[900px] font-serif text-[clamp(38px,6vw,62px)] leading-[.98] text-[#284d45]">{descriptor.title}</h1>
           <p className="mt-5 max-w-[790px] text-[17px] leading-8 text-[#405650]">A configured local club profile with its own special hands, Goulash treatment and table incidents. It describes this table configuration, not a universal set of club Mahjong rules.</p>
+          <ReaderRulesControl />
         </section>
         <RulesetProfileReport profile={descriptor.profile} />
         <Section title="How hands work"><p>This is the Bramhall club’s configured local variation, not a universal club or British ruleset. Its own special-hand catalogue and table-resolved incidents are recorded against this exact profile. Mahjong Reference records decisions made at the table; it does not referee physical play.</p></Section>

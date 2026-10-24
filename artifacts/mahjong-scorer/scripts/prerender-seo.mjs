@@ -1,7 +1,7 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { createServer } from 'vite';
+import { fileURLToPath, pathToFileURL } from 'node:url';
+import { build } from 'vite';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const output = path.join(root, 'dist/public');
@@ -48,11 +48,19 @@ function metadata({ path: route, title, description, indexable }) {
     <!-- seo:metadata:end -->`;
 }
 
-function assertRenderedBody(route, body) {
+function assertRenderedBody(route, body, profiles) {
   const h1Count = (body.match(/<h1\b/g) ?? []).length;
   const anchorCount = (body.match(/<a\b/g) ?? []).length;
   if (body.length < 100 || h1Count !== 1 || anchorCount < 1) {
     throw new Error(`${route}: prerendered body is incomplete (${body.length} bytes, ${h1Count} h1, ${anchorCount} anchors).`);
+  }
+  if (/<img\b[^>]*src="(?:file:|\/src\/)/.test(body)) throw new Error(`${route}: prerender contains a development-only image URL.`);
+  if (route === '/guide' || route === '/gameplay-basics') {
+    const main = body.slice(body.indexOf('<main'), body.indexOf('</main>'));
+    if (main.includes('Loading your rules') || !main.includes('Choose the rules your table uses')) throw new Error(`${route}: expected a meaningful neutral guide index.`);
+    for (const { slug } of profiles) {
+      if (!main.includes(`href="${route}?rules=${slug}"`) || !main.includes(`href="/rules/${slug}"`)) throw new Error(`${route}: missing initial HTML links for ${slug}.`);
+    }
   }
 }
 
@@ -60,28 +68,28 @@ const shell = await readFile(path.join(output, 'index.html'), 'utf8');
 if (!marker.test(shell)) throw new Error('SEO metadata markers were not found in the Vite output.');
 if (!shell.includes(rootMarker)) throw new Error('Empty root marker was not found in the Vite output.');
 
-const vite = await createServer({
-  root,
-  server: { middlewareMode: true, hmr: false },
-  appType: 'custom',
-  logLevel: 'error',
+// Prerender the production module graph so asset imports use the same public
+// URLs as the client build. Development SSR URLs cannot be shipped as HTML.
+await build({
+  configFile: path.join(root, 'vite.config.ts'),
+  build: {
+    ssr: path.join(root, 'src/prerender.tsx'),
+    outDir: path.join(root, 'dist/server'),
+    copyPublicDir: false,
+    emptyOutDir: true,
+    rollupOptions: { output: { entryFileNames: 'prerender.mjs' } },
+  },
 });
+const serverEntry = pathToFileURL(path.join(root, 'dist/server/prerender.mjs')).href;
+const { renderRoute, initialiseCurrentRulesRuntimes, siteSeo, PUBLIC_RULES_DESCRIPTORS } = await import(serverEntry);
+seo = siteSeo;
+socialImage = `${seo.siteUrl}${seo.socialImagePath}`;
+await initialiseCurrentRulesRuntimes();
 const renderedRoutes = new Map();
-try {
-  const { default: siteSeo } = await vite.ssrLoadModule('/src/site-seo.ts');
-  seo = siteSeo;
-  socialImage = `${seo.siteUrl}${seo.socialImagePath}`;
-
-  const { initialiseCurrentRulesRuntimes } = await vite.ssrLoadModule('/src/rules-platform/current-runtime-registry.ts');
-  await initialiseCurrentRulesRuntimes();
-  const { renderRoute } = await vite.ssrLoadModule('/src/prerender.tsx');
-  for (const route of seo.routes) {
-    const body = renderRoute(route.path);
-    assertRenderedBody(route.path, body);
-    renderedRoutes.set(route.path, body);
-  }
-} finally {
-  await vite.close();
+for (const route of seo.routes) {
+  const body = renderRoute(route.path);
+  assertRenderedBody(route.path, body, PUBLIC_RULES_DESCRIPTORS);
+  renderedRoutes.set(route.path, body);
 }
 
 for (const route of seo.routes) {
