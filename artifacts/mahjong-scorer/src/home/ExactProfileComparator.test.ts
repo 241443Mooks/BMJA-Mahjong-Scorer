@@ -42,54 +42,84 @@ describe('exact profile comparator', () => {
     expect(comparisonState(unknown, { ...unknown, profile: { id: 'outside-the-box', version: '0.1' } })).toBe('needs-checking');
     expect(comparisonValuesDiffer(unknown, unknown)).toBe(false);
     expect(comparisonState(match, unknown)).toBe('needs-checking');
-    expect(comparisonState(match, value({ status: 'present', data: 'classical-points-doubles' }, 'source-provisional'))).toBe('needs-checking');
+    expect(comparisonState(match, value({ status: 'present', data: 'classical-points-doubles' }, 'source-provisional'))).toBe('same');
+    expect(comparisonState(match, value({ status: 'present', data: 'pattern-accumulator' }, 'source-provisional'))).toBe('different');
     expect(comparisonState(value({ status: 'present', data: 'known' }, 'source-verified', 'not-modelled'), match)).toBe('needs-checking');
     expect(comparisonState(value({ status: 'absent' }), value({ status: 'absent' }))).toBe('same');
     expect(comparisonState(value({ status: 'absent' }), match)).toBe('different');
+    const noTransfers = { ...value({ status: 'present', data: 'product-wording-a' }), comparisonKey: 'draw:no-payments', playerAnswer: 'Nobody pays after a draw.' };
+    const noSettlement = { ...value({ status: 'present', data: 'product-wording-b' }), comparisonKey: 'draw:no-payments', playerAnswer: 'No score or settlement is made.' };
+    expect(comparisonState(noTransfers, noSettlement)).toBe('same');
+    expect(comparisonState({ ...noSettlement, comparisonKey: 'draw:payments-made' }, noTransfers)).toBe('different');
   });
 
-  it('defaults to exact BMJA and Bramhall profiles and explains the reviewed table difference', async () => {
+  it('defaults to exact BMJA and Bramhall profiles and shows shared player-facing facts', async () => {
     const node = await mount();
     const first = node.querySelector<HTMLSelectElement>('select[aria-label="First exact profile"]')!;
     const second = node.querySelector<HTMLSelectElement>('select[aria-label="Second exact profile"]')!;
     expect([...first.options].map(({ value: option }) => option)).toEqual(expect.arrayContaining(['bmja@1.0', 'buzzard-2000@0.1', 'mcr-wmo-2006@0.1']));
     expect(first.value).toBe('bmja@1.0'); expect(second.value).toBe('outside-the-box@0.1');
     expect(node.textContent).toContain('What happens after a draw?');
-    expect(node.textContent).toContain('East stays East. The next hand is played normally.');
-    expect(node.textContent).toContain('East stays East. The next hand is Goulash.');
+    expect(node.textContent).toContain('East stays East and the next hand is played normally.');
+    expect(node.textContent).toContain('East stays East and the next hand is Goulash.');
     expect(node.textContent).toContain('profile status Stable');
     expect(node.textContent).toContain('profile status Configured club profile');
-    expect(node.textContent).toContain('Bramhall plays Goulash after a draw.');
-    expect(node.textContent).not.toContain('Losing players settle with each other using score differences.');
+    expect(node.textContent).toContain('The club catalogue lists 33 unique named special hands.');
+    expect(node.textContent).toContain('18 inventoried named-hand entries');
+    expect(node.textContent).toContain('A waiting hand needs one tile to complete it.');
+    expect(node.textContent).not.toContain('Losing players settle score differences with each other.');
     expect(node.textContent).not.toContain('Same in both');
+    expect(node.textContent).not.toContain('Nobody pays anything after a drawn hand.');
     expect(node.textContent).not.toContain('hand-mode.outside-the-box-goulash');
     expect(node.textContent).not.toContain('progression.classical-east-cycle');
     expect(node.querySelectorAll('a[href="/rules"]')).toHaveLength(1);
+    expect(node.querySelectorAll('a[href="/special-hands"]')).toHaveLength(1);
+    expect(node.textContent).not.toContain('current product interpretation');
+    expect(node.textContent).not.toContain('source interpretation needs checking');
     await act(async () => { (node.querySelector<HTMLInputElement>('input[aria-label="Differences only"]')!).click(); });
-    expect(node.textContent).toContain('Losing players settle with each other using score differences.');
-    expect(node.textContent).toContain('No difference identified.');
+    expect(node.textContent).toContain('Showing a set changes its points.');
+    expect(node.textContent).toContain('Chows score no points. Pungs score 2/4');
+    expect(node.textContent).toContain('A player may win on a tile taken from another player’s Kong. The win earns one double.');
+    expect(node.textContent).toContain('13 tiles while waiting and 14 when complete');
+    expect(node.textContent).toContain('four blank substitute tiles');
+    expect(node.textContent).toContain('Ask your table how exposure affects ordinary sets.');
+    expect(node.textContent).toContain('Check with your table whether ordinary hands may contain more than one Chow.');
+    expect(node.textContent).toContain('Losing players settle score differences with each other.');
+    expect(node.textContent).toContain('Nobody pays anything after a drawn hand.');
     expect(node.querySelector('section[aria-label="Settlement & incidents"]')).not.toBeNull();
     const drawRow = [...node.querySelectorAll('article')].find((article) => article.textContent?.includes('What happens after a draw?'))!;
     await act(async () => { drawRow.querySelector('summary')!.dispatchEvent(new MouseEvent('click', { bubbles: true })); });
-    expect(drawRow.textContent).toContain('Source evidence source unknown');
+    expect(drawRow.textContent).toContain('source evidence source unknown');
     expect(drawRow.textContent).toContain('app support partial');
-    expect(drawRow.textContent).toContain('Reviewed in audit');
+    expect(drawRow.textContent).toContain('verified club');
     expect(drawRow.textContent).toContain('app support executable');
+    const exposureRow = [...node.querySelectorAll('li')].find((item) => item.textContent?.includes('Exposed vs concealed'))!;
+    expect(exposureRow.textContent).toContain('Ask your table how exposure affects ordinary sets.');
   });
 
-  it('keeps unknown/provisional rows outside Differences and exposes source and app status in details', async () => {
+  it('keeps unknown facts out of difference cards and retains them in collapsed coverage details', async () => {
     const node = await mount();
     const first = node.querySelector<HTMLSelectElement>('select[aria-label="First exact profile"]')!;
-    await act(async () => { first.value = 'western-tm@0.1'; first.dispatchEvent(new Event('change', { bubbles: true })); });
-    expect(node.textContent).toContain('No established differences found for these profiles.');
-    const needsChecking = node.querySelector('summary')!;
-    expect(needsChecking.textContent).toMatch(/Needs checking/);
-    expect(node.querySelector('details')?.open).toBe(false);
-    await act(async () => { (node.querySelector<HTMLInputElement>('input[aria-label="Differences only"]')!).click(); });
-    expect(node.querySelector('details')?.open).toBe(true);
-    expect(node.textContent).toContain('Source evidence source provisional');
-    expect(node.textContent).toContain('app support executable');
-    expect(node.textContent).toContain('Not yet described in this comparison.');
+    await act(async () => { first.value = 'mcr-wmo-2006@0.1'; first.dispatchEvent(new Event('change', { bubbles: true })); });
+    const second = node.querySelector<HTMLSelectElement>('select[aria-label="Second exact profile"]')!;
+    await act(async () => { second.value = 'buzzard-2000@0.1'; second.dispatchEvent(new Event('change', { bubbles: true })); });
+    const coverage = [...node.querySelectorAll('details')].find(({ textContent }) => textContent?.includes('Other rules and qualifications'))!;
+    expect(coverage.open).toBe(false);
+    expect(node.textContent).not.toContain('Not yet described in this comparison.');
+    expect(node.textContent).not.toContain('Not established in comparison data');
+    await act(async () => { coverage.querySelector('summary')!.dispatchEvent(new MouseEvent('click', { bubbles: true })); });
+    expect(coverage.open).toBe(true);
+    expect(coverage.textContent).toContain('The available Buzzard source does not establish whether substitute tiles are used in ordinary play.');
+  });
+
+  it('uses profile-local answers after switching away from the default pair', async () => {
+    const node = await mount();
+    const first = node.querySelector<HTMLSelectElement>('select[aria-label="First exact profile"]')!;
+    await act(async () => { first.value = 'buzzard-2000@0.1'; first.dispatchEvent(new Event('change', { bubbles: true })); });
+    expect(node.textContent).toContain('Ordinary hands may contain more than one Chow.');
+    expect(node.textContent).toContain('a completed Standing Hand adds 100 points.');
+    expect(node.textContent).toContain('The Buzzard source lists 10 named limit hands.');
+    expect(node.textContent).not.toContain('Bramhall plays Goulash after a draw.');
   });
 
   it('renders visible labels, grouped comparison content and the selector on the canonical page', () => {

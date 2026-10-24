@@ -49,9 +49,14 @@ describe('shared profile dimension contract', () => {
     ];
     expect(distinctRuleStates.map(({ status }) => status)).toEqual(['present', 'absent', 'unknown', 'not-applicable']);
     expect(profileDimensionValue(values, 'tiles.substitute-special')).toMatchObject({
-      value: { status: 'unknown' }, runtimeSupport: 'not-modelled', sourceStatus: 'source-unknown',
+      value: { status: 'present' }, runtimeSupport: 'not-modelled', sourceStatus: 'source-unknown',
+      playerAnswer: 'The British rules do not use substitute tiles.',
     });
     expect(profileDimensionValue(values, 'play.ordinary-chow-policy')).toMatchObject({
+      value: { status: 'present' }, runtimeSupport: 'executable', sourceStatus: 'source-verified',
+      playerAnswer: 'An ordinary hand can contain at most one Chow.',
+    });
+    expect(profileDimensionValue(values, 'settlement.false-mahjong')).toMatchObject({
       value: { status: 'unknown' }, runtimeSupport: 'not-modelled', sourceStatus: 'source-unknown',
     });
     expect(profileDimensionValue(values, 'settlement.false-mahjong')!.value).not.toEqual({ status: 'absent' });
