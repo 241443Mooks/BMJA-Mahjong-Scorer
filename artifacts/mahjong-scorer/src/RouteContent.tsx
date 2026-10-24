@@ -23,6 +23,7 @@ import { RulesHubPage, RulesProfilePage } from './rules/RulesReference';
 import { descriptorForSlug, publicRulesSlugFromGamePath } from './game/rules-presentation';
 import { RulesProfilePickerScalabilityFixture } from './game/RulesProfilePicker';
 import { PreviousGamesPage } from './game/PreviousGamesPage';
+import { EncyclopaediaHubPage, FlowersAndSeasonsReferencePage, PUBLIC_CONCEPT_ROUTES, PublicReferencePage, PublicScoringConceptPage } from './rules-knowledge/PublicReferencePage';
 
 function returnHome() {
   if (typeof window !== 'undefined') window.location.assign('/');
@@ -49,6 +50,10 @@ export function RouteContent({ path, prerender = false }: { path: string; preren
   if (path === '/scoring-examples') return withFooter(<ScoringExamplesPage />, { showTileCredit: true });
   if (path === '/guide' || path === '/beginner-guide') return withFooter(<BeginnerGuide onClose={returnHome} />, { showTileCredit: true });
   if (path === '/special-hands' || path === '/special-hand-catalogue') return withFooter(<SpecialHandsCatalogue />, { showTileCredit: true });
+  if (path === '/encyclopaedia') return withFooter(<EncyclopaediaHubPage />);
+  if (PUBLIC_CONCEPT_ROUTES[path]) return withFooter(<PublicReferencePage conceptId={PUBLIC_CONCEPT_ROUTES[path]!} />);
+  if (path === '/encyclopaedia/flowers-and-seasons') return withFooter(<FlowersAndSeasonsReferencePage />);
+  if (path === '/encyclopaedia/scoring-systems') return withFooter(<PublicScoringConceptPage />);
   if (path === '/gameplay-basics') return withFooter(<GameplayBasics />, { showTileCredit: true });
   if (path === '/features') return withFooter(<FeaturesPage />);
   if (path === '/help') return withFooter(<HelpPage />);

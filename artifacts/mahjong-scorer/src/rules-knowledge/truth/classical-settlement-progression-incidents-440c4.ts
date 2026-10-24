@@ -1,5 +1,7 @@
 import type { EvidenceClaim, ProfileTreatment, SemanticSubject } from '../../rules-platform/truth-model';
 import { versioned } from './records';
+import { profileRuntimeRefByFact } from './classical-scoring-runtime';
+import { classicalRuntimeRefBySubject } from './classical-scoring-runtime';
 
 type ProfileId = 'bmja' | 'outside-the-box' | 'buzzard-2000';
 type Row = {
@@ -11,15 +13,19 @@ type Row = {
   page?: string;
   url?: string;
 };
-type Family = { id: string; rows: readonly Row[]; unresolvedProfiles?: readonly ProfileId[] };
+type Family = { id: string; rows: readonly Row[]; unresolvedProfiles?: readonly ProfileId[]; runtimeStateByProfile?: Partial<Record<ProfileId, ProfileTreatment['runtimeState']>> };
 
 const bmjaSettlement = (claim: string, section: string): Row => ({ profile: 'bmja', sourceId: 'bmja-settlement', claim, section, status: 'verified', url: 'https://mahjongbritishrules.wordpress.com/scoring/settling-up/' });
 const bmjaQa = (claim: string, section: string): Row => ({ profile: 'bmja', sourceId: 'bmja-qa', claim, section, status: 'verified', url: 'https://mahjongbritishrules.wordpress.com/questions/playing-the-game/' });
 const bmjaPlaying = (claim: string, section: string): Row => ({ profile: 'bmja', sourceId: 'bmja-approved-site', claim, section, status: 'verified', url: 'https://mahjongbritishrules.wordpress.com/the-game/preparing-to-play/' });
+const bmjaVariations = (claim: string, section: string): Row => ({ profile: 'bmja', sourceId: 'bmja-approved-site', claim, section, status: 'verified', url: 'https://mahjongbritishrules.wordpress.com/the-game/variations-of-play/' });
 const otb = (claim: string, section: string): Row => ({ profile: 'outside-the-box', sourceId: 'otb-guide-2026-09', claim, section, status: 'verified-club' });
 const buzzard = (claim: string, section: string, page: string): Row => ({ profile: 'buzzard-2000', sourceId: 'buzzard-2000-classical', claim, section, page, status: 'verified' });
 
 const families: readonly Family[] = [
+  { id: 'rule.classical.goulash-round-transition', rows: [
+    bmjaVariations('After a drawn hand, the game restarts with the same player as East and continues as Goulash.', 'The goulash'),
+  ], runtimeStateByProfile: { bmja: { kind: 'present-not-modelled' } } },
   { id: 'rule.classical.loser-pays-winner-score', rows: [
     bmjaSettlement('Each loser pays the winner the winner’s hand score.', 'Paying the winner'),
     otb('Each loser pays the winner the winner’s Mah Jong score.', 'Ordinary settlement — winner payments'),
@@ -41,8 +47,9 @@ const families: readonly Family[] = [
     buzzard('After a dead hand, East remains East.', 'Rules 11–14 — dead hand', '7'),
   ] },
   { id: 'rule.classical.draw-has-no-settlement', rows: [
+    bmjaQa('No one scores anything when the game is drawn.', 'Drawn game'),
     otb('A draw produces no score or settlement.', 'Drawn game / round-state'),
-  ], unresolvedProfiles: ['bmja', 'buzzard-2000'] },
+  ], unresolvedProfiles: ['buzzard-2000'], runtimeStateByProfile: { bmja: { kind: 'executable', ref: classicalRuntimeRefBySubject['rule.classical.draw-has-no-settlement'] } } },
   { id: 'rule.classical.east-retained-after-east-win', rows: [
     bmjaQa('If East declares Mah-Jong, East remains East.', 'Winds — When does East Wind move to another player?'),
     buzzard('If East wins, East remains East.', 'Rules 11–14 — East wins', '7'),
@@ -65,7 +72,7 @@ const families: readonly Family[] = [
   ], unresolvedProfiles: ['outside-the-box'] },
   { id: 'rule.otb.goulash-round-transition', rows: [
     otb('Normal followed by a winner remains Normal; Normal followed by a draw enters Goulash; Goulash followed by a winner returns to Normal; Goulash followed by a draw remains Goulash.', 'Goulash / round transitions'),
-  ] },
+  ], runtimeStateByProfile: { 'outside-the-box': { kind: 'executable', ref: profileRuntimeRefByFact['outside-the-box@0.1|rule.otb.goulash-round-transition'] } } },
   { id: 'rule.otb.incorrect-tile-count-consequences', rows: [
     otb('A wrong-count hand cannot win; a too-few-tile hand may retain a score, while a too-many-tile hand scores zero.', 'Incorrect tile count'),
   ] },
@@ -132,7 +139,8 @@ export const classicalSettlementProgressionIncident440c4Treatments = claims.map(
   const treatmentId = `${record.supportsProfile!.id}@${record.supportsProfile!.version}:${record.subjectId}`;
   const treatment: ProfileTreatment = {
     treatmentId, profile: record.supportsProfile!, subjectId: record.subjectId,
-    runtimeState: { kind: 'migration-incomplete' }, evidenceClaimIds: [record.claimId],
+    runtimeState: families.find(({ id }) => id === record.subjectId)?.runtimeStateByProfile?.[record.supportsProfile!.id as ProfileId] ?? { kind: 'migration-incomplete' },
+    evidenceClaimIds: [record.claimId],
   };
   return versioned(treatmentId, treatment);
 });
@@ -141,12 +149,17 @@ export const classicalSettlementProgressionIncident440c4Coverage = families.flat
   allProfiles.map((profile) => {
     const row = rows.find((candidate) => candidate.profile === profile);
     const unresolved = unresolvedProfiles.includes(profile);
+    const runtimeKind = families.find((family) => family.id === id)?.runtimeStateByProfile?.[profile]?.kind;
     return {
       subjectId: id,
       profile: profileRefs[profile],
       evidenceStatus: (row ? 'source-ready' : unresolved ? 'source-unresolved' : 'not-applicable') as 'source-ready' | 'source-unresolved' | 'not-applicable',
       recordStatus: (row ? 'migrated' : unresolved ? 'not-migrated' : 'not-applicable') as 'migrated' | 'not-migrated' | 'not-applicable',
-      treatmentStatus: (row ? 'runtime-edge-migration-incomplete' : 'not-applicable') as 'runtime-edge-migration-incomplete' | 'present-not-modelled' | 'not-applicable',
+      treatmentStatus: (row
+        ? runtimeKind === 'executable' ? 'migrated'
+          : runtimeKind === 'present-not-modelled' ? 'present-not-modelled'
+            : 'runtime-edge-migration-incomplete'
+        : 'not-applicable') as 'migrated' | 'runtime-edge-migration-incomplete' | 'present-not-modelled' | 'not-applicable',
     };
   }),
 );

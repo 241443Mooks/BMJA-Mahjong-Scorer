@@ -1,0 +1,58 @@
+{
+  "schemaVersion": 1,
+  "exceptions": [
+    {
+      "id": "C1-bmja-goulash",
+      "profile": "bmja@1.0",
+      "factId": "bmja@1.0:rule.classical.goulash-round-transition",
+      "severity": "review",
+      "impact": "Published BMJA follow-up is Goulash; the current scorer does not switch hand mode automatically.",
+      "evidence": [
+        "#539 C1",
+        "rule.classical.goulash-round-transition"
+      ],
+      "ownerClass": "known-discrepancy",
+      "disposition": "disclosed",
+      "assertion": "The player explanation and comparator disclose the source/runtime difference."
+    },
+    {
+      "id": "C3-rob-kong-validation",
+      "profile": "bmja@1.0",
+      "severity": "review",
+      "impact": "Robbing-Kong eligibility validation remains unresolved.",
+      "evidence": [
+        "#539 C3",
+        "src/rules-platform/reconciliation-report.test.ts"
+      ],
+      "ownerClass": "known-discrepancy",
+      "disposition": "unresolved",
+      "assertion": "The regression assertion requires this unresolved item to remain reported until an exact BMJA eligibility fixture and owner link exist."
+    },
+    {
+      "id": "C6-blessing-chow-wording",
+      "profile": "bmja@1.0",
+      "severity": "review",
+      "impact": "Published blessing/Chow wording has conflicting interpretations.",
+      "evidence": [
+        "#539 C6",
+        "src/rules-platform/reconciliation-report.test.ts"
+      ],
+      "ownerClass": "source-review",
+      "disposition": "unresolved",
+      "assertion": "The regression assertion requires the source conflict to remain visible until an adjudicated claim is recorded."
+    },
+    {
+      "id": "western-tm@0.1:pattern.western-tm.purity-one-chow:missing-treatment",
+      "profile": "western-tm@0.1",
+      "factId": "western-tm@0.1:pattern.western-tm.purity-one-chow",
+      "severity": "review",
+      "impact": "A sourced claim has no exact-profile treatment record.",
+      "evidence": [
+        "evidence.pattern.western-tm.purity-one-chow"
+      ],
+      "ownerClass": "truth-record",
+      "disposition": "unresolved",
+      "assertion": "A claim should not imply scorer behaviour without an exact treatment."
+    }
+  ]
+}
