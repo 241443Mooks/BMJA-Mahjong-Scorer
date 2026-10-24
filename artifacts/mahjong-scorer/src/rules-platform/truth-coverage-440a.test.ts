@@ -20,14 +20,14 @@ const classicalInventories = [
 describe('Issue 440A derived coverage accounting', () => {
   it('joins all current Classical special-hand inventory IDs to exact-profile truth or leaves them visibly unrecorded', () => {
     for (const { profile, bindings } of classicalInventories) {
-      const treatments = currentTruthIndex.treatmentsForProfile(profile).map(({ record }) => record).filter(({ runtimeState }) => runtimeState.kind === 'executable');
+      const treatments = currentTruthIndex.treatmentsForProfile(profile).map(({ record }) => record).filter(({ runtimeState }) => runtimeState.kind === 'executable' && runtimeState.ref.kind === 'binding');
       const executableIds = new Set(treatments.flatMap((record) => record.runtimeState.kind === 'executable' && record.runtimeState.ref.kind === 'binding' ? [record.runtimeState.ref.id] : []));
       const inventoryIds = new Set(bindings.map(({ patternId }) => patternId));
       expect(executableIds.size).toBe(treatments.length);
       for (const id of executableIds) expect(inventoryIds.has(id)).toBe(true);
       expect(bindings.length).toBeGreaterThan(0);
     }
-    expect(classicalInventories.map(({ profile }) => currentTruthIndex.treatmentsForProfile(profile).filter(({ record }) => record.runtimeState.kind === 'executable').length)).toEqual([18, 84, 33, 9]);
+    expect(classicalInventories.map(({ profile }) => currentTruthIndex.treatmentsForProfile(profile).filter(({ record }) => record.runtimeState.kind === 'executable' && record.runtimeState.ref.kind === 'binding').length)).toEqual([18, 84, 33, 9]);
     expect(classicalInventories.map(({ bindings }) => bindings.length)).toEqual([18, 85, 33, 10]);
   });
 
@@ -112,8 +112,8 @@ describe('Issue 440A derived coverage accounting', () => {
     for (const { runtimeState } of policyTreatments) {
       if (runtimeState.kind === 'executable') expect(currentTruthValidationEnvironment.runtimeTreatmentExists(profile, runtimeState.ref)).toBe(true);
     }
-    expect(currentTruthCorpus.treatments).toHaveLength(378);
-    expect(currentTruthCorpus.subjects).toHaveLength(317);
-    expect(currentTruthCorpus.claims).toHaveLength(380);
+    expect(currentTruthCorpus.treatments).toHaveLength(380);
+    expect(currentTruthCorpus.subjects).toHaveLength(318);
+    expect(currentTruthCorpus.claims).toHaveLength(382);
   });
 });

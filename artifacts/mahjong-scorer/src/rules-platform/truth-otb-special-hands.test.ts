@@ -23,7 +23,7 @@ const newlyMigratedIds = [
 
 describe('Issue 440B2 Outside the Box special-hand truth migration', () => {
   it('accounts for all 33 fixed bindings with exact-profile executable treatments', () => {
-    const treatments = currentTruthIndex.treatmentsForProfile(profile).map(({ record }) => record).filter(({ runtimeState }) => runtimeState.kind === 'executable');
+    const treatments = currentTruthIndex.treatmentsForProfile(profile).map(({ record }) => record).filter(({ runtimeState }) => runtimeState.kind === 'executable' && runtimeState.ref.kind === 'binding');
     const refs = treatments.map((record) => {
       expect(record.profile).toEqual(profile);
       expect(record.runtimeState.kind).toBe('executable');
