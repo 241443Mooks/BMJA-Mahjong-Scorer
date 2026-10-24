@@ -2,7 +2,8 @@ import { ArrowRight } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { SiteHeader } from '../components/SiteHeader';
 import { descriptorForSlug } from '../game/rules-presentation';
-import { RulesSupportStatus } from './RulesReference';
+import { ProfileEvidenceDetails, ProfileSpecialHands, RulesSupportStatus } from './RulesReference';
+import { RulesetProfileReport } from './RulesetProfileReport';
 
 const actionClass = 'inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-[#284d45] px-4 py-2.5 text-[15px] font-semibold text-[#f8f4e9] transition hover:bg-[#23443d] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249] focus-visible:ring-offset-2';
 const secondaryActionClass = 'inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-[#b8c8c1] bg-white px-4 py-2.5 text-[15px] font-semibold text-[#284d45] transition hover:bg-[#f2f6f3] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249] focus-visible:ring-offset-2';
@@ -23,12 +24,11 @@ export function ClubRulesPage() {
           <h1 className="mt-3 max-w-[900px] font-serif text-[clamp(38px,6vw,62px)] leading-[.98] text-[#284d45]">{descriptor.title}</h1>
           <p className="mt-5 max-w-[790px] text-[17px] leading-8 text-[#405650]">A configured local club profile with its own special hands, Goulash treatment and table incidents. It describes this table configuration, not a universal set of club Mahjong rules.</p>
         </section>
-        <section className="px-5 py-7 sm:px-8 lg:px-12"><RulesSupportStatus descriptor={descriptor} /></section>
-        <Section title="Identity and authority"><p>This is a named local configuration in Mahjong Reference. It should not be read as authority for other clubs, Western Mahjong generally, or British / BMJA-style play. Where another table uses different house rules, that table needs its own explicit amendments or profile.</p></Section>
-        <Section title="At the table"><p>The profile carries the club-specific special-hand catalogue and supports a Goulash hand after a draw. It also records table-resolved incidents and liability where those facts affect settlement. Mahjong Reference records those decisions; it does not attempt to referee physical play after the event.</p></Section>
-        <Section title="How scoring works"><p>The scorer uses this configured profile rather than silently falling back to the British profile. Special-hand recognition and other profile-owned treatments remain attached to the exact Club rules profile and version used by the hand or game.</p></Section>
+        <RulesetProfileReport profile={descriptor.profile} />
+        <Section title="How hands work"><p>This is the Bramhall club’s configured local variation, not a universal club or British ruleset. Its own special-hand catalogue and table-resolved incidents are recorded against this exact profile. Mahjong Reference records decisions made at the table; it does not referee physical play.</p></Section>
+        <Section title="How scoring works"><p>The scorer uses the Club configuration and its own scoring treatments. It does not inherit British draw behaviour. After a drawn hand, the configured Goulash uses physical blank tiles as substitutes in the next hand; the tracker records this configured transition.</p></Section>
+        <ProfileSpecialHands profile={descriptor.profile} slug="club" />
         <Section id="settlement" title="What happens after a hand"><p>The game tracker uses this Club profile to turn confirmed hand scores into who pays whom. Winner payments, East/dealer effects, loser-to-loser differences and any recorded Club liability are applied under these rules. After a draw there are no payments; East and the prevailing Wind stay unchanged and the next hand becomes Goulash.</p></Section>
-        <Section title="Distinctive mechanics"><p>The public descriptor currently records a club-specific special-hand catalogue, Goulash with physical blank tiles after draws, and table incidents/liability that are entered as resolved facts. These are local configuration choices, not claims about all Mahjong clubs.</p></Section>
         <Section title="Penalties and incidents">
           <p>These are Club-specific table rules. Mahjong Reference records the incident once the table has decided what happened; it does not reconstruct or referee the play itself.</p>
           <div id="penalties" className="mt-5 grid gap-3 sm:grid-cols-2">
@@ -56,8 +56,8 @@ export function ClubRulesPage() {
             </article>
           </div>
         </Section>
+        <Section title="Where these rules come from"><div className="rounded-xl border border-[#d8ceb8] bg-[#fdfbf5] p-5 sm:p-6"><RulesSupportStatus descriptor={descriptor} /><p className="mt-4"><strong className="text-[#284d45]">Reference basis:</strong> {descriptor.support.authority}.</p><p className="mt-4">The source status is kept separate from published British, Thompson &amp; Maloney, Buzzard and MCR traditions, so this local variation is not presented as universal Mahjong.</p><ProfileEvidenceDetails profile={descriptor.profile} /></div></Section>
         <Section title="Use these rules"><div className="flex flex-wrap gap-3"><a href="/game/club" className={actionClass}>Track a Club rules game <ArrowRight size={16} aria-hidden="true" /></a><a href={`/hand?rules=${descriptor.slug}`} className={secondaryActionClass}>Score a hand <ArrowRight size={16} aria-hidden="true" /></a><a href="/rules" className={secondaryActionClass}>All supported rules <ArrowRight size={16} aria-hidden="true" /></a></div></Section>
-        <Section title="Sources and provenance"><div className="rounded-xl border border-[#d8ceb8] bg-[#fdfbf5] p-5 sm:p-6"><p><strong className="text-[#284d45]">Reference basis:</strong> {descriptor.support.authority}.</p><p className="mt-4">Mahjong Reference treats this as a configured local profile. Its source status is kept separate from the published British, Thompson &amp; Maloney, Buzzard and MCR source traditions, so local house rules are not presented as though they were universal published rules.</p></div></Section>
       </article>
     </main>
   </div>;
