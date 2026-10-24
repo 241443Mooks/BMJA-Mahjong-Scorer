@@ -4,7 +4,7 @@ import type { ReactNode } from 'react';
 import { SiteHeader } from '../components/SiteHeader';
 import { descriptorForSlug, PUBLIC_RULES_DESCRIPTORS, type PublicRulesSlug, type RulesDescriptor } from '../game/rules-presentation';
 import { clearPreferredRulesProfile, readPreferredRulesProfile, setPreferredRulesProfile } from '../game/preferred-rules-profile';
-import { RulesetProfileReport } from './RulesetProfileReport';
+import { BritishSpecialHands, RulesetProfileDetails, RulesetProfileReport } from './RulesetProfileReport';
 import { familiesBySupportedProfileCount, MAHJONG_FAMILIES, PROFILE_LEARNING_LINKS, supportedProfilesForFamily } from '../home/mahjong-family-presentation';
 
 const actionClass = 'inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-[#284d45] px-4 py-2.5 text-[15px] font-semibold text-[#f8f4e9] transition hover:bg-[#23443d] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249] focus-visible:ring-offset-2';
@@ -42,11 +42,11 @@ const pageCopy: Record<Exclude<PublicRulesSlug, 'club'>, { eyebrow: string; intr
     eyebrow: 'Rules reference',
     intro: 'The stable British / BMJA-style profile used by Mahjong Reference. It gives your table a shared way to score a hand, settle it and continue the game.',
     identity: <>British / BMJA-style Mahjong is a standardised British profile within the wider Western/classical Mahjong tradition. Mahjong Reference uses the BMJA-approved British rules reference for this scorer; that is a source basis, not a claim of BMJA affiliation.</>,
-    table: <>A normal winning hand is four sets and a pair, alongside defined special hands. Flowers and Seasons are scoring bonus tiles. Ordinary hands allow at most one Chow. The published rules describe Goulash after a drawn hand; this scorer does not switch hand mode automatically.</>,
-    scoring: <>Ordinary scoring starts with base points for qualifying sets, pairs and bonus tiles, then applies doubles. Defined special hands and fishing can instead have their own values. This is the scoring grammar; the detailed points tables stay in the British scoring guide.</>,
+    table: <>A normal winning hand is four sets and a pair, alongside defined special hands. Flowers and Seasons are scoring bonus tiles. Ordinary hands allow at most one Chow. The published rules describe Goulash after a drawn hand; this scorer does not switch to Goulash automatically.</>,
+    scoring: <>Ordinary scoring starts with points for qualifying sets, pairs and bonus tiles, then applies doubles. Some special hands and hands that are one tile from winning have their own values. For the full points table, see the British scoring guide.</>,
     after: <>The winner is paid for the winning hand. Losing hands can matter too: settlement compares them with one another, and East pays or receives double where the rules apply. The game tracker carries that settlement and Wind progression forward.</>,
     distinctive: <>British rules deliberately standardise a restricted special-hand catalogue and a one-Chow ordinary-hand limit. Clubs may agree variations, so check the table's own sheet when it differs from this profile.</>,
-    provenance: <>The scorer baseline is verified against the BMJA-approved British rules reference, including its scoring, special-hands, settlement and Q&amp;A material. This page gives a practical overview; the guide and examples provide the detailed learning material.</>,
+    provenance: <>These rules are checked against the BMJA-approved British rules reference, including its scoring, special-hand, settlement and Q&amp;A material. This page gives a practical overview; the guide and examples provide the detailed learning material.</>,
     links: [['Track a British game', '/game/british'], ['Score a hand', '/hand?rules=british'], ['British scoring guide', '/guide'], ['Special hands', '/special-hands'], ['Scoring examples', '/scoring-examples'], ['Compare Mahjong rules', '/mahjong-rules-compared']],
   },
   western: {
@@ -85,13 +85,21 @@ const pageCopy: Record<Exclude<PublicRulesSlug, 'club'>, { eyebrow: string; intr
 export function RulesProfilePage({ slug }: { slug: Exclude<PublicRulesSlug, 'club'> }) {
   const descriptor = descriptorForSlug(slug);
   const copy = pageCopy[slug];
+  if (slug === 'british') return <PageFrame eyebrow={copy.eyebrow} title={descriptor.title} intro="A practical guide to the British Mahjong rules used by this scorer. Check the hand, its score and what happens next; open the source details when you want to see how a rule was checked.">
+    <RulesetProfileReport profile={descriptor.profile} />
+    <Section title="How hands work"><p>{copy.table}</p></Section>
+    <Section title="How scoring works"><p>{copy.scoring}</p><p className="mt-3"><a href="/guide" className="font-semibold text-[#284d45] underline underline-offset-4">See the British scoring guide</a> or <a href="/scoring-examples" className="font-semibold text-[#284d45] underline underline-offset-4">worked scoring examples</a>.</p></Section>
+    <BritishSpecialHands profile={descriptor.profile} />
+    <Section id="settlement" title="What happens after a hand"><p>{copy.after}</p><p className="mt-3"><a href="/mahjong-settlement" className="font-semibold text-[#284d45] underline decoration-[#ae6249] underline-offset-4">See a worked settlement example</a>.</p></Section>
+    <Section title="Where these rules come from"><div className="space-y-3"><p>{copy.provenance}</p><p>Robbing a Kong still needs eligibility validation, and the source wording about Blessing and Chow remains unresolved. These are open differences in the evidence, not new scoring decisions.</p><RulesetProfileDetails profile={descriptor.profile} /></div></Section>
+    <Section title="Use these rules"><div className="flex flex-wrap gap-3">{copy.links.map(([label, href]) => <a key={href} href={href} className={href.startsWith('/game') ? actionClass : secondaryActionClass}>{label}<ArrowRight size={16} aria-hidden="true" /></a>)}</div></Section>
+  </PageFrame>;
   return <PageFrame eyebrow={copy.eyebrow} title={descriptor.title} intro={copy.intro}>
     <section className="px-5 py-7 sm:px-8 lg:px-12"><RulesSupportStatus descriptor={descriptor} /></section>
-    {slug === 'british' && <RulesetProfileReport profile={descriptor.profile} />}
     <Section title="Identity and authority"><p>{copy.identity}</p></Section>
     <Section title="At the table"><p>{copy.table}</p></Section>
     <Section title="How scoring works"><p>{copy.scoring}</p></Section>
-    <Section id="settlement" title="What happens after a hand"><p>{copy.after}</p>{slug === 'british' && <p className="mt-3"><a href="/mahjong-settlement" className="font-semibold text-[#284d45] underline decoration-[#ae6249] underline-offset-4">See the worked British settlement explainer</a>.</p>}</Section>
+    <Section id="settlement" title="What happens after a hand"><p>{copy.after}</p></Section>
     <Section title="Distinctive mechanics"><p>{copy.distinctive}</p></Section>
     <Section title="Use these rules"><div className="flex flex-wrap gap-3">{copy.links.map(([label, href]) => <a key={href} href={href} className={href.startsWith('/game') ? actionClass : secondaryActionClass}>{label}<ArrowRight size={16} aria-hidden="true" /></a>)}</div></Section>
     <Section title="Sources and provenance"><div className="rounded-xl border border-[#d8ceb8] bg-[#fdfbf5] p-5 sm:p-6"><p><strong className="text-[#284d45]">Reference basis:</strong> {descriptor.support.authority}.</p><p className="mt-4">{copy.provenance}</p></div></Section>

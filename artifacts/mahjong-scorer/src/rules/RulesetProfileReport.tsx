@@ -12,6 +12,10 @@ import type { RulesProfileRef } from '../rules-platform/types';
 import { readGovernedFacts } from '../rules-knowledge/truth/read-contract';
 import type { GovernedFact } from '../rules-knowledge/truth/read-contract';
 import { explainBritishFlowersAndSeasons } from '../rules-knowledge/truth/explain-british-flowers-seasons';
+import { specialHandTreatmentsForProfile } from '../rules-knowledge/special-hand-treatments';
+import { ATLAS_LEARNER_ENTRIES, atlasExamplesForTreatment, ATLAS_TREATMENT_OWNERSHIP } from '../guide/special-hands-atlas';
+import { AtlasExampleVisual } from '../guide/AtlasExampleVisual';
+import { atlasExampleProvesTreatment } from '../guide/atlas-scorer-handoff';
 
 /**
  * Reader-facing projection of the shared #406 profile x dimension contract.
@@ -29,27 +33,24 @@ const groups: readonly { id: RulesDimensionGroup; title: string }[] = [
 
 const highlights: readonly RulesDimensionId[] = [
   'table.player-count',
+  'table.seat-model',
   'tiles.physical-set',
-  'hand.normal-winning-shape',
-  'scoring.grammar',
-  'scoring.limit-cap',
-  'settlement.winner-payments',
 ];
 
 const sourceStatusLabel: Record<ProfileDimensionValue['sourceStatus'], string> = {
-  'source-verified': 'Source checked',
-  'verified-club': 'Club rules checked',
-  'source-provisional': 'Source review incomplete',
-  'source-unknown': 'Source finding not recorded',
-  'not-applicable': 'Source status not applicable',
+  'source-verified': 'Checked against the published rules',
+  'verified-club': 'Checked against the club rules',
+  'source-provisional': 'Some source details still need checking',
+  'source-unknown': 'We haven’t confirmed this here yet',
+  'not-applicable': 'No source check applies',
 };
 
 const runtimeStatusLabel: Record<ProfileDimensionValue['runtimeSupport'], string> = {
-  executable: 'In the current scorer',
-  partial: 'Partly represented by the scorer',
-  'reference-only': 'Reference only',
-  'not-modelled': 'Not established by this report',
-  'not-applicable': 'Not an executable rule',
+  executable: 'Used by the scorer',
+  partial: 'Partly used by the scorer',
+  'reference-only': 'Reference information',
+  'not-modelled': 'We haven’t confirmed this here yet',
+  'not-applicable': 'This does not apply here',
 };
 
 function readerValue(row: ProfileDimensionValue): string {
@@ -69,7 +70,7 @@ function readerValue(row: ProfileDimensionValue): string {
     case 'table.seat-model':
       return value === 'seats.winds-4' ? 'East, South, West and North' : 'Value not translated';
     case 'tiles.physical-set':
-      return value === 'tiles.flowers-144' ? '144 tiles, including Flowers and Seasons' : 'Value not translated';
+      return value === 'tiles.flowers-144' ? '144 tiles, including Flowers and Seasons' : 'The tile set has not been confirmed here yet.';
     case 'hand.normal-winning-shape':
       return value === 'shape.four-sets-pair' ? 'Four sets and a pair' : 'Value not translated';
     case 'scoring.grammar':
@@ -90,8 +91,8 @@ function readerValue(row: ProfileDimensionValue): string {
       return value === 'game-end.classical-east-cycle' ? 'Classical East-cycle game end' : 'Value not translated';
     default:
       return typeof value === 'string' || typeof value === 'number'
-        ? `Configured as ${String(value)}; this report does not interpret that setting.`
-        : `A value is recorded (${row.displayValue}); this report does not interpret that setting.`;
+        ? `The scorer uses ${String(value)} for this setting.`
+        : 'We haven’t confirmed this here yet.';
   }
 }
 
@@ -100,11 +101,56 @@ function DimensionDetail({ row }: { row: ProfileDimensionValue }) {
   return <div className="border-t border-[#e4dccd] py-3 first:border-t-0">
     <dt className="font-semibold text-[#284d45]">{definition.label}</dt>
     <dd className="mt-1">{readerValue(row)}</dd>
-    <dd className="mt-1 text-[13px] leading-5 text-[#536860]">
-      {runtimeStatusLabel[row.runtimeSupport]} · {sourceStatusLabel[row.sourceStatus]}
-    </dd>
+    <dd className="mt-1 text-[13px] leading-5 text-[#536860]">{row.value.status === 'unknown' ? 'We haven’t confirmed this here yet.' : `${runtimeStatusLabel[row.runtimeSupport]} · ${sourceStatusLabel[row.sourceStatus]}`}</dd>
     {row.caveat && <dd className="mt-1 text-[13px] leading-5 text-[#684f37]">{row.caveat}</dd>}
   </div>;
+}
+
+function specialHandScore(record: ReturnType<typeof specialHandTreatmentsForProfile>[number]) {
+  if (record.winnerValue === undefined) return 'Score follows the hand’s scoring rules.';
+  const format = (value: number) => new Intl.NumberFormat('en-GB').format(value);
+  return `${format(record.winnerValue)} points when complete${record.fishingValue === undefined ? '' : `; ${format(record.fishingValue)} when one tile from winning${record.fishingUsesIntrinsicFloor ? ' (or the hand value if higher)' : ''}`}.`;
+}
+
+function specialHandConditions(record: ReturnType<typeof specialHandTreatmentsForProfile>[number]) {
+  const facts: string[] = [];
+  const policy = record.exposurePolicy?.policy as { allowed?: boolean; exposedValue?: number; exposedFishingValue?: number; multiplier?: number } | undefined;
+  if (policy?.allowed === false) facts.push('All sets must be concealed.');
+  else if (policy?.allowed === true && policy.exposedValue !== undefined) facts.push(`With exposed sets: ${policy.exposedValue} points${policy.exposedFishingValue === undefined ? '' : ` when one tile from winning: ${policy.exposedFishingValue} points`}.`);
+  else if (policy?.allowed === true) facts.push('Exposed sets are allowed.');
+  else if (policy?.multiplier !== undefined) facts.push(`Exposed sets multiply the score by ${policy.multiplier}.`);
+  if (record.winningMethods?.length) facts.push(`Winning method: ${record.winningMethods.join(' or ')}.`);
+  return facts;
+}
+
+export function BritishSpecialHands({ profile }: { profile: RulesProfileRef }) {
+  const treatments = specialHandTreatmentsForProfile(profile);
+  const cards = treatments.flatMap((treatment) => {
+    const entryId = ATLAS_TREATMENT_OWNERSHIP[treatment.referenceId];
+    const entry = ATLAS_LEARNER_ENTRIES.find((candidate) => candidate.id === entryId);
+    return [{ treatment, entry, examples: entry ? atlasExamplesForTreatment(entry, treatment.referenceId).filter((example) => example.kind === 'tile-hand' && atlasExampleProvesTreatment(example.id, treatment.referenceId)) : [] }];
+  });
+  return <section id="british-special-hands" aria-labelledby="british-special-hands-title" className="border-b border-[#ddd3bf] px-5 py-9 sm:px-8 sm:py-11 lg:px-12">
+    <h2 id="british-special-hands-title" className="font-serif text-[30px] text-[#284d45]">Special hands</h2>
+    <p className="mt-3 max-w-[820px] text-[16px] leading-7 text-[#405650]">These named hands have their own requirements and scores. Open a hand for its details and any reviewed tile example.</p>
+    <details className="mt-4 rounded-xl border border-[#d8ceb8] bg-white p-4"><summary className="min-h-11 cursor-pointer font-semibold text-[#284d45]">Browse {cards.length} British special hands</summary>
+      <ul className="mt-3 grid gap-3 sm:grid-cols-2">{cards.map(({ treatment, entry, examples }) => {
+        const example = examples[0];
+        const handName = treatment.name;
+        return <li key={treatment.referenceId} className="min-w-0 rounded-lg border border-[#e4dccd] bg-[#fdfbf5] p-3">
+          <h3 className="font-serif text-xl text-[#284d45]">{handName}</h3>
+          <p className="mt-1 text-sm leading-5">{treatment.description}</p>
+          <p className="mt-2 text-sm font-semibold">{specialHandScore(treatment)}</p>
+          <details className="mt-2"><summary className="min-h-11 cursor-pointer py-2 text-sm font-semibold text-[#284d45]">Requirements and example</summary>
+            <div className="space-y-2 text-sm leading-5"><p>{treatment.description}</p>{specialHandConditions(treatment).map((fact) => <p key={fact}>{fact}</p>)}
+              {example ? <AtlasExampleVisual example={example} title={`${handName} tile example`} /> : <p>No reviewed tile example is available for this hand. See its guide entry for the reviewed description.</p>}
+              <a className="inline-flex min-h-11 items-center font-semibold text-[#284d45] underline underline-offset-4" href={treatment.href ?? '/special-hands'}>{treatment.href ? `Read ${handName} in the Special Hands guide` : 'Browse the Special Hands guide'}</a>
+            </div>
+          </details>
+        </li>;
+      })}</ul>
+    </details>
+  </section>;
 }
 
 const sourceLabel = (status: GovernedFact['sourceState']) => ({
@@ -137,15 +183,9 @@ export function RulesetProfileReport({ profile }: { profile: RulesProfileRef }) 
   // The app initialises exact, sealed runtimes before it renders routes.
   const artifact = getCurrentCompiledRulesRuntime(profile).artifact;
   const values = projectProfileDimensions(artifact, CLASSICAL_COMPARATOR_REVIEWED_EVIDENCE);
-  const governedFacts = readGovernedFacts(profile);
-  const flowers = explainBritishFlowersAndSeasons(profile);
-  const gaps = values.filter(({ value }) => value.status === 'unknown').length;
   return <section aria-labelledby="ruleset-at-a-glance" className="border-b border-[#ddd3bf] px-5 py-9 sm:px-8 sm:py-11 lg:px-12">
-    <h2 id="ruleset-at-a-glance" className="font-serif text-[30px] leading-tight text-[#284d45]">Rules at a glance</h2>
-    <p className="mt-3 max-w-[820px] text-[16px] leading-7 text-[#405650]">
-      These are settings and mechanics used by the current scorer, not a substitute for the full rules.
-      The exact profile is <strong>{profile.id}@{profile.version}</strong>.
-    </p>
+    <h2 id="ruleset-at-a-glance" className="font-serif text-[30px] leading-tight text-[#284d45]">Players and tiles</h2>
+    {profile.id !== 'bmja' && <p className="mt-3 max-w-[820px] text-[16px] leading-7 text-[#405650]">These are settings and mechanics used by the current scorer, not a substitute for the full rules.</p>}
     <dl className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
       {highlights.map((id) => {
         const row = profileDimensionValue(values, id)!;
@@ -153,49 +193,41 @@ export function RulesetProfileReport({ profile }: { profile: RulesProfileRef }) 
         return <div key={id} className="rounded-xl border border-[#d8ceb8] bg-[#fdfbf5] p-4">
           <dt className="text-[13px] font-semibold text-[#536860]">{definition.label}</dt>
           <dd className="mt-2 text-[18px] font-semibold leading-6 text-[#284d45]">{readerValue(row)}</dd>
-          <dd className="mt-2 text-[12px] leading-5 text-[#536860]">{runtimeStatusLabel[row.runtimeSupport]} · {sourceStatusLabel[row.sourceStatus]}</dd>
+          {profile.id !== 'bmja' && <dd className="mt-2 text-[12px] leading-5 text-[#536860]">{runtimeStatusLabel[row.runtimeSupport]} · {sourceStatusLabel[row.sourceStatus]}</dd>}
         </div>;
       })}
     </dl>
-    <details className="mt-6 rounded-xl border border-[#d8ceb8] bg-white p-4 sm:p-5">
-      <summary className="cursor-pointer font-semibold text-[#284d45]">See the detailed profile and what it doesn't yet cover</summary>
-      <p className="mt-4 text-[14px] leading-6 text-[#405650]">
-        The shared report currently defines {values.length} dimensions. {gaps} do not yet have a mapped value for this profile.
-        That is a gap in this summary, <strong>not evidence that a rule is absent or unsupported by the scorer</strong>.
-        Other parts of the scorer may already implement the rule. A working scorer also does not, by itself, verify a published source.
-      </p>
-      <p className="mt-3 break-all text-[12px] leading-5 text-[#536860]">
-        Configuration fingerprint: <code>{artifact.rulesFingerprint}</code>
-      </p>
-      {groups.map((group) => {
-        const rows = values.filter((row) => RULES_DIMENSIONS.find((definition) => definition.id === row.dimensionId)?.group === group.id);
-        const mapped = rows.filter(({ value }) => value.status !== 'unknown').length;
-        return <details key={group.id} className="mt-3 rounded-lg border border-[#e4dccd] bg-[#fdfbf5] p-4">
-          <summary className="cursor-pointer font-serif text-[20px] text-[#284d45] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">{group.title}<span className="ml-2 font-sans text-[12px] text-[#536860]">{mapped} of {rows.length} values recorded</span></summary>
-          <dl className="mt-3 text-[14px] leading-6 text-[#405650]">
-            {rows.map((row) => <DimensionDetail key={row.dimensionId} row={row} />)}
-          </dl>
-        </details>;
-      })}
-      <p className="mt-6 text-[13px] leading-6 text-[#405650]">
-        Source references and limitations for this ruleset are explained below. The same shared dimensions will also power comparisons with other exact profiles.
-      </p>
-      <details className="mt-6 rounded-xl border border-[#d8ceb8] bg-white p-4 sm:p-5">
-        <summary className="cursor-pointer font-semibold text-[#284d45]">Open governed source facts and scorer connections ({governedFacts.length})</summary>
-        <p className="mt-3 text-sm leading-6 text-[#405650]">These rows join canonical claims, exact-profile treatment records and registered runtime owners. A representative fixture tests a mechanism; it is not an automatic interpretation of every source claim.</p>
-        <div className="mt-3">{governedFacts.map((fact) => <GovernedFactDetails key={fact.factId} fact={fact} />)}</div>
-      </details>
-      {flowers.available && <section className="mt-6 rounded-xl border border-[#d8ceb8] bg-[#fdfbf5] p-4 sm:p-5" aria-labelledby="flowers-seasons-explanation">
-        <h3 id="flowers-seasons-explanation" className="font-serif text-xl text-[#284d45]">{flowers.title}</h3>
-        <p className="mt-2 text-sm leading-6 text-[#405650]">{flowers.summary}</p>
-        <ul className="mt-3 space-y-2 text-sm leading-6 text-[#405650]">
-          {flowers.scorerBehaviour.map((behaviour, index) => <li key={index}><span className="font-semibold">{['Ordinary hands', 'Fixed special hands', 'Fishing'][index]}:</span> {behaviour}</li>)}
-        </ul>
-        <details className="mt-3 border-t border-[#e5dccb] pt-2 text-xs text-[#596b65]"><summary className="min-h-11 cursor-pointer py-3 font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">Source and scorer details</summary>
-          <ul className="space-y-2 pb-2 leading-5">{flowers.sourceFacts.map(({ claim, source }) => <li key={claim.recordId}><p>{claim.text}</p><p>Claim {claim.recordId} v{claim.recordVersion} · {claim.reviewStatus} · {source.citation} · {source.locator.url ? <a className="underline" href={source.locator.url} target="_blank" rel="noreferrer">{source.locator.label}</a> : source.locator.label} · source {source.recordId} v{source.recordVersion}</p></li>)}</ul>
-          <ul className="list-disc pl-5">{flowers.technical.map(({ subjectId, treatment, mapping, fixtures }) => <li key={subjectId}><code>{subjectId}</code> → {mapping.ruleRef.id} · {treatment.recordId} v{treatment.recordVersion} · tests: {fixtures.join(', ')}</li>)}</ul>
-        </details>
-      </section>}
-    </details>
   </section>;
+}
+
+export function RulesetProfileDetails({ profile }: { profile: RulesProfileRef }) {
+  const artifact = getCurrentCompiledRulesRuntime(profile).artifact;
+  const values = projectProfileDimensions(artifact, CLASSICAL_COMPARATOR_REVIEWED_EVIDENCE);
+  const governedFacts = readGovernedFacts(profile);
+  const flowers = explainBritishFlowersAndSeasons(profile);
+  return <details className="rounded-xl border border-[#d8ceb8] bg-white p-4 sm:p-5">
+    <summary className="min-h-11 cursor-pointer font-semibold text-[#284d45]">More about these rules</summary>
+    <p className="mt-4 text-[14px] leading-6 text-[#405650]">This summary separates what the published rules say from what the scorer currently does. Some details still need confirmation; a missing note here does not mean the scorer lacks that rule.</p>
+    {groups.map((group) => {
+      const rows = values.filter((row) => RULES_DIMENSIONS.find((definition) => definition.id === row.dimensionId)?.group === group.id);
+      return <details key={group.id} className="mt-3 rounded-lg border border-[#e4dccd] bg-[#fdfbf5] p-4">
+        <summary className="min-h-11 cursor-pointer font-serif text-[20px] text-[#284d45] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">{group.title}</summary>
+        <dl className="mt-3 text-[14px] leading-6 text-[#405650]">{rows.map((row) => <DimensionDetail key={row.dimensionId} row={row} />)}</dl>
+      </details>;
+    })}
+    <details className="mt-4 rounded-xl border border-[#d8ceb8] bg-[#fdfbf5] p-4">
+      <summary className="min-h-11 cursor-pointer font-semibold text-[#284d45]">How we checked these rules</summary>
+      <p className="mt-3 text-sm leading-6 text-[#405650]">The published British reference is checked against the scorer and focused behaviour examples. These checks support the specific rules they cover; they do not prove every rule is complete.</p>
+      <div className="mt-3">{governedFacts.map((fact) => <GovernedFactDetails key={fact.factId} fact={fact} />)}</div>
+    </details>
+    {flowers.available && <section className="mt-4 rounded-xl border border-[#d8ceb8] bg-[#fdfbf5] p-4" aria-labelledby="flowers-seasons-explanation">
+      <h3 id="flowers-seasons-explanation" className="font-serif text-xl text-[#284d45]">{flowers.title}</h3>
+      <p className="mt-2 text-sm leading-6 text-[#405650]">{flowers.summary}</p>
+      <ul className="mt-3 space-y-2 text-sm leading-6 text-[#405650]">{flowers.scorerBehaviour.map((behaviour, index) => <li key={index}><span className="font-semibold">{['Ordinary hands', 'Fixed special hands', 'Fishing'][index]}:</span> {behaviour}</li>)}</ul>
+      <details className="mt-3 border-t border-[#e5dccb] pt-2 text-xs text-[#596b65]"><summary className="min-h-11 cursor-pointer py-3 font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">Source and scorer details</summary>
+        <ul className="space-y-2 pb-2 leading-5">{flowers.sourceFacts.map(({ claim, source }) => <li key={claim.recordId}><p>{claim.text}</p><p>Claim {claim.recordId} v{claim.recordVersion} · {claim.reviewStatus} · {source.citation} · {source.locator.url ? <a className="underline" href={source.locator.url} target="_blank" rel="noreferrer">{source.locator.label}</a> : source.locator.label} · source {source.recordId} v{source.recordVersion}</p></li>)}</ul>
+        <ul className="list-disc pl-5">{flowers.technical.map(({ subjectId, treatment, mapping, fixtures }) => <li key={subjectId}><code>{subjectId}</code> → {mapping.ruleRef.id} · {treatment.recordId} v{treatment.recordVersion} · tests: {fixtures.join(', ')}</li>)}</ul>
+      </details>
+    </section>}
+  </details>;
 }

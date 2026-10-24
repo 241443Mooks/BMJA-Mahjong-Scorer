@@ -35,7 +35,7 @@ const displayFacets = Object.entries(ATLAS_FACET_DEFINITIONS);
 export const shouldShowAtlasFacet = (count: number, selected: boolean) => selected || count > 0;
 const publicClubCopy = (value: string) => value.replaceAll('Outside the Box', 'Club - Bramhall 2026').replaceAll('outside-the-box', 'Club - Bramhall 2026');
 const facetName = (id: string) => id.replaceAll('-', ' ').replace(/\b\w/g, (char) => char.toLocaleUpperCase('en-GB'));
-function treatmentAnchor(record: SpecialHandsAtlasRecord) {
+export function treatmentAnchor(record: SpecialHandsAtlasRecord) {
   if (!record.href) return undefined;
   const raw = record.href.split('#')[1];
   return raw && raw in SPECIAL_HAND_ANCHORS ? SPECIAL_HAND_ANCHORS[raw as keyof typeof SPECIAL_HAND_ANCHORS] : raw;

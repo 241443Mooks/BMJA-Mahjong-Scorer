@@ -151,30 +151,35 @@ describe('public rules reference model', () => {
       expect(comparison).toContain(family.clue);
     }
   });
-  it('renders British rules at a glance from the shared exact-profile contract, not an independent score table', () => {
+  it('presents British rules in plain English and keeps technical evidence optional', () => {
     const british = renderToStaticMarkup(createElement(RulesProfilePage, { slug: 'british' }));
-    expect(british).toContain('Rules at a glance');
-    expect(british).toContain('bmja@1.0');
-    expect(british).toContain('The profile uses a 144-tile set, including Flowers and Seasons.');
+    expect(british).toContain('Players and tiles');
+    expect(british).toContain('Four players.');
+    expect(british).toContain('144 tiles, including Flowers and Seasons');
+    expect(british).toContain('How hands work');
+    expect(british).toContain('How scoring works');
     expect(british).toContain('A normal winning hand has four sets and a pair.');
     expect(british).toContain('Ordinary hands score points, then apply doubles.');
     expect(british).toContain('1,000 points (configured default)');
     expect(british).toContain('Each losing player pays the winner according to the hand score.');
-    expect(british).toContain('In the current scorer · Source checked');
-    expect(british).toContain('Source checked');
-    expect(british).toContain('Source finding not recorded');
-    expect(british).toContain('Not established by this report');
-    expect(british).toContain('not evidence that a rule is absent or unsupported by the scorer');
-    expect(british).toContain('not evidence that a rule is absent');
-    expect(british).toContain('Configuration fingerprint');
     expect(british).toContain('What happens after a hand');
-    expect(british).toContain('The published rules describe Goulash after a drawn hand; this scorer does not switch hand mode automatically.');
-    expect(british).toContain('Open governed source facts and scorer connections');
+    expect(british).toContain('The published rules describe Goulash after a drawn hand; this scorer does not switch to Goulash automatically.');
+    expect(british).toContain('Browse');
+    expect(british).toContain('Four Blessings');
+    expect(british).toContain('/special-hands#four-blessings');
+    expect(british).toContain('No reviewed tile example is available for this hand.');
+    expect(british).toContain('when one tile from winning');
+    expect(british).toContain('concealed');
+    expect(british).toContain('How we checked these rules');
+    expect(british.split('More about these rules')[0]).not.toMatch(/(?:pattern|concept)\.bmja\./);
+    expect(british).not.toContain('Configuration fingerprint');
+    expect(british).not.toContain('of 37 values recorded');
+    expect(british).not.toContain('Open governed source facts and scorer connections');
     expect(british).toContain('evidence.rule.classical.flower-season-base-scoring.bmja');
-    expect(british.indexOf('Table and tiles')).toBeLessThan(british.indexOf('Hand structure and play'));
-    expect(british.indexOf('Hand structure and play')).toBeLessThan(british.indexOf('Ready and waiting'));
+    expect(british).toContain('Robbing a Kong still needs eligibility validation');
+    expect(british).toContain('source wording about Blessing and Chow remains unresolved');
 
-    // First slice is a single-profile proof; other profiles are #408.
+    // Other profile pages retain their existing structure.
     const mcr = renderToStaticMarkup(createElement(RulesProfilePage, { slug: 'mcr' }));
     expect(mcr).not.toContain('Rules at a glance');
   });
