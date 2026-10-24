@@ -3,6 +3,7 @@ import { PUBLIC_RULES_DESCRIPTORS } from '../game/rules-presentation';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { createElement } from 'react';
 import { RulesHubPage, RulesProfilePage, chooseRulesHubProfile } from './RulesReference';
+import { ClubRulesPage } from './ClubRulesPage';
 import { familiesBySupportedProfileCount, MAHJONG_FAMILIES, supportedProfilesForFamily } from '../home/mahjong-family-presentation';
 import { MahjongRulesComparedPage } from '../home/MahjongRulesComparedPage';
 import { initialiseCurrentRulesRuntimes } from '../rules-platform/current-runtime-registry';
@@ -179,9 +180,48 @@ describe('public rules reference model', () => {
     expect(british).toContain('Robbing a Kong still needs eligibility validation');
     expect(british).toContain('source wording about Blessing and Chow remains unresolved');
 
-    // Other profile pages retain their existing structure.
+    // British remains the accepted presentation baseline; other profiles use
+    // the same reader-first sequence while retaining their own rule families.
     const mcr = renderToStaticMarkup(createElement(RulesProfilePage, { slug: 'mcr' }));
-    expect(mcr).not.toContain('Rules at a glance');
+    const club = renderToStaticMarkup(createElement(ClubRulesPage));
+    const buzzard = renderToStaticMarkup(createElement(RulesProfilePage, { slug: 'buzzard' }));
+    const western = renderToStaticMarkup(createElement(RulesProfilePage, { slug: 'western' }));
+    for (const page of [club, buzzard, western, mcr]) {
+      for (const heading of ['Players and tiles', 'How hands work', 'How scoring works', 'What happens after a hand', 'Where these rules come from']) {
+        expect(page).toContain(heading);
+      }
+      expect(page.indexOf('Players and tiles')).toBeLessThan(page.indexOf('How hands work'));
+      expect(page.indexOf('How hands work')).toBeLessThan(page.indexOf('How scoring works'));
+      expect(page).toContain('Evidence and scorer links');
+      expect(page).not.toContain('37 values recorded');
+    }
+    expect(club).toContain('local variation');
+    expect(club).toContain('physical blank tiles as substitutes');
+    expect(club).toContain('After a draw there are no payments');
+    expect(club).toContain('Cannon');
+    expect(club).toContain('normal loser-to-loser settlement is suppressed');
+    expect(club).not.toContain('Ordinary hands allow at most one Chow');
+    expect(club.indexOf('Where these rules come from')).toBeLessThan(club.indexOf('Use these rules'));
+
+    expect(buzzard).toContain('Calling and Standing Hand');
+    expect(buzzard).toContain('600 is the source-backed Buzzard default/example');
+    expect(buzzard).toContain('Browse 10 profile-specific hands');
+    expect(buzzard).toContain('does not use the British/T&amp;M special-hand Fishing scores');
+    expect(buzzard).not.toContain('1,000 points (configured default)');
+
+    expect(western).toContain('ordinary rules, settlement and progression still need direct source review');
+    expect(western).toContain('Special hands and patterns');
+    expect(western).toContain('does not present a complete Western points table as settled authority');
+    expect(western).toContain('remains provisional');
+
+    expect(mcr).toContain('8-point minimum from qualifying fan patterns');
+    expect(mcr).toContain('Flowers are added only after that qualification');
+    expect(mcr).toContain('Settlement uses the accepted Basic Points');
+    expect(mcr.match(/Configured in the MCR scorer/g)).toHaveLength(3);
+    expect(mcr).not.toContain('We haven’t confirmed this here yet');
+    expect(mcr).not.toContain('points and doubles');
+    expect(mcr).not.toContain('Fishing scores');
+    expect(mcr).not.toContain('A normal winning hand has four sets and a pair.');
   });
 
 });
