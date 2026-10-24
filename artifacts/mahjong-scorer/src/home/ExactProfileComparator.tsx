@@ -1,17 +1,11 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { PUBLIC_RULES_DESCRIPTORS } from '../game/rules-presentation';
-import { MCR_WMO_2006_PROFILE, mcrProfileResolverEnvironment } from '../rules-platform/mcr-profile';
-import { resolvePlayableProfile } from '../rules-platform/resolver';
-import { currentPlayableResolverEnvironment, currentPlayableProfiles } from '../rules-platform/current-profiles';
+import { getCurrentCompiledRulesRuntime } from '../rules-platform/current-runtime-registry';
+import type { RulesDescriptor } from '../game/rules-presentation';
 import { projectProfileDimensions, RULES_DIMENSIONS, CLASSICAL_COMPARATOR_REVIEWED_EVIDENCE, type ProfileDimensionValue, type RulesDimensionGroup, type RulesDimensionId } from '../rules-platform/profile-dimensions';
 import type { RulesProfileRef } from '../rules-platform/types';
 
-const profiles: { ref: RulesProfileRef; name: string; slug?: string; mcr?: boolean; status?: string }[] = [
-  ...[...currentPlayableProfiles.map(({ identity }) => ({ id: identity.id, version: identity.version })), { id: MCR_WMO_2006_PROFILE.identity.id, version: MCR_WMO_2006_PROFILE.identity.version }].map((ref) => {
-    const descriptor = PUBLIC_RULES_DESCRIPTORS.find(({ profile }) => profile.id === ref.id && profile.version === ref.version);
-    return { ref, name: descriptor?.compactLabel ?? `${ref.id} ${ref.version}`, slug: descriptor?.slug, status: descriptor?.status, mcr: ref.id === MCR_WMO_2006_PROFILE.identity.id };
-  }),
-];
+export const comparatorProfiles = (registry: readonly RulesDescriptor[] = PUBLIC_RULES_DESCRIPTORS) => registry.map((descriptor) => ({ ref: descriptor.profile, name: descriptor.compactLabel, slug: descriptor.slug, status: descriptor.status }));
 const compareGroups = [
   { title: 'Tiles and hands', groups: ['identity-table-tiles', 'hand-play'] as const },
   { title: 'Scoring and special hands', groups: ['ready-declarations', 'scoring'] as const },
@@ -77,19 +71,12 @@ const readableValue = (value: ProfileDimensionValue, profileName: string): strin
   return labels[data] ?? (/^[a-z][a-z0-9-]*\.[a-z0-9.-]+$/.test(data) ? 'A profile-specific rule value' : data);
 };
 
-export function ExactProfileComparator() {
-  const [values, setValues] = useState<Record<string, readonly ProfileDimensionValue[]>>({});
+export function ExactProfileComparator({ registry = PUBLIC_RULES_DESCRIPTORS }: { registry?: readonly RulesDescriptor[] } = {}) {
+  const profiles = useMemo(() => comparatorProfiles(registry), [registry]);
+  const values = useMemo(() => Object.fromEntries(profiles.map(({ ref }) => [`${ref.id}@${ref.version}`, projectProfileDimensions(getCurrentCompiledRulesRuntime(ref).artifact, CLASSICAL_COMPARATOR_REVIEWED_EVIDENCE)])), [profiles]);
   const [left, setLeft] = useState('bmja@1.0');
   const [right, setRight] = useState('outside-the-box@0.1');
   const [differencesOnly, setDifferencesOnly] = useState(true);
-  useEffect(() => {
-    let live = true;
-    Promise.all(profiles.map(async ({ ref, mcr }) => {
-      const artifact = await resolvePlayableProfile(ref, mcr ? mcrProfileResolverEnvironment : currentPlayableResolverEnvironment);
-      return [`${ref.id}@${ref.version}`, projectProfileDimensions(artifact, CLASSICAL_COMPARATOR_REVIEWED_EVIDENCE)] as const;
-    })).then((entries) => { if (live) setValues(Object.fromEntries(entries)); });
-    return () => { live = false; };
-  }, []);
   const l = values[left], r = values[right];
   const selectedLeft = profiles.find(({ ref }) => `${ref.id}@${ref.version}` === left)!;
   const selectedRight = profiles.find(({ ref }) => `${ref.id}@${ref.version}` === right)!;

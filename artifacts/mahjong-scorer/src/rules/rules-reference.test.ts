@@ -128,17 +128,10 @@ describe('public rules reference model', () => {
       expect(actionArea).toContain(`href="/rules/${slug}"`);
       expect(actionArea?.match(/href="\/hand\?rules=/g)).toHaveLength(1);
       expect(actionArea?.match(new RegExp(`href="\\/game\\/${slug}"`, 'g'))).toHaveLength(1);
-      if (slug === 'mcr') expect(actionArea).not.toContain('href="/special-hands"');
-      else expect(actionArea).toContain('href="/special-hands"');
-      if (slug === 'british') {
-        expect(actionArea).toContain('href="/gameplay-basics"');
-        expect(actionArea).toContain('href="/guide"');
-        expect(actionArea).toContain('href="/scoring-examples"');
-      } else {
-        expect(actionArea).not.toContain('href="/gameplay-basics"');
-        expect(actionArea).not.toContain('href="/guide"');
-        expect(actionArea).not.toContain('href="/scoring-examples"');
-      }
+      if (slug !== 'mcr') expect(actionArea).toContain(`href="/special-hands?rules=${slug}"`);
+      expect(actionArea).toContain(`href="/gameplay-basics?rules=${slug}"`);
+      expect(actionArea).toContain(`href="/guide?rules=${slug}"`);
+      expect(actionArea).toContain(`href="/encyclopaedia?rules=${slug}"`);
     }
   });
 

@@ -1,5 +1,6 @@
 // @vitest-environment happy-dom
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { initialiseCurrentRulesRuntimes } from '../rules-platform/current-runtime-registry';
+import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { act, createElement } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { renderToStaticMarkup } from 'react-dom/server';
@@ -8,6 +9,7 @@ import { MahjongRulesComparedPage } from './MahjongRulesComparedPage';
 import { RULES_DIMENSIONS, type ProfileDimensionValue } from '../rules-platform/profile-dimensions';
 
 describe('exact profile comparator', () => {
+  beforeAll(() => initialiseCurrentRulesRuntimes());
   let root: Root | undefined;
   let container: HTMLDivElement | undefined;
   afterEach(async () => {

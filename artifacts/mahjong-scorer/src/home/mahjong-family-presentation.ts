@@ -11,8 +11,8 @@ export type MahjongFamilyPresentation = {
 
 export const PROFILE_LEARNING_LINKS: Partial<Record<PublicRulesSlug, readonly { label: string; href: string }[]>> = {
   british: [
-    { label: 'British gameplay basics', href: '/gameplay-basics' },
-    { label: 'British scoring guide', href: '/guide' },
+    { label: 'British gameplay basics', href: '/gameplay-basics?rules=british' },
+    { label: 'British scoring guide', href: '/guide?rules=british' },
     { label: 'British scoring examples', href: '/scoring-examples' },
   ],
 };

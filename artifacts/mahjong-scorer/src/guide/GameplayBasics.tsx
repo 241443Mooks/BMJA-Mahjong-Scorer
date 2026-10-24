@@ -173,13 +173,14 @@ function ProcessStrip({ steps }: { steps: string[] }) {
   );
 }
 
-export function GameplayBasics() {
+export function GameplayBasics({ readerControl }: { readerControl?: ReactNode } = {}) {
   return (
     <div className="mahjong-shell">
       <SiteHeader />
 
       <main className="mx-auto max-w-[1180px] px-5 py-8 lg:px-8 lg:py-12">
         <ReturnToGame />
+        {readerControl}
         <div className="grid gap-8 lg:grid-cols-[250px_minmax(0,1fr)] lg:gap-12">
           <aside className="lg:sticky lg:top-5 lg:self-start">
             <div className="rounded-xl border border-[#d8ceb8] bg-[#fbf8ed] p-4 shadow-[var(--shadow-sm)]">
@@ -212,7 +213,7 @@ export function GameplayBasics() {
                 Follow the play from the deal to the next hand: turns, claims, replacement tiles and Winds. You do not need to learn the scoring rules to follow what happens at the table.
               </p>
               <a
-                href="/guide#ordinary-scoring"
+                href="/guide?rules=british#ordinary-scoring"
                 className="mt-4 inline-flex items-center gap-2 text-[12px] font-semibold text-[#284d45] underline decoration-[#cfa58f] underline-offset-4 transition hover:text-[#ae6249] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]"
               >
                 Next: how British scoring works <ArrowRight size={13} />
@@ -486,11 +487,11 @@ export function GameplayBasics() {
                   <div className="font-serif text-[22px]">Score a game</div>
                   <div className="mt-2 flex items-center gap-2 text-[11px] text-[#c8d8d1]">Run a four-player table <ArrowRight size={13} className="transition-transform group-hover:translate-x-1" /></div>
                 </a>
-                <a href="/hand" className="group rounded-xl border border-[#d8ceb8] bg-[#fdfbf5] p-5 transition hover:border-[#ae6249] hover:bg-[#fffaf0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">
+                <a href="/hand?rules=british" className="group rounded-xl border border-[#d8ceb8] bg-[#fdfbf5] p-5 transition hover:border-[#ae6249] hover:bg-[#fffaf0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">
                   <div className="font-serif text-[22px] text-[#284d45]">Ready to try it?</div>
                   <div className="mt-2 flex items-center gap-2 text-[11px] text-[#66746e]">Open the British Mahjong hand scorer <ArrowRight size={13} className="text-[#ae6249] transition-transform group-hover:translate-x-1" /></div>
                 </a>
-                <a href="/guide#ordinary-scoring" className="group rounded-xl border border-[#d8ceb8] bg-[#fdfbf5] p-5 transition hover:border-[#ae6249] hover:bg-[#fffaf0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">
+                <a href="/guide?rules=british#ordinary-scoring" className="group rounded-xl border border-[#d8ceb8] bg-[#fdfbf5] p-5 transition hover:border-[#ae6249] hover:bg-[#fffaf0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">
                   <div className="font-serif text-[22px] text-[#284d45]">Scoring basics</div>
                   <div className="mt-2 flex items-center gap-2 text-[11px] text-[#66746e]">Points, doubles and settlement <ArrowRight size={13} className="text-[#ae6249] transition-transform group-hover:translate-x-1" /></div>
                 </a>
@@ -498,7 +499,7 @@ export function GameplayBasics() {
                   <div className="font-serif text-[22px] text-[#284d45]">Worked scoring examples</div>
                   <div className="mt-2 flex items-center gap-2 text-[11px] text-[#66746e]">See a hand built into points and doubles <ArrowRight size={13} className="text-[#ae6249] transition-transform group-hover:translate-x-1" /></div>
                 </a>
-                <a href="/special-hands" className="group rounded-xl border border-[#d8ceb8] bg-[#fdfbf5] p-5 transition hover:border-[#ae6249] hover:bg-[#fffaf0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">
+                <a href="/special-hands?rules=british" className="group rounded-xl border border-[#d8ceb8] bg-[#fdfbf5] p-5 transition hover:border-[#ae6249] hover:bg-[#fffaf0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">
                   <div className="font-serif text-[22px] text-[#284d45]">Special hands</div>
                   <div className="mt-2 flex items-center gap-2 text-[11px] text-[#66746e]">Browse the visual catalogue <ArrowRight size={13} className="text-[#ae6249] transition-transform group-hover:translate-x-1" /></div>
                 </a>

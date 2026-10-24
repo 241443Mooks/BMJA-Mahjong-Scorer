@@ -1,5 +1,7 @@
-import { beforeAll, describe, expect, it, vi } from 'vitest';
-import { renderToStaticMarkup } from 'react-dom/server';
+// @vitest-environment happy-dom
+import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
+import { act } from 'react';
+import { createRoot } from 'react-dom/client';
 import { initialiseCurrentRulesRuntimes } from './rules-platform/current-runtime-registry';
 
 const preference = vi.hoisted(() => ({ profile: { id: 'western-tm', version: '0.1' } }));
@@ -11,7 +13,16 @@ vi.mock('./game/preferred-rules-profile', async (importOriginal) => {
 
 import { SpecialHandsCatalogue, shouldShowAtlasFacet } from './guide/SpecialHandsCatalogue';
 
-beforeAll(() => initialiseCurrentRulesRuntimes());
+beforeAll(() => { vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true); return initialiseCurrentRulesRuntimes(); });
+afterEach(() => window.history.replaceState(null, '', '/special-hands'));
+async function catalogue() {
+  const container = document.createElement('div'); document.body.append(container);
+  const root = createRoot(container);
+  await act(async () => root.render(<SpecialHandsCatalogue />));
+  const html = container.innerHTML;
+  await act(async () => root.unmount()); container.remove();
+  return html;
+}
 
 describe('Special Hands Catalogue rendering', () => {
   it('hides zero-count facet filters unless they are already selected', () => {
@@ -20,8 +31,8 @@ describe('Special Hands Catalogue rendering', () => {
     expect(shouldShowAtlasFacet(0, true)).toBe(true);
   });
 
-  it('keeps the BMJA legacy treatment anchor in the DOM with Western as My rules', () => {
-    const html = renderToStaticMarkup(<SpecialHandsCatalogue />);
+  it('keeps the BMJA legacy treatment anchor in the DOM with Western as My rules', async () => {
+    const html = await catalogue();
     expect(html.match(/id="thirteen-unique-wonders"/g)).toHaveLength(1);
     expect(html).toMatch(/<summary id="thirteen-unique-wonders"[^>]*>[\s\S]*?Thirteen Unique Wonders/);
     expect(html).toContain('aria-pressed="true"');
@@ -45,20 +56,20 @@ describe('Special Hands Catalogue rendering', () => {
     expect([...html.matchAll(/Special Hands Atlas|Atlas currently|Atlas learner|predicate|runtime|executable|qualification|provenance|reviewed concept|learner entr(?:y|ies)|exact treatment|exact profile treatment|under this treatment|accepted by this profile|Facets overlap|Outside the Box|outside-the-box/gi)].map(([copy]) => copy)).toEqual([]);
   });
 
-  it('scopes supplemental Purity guidance to British and All rules, excluding Buzzard and Western', () => {
+  it('scopes supplemental Purity guidance to British and All rules, excluding Buzzard and Western', async () => {
     for (const profile of [{ id: 'buzzard-2000', version: '0.1' }, { id: 'western-tm', version: '0.1' }]) {
       preference.profile = profile;
-    expect(renderToStaticMarkup(<SpecialHandsCatalogue />)).not.toContain('British scoring note');
+    expect(await catalogue()).not.toContain('British scoring note');
     }
     preference.profile = { id: 'bmja', version: '1.0' };
-    expect(renderToStaticMarkup(<SpecialHandsCatalogue />)).toContain('British scoring note');
+    expect(await catalogue()).toContain('British scoring note');
     preference.profile = { id: 'western-tm', version: '0.1' };
   });
 
-  it('explains the MCR catalogue limit in player-facing language', () => {
+  it('explains the MCR catalogue limit in player-facing language', async () => {
     preference.profile = { id: 'mcr-wmo-2006', version: '0.1' };
-    const html = renderToStaticMarkup(<SpecialHandsCatalogue />);
-    expect(html).toContain('Your remembered rules are MCR. This guide currently covers the supported Classical rules');
+    const html = await catalogue();
+    expect(html).toContain('MCR special hands are not currently covered by the available reference');
     expect(html).not.toContain('Your remembered profile');
     expect(html).not.toContain('supported Classical profiles');
     preference.profile = { id: 'western-tm', version: '0.1' };

@@ -40,12 +40,16 @@ export function readPreferredRulesProfile(storage: StorageLike | undefined = bro
   return null;
 }
 
+const notifyPreference = () => { if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function') window.dispatchEvent(new Event('mahjong-reference:preferred-rules-changed')); };
+
 export function setPreferredRulesProfile(profile: RulesProfileRef, storage: StorageLike | undefined = browserStorage()): void {
   const ref = exactRef(profile);
   if (!ref || !isCurrentPreferredRulesProfile(ref)) throw new Error('Cannot store an unavailable rules profile preference.');
   try { storage?.setItem(PREFERRED_RULES_PROFILE_STORAGE_KEY, JSON.stringify(ref)); } catch { /* preference failure never blocks scoring */ }
+  notifyPreference();
 }
 
 export function clearPreferredRulesProfile(storage: StorageLike | undefined = browserStorage()): void {
   try { storage?.removeItem(PREFERRED_RULES_PROFILE_STORAGE_KEY); } catch { /* preference failure never blocks scoring */ }
+  notifyPreference();
 }

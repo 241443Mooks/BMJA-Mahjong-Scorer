@@ -1,3 +1,4 @@
+import { ReaderRulesControl } from '../guide/ReaderRulesContext';
 import { ArrowRight, CircleAlert, ShieldCheck } from 'lucide-react';
 import { useState } from 'react';
 import type { ReactNode } from 'react';
@@ -5,7 +6,8 @@ import { SiteHeader } from '../components/SiteHeader';
 import { descriptorForSlug, PUBLIC_RULES_DESCRIPTORS, type PublicRulesSlug, type RulesDescriptor } from '../game/rules-presentation';
 import { clearPreferredRulesProfile, readPreferredRulesProfile, setPreferredRulesProfile } from '../game/preferred-rules-profile';
 import { BritishSpecialHands, RulesetProfileDetails, RulesetProfileReport } from './RulesetProfileReport';
-import { familiesBySupportedProfileCount, MAHJONG_FAMILIES, PROFILE_LEARNING_LINKS, supportedProfilesForFamily } from '../home/mahjong-family-presentation';
+import { familiesBySupportedProfileCount, MAHJONG_FAMILIES, supportedProfilesForFamily } from '../home/mahjong-family-presentation';
+import { readerSurfaceLinks } from '../guide/reader-content';
 import { specialHandTreatmentsForProfile } from '../rules-knowledge/special-hand-treatments';
 import { readGovernedFacts } from '../rules-knowledge/truth/read-contract';
 import { ATLAS_LEARNER_ENTRIES, atlasExamplesForTreatment, ATLAS_TREATMENT_OWNERSHIP } from '../guide/special-hands-atlas';
@@ -101,15 +103,15 @@ export function RulesSupportStatus({ descriptor }: { descriptor: RulesDescriptor
   );
 }
 
-function PageFrame({ eyebrow, title, intro, children }: { eyebrow: string; title: string; intro: string; children: ReactNode }) {
-  return <div className="mahjong-shell min-h-screen"><SiteHeader /><main className="mx-auto max-w-[1180px] px-5 py-9 lg:px-8 lg:py-14"><article className="overflow-hidden rounded-2xl border border-[#d8ceb8] bg-[#fbf8ed] shadow-[var(--shadow-sm)]"><section className="border-b border-[#ddd3bf] px-5 py-9 sm:px-8 sm:py-12 lg:px-12 lg:py-14"><div className="fine-rule mb-4 w-10" /><p className="font-mono text-[12px] font-semibold uppercase tracking-[.16em] text-[#ae6249]">{eyebrow}</p><h1 className="mt-3 max-w-[900px] font-serif text-[clamp(38px,6vw,62px)] leading-[.98] text-[#284d45]">{title}</h1><p className="mt-5 max-w-[790px] text-[17px] leading-8 text-[#405650]">{intro}</p></section>{children}</article></main></div>;
+function PageFrame({ eyebrow, title, intro, children, readerControl = true }: { eyebrow: string; title: string; intro: string; children: ReactNode; readerControl?: boolean }) {
+  return <div className="mahjong-shell min-h-screen"><SiteHeader /><main className="mx-auto max-w-[1180px] px-5 py-9 lg:px-8 lg:py-14"><article className="overflow-hidden rounded-2xl border border-[#d8ceb8] bg-[#fbf8ed] shadow-[var(--shadow-sm)]"><section className="border-b border-[#ddd3bf] px-5 py-9 sm:px-8 sm:py-12 lg:px-12 lg:py-14"><div className="fine-rule mb-4 w-10" /><p className="font-mono text-[12px] font-semibold uppercase tracking-[.16em] text-[#ae6249]">{eyebrow}</p><h1 className="mt-3 max-w-[900px] font-serif text-[clamp(38px,6vw,62px)] leading-[.98] text-[#284d45]">{title}</h1><p className="mt-5 max-w-[790px] text-[17px] leading-8 text-[#405650]">{intro}</p>{readerControl && <ReaderRulesControl />}</section>{children}</article></main></div>;
 }
 
 function Section({ title, children, id }: { title: string; children: ReactNode; id?: string }) {
   return <section id={id} className="scroll-mt-24 border-b border-[#ddd3bf] px-5 py-9 sm:px-8 sm:py-11 lg:px-12"><h2 className="font-serif text-[30px] leading-tight text-[#284d45]">{title}</h2><div className="mt-4 max-w-[820px] text-[16px] leading-7 text-[#405650]">{children}</div></section>;
 }
 
-const pageCopy: Record<Exclude<PublicRulesSlug, 'club'>, { eyebrow: string; intro: string; identity: ReactNode; table: ReactNode; scoring: ReactNode; after: ReactNode; distinctive: ReactNode; provenance: ReactNode; links: readonly [string, string][] }> = {
+const pageCopy: Partial<Record<PublicRulesSlug, { eyebrow: string; intro: string; identity: ReactNode; table: ReactNode; scoring: ReactNode; after: ReactNode; distinctive: ReactNode; provenance: ReactNode; links: readonly [string, string][] }>> = {
   british: {
     eyebrow: 'Rules reference',
     intro: 'The stable British / BMJA-style profile used by Mahjong Reference. It gives your table a shared way to score a hand, settle it and continue the game.',
@@ -119,7 +121,7 @@ const pageCopy: Record<Exclude<PublicRulesSlug, 'club'>, { eyebrow: string; intr
     after: <>The winner is paid for the winning hand. Losing hands can matter too: settlement compares them with one another, and East pays or receives double where the rules apply. The game tracker carries that settlement and Wind progression forward.</>,
     distinctive: <>British rules deliberately standardise a restricted special-hand catalogue and a one-Chow ordinary-hand limit. Clubs may agree variations, so check the table's own sheet when it differs from this profile.</>,
     provenance: <>These rules are checked against the BMJA-approved British rules reference, including its scoring, special-hand, settlement and Q&amp;A material. This page gives a practical overview; the guide and examples provide the detailed learning material.</>,
-    links: [['Track a British game', '/game/british'], ['Score a hand', '/hand?rules=british'], ['British scoring guide', '/guide'], ['Special hands', '/special-hands'], ['Scoring examples', '/scoring-examples'], ['Compare Mahjong rules', '/mahjong-rules-compared']],
+    links: [['Track a British game', '/game/british'], ['Score a hand', '/hand?rules=british'], ['British scoring guide', '/guide?rules=british'], ['Special hands', '/special-hands?rules=british'], ['Scoring examples', '/scoring-examples'], ['Compare Mahjong rules', '/mahjong-rules-compared']],
   },
   western: {
     eyebrow: 'Rules reference',
@@ -154,13 +156,13 @@ const pageCopy: Record<Exclude<PublicRulesSlug, 'club'>, { eyebrow: string; intr
   },
 };
 
-export function RulesProfilePage({ slug }: { slug: Exclude<PublicRulesSlug, 'club'> }) {
-  const descriptor = descriptorForSlug(slug);
+export function RulesProfilePage({ slug, descriptor = descriptorForSlug(slug) }: { slug: PublicRulesSlug; descriptor?: RulesDescriptor }) {
   const copy = pageCopy[slug];
+  if (!copy) return <SharedRulesProfilePage descriptor={descriptor} />;
   if (slug === 'british') return <PageFrame eyebrow={copy.eyebrow} title={descriptor.title} intro="A practical guide to the British Mahjong rules used by this scorer. Check the hand, its score and what happens next; open the source details when you want to see how a rule was checked.">
     <RulesetProfileReport profile={descriptor.profile} />
     <Section title="How hands work"><p>{copy.table}</p></Section>
-    <Section title="How scoring works"><p>{copy.scoring}</p><p className="mt-3"><a href="/guide" className="font-semibold text-[#284d45] underline underline-offset-4">See the British scoring guide</a> or <a href="/scoring-examples" className="font-semibold text-[#284d45] underline underline-offset-4">worked scoring examples</a>.</p></Section>
+    <Section title="How scoring works"><p>{copy.scoring}</p><p className="mt-3"><a href="/guide?rules=british" className="font-semibold text-[#284d45] underline underline-offset-4">See the British scoring guide</a> or <a href="/scoring-examples" className="font-semibold text-[#284d45] underline underline-offset-4">worked scoring examples</a>.</p></Section>
     <BritishSpecialHands profile={descriptor.profile} />
     <Section id="settlement" title="What happens after a hand"><p>{copy.after}</p><p className="mt-3"><a href="/mahjong-settlement" className="font-semibold text-[#284d45] underline decoration-[#ae6249] underline-offset-4">See a worked settlement example</a>.</p></Section>
     <Section title="Where these rules come from"><div className="space-y-3"><p>{copy.provenance}</p><p>Robbing a Kong still needs eligibility validation, and the source wording about Blessing and Chow remains unresolved. These are open differences in the evidence, not new scoring decisions.</p><RulesetProfileDetails profile={descriptor.profile} /></div></Section>
@@ -177,6 +179,16 @@ export function RulesProfilePage({ slug }: { slug: Exclude<PublicRulesSlug, 'clu
   </PageFrame>;
 }
 
+/** New profiles use this template until additional reviewed teaching is supplied. */
+export function SharedRulesProfilePage({ descriptor }: { descriptor: RulesDescriptor }) {
+  const links = readerSurfaceLinks(descriptor);
+  return <PageFrame eyebrow="Rules reference" title={descriptor.title} intro={descriptor.description}>
+    <RulesetProfileReport profile={descriptor.profile} />
+    <Section title="Source and coverage"><RulesSupportStatus descriptor={descriptor} /><p>A complete physical-play lesson is not currently covered by the available reference. See the scoped guides for what has been established.</p></Section>
+    <Section title="Learn with these rules"><div className="flex flex-wrap gap-4">{Object.entries(links).filter(([key]) => key !== 'reference').map(([key, href]) => <a className="underline" key={key} href={href}>{key === 'specialHands' ? 'Special Hands' : key === 'gameplay' ? 'Gameplay basics' : key === 'scoring' ? 'Scoring guide' : 'Encyclopaedia'}</a>)}</div></Section>
+  </PageFrame>;
+}
+
 export function chooseRulesHubProfile(slug: PublicRulesSlug | null, storage?: Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>) {
   if (slug === null) {
     clearPreferredRulesProfile(storage);
@@ -187,18 +199,19 @@ export function chooseRulesHubProfile(slug: PublicRulesSlug | null, storage?: Pi
   return profile;
 }
 
-export function RulesHubPage() {
+export function RulesHubPage({ registry = PUBLIC_RULES_DESCRIPTORS }: { registry?: readonly RulesDescriptor[] } = {}) {
   const [preferredProfile, setPreferredProfile] = useState(() => readPreferredRulesProfile());
   const selected = preferredProfile
-    ? PUBLIC_RULES_DESCRIPTORS.find(({ profile }) => profile.id === preferredProfile.id && profile.version === preferredProfile.version)
+    ? registry.find(({ profile }) => profile.id === preferredProfile.id && profile.version === preferredProfile.version)
     : undefined;
   const selectProfile = (slug: PublicRulesSlug | null) => {
     setPreferredProfile(chooseRulesHubProfile(slug));
   };
   const classicalFamily = MAHJONG_FAMILIES.find(({ id }) => id === 'classical-western')!;
   const selectedIsClassical = selected ? classicalFamily.supportedProfileSlugs.includes(selected.slug) : false;
-  const learningLinks = selected ? PROFILE_LEARNING_LINKS[selected.slug] ?? [] : [];
-  return <PageFrame eyebrow="Rules" title="Find the Mahjong rules your table uses" intro="You do not need to know the rulebook name. Start with how your game works.">
+  const learningLinks = selected ? [{ label: 'Gameplay basics', href: readerSurfaceLinks(selected).gameplay }, { label: 'Scoring guide', href: readerSurfaceLinks(selected).scoring }, { label: 'Encyclopaedia', href: readerSurfaceLinks(selected).encyclopaedia }] : [];
+  const pickerGroups = [...MAHJONG_FAMILIES.map((family) => ({ name: family.name, profiles: registry.filter(({ slug }) => family.supportedProfileSlugs.includes(slug)) })), { name: 'Other supported rules', profiles: registry.filter(({ slug }) => !MAHJONG_FAMILIES.some((family) => family.supportedProfileSlugs.includes(slug))) }].filter(({ profiles }) => profiles.length);
+  return <PageFrame readerControl={false} eyebrow="Rules" title="Find the Mahjong rules your table uses" intro="You do not need to know the rulebook name. Start with how your game works.">
     <section aria-labelledby="family-recognition" className="border-b border-[#ddd3bf] px-5 py-7 sm:px-8 sm:py-9 lg:px-12">
       <h2 id="family-recognition" className="font-serif text-[27px] leading-tight text-[#284d45]">What kind of Mahjong do you play?</h2>
       <ul className="mt-4 divide-y divide-[#e5dccb]">
@@ -221,10 +234,10 @@ export function RulesHubPage() {
             <span>All rules / No default</span>
             {!selected && <span className="ml-auto font-mono text-[10px] font-semibold uppercase tracking-wide text-[#477562]">Selected</span>}
           </label>
-          {MAHJONG_FAMILIES.filter((family) => supportedProfilesForFamily(family).length > 0).map((family) => <fieldset key={family.id} className="py-2">
+          {pickerGroups.map((family) => <fieldset key={family.name} className="py-2">
             <legend className="py-1 font-serif text-[18px] text-[#284d45]">{family.name}</legend>
             <div className="divide-y divide-[#e5dccb]">
-              {supportedProfilesForFamily(family).map((descriptor) => {
+              {family.profiles.map((descriptor) => {
                 const isSelected = selected?.slug === descriptor.slug;
                 return <label key={descriptor.slug} className={`flex cursor-pointer items-start gap-3 py-3 text-[14px] ${isSelected ? 'font-semibold text-[#284d45]' : 'text-[#405650]'}`}>
                   <input type="radio" name="my-rules-profile" value={descriptor.slug} checked={isSelected} onChange={() => selectProfile(descriptor.slug)} className="h-4 w-4 accent-[#284d45]" />
@@ -246,7 +259,7 @@ export function RulesHubPage() {
           <a href={selected ? `/hand?rules=${selected.slug}` : '/hand'} className={actionClass}>Score a hand <ArrowRight size={16} /></a>
           <a href={selected ? `/game/${selected.slug}` : '/game'} className={secondaryActionClass}>Track a game <ArrowRight size={16} /></a>
           {selected && <a href={`/rules/${selected.slug}`} className={secondaryActionClass}>View these rules</a>}
-          {(!selected || selectedIsClassical) && <a href="/special-hands" className={secondaryActionClass}>Special Hands</a>}
+          {(!selected || selectedIsClassical) && <a href={selected ? readerSurfaceLinks(selected).specialHands : '/special-hands'} className={secondaryActionClass}>Special Hands</a>}
         </div>
         {learningLinks.length > 0 && <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-[13px]">{learningLinks.map(({ label, href }) => <li key={href}><a href={href} className="font-semibold text-[#284d45] underline decoration-[#cfa58f] underline-offset-4">{label}</a></li>)}</ul>}
       </section>
