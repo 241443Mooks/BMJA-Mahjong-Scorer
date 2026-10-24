@@ -21,7 +21,7 @@ describe('shared profile dimension contract', () => {
   beforeAll(() => initialiseCurrentRulesRuntimes());
 
   it('exposes the reviewed finite catalogue with stable IDs, groups and order', () => {
-    expect(RULES_DIMENSIONS).toHaveLength(37);
+    expect(RULES_DIMENSIONS).toHaveLength(38);
     expect(new Set(RULES_DIMENSIONS.map(({ id }) => id)).size).toBe(RULES_DIMENSIONS.length);
     expect(RULES_DIMENSIONS.map(({ order }) => order)).toEqual(RULES_DIMENSIONS.map((_, index) => index + 1));
     expect(RULES_DIMENSIONS.every(({ groupOrder }) => groupOrder >= 1 && groupOrder <= 6)).toBe(true);
@@ -63,6 +63,15 @@ describe('shared profile dimension contract', () => {
     expect(profileDimensionValue(values, 'settlement.false-mahjong')!.value).not.toEqual({ status: 'absent' });
     expect(profileDimensionValue(values, 'profile.identity')!.runtimeSupport).toBe('not-applicable');
     expect(profileDimensionValue(values, 'round.draw-follow-up')!.runtimeSupport).toBe('partial');
+  });
+
+  it('compares draw payments separately from whether a draw score is recorded', () => {
+    const british = project(ref('bmja', '1.0'));
+    const bramhall = project(ref('outside-the-box', '0.1'));
+    expect(profileDimensionValue(british, 'round.draw-settlement')).toMatchObject({ comparisonKey: 'draw-settlement:no-payments' });
+    expect(profileDimensionValue(bramhall, 'round.draw-settlement')).toMatchObject({ comparisonKey: 'draw-settlement:no-payments' });
+    expect(profileDimensionValue(british, 'round.draw-score')).toMatchObject({ comparisonKey: 'draw-score:none', sourceStatus: 'source-verified' });
+    expect(profileDimensionValue(bramhall, 'round.draw-score')).toMatchObject({ value: { status: 'unknown' }, runtimeSupport: 'not-modelled', sourceStatus: 'source-unknown' });
   });
 
   it('keeps comparator scoring numbers tied to the scorer-owned values', () => {

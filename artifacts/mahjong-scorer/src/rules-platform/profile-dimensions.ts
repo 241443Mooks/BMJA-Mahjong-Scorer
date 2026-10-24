@@ -16,7 +16,7 @@ export type RulesDimensionId =
   | 'scoring.nonwinner-special-result' | 'scoring.decomposition-policy'
   | 'settlement.winner-payments' | 'settlement.loser-to-loser' | 'settlement.dealer-multiplier'
   | 'settlement.liability' | 'settlement.false-mahjong' | 'settlement.incorrect-hand'
-  | 'round.draw-settlement' | 'round.draw-follow-up' | 'progression.dealer-retention'
+  | 'round.draw-settlement' | 'round.draw-score' | 'round.draw-follow-up' | 'progression.dealer-retention'
   | 'progression.seat-rotation' | 'progression.prevailing-wind' | 'progression.game-end';
 
 export type RulesDimensionDefinition = {
@@ -45,7 +45,7 @@ const definitions: readonly RulesDimensionDefinition[] = [
   ['settlement.winner-payments','Who pays the winner?','settlement-incidents','medium'], ['settlement.loser-to-loser','Do non-winners settle with each other?','settlement-incidents','high'],
   ['settlement.dealer-multiplier','East/dealer payment multiplier','settlement-incidents','medium'], ['settlement.liability','Liability / one player pays for others','settlement-incidents','very-high'],
   ['settlement.false-mahjong','False Mahjong consequence','settlement-incidents','high'], ['settlement.incorrect-hand','Wrong tile-count consequence','settlement-incidents','high'],
-  ['round.draw-settlement','What happens financially on a draw?','draws-progression','medium'], ['round.draw-follow-up','What happens after a draw?','draws-progression','very-high'],
+  ['round.draw-settlement','Does anyone pay after a draw?','draws-progression','medium'], ['round.draw-score','Is a score recorded for a draw?','draws-progression','medium'], ['round.draw-follow-up','What happens after a draw?','draws-progression','very-high'],
   ['progression.dealer-retention','When does East stay East?','draws-progression','medium'], ['progression.seat-rotation','When do seats rotate?','draws-progression','low'],
   ['progression.prevailing-wind','Prevailing Wind progression','draws-progression','medium'], ['progression.game-end','Full-game end','draws-progression','medium'],
 ].map(([id,label,group,diagnosticValue], index) => ({
@@ -162,7 +162,8 @@ export const CLASSICAL_COMPARATOR_PLAYER_FACTS: Readonly<Record<string, Partial<
     'settlement.winner-payments': auditFact('Each losing player pays the winner according to the hand score.', 'winner-payments:each-loser-pays-winner', 'source-verified', 'executable'),
     'settlement.loser-to-loser': auditFact('Losing players settle score differences with each other.', 'loser-settlement:pairwise-score-differences', 'source-verified', 'executable'),
     'settlement.dealer-multiplier': auditFact('East pays or receives double.', 'dealer-payment:double', 'source-verified', 'executable'),
-    'round.draw-settlement': auditFact('A drawn BMJA hand scores nothing and has no settlement.', 'draw-settlement:no-score-or-payments', 'source-verified', 'executable'),
+    'round.draw-settlement': auditFact('Nobody pays after a drawn hand.', 'draw-settlement:no-payments', 'source-verified', 'executable'),
+    'round.draw-score': auditFact('No score is recorded for a drawn hand.', 'draw-score:none', 'source-verified', 'executable'),
     'round.draw-follow-up': auditFact('The published rules restart as Goulash after a drawn hand; the current scorer does not switch hand mode automatically.', 'draw-follow-up:goulash-source-not-modelled', 'source-verified', 'partial', 'Published source and current scorer behaviour differ here.'),
     'progression.dealer-retention': auditFact('East stays East after an East win or a draw.', 'dealer-retention:east-win-or-draw', 'source-verified', 'executable'),
     'progression.seat-rotation': auditFact('After another player wins, the deal moves to the next seat.', 'seat-rotation:after-non-east-win', 'source-verified', 'executable'),
@@ -194,7 +195,8 @@ export const CLASSICAL_COMPARATOR_PLAYER_FACTS: Readonly<Record<string, Partial<
     'settlement.winner-payments': auditFact('This profile makes each losing player pay the winner according to the hand score.', 'winner-payments:each-loser-pays-winner', 'source-provisional', 'executable', 'Check your table’s agreed rules for local variations.'),
     'settlement.loser-to-loser': auditFact('This profile settles score differences between losing players.', 'loser-settlement:pairwise-score-differences', 'source-provisional', 'executable', 'Check your table’s agreed rules for local variations.'),
     'settlement.dealer-multiplier': auditFact('This profile makes East pay or receive double.', 'dealer-payment:double', 'source-provisional', 'executable', 'Check your table’s agreed rules for local variations.'),
-    'round.draw-settlement': auditFact('Nobody pays anything after a drawn hand in this profile.', 'draw-settlement:no-payments', 'source-provisional', 'executable', 'Check your table’s agreed rules for local variations.'),
+    'round.draw-settlement': auditFact('Nobody pays after a drawn hand in this profile.', 'draw-settlement:no-payments', 'source-provisional', 'executable', 'Check your table’s agreed rules for local variations.'),
+    'round.draw-score': auditFact('The available source does not establish whether a score is recorded for a drawn hand.', undefined, 'source-unknown', 'not-modelled'),
     'round.draw-follow-up': auditFact('East stays East and the next hand is played normally in this profile.', 'draw-follow-up:east-retained-normal-hand', 'source-provisional', 'partial', 'Check your table’s agreed rules for local variations.'),
     'progression.dealer-retention': auditFact('This profile keeps East after an East win or a draw.', 'dealer-retention:east-win-or-draw', 'source-provisional', 'executable', 'Check your table’s agreed rules for local variations.'),
     'progression.seat-rotation': auditFact('This profile moves the deal after another player wins.', 'seat-rotation:after-non-east-win', 'source-provisional', 'executable', 'Check your table’s agreed rules for local variations.'),
@@ -227,7 +229,8 @@ export const CLASSICAL_COMPARATOR_PLAYER_FACTS: Readonly<Record<string, Partial<
     'settlement.liability': auditFact('The club has specific liability incidents, including Cannon and the “No choice!” exception.', 'liability:otb-club-incidents', 'verified-club', 'executable'),
     'settlement.loser-to-loser': auditFact('Losing players settle score differences with each other.', 'loser-settlement:pairwise-score-differences', 'verified-club', 'executable'),
     'settlement.dealer-multiplier': auditFact('East pays or receives double.', 'dealer-payment:double', 'verified-club', 'executable'),
-    'round.draw-settlement': auditFact('Nobody pays anything after a drawn hand.', 'draw-settlement:no-payments', 'verified-club', 'executable'),
+    'round.draw-settlement': auditFact('Nobody pays after a drawn hand.', 'draw-settlement:no-payments', 'verified-club', 'executable'),
+    'round.draw-score': auditFact('The club source does not specify whether a score is recorded for a drawn hand.', undefined, 'source-unknown', 'not-modelled'),
     'round.draw-follow-up': auditFact('East stays East and the next hand is Goulash.', 'draw-follow-up:east-retained-goulash', 'verified-club', 'executable'),
     'progression.dealer-retention': auditFact('East stays East after an East win or a draw.', 'dealer-retention:east-win-or-draw', 'verified-club', 'executable'),
     'progression.seat-rotation': auditFact('After another player wins, the deal moves to the next seat.', 'seat-rotation:after-non-east-win', 'verified-club', 'executable'),
@@ -260,7 +263,8 @@ export const CLASSICAL_COMPARATOR_PLAYER_FACTS: Readonly<Record<string, Partial<
     'settlement.liability': auditFact('A dangerous discard on a source-defined hand can make the discarder pay the full limit to each other player.', 'liability:buzzard-dangerous-discard', 'source-verified', 'executable'),
     'settlement.loser-to-loser': auditFact('Losing players settle score differences with each other.', 'loser-settlement:pairwise-score-differences', 'source-verified', 'executable'),
     'settlement.dealer-multiplier': auditFact('East pays or receives double.', 'dealer-payment:double', 'source-verified', 'executable'),
-    'round.draw-settlement': auditFact('A drawn hand is dead: nobody scores or pays.', 'draw-settlement:no-payments', 'source-verified', 'executable'),
+    'round.draw-settlement': auditFact('Nobody pays after a drawn hand.', 'draw-settlement:no-payments', 'source-verified', 'executable'),
+    'round.draw-score': auditFact('No score is recorded for a drawn hand.', 'draw-score:none', 'source-verified', 'executable'),
     'round.draw-follow-up': auditFact('East stays East and the next hand is played normally.', 'draw-follow-up:east-retained-normal-hand', 'source-verified', 'executable'),
     'progression.dealer-retention': auditFact('East stays East after an East win or a draw.', 'dealer-retention:east-win-or-draw', 'source-verified', 'executable'),
     'progression.seat-rotation': auditFact('After another player wins, the deal moves to the next seat.', 'seat-rotation:after-non-east-win', 'source-verified', 'executable'),
@@ -326,8 +330,8 @@ export const projectProfileDimensions = (
       ? present({ reviewedMeaning: flowersKey })
       : data !== undefined
       ? present(data)
-      : playerFact
-        ? present({ reviewedMeaning: playerFact.comparisonKey ?? 'unresolved' })
+      : playerFact?.comparisonKey
+        ? present({ reviewedMeaning: playerFact.comparisonKey })
         : { status: 'unknown' as const };
     return {
       profile, dimensionId: id, value, displayValue: flowersAnswer ?? playerFact?.playerAnswer ?? display(value),

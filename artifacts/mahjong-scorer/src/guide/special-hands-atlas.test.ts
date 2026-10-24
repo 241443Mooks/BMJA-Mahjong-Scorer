@@ -1,4 +1,6 @@
 import { beforeAll, describe, expect, it } from 'vitest';
+import { createElement } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
 import { BMJA_PROFILE_REF, OUTSIDE_THE_BOX_PROFILE_REF, WESTERN_TM_PROFILE_REF } from '../game/ruleset';
 import { BUZZARD_2000_PROFILE_REF } from '../game/buzzard-2000';
 import { initialiseCurrentRulesRuntimes } from '../rules-platform/current-runtime-registry';
@@ -7,7 +9,7 @@ import { specialHandBindingsForCurrentClassicalProfile } from '../rules-knowledg
 import { specialHandTreatmentsForProfile } from '../rules-knowledge/special-hand-treatments';
 import { ATLAS_EXAMPLE_BY_ID, ATLAS_FACET_DEFINITIONS, ATLAS_LEARNER_ENTRIES, ATLAS_LEARNER_EXAMPLES, ATLAS_TREATMENT_OWNERSHIP, ATLAS_UNRESOLVED_TREATMENTS, CLASSICAL_ATLAS_DISPLAY_PROFILES, SPECIAL_HANDS_ATLAS, atlasBrowseRecords, atlasExposureLabel, atlasExamplesForTreatment, atlasScoreLabel, atlasTreatmentsForEntry, clearAtlasSearchAndProfileFilter, filterAtlasEntriesByFacets, filterSpecialHandsAtlasByProfile, resolveSpecialHandsTarget, searchAtlasLearnerEntries, searchSpecialHandsAtlas, selectAtlasLeadExample } from './special-hands-atlas';
 import { specialHandExampleProvesBmjaTreatment } from './special-hand-examples';
-import { materializeAtlasGenerator } from './AtlasExampleVisual';
+import { AtlasExampleVisual, materializeAtlasGenerator } from './AtlasExampleVisual';
 import { detectSpecialHands } from '../scoring';
 import { SPECIAL_HAND_ANCHORS, specialHandReferenceHref } from './special-hand-references';
 import { atlasExampleProvesTreatment, resolveAtlasScorerExample } from './atlas-scorer-handoff';
@@ -18,6 +20,20 @@ const profiles = [BMJA_PROFILE_REF, WESTERN_TM_PROFILE_REF, OUTSIDE_THE_BOX_PROF
 beforeAll(() => initialiseCurrentRulesRuntimes());
 
 describe('Special Hands Atlas directory projection', () => {
+  it('keeps the knitting, second and longer tile diagrams compact and accessible', () => {
+    for (const exampleId of ['example-knitting-existing', 'example-triple-knitting-existing', 'example-thirteen-wonders-existing']) {
+      const example = ATLAS_EXAMPLE_BY_ID.get(exampleId)!;
+      const markup = renderToStaticMarkup(createElement(AtlasExampleVisual, { example, title: `${exampleId} tile example` }));
+      expect(markup).toContain('flex-wrap');
+      expect(markup).toContain('min-w-0');
+      expect(markup).toContain('role="img"');
+      expect(markup).toContain(`aria-label="${example.accessibleDescription}`);
+      expect(markup.match(/<img\b/g)?.length).toBeGreaterThan(0);
+      expect(markup).not.toContain(`>${example.accessibleDescription}</p>`);
+      expect(markup).toContain('sm:border');
+    }
+  });
+
   it('orders rules choices by newest displayed source year', () => {
     expect(CLASSICAL_ATLAS_DISPLAY_PROFILES.map(({ id }) => id)).toEqual(['outside-the-box', 'bmja', 'buzzard-2000', 'western-tm']);
   });

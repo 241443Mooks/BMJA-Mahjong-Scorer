@@ -83,11 +83,10 @@ describe('exact profile comparator', () => {
     expect(node.textContent).toContain('A waiting hand needs one tile to complete it.');
     expect(node.textContent).not.toContain('Losing players settle score differences with each other.');
     expect(node.textContent).not.toContain('Same in both');
-    expect(node.textContent).toContain('A drawn BMJA hand scores nothing and has no settlement.');
-    expect(node.textContent).toContain('rule.classical.goulash-round-transition');
-    expect(node.textContent).toContain('rule.otb.goulash-round-transition');
-    expect(node.textContent).toContain('scoring.scoreBonusTiles');
-    expect(node.textContent).toContain('evidence.rule.classical.flower-season-base-scoring.bmja');
+    expect(node.textContent).toContain('No score is recorded for a drawn hand.');
+    expect(node.textContent).not.toContain('rule.classical.goulash-round-transition');
+    expect(node.textContent).not.toContain('scoring.scoreBonusTiles');
+    expect(node.textContent).not.toContain('evidence.rule.classical.flower-season-base-scoring.bmja');
     expect(node.textContent).not.toContain('progression.classical-east-cycle');
     expect(node.querySelectorAll('a[href="/rules"]')).toHaveLength(1);
     expect(node.querySelectorAll('a[href="/special-hands"]')).toHaveLength(1);
@@ -102,20 +101,16 @@ describe('exact profile comparator', () => {
     expect(node.textContent).toContain('Ask your table how exposure affects ordinary sets.');
     expect(node.textContent).toContain('Check with your table whether ordinary hands may contain more than one Chow.');
     expect(node.textContent).toContain('Losing players settle score differences with each other.');
-    expect(node.textContent).toContain('Nobody pays anything after a drawn hand.');
+    expect(node.textContent).toContain('Nobody pays after a drawn hand.');
     expect(node.textContent).toContain('Payments and what happens next');
     const drawRow = [...node.querySelectorAll('details article')].find((article) => article.textContent?.includes('What happens after a draw?'))!;
-    await act(async () => { drawRow.querySelector('summary')!.dispatchEvent(new MouseEvent('click', { bubbles: true })); });
-    expect(drawRow.textContent).toContain('source evidence source verified');
-    expect(drawRow.textContent).toContain('app support partial');
-    expect(drawRow.textContent).toContain('verified club');
-    expect(drawRow.textContent).toContain('app support executable');
+    expect(drawRow.textContent).toContain('Published source and current scorer behaviour differ here.');
+    expect(drawRow.textContent).not.toContain('app support');
     const exposureRow = [...node.querySelectorAll('li')].find((item) => item.textContent?.includes('Exposed vs concealed'))!;
     expect(exposureRow.textContent).toContain('Ask your table how exposure affects ordinary sets.');
-    const governedEvidence = [...node.querySelectorAll('details')].find((details) => details.textContent?.includes('Where this comparison comes from'))!;
+    const governedEvidence = [...node.querySelectorAll('details')].find((details) => details.textContent?.includes('Read the rules being compared'))!;
     await act(async () => { governedEvidence.querySelector('summary')!.dispatchEvent(new MouseEvent('click', { bubbles: true })); });
-    expect(governedEvidence.textContent).toContain('rule.classical.goulash-round-transition');
-    expect(governedEvidence.textContent).toContain('rule.classical.flower-season-base-scoring');
+    expect(governedEvidence.querySelectorAll('a[href^="/rules/"]')).toHaveLength(2);
   });
 
   it('keeps unknown facts out of difference cards and retains them in collapsed coverage details', async () => {
@@ -154,6 +149,33 @@ describe('exact profile comparator', () => {
     expect(node.textContent).toContain('Tiles and hands');
     expect(node.textContent).toContain('Payments and what happens next');
     expect(node.textContent).toContain('same');
+    const sourceLinks = [...node.querySelectorAll('details')].find((details) => details.querySelector('summary')?.textContent?.includes('Read the rules being compared'))!;
+    expect(sourceLinks.querySelectorAll('a[href^="/rules/"]')).toHaveLength(1);
+  });
+
+  it('uses payment semantics for draw-payment comparison and keeps score recording separate', async () => {
+    const node = await mount();
+    await act(async () => { node.querySelector<HTMLInputElement>('input[aria-label="Show the same rules too"]')!.click(); });
+    const rows = [...node.querySelectorAll('details article, details li')];
+    const payment = rows.find((item) => item.textContent?.includes('Does anyone pay after a draw?'))!;
+    const score = rows.find((item) => item.textContent?.includes('Is a score recorded for a draw?'))!;
+    expect(payment.textContent).toContain('Nobody pays after a drawn hand.');
+    expect(payment.textContent?.match(/Nobody pays after a drawn hand\./g)).toHaveLength(2);
+    expect(score.textContent).toContain('No score is recorded for a drawn hand.');
+    expect(score.textContent).toContain('does not specify whether a score is recorded');
+  });
+
+  it('links selected exact profiles to their matching public rules pages', async () => {
+    const node = await mount();
+    const first = node.querySelector<HTMLSelectElement>('select[aria-label="First ruleset"]')!;
+    const second = node.querySelector<HTMLSelectElement>('select[aria-label="Second ruleset"]')!;
+    for (const [selection, slug] of [['bmja@1.0', 'british'], ['western-tm@0.1', 'western'], ['outside-the-box@0.1', 'club'], ['buzzard-2000@0.1', 'buzzard'], ['mcr-wmo-2006@0.1', 'mcr']]) {
+      await act(async () => { first.value = selection; first.dispatchEvent(new Event('change', { bubbles: true })); });
+      await act(async () => { second.value = selection; second.dispatchEvent(new Event('change', { bubbles: true })); });
+      const links = [...node.querySelectorAll('details a[href^="/rules/"]')];
+      expect(links).toHaveLength(1);
+      expect(links[0].getAttribute('href')).toBe(`/rules/${slug}`);
+    }
   });
 
   it('labels each answer with its selected profile and exposes the labels to assistive technology on wide layouts', async () => {

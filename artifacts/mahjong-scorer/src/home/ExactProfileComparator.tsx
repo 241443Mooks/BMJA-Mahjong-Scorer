@@ -5,8 +5,6 @@ import { resolvePlayableProfile } from '../rules-platform/resolver';
 import { currentPlayableResolverEnvironment, currentPlayableProfiles } from '../rules-platform/current-profiles';
 import { projectProfileDimensions, RULES_DIMENSIONS, CLASSICAL_COMPARATOR_REVIEWED_EVIDENCE, type ProfileDimensionValue, type RulesDimensionGroup, type RulesDimensionId } from '../rules-platform/profile-dimensions';
 import type { RulesProfileRef } from '../rules-platform/types';
-import { readGovernedFacts } from '../rules-knowledge/truth/read-contract';
-import { GOVERNED_DIMENSION_LINKS } from '../rules-platform/governed-dimension-links';
 
 const profiles: { ref: RulesProfileRef; name: string; slug?: string; mcr?: boolean; status?: string }[] = [
   ...[...currentPlayableProfiles.map(({ identity }) => ({ id: identity.id, version: identity.version })), { id: MCR_WMO_2006_PROFILE.identity.id, version: MCR_WMO_2006_PROFILE.identity.version }].map((ref) => {
@@ -103,12 +101,6 @@ export function ExactProfileComparator() {
   const differentRows = rows.filter(({ state }) => state === 'different');
   const sameRows = rows.filter(({ state }) => state === 'same');
   const checkingRows = rows.filter(({ state }) => state === 'needs-checking');
-  const governedLeft = readGovernedFacts(selectedLeft.ref);
-  const governedRight = readGovernedFacts(selectedRight.ref);
-  const relevantFacts = (profile: typeof selectedLeft, facts: typeof governedLeft) => facts.filter(({ subject }) =>
-    Object.values(GOVERNED_DIMENSION_LINKS).some((profilesById) => profilesById?.[`${profile.ref.id}@${profile.ref.version}`]?.subjectIds.includes(subject.id)));
-  const relevantLeft = relevantFacts(selectedLeft, governedLeft);
-  const relevantRight = relevantFacts(selectedRight, governedRight);
 
   const groupedRows = () => comparisonGroupRows(differentRows, sameRows, !differencesOnly).map(({ title, differences, same, rows: groupRows }) => {
     return <details key={title} className="rounded-xl border border-[#d8ceb8] bg-[#fdfbf5] p-4 sm:p-5">
@@ -136,13 +128,6 @@ export function ExactProfileComparator() {
       </div>
       {definition.id === 'scoring.special-catalogue' && <a href="/special-hands" className="mt-2 inline-block min-h-11 content-center text-sm font-semibold underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">Browse special hands</a>}
       {definition.id === 'scoring.special-catalogue' && <p className="mt-2 text-xs leading-5 text-[#596b65]">These totals count different things—named hands, scoring entries or limit hands—so they are not a like-for-like count.</p>}
-      <details className="mt-2 border-t border-[#e5dccb] pt-2 text-xs text-[#596b65]"><summary className="min-h-11 cursor-pointer py-3 font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">Where this comes from</summary>
-        <div className="space-y-2 pb-2 leading-5">
-          <p>{selectedLeft.name}: source evidence {a.sourceStatus.replaceAll('-', ' ')}; app support {a.runtimeSupport.replaceAll('-', ' ')}.{a.caveat ? ` ${a.caveat}` : ''}</p>
-          <p>{selectedRight.name}: source evidence {b.sourceStatus.replaceAll('-', ' ')}; app support {b.runtimeSupport.replaceAll('-', ' ')}.{b.caveat ? ` ${b.caveat}` : ''}</p>
-          {[...a.provenanceIds, ...b.provenanceIds].some((id) => id.includes('CLASSICAL_COMPARATOR_AUDIT_V1')) && <p>Evidence reference: Classical comparator audit v1.</p>}
-        </div>
-      </details>
     </article>;
   };
 
@@ -170,7 +155,7 @@ export function ExactProfileComparator() {
       {featuredRows.length > 0 && <section aria-labelledby="biggest-differences-title"><h3 id="biggest-differences-title" className="mb-3 font-serif text-2xl text-[#284d45]">Largest established differences</h3><div className="grid gap-3 md:grid-cols-3">{featuredRows.map(({ definition, a, b }) => <article key={definition.id} className="rounded-xl border border-[#d8ceb8] bg-white p-4"><h4 className="font-semibold leading-5 text-[#284d45]">{definition.label}</h4><p className="mt-3 text-sm leading-5 text-[#596b65]"><strong className="text-[#284d45]">{selectedLeft.name}:</strong> {readableValue(a, selectedLeft.name)}</p><p className="mt-2 text-sm leading-5 text-[#596b65]"><strong className="text-[#284d45]">{selectedRight.name}:</strong> {readableValue(b, selectedRight.name)}</p></article>)}</div></section>}
       <section aria-labelledby="details-title"><h3 id="details-title" className="mb-3 font-serif text-2xl text-[#284d45]">Explore the details</h3>{comparisonGroupRows(differentRows, sameRows, !differencesOnly).length ? <div className="space-y-3">{groupedRows()}</div> : <p className="rounded-lg bg-[#efe8da] p-4 text-sm leading-6 text-[#405650]">{sameProfileSelected ? `Both selectors show ${selectedLeft.name} ${selectedLeft.ref.version}, so there are no cross-profile differences to show. Turn on “Show the same rules too” to inspect its established answers; topics without comparable answers remain under “Still to check”.` : 'No differences are established for this pair in the available comparison. That does not mean the rules are the same; see “Still to check” for topics without comparable answers.'}</p>}</section>
       {checkingRows.length > 0 && <details className="rounded-xl border border-[#d8ceb8] bg-[#fbf8ed] p-4"><summary className="min-h-11 cursor-pointer font-serif text-xl text-[#284d45] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">Still to check ({checkingRows.length})</summary><p className="mb-3 mt-2 text-sm leading-6 text-[#596b65]">These topics do not have comparable answers for both versions. An incomplete comparison does not mean a rule is absent.</p><ul className="space-y-3 text-sm leading-6">{checkingRows.map(({ definition, a, b }) => <li key={definition.id}><strong>{definition.label}</strong><p>{selectedLeft.name}: {a.playerAnswer ?? (a.value.status === 'unknown' ? 'No answer is available.' : readableValue(a, selectedLeft.name))}</p><p>{selectedRight.name}: {b.playerAnswer ?? (b.value.status === 'unknown' ? 'No answer is available.' : readableValue(b, selectedRight.name))}</p></li>)}</ul></details>}
-      <details className="rounded-xl border border-[#d8ceb8] bg-white p-4"><summary className="min-h-11 cursor-pointer font-serif text-lg text-[#284d45]">Where this comparison comes from ({relevantLeft.length + relevantRight.length} linked facts)</summary><p className="mt-2 text-sm leading-6 text-[#596b65]">Governed fact links cover named components of broader dimensions. They do not claim that one fact covers an entire scoring or play policy. Each comparison also keeps its own source and app-support evidence.</p><div className="mt-3 grid gap-4 sm:grid-cols-2">{[[selectedLeft, relevantLeft], [selectedRight, relevantRight]].map(([profile, facts], profileIndex) => <div key={String((profile as typeof selectedLeft).ref.id) + "-" + profileIndex}><h4 className="font-semibold">{(profile as typeof selectedLeft).name}</h4><ul className="mt-2 space-y-2 text-xs leading-5">{(facts as typeof relevantLeft).map((fact) => <li key={fact.factId} className="border-t border-[#e5dccb] pt-2"><strong className="break-all">{fact.subject.id}</strong><p>Dimensions: {RULES_DIMENSIONS.filter(({ id }) => GOVERNED_DIMENSION_LINKS[id]?.[`${fact.profile.id}@${fact.profile.version}`]?.subjectIds.includes(fact.subject.id)).map(({ label }) => label).join(', ')} (component coverage)</p><p>Treatment: {fact.treatment ? `${fact.treatment.recordId} v${fact.treatment.recordVersion}` : 'missing'} · scorer mapping: {fact.runtime.mappingState}{fact.runtime.ref ? ` · ${fact.runtime.ref.kind}:${fact.runtime.ref.id}` : ''} · capability: {fact.runtime.capability} · conformance: {fact.runtime.conformance}</p>{fact.claims.map((claim) => <p key={claim.recordId}>{claim.recordId} v{claim.recordVersion} · {claim.status} · {claim.source?.recordId ?? 'source missing'} v{claim.source?.recordVersion ?? '—'} · {claim.source?.citation ?? 'Source unavailable'} · {claim.source?.locator.label ?? 'Locator unavailable'}</p>)}</li>)}</ul></div>)}</div></details>
+      <details className="rounded-xl border border-[#d8ceb8] bg-white p-4"><summary className="min-h-11 cursor-pointer font-serif text-lg text-[#284d45] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">Read the rules being compared</summary><ul className="mt-2 space-y-2 text-sm leading-6">{[selectedLeft, ...(left === right ? [] : [selectedRight])].map((profile) => <li key={`${profile.ref.id}@${profile.ref.version}`}><a className="font-semibold text-[#284d45] underline underline-offset-2" href={profile.slug ? `/rules/${profile.slug}` : '/rules'}>{profile.name} · {profile.ref.version}</a></li>)}</ul></details>
     </div>}
   </section>;
 }
