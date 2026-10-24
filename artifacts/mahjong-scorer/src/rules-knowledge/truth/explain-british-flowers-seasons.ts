@@ -1,22 +1,18 @@
 import type { EvidenceClaim, ProfileTreatment, RuntimeTreatmentRef, SemanticSubject, SourceRecord, VersionedTruthRecord } from '../../rules-platform/truth-model';
 import type { RulesProfileRef } from '../../rules-platform/types';
+import { BMJA_BONUS_TILE_SCORING, describeBonusTileScoring, type BonusTileScoringContract } from '../../scoring/rules';
 import { currentTruthCorpus } from './current';
 import type { TruthCorpus } from './records';
 import { formatSourceLocator } from './explain-runtime-treatment';
-import { isClassicalScoringRule } from './classical-scoring-runtime';
+import { flowerSeasonRuntimeRefBySubject, isClassicalScoringRule } from './classical-scoring-runtime';
 
 const profile = { id: 'bmja', version: '1.0' } as const;
-const runtimeRuleBySubject = {
-  'rule.classical.flower-season-base-scoring': 'scoring.scoreBonusTiles',
-  'rule.classical.own-flower-season-double': 'scoring.scoreBonusDoubles',
-  'rule.classical.complete-flower-season-set-double': 'scoring.scoreBonusDoubles',
-} as const;
-
+type SubjectId = keyof typeof flowerSeasonRuntimeRefBySubject;
 type ResolvedFact = {
-  subject: SemanticSubject;
-  claim: EvidenceClaim;
-  treatment: ProfileTreatment;
-  source: SourceRecord;
+  subject: VersionedTruthRecord<SemanticSubject>;
+  claim: VersionedTruthRecord<EvidenceClaim>;
+  treatment: VersionedTruthRecord<ProfileTreatment>;
+  source: VersionedTruthRecord<SourceRecord>;
   runtime: RuntimeTreatmentRef;
 };
 
@@ -28,51 +24,57 @@ export type BritishFlowersSeasonsExplanation =
       title: string;
       summary: string;
       sourceFacts: readonly {
-        claim: string;
-        citation: string;
-        locator: { label: string; url?: string };
+        claim: { recordId: string; recordVersion: number; reviewStatus: EvidenceClaim['status']; text: string };
+        source: {
+          recordId: string;
+          recordVersion: number;
+          sourceId: string;
+          citation: string;
+          authority: SourceRecord['authority'];
+          locator: { label: string; url?: string };
+        };
       }[];
       scorerBehaviour: readonly string[];
-      technical: readonly { subjectId: string; runtimeRule: string }[];
+      technical: readonly {
+        subjectId: string;
+        treatment: { recordId: string; recordVersion: number; runtimeState: ProfileTreatment['runtimeState'] };
+        mapping: { state: 'connected'; ruleRef: RuntimeTreatmentRef };
+        fixture: { file: string; cases: readonly string[] };
+      }[];
     };
 
-const currentRecords = <T>(records: readonly VersionedTruthRecord<T>[]) => records
-  .filter(({ lifecycle }) => lifecycle === 'current')
-  .map(({ record }) => record);
+const current = <T>(records: readonly VersionedTruthRecord<T>[]) => records
+  .filter(({ lifecycle }) => lifecycle === 'current');
 
 const exactlyOne = <T>(items: readonly T[]): T | undefined => items.length === 1 ? items[0] : undefined;
 
 const resolveFact = (
   corpus: TruthCorpus,
   requestedProfile: RulesProfileRef,
-  subjectId: keyof typeof runtimeRuleBySubject,
+  subjectId: SubjectId,
 ): ResolvedFact | undefined => {
   if (requestedProfile.id !== profile.id || requestedProfile.version !== profile.version) return undefined;
-  const subjects = currentRecords(corpus.subjects).filter((subject) => subject.id === subjectId);
-  const subject = exactlyOne(subjects);
-  const treatments = currentRecords(corpus.treatments).filter((treatment) =>
-    treatment.subjectId === subjectId
-    && treatment.profile.id === requestedProfile.id
-    && treatment.profile.version === requestedProfile.version);
-  const treatment = exactlyOne(treatments);
-  if (!subject || !treatment || treatment.runtimeState.kind !== 'executable') return undefined;
+  const subject = exactlyOne(current(corpus.subjects).filter(({ record }) => record.id === subjectId));
+  const treatment = exactlyOne(current(corpus.treatments).filter(({ record }) =>
+    record.subjectId === subjectId
+    && record.profile.id === requestedProfile.id
+    && record.profile.version === requestedProfile.version));
+  if (!subject || !treatment || treatment.record.runtimeState.kind !== 'executable') return undefined;
 
-  const expectedRule = runtimeRuleBySubject[subjectId];
-  const runtime = treatment.runtimeState.ref;
-  if (runtime.kind !== 'rule' || runtime.id !== expectedRule || !isClassicalScoringRule(requestedProfile, runtime.id)) return undefined;
+  const expected = flowerSeasonRuntimeRefBySubject[subjectId];
+  const runtime = treatment.record.runtimeState.ref;
+  if (runtime.kind !== expected.kind || runtime.id !== expected.id || !isClassicalScoringRule(requestedProfile, runtime.id)) return undefined;
 
-  const claims = currentRecords(corpus.claims).filter((claim) =>
-    treatment.evidenceClaimIds.includes(claim.claimId)
-    && claim.subjectId === subjectId
-    && claim.supportsProfile?.id === requestedProfile.id
-    && claim.supportsProfile.version === requestedProfile.version
-    && (claim.status === 'verified' || claim.status === 'verified-club'));
-  const claim = exactlyOne(claims);
+  const claim = exactlyOne(current(corpus.claims).filter(({ record }) =>
+    treatment.record.evidenceClaimIds.includes(record.claimId)
+    && record.subjectId === subjectId
+    && record.supportsProfile?.id === requestedProfile.id
+    && record.supportsProfile.version === requestedProfile.version
+    && (record.status === 'verified' || record.status === 'verified-club')));
   if (!claim) return undefined;
-  const sources = currentRecords(corpus.sources).filter((source) =>
-    source.sourceId === claim.sourceId
-    && source.authorityForProfileIds.includes(requestedProfile.id));
-  const source = exactlyOne(sources);
+  const source = exactlyOne(current(corpus.sources).filter(({ record }) =>
+    record.sourceId === claim.record.sourceId
+    && record.authorityForProfileIds.includes(requestedProfile.id)));
   if (!source) return undefined;
   return { subject, claim, treatment, source, runtime };
 };
@@ -81,30 +83,51 @@ const resolveFact = (
 export const explainBritishFlowersAndSeasons = (
   requestedProfile: RulesProfileRef = profile,
   corpus: TruthCorpus = currentTruthCorpus,
+  contract: BonusTileScoringContract = BMJA_BONUS_TILE_SCORING,
 ): BritishFlowersSeasonsExplanation => {
-  const facts = (Object.keys(runtimeRuleBySubject) as (keyof typeof runtimeRuleBySubject)[])
-    .map((subjectId) => resolveFact(corpus, requestedProfile, subjectId));
+  const subjectIds = Object.keys(flowerSeasonRuntimeRefBySubject) as SubjectId[];
+  const facts = subjectIds.map((subjectId) => resolveFact(corpus, requestedProfile, subjectId));
   if (facts.some((fact) => fact === undefined)) return { available: false };
-
   const resolved = facts as ResolvedFact[];
+  const description = describeBonusTileScoring(contract);
+
   return {
     available: true,
     profile: { id: requestedProfile.id, version: requestedProfile.version },
     title: 'Flowers and Seasons',
-    summary: 'Each Flower or Season adds 4 points. Your matching Flower or Season gives one double. A complete set gives two doubles in total, including that matching-tile double.',
+    summary: description.summary,
     sourceFacts: resolved.map(({ claim, source }) => ({
-      claim: claim.claim,
-      citation: source.citation,
-      locator: {
-        label: formatSourceLocator(claim.locator),
-        ...(claim.locator.kind === 'url' ? { url: claim.locator.url } : {}),
+      claim: {
+        recordId: claim.record.claimId,
+        recordVersion: claim.recordVersion,
+        reviewStatus: claim.record.status,
+        text: claim.record.claim,
+      },
+      source: {
+        recordId: source.record.sourceId,
+        recordVersion: source.recordVersion,
+        sourceId: source.record.sourceId,
+        citation: source.record.citation,
+        authority: source.record.authority,
+        locator: {
+          label: formatSourceLocator(claim.record.locator),
+          ...(claim.record.locator.kind === 'url' ? { url: claim.record.locator.url } : {}),
+        },
       },
     })),
-    scorerBehaviour: [
-      'For an ordinary hand, bonus points are included in the basic score and ordinary doubles apply to that score.',
-      'For a fixed special hand, its fixed value stays separate; eligible Flower and Season doubles apply only to bonus-tile points. The scorer also applies the published final-discard bonus to those points.',
-      'While fishing, the scorer keeps bonus points and eligible own-tile or complete-set doubles with the fishing result; the existing scorer chooses the fishing value.',
-    ],
-    technical: resolved.map(({ subject, runtime }) => ({ subjectId: subject.id, runtimeRule: runtime.id })),
+    scorerBehaviour: [description.behavior.ordinary, description.behavior.fixedSpecial, description.behavior.fishing],
+    technical: resolved.map(({ subject, treatment, runtime }) => ({
+      subjectId: subject.record.id,
+      treatment: {
+        recordId: treatment.record.treatmentId,
+        recordVersion: treatment.recordVersion,
+        runtimeState: treatment.record.runtimeState,
+      },
+      mapping: { state: 'connected', ruleRef: runtime },
+      fixture: {
+        file: 'src/rules-platform/truth-british-flowers-seasons.test.ts',
+        cases: ['keeps the linked scorer behaviour in ordinary, fixed-special and fishing calculations'],
+      },
+    })),
   };
 };

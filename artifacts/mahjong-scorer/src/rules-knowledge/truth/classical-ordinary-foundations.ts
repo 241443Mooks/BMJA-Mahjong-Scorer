@@ -1,5 +1,6 @@
 import type { EvidenceClaim, ProfileTreatment, RuntimeTreatmentRef, SemanticSubject } from '../../rules-platform/truth-model';
 import { versioned } from './records';
+import { flowerSeasonRuntimeRefBySubject } from './classical-scoring-runtime';
 
 type ProfileKey = 'bmja' | 'outside-the-box' | 'buzzard-2000';
 type ClaimRow = { profile: ProfileKey; text: string; section: string; page?: string; locatorUrl?: string };
@@ -91,11 +92,7 @@ const profileRefs = {
 
 const runtimeRefFor = (subjectId: string, profile: ProfileKey): RuntimeTreatmentRef | undefined => {
   if (profile !== 'bmja') return undefined;
-  if (subjectId === 'rule.classical.flower-season-base-scoring') return { kind: 'rule', id: 'scoring.scoreBonusTiles' };
-  if (subjectId === 'rule.classical.own-flower-season-double' || subjectId === 'rule.classical.complete-flower-season-set-double') {
-    return { kind: 'rule', id: 'scoring.scoreBonusDoubles' };
-  }
-  return undefined;
+  return flowerSeasonRuntimeRefBySubject[subjectId as keyof typeof flowerSeasonRuntimeRefBySubject];
 };
 
 const evidence = families.flatMap(({ id: subjectId, claims }) => Object.values(claims).map((row) => {

@@ -20,6 +20,48 @@ const double = (
   amount = 1,
 ): RuleResult => ({ id, label, description, amount, unit: 'doubles' });
 
+/** Single owner for the BMJA bonus-tile values and their explanatory conditions. */
+export type BonusTileScoringContract = {
+  pointsEach: number;
+  ownTileDoubles: number;
+  completeSetSize: number;
+  completeSetDoubles: number;
+  completeSetIncludesOwnTile: boolean;
+  modes: {
+    ordinary: { points: 'ordinary-base'; doubles: 'whole-score' };
+    fixedSpecial: { points: 'separate-bonus-component'; doubles: 'bonus-only' | 'none'; finalDiscardDoubles: number };
+    fishing: { points: 'separate-bonus-component'; doubles: 'bonus-only' | 'none' };
+  };
+};
+
+export const BMJA_BONUS_TILE_SCORING: BonusTileScoringContract = Object.freeze({
+  pointsEach: 4,
+  ownTileDoubles: 1,
+  completeSetSize: 4,
+  completeSetDoubles: 2,
+  completeSetIncludesOwnTile: true,
+  modes: {
+    ordinary: { points: 'ordinary-base', doubles: 'whole-score' },
+    fixedSpecial: { points: 'separate-bonus-component', doubles: 'bonus-only', finalDiscardDoubles: 1 },
+    fishing: { points: 'separate-bonus-component', doubles: 'bonus-only' },
+  },
+} satisfies BonusTileScoringContract);
+
+export const bonusTileSubtotal = (
+  points: number,
+  doubles: number,
+  treatment: 'bonus-only' | 'none',
+): number => treatment === 'bonus-only' ? points * 2 ** doubles : points;
+
+export const describeBonusTileScoring = (contract: BonusTileScoringContract) => ({
+  summary: `Each Flower or Season adds ${contract.pointsEach} points. Your matching Flower or Season gives ${contract.ownTileDoubles} double${contract.ownTileDoubles === 1 ? '' : 's'}. A complete set gives ${contract.completeSetDoubles} doubles${contract.completeSetIncludesOwnTile ? ', including that matching-tile double' : ', with the matching-tile double counted separately'}.`,
+  behavior: {
+    ordinary: `For an ordinary hand, Flower and Season points join the ${contract.modes.ordinary.points === 'ordinary-base' ? 'basic score' : contract.modes.ordinary.points}; doubles apply to the ${contract.modes.ordinary.doubles === 'whole-score' ? 'whole ordinary score' : contract.modes.ordinary.doubles}.`,
+    fixedSpecial: `For a fixed special hand, its value stays separate and Flower/Season points use a ${contract.modes.fixedSpecial.points}; eligible doubles apply ${contract.modes.fixedSpecial.doubles === 'bonus-only' ? 'only to those bonus points' : 'not to those bonus points'}. A final discard adds ${contract.modes.fixedSpecial.finalDiscardDoubles} bonus double${contract.modes.fixedSpecial.finalDiscardDoubles === 1 ? '' : 's'}.`,
+    fishing: `While fishing, Flower/Season points use a ${contract.modes.fishing.points}; eligible doubles apply ${contract.modes.fishing.doubles === 'bonus-only' ? 'only to those bonus points' : 'not to those bonus points'}. The scorer retains ownership of the fishing value.`,
+  },
+});
+
 /**
  * BMJA rule: chows score no basic points. They are deliberately omitted.
  * Pungs score 2/4 for exposed minor/major and twice that when concealed.
@@ -93,14 +135,17 @@ export const scoreHonorPairs = (
     return results;
   });
 
-/** BMJA rule: every flower and season scores 4 basic points. */
-export const scoreBonusTiles = (hand: MahjongHand): RuleResult[] =>
+/** BMJA rule: every flower and season scores four basic points. */
+export const scoreBonusTiles = (
+  hand: MahjongHand,
+  contract: BonusTileScoringContract = BMJA_BONUS_TILE_SCORING,
+): RuleResult[] =>
   hand.bonusTiles.map((tile) =>
     point(
       `bonus-${tile.family}-${tile.number}`,
       `${tile.family === 'flower' ? 'Flower' : 'Season'} ${tile.number}`,
-      'Every bonus tile scores 4.',
-      4,
+      `Every bonus tile scores ${contract.pointsEach}.`,
+      contract.pointsEach,
     ),
   );
 
@@ -185,26 +230,38 @@ export const scoreHonorDoubles = (
 export const scoreBonusDoubles = (
   hand: MahjongHand,
   context: GameContext,
+  contract: BonusTileScoringContract = BMJA_BONUS_TILE_SCORING,
 ): RuleResult[] => {
   const rules: RuleResult[] = [];
   const ownNumber = windNumber(context.playerWind);
   for (const family of ['flower', 'season'] as const) {
     const familyTiles = hand.bonusTiles.filter((tile) => tile.family === family);
-    if (familyTiles.length === 4) {
+    if (familyTiles.length === contract.completeSetSize) {
       rules.push(
         double(
           `${family}-bouquet`,
           `Bouquet of ${family}s`,
-          `All four ${family}s give two doubles, including the own ${family}.`,
-          2,
+          contract.completeSetIncludesOwnTile
+            ? `All ${contract.completeSetSize} ${family}s give ${contract.completeSetDoubles} doubles, including the own ${family}.`
+            : `All ${contract.completeSetSize} ${family}s give ${contract.completeSetDoubles} doubles; the own ${family} is counted separately.`,
+          contract.completeSetDoubles,
         ),
       );
+      if (!contract.completeSetIncludesOwnTile && familyTiles.some((tile) => tile.number === ownNumber)) {
+        rules.push(double(
+          `own-${family}`,
+          `Own ${family}`,
+          `The ${family} matching the player's wind gives ${contract.ownTileDoubles} double${contract.ownTileDoubles === 1 ? '' : 's'}.`,
+          contract.ownTileDoubles,
+        ));
+      }
     } else if (familyTiles.some((tile) => tile.number === ownNumber)) {
       rules.push(
         double(
           `own-${family}`,
           `Own ${family}`,
-          `The ${family} matching the player's wind gives one double.`,
+          `The ${family} matching the player's wind gives ${contract.ownTileDoubles} double${contract.ownTileDoubles === 1 ? '' : 's'}.`,
+          contract.ownTileDoubles,
         ),
       );
     }
