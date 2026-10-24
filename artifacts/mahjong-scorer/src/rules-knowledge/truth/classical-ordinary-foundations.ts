@@ -1,4 +1,4 @@
-import type { EvidenceClaim, ProfileTreatment, SemanticSubject } from '../../rules-platform/truth-model';
+import type { EvidenceClaim, ProfileTreatment, RuntimeTreatmentRef, SemanticSubject } from '../../rules-platform/truth-model';
 import { versioned } from './records';
 
 type ProfileKey = 'bmja' | 'outside-the-box' | 'buzzard-2000';
@@ -89,6 +89,15 @@ const profileRefs = {
   'buzzard-2000': { id: 'buzzard-2000', version: '0.1' },
 } as const;
 
+const runtimeRefFor = (subjectId: string, profile: ProfileKey): RuntimeTreatmentRef | undefined => {
+  if (profile !== 'bmja') return undefined;
+  if (subjectId === 'rule.classical.flower-season-base-scoring') return { kind: 'rule', id: 'scoring.scoreBonusTiles' };
+  if (subjectId === 'rule.classical.own-flower-season-double' || subjectId === 'rule.classical.complete-flower-season-set-double') {
+    return { kind: 'rule', id: 'scoring.scoreBonusDoubles' };
+  }
+  return undefined;
+};
+
 const evidence = families.flatMap(({ id: subjectId, claims }) => Object.values(claims).map((row) => {
   const claimId = `evidence.${subjectId}.${row.profile}`;
   const locator = row.profile === 'bmja'
@@ -120,11 +129,12 @@ export const classicalOrdinaryFoundationTreatments = families.flatMap(({ id: sub
     const profileKey = profile as ProfileKey;
     const treatmentId = `${profileRefs[profileKey].id}@${profileRefs[profileKey].version}:${subjectId}`;
     const claimId = `evidence.${subjectId}.${profileKey}`;
+    const runtimeRef = runtimeRefFor(subjectId, profileKey);
     const record: ProfileTreatment = {
       treatmentId,
       profile: profileRefs[profileKey],
       subjectId,
-      runtimeState: { kind: 'migration-incomplete' },
+      runtimeState: runtimeRef ? { kind: 'executable', ref: runtimeRef } : { kind: 'migration-incomplete' },
       evidenceClaimIds: [claimId],
     };
     return versioned(treatmentId, record);
@@ -141,7 +151,7 @@ export const classicalOrdinaryFoundationCoverage = families.flatMap(({ id, claim
       profile: profileRefs[profile],
       evidenceStatus: (row ? 'source-ready' : 'not-applicable') as 'source-ready' | 'source-unresolved' | 'not-applicable',
       recordStatus: (row ? 'migrated' : 'not-applicable') as 'migrated' | 'not-migrated' | 'not-applicable',
-      treatmentStatus: (row ? 'runtime-edge-migration-incomplete' : 'not-applicable') as 'migrated' | 'runtime-edge-migration-incomplete' | 'present-not-modelled' | 'not-applicable',
+      treatmentStatus: (row ? runtimeRefFor(id, profile) ? 'migrated' : 'runtime-edge-migration-incomplete' : 'not-applicable') as 'migrated' | 'runtime-edge-migration-incomplete' | 'present-not-modelled' | 'not-applicable',
     };
   }),
 );

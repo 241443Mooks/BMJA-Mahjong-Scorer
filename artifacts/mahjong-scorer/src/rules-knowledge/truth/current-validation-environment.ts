@@ -4,12 +4,14 @@ import type { RuntimeTreatmentRef } from '../../rules-platform/truth-model';
 import type { RulesProfileRef } from '../../rules-platform/types';
 import type { TruthValidationEnvironment } from './integrity';
 import { mcrTruthValidationEnvironment } from './mcr-validation-environment';
+import { isClassicalScoringRule } from './classical-scoring-runtime';
 
 /** Family-specific joins live at the edge; the truth validator only sees this family-neutral adapter. */
 export const currentTruthValidationEnvironment: TruthValidationEnvironment = {
   profileExists: (profile: RulesProfileRef) => currentPlayableResolverEnvironment.profiles.get(profile) !== undefined
     || mcrTruthValidationEnvironment.profileExists(profile),
   runtimeTreatmentExists: (profile: RulesProfileRef, ref: RuntimeTreatmentRef) => {
+    if (ref.kind === 'rule') return isClassicalScoringRule(profile, ref.id);
     if (ref.kind === 'binding') {
       const classicalBinding = specialHandBindingsForCurrentClassicalProfile(profile).some((binding) =>
         binding.profile.id === profile.id

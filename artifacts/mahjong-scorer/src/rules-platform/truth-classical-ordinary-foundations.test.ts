@@ -39,7 +39,8 @@ describe('Issue 440C1 ordinary scoring foundations', () => {
     expect(subjects.map(({ record }) => record.id)).toEqual(expectedInventory);
     expect(claims).toHaveLength(39);
     expect(treatments).toHaveLength(39);
-    expect(treatments.every(({ record }) => record.runtimeState.kind === 'migration-incomplete')).toBe(true);
+    expect(treatments.filter(({ record }) => record.runtimeState.kind === 'executable')).toHaveLength(3);
+    expect(treatments.filter(({ record }) => record.runtimeState.kind === 'migration-incomplete')).toHaveLength(36);
     expect(treatments.every(({ record }) => !('score' in record) && !('value' in record))).toBe(true);
     expect(currentTruthIndex.treatmentsForProfile({ id: 'western-tm', version: '0.1' }).some(({ record }) => expectedInventory.includes(record.subjectId))).toBe(false);
   });
@@ -53,7 +54,9 @@ describe('Issue 440C1 ordinary scoring foundations', () => {
       expect(treatments).toHaveLength(13);
       expect(claims).toHaveLength(treatments.length);
       expect(treatments.every(({ record }) => record.evidenceClaimIds.length === 1 && claims.some(({ record: claim }) => claim.claimId === record.evidenceClaimIds[0]))).toBe(true);
-      expect(treatments.every(({ record }) => record.runtimeState.kind === 'migration-incomplete')).toBe(true);
+      const executable = treatments.filter(({ record }) => record.runtimeState.kind === 'executable');
+      expect(executable).toHaveLength(profile.id === 'bmja' ? 3 : 0);
+      expect(treatments.filter(({ record }) => record.runtimeState.kind === 'migration-incomplete')).toHaveLength(profile.id === 'bmja' ? 10 : 13);
     }
     expect(c1Claims.filter(({ record }) => record.sourceId === 'bmja-scoring' && record.status === 'verified')).toHaveLength(13);
     expect(c1Claims.filter(({ record }) => record.sourceId === 'otb-guide-2026-09' && record.status === 'verified-club')).toHaveLength(13);
@@ -97,7 +100,8 @@ describe('Issue 440C1 ordinary scoring foundations', () => {
     expect(classicalOrdinaryFoundationCoverage).toHaveLength(48);
     expect(classicalOrdinaryFoundationCoverage.filter(({ evidenceStatus }) => evidenceStatus === 'source-ready')).toHaveLength(39);
     expect(classicalOrdinaryFoundationCoverage.filter(({ recordStatus }) => recordStatus === 'migrated')).toHaveLength(39);
-    expect(classicalOrdinaryFoundationCoverage.filter(({ treatmentStatus }) => treatmentStatus === 'runtime-edge-migration-incomplete')).toHaveLength(39);
+    expect(classicalOrdinaryFoundationCoverage.filter(({ treatmentStatus }) => treatmentStatus === 'runtime-edge-migration-incomplete')).toHaveLength(36);
+    expect(classicalOrdinaryFoundationCoverage.filter(({ treatmentStatus }) => treatmentStatus === 'migrated')).toHaveLength(3);
     expect(classicalOrdinaryFoundationCoverage.filter(({ evidenceStatus }) => evidenceStatus === 'not-applicable')).toHaveLength(9);
     expect(classicalOrdinaryFoundationCoverage.filter(({ evidenceStatus }) => evidenceStatus === 'source-unresolved')).toHaveLength(0);
     expect(classicalOrdinaryFoundationCoverage.filter(({ treatmentStatus }) => treatmentStatus === 'present-not-modelled')).toHaveLength(0);

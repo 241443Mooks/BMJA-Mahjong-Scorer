@@ -67,14 +67,14 @@ describe('Issue 440F final truth-corpus closeout', () => {
     });
     expect(Object.values(profileTreatmentCounts).reduce((sum, count) => sum + count, 0)).toBe(378);
     expect(treatmentStateCounts).toEqual({
-      executable: 227,
+      executable: 230,
       'absent-by-rule': 0,
       'present-not-modelled': 5,
       unknown: 0,
       'not-applicable': 0,
-      'migration-incomplete': 146,
+      'migration-incomplete': 143,
     });
-    expect(executableByRefKind).toEqual({ binding: 225, policy: 2 });
+    expect(executableByRefKind).toEqual({ binding: 225, policy: 2, rule: 3 });
     expect(treatments.filter(({ runtimeState }) => runtimeState.kind === 'present-not-modelled').map(({ treatmentId, subjectId }) => ({ treatmentId, subjectId })).sort((a, b) => a.treatmentId.localeCompare(b.treatmentId))).toEqual([
       { treatmentId: 'bmja@1.0:rule.bmja.dead-wanted-tile-does-not-remove-fishing-eligibility', subjectId: 'rule.bmja.dead-wanted-tile-does-not-remove-fishing-eligibility' },
       { treatmentId: 'outside-the-box@0.1:rule.otb.earthly-hand-limit-event', subjectId: 'rule.otb.earthly-hand-limit-event' },

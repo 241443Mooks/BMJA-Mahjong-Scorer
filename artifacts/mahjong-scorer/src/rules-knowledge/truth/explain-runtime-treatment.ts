@@ -1,8 +1,8 @@
-import type { EvidenceClaim, SourceAuthority, SourceLocator } from '../../rules-platform/truth-model';
+import type { EvidenceClaim, RuntimeTreatmentRef, SourceAuthority, SourceLocator } from '../../rules-platform/truth-model';
 import type { RulesProfileRef } from '../../rules-platform/types';
 import { currentTruthIndex } from './current';
 
-export type RuntimeBindingRef = { kind: 'binding'; id: string };
+export type RuntimeBindingRef = Extract<RuntimeTreatmentRef, { kind: 'binding' }>;
 export type RuntimeTreatmentExplanation =
   | { available: false }
   | {
@@ -37,13 +37,13 @@ export const formatSourceLocator = (locator: SourceLocator): string => {
   }
 };
 
-/** Resolve only an executable binding treatment authorized by this exact profile. */
+/** Resolve only an executable treatment authorized by this exact profile. */
 export const explainRuntimeTreatment = ({
   profile,
   ref,
 }: {
   profile: RulesProfileRef;
-  ref: RuntimeBindingRef;
+  ref: RuntimeTreatmentRef;
 }): RuntimeTreatmentExplanation => {
   const treatments = currentTruthIndex.treatmentsForProfile(profile)
     .map(({ record }) => record)
