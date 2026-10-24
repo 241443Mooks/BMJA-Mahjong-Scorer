@@ -1,3 +1,4 @@
+import { hasPublishedSpecialHands } from '../rules-knowledge/reference-topics';
 import { useEffect, useMemo, useState } from 'react';
 import { BookOpen, Search, X, Check } from 'lucide-react';
 import { SiteHeader } from '../components/SiteHeader';
@@ -322,7 +323,7 @@ export function SpecialHandsCatalogue() {
     requestAnimationFrame(() => requestAnimationFrame(() => document.getElementById(anchor)?.scrollIntoView({ block: 'start' })));
   }, [reader.ready, reader.anchor]);
 
-  const mcrPreference = preferred?.id === 'mcr-wmo-2006' && preferred.version === '0.1';
+  const catalogueAvailable = !preferred || hasPublishedSpecialHands(preferred);
   const showBmjaPurity = reader.ready && (myRules ? preferred?.id === 'bmja' : !profileForFilter || profileForFilter.id === 'bmja');
 
   return <div className="mahjong-shell">
@@ -335,8 +336,7 @@ export function SpecialHandsCatalogue() {
         <p className="mt-2 max-w-[780px] text-sm leading-6 text-[#596b65]">Find, understand and compare special hands across different Mahjong rules.</p>
         <p className="mt-3 text-sm leading-6 text-[#596b65]">For source-linked explanations across rules, browse the <a className="font-semibold text-[#284d45] underline underline-offset-4" href={readerHref('/encyclopaedia', reader.selected)}>Mahjong Encyclopaedia</a>.</p>
         <ReaderRulesControl />
-        {mcrPreference && <p role="status" className="mt-4 rounded-lg bg-[#edf3ed] p-3 text-sm leading-6 text-[#284d45]">MCR special hands are not currently covered by the available reference. Explore all rules to browse other profiles; this is a coverage gap, not a claim that MCR has no special hands.</p>}
-        {preferred && !preferredClassical && !mcrPreference && <p role="status" className="mt-4 rounded-lg bg-[#edf3ed] p-3 text-sm leading-6 text-[#284d45]">Your remembered rules do not have a special-hands list yet. Choose All rules to browse the supported Classical rules.</p>}
+        {reader.ready && catalogueAvailable && <>
         <label className="sr-only" htmlFor="atlas-search">Search hand names and patterns</label>
         <div className="mt-2 flex flex-col gap-2">
           <div className="flex min-h-12 w-full min-w-0 items-center gap-2 rounded-lg border border-[#b8cdbf] bg-white px-3 focus-within:ring-2 focus-within:ring-[#ae6249]"><Search size={18} aria-hidden="true" className="shrink-0 text-[#596b65]" /><input id="atlas-search" type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Try Unique Wonder, Imperial Jade or Seven Twins" className="min-h-11 min-w-0 flex-1 border-0 bg-transparent text-base text-[#284d45] outline-none" /></div>
@@ -356,11 +356,15 @@ export function SpecialHandsCatalogue() {
         </section>
         }
         <p className="mt-4 text-sm text-[#596b65]" aria-live="polite">{results.length} {results.length === 1 ? 'hand' : 'hands'}</p>
+        </>}
       </section>
 
-      <section className="py-5 sm:py-6" aria-label="Special hands">
-        {!reader.ready ? <p role="status">Loading your rules…</p> : results.length ? <div className="space-y-3">{results.map((entry) => <EntryCard key={entry.id} entry={entry} preferredProfile={preferredClassical} myRules={myRules} explicitProfile={!myRules && profileForFilter ? `${profileForFilter.id}@${profileForFilter.version}` : null} expanded={expandedEntryId === entry.id} onExpandedChange={(open) => setExpandedEntryId(open ? entry.id : (expandedEntryId === entry.id ? null : expandedEntryId))} targetTreatmentReferenceId={targetTreatment?.entryId === entry.id ? targetTreatment.referenceId : undefined} />)}</div> : <div className="rounded-xl border border-[#d8ceb8] bg-[#fbf8ed] p-6 text-center"><h2 className="font-serif text-2xl text-[#284d45]">{preferred && !preferredClassical ? 'No reference coverage for these rules yet' : 'No matching hands'}</h2><p className="mt-2 text-sm text-[#596b65]">Try another name or filter.</p><button type="button" onClick={clearSearchAndFilter} className="mt-4 min-h-11 rounded-lg border border-[#b8cdbf] px-4 text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">Clear search and filters</button><a href="?rules=all" className="ml-3 inline-block py-2 font-semibold underline">Explore all rules</a></div>}
-      </section>
+      {reader.ready && !catalogueAvailable ? <section className="py-6" aria-label="Continue learning">
+        <p className="text-sm leading-6 text-[#596b65]">For {reader.selected!.compactLabel}, start with the available scoring guide. Explore all rules to compare published special-hand treatments from other traditions.</p>
+        <div className="mt-4 flex flex-wrap gap-4"><a className="inline-block py-2 font-semibold underline" href={readerHref('/guide', reader.selected)}>Continue with the scoring guide</a><a className="inline-block py-2 underline" href="?rules=all">Explore all rules</a></div>
+      </section> : reader.ready ? <section className="py-5 sm:py-6" aria-label="Special hands">
+        {results.length ? <div className="space-y-3">{results.map((entry) => <EntryCard key={entry.id} entry={entry} preferredProfile={preferredClassical} myRules={myRules} explicitProfile={!myRules && profileForFilter ? `${profileForFilter.id}@${profileForFilter.version}` : null} expanded={expandedEntryId === entry.id} onExpandedChange={(open) => setExpandedEntryId(open ? entry.id : (expandedEntryId === entry.id ? null : expandedEntryId))} targetTreatmentReferenceId={targetTreatment?.entryId === entry.id ? targetTreatment.referenceId : undefined} />)}</div> : <div className="rounded-xl border border-[#d8ceb8] bg-[#fbf8ed] p-6 text-center"><h2 className="font-serif text-2xl text-[#284d45]">No matching hands</h2><p className="mt-2 text-sm text-[#596b65]">Try another name or filter.</p><button type="button" onClick={clearSearchAndFilter} className="mt-4 min-h-11 rounded-lg border border-[#b8cdbf] px-4 text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">Clear search and filters</button><a href="?rules=all" className="ml-3 inline-block py-2 font-semibold underline">Explore all rules</a></div>}
+      </section> : null}
 
       {showBmjaPurity && <section className="mb-8 rounded-2xl border border-[#d8ceb8] bg-[#fbf8ed] p-4 sm:p-5" id="purity">
         <div className="font-mono text-xs uppercase tracking-[.16em] text-[#ae6249]">British scoring note</div>
@@ -369,10 +373,10 @@ export function SpecialHandsCatalogue() {
         <p className="mt-2 text-sm leading-6 text-[#596b65]">Other rules may score Purity differently. Choose a rules version above to see how it works.</p>
       </section>}
 
-      <footer className="border-t border-[#d8ceb8] py-5 text-sm leading-6 text-[#596b65]">
+      {catalogueAvailable && <footer className="border-t border-[#d8ceb8] py-5 text-sm leading-6 text-[#596b65]">
         <p>Each rules version keeps its own scoring and hand rules.</p>
         <p className="mt-1">For worked British scoring examples, <a href="/scoring-examples" className="font-semibold underline decoration-[#ae6249] underline-offset-4">visit the scoring guide</a>; to score a hand, <a href="/hand" className="font-semibold underline decoration-[#ae6249] underline-offset-4">open the hand scorer</a>.</p>
-      </footer>
+      </footer>}
     </main>
   </div>;
 }

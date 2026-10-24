@@ -1,3 +1,4 @@
+import { renderRoute } from './prerender';
 // @vitest-environment happy-dom
 import { createGame } from './game/game';
 import { GAME_SNAPSHOT_STORAGE_KEY, saveGameRecoveryV2, loadInProgressGameRecoveryCore } from './game/persistence';
@@ -97,7 +98,9 @@ describe('rules-aware reading', () => {
     await open('/special-hands');
     expect(container.querySelectorAll('article[id^="atlas-entry-"]')).toHaveLength(0);
     expect(container.querySelector('#purity')).toBeNull();
-    expect(container.textContent).toContain('not currently covered by the available reference');
+    expect(container.querySelector('a[href="/guide?rules=mcr"]')).not.toBeNull();
+    expect(container.textContent).not.toContain('0 hands');
+    expect(container.querySelector('#atlas-search')).toBeNull();
     await open('/special-hands?rules=all');
     expect(container.querySelectorAll('article[id^="atlas-entry-"]').length).toBeGreaterThan(0);
     expect(window.localStorage.getItem(PREFERRED_RULES_PROFILE_STORAGE_KEY)).toBe(JSON.stringify(descriptor('mcr').profile));
@@ -121,8 +124,9 @@ describe('rules-aware reading', () => {
     expect(cards.querySelector('li[id]')?.id).toBe('western-tm@0.1:thirteen-unique-wonders');
     expect(container.querySelectorAll('figure').length).toBeGreaterThan(0);
     await open('/encyclopaedia/thirteen-orphans?rules=mcr');
-    expect(container.querySelector('#treatments')!.textContent).toContain('not currently covered');
-    expect(container.querySelectorAll('figure')).toHaveLength(0);
+    expect(container.querySelector('#treatments')!.textContent).toContain('Published treatments across rules');
+    expect(container.querySelector('aside[aria-label="Reading rules"]')?.textContent).not.toContain('Reading: MCR');
+    expect(container.querySelectorAll('figure').length).toBeGreaterThan(0);
     expect(container.querySelector('li[id="mcr-wmo-2006@0.1:thirteen-orphans"]')).toBeNull();
   });
   it('keeps Imperial Jade and Snake tile examples attached to their proven British treatments', async () => {
@@ -136,14 +140,77 @@ describe('rules-aware reading', () => {
     expect(snakeTiles.some((src) => src!.includes('Hatsu.svg'))).toBe(false);
     expect(snakeTiles).not.toEqual(jadeTiles);
   });
-  it('does not substitute British Imperial Jade or Snake examples into a coverage gap', async () => {
+  it('keeps canonical British articles readable as cross-profile reading rather than unavailable stubs', async () => {
     setPreferredRulesProfile(descriptor('western').profile);
     for (const path of ['/encyclopaedia/imperial-jade', '/encyclopaedia/wriggling-snake', '/encyclopaedia/flowers-and-seasons']) {
       await open(path);
-      expect(container.textContent).toContain('not currently covered');
-      expect(container.querySelectorAll('figure, img')).toHaveLength(0);
+      expect(container.textContent).toContain('This published article describes British');
+      expect(container.textContent).not.toContain('not currently covered');
+      expect(container.querySelectorAll('main img').length).toBeGreaterThan(0);
+      expect(container.querySelector('aside[aria-label="Reading rules"]')?.textContent).toContain('Reading: British');
+      expect(window.localStorage.getItem(PREFERRED_RULES_PROFILE_STORAGE_KEY)).toBe(JSON.stringify(descriptor('western').profile));
     }
   });
+  for (const saved of [null, 'british', 'mcr'] as const) {
+    it(`preserves the full eight-tile British Flowers article for a direct visitor with ${saved ?? 'no preference'}`, async () => {
+      if (saved) setPreferredRulesProfile(descriptor(saved).profile);
+      const original = window.localStorage.getItem(PREFERRED_RULES_PROFILE_STORAGE_KEY);
+      for (const path of ['/encyclopaedia/flowers-and-seasons', '/encyclopaedia/flowers-and-seasons?rules=mcr', '/encyclopaedia/flowers-and-seasons?rules=british']) {
+        await open(path);
+        expect(container.querySelectorAll('main img')).toHaveLength(8);
+        expect(container.textContent).toContain('British Mahjong · BMJA 1.0');
+        expect(container.textContent).toContain('The eight bonus tiles');
+        expect(container.textContent).toContain('Where these rules come from');
+        expect(container.textContent).not.toContain('not currently covered');
+        expect(container.querySelector('aside[aria-label="Reading rules"]')?.textContent).toContain('Reading: British');
+        expect(window.localStorage.getItem(PREFERRED_RULES_PROFILE_STORAGE_KEY)).toBe(original);
+        if (saved === 'mcr' && !path.includes('rules=british')) expect(container.querySelector('a[href="/guide?rules=mcr#fan-and-flowers"]')).not.toBeNull();
+      }
+    });
+  }
+  it('MCR discovery offers useful fan/Flowers reading and omits British-only or withheld topic destinations', async () => {
+    setPreferredRulesProfile(descriptor('mcr').profile);
+    await open('/encyclopaedia');
+    const entries = container.querySelector('[aria-labelledby="concept-list-heading"]')!;
+    expect(entries.querySelector('a[href="/guide?rules=mcr#fan-and-flowers"]')).not.toBeNull();
+    expect(entries.querySelector('a[href="/encyclopaedia/scoring-systems?rules=mcr"]')).not.toBeNull();
+    for (const path of ['flowers-and-seasons', 'thirteen-orphans', 'imperial-jade', 'wriggling-snake']) expect(entries.querySelector(`a[href^="/encyclopaedia/${path}"]`)).toBeNull();
+    expect(entries.textContent).not.toContain('British');
+    await open('/encyclopaedia/scoring-systems?rules=mcr');
+    expect(container.querySelectorAll('li[id^="profile-"]')).toHaveLength(1);
+    expect(container.querySelector('li[id^="profile-"]')?.textContent).toContain('Fan-pattern scoring');
+    expect(container.querySelector('a[href="/guide?rules=mcr#fan-and-flowers"]')).not.toBeNull();
+    await open('/guide?rules=mcr#fan-and-flowers');
+    expect(container.querySelector('#fan-and-flowers')?.textContent).toContain('8-point minimum');
+    expect(container.querySelector('#fan-and-flowers')?.textContent).toContain('Flowers are added only after');
+  });
+  it('MCR can deliberately explore every published article without changing the saved profile', async () => {
+    setPreferredRulesProfile(descriptor('mcr').profile);
+    await open('/encyclopaedia?rules=all');
+    expect(container.querySelector('a[href="/encyclopaedia/flowers-and-seasons"]')).not.toBeNull();
+    await open('/encyclopaedia/flowers-and-seasons');
+    expect(container.querySelectorAll('main img')).toHaveLength(8);
+    expect(container.querySelector('aside[aria-label="Reading rules"]')?.textContent).toContain('Reading: British');
+    expect(window.localStorage.getItem(PREFERRED_RULES_PROFILE_STORAGE_KEY)).toBe(JSON.stringify(descriptor('mcr').profile));
+  });
+  for (const selected of ['british', 'club', 'buzzard', 'western']) {
+    it(`${selected} discovery filters treatment matches, while Explore All retains published articles`, async () => {
+      setPreferredRulesProfile(descriptor(selected).profile);
+      await open('/encyclopaedia');
+      const entries = container.querySelector('[aria-labelledby="concept-list-heading"]')!;
+      expect(entries.querySelector(`a[href="/encyclopaedia/thirteen-orphans?rules=${selected}"]`)).not.toBeNull();
+      if (selected === 'british') expect(entries.querySelector('a[href="/encyclopaedia/flowers-and-seasons?rules=british"]')).not.toBeNull();
+      else {
+        expect(entries.querySelector('a[href^="/encyclopaedia/imperial-jade"]')).toBeNull();
+        expect(entries.querySelector('a[href^="/encyclopaedia/wriggling-snake"]')).toBeNull();
+        expect(entries.querySelector(`a[href="/guide?rules=${selected}#known-rules"]`)).not.toBeNull();
+      }
+      await open('/encyclopaedia?rules=all');
+      expect(container.querySelector('a[href="/encyclopaedia/flowers-and-seasons"]')).not.toBeNull();
+      expect(container.querySelector('a[href="/encyclopaedia/imperial-jade"]')).not.toBeNull();
+      expect(window.localStorage.getItem(PREFERRED_RULES_PROFILE_STORAGE_KEY)).toBe(JSON.stringify(descriptor(selected).profile));
+    });
+  }
   it('preserves the saved preference when a legacy exact-treatment anchor overrides it', () => {
     const reader = resolveReaderRules('', '#treatment-club-seven-pairs-one-suit', descriptor('mcr'), true);
     expect(reader.selected?.slug).toBe('club');
@@ -165,11 +232,30 @@ describe('rules-aware reading', () => {
     expect(container.querySelector('aside[aria-label="Reading rules"]')?.textContent).toContain('Reading: British');
     expect(window.localStorage.getItem(PREFERRED_RULES_PROFILE_STORAGE_KEY)).toBe(JSON.stringify(descriptor('mcr').profile));
   });
+  for (const path of ['/guide', '/gameplay-basics']) {
+    it(`prerenders meaningful neutral initial HTML for ${path} despite a saved MCR preference`, () => {
+      setPreferredRulesProfile(descriptor('mcr').profile);
+      const html = renderRoute(path);
+      const main = html.slice(html.indexOf('<main'), html.indexOf('</main>'));
+      expect(main).toContain('Choose the rules your table uses');
+      expect(main).not.toContain('Loading your rules');
+      expect(main).not.toContain('id="getting-started"');
+      expect(main).not.toContain('id="deal"');
+      for (const { slug, title } of PUBLIC_RULES_DESCRIPTORS) {
+        expect(main).toContain(`href="${path}?rules=${slug}"`);
+        expect(main).toContain(`href="/rules/${slug}"`);
+        expect(main).toContain(title.replaceAll('&', '&amp;'));
+      }
+    });
+  }
   it('hydrates a neutral server shell without a flash of British lessons or hydration errors', async () => {
     setPreferredRulesProfile(descriptor('mcr').profile);
     const element = <ReaderRulesProvider><ProfileLearningPage topic="scoring" /></ReaderRulesProvider>;
     const html = renderToString(element);
-    expect(html).toContain('Loading your rules');
+    expect(html).toContain('Choose the rules your table uses');
+    expect(html).not.toContain('Loading your rules');
+    expect(html).toContain('/rules/mcr');
+    expect(html).toContain('/guide?rules=british');
     expect(html).not.toContain('Each Flower or Season adds');
     container = document.createElement('div'); container.innerHTML = html; document.body.append(container);
     const errors: unknown[] = [];

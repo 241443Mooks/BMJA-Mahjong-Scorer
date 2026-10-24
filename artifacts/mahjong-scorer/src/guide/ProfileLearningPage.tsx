@@ -1,3 +1,4 @@
+import { hasPublishedSpecialHands } from '../rules-knowledge/reference-topics';
 import { ReaderRuleLimits } from './ReaderRuleLimits';
 import { SiteHeader } from '../components/SiteHeader';
 import { BeginnerGuide } from './BeginnerGuide';
@@ -17,7 +18,7 @@ export function PartialLearningContent({ descriptor, topic, content = projectLea
     <p className="mt-3 text-sm">Source basis: {descriptor.support.authority}. {descriptor.status}.</p>
     <ReaderRuleLimits profile={descriptor.profile} />
     {!content.capability && <p role="status" className="mt-6">Teaching material is not currently covered by the available reference for these exact rules. No other profile’s lesson has been substituted.</p>}
-    {content.capability?.teaching?.map(({ title, text, sourceHref }) => <section key={title} className="mt-6"><h2 className="font-serif text-2xl">{title}</h2><p className="mt-2">{text}</p><a className="inline-block py-2 text-sm underline" href={sourceHref}>Read the source context</a></section>)}
+    {content.capability?.teaching?.map(({ id, title, text, sourceHref }) => <section id={id} key={title} className="mt-6"><h2 className="font-serif text-2xl">{title}</h2><p className="mt-2">{text}</p><a className="inline-block py-2 text-sm underline" href={sourceHref}>Read the source context</a></section>)}
     {content.rows.length > 0 && <section className="mt-7" aria-labelledby="known-rules"><h2 id="known-rules" className="font-serif text-2xl">What is known for these rules</h2>
       <dl className="mt-3 divide-y divide-[#cbd8d0]">{content.rows.map((row) => <div key={row.dimensionId} className="py-4">
         <dt className="font-semibold">{rulesDimension(row.dimensionId).label}</dt><dd className="mt-1">{row.playerAnswer}</dd>
@@ -27,7 +28,7 @@ export function PartialLearningContent({ descriptor, topic, content = projectLea
     <section className="mt-7"><h2 className="font-serif text-2xl">Continue with these rules</h2><ul className="mt-3 space-y-2">
       <li><a className="underline" href={links.reference}>Rules, source details and known differences</a></li>
       <li><a className="underline" href={topic === 'gameplay' ? links.scoring : links.gameplay}>{topic === 'gameplay' ? 'Scoring guide' : 'Gameplay basics'}</a></li>
-      <li><a className="underline" href={links.specialHands}>Special hands and currently supported tile examples</a></li>
+      {hasPublishedSpecialHands(descriptor.profile) && <li><a className="underline" href={links.specialHands}>Special hands and currently supported tile examples</a></li>}
       <li><a className="underline" href={links.encyclopaedia}>Encyclopaedia topics</a></li>
     </ul></section>
   </>;
@@ -41,9 +42,9 @@ export function ProfileLearningPage({ topic }: { topic: LearningTopic }) {
   }
   return <div className="mahjong-shell"><SiteHeader /><main className="mx-auto max-w-4xl px-5 py-8 leading-7 text-[#284d45]">
     <h1 className="font-serif text-4xl">{title}</h1><ReaderRulesControl />
-    {reader.ready && (reader.selected ? <PartialLearningContent descriptor={reader.selected} topic={topic} content={content || undefined} /> : <>
+    {reader.ready && reader.selected ? <PartialLearningContent descriptor={reader.selected} topic={topic} content={content || undefined} /> : <>
       <p>Choose the rules your table uses to open a guide. Each guide keeps its own source status, scoring and limits.</p>
-      <ul className="mt-5 space-y-3">{readerProfiles().map((item) => <li key={item.slug}><a className="inline-block py-2 font-semibold underline" href={readerHref(topic === 'gameplay' ? '/gameplay-basics' : '/guide', item)}>{item.title}</a></li>)}</ul>
-    </>)}
+      <ul className="mt-5 space-y-3">{readerProfiles().map((item) => <li key={item.slug}><a className="inline-block py-2 font-semibold underline" href={readerHref(topic === 'gameplay' ? '/gameplay-basics' : '/guide', item)}>{item.title}</a><span className="mx-2">·</span><a className="inline-block py-2 underline" href={readerSurfaceLinks(item).reference}>Rules reference</a></li>)}</ul>
+    </>}
   </main></div>;
 }

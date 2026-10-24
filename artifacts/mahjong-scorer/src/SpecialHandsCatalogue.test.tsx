@@ -69,7 +69,10 @@ describe('Special Hands Catalogue rendering', () => {
   it('explains the MCR catalogue limit in player-facing language', async () => {
     preference.profile = { id: 'mcr-wmo-2006', version: '0.1' };
     const html = await catalogue();
-    expect(html).toContain('MCR special hands are not currently covered by the available reference');
+    expect(html).toContain('start with the available scoring guide');
+    expect(html).toContain('href="/guide?rules=mcr"');
+    expect(html).not.toContain('0 hands');
+    expect(html).not.toContain('id="atlas-search"');
     expect(html).not.toContain('Your remembered profile');
     expect(html).not.toContain('supported Classical profiles');
     preference.profile = { id: 'western-tm', version: '0.1' };

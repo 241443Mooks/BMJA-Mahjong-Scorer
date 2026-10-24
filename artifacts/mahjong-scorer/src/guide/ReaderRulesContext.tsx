@@ -61,9 +61,9 @@ export function browseReaderRules(slug: string) {
 export function readerHref(path: string, selected: RulesDescriptor | null) {
   return `${path}?rules=${selected?.slug ?? 'all'}`;
 }
-export function ReaderRulesControl() {
+export function ReaderRulesControl({ readingLabel, myRulesHref }: { readingLabel?: string; myRulesHref?: string } = {}) {
   const { ready, saved, selected, explicit, invalid, pageProfile } = useReaderRules();
-  if (!ready) return <p role="status" className="py-3 text-sm">Loading your rules…</p>;
+  if (!ready) return <aside aria-label="Reading rules" className="my-4 py-3 text-sm"><a className="underline" href="/rules">Choose rules for personalised reading</a></aside>;
   return <aside aria-label="Reading rules" className="my-4 flex min-w-0 flex-wrap items-center gap-x-4 gap-y-2 border-y border-[#cbd8d0] py-3 text-sm text-[#284d45]">
     <span>My rules: {saved ? publicRulesEditionLabel(saved) : 'None selected'}</span>
     <details><summary className="min-h-11 cursor-pointer py-2 font-semibold underline focus-visible:outline focus-visible:outline-2">Change rules</summary>
@@ -75,10 +75,10 @@ export function ReaderRulesControl() {
           <option value="all">No default</option>{PUBLIC_RULES_DESCRIPTORS.map((item) => <option key={item.slug} value={item.slug}>{publicRulesEditionLabel(item)}</option>)}
         </select>
       </label>
-      {explicit && <a className="inline-block py-2 underline" href={pageProfile ? saved ? `/rules/${saved.slug}` : '/rules' : typeof window === 'undefined' ? '?' : window.location.pathname}>Read using My rules</a>}
+      {(explicit || readingLabel) && <a className="inline-block py-2 underline" href={myRulesHref ?? (pageProfile ? saved ? `/rules/${saved.slug}` : '/rules' : typeof window === 'undefined' ? '?' : window.location.pathname)}>Read using My rules</a>}
     </details>
     <a className="py-2 underline" href={pageProfile ? '/rules' : '?rules=all'}>Explore all rules</a>
-    {explicit && <span className="basis-full">Reading: {selected ? publicRulesEditionLabel(selected) : 'All rules'}. This page choice does not change My rules.</span>}
+    {(explicit || readingLabel) && <span className="basis-full">Reading: {readingLabel ?? (selected ? publicRulesEditionLabel(selected) : 'All rules')}. This page choice does not change My rules.</span>}
     {invalid && <p role="status" className="basis-full">That rules profile is unavailable. Choose a current profile; no replacement has been assumed.</p>}
   </aside>;
 }

@@ -69,7 +69,7 @@ describe('Issue 251B public reference projection', () => {
     expect(html).toContain('Thirteen Unique Wonders');
     expect(html).toContain('Tile examples');
     expect(html).toContain('How to make the hand');
-    expect(html).toContain('How each ruleset scores it');
+    expect(html).toContain('Published treatments across rules');
     expect(html).toContain('British / BMJA-style');
     expect(html).toContain('Western — T&amp;M');
     expect(html).toContain('Club - Bramhall 2026');
@@ -103,7 +103,7 @@ describe('Issue 251B public reference projection', () => {
     expect(snake).toContain('Wriggly Snake');
     expect(snake).toContain('with the suited 1 duplicated');
     expect(snake).toContain('with any one tile in that thirteen-tile base duplicated');
-    expect(snake).toContain('How each ruleset scores it');
+    expect(snake).toContain('Published treatments across rules');
     expect(snake).toContain('British / BMJA-style');
     expect(container!.querySelector('#treatments')!.innerHTML).not.toContain('MCR');
   });

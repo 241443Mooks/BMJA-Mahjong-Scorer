@@ -1,3 +1,4 @@
+import { PUBLIC_CONCEPT_ROUTES } from './rules-knowledge/reference-topics';
 import type { ReactNode } from 'react';
 import App from './App';
 import { SiteFooter } from './components/SiteFooter';
@@ -23,7 +24,7 @@ import { RulesHubPage, RulesProfilePage } from './rules/RulesReference';
 import { descriptorForSlug, PUBLIC_RULES_DESCRIPTORS, publicRulesSlugFromGamePath } from './game/rules-presentation';
 import { RulesProfilePickerScalabilityFixture } from './game/RulesProfilePicker';
 import { PreviousGamesPage } from './game/PreviousGamesPage';
-import { EncyclopaediaHubPage, FlowersAndSeasonsReferencePage, PUBLIC_CONCEPT_ROUTES, PublicReferencePage, PublicScoringConceptPage } from './rules-knowledge/PublicReferencePage';
+import { EncyclopaediaHubPage, FlowersAndSeasonsReferencePage, PublicReferencePage, PublicScoringConceptPage } from './rules-knowledge/PublicReferencePage';
 
 function withFooter(content: ReactNode, options: { variant?: 'full' | 'compact'; showTileCredit?: boolean } = {}) {
   return <>{content}<SiteFooter variant={options.variant} showTileCredit={options.showTileCredit} /></>;
