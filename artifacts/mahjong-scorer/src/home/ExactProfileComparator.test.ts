@@ -3,9 +3,9 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { act, createElement } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { ExactProfileComparator, comparisonState, comparisonValuesDiffer } from './ExactProfileComparator';
+import { ExactProfileComparator, comparisonGroupRows, comparisonState, comparisonValuesDiffer } from './ExactProfileComparator';
 import { MahjongRulesComparedPage } from './MahjongRulesComparedPage';
-import type { ProfileDimensionValue } from '../rules-platform/profile-dimensions';
+import { RULES_DIMENSIONS, type ProfileDimensionValue } from '../rules-platform/profile-dimensions';
 
 describe('exact profile comparator', () => {
   let root: Root | undefined;
@@ -51,6 +51,19 @@ describe('exact profile comparator', () => {
     const noSettlement = { ...value({ status: 'present', data: 'product-wording-b' }), comparisonKey: 'draw:no-payments', playerAnswer: 'No score or settlement is made.' };
     expect(comparisonState(noTransfers, noSettlement)).toBe('same');
     expect(comparisonState({ ...noSettlement, comparisonKey: 'draw:payments-made' }, noTransfers)).toBe('different');
+  });
+
+  it('keeps an all-same category visible when same rules are requested', () => {
+    const makeRow = (dimensionId: string, state: 'same' | 'different') => ({
+      definition: RULES_DIMENSIONS.find(({ id }) => id === dimensionId)!,
+      a: value({ status: 'present', data: dimensionId }),
+      b: value({ status: 'present', data: state === 'same' ? dimensionId : `${dimensionId}-other` }),
+      state,
+    });
+    const rows = [makeRow('play.ordinary-chow-policy', 'different'), makeRow('settlement.winner-payments', 'same')];
+    const grouped = comparisonGroupRows(rows.filter(({ state }) => state === 'different'), rows.filter(({ state }) => state === 'same'), true);
+    expect(grouped.find(({ title }) => title === 'Tiles and hands')).toMatchObject({ differences: [{ state: 'different' }], same: [], rows: [{ state: 'different' }] });
+    expect(grouped.find(({ title }) => title === 'Payments and what happens next')).toMatchObject({ differences: [], same: [{ state: 'same' }], rows: [{ state: 'same' }] });
   });
 
   it('defaults to exact BMJA and Bramhall profiles and shows shared player-facing facts', async () => {
@@ -128,6 +141,29 @@ describe('exact profile comparator', () => {
     expect(node.textContent).toContain('a completed Standing Hand adds 100 points.');
     expect(node.textContent).toContain('The Buzzard source lists 10 named limit hands.');
     expect(node.textContent).not.toContain('Bramhall plays Goulash after a draw.');
+  });
+
+  it('explains identical profile selection and shows same answers when requested', async () => {
+    const node = await mount();
+    const second = node.querySelector<HTMLSelectElement>('select[aria-label="Second ruleset"]')!;
+    await act(async () => { second.value = 'bmja@1.0'; second.dispatchEvent(new Event('change', { bubbles: true })); });
+    expect(node.textContent).toContain('Both selectors show British / BMJA-style 1.0, so there are no cross-profile differences to show.');
+    expect(node.textContent).toContain('Still to check');
+    const showSame = node.querySelector<HTMLInputElement>('input[aria-label="Show the same rules too"]')!;
+    await act(async () => { showSame.click(); });
+    expect(node.textContent).toContain('Tiles and hands');
+    expect(node.textContent).toContain('Payments and what happens next');
+    expect(node.textContent).toContain('same');
+  });
+
+  it('labels each answer with its selected profile and exposes the labels to assistive technology on wide layouts', async () => {
+    const node = await mount();
+    const details = [...node.querySelectorAll('details')].find(({ textContent }) => textContent?.includes('Payments and what happens next'))!;
+    const drawRow = [...details.querySelectorAll('article')].find(({ textContent }) => textContent?.includes('What happens after a draw?'))!;
+    const labels = [...drawRow.querySelectorAll('p')].filter(({ className }) => className.includes('sm:sr-only'));
+    expect(labels[0].textContent).toContain('BMJA');
+    expect(labels[1].textContent).toContain('Bramhall');
+    expect(labels).toHaveLength(2);
   });
 
   it('renders visible labels, grouped comparison content and the selector on the canonical page', () => {
