@@ -49,8 +49,8 @@ describe('public SEO configuration', () => {
     for (const profile of ['British/BMJA-style', 'Thompson & Maloney Western', 'Club', 'Buzzard 2000', 'MCR/WMO 2006']) {
       expect(supportedProfilesFeature).toContain(profile);
     }
-    expect(siteSeo.routes.find((route) => route.path === '/guide')?.title).toContain('British Mahjong Scoring Guide');
-    expect(siteSeo.routes.find((route) => route.path === '/gameplay-basics')?.title).toContain('British Mahjong Gameplay Basics');
+    expect(siteSeo.routes.find((route) => route.path === '/guide')?.title).toContain('Mahjong Scoring Guide');
+    expect(siteSeo.routes.find((route) => route.path === '/gameplay-basics')?.title).toContain('Mahjong Gameplay Basics');
     expect(siteSeo.routes.find((route) => route.path === '/rules')?.title).toContain('Mahjong Rules We Support');
     expect(siteSeo.routes.find((route) => route.path === '/rules/british')?.title).toContain('British Mahjong Rules');
     expect(siteSeo.routes.find((route) => route.path === '/rules/western')?.description).toContain('provisional ordinary-rule boundary');

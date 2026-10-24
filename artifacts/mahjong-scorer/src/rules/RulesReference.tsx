@@ -7,7 +7,7 @@ import { descriptorForSlug, PUBLIC_RULES_DESCRIPTORS, type PublicRulesSlug, type
 import { clearPreferredRulesProfile, readPreferredRulesProfile, setPreferredRulesProfile } from '../game/preferred-rules-profile';
 import { BritishSpecialHands, RulesetProfileDetails, RulesetProfileReport } from './RulesetProfileReport';
 import { familiesBySupportedProfileCount, MAHJONG_FAMILIES, supportedProfilesForFamily } from '../home/mahjong-family-presentation';
-import { readerSurfaceLinks } from '../guide/reader-content';
+import { MCR_READER_TEACHING, readerSurfaceLinks } from '../guide/reader-content';
 import { specialHandTreatmentsForProfile } from '../rules-knowledge/special-hand-treatments';
 import { readGovernedFacts } from '../rules-knowledge/truth/read-contract';
 import { ATLAS_LEARNER_ENTRIES, atlasExamplesForTreatment, ATLAS_TREATMENT_OWNERSHIP } from '../guide/special-hands-atlas';
@@ -147,7 +147,7 @@ const pageCopy: Partial<Record<PublicRulesSlug, { eyebrow: string; intro: string
   mcr: {
     eyebrow: 'Rules reference', intro: 'Mahjong Competition Rules / WMO 2006 profile 0.1 remains Provisional. Winning-hand scoring and Table Companion game tracking are available.',
     identity: <>This profile represents the Mahjong Competition Rules / WMO 2006 source context.</>,
-    table: <>The scorer evaluates completed winning hands using fan. The Table Companion records resolved table and end-of-hand facts; it does not arbitrate physical play.</>,
+    table: <>{MCR_READER_TEACHING[1].text}</>,
     scoring: <>A winning hand must first reach the 8-point minimum from qualifying fan patterns. Flowers are added only after that qualification. Settlement uses the accepted Basic Points; British points, doubles and Fishing do not apply here.</>,
     after: <>Accepted Basic Points drive settlement. The dealer passes after every completed hand, while seats and prevailing-wind progression are tracked under the MCR progression profile.</>,
     distinctive: <>This profile remains version 0.1 and Provisional. Table tracking records the table's resolved result rather than deciding what happened during physical play.</>,

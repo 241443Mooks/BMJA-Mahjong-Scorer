@@ -14,6 +14,11 @@ export type ReaderContentCapability = {
 const gameplay: readonly RulesDimensionId[] = ['table.player-count', 'table.seat-model', 'tiles.physical-set', 'hand.structural-size', 'hand.normal-winning-shape', 'play.ordinary-chow-policy', 'play.exposure-model', 'round.draw-follow-up', 'progression.dealer-retention', 'progression.seat-rotation'];
 const scoring: readonly RulesDimensionId[] = ['scoring.grammar', 'scoring.ordinary-base', 'scoring.winner-base-bonus', 'scoring.multiplier-bonus-policy', 'scoring.limit-cap', 'tiles.bonus-tiles', 'ready.model', 'ready.fishing-score', 'settlement.winner-payments', 'settlement.loser-to-loser', 'settlement.dealer-multiplier'];
 const partial = (profile: RulesProfileRef): ReaderContentCapability => ({ profile, lessons: { gameplay: 'partial', scoring: 'partial' }, dimensions: { gameplay, scoring } });
+/** Accepted MCR reference teaching, shared by the reference page and scoped guides. */
+export const MCR_READER_TEACHING = [
+    { title: 'Fan and qualifying to win', text: 'A winning hand must first reach the 8-point minimum from qualifying fan patterns. Flowers are added only after that qualification. Settlement uses the accepted Basic Points.', sourceHref: '/rules/mcr' },
+    { title: 'Recording physical play', text: 'The scorer evaluates completed winning hands using fan. The Table Companion records resolved table and end-of-hand facts; it does not arbitrate physical play.', sourceHref: '/rules/mcr' },
+  ] as const;
 /** Content availability is an editorial declaration, separate from runtime availability.
  * The existing British lessons are retained; other profiles expose scoped source/scorer
  * projections, not a claim that a full physical-play lesson has been reviewed.
@@ -23,10 +28,7 @@ export const READER_CONTENT_CAPABILITIES: readonly ReaderContentCapability[] = [
   partial({ id: 'outside-the-box', version: '0.1' }),
   partial({ id: 'buzzard-2000', version: '0.1' }),
   partial({ id: 'western-tm', version: '0.1' }),
-  { ...partial({ id: 'mcr-wmo-2006', version: '0.1' }), teaching: [
-    { title: 'Fan and qualifying to win', text: 'A winning hand must first reach the 8-point minimum from qualifying fan patterns. Flowers are added only after that qualification. Settlement uses the accepted Basic Points.', sourceHref: '/rules/mcr' },
-    { title: 'Recording physical play', text: 'The scorer evaluates completed winning hands using fan. The Table Companion records resolved table and end-of-hand facts; it does not arbitrate physical play.', sourceHref: '/rules/mcr' },
-  ] },
+  { ...partial({ id: 'mcr-wmo-2006', version: '0.1' }), teaching: MCR_READER_TEACHING },
 ];
 export const sameReaderProfile = (a: RulesProfileRef, b: RulesProfileRef) => a.id === b.id && a.version === b.version;
 export function readerContentCapability(profile: RulesProfileRef, records = READER_CONTENT_CAPABILITIES) {

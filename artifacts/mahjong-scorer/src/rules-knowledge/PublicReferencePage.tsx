@@ -1,3 +1,4 @@
+import { MCR_READER_TEACHING } from '../guide/reader-content';
 import { ReaderRulesControl, readerHref, useReaderRules } from '../guide/ReaderRulesContext';
 import { atlasExampleProvesTreatment } from '../guide/atlas-scorer-handoff';
 import { ATLAS_EXAMPLE_BY_ID, ATLAS_LEARNER_ENTRIES, SPECIAL_HANDS_ATLAS, atlasExposureLabel, atlasScoreLabel, atlasExamplesForTreatment } from '../guide/special-hands-atlas';
@@ -66,7 +67,7 @@ export function FlowersAndSeasonsReferencePage() {
   if (!reader.ready || reader.selected?.slug !== 'british') return <main className="mx-auto max-w-4xl px-5 py-10 text-[#253b35]">
     <h1 className="font-serif text-4xl">Flowers and Seasons</h1><ReaderRulesControl />
     {reader.ready && <><p>{reader.selected ? `A full Flowers and Seasons lesson for ${reader.selected.title} is not currently covered by the available reference.` : 'Choose a profile to read its Flowers and Seasons treatment.'}</p>
-    {reader.selected?.slug === 'mcr' && <p className="mt-3">MCR requires the 8-point qualifying minimum before Flowers. Flowers are added only after qualification.</p>}
+    {reader.selected?.slug === 'mcr' && <p className="mt-3">{MCR_READER_TEACHING[0].text}</p>}
     <p className="mt-4"><a className="underline" href={readerHref('/guide', reader.selected)}>Read the scoped scoring guide</a></p><p className="mt-3"><a className="underline" href="?rules=british">Explore the British Flowers and Seasons lesson</a></p></>}
   </main>;
 
