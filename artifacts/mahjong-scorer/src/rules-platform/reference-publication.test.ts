@@ -15,7 +15,10 @@ describe('Issue 251B public reference projection', () => {
     expect(hub).toContain('Mahjong concepts across rules');
     expect(hub).toContain('/encyclopaedia/thirteen-orphans');
     expect(hub).toContain('/encyclopaedia/flowers-and-seasons');
-    expect(hub).toContain('Gates of Heaven and Nine Gates remains unresolved');
+    expect(hub).toContain('A green-tile hand whose permitted groups vary by ruleset.');
+    expect(hub).toContain('A plain-language guide to how the listed rulesets build an ordinary hand’s score.');
+    expect(hub).toContain('The relationship between Gates of Heaven and Nine Gates is unresolved');
+    expect(hub).not.toContain('scoring.grammar');
     const guide = renderToStaticMarkup(React.createElement(RouteContent, { path: '/special-hands' }));
     expect(guide).toContain('href="/encyclopaedia"');
   });
@@ -51,12 +54,17 @@ describe('Issue 251B public reference projection', () => {
   it('publishes the Thirteen Orphans vertical while withholding the governed MCR treatment', () => {
     const html = renderToStaticMarkup(React.createElement(RouteContent, { path: '/encyclopaedia/thirteen-orphans' }));
     expect(html).toContain('Thirteen Unique Wonders');
+    expect(html).toContain('What it looks like');
+    expect(html).toContain('How to make the hand');
+    expect(html).toContain('How each ruleset scores it');
     expect(html).toContain('British / BMJA-style');
     expect(html).toContain('Western — T&amp;M');
     expect(html).toContain('Club - Bramhall 2026');
     expect(html).toContain('Buzzard 2000');
-    expect(html).toContain('Provenance');
-    expect(html).toContain('Scoring treatment');
+    expect(html).toContain('Sources and checking');
+    expect(html).toContain('Score');
+    expect(html).toContain('Checked against a published source');
+    expect(html).not.toContain('source-verified');
     expect(html).toContain('Fixed');
     expect(html).toContain('Thirteen unique wonders');
     expect(html).toContain('/hand?rules=british');
@@ -68,24 +76,36 @@ describe('Issue 251B public reference projection', () => {
     expect(jade).toContain('Imperial Jade');
     expect(jade).toContain('British / BMJA-style');
     expect(jade).not.toContain('All Green');
-    expect(jade).toContain('Related profile forms');
-    expect(jade).toContain('does not assert that the forms are equivalent');
-    expect(jade).toContain('broader than imperial jade no chow');
-    expect(jade).toContain('Open exact profile treatment in Special Hands');
+    expect(jade).toContain('How the forms differ');
+    expect(jade).toContain('British / Club - Bramhall 2026 form');
+    expect(jade).toContain('Thompson &amp; Maloney Western form');
+    expect(jade).toContain('Open British / BMJA-style treatment in Special Hands');
+    expect(jade).toContain('Open Club - Bramhall 2026 treatment in Special Hands');
+    expect((jade.match(/<img\b/g) ?? []).length).toBeGreaterThan(0);
+    expect(jade).not.toContain('broader than imperial jade no chow');
+    expect(jade).not.toContain('profile treatments');
 
     const snake = renderToStaticMarkup(React.createElement(RouteContent, { path: '/encyclopaedia/wriggling-snake' }));
     expect(snake).toContain('Wriggling Snake');
+    expect(snake).toContain('Wriggly Snake');
+    expect(snake).toContain('with the suited 1 duplicated');
+    expect(snake).toContain('with any one tile in that thirteen-tile base duplicated');
+    expect(snake).toContain('How each ruleset scores it');
     expect(snake).toContain('British / BMJA-style');
     expect(snake).not.toContain('MCR');
   });
 
-  it('projects the #406 scoring grammar from runtime data and omits the unpublished profile', () => {
+  it('explains ordinary scoring in plain language and keeps profile evidence optional', () => {
     const html = renderToStaticMarkup(React.createElement(RouteContent, { path: '/encyclopaedia/scoring-systems' }));
     expect(html).toContain('Scoring system');
-    expect(html).toContain('Mapped from #406 dimension');
-    expect(html).toContain('scoring.grammar');
+    expect(html).toContain('A ruleset first awards points for the hand, then applies any doubles that hand qualifies for.');
+    expect(html).toContain('How the listed rulesets score ordinary hands');
     expect(html).toContain('Ordinary hands score points, then apply doubles.');
+    expect(html).toContain('Sources and checking');
+    expect(html).toContain('Source basis remains provisional');
+    expect(html).not.toContain('source-verified');
     expect(html).not.toContain('pattern-accumulator');
+    expect(html).not.toContain('Mapped from #406 dimension');
     expect(referenceConceptsForDimension('scoring.grammar').map(({ conceptId }) => conceptId))
       .toContain('dimension:scoring.grammar');
   });
