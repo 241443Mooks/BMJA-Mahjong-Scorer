@@ -141,14 +141,14 @@ describe('public rules reference model', () => {
     }
   });
 
-  it('uses the same family names and recognition clues in the Hub and comparison quick clues', () => {
+  it('uses the same family names for the collapsed comparison context without repeating family clues', () => {
     const hub = renderToStaticMarkup(createElement(RulesHubPage));
     const comparison = renderToStaticMarkup(createElement(MahjongRulesComparedPage));
     for (const family of MAHJONG_FAMILIES) {
       expect(hub).toContain(family.name);
       expect(hub).toContain(family.clue);
       expect(comparison).toContain(family.name);
-      expect(comparison).toContain(family.clue);
+      expect(comparison).not.toContain(family.clue);
     }
   });
   it('presents British rules in plain English and keeps technical evidence optional', () => {

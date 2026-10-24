@@ -14,10 +14,11 @@ const profiles: { ref: RulesProfileRef; name: string; slug?: string; mcr?: boole
     return { ref, name: descriptor?.compactLabel ?? `${ref.id} ${ref.version}`, slug: descriptor?.slug, status: descriptor?.status, mcr: ref.id === MCR_WMO_2006_PROFILE.identity.id };
   }),
 ];
-const groupNames: Record<RulesDimensionGroup, string> = {
-  'identity-table-tiles': 'Identity, table & tiles', 'hand-play': 'Hand & play', 'ready-declarations': 'Ready & declarations',
-  scoring: 'Scoring', 'settlement-incidents': 'Settlement & incidents', 'draws-progression': 'Draws & progression',
-};
+const compareGroups = [
+  { title: 'Tiles and hands', groups: ['identity-table-tiles', 'hand-play'] as const },
+  { title: 'Scoring and special hands', groups: ['ready-declarations', 'scoring'] as const },
+  { title: 'Payments and what happens next', groups: ['settlement-incidents', 'draws-progression'] as const },
+];
 
 type ComparisonState = 'different' | 'same' | 'needs-checking';
 const hasValue = (cell: ProfileDimensionValue) =>
@@ -33,6 +34,14 @@ export const comparisonState = (a: ProfileDimensionValue, b: ProfileDimensionVal
 };
 /** Semantic keys compare rules; uncertain evidence is kept separate from the answer. */
 export const comparisonValuesDiffer = (a: ProfileDimensionValue, b: ProfileDimensionValue) => comparisonState(a, b) === 'different';
+const chooserStatus = (status?: string) => {
+  if (!status) return undefined;
+  if (status.toLowerCase().includes('ordinary play is still under source review')) return 'Provisional ordinary rules';
+  if (status.toLowerCase().includes('provisional, source-backed')) return 'Provisional · source-backed';
+  if (status.toLowerCase().includes('provisional')) return 'Provisional';
+  if (status.toLowerCase().includes('club')) return 'Club profile';
+  return status;
+};
 const readableValue = (value: ProfileDimensionValue, profileName: string): string => {
   if (value.playerAnswer) return value.playerAnswer;
   if (value.value.status === 'absent') return 'This rule is absent from this profile.';
@@ -85,9 +94,16 @@ export function ExactProfileComparator() {
   const relevantLeft = relevantFacts(selectedLeft, governedLeft);
   const relevantRight = relevantFacts(selectedRight, governedRight);
 
-  const groupedRows = (items: typeof rows) => Object.entries(groupNames).map(([group, title]) => {
-    const groupRows = items.filter(({ definition }) => definition.group === group);
-    return groupRows.length ? <section key={group} aria-label={title}><h4 className="mb-2 font-serif text-lg text-[#284d45]">{title}</h4><div className="mb-2 grid grid-cols-2 gap-3 text-[11px] font-semibold leading-4 text-[#596b65]"><p>{selectedLeft.name} · {selectedLeft.ref.version}</p><p>{selectedRight.name} · {selectedRight.ref.version}</p></div><div className="space-y-3">{groupRows.map(row)}</div></section> : null;
+  const groupedRows = (items: typeof rows) => compareGroups.map(({ title, groups }) => {
+    const groupRows = items.filter(({ definition }) => (groups as readonly RulesDimensionGroup[]).includes(definition.group));
+    if (!groupRows.length) return null;
+    const sameInGroup = sameRows.filter(({ definition }) => (groups as readonly RulesDimensionGroup[]).includes(definition.group));
+    const expandedRows = [...groupRows, ...(differencesOnly ? [] : sameInGroup)];
+    return <details key={title} className="rounded-xl border border-[#d8ceb8] bg-[#fdfbf5] p-4 sm:p-5">
+      <summary className="min-h-11 cursor-pointer font-serif text-xl text-[#284d45] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">{title}<span className="ml-2 font-sans text-xs text-[#596b65]">({groupRows.length} differences{!differencesOnly && sameInGroup.length ? `, ${sameInGroup.length} same` : ''})</span></summary>
+      <div className="mt-4 grid gap-3 sm:grid-cols-2"><p className="min-w-0 text-xs font-semibold leading-5 text-[#405650]">{selectedLeft.name} · {selectedLeft.ref.version}{selectedLeft.slug && <> · <a className="underline underline-offset-2" href={`/rules/${selectedLeft.slug}`}>rules detail</a></>}</p><p className="min-w-0 text-xs font-semibold leading-5 text-[#405650]">{selectedRight.name} · {selectedRight.ref.version}{selectedRight.slug && <> · <a className="underline underline-offset-2" href={`/rules/${selectedRight.slug}`}>rules detail</a></>}</p></div>
+      <div className="mt-3 space-y-3">{expandedRows.map(row)}</div>
+    </details>;
   });
 
   const row = (item: typeof rows[number]) => {
@@ -100,15 +116,15 @@ export function ExactProfileComparator() {
         : undefined);
     const leftQualification = qualification(a);
     const rightQualification = qualification(b);
-    return <article key={definition.id} className="rounded-xl border border-[#d8ceb8] bg-[#fdfbf5] p-4 sm:p-5">
-      <h4 className="font-serif text-lg leading-snug text-[#284d45]">{definition.label}</h4>
-      <div className="mt-3 grid gap-3 sm:grid-cols-2">
-        <div className="min-w-0"><p className="text-[10px] font-semibold uppercase tracking-wide text-[#596b65]">First profile</p><p className="mt-1 break-words text-sm leading-6 text-[#284d45]">{leftText}</p>{leftQualification && <p className="mt-1 text-xs leading-5 text-[#7a5a42]">{leftQualification}</p>}</div>
-        <div className="min-w-0"><p className="text-[10px] font-semibold uppercase tracking-wide text-[#596b65]">Second profile</p><p className="mt-1 break-words text-sm leading-6 text-[#284d45]">{rightText}</p>{rightQualification && <p className="mt-1 text-xs leading-5 text-[#7a5a42]">{rightQualification}</p>}</div>
+    return <article key={definition.id} className="rounded-lg border border-[#e5dccb] bg-white p-4">
+      <h4 className="font-semibold leading-6 text-[#284d45]">{definition.label}</h4>
+      <div className="mt-2 grid gap-3 sm:grid-cols-2">
+        <div className="min-w-0"><p className="break-words text-sm leading-6 text-[#284d45]">{leftText}</p>{leftQualification && <p className="mt-1 text-xs leading-5 text-[#7a5a42]">{leftQualification}</p>}</div>
+        <div className="min-w-0"><p className="break-words text-sm leading-6 text-[#284d45]">{rightText}</p>{rightQualification && <p className="mt-1 text-xs leading-5 text-[#7a5a42]">{rightQualification}</p>}</div>
       </div>
       {definition.id === 'scoring.special-catalogue' && <a href="/special-hands" className="mt-2 inline-block min-h-11 content-center text-sm font-semibold underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">Browse special hands</a>}
       {definition.id === 'scoring.special-catalogue' && <p className="mt-2 text-xs leading-5 text-[#596b65]">These totals count different things—named hands, scoring entries or limit hands—so they are not a like-for-like count.</p>}
-      <details className="mt-3 border-t border-[#e5dccb] pt-2 text-xs text-[#596b65]"><summary className="min-h-11 cursor-pointer py-3 font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">Evidence & app support</summary>
+      <details className="mt-2 border-t border-[#e5dccb] pt-2 text-xs text-[#596b65]"><summary className="min-h-11 cursor-pointer py-3 font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">Where this comes from</summary>
         <div className="space-y-2 pb-2 leading-5">
           <p>{selectedLeft.name}: source evidence {a.sourceStatus.replaceAll('-', ' ')}; app support {a.runtimeSupport.replaceAll('-', ' ')}.{a.caveat ? ` ${a.caveat}` : ''}</p>
           <p>{selectedRight.name}: source evidence {b.sourceStatus.replaceAll('-', ' ')}; app support {b.runtimeSupport.replaceAll('-', ' ')}.{b.caveat ? ` ${b.caveat}` : ''}</p>
@@ -118,24 +134,30 @@ export function ExactProfileComparator() {
     </article>;
   };
 
-  return <section className="border-b border-[#ddd3bf] px-5 py-9 sm:px-8 sm:py-11 lg:px-12" aria-labelledby="exact-profile-title">
-    <div className="font-mono text-[10px] uppercase tracking-[.18em] text-[#ae6249]">Compare playable rules</div>
-    <h2 id="exact-profile-title" className="mt-2 font-serif text-[34px] leading-tight text-[#284d45]">What changes at the table?</h2>
-    <p className="mt-3 max-w-[780px] text-[13px] leading-6 text-[#596b65]">See what changes at the table. Local rules may vary; a short note appears where that affects what you can rely on.</p>
+  const featuredRows = differentRows.filter(({ a, b }) =>
+    ['source-verified', 'verified-club'].includes(a.sourceStatus) && ['source-verified', 'verified-club'].includes(b.sourceStatus))
+    .sort((leftRow, rightRow) => {
+      const priority = { low: 0, medium: 1, high: 2, 'very-high': 3 };
+      return priority[rightRow.definition.diagnosticValue] - priority[leftRow.definition.diagnosticValue] || leftRow.definition.order - rightRow.definition.order;
+    }).slice(0, 3);
+
+  return <section className="border-b border-[#ddd3bf] px-5 py-7 sm:px-8 sm:py-9 lg:px-12" aria-labelledby="exact-profile-title">
+    <h2 id="exact-profile-title" className="font-serif text-[28px] leading-tight text-[#284d45] sm:text-[32px]">Compare two supported rulesets</h2>
+    <p className="mt-2 max-w-[780px] text-sm leading-6 text-[#596b65]">The comparison uses the published profile and evidence available here. Local table rules and provisional source details can affect what is established.</p>
     <div className="mt-6 grid gap-4 sm:grid-cols-2">
-      {[{ value: left, set: setLeft, label: 'First exact profile' }, { value: right, set: setRight, label: 'Second exact profile' }].map((control) => <label key={control.label} className="grid gap-2 text-[12px] font-semibold text-[#284d45]">{control.label}<select aria-label={control.label} value={control.value} onChange={(event) => control.set(event.target.value)} className="min-h-11 w-full rounded-lg border border-[#b8c8c1] bg-white px-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">{profiles.map(({ ref, name }) => <option key={`${ref.id}@${ref.version}`} value={`${ref.id}@${ref.version}`}>{name} · {ref.version}</option>)}</select></label>)}
+      {[{ value: left, set: setLeft, label: 'First ruleset' }, { value: right, set: setRight, label: 'Second ruleset' }].map((control) => <label key={control.label} className="grid gap-2 text-[12px] font-semibold text-[#284d45]">{control.label}<select aria-label={control.label} value={control.value} onChange={(event) => control.set(event.target.value)} className="min-h-11 w-full rounded-lg border border-[#b8c8c1] bg-white px-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">{profiles.map(({ ref, name, status }) => <option key={`${ref.id}@${ref.version}`} value={`${ref.id}@${ref.version}`}>{name} · {ref.version}{chooserStatus(status) ? ` · ${chooserStatus(status)}` : ''}</option>)}</select></label>)}
     </div>
     <div className="mt-3 grid gap-2 text-xs leading-5 text-[#596b65] sm:grid-cols-2"><p>{selectedLeft.name}: profile status {selectedLeft.status ?? 'not stated'} · version {selectedLeft.ref.version}</p><p>{selectedRight.name}: profile status {selectedRight.status ?? 'not stated'} · version {selectedRight.ref.version}</p></div>
     <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-lg bg-[#efe8da] p-3 text-[12px] text-[#405650]">
-      <span>{selectedLeft.name} {selectedLeft.ref.version} vs {selectedRight.name} {selectedRight.ref.version}</span>
-      <label className="flex min-h-11 cursor-pointer items-center gap-2 font-semibold"><input type="checkbox" aria-label="Differences only" checked={differencesOnly} onChange={(event) => setDifferencesOnly(event.target.checked)} className="h-4 w-4 accent-[#284d45] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]"/>Differences only</label>
-      <a className="min-h-11 content-center rounded border border-[#b8c8c1] bg-white px-3 font-semibold underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]" href="/rules">Explore rules profiles</a>
+      <span className="font-semibold">{selectedLeft.name} vs {selectedRight.name}</span>
+      <label className="flex min-h-11 cursor-pointer items-center gap-2 font-semibold"><input type="checkbox" aria-label="Show the same rules too" checked={!differencesOnly} onChange={(event) => setDifferencesOnly(!event.target.checked)} className="h-4 w-4 accent-[#284d45] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]"/>Show the same rules too</label>
+      <a className="min-h-11 content-center font-semibold underline decoration-[#ae6249] underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]" href="/rules">Explore rules profiles</a>
     </div>
     {!l || !r ? <p className="mt-5 text-sm text-[#596b65]" role="status">Loading resolved profiles…</p> : <div className="mt-6 space-y-7">
-      <section aria-labelledby="differences-heading"><h3 id="differences-heading" className="mb-3 font-serif text-2xl text-[#284d45]">What differs?</h3>{differentRows.length ? <div className="space-y-5">{groupedRows(differentRows)}</div> : <p className="rounded-lg bg-[#efe8da] p-4 text-sm leading-6 text-[#405650]">No differences are established in the rules shown here.</p>}</section>
-      {!differencesOnly && sameRows.length > 0 && <section aria-labelledby="same-heading"><h3 id="same-heading" className="mb-3 font-serif text-2xl text-[#284d45]">Same in both</h3><div className="space-y-5">{groupedRows(sameRows)}</div></section>}
-      {checkingRows.length > 0 && <details className="rounded-lg border border-[#d8ceb8] bg-[#fbf8ed] p-4"><summary className="min-h-11 cursor-pointer font-serif text-xl text-[#284d45] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">Other rules and qualifications ({checkingRows.length})</summary><p className="mb-3 mt-2 text-sm leading-6 text-[#596b65]">These topics do not have comparable answers for both versions. An incomplete comparison does not mean a rule is absent.</p><ul className="space-y-3 text-sm leading-6">{checkingRows.map(({ definition, a, b }) => <li key={definition.id}><strong>{definition.label}</strong><p>{selectedLeft.name}: {a.playerAnswer ?? (a.value.status === 'unknown' ? 'No answer is available.' : readableValue(a, selectedLeft.name))}</p><p>{selectedRight.name}: {b.playerAnswer ?? (b.value.status === 'unknown' ? 'No answer is available.' : readableValue(b, selectedRight.name))}</p></li>)}</ul></details>}
-      <details className="rounded-lg border border-[#d8ceb8] bg-white p-4"><summary className="min-h-11 cursor-pointer font-serif text-xl text-[#284d45]">Governed evidence linked to compared dimensions ({relevantLeft.length + relevantRight.length})</summary><p className="mt-2 text-sm leading-6 text-[#596b65]">The links identify supported components of broader dimensions. They do not claim that one fact covers an entire scoring or play policy. Other comparison answers retain their separate reviewed-audit evidence.</p><div className="mt-3 grid gap-4 sm:grid-cols-2">{[[selectedLeft, relevantLeft], [selectedRight, relevantRight]].map(([profile, facts]) => <div key={(profile as typeof selectedLeft).ref.id}><h4 className="font-semibold">{(profile as typeof selectedLeft).name}</h4><ul className="mt-2 space-y-2 text-xs leading-5">{(facts as typeof relevantLeft).map((fact) => <li key={fact.factId} className="border-t border-[#e5dccb] pt-2"><strong className="break-all">{fact.subject.id}</strong><p>Dimensions: {RULES_DIMENSIONS.filter(({ id }) => GOVERNED_DIMENSION_LINKS[id]?.[`${fact.profile.id}@${fact.profile.version}`]?.subjectIds.includes(fact.subject.id)).map(({ label }) => label).join(', ')} (component coverage)</p><p>Treatment: {fact.treatment ? `${fact.treatment.recordId} v${fact.treatment.recordVersion}` : 'missing'} · scorer mapping: {fact.runtime.mappingState}{fact.runtime.ref ? ` · ${fact.runtime.ref.kind}:${fact.runtime.ref.id}` : ''} · capability: {fact.runtime.capability} · conformance: {fact.runtime.conformance}</p>{fact.claims.map((claim) => <p key={claim.recordId}>{claim.recordId} v${claim.recordVersion} · {claim.status} · {claim.source?.recordId ?? 'source missing'} v{claim.source?.recordVersion ?? '—'} · {claim.source?.citation ?? 'Source unavailable'} · {claim.source?.locator.label ?? 'Locator unavailable'}</p>)}</li>)}</ul></div>)}</div></details>
+      {featuredRows.length > 0 && <section aria-labelledby="biggest-differences-title"><h3 id="biggest-differences-title" className="mb-3 font-serif text-2xl text-[#284d45]">Largest established differences</h3><div className="grid gap-3 md:grid-cols-3">{featuredRows.map(({ definition, a, b }) => <article key={definition.id} className="rounded-xl border border-[#d8ceb8] bg-white p-4"><h4 className="font-semibold leading-5 text-[#284d45]">{definition.label}</h4><p className="mt-3 text-sm leading-5 text-[#596b65]"><strong className="text-[#284d45]">{selectedLeft.name}:</strong> {readableValue(a, selectedLeft.name)}</p><p className="mt-2 text-sm leading-5 text-[#596b65]"><strong className="text-[#284d45]">{selectedRight.name}:</strong> {readableValue(b, selectedRight.name)}</p></article>)}</div></section>}
+      <section aria-labelledby="details-title"><h3 id="details-title" className="mb-3 font-serif text-2xl text-[#284d45]">Explore the details</h3>{differentRows.length ? <div className="space-y-3">{groupedRows(differentRows)}</div> : <p className="rounded-lg bg-[#efe8da] p-4 text-sm leading-6 text-[#405650]">No differences are established for this pair in the available comparison. That does not mean the rules are the same; see “Still to check” for topics without comparable answers.</p>}</section>
+      {checkingRows.length > 0 && <details className="rounded-xl border border-[#d8ceb8] bg-[#fbf8ed] p-4"><summary className="min-h-11 cursor-pointer font-serif text-xl text-[#284d45] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">Still to check ({checkingRows.length})</summary><p className="mb-3 mt-2 text-sm leading-6 text-[#596b65]">These topics do not have comparable answers for both versions. An incomplete comparison does not mean a rule is absent.</p><ul className="space-y-3 text-sm leading-6">{checkingRows.map(({ definition, a, b }) => <li key={definition.id}><strong>{definition.label}</strong><p>{selectedLeft.name}: {a.playerAnswer ?? (a.value.status === 'unknown' ? 'No answer is available.' : readableValue(a, selectedLeft.name))}</p><p>{selectedRight.name}: {b.playerAnswer ?? (b.value.status === 'unknown' ? 'No answer is available.' : readableValue(b, selectedRight.name))}</p></li>)}</ul></details>}
+      <details className="rounded-xl border border-[#d8ceb8] bg-white p-4"><summary className="min-h-11 cursor-pointer font-serif text-lg text-[#284d45]">Where this comparison comes from ({relevantLeft.length + relevantRight.length} linked facts)</summary><p className="mt-2 text-sm leading-6 text-[#596b65]">Governed fact links cover named components of broader dimensions. They do not claim that one fact covers an entire scoring or play policy. Each comparison also keeps its own source and app-support evidence.</p><div className="mt-3 grid gap-4 sm:grid-cols-2">{[[selectedLeft, relevantLeft], [selectedRight, relevantRight]].map(([profile, facts]) => <div key={(profile as typeof selectedLeft).ref.id}><h4 className="font-semibold">{(profile as typeof selectedLeft).name}</h4><ul className="mt-2 space-y-2 text-xs leading-5">{(facts as typeof relevantLeft).map((fact) => <li key={fact.factId} className="border-t border-[#e5dccb] pt-2"><strong className="break-all">{fact.subject.id}</strong><p>Dimensions: {RULES_DIMENSIONS.filter(({ id }) => GOVERNED_DIMENSION_LINKS[id]?.[`${fact.profile.id}@${fact.profile.version}`]?.subjectIds.includes(fact.subject.id)).map(({ label }) => label).join(', ')} (component coverage)</p><p>Treatment: {fact.treatment ? `${fact.treatment.recordId} v${fact.treatment.recordVersion}` : 'missing'} · scorer mapping: {fact.runtime.mappingState}{fact.runtime.ref ? ` · ${fact.runtime.ref.kind}:${fact.runtime.ref.id}` : ''} · capability: {fact.runtime.capability} · conformance: {fact.runtime.conformance}</p>{fact.claims.map((claim) => <p key={claim.recordId}>{claim.recordId} v{claim.recordVersion} · {claim.status} · {claim.source?.recordId ?? 'source missing'} v{claim.source?.recordVersion ?? '—'} · {claim.source?.citation ?? 'Source unavailable'} · {claim.source?.locator.label ?? 'Locator unavailable'}</p>)}</li>)}</ul></div>)}</div></details>
     </div>}
   </section>;
 }

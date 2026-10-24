@@ -55,8 +55,8 @@ describe('exact profile comparator', () => {
 
   it('defaults to exact BMJA and Bramhall profiles and shows shared player-facing facts', async () => {
     const node = await mount();
-    const first = node.querySelector<HTMLSelectElement>('select[aria-label="First exact profile"]')!;
-    const second = node.querySelector<HTMLSelectElement>('select[aria-label="Second exact profile"]')!;
+    const first = node.querySelector<HTMLSelectElement>('select[aria-label="First ruleset"]')!;
+    const second = node.querySelector<HTMLSelectElement>('select[aria-label="Second ruleset"]')!;
     expect([...first.options].map(({ value: option }) => option)).toEqual(expect.arrayContaining(['bmja@1.0', 'buzzard-2000@0.1', 'mcr-wmo-2006@0.1']));
     expect(first.value).toBe('bmja@1.0'); expect(second.value).toBe('outside-the-box@0.1');
     expect(node.textContent).toContain('What happens after a draw?');
@@ -64,6 +64,7 @@ describe('exact profile comparator', () => {
     expect(node.textContent).toContain('East stays East and the next hand is Goulash.');
     expect(node.textContent).toContain('profile status Stable');
     expect(node.textContent).toContain('profile status Configured club profile');
+    expect(node.textContent).toContain('Largest established differences');
     expect(node.textContent).toContain('The club catalogue lists 33 unique named special hands.');
     expect(node.textContent).toContain('18 inventoried named-hand entries');
     expect(node.textContent).toContain('A waiting hand needs one tile to complete it.');
@@ -79,7 +80,7 @@ describe('exact profile comparator', () => {
     expect(node.querySelectorAll('a[href="/special-hands"]')).toHaveLength(1);
     expect(node.textContent).not.toContain('current product interpretation');
     expect(node.textContent).not.toContain('source interpretation needs checking');
-    await act(async () => { (node.querySelector<HTMLInputElement>('input[aria-label="Differences only"]')!).click(); });
+    await act(async () => { (node.querySelector<HTMLInputElement>('input[aria-label="Show the same rules too"]')!).click(); });
     expect(node.textContent).toContain('Showing a set changes its points.');
     expect(node.textContent).toContain('Chows score no points. Pungs score 2/4');
     expect(node.textContent).toContain('A player may win on a tile taken from another player’s Kong. The win earns one double.');
@@ -89,8 +90,8 @@ describe('exact profile comparator', () => {
     expect(node.textContent).toContain('Check with your table whether ordinary hands may contain more than one Chow.');
     expect(node.textContent).toContain('Losing players settle score differences with each other.');
     expect(node.textContent).toContain('Nobody pays anything after a drawn hand.');
-    expect(node.querySelector('section[aria-label="Settlement & incidents"]')).not.toBeNull();
-    const drawRow = [...node.querySelectorAll('article')].find((article) => article.textContent?.includes('What happens after a draw?'))!;
+    expect(node.textContent).toContain('Payments and what happens next');
+    const drawRow = [...node.querySelectorAll('details article')].find((article) => article.textContent?.includes('What happens after a draw?'))!;
     await act(async () => { drawRow.querySelector('summary')!.dispatchEvent(new MouseEvent('click', { bubbles: true })); });
     expect(drawRow.textContent).toContain('source evidence source verified');
     expect(drawRow.textContent).toContain('app support partial');
@@ -98,7 +99,7 @@ describe('exact profile comparator', () => {
     expect(drawRow.textContent).toContain('app support executable');
     const exposureRow = [...node.querySelectorAll('li')].find((item) => item.textContent?.includes('Exposed vs concealed'))!;
     expect(exposureRow.textContent).toContain('Ask your table how exposure affects ordinary sets.');
-    const governedEvidence = [...node.querySelectorAll('details')].find((details) => details.textContent?.includes('Governed evidence linked to compared dimensions'))!;
+    const governedEvidence = [...node.querySelectorAll('details')].find((details) => details.textContent?.includes('Where this comparison comes from'))!;
     await act(async () => { governedEvidence.querySelector('summary')!.dispatchEvent(new MouseEvent('click', { bubbles: true })); });
     expect(governedEvidence.textContent).toContain('rule.classical.goulash-round-transition');
     expect(governedEvidence.textContent).toContain('rule.classical.flower-season-base-scoring');
@@ -106,11 +107,11 @@ describe('exact profile comparator', () => {
 
   it('keeps unknown facts out of difference cards and retains them in collapsed coverage details', async () => {
     const node = await mount();
-    const first = node.querySelector<HTMLSelectElement>('select[aria-label="First exact profile"]')!;
+    const first = node.querySelector<HTMLSelectElement>('select[aria-label="First ruleset"]')!;
     await act(async () => { first.value = 'mcr-wmo-2006@0.1'; first.dispatchEvent(new Event('change', { bubbles: true })); });
-    const second = node.querySelector<HTMLSelectElement>('select[aria-label="Second exact profile"]')!;
+    const second = node.querySelector<HTMLSelectElement>('select[aria-label="Second ruleset"]')!;
     await act(async () => { second.value = 'buzzard-2000@0.1'; second.dispatchEvent(new Event('change', { bubbles: true })); });
-    const coverage = [...node.querySelectorAll('details')].find(({ textContent }) => textContent?.includes('Other rules and qualifications'))!;
+    const coverage = [...node.querySelectorAll('details')].find(({ textContent }) => textContent?.includes('Still to check'))!;
     expect(coverage.open).toBe(false);
     expect(node.textContent).not.toContain('Not yet described in this comparison.');
     expect(node.textContent).not.toContain('Not established in comparison data');
@@ -121,7 +122,7 @@ describe('exact profile comparator', () => {
 
   it('uses profile-local answers after switching away from the default pair', async () => {
     const node = await mount();
-    const first = node.querySelector<HTMLSelectElement>('select[aria-label="First exact profile"]')!;
+    const first = node.querySelector<HTMLSelectElement>('select[aria-label="First ruleset"]')!;
     await act(async () => { first.value = 'buzzard-2000@0.1'; first.dispatchEvent(new Event('change', { bubbles: true })); });
     expect(node.textContent).toContain('Ordinary hands may contain more than one Chow.');
     expect(node.textContent).toContain('a completed Standing Hand adds 100 points.');
@@ -132,8 +133,8 @@ describe('exact profile comparator', () => {
   it('renders visible labels, grouped comparison content and the selector on the canonical page', () => {
     const markup = renderToStaticMarkup(createElement(MahjongRulesComparedPage));
     expect(markup).toContain('id="exact-profile-title"');
-    expect(markup).toContain('First exact profile');
-    expect(markup).toContain('Differences only');
-    expect(markup).toContain('Explore rules profiles');
+    expect(markup).toContain('First ruleset');
+    expect(markup).toContain('Show the same rules too');
+    expect(markup).toContain('Explore other Mahjong traditions');
   });
 });
