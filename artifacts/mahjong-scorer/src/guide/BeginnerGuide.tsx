@@ -102,12 +102,13 @@ export function BeginnerGuide({ onClose }: { onClose: () => void }) {
             <section className="border-b border-[#ddd3bf] py-9 sm:py-11">
               <div className="mb-4 flex items-center gap-3">
                 <div className="fine-rule w-10" />
-                <span className="font-mono text-[10px] uppercase tracking-[.2em] text-[#ae6249]">Practical guide</span>
+                <span className="font-mono text-[10px] uppercase tracking-[.2em] text-[#ae6249]">British scoring guide</span>
               </div>
-              <h1 className="max-w-[720px] font-serif text-[clamp(38px,6vw,62px)] leading-[.98] text-[#284d45]">British Mahjong without the rulebook overwhelm.</h1>
+              <h1 className="max-w-[720px] font-serif text-[clamp(38px,6vw,62px)] leading-[.98] text-[#284d45]">How British Mahjong scoring works.</h1>
               <p className="mt-5 max-w-[720px] text-[15px] leading-7 text-[#596b65]">
-                This guide explains enough to understand what the scorer is asking you and why. You do not need to memorise the scoring engine before you can play.
+                Use this guide for points, doubles, fishing and the questions the scorer asks. For turn order, claims, replacement tiles and how play moves around the table, start with <a href="/gameplay-basics" className="font-semibold text-[#284d45] underline decoration-[#cfa58f] underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">how to play a British hand</a>.
               </p>
+              <p className="mt-2 text-[11px] leading-5 text-[#8c8a7f]">For the full rule reference, see <a href="/rules/british" className="font-semibold text-[#284d45] underline decoration-[#cfa58f] underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">British Mahjong rules</a>.</p>
               <div className="mt-6 flex items-start gap-3 rounded-xl bg-[#284d45] p-5 text-[#f8f4e9]">
                 <Sparkles size={18} className="mt-1 shrink-0 text-[#d7a287]" />
                 <div>
@@ -146,7 +147,7 @@ export function BeginnerGuide({ onClose }: { onClose: () => void }) {
                   </tbody>
                 </table>
               </HorizontalScrollRegion>
-              <p>Flowers and Seasons are bonus tiles. They are put aside when drawn and replaced, so they do not form part of the normal playing-hand count.</p>
+              <p>Flowers and Seasons score as bonus tiles; a Flower or Season matching your seat Wind can also earn a double.</p>
               <Callout>You do not need to decide whether a tile is major, minor or an honour. The scorer does that automatically.</Callout>
             </GuideSection>
 
@@ -183,8 +184,7 @@ export function BeginnerGuide({ onClose }: { onClose: () => void }) {
             </GuideSection>
 
             <GuideSection id="visibility" number="06" title="Exposed and concealed sets">
-              <p>A set is <strong className="text-[#284d45]">concealed</strong> if you made it entirely from tiles you drew yourself.</p>
-              <p>A set is <strong className="text-[#284d45]">exposed</strong> if you claimed another player’s discard to complete it.</p>
+              <p>Whether a set is <strong className="text-[#284d45]">concealed</strong> or <strong className="text-[#284d45]">exposed</strong> changes its point value. <a href="/gameplay-basics#visibility" className="font-semibold text-[#284d45] underline decoration-[#cfa58f] underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">See how a claim exposes a set</a> in the table guide.</p>
               <p>Concealed Pungs and Kongs normally score more than exposed ones, which is why the scorer asks which applies. When the final winning tile creates a special exception, the app asks which tile completed Mah Jong rather than expecting you to know the rule.</p>
             </GuideSection>
 
