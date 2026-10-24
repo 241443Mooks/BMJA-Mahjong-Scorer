@@ -48,7 +48,7 @@ describe('British Flowers and Seasons source-to-scorer proof', () => {
       scorerBehaviour: [
         expect.stringContaining('ordinary hand'),
         expect.stringContaining('fixed special hand'),
-        expect.stringContaining('fishing'),
+        expect.stringContaining('Fishing means'),
       ],
       technical: [
         { subjectId: subjectIds[0], treatment: { recordId: `bmja@1.0:${subjectIds[0]}`, recordVersion: 1, runtimeState: { kind: 'executable', ref: { kind: 'rule', id: 'scoring.scoreBonusTiles' } } }, mapping: { state: 'connected', ruleRef: { kind: 'rule', id: 'scoring.scoreBonusTiles' } }, fixtures: ['src/rules-platform/truth-british-flowers-seasons.test.ts'] },
@@ -57,7 +57,7 @@ describe('British Flowers and Seasons source-to-scorer proof', () => {
       ],
     });
     if (explanation.available) {
-      expect(explanation.scorerBehaviour[1]).toContain('separate bonus subtotal');
+      expect(explanation.scorerBehaviour[1]).toContain('Flower and Season points are added separately');
       expect(explanation.technical.map(({ subjectId }) => subjectId)).toEqual(subjectIds);
       expect(explanation.technical.map(({ mapping }) => mapping.ruleRef.id)).toEqual([
         'scoring.scoreBonusTiles', 'scoring.scoreBonusDoubles', 'scoring.scoreBonusDoubles',
@@ -179,9 +179,9 @@ describe('British Flowers and Seasons source-to-scorer proof', () => {
     if (explanation.available) {
       expect(explanation.summary).toContain('Each Flower or Season adds 5 points.');
       expect(explanation.summary).toContain('3 doubles, with the matching-tile double counted separately');
-      expect(explanation.scorerBehaviour[1]).toContain('eligible doubles apply not to those bonus points');
+      expect(explanation.scorerBehaviour[1]).toContain('no doubles are applied to those bonus points');
       expect(explanation.scorerBehaviour[1]).toContain('A final discard adds 0 bonus doubles');
-      expect(explanation.scorerBehaviour[2]).toContain('eligible doubles apply not to those bonus points');
+      expect(explanation.scorerBehaviour[2]).toContain('no doubles are applied to those bonus points');
     }
     expect(bonusTileSubtotal(20, 2, changed.modes.fixedSpecial.doubles)).toBe(20);
     expect(bonusTileSubtotal(20, 2, changed.modes.fishing.doubles)).toBe(20);

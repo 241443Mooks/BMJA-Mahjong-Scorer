@@ -22,14 +22,29 @@ describe('Issue 251B public reference projection', () => {
 
   it('publishes the source-to-scorer Flowers and Seasons explanation from governed facts', () => {
     const html = renderToStaticMarkup(React.createElement(RouteContent, { path: '/encyclopaedia/flowers-and-seasons' }));
+    expect(html).toContain('Encyclopaedia</a> / <a class="underline" href="/rules/british">British Mahjong');
+    expect((html.match(/<img\b/g) ?? [])).toHaveLength(8);
+    for (const tile of [
+      'Flower 1', 'Flower 2', 'Flower 3', 'Flower 4',
+      'Season 1', 'Season 2', 'Season 3', 'Season 4',
+      'East', 'South', 'West', 'North',
+    ]) expect(html).toContain(tile);
     expect(html).toContain('Each Flower or Season adds 4 points');
     expect(html).toContain('matching Flower or Season gives 1 double');
     expect(html).toContain('including that matching-tile double');
-    expect(html).toContain('ordinary hand');
-    expect(html).toContain('fixed special hand');
-    expect(html).toContain('fishing');
+    expect(html).toContain('Ordinary hands');
+    expect(html).toContain('Fixed special hands');
+    expect(html).toContain('Fishing means the hand needs one more tile to win');
+    expect(html).toContain('A South player’s Flower 2 (Orchid) adds 4 points');
+    expect(html).toContain('Four Seasons add 16 points and give 2 doubles in total');
+    expect(html).toContain('Where these rules come from');
     expect(html).toContain('British Mahjong Association, Working out the scores');
-    expect(html).toContain('scoreBonusDoubles');
+    expect(html).toContain('https://mahjongbritishrules.wordpress.com/scoring/working-out-the-scores/');
+    expect(html).toContain('Published-rule difference:');
+    expect(html).toContain('below 1,000 points');
+    expect(html).toContain('without increasing the final score');
+    expect(html).not.toContain('scoreBonusDoubles');
+    expect(html).not.toMatch(/evidence\.rule\.classical|bmja@1\.0|\.test\.ts|repository path/i);
     expect(html).not.toContain('The source-to-scorer explanation is unavailable');
   });
 
