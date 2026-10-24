@@ -51,9 +51,9 @@ describe('British Flowers and Seasons source-to-scorer proof', () => {
         expect.stringContaining('fishing'),
       ],
       technical: [
-        { subjectId: subjectIds[0], treatment: { recordId: `bmja@1.0:${subjectIds[0]}`, recordVersion: 1, runtimeState: { kind: 'executable', ref: { kind: 'rule', id: 'scoring.scoreBonusTiles' } } }, mapping: { state: 'connected', ruleRef: { kind: 'rule', id: 'scoring.scoreBonusTiles' } }, fixture: { file: 'src/rules-platform/truth-british-flowers-seasons.test.ts', cases: ['keeps the linked scorer behaviour in ordinary, fixed-special and fishing calculations'] } },
-        { subjectId: subjectIds[1], treatment: { recordId: `bmja@1.0:${subjectIds[1]}`, recordVersion: 1, runtimeState: { kind: 'executable', ref: { kind: 'rule', id: 'scoring.scoreBonusDoubles' } } }, mapping: { state: 'connected', ruleRef: { kind: 'rule', id: 'scoring.scoreBonusDoubles' } }, fixture: { file: 'src/rules-platform/truth-british-flowers-seasons.test.ts', cases: ['keeps the linked scorer behaviour in ordinary, fixed-special and fishing calculations'] } },
-        { subjectId: subjectIds[2], treatment: { recordId: `bmja@1.0:${subjectIds[2]}`, recordVersion: 1, runtimeState: { kind: 'executable', ref: { kind: 'rule', id: 'scoring.scoreBonusDoubles' } } }, mapping: { state: 'connected', ruleRef: { kind: 'rule', id: 'scoring.scoreBonusDoubles' } }, fixture: { file: 'src/rules-platform/truth-british-flowers-seasons.test.ts', cases: ['keeps the linked scorer behaviour in ordinary, fixed-special and fishing calculations'] } },
+        { subjectId: subjectIds[0], treatment: { recordId: `bmja@1.0:${subjectIds[0]}`, recordVersion: 1, runtimeState: { kind: 'executable', ref: { kind: 'rule', id: 'scoring.scoreBonusTiles' } } }, mapping: { state: 'connected', ruleRef: { kind: 'rule', id: 'scoring.scoreBonusTiles' } }, fixtures: ['src/rules-platform/truth-british-flowers-seasons.test.ts', 'src/scoring/rules.test.ts'] },
+        { subjectId: subjectIds[1], treatment: { recordId: `bmja@1.0:${subjectIds[1]}`, recordVersion: 1, runtimeState: { kind: 'executable', ref: { kind: 'rule', id: 'scoring.scoreBonusDoubles' } } }, mapping: { state: 'connected', ruleRef: { kind: 'rule', id: 'scoring.scoreBonusDoubles' } }, fixtures: ['src/rules-platform/truth-british-flowers-seasons.test.ts', 'src/scoring/rules.test.ts'] },
+        { subjectId: subjectIds[2], treatment: { recordId: `bmja@1.0:${subjectIds[2]}`, recordVersion: 1, runtimeState: { kind: 'executable', ref: { kind: 'rule', id: 'scoring.scoreBonusDoubles' } } }, mapping: { state: 'connected', ruleRef: { kind: 'rule', id: 'scoring.scoreBonusDoubles' } }, fixtures: ['src/rules-platform/truth-british-flowers-seasons.test.ts', 'src/scoring/rules.test.ts'] },
       ],
     });
     if (explanation.available) {
@@ -62,7 +62,7 @@ describe('British Flowers and Seasons source-to-scorer proof', () => {
         'scoring.scoreBonusTiles', 'scoring.scoreBonusDoubles', 'scoring.scoreBonusDoubles',
       ]);
       expect(new Set(explanation.technical.map(({ treatment }) => treatment.recordId)).size).toBe(3);
-      expect(explanation.technical.every(({ fixture }) => fixture.cases.length > 0)).toBe(true);
+      expect(explanation.technical.every(({ fixtures }) => fixtures.includes('src/rules-platform/truth-british-flowers-seasons.test.ts'))).toBe(true);
     }
     for (const subjectId of subjectIds) {
       const treatment = currentTruthCorpus.treatments.find(({ record }) =>

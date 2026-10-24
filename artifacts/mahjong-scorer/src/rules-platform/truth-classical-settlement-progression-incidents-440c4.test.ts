@@ -11,6 +11,7 @@ import {
 } from '../rules-knowledge/truth/classical-settlement-progression-incidents-440c4';
 
 const expectedInventory = [
+  'rule.classical.goulash-round-transition',
   'rule.classical.loser-pays-winner-score',
   'rule.classical.nonwinners-settle-pairwise-score-differences',
   'rule.classical.east-payment-doubles',
@@ -41,20 +42,21 @@ const c4Subjects = currentTruthCorpus.subjects.filter(({ record }) => expectedIn
 describe('Issue 440C4 Classical settlement, progression and incident truth', () => {
   it('freezes the source inventory and exact row counts', () => {
     expect(classicalSettlementProgressionIncident440c4Inventory).toEqual(expectedInventory);
-    expect(classicalSettlementProgressionIncident440c4Coverage).toHaveLength(69);
-    expect(classicalSettlementProgressionIncident440c4Coverage.filter(({ evidenceStatus }) => evidenceStatus === 'source-ready')).toHaveLength(35);
+    expect(classicalSettlementProgressionIncident440c4Coverage).toHaveLength(72);
+    expect(classicalSettlementProgressionIncident440c4Coverage.filter(({ evidenceStatus }) => evidenceStatus === 'source-ready')).toHaveLength(36);
     expect(classicalSettlementProgressionIncident440c4Coverage.filter(({ evidenceStatus }) => evidenceStatus === 'source-unresolved')).toHaveLength(8);
-    expect(classicalSettlementProgressionIncident440c4Coverage.filter(({ evidenceStatus }) => evidenceStatus === 'not-applicable')).toHaveLength(26);
-    expect(classicalSettlementProgressionIncident440c4Coverage.filter(({ treatmentStatus }) => treatmentStatus === 'runtime-edge-migration-incomplete')).toHaveLength(35);
-    expect(classicalSettlementProgressionIncident440c4Coverage.filter(({ treatmentStatus }) => treatmentStatus === 'present-not-modelled')).toHaveLength(0);
-    expect(c4Subjects).toHaveLength(23);
-    expect(c4Claims).toHaveLength(35);
-    expect(c4Treatments).toHaveLength(35);
+    expect(classicalSettlementProgressionIncident440c4Coverage.filter(({ evidenceStatus }) => evidenceStatus === 'not-applicable')).toHaveLength(28);
+    expect(classicalSettlementProgressionIncident440c4Coverage.filter(({ treatmentStatus }) => treatmentStatus === 'runtime-edge-migration-incomplete')).toHaveLength(34);
+    expect(classicalSettlementProgressionIncident440c4Coverage.filter(({ treatmentStatus }) => treatmentStatus === 'present-not-modelled')).toHaveLength(1);
+    expect(classicalSettlementProgressionIncident440c4Coverage.filter(({ treatmentStatus }) => treatmentStatus === 'migrated')).toHaveLength(1);
+    expect(c4Subjects).toHaveLength(24);
+    expect(c4Claims).toHaveLength(36);
+    expect(c4Treatments).toHaveLength(36);
     expect(classicalSettlementProgressionIncident440c4Unresolved).toHaveLength(8);
   });
 
   it('keeps ordinary settlement subjects shared only across independently sourced exact profiles', () => {
-    const shared = expectedInventory.slice(0, 3);
+    const shared = expectedInventory.slice(1, 4);
     for (const subjectId of shared) {
       const claims = c4Claims.filter(({ record }) => record.subjectId === subjectId);
       const treatments = c4Treatments.filter(({ record }) => record.subjectId === subjectId);
@@ -99,8 +101,10 @@ describe('Issue 440C4 Classical settlement, progression and incident truth', () 
     expect(c4Claims.some(({ record }) => record.subjectId === nonWinner && record.subjectId.startsWith('pattern.'))).toBe(false);
   });
 
-  it('keeps shortened game length as product policy and all C4 treatments migration-incomplete', () => {
-    expect(c4Treatments.every(({ record }) => record.runtimeState.kind === 'migration-incomplete')).toBe(true);
+  it('keeps shortened game length as product policy and reports the two explicit Goulash runtime states', () => {
+    expect(c4Treatments.filter(({ record }) => record.runtimeState.kind === 'migration-incomplete')).toHaveLength(34);
+    expect(c4Treatments.find(({ record }) => record.subjectId === 'rule.classical.goulash-round-transition')?.record.runtimeState).toEqual({ kind: 'present-not-modelled' });
+    expect(c4Treatments.find(({ record }) => record.subjectId === 'rule.otb.goulash-round-transition')?.record.runtimeState).toEqual({ kind: 'executable', ref: { kind: 'hand-mode', id: 'hand-mode.outside-the-box-goulash' } });
     expect(c4Treatments.every(({ record }) => !('score' in record) && !('value' in record))).toBe(true);
     expect(c4Treatments.every(({ record }) => ['bmja', 'outside-the-box', 'buzzard-2000'].includes(record.profile.id))).toBe(true);
     expect(c4Claims.some(({ record }) => /one-round/i.test(record.claim))).toBe(false);
@@ -131,7 +135,7 @@ describe('Issue 440C4 Classical settlement, progression and incident truth', () 
   it('registers BMJA settlement authority and has no executable strategy refs', () => {
     const source = currentTruthCorpus.sources.find(({ record }) => record.sourceId === 'bmja-settlement')?.record;
     expect(source).toMatchObject({ authority: 'governing', authorityForProfileIds: ['bmja'] });
-    expect(c4Treatments.every(({ record }) => record.runtimeState.kind !== 'executable')).toBe(true);
+    expect(c4Treatments.filter(({ record }) => record.runtimeState.kind === 'executable').map(({ record }) => record.subjectId)).toEqual(['rule.otb.goulash-round-transition']);
     expect(c4Claims.find(({ record }) => record.subjectId === 'rule.classical.draw-has-no-settlement' && record.supportsProfile?.id === 'outside-the-box')?.record.sourceId).toBe('otb-guide-2026-09');
   });
 });

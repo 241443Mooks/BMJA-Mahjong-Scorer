@@ -2,6 +2,7 @@ import { ArrowRight, CheckCircle2, CircleHelp, Compass, Flower2, Gamepad2, Shiel
 import { SiteHeader } from '../components/SiteHeader';
 import { HorizontalScrollRegion } from '../components/HorizontalScrollRegion';
 import { MAHJONG_FAMILIES } from './mahjong-family-presentation';
+import { ExactProfileComparator } from './ExactProfileComparator';
 
 const variants = [
   {
@@ -94,6 +95,8 @@ export function MahjongRulesComparedPage() {
               <p className="mt-2 font-serif text-[26px] leading-snug">Mahjong is a family of related rulesets, not one universal rulebook with a few house rules.</p>
             </div>
           </section>
+
+          <ExactProfileComparator />
 
           <section className="border-b border-[#ddd3bf] px-5 py-9 sm:px-8 sm:py-11 lg:px-12">
             <div className="max-w-[760px]">

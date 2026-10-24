@@ -39,9 +39,9 @@ describe('Issue 440E4 MCR non-catalogue/profile truth closeout', () => {
     expect(mcrE4ProfileSubjects).toHaveLength(8);
     expect(mcrE4ProfileClaims).toHaveLength(8);
     expect(mcrE4ProfileTreatments).toHaveLength(8);
-    expect(currentTruthCorpus.subjects).toHaveLength(317);
-    expect(currentTruthCorpus.claims).toHaveLength(380);
-    expect(currentTruthCorpus.treatments).toHaveLength(378);
+    expect(currentTruthCorpus.subjects).toHaveLength(318);
+    expect(currentTruthCorpus.claims).toHaveLength(381);
+    expect(currentTruthCorpus.treatments).toHaveLength(379);
 
     for (const { slug, locator, runtime } of migrated) {
       const subjectId = `rule.mcr-e4-${slug}`;

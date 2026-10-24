@@ -4,6 +4,7 @@ import type { ReactNode } from 'react';
 import { SiteHeader } from '../components/SiteHeader';
 import { descriptorForSlug, PUBLIC_RULES_DESCRIPTORS, type PublicRulesSlug, type RulesDescriptor } from '../game/rules-presentation';
 import { clearPreferredRulesProfile, readPreferredRulesProfile, setPreferredRulesProfile } from '../game/preferred-rules-profile';
+import { RulesetProfileReport } from './RulesetProfileReport';
 import { familiesBySupportedProfileCount, MAHJONG_FAMILIES, PROFILE_LEARNING_LINKS, supportedProfilesForFamily } from '../home/mahjong-family-presentation';
 
 const actionClass = 'inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-[#284d45] px-4 py-2.5 text-[15px] font-semibold text-[#f8f4e9] transition hover:bg-[#23443d] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249] focus-visible:ring-offset-2';
@@ -41,7 +42,7 @@ const pageCopy: Record<Exclude<PublicRulesSlug, 'club'>, { eyebrow: string; intr
     eyebrow: 'Rules reference',
     intro: 'The stable British / BMJA-style profile used by Mahjong Reference. It gives your table a shared way to score a hand, settle it and continue the game.',
     identity: <>British / BMJA-style Mahjong is a standardised British profile within the wider Western/classical Mahjong tradition. Mahjong Reference uses the BMJA-approved British rules reference for this scorer; that is a source basis, not a claim of BMJA affiliation.</>,
-    table: <>A normal winning hand is four sets and a pair, alongside defined special hands. Flowers and Seasons are scoring bonus tiles. Ordinary hands allow at most one Chow, and the profile includes fishing treatment, East/dealer effects and Goulash after a drawn hand.</>,
+    table: <>A normal winning hand is four sets and a pair, alongside defined special hands. Flowers and Seasons are scoring bonus tiles. Ordinary hands allow at most one Chow. The published rules describe Goulash after a drawn hand; this scorer does not switch hand mode automatically.</>,
     scoring: <>Ordinary scoring starts with base points for qualifying sets, pairs and bonus tiles, then applies doubles. Defined special hands and fishing can instead have their own values. This is the scoring grammar; the detailed points tables stay in the British scoring guide.</>,
     after: <>The winner is paid for the winning hand. Losing hands can matter too: settlement compares them with one another, and East pays or receives double where the rules apply. The game tracker carries that settlement and Wind progression forward.</>,
     distinctive: <>British rules deliberately standardise a restricted special-hand catalogue and a one-Chow ordinary-hand limit. Clubs may agree variations, so check the table's own sheet when it differs from this profile.</>,
@@ -86,6 +87,7 @@ export function RulesProfilePage({ slug }: { slug: Exclude<PublicRulesSlug, 'clu
   const copy = pageCopy[slug];
   return <PageFrame eyebrow={copy.eyebrow} title={descriptor.title} intro={copy.intro}>
     <section className="px-5 py-7 sm:px-8 lg:px-12"><RulesSupportStatus descriptor={descriptor} /></section>
+    {slug === 'british' && <RulesetProfileReport profile={descriptor.profile} />}
     <Section title="Identity and authority"><p>{copy.identity}</p></Section>
     <Section title="At the table"><p>{copy.table}</p></Section>
     <Section title="How scoring works"><p>{copy.scoring}</p></Section>

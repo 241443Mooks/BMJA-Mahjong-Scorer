@@ -5,6 +5,7 @@ import type { RulesProfileRef } from '../../rules-platform/types';
 import type { TruthValidationEnvironment } from './integrity';
 import { mcrTruthValidationEnvironment } from './mcr-validation-environment';
 import { isClassicalScoringRule } from './classical-scoring-runtime';
+import { OUTSIDE_THE_BOX_GOULASH_HAND_MODE, outsideTheBoxHandModeImplementation } from '../../rules-platform/outside-the-box-strategies';
 
 /** Family-specific joins live at the edge; the truth validator only sees this family-neutral adapter. */
 export const currentTruthValidationEnvironment: TruthValidationEnvironment = {
@@ -12,6 +13,15 @@ export const currentTruthValidationEnvironment: TruthValidationEnvironment = {
     || mcrTruthValidationEnvironment.profileExists(profile),
   runtimeTreatmentExists: (profile: RulesProfileRef, ref: RuntimeTreatmentRef) => {
     if (ref.kind === 'rule') return isClassicalScoringRule(profile, ref.id);
+    if (ref.kind === 'hand-mode') {
+      const definition = currentPlayableResolverEnvironment.profiles.get(profile);
+      const value = definition?.kind === 'root' ? definition.definition.handMode : undefined;
+      const configured = value && typeof value === 'object' && !Array.isArray(value) && 'id' in value && typeof value.id === 'string'
+        ? value.id : undefined;
+      return configured === ref.id
+        && ref.id === OUTSIDE_THE_BOX_GOULASH_HAND_MODE.id
+        && typeof outsideTheBoxHandModeImplementation(OUTSIDE_THE_BOX_GOULASH_HAND_MODE) === 'function';
+    }
     if (ref.kind === 'binding') {
       const classicalBinding = specialHandBindingsForCurrentClassicalProfile(profile).some((binding) =>
         binding.profile.id === profile.id

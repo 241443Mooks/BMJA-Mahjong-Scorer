@@ -151,4 +151,32 @@ describe('public rules reference model', () => {
       expect(comparison).toContain(family.clue);
     }
   });
+  it('renders British rules at a glance from the shared exact-profile contract, not an independent score table', () => {
+    const british = renderToStaticMarkup(createElement(RulesProfilePage, { slug: 'british' }));
+    expect(british).toContain('Rules at a glance');
+    expect(british).toContain('bmja@1.0');
+    expect(british).toContain('144 tiles, including Flowers and Seasons');
+    expect(british).toContain('Four sets and a pair');
+    expect(british).toContain('Points and doubles');
+    expect(british).toContain('1,000 points (configured default)');
+    expect(british).toContain('Classical pairwise settlement');
+    expect(british).toContain('In the current scorer · Source checked');
+    expect(british).toContain('Source checked');
+    expect(british).toContain('Source finding not recorded');
+    expect(british).toContain('Not established by this report');
+    expect(british).toContain('not evidence that a rule is absent or unsupported by the scorer');
+    expect(british).toContain('not evidence that a rule is absent');
+    expect(british).toContain('Configuration fingerprint');
+    expect(british).toContain('What happens after a hand');
+    expect(british).toContain('The published rules describe Goulash after a drawn hand; this scorer does not switch hand mode automatically.');
+    expect(british).toContain('Open governed source facts and scorer connections');
+    expect(british).toContain('evidence.rule.classical.flower-season-base-scoring.bmja');
+    expect(british.indexOf('Table and tiles')).toBeLessThan(british.indexOf('Hand structure and play'));
+    expect(british.indexOf('Hand structure and play')).toBeLessThan(british.indexOf('Ready and waiting'));
+
+    // First slice is a single-profile proof; other profiles are #408.
+    const mcr = renderToStaticMarkup(createElement(RulesProfilePage, { slug: 'mcr' }));
+    expect(mcr).not.toContain('Rules at a glance');
+  });
+
 });

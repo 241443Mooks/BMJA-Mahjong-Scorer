@@ -51,32 +51,33 @@ const profileTreatmentCounts = Object.fromEntries(profiles.map((profile) => [
 
 describe('Issue 440F final truth-corpus closeout', () => {
   it('freezes the assembled corpus and deterministic treatment accounting', () => {
-    expect(currentTruthCorpus.subjects).toHaveLength(317);
-    expect(currentTruthCorpus.claims).toHaveLength(380);
-    expect(currentTruthCorpus.treatments).toHaveLength(378);
+    expect(currentTruthCorpus.subjects).toHaveLength(318);
+    expect(currentTruthCorpus.claims).toHaveLength(381);
+    expect(currentTruthCorpus.treatments).toHaveLength(379);
     expect(currentTruthCorpus.sources).toHaveLength(10);
     expect(new Set(treatmentStates).size).toBe(6);
-    expect(Object.values(treatmentStateCounts).reduce((sum, count) => sum + count, 0)).toBe(378);
+    expect(Object.values(treatmentStateCounts).reduce((sum, count) => sum + count, 0)).toBe(379);
     expect(treatmentStateCounts.unknown).toBe(0);
     expect(profileTreatmentCounts).toEqual({
-      'bmja@1.0': 62,
+      'bmja@1.0': 63,
       'western-tm@0.1': 84,
       'outside-the-box@0.1': 85,
       'buzzard-2000@0.1': 56,
       'mcr-wmo-2006@0.1': 91,
     });
-    expect(Object.values(profileTreatmentCounts).reduce((sum, count) => sum + count, 0)).toBe(378);
+    expect(Object.values(profileTreatmentCounts).reduce((sum, count) => sum + count, 0)).toBe(379);
     expect(treatmentStateCounts).toEqual({
-      executable: 230,
+      executable: 232,
       'absent-by-rule': 0,
-      'present-not-modelled': 5,
+      'present-not-modelled': 6,
       unknown: 0,
       'not-applicable': 0,
-      'migration-incomplete': 143,
+      'migration-incomplete': 141,
     });
-    expect(executableByRefKind).toEqual({ binding: 225, policy: 2, rule: 3 });
+    expect(executableByRefKind).toEqual({ binding: 225, 'hand-mode': 1, policy: 2, rule: 4 });
     expect(treatments.filter(({ runtimeState }) => runtimeState.kind === 'present-not-modelled').map(({ treatmentId, subjectId }) => ({ treatmentId, subjectId })).sort((a, b) => a.treatmentId.localeCompare(b.treatmentId))).toEqual([
       { treatmentId: 'bmja@1.0:rule.bmja.dead-wanted-tile-does-not-remove-fishing-eligibility', subjectId: 'rule.bmja.dead-wanted-tile-does-not-remove-fishing-eligibility' },
+      { treatmentId: 'bmja@1.0:rule.classical.goulash-round-transition', subjectId: 'rule.classical.goulash-round-transition' },
       { treatmentId: 'outside-the-box@0.1:rule.otb.earthly-hand-limit-event', subjectId: 'rule.otb.earthly-hand-limit-event' },
       { treatmentId: 'outside-the-box@0.1:rule.otb.first-wall-draw-limit-event', subjectId: 'rule.otb.first-wall-draw-limit-event' },
       { treatmentId: 'outside-the-box@0.1:rule.otb.heavenly-hand-limit-event', subjectId: 'rule.otb.heavenly-hand-limit-event' },
@@ -165,9 +166,9 @@ describe('Issue 440F final truth-corpus closeout', () => {
   });
 
   it('proves uniqueness, evidence, exact-profile, executable-edge and lifecycle integrity', () => {
-    expect(new Set(currentTruthCorpus.subjects.map(({ record }) => record.id)).size).toBe(317);
-    expect(new Set(currentTruthCorpus.claims.map(({ record }) => record.claimId)).size).toBe(380);
-    expect(new Set(treatments.map(({ treatmentId }) => treatmentId)).size).toBe(378);
+    expect(new Set(currentTruthCorpus.subjects.map(({ record }) => record.id)).size).toBe(318);
+    expect(new Set(currentTruthCorpus.claims.map(({ record }) => record.claimId)).size).toBe(381);
+    expect(new Set(treatments.map(({ treatmentId }) => treatmentId)).size).toBe(379);
     expect(validateTruthCorpus(currentTruthCorpus, currentTruthValidationEnvironment)).toEqual([]);
     expect(() => assertTruthCorpusIntegrity(currentTruthCorpus, currentTruthValidationEnvironment)).not.toThrow();
     for (const { record } of currentTruthCorpus.claims) expect(currentTruthIndex.sourceById(record.sourceId)).toBeDefined();

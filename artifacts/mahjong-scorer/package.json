@@ -12,6 +12,7 @@
     "atlas:generate": "node scripts/build-atlas-v02-content.mjs",
     "atlas:check": "node scripts/build-atlas-v02-content.mjs --check",
     "atlas:verify:issue-358": "node scripts/verify-atlas-issue-358.mjs",
+    "rules:reconcile": "node scripts/generate-truth-reconciliation-report.mjs",
     "screenshots:help": "git submodule update --init --recursive --depth 1 && node scripts/capture-help-screenshots.mjs"
   },
   "devDependencies": {
