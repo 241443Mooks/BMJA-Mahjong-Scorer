@@ -1,13 +1,14 @@
 # What's next — project handoff roadmap
 
-**Snapshot:** 23 October 2026 (current handoff; earlier architectural snapshots retained below)
+**Snapshot:** 26 October 2026 (current handoff; earlier architectural snapshots retained below)
 **Purpose:** current restart point after truth-corpus closeout, Riichi preflight and recent product-assurance work.
 **Live authority:** issue #105 remains the programme map; this file is the dated handoff companion, not a second backlog.
 
-## 23 October 2026 — current handoff (supersedes the 3 October priority snapshot below)
+## 26 October 2026 — current handoff (supersedes the 3 October priority snapshot below)
 
 **Authority:** live programme tracker #105 and current `main`. The sections below preserve the earlier architectural context; this section is the current product handoff.
 
+- **Reference release gate:** Draft #541 integrates the rules reference, comparison and Encyclopaedia; draft #553 is stacked on #541 for selected-rules learning. Both are unmerged. Coordinate #554 (read-only whole-site walkthrough) and #555 (owner release decision) before any merge. Five public Encyclopaedia articles and 36 displayed comparison questions in the draft do not prove full coverage. #552 owns Encyclopaedia discovery planning; do not duplicate it or turn this review into a broad redesign.
 - **10 October field validation (#89):** three real tables used the app; players valued it. Repeated full-hand calculation and end-of-hand scrolling were major friction, including for experienced players. Terminology, identifying winds/flowers/seasons and progression clarity also need attention.
 - **Merged:** #521 preserves finished games as dated local, read-only ledgers with print/save and second-tab protection. #525 makes hand outcome/winner explicit, records directly after deterministic settlement validation, leaves settlement details optional and supports Undo. #517/#518 improved player entry and contextual hand scoring. #527 adds the compact Previous games homepage card, #528 uses plain-language tile-group labels, and #529 opens final standings at completion and offers Start a new game.
 - **Not cloud storage:** previous games persist in the same browser/profile/device subject to site-data clearing and browser limitations. Important records should be exported.
@@ -33,7 +34,7 @@ Production `main` has:
 - the completed #399 machine-readable rules-truth architecture, with typed source/evidence/treatment records, fail-closed integrity gates and Classical + MCR proof;
 - the shared #406 profile × dimension contract for #296/#405 projections.
 
-Historical 3 October production baseline: `718bdc496983a249ef714d090872075116fce6a0`. Current 23 October `main`: `95063f380660ab5ce7ebdd069936aed5dc1675c4`.
+Historical 3 October production baseline: `718bdc496983a249ef714d090872075116fce6a0`. Current 26 October `main`: `3f68b860f6e31c59f2597e765e3d15c56d883ac1` (last merge: test-only PR #536 on 23 October).
 
 ## Completed architecture programme — #399 rules truth
 
@@ -183,12 +184,13 @@ At the start of the 23 October review there were no open PRs; draft #531 is now 
 
 Unless new evidence changes the priority:
 
-1. Product validation: **#253 formal current-production QA**, then evidence-led follow-up from the **completed 10 October #89 real-table session**; continue #246 analytics observation and experienced-player MCR review.
-2. Riichi: **#494 → #262 → #263 → #264 → experienced EMA/European player review**.
-3. Suitable independent bounded work: **#429** MCR evidence UX. **#412** What's New is already live; maintain it only when a meaningful player-facing milestone warrants an entry.
-4. Keep **#434** at American/NMJL-style N0 evidence + architecture.
-5. Keep **#447 parked** until real ruleset onboarding/migration pain provides evidence for the authoring workflow.
-6. #407 remains technically available but is not automatically next. #167 remains the parking-lot index.
+1. Reference release review: **#554 read-only visitor/content audit + #555 owner decision** for draft #541/#553; preserve stacked PRs until approved.
+2. Product validation: **#253 formal current-production QA**, then evidence-led follow-up from the **completed 10 October #89 real-table session**; continue #246 analytics observation and experienced-player MCR review.
+3. Riichi: **#494 → #262 → #263 → #264 → experienced EMA/European player review**.
+4. Suitable independent bounded work: **#429** MCR evidence UX. **#412** What's New is already live; maintain it only when a meaningful player-facing milestone warrants an entry.
+5. Keep **#434** at American/NMJL-style N0 evidence + architecture.
+6. Keep **#447 parked** until real ruleset onboarding/migration pain provides evidence for the authoring workflow.
+7. #407 remains technically available but is not automatically next. #167 remains the parking-lot index.
 
 ## Things not to do on restart
 
@@ -212,7 +214,7 @@ Read, in order:
 
 1. this file;
 2. issue #105;
-3. the exact active issue from the current programme map (currently #253 validation or #494 Riichi prerequisite, by chosen track);
+3. the exact active issue from the current programme map (currently #554/#555 reference release review, #253 validation or #494 Riichi prerequisite, by chosen track);
 4. only the current `main` code/tests and authority documents needed by that batch.
 
 Then do one bounded thing.
