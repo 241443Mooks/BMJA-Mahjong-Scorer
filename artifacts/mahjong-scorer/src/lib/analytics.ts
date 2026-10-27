@@ -32,7 +32,7 @@ export function captureProductEvent(
   event: ProductAnalyticsEvent,
   properties: AnalyticsProperties = {},
 ) {
-  if (typeof window === 'undefined') return;
+  if (typeof window === 'undefined' || window.location?.hostname !== 'mahjong.smooks.co.uk') return;
   try {
     window.posthog?.capture?.(event, properties);
   } catch {
