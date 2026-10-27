@@ -21,7 +21,7 @@ function profileRadio(profile: typeof BMJA_PROFILE_REF | typeof BUZZARD_2000_PRO
 
 describe('rules profile picker analytics', () => {
   beforeEach(() => {
-    Object.defineProperty(globalThis, 'window', { configurable: true, value: {} });
+    Object.defineProperty(globalThis, 'window', { configurable: true, value: { location: { hostname: 'mahjong.smooks.co.uk' } } });
   });
 
   afterEach(() => {

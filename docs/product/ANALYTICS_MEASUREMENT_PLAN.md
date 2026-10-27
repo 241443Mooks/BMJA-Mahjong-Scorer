@@ -176,3 +176,11 @@ Cloudflare Web Analytics can be enabled separately as a simple independent traff
 - PostHog privacy controls: https://posthog.com/docs/product-analytics/privacy
 - PostHog cookieless tracking: https://posthog.com/tutorials/cookieless-tracking
 - PostHog bot and traffic detection: https://posthog.com/docs/web-analytics/bot-detection
+
+## Production-host guard and completion measurement follow-up (#556)
+
+The analytics bootstrap and custom capture helper only run on `mahjong.smooks.co.uk`. Localhost and Pages previews retain app functionality without sending to the production project. For historical comparisons, filter PostHog events by `$host = mahjong.smooks.co.uk`; pre-guard data includes preview and local traffic.
+
+Completion events are not yet implemented. The hand scorer computes results live, including supported partial evidence, so a render or a generic valid state is not a unique user calculation. The game tracker confirms a final hand into `isComplete`, but undo and reconfirmation, including across recovery, need a durable deduplication design before capturing a single completion per game. Resume is also deferred: recovery is automatic, not an unambiguous intentional resume action. Do not use pageviews or hand confirmations as substitutes.
+
+Once reliable events exist, compare weekly aggregate completion counts and device breakdowns over 2–4 weeks, filtered to the production host. Cookieless identifiers do not establish visitor retention; bots, owner QA, and browser or network blocking remain limitations. Do not infer historical completion counts from pageviews.
