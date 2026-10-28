@@ -1,10 +1,21 @@
 # What's next — project handoff roadmap
 
-**Snapshot:** 26 October 2026 (current handoff; earlier architectural snapshots retained below)
+**Snapshot:** 28 October 2026 (current handoff; earlier architectural snapshots retained below)
 **Purpose:** current restart point after truth-corpus closeout, Riichi preflight and recent product-assurance work.
 **Live authority:** issue #105 remains the programme map; this file is the dated handoff companion, not a second backlog.
 
-## 26 October 2026 — current handoff (supersedes the 3 October priority snapshot below)
+## 28 October 2026 — evidence-led product focus (supersedes 26 October ordering)
+
+**Authority:** [live programme map #105](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/105), production `main@3f68b860`. The user has deliberately narrowed the near-term product question: **is Mahjong Reference a dependable, mobile-first scoring and game-tracking companion?** Avoid treating the larger Encyclopaedia or personalised learning platform as an automatic next release.
+
+- **First measurement slice:** [#556](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/556) / [draft #557](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/pull/557) restricts PostHog collection to the production hostname, preserves `ruleset_selected` semantics and documents measurement/privacy limits. It is **draft, unmerged, undeployed and incomplete**: meaningful hand-score and game-completion events are not implemented. Live recalculation of partial hands, game Undo/reconfirmation and automatic recovery make naive completion/resume events misleading. Define and test durable event boundaries separately; do not add artificial user actions solely for analytics.
+- **Evidence caveat:** earlier all-host PostHog views included localhost and Cloudflare previews. Production-only last-30-day pageviews at the 27 October review: Home 198, Game 133, Hand 64, Rules Comparison 7. These are pageviews, **not completed tasks, proven demand or reliable retention**. Mobile accounted for 555 of 673 production pageviews in the device breakdown. Avoid overinterpreting development/owner QA.
+- **Near-term priority:** finish and review the small production-only analytics foundation, agree genuine completion event definitions, run [#253](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/253) production/mobile/recovery QA and use [#89](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/89) table feedback to fix proven scoring friction. Observe aggregate outcomes for 2–4 weeks after trustworthy instrumentation ships.
+- **Reference scope held for decision:** [#541](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/pull/541) and stacked [#553](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/pull/553) remain draft and require owner approval. Coordinate [#554](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/554)/[#555](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/555) as a **bounded evidence-led scope/release decision**, not a mandate for site-wide expansion. Preserve completed work without automatically shipping it.
+- **Independent tracks:** Riichi [#494](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/494) remains the prerequisite before #262; MCR remains provisional. Public What's New remains at its existing October player milestone; no new player-facing merge has occurred since test-only #536 on 23 October.
+- **Branch cleanup:** [#398](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/398) tracks eight reverified exact-head merged candidates; protect all eight current draft PR heads including #557, stacked bases and unique/ambiguous work. No deletion.
+
+## 26 October 2026 — historical handoff (supersedes the 3 October priority snapshot below)
 
 **Authority:** live programme tracker #105 and current `main`. The sections below preserve the earlier architectural context; this section is the current product handoff.
 
