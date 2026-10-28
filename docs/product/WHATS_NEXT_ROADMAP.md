@@ -15,9 +15,9 @@
 - **Independent tracks:** Riichi [#494](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/494) remains the prerequisite before #262; MCR remains provisional. Public What's New remains at its existing October player milestone; no new player-facing merge has occurred since test-only #536 on 23 October.
 - **Branch cleanup:** [#398](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/398) tracks eight reverified exact-head merged candidates; protect all eight current draft PR heads including #557, stacked bases and unique/ambiguous work. No deletion.
 
-## 26 October 2026 — historical handoff (supersedes the 3 October priority snapshot below)
+## 26 October 2026 — prior handoff (retained for history)
 
-**Authority:** live programme tracker #105 and current `main`. The sections below preserve the earlier architectural context; this section is the current product handoff.
+**Authority at that date:** live programme tracker #105 and then-current `main`. The sections below preserve earlier architectural context; the 28 October section above supersedes this handoff.
 
 - **Reference release gate:** Draft #541 integrates the rules reference, comparison and Encyclopaedia; draft #553 is stacked on #541 for selected-rules learning. Both are unmerged. Coordinate #554 (read-only whole-site walkthrough) and #555 (owner release decision) before any merge. Five public Encyclopaedia articles and 36 displayed comparison questions in the draft do not prove full coverage. #552 owns Encyclopaedia discovery planning; do not duplicate it or turn this review into a broad redesign.
 - **10 October field validation (#89):** three real tables used the app; players valued it. Repeated full-hand calculation and end-of-hand scrolling were major friction, including for experienced players. Terminology, identifying winds/flowers/seasons and progression clarity also need attention.
