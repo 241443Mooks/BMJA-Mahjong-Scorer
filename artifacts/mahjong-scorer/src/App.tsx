@@ -360,6 +360,8 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
   }, [playerWind]);
 
   const [selectedSet, setSelectedSet] = useState<string>(initialHand ? 'set-working' : 'set-1');
+  const [lastGroupKind, setLastGroupKind] = useState<SetKind>('pung');
+  const [groupFallbackNotice, setGroupFallbackNotice] = useState(false);
   const [remainingTilesExpanded, setRemainingTilesExpanded] = useState(false);
   const [activeSuit, setActiveSuit] = useState<string>('characters');
   const [showAllTiles, setShowAllTiles] = useState(false);
@@ -839,10 +841,13 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
   }
   function removeSet(id: string) {
     clearWinningTileEvidence();
+    const removed = sets.find((set) => set.id === id);
+    const fallbackKind = lastGroupKind === 'chow' && (handMode === 'goulash' || sets.some((set) => set.id !== id && set.kind === 'chow')) ? 'pung' : lastGroupKind;
+    if (selectedSet === id) setGroupFallbackNotice(fallbackKind !== lastGroupKind);
     setSets((current) => {
       const newSets = current.filter(s => s.id !== id);
       if (selectedSet === id) {
-        const recovered = recoverWorkingDraft(newSets, () => ({ id: `set-${Date.now()}`, kind: 'pung' as const, visibility: 'concealed' as const, tile: null }));
+        const recovered = recoverWorkingDraft(newSets, () => ({ id: `set-${Date.now()}`, kind: fallbackKind, visibility: removed?.visibility ?? 'concealed', tile: null }));
         setSelectedSet(recovered.draftId);
         return recovered.sets;
       }
@@ -851,8 +856,10 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
   }
   function startNormalGroup() {
     const draftId = `set-${Date.now()}`;
+    const kind = lastGroupKind === 'chow' && (handMode === 'goulash' || sets.some((set) => set.kind === 'chow' && set.tile !== null)) ? 'pung' : lastGroupKind;
+    setGroupFallbackNotice(kind !== lastGroupKind);
     setSets((current) => {
-      const recovered = recoverWorkingDraft(current, () => ({ id: draftId, kind: 'pung' as const, visibility: 'concealed' as const, tile: null }));
+      const recovered = recoverWorkingDraft(current, () => ({ id: draftId, kind, visibility: 'concealed' as const, tile: null }));
       setSelectedSet(recovered.draftId);
       return recovered.sets;
     });
@@ -862,6 +869,8 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
     // evidence, and discard the unused next-group draft while it is open.
     const set = sets.find((handSet) => handSet.id === id);
     if (set?.tile) {
+      setLastGroupKind(set.kind);
+      setGroupFallbackNotice(false);
       if (set.tile.family === 'suit') {
         setStructuredFamily(set.tile.suit);
         setStructuredValue(String(set.tile.rank));
@@ -928,9 +937,12 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
     // A normal set is confirmed by its representative tile. Immediately make a
     // fresh draft so the one picker is ready for the next group in the same place.
     clearWinningTileEvidence();
+    const nextKind = selected.kind === 'chow' ? 'pung' : selected.kind;
+    setLastGroupKind(nextKind);
+    setGroupFallbackNotice(nextKind !== selected.kind);
     setSets((current) => [
       ...current.map((handSet) => handSet.id === destination ? { ...handSet, tile } : handSet),
-      { id: nextId, kind: 'pung', visibility: 'concealed', tile: null },
+      { id: nextId, kind: nextKind, visibility: selected.visibility, tile: null },
     ]);
     setSelectedSet(nextId);
   }
@@ -969,6 +981,8 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
     return true;
   }
   function clearHand() {
+    setLastGroupKind('pung');
+    setGroupFallbackNotice(false);
     setSets([{ id: 'set-1', kind: 'pung', visibility: 'concealed', tile: null }]);
     setFlowers([]);
     setSeasons([]);
@@ -1335,8 +1349,9 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
                       <div className="mb-3 flex items-center justify-between gap-2">{selectedSet === 'remaining-tiles' ? <h3 className="font-serif text-[20px] text-[#284d45]">Add tiles</h3> : <span className="text-[10px] text-[#66746e]">Choose details, then a tile</span>}<div className="text-right">{selectedSet === 'remaining-tiles' && <span className="block text-[10px] text-[#66746e]">Enter tiles individually</span>}{plainStandaloneHand && <span data-testid="mobile-tile-progress" className="block text-[10px] font-mono text-[#7a7769] sm:hidden">{tileProgressLabel}</span>}</div></div>
                       {!isMcr && !isWinner && <div className="mb-3 grid grid-cols-2 gap-2" role="group" aria-label="Choose hand evidence to add"><button type="button" data-testid="button-add-group-mode" aria-pressed={selectedSet !== 'remaining-tiles'} onClick={() => { startNormalGroup(); setRemainingTilesExpanded(false); }} className={`rounded-md border px-3 py-2 text-[12px] font-semibold ${selectedSet !== 'remaining-tiles' ? 'border-[#284d45] bg-[#284d45] text-[#f8f4e9]' : 'border-[#cfc3aa] bg-[#fdfbf5] text-[#284d45]'}`}>Add a group</button><button type="button" data-testid="button-add-remaining-tiles-mode" aria-pressed={selectedSet === 'remaining-tiles'} onClick={() => { setSelectedSet('remaining-tiles'); setRemainingTilesExpanded(false); }} className={`rounded-md border px-3 py-2 text-[12px] font-semibold ${selectedSet === 'remaining-tiles' ? 'border-[#284d45] bg-[#284d45] text-[#f8f4e9]' : 'border-[#cfc3aa] bg-[#fdfbf5] text-[#284d45]'}`}>Add tiles</button></div>}
                       {selectedSet === 'remaining-tiles' && <div data-testid="remaining-tile-picker-controls" className="mt-3">{remainingTileControls}</div>}
+                      {selectedSet !== 'remaining-tiles' && groupFallbackNotice && <p data-testid="group-fallback-notice" role="status" className="mb-2 text-[11px] text-[#66746e]">Another Chow is unavailable, so Group has been set to Pung.</p>}
                       {selectedSet !== 'remaining-tiles' && activeSet && <div data-testid={activeSet.tile === null ? 'working-group-draft' : undefined} className="grid min-w-0 grid-cols-2 gap-2">
-                        <label className="min-w-0 text-[10px] font-semibold text-[#66746e]">Group<select aria-label="Working group type" data-testid="select-working-set-type" value={activeSet.kind} onChange={(e) => { const kind = e.target.value as SetKind; const maximumBlanks = kind === 'pung' ? 1 : kind === 'kong' || kind === 'pair' ? 2 : 0; const blankTileIds = (activeSet.blankTileIds ?? []).slice(0, maximumBlanks); const choice = normaliseStructuredChoiceForGroup(kind, structuredFamily, structuredValue); setStructuredFamily(choice.family); setStructuredValue(choice.value); updateSet(activeSet.id, { kind, tile: null, blankTileIds: blankTileIds.length ? blankTileIds : undefined }); }} className="mt-1 w-full rounded border border-[#cfc3aa] bg-[#fdfbf5] px-2 py-2 text-[12px] font-semibold text-[#284d45]"><option value="pung">Three matching (Pung)</option><option value="chow" disabled={handMode === 'goulash' || sets.some((other) => other.id !== activeSet.id && other.kind === 'chow')}>Three in a run (Chow)</option><option value="kong">Four matching (Kong)</option><option value="pair">Two matching (Pair)</option></select></label>
+                        <label className="min-w-0 text-[10px] font-semibold text-[#66746e]">Group<select aria-label="Working group type" data-testid="select-working-set-type" value={activeSet.kind} onChange={(e) => { const kind = e.target.value as SetKind; setLastGroupKind(kind); setGroupFallbackNotice(false); const maximumBlanks = kind === 'pung' ? 1 : kind === 'kong' || kind === 'pair' ? 2 : 0; const blankTileIds = (activeSet.blankTileIds ?? []).slice(0, maximumBlanks); const choice = normaliseStructuredChoiceForGroup(kind, structuredFamily, structuredValue); setStructuredFamily(choice.family); setStructuredValue(choice.value); updateSet(activeSet.id, { kind, tile: null, blankTileIds: blankTileIds.length ? blankTileIds : undefined }); }} className="mt-1 w-full rounded border border-[#cfc3aa] bg-[#fdfbf5] px-2 py-2 text-[12px] font-semibold text-[#284d45]"><option value="pung">Three matching (Pung)</option><option value="chow" disabled={handMode === 'goulash' || sets.some((other) => other.id !== activeSet.id && other.kind === 'chow')}>Three in a run (Chow)</option><option value="kong">Four matching (Kong)</option><option value="pair">Two matching (Pair)</option></select></label>
                         <label className="min-w-0 text-[10px] font-semibold text-[#66746e]">Visibility<select aria-label="Working group visibility" data-testid="select-working-set-visibility" value={activeSet.visibility} onChange={(e) => updateSet(activeSet.id, { visibility: e.target.value as Visibility })} className="mt-1 w-full rounded border border-[#cfc3aa] bg-[#fdfbf5] px-2 py-2 text-[12px] font-semibold text-[#284d45]"><option value="concealed">Concealed</option><option value="exposed">Exposed</option></select></label>
                         {handMode === 'goulash' && activeSet.kind !== 'chow' && <label className="min-w-0 text-[10px] font-semibold text-[#66746e]">Blank tiles<select aria-label="Working group blank tiles" data-testid="select-working-set-blanks" value={activeSet.blankTileIds?.length ?? 0} onChange={(e) => { const count = Number(e.target.value); updateSet(activeSet.id, { blankTileIds: Array.from({ length: count }, (_, blankIndex) => `blank-${activeSet.id}-${blankIndex + 1}`) }); }} className="mt-1 w-full rounded border border-[#cfc3aa] bg-[#fdfbf5] px-2 py-2 text-[12px] font-semibold text-[#284d45]">{Array.from({ length: activeSet.kind === 'pung' ? 2 : 3 }, (_, count) => <option key={count} value={count}>{count} blank{count === 1 ? '' : 's'}</option>)}</select></label>}
                       </div>}

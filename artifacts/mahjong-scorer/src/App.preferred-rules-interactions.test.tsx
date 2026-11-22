@@ -97,6 +97,50 @@ describe('preferred profile flow interactions', () => {
     }
   });
 
+  it('retains group choices across additions and entry modes, and resets on Clear', async () => {
+    vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
+    const container = document.createElement('div');
+    document.body.append(container);
+    const root = createRoot(container);
+    await act(async () => root.render(<HandScorer context={null} onClose={vi.fn()} standaloneHand standaloneRulesProfile={WESTERN_TM_PROFILE_REF} onStandaloneRulesProfileChange={vi.fn()} />));
+    const select = (id: string) => container.querySelector<HTMLSelectElement>(`[data-testid="${id}"]`)!;
+    const change = async (id: string, value: string) => { await act(async () => { const el = select(id); el.value = value; el.dispatchEvent(new Event('change', { bubbles: true })); }); };
+    const click = async (id: string) => { await act(async () => container.querySelector<HTMLButtonElement>(`[data-testid="${id}"]`)!.click()); };
+    try {
+      await change('select-working-set-type', 'pair');
+      await change('select-working-set-visibility', 'exposed');
+      await change('select-working-family', 'bamboo');
+      await change('select-working-value', '2');
+      await click('button-add-working-group');
+      expect(select('select-working-set-type').value).toBe('pair');
+      expect(select('select-working-set-visibility').value).toBe('exposed');
+      expect(select('select-working-family').value).toBe('bamboo');
+      expect(select('select-working-value').value).toBe('2');
+      await change('select-working-value', '3');
+      await click('button-add-working-group');
+      expect(select('select-working-set-type').value).toBe('pair');
+      await click('button-add-remaining-tiles-mode');
+      await click('button-add-remaining-tile');
+      await click('button-add-group-mode');
+      expect(select('select-working-set-type').value).toBe('pair');
+      await change('select-working-set-type', 'pung');
+      await change('select-working-value', '4');
+      await click('button-add-working-group');
+      expect(select('select-working-set-type').value).toBe('pung');
+      await change('select-working-set-type', 'pair');
+      await click('button-clear-hand');
+      expect(select('select-working-set-type').value).toBe('pung');
+      expect(select('select-working-set-visibility').value).toBe('concealed');
+      await change('select-working-set-type', 'chow');
+      await click('button-add-working-group');
+      expect(select('select-working-set-type').value).toBe('pung');
+      expect(container.querySelector('[data-testid="group-fallback-notice"]')?.textContent).toContain('Another Chow is unavailable');
+    } finally {
+      await act(async () => root.unmount());
+      container.remove();
+    }
+  });
+
   it('reveals the existing standalone rules picker on demand and retains profile transition cleanup', async () => {
     const { values } = installBrowser();
     vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
