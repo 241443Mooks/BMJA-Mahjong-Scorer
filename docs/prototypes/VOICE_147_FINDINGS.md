@@ -1,21 +1,27 @@
-# Issue #147: Phase 0 investigation (incomplete)
+# Issue #147: typed voice experiment — local only
 
-This branch is a contract experiment, not a working voice prototype. It must not be deployed as a voice feature.
+This draft contains a developer-only typed-transcript prototype. It is **not ready for private deployment or merger**. No microphone, production route, public navigation or billing is added.
 
-## Existing entry and adapter
+## Scope and hand integration
 
-`HandScorer` in `src/App.tsx` keeps `sets` as `UIHandSet[]`: each completed group is a `HandSet`, while the working picker has `tile: null`. It separately owns layout mode, loose/remaining tiles, blank provenance, bonus tiles, winner and event evidence, winds and the exact active profile. It derives `MahjongHand` for the existing profile runtime. In a tracked game, context supplies authoritative locked facts. `HandSet.visibility` admits only exposed or concealed; missing visibility cannot safely be inserted into it.
+Run `/voice-test` only on the local development server below. The user can enter a description, see what was submitted and review proposed group tiles using the existing artwork. Exposure remains unknown unless supplied or explicitly selected. Edit the text and interpret again to correct a tile, group, ambiguity or unparsed text; Accept is blocked until all proposals are resolved. The current version supports only standalone British BMJA 1.0 non-winning grouped hands, in normal mode, without remaining tiles or blank evidence. Other rules, winner, special-layout and tracked-game cases fail closed. Bonus, loose-tile, winner and context speech is retained as unresolved, not applied.
 
-A future integration must keep proposals separately, require confirmation of all uncertain group fields, and append to the current `sets` using a functional update and unique stable IDs. Preserve the unfinished picker and every unrelated state field. It must apply existing picker restrictions and the exact selected profile's validation to the combined draft, taking care that incomplete winning and hybrid drafts have distinct validation paths. Do not use the scorer's `set()` default for unknown exposure. Do not overwrite locked game context or silently invalidate winning-tile provenance. Confirm behaviour for special layouts and hybrid winner resolution before enabling append there.
+`HandScorer` holds completed `HandSet`s and an unfinished `tile: null` picker alongside separate context. The adapter appends uniquely identified confirmed groups while preserving these fields. It checks structural and four-copy limits and invokes the selected compiled profile's hand validator before the existing scorer sees the new state. It does not overwrite game facts or winning-tile evidence. No AI score is used. A mocked UI test verifies one manual group, its working picker and a later accepted group; another rejects a fifth physical tile. The existing adapter test compares one deterministic partial-hand result with manual entry. This is not proof for other modes or complete winning hands.
 
-The experimental `voice-evidence.ts` implements only the schema boundary and an append primitive. It checks basic tile and chow structure, but **does not** enforce complete domain/profile validation, copy counts, structural limits, layout compatibility, winning provenance or consent. It is not connected to the app. Its schema is not yet a full voice interpretation contract; bonus, ungrouped and contextual evidence require design. Treat unparsed and ambiguous text as blocking evidence, not a successful interpretation.
+## Local setup for the owner
 
-## Still needed before private testing
+1. Initialise the pinned tile-artwork submodule: `git submodule update --init --depth 1`.
+2. Install dependencies using the repository's pnpm version: `pnpm install --frozen-lockfile`.
+3. In a private local shell, securely configure the existing OpenAI project key as the `OPENAI_API_KEY` environment variable for the server process. For a transient shell session, `read -rs OPENAI_API_KEY; export OPENAI_API_KEY` reads it without displaying it; enter it directly in that shell, never in chat. Do not save it in the repository, browser, logs or a tracked file. Use a non-production project/key if available.
+4. Start from the repository root: `PORT=5173 BASE_PATH=/ VOICE_TEST_LOCAL=1 pnpm --filter @workspace/mahjong-scorer dev --host 127.0.0.1`.
+5. On the same machine open `http://127.0.0.1:5173/voice-test`. The middleware requires that exact loopback host and Origin; it is available only when `VOICE_TEST_LOCAL=1`. Stop the server and `unset OPENAI_API_KEY` when done.
 
-- Build and evaluate a typed-transcript interpreter with constrained output, real evaluation cases, explicit correction/ambiguity handling and an editable visual confirmation using existing tile artwork and entry controls.
-- Integrate safely with the current draft, active profile and existing deterministic validation/scoring paths; prove parity across profiles and partial hands.
-- Implement a private Cloudflare endpoint with server-side OpenAI calls, authentication and durable abuse limits; bound payload size and recording time, avoid retaining inputs, and verify the provider's current transcription API and data handling. Use an encrypted Cloudflare environment secret for the API key; never send the key to the browser or request it in chat.
-- Add optional deliberate microphone recording and verify realistic recordings, accents and noise with consent. No recordings have been tested on this branch.
-- Provide exact owner setup and a protected test route; deployment requires the owner's approval. Do not enable a public route or billing.
+The server sends the text to OpenAI's Responses API using `gpt-4o-mini-2024-07-18` and strict structured output, with `store: false`. OpenAI receives the submitted description: consult the project's current provider data-retention settings and terms before using real hand descriptions. The code does not save or log transcript or response bodies; this does not guarantee provider-side zero retention. The local middleware limits the request body to 4 KiB, text to 2,000 characters, and requests to ten per minute per process. It rejects non-loopback connections and unexpected Origin/Host, and returns generic errors. It is not an authentication or distributed-rate-limit solution and must not be exposed through a proxy, tunnel or public host.
 
-The tests here cover only this narrow boundary and one deterministic score parity example. They do not establish speech recognition or the Phase 0/1 gate.
+## Evaluation and limits
+
+`voice-dev/evaluation.json` has 26 typed cases, including informal terms, missing exposure, corrections, invalid identities, partial and mixed hands. With the explicitly configured local server running, execute `node artifacts/mahjong-scorer/voice-dev/evaluate.mjs`. It sends each case to OpenAI and prints aggregate exact-evidence/uncertainty checks. It deliberately spaces requests to respect the local limit. This uses API capacity and may incur existing API charges. No live evaluation was run because the owner has not configured a key for this local session. **Accuracy is unmeasured**; passing mocked tests is not evidence of model accuracy. The evaluation should be reviewed case by case before relying on its aggregate, especially correction and ambiguity cases.
+
+## Cloudflare and deployment gate
+
+There is **no Cloudflare endpoint or secure hosted route in this draft**. A hidden URL is not access control. Before a private deployment, implement and independently verify Cloudflare Access authentication at the endpoint (including origin bypass prevention), durable rate limits, bounded requests, no input logging and generic errors. Configure `OPENAI_API_KEY` only as an encrypted Cloudflare environment secret, never as a frontend variable or tracked file. Verify isolation from production, provider retention controls and cost limits. Obtain explicit owner approval before any private deployment. Until then the experiment is local only; nothing has been deployed.
