@@ -45,7 +45,7 @@ export function RouteContent({ path, prerender = false }: { path: string; preren
     const explicitProfile = path === '/game' ? undefined : slug ? descriptorForSlug(slug).profile : undefined;
     return slug ? withFooter(<App initialRulesProfile={explicitProfile} prerenderOnly={prerender} />, { variant: 'compact' }) : <NotFound />;
   }
-  if (import.meta.env.DEV && path === '/voice-test') return <App initialView="hand" standaloneHand />;
+  if ((import.meta.env.DEV || import.meta.env.VITE_PRIVATE_VOICE_PREVIEW === '1') && path === '/voice-test') return <App initialView="hand" standaloneHand />;
   if (path === '/hand') return withFooter(<App initialView="hand" standaloneHand prerenderOnly={prerender} />, { showTileCredit: true });
   if (path === '/scoring-examples') return withFooter(<ScoringExamplesPage />, { showTileCredit: true });
   if (path === '/guide' || path === '/beginner-guide') return withFooter(<BeginnerGuide onClose={returnHome} />, { showTileCredit: true });

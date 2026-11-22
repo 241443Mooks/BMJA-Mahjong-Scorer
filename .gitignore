@@ -47,3 +47,7 @@ Thumbs.db
 # Replit
 .cache/
 .local/
+
+# Owner-only typed preview config and Cloudflare local state
+/artifacts/mahjong-scorer/voice-preview/wrangler.owner.jsonc
+/artifacts/mahjong-scorer/voice-preview/.wrangler/

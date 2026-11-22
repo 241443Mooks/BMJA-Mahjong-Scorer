@@ -1,0 +1,26 @@
+{
+  "$schema": "https://developers.cloudflare.com/workers/wrangler/configuration/",
+  "name": "mahjong-typed-private-preview",
+  "main": "worker.mjs",
+  "compatibility_date": "2026-10-01",
+  "workers_dev": false,
+  "preview_urls": false,
+  "observability": { "enabled": false },
+  "assets": {
+    "directory": "../dist/voice-preview",
+    "binding": "ASSETS",
+    "html_handling": "none",
+    "run_worker_first": true
+  },
+  "durable_objects": {
+    "bindings": [{ "name": "VOICE_QUOTA", "class_name": "VoiceQuota" }]
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["VoiceQuota"] }],
+  // Copy this file to wrangler.owner.jsonc in this directory, then replace all three values.
+  "vars": {
+    "PREVIEW_HOST": "voice-preview.example.invalid",
+    "ACCESS_ISSUER": "https://replace-me.cloudflareaccess.com",
+    "ACCESS_AUD": "replace-with-access-application-audience"
+  },
+  "routes": [{ "pattern": "voice-preview.example.invalid", "custom_domain": true }]
+}

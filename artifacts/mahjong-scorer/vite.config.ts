@@ -2,7 +2,6 @@ import path from 'path';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import { defineConfig } from 'vite';
-import { voiceLocalApi } from './voice-dev/local-api.mjs';
 
 const rawPort = process.env.PORT;
 
@@ -28,7 +27,7 @@ if (!basePath) {
 
 export default defineConfig({
   base: basePath,
-  plugins: [react(), tailwindcss(), ...(process.env.VOICE_TEST_LOCAL === '1' ? [voiceLocalApi()] : [])],
+  plugins: [react(), tailwindcss()],
   resolve: {
     alias: {
       '@': path.resolve(import.meta.dirname, 'src'),
@@ -43,7 +42,7 @@ export default defineConfig({
   },
   root: path.resolve(import.meta.dirname),
   build: {
-    outDir: path.resolve(import.meta.dirname, 'dist/public'),
+    outDir: path.resolve(import.meta.dirname, process.env.VITE_PRIVATE_VOICE_PREVIEW === '1' ? 'dist/voice-preview' : 'dist/public'),
     emptyOutDir: true,
   },
   server: {

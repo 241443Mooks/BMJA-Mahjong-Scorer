@@ -1,27 +1,60 @@
-# Issue #147: typed voice experiment — local only
+# Issue #147 · private typed interpretation preview
 
-This draft contains a developer-only typed-transcript prototype. It is **not ready for private deployment or merger**. No microphone, production route, public navigation or billing is added.
+Draft PR #563 contains a typed-only preview for standalone British (BMJA 1.0) non-winning grouped hands in normal mode. It uses the existing hand-entry workspace and scorer. The Cloudflare preview and its OpenAI-backed evaluation are awaiting owner approval and configuration.
 
-## Scope and hand integration
+## Verification completed offline
 
-Run `/voice-test` only on the local development server below. The user can enter a description, see what was submitted and review proposed group tiles using the existing artwork. Exposure remains unknown unless supplied or explicitly selected. Edit the text and interpret again to correct a tile, group, ambiguity or unparsed text; Accept is blocked until all proposals are resolved. The current version supports only standalone British BMJA 1.0 non-winning grouped hands, in normal mode, without remaining tiles or blank evidence. Other rules, winner, special-layout and tracked-game cases fail closed. Bonus, loose-tile, winner and context speech is retained as unresolved, not applied.
+- Each of the 26 corpus cases has its own test against expected evidence, with explicit expectations for unsupported information and acceptance readiness. The expected proposals passed all 26 checks. In an empty British hand, cases 01–06, 09–16 and 26 were ready. Cases 07–08 preserved unknown exposure. Cases 17–20 and 24–25 needed tile clarification. Cases 21–23 left unsupported loose tiles, a Flower, or winner context unresolved and retained any supported group.
+- Additional tests reject guessed exposure and tile identity, fabricated source spans, unrelated clarification, and dropped evidence in a mixed case. Reordered groups can pass.
+- The UI regression exercises a queued manual edit racing with acceptance. The stale update preserves the review and existing group. Retrying applies the proposal and preserves the working picker. A fifth physical copy is rejected.
+- A UI fixture adds the same exposed Pung of 3 Circles through review and then through manual entry. With a previously entered concealed Pung of 1 Characters, both paths show **10 points, 10 base, 0 doubles**. This exercises the existing British runtime from the normal scorer surface.
+- Worker tests cover application JWT signature, issuer, audience, expiration, request validation, alternate-host rejection, missing secret, and quota persistence across object instances. Wrangler can bundle the separate Worker and assets in dry-run mode.
+- The local Chromium preview loaded the typed panel and existing manual scorer. A submitted synthetic description produced the unavailable state and preserved the entered Pung and its **8-point** score. The screenshot in the work session shows the keyless local path.
 
-`HandScorer` holds completed `HandSet`s and an unfinished `tile: null` picker alongside separate context. The adapter appends uniquely identified confirmed groups while preserving these fields. It checks structural and four-copy limits and invokes the selected compiled profile's hand validator before the existing scorer sees the new state. It does not overwrite game facts or winning-tile evidence. No AI score is used. A mocked UI test verifies one manual group, its working picker and a later accepted group; another rejects a fifth physical tile. The existing adapter test compares one deterministic partial-hand result with manual entry. This is not proof for other modes or complete winning hands.
+Live model accuracy, latency, cost, Cloudflare edge access enforcement, and successful review screenshots remain unmeasured. The offline fixtures check the evaluator and scoring integration.
 
-## Local setup for the owner
+## Owner setup before private deployment
 
-1. Initialise the pinned tile-artwork submodule: `git submodule update --init --depth 1`.
-2. Install dependencies using the repository's pnpm version: `pnpm install --frozen-lockfile`.
-3. In a private local shell, securely configure the existing OpenAI project key as the `OPENAI_API_KEY` environment variable for the server process. For a transient shell session, `read -rs OPENAI_API_KEY; export OPENAI_API_KEY` reads it without displaying it; enter it directly in that shell, never in chat. Do not save it in the repository, browser, logs or a tracked file. Use a non-production project/key if available.
-4. Start from the repository root: `PORT=5173 BASE_PATH=/ VOICE_TEST_LOCAL=1 pnpm --filter @workspace/mahjong-scorer dev --host 127.0.0.1`.
-5. On the same machine open `http://127.0.0.1:5173/voice-test`. The middleware requires that exact loopback host and Origin; it is available only when `VOICE_TEST_LOCAL=1`. Stop the server and `unset OPENAI_API_KEY` when done.
+1. Choose a dedicated unused Cloudflare-proxied hostname, for example `voice-preview.<your-zone>`. Use the separate Worker `mahjong-typed-private-preview` and its dedicated asset build and Durable Object. Verify the selected account, zone and Worker name are distinct from production resources. Check that no existing DNS record, Worker route, origin or Cache Rule on that hostname can serve or cache content outside this Worker.
+2. In **Cloudflare Zero Trust → Access → Applications**, create a **Self-hosted** application for that exact hostname, with the path left blank so the policy covers the page, API and static assets. Use a short session such as one hour, long enough for the suite. Add an **Allow** policy whose **Include → Emails** lists only named testers. Select the approved identity provider. Check inherited policies and remove any broader Allow, Bypass or Service Auth grants covering this hostname. Record the app's **Application Audience (AUD) Tag** and the team issuer URL, for example `https://<team>.cloudflareaccess.com`.
+3. In a dedicated OpenAI project, have the owner select or create a project key restricted to writing Responses and allow the pinned `gpt-4o-mini-2024-07-18` model. Confirm the account's rate, pricing and data-retention settings and configure a project budget alert. Use synthetic Mahjong descriptions for this first test. OpenAI receives each description with `store: false`; provider abuse-monitoring retention is governed by the project settings. The app keeps description and proposal in memory for review and sends no transcript or output to Worker logs, storage or caches.
+4. From the repository root, initialise artwork, install dependencies and build the dedicated asset directory. Create the ignored owner config beside the template. In that copy set `vars.PREVIEW_HOST` and `routes[0].pattern` to the same exact hostname, set `vars.ACCESS_ISSUER` to the team URL without a trailing slash, and set `vars.ACCESS_AUD` to the application's AUD tag. The checked-in template intentionally uses a reserved invalid hostname.
 
-The server sends the text to OpenAI's Responses API using `gpt-4o-mini-2024-07-18` and strict structured output, with `store: false`. OpenAI receives the submitted description: consult the project's current provider data-retention settings and terms before using real hand descriptions. The code does not save or log transcript or response bodies; this does not guarantee provider-side zero retention. The local middleware limits the request body to 4 KiB, text to 2,000 characters, and requests to ten per minute per process. It rejects non-loopback connections and unexpected Origin/Host, and returns generic errors. It is not an authentication or distributed-rate-limit solution and must not be exposed through a proxy, tunnel or public host.
+   ```sh
+   git submodule update --init --depth 1
+   pnpm install --frozen-lockfile
+   pnpm --filter @workspace/mahjong-scorer run build:voice-preview
+   cd artifacts/mahjong-scorer/voice-preview
+   cp wrangler.jsonc wrangler.owner.jsonc
+   # Edit wrangler.owner.jsonc as described above.
+   npx wrangler@4.166.0 deploy --dry-run --config wrangler.owner.jsonc
+   ```
+5. **Approval gate.** Obtain explicit owner approval for the exact draft commit, Cloudflare account and preview hostname, tester allowlist, OpenAI project, and the bounded paid run. Confirm the Access application is in place before deploying the Worker. The commands below are for the owner or authorised Cloudflare operator after approval only.
 
-## Evaluation and limits
+   ```sh
+   # From artifacts/mahjong-scorer/voice-preview
+   npx wrangler@4.166.0 whoami
+   npx wrangler@4.166.0 deploy --config wrangler.owner.jsonc
+   npx wrangler@4.166.0 secret put OPENAI_API_KEY --config wrangler.owner.jsonc
+   ```
 
-`voice-dev/evaluation.json` has 26 typed cases, including informal terms, missing exposure, corrections, invalid identities, partial and mixed hands. With the explicitly configured local server running, execute `node artifacts/mahjong-scorer/voice-dev/evaluate.mjs`. It sends each case to OpenAI and prints aggregate exact-evidence/uncertainty checks. It deliberately spaces requests to respect the local limit. This uses API capacity and may incur existing API charges. No live evaluation was run because the owner has not configured a key for this local session. **Accuracy is unmeasured**; passing mocked tests is not evidence of model accuracy. The evaluation should be reviewed case by case before relying on its aggregate, especially correction and ambiguity cases.
+   Enter the project key directly at the Wrangler secret prompt. The API fails closed until the secret exists. Keep the key only in the encrypted Worker secret. Keep it out of chat, shell arguments, shell environment, config vars, env files and the frontend. Keep Workers observability disabled and check that account-level log export and observability do not capture request or response bodies.
 
-## Cloudflare and deployment gate
+The Worker validates the signed Access application JWT before it serves assets or handles the API. The deployment disables `workers.dev` and version preview URLs. The Worker checks the exact HTTPS host and requires the API's same-origin POST with uncompressed JSON. Each request is limited to 4 KiB and 2,000 UTF-16 code units of description. The Worker reserves a call atomically before contacting OpenAI, spends one reservation on any attempt that reaches that step, makes a single upstream request with a 30-second timeout and caps output at 2,000 tokens. The single SQLite-backed Durable Object enforces 5 calls per tester and 10 across all testers in a rolling minute, 40 per tester and 60 across all testers per UTC day, and 100 total across the life of this preview. It stores counters, timestamps and hashed Access subject IDs. The global lifetime cap stays in place across Worker versions. An OpenAI budget alert is a notification. The enforced attempt caps are in the Worker.
 
-There is **no Cloudflare endpoint or secure hosted route in this draft**. A hidden URL is not access control. Before a private deployment, implement and independently verify Cloudflare Access authentication at the endpoint (including origin bypass prevention), durable rate limits, bounded requests, no input logging and generic errors. Configure `OPENAI_API_KEY` only as an encrypted Cloudflare environment secret, never as a frontend variable or tracked file. Verify isolation from production, provider retention controls and cost limits. Obtain explicit owner approval before any private deployment. Until then the experiment is local only; nothing has been deployed.
+## First approved test
+
+1. In a signed-out session verify `/voice-test`, a known `/assets/...` URL and a POST to `/__voice/interpret` all require Access. Repeat with an identity outside the allowlist. In the Worker settings confirm both alternate preview URL types are disabled. Sign in as an authorised tester and verify the page and its assets load. Verify an authenticated cross-origin POST is denied and an authenticated oversized body receives `413`. Run the quota tests locally to avoid consuming the live budget for rate-limit checks.
+2. On `/voice-test`, retain British rules and the East/East non-winning normal hand defaults. Manually enter the default concealed Pung of 1 Characters. Type `pong of three dots` and select **Interpret**. Capture the source, proposed 3 Circles artwork, **Exposure unknown**, and the disabled **Accept groups**. The previously entered group should still show 8 points. Confirm exposure as **Exposed** in the review, or choose **Edit**, type `exposed pong of three dots` and interpret again to exercise correction. Capture review before acceptance.
+3. Select **Accept groups**. Capture both groups, the working picker and the breakdown. Check for **10 points, 10 base, 0 doubles**. Remove only the added group and re-create it using the manual selector for an exposed Pung of 3 Circles. Verify the same score and breakdown lines. Record the reviewed commit, model and any discrepancies. Capture screenshots with synthetic descriptions and omit Access badges, headers, tokens and tester identity.
+4. From the repository root on a tester's machine with `cloudflared` installed, sign in to the same Access app and run all cases. The evaluator retrieves the Access token through `cloudflared` in memory. It makes one request per fixture, waits at least 12.5 seconds between requests, reports each case and exits non-zero if any case fails. Supply a final argument such as `07` to rerun a specific case. Leave five minutes or more for the full run and reserve enough of the tester's daily allowance for 26 calls plus the browser walkthrough.
+
+   ```sh
+   cloudflared access login https://<approved-preview-host>
+   node artifacts/mahjong-scorer/voice-dev/evaluate.mjs https://<approved-preview-host>
+   ```
+
+   The JSON lines report exact evidence and source coverage, correctly preserved unresolved facts, omitted facts, incorrect guesses, readiness, failure reasons, round-trip and provider latency, and usage where returned. The final line reports provider p50/p95 and estimated USD for metered responses. Estimates use $0.15 input, $0.075 cached input and $0.60 output per million tokens. Check pricing and reconcile with the dedicated project's actual usage after the run, including failed or timed-out attempts with no usage returned. Save the metrics report and the opted-in synthetic screenshots for owner review. The runner does not write raw descriptions or responses.
+5. Report every live failure by case ID and cause. Review cases that passed exact evidence but correctly require manual clarification, and record any user journey differences as findings before approving the next slice.
+
+Existing scope limits include other rules profiles, winners, tracked games, special layouts, remaining or blank tiles, and unsupported bonus or context descriptions. Edit currently means revising and re-interpreting the description or explicitly confirming missing exposure before acceptance. The build has a large-bundle warning.
