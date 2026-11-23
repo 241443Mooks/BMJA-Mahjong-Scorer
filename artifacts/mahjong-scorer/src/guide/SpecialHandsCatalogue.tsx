@@ -35,7 +35,7 @@ const displayFacets = Object.entries(ATLAS_FACET_DEFINITIONS);
 export const shouldShowAtlasFacet = (count: number, selected: boolean) => selected || count > 0;
 const publicClubCopy = (value: string) => value.replaceAll('Outside the Box', 'Club - Bramhall 2026').replaceAll('outside-the-box', 'Club - Bramhall 2026');
 const facetName = (id: string) => id.replaceAll('-', ' ').replace(/\b\w/g, (char) => char.toLocaleUpperCase('en-GB'));
-function treatmentAnchor(record: SpecialHandsAtlasRecord) {
+export function treatmentAnchor(record: SpecialHandsAtlasRecord) {
   if (!record.href) return undefined;
   const raw = record.href.split('#')[1];
   return raw && raw in SPECIAL_HAND_ANCHORS ? SPECIAL_HAND_ANCHORS[raw as keyof typeof SPECIAL_HAND_ANCHORS] : raw;
@@ -338,6 +338,7 @@ export function SpecialHandsCatalogue() {
         <div className="mb-2 flex items-center gap-3"><div className="fine-rule w-10" /><span className="font-mono text-xs uppercase tracking-[.18em] text-[#ae6249]">Special Hands Guide</span></div>
         <h1 className="max-w-[800px] font-serif text-[clamp(34px,6vw,58px)] leading-[.98] text-[#284d45]">Find a special hand.</h1>
         <p className="mt-2 max-w-[780px] text-sm leading-6 text-[#596b65]">Find, understand and compare special hands across different Mahjong rules.</p>
+        <p className="mt-3 text-sm leading-6 text-[#596b65]">For source-linked explanations across rules, browse the <a className="font-semibold text-[#284d45] underline underline-offset-4" href="/encyclopaedia">Mahjong Encyclopaedia</a>.</p>
         {mcrPreference && <p role="status" className="mt-4 rounded-lg bg-[#edf3ed] p-3 text-sm leading-6 text-[#284d45]">Your remembered rules are MCR. This guide currently covers the supported Classical rules; choose All rules to browse them.</p>}
         {preferred && !preferredClassical && !mcrPreference && <p role="status" className="mt-4 rounded-lg bg-[#edf3ed] p-3 text-sm leading-6 text-[#284d45]">Your remembered rules do not have a special-hands list yet. Choose All rules to browse the supported Classical rules.</p>}
         <label className="sr-only" htmlFor="atlas-search">Search hand names and patterns</label>

@@ -4,10 +4,83 @@ import type { ReactNode } from 'react';
 import { SiteHeader } from '../components/SiteHeader';
 import { descriptorForSlug, PUBLIC_RULES_DESCRIPTORS, type PublicRulesSlug, type RulesDescriptor } from '../game/rules-presentation';
 import { clearPreferredRulesProfile, readPreferredRulesProfile, setPreferredRulesProfile } from '../game/preferred-rules-profile';
+import { BritishSpecialHands, RulesetProfileDetails, RulesetProfileReport } from './RulesetProfileReport';
 import { familiesBySupportedProfileCount, MAHJONG_FAMILIES, PROFILE_LEARNING_LINKS, supportedProfilesForFamily } from '../home/mahjong-family-presentation';
+import { specialHandTreatmentsForProfile } from '../rules-knowledge/special-hand-treatments';
+import { readGovernedFacts } from '../rules-knowledge/truth/read-contract';
+import { ATLAS_LEARNER_ENTRIES, atlasExamplesForTreatment, ATLAS_TREATMENT_OWNERSHIP } from '../guide/special-hands-atlas';
+import { AtlasExampleVisual } from '../guide/AtlasExampleVisual';
+import { atlasExampleProvesTreatment } from '../guide/atlas-scorer-handoff';
+import { MCR_WMO_2006_PROFILE } from '../rules-platform/mcr-profile';
 
 const actionClass = 'inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-[#284d45] px-4 py-2.5 text-[15px] font-semibold text-[#f8f4e9] transition hover:bg-[#23443d] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249] focus-visible:ring-offset-2';
 const secondaryActionClass = 'inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-[#b8c8c1] bg-white px-4 py-2.5 text-[15px] font-semibold text-[#284d45] transition hover:bg-[#f2f6f3] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249] focus-visible:ring-offset-2';
+
+export function ProfileSpecialHands({ profile, slug }: { profile: RulesDescriptor['profile']; slug: PublicRulesSlug }) {
+  const treatments = specialHandTreatmentsForProfile(profile);
+  if (!treatments.length) return null;
+  return <Section title="Special hands and patterns">
+    <p>These entries come from this profile’s scorer treatments. Open an entry for its conditions and any reviewed tile example.</p>
+    <details className="mt-4 rounded-xl border border-[#d8ceb8] bg-white p-4">
+      <summary className="min-h-11 cursor-pointer font-semibold text-[#284d45]">Browse {treatments.length} profile-specific hands</summary>
+      <ul className="mt-3 grid min-w-0 gap-3 sm:grid-cols-2">{treatments.map((treatment) => {
+        const entryId = ATLAS_TREATMENT_OWNERSHIP[treatment.referenceId];
+        const entry = ATLAS_LEARNER_ENTRIES.find((candidate) => candidate.id === entryId);
+        const example = entry ? atlasExamplesForTreatment(entry, treatment.referenceId).find((candidate) => candidate.kind === 'tile-hand' && atlasExampleProvesTreatment(candidate.id, treatment.referenceId)) : undefined;
+        const policy = treatment.exposurePolicy?.policy as { allowed?: boolean; exposedValue?: number; exposedFishingValue?: number; multiplier?: number } | undefined;
+        const score = treatment.winnerValue === undefined ? 'Score follows the hand’s scoring rules.' : `${treatment.winnerValue.toLocaleString('en-GB')} points when complete${treatment.fishingValue === undefined ? '' : `; ${treatment.fishingValue.toLocaleString('en-GB')} when one tile from winning${treatment.fishingUsesIntrinsicFloor ? ' (or the hand value if higher)' : ''}`}.`;
+        const href = treatment.href ?? (entry ? `/special-hands#treatment-${slug}-${treatment.identity.patternId}` : undefined);
+        return <li key={treatment.referenceId} className="min-w-0 rounded-lg border border-[#e4dccd] bg-[#fdfbf5] p-3">
+          <h3 className="font-serif text-xl text-[#284d45]">{treatment.name}</h3>
+          <p className="mt-1 break-words text-sm leading-5">{treatment.description}</p>
+          <p className="mt-2 text-sm font-semibold">{score}</p>
+          <details className="mt-2"><summary className="min-h-11 cursor-pointer py-2 text-sm font-semibold text-[#284d45]">Conditions and example</summary>
+            <div className="space-y-2 break-words text-sm leading-5">
+              {policy?.allowed === false && <p>All sets must be concealed.</p>}
+              {policy?.allowed === true && policy.exposedValue !== undefined && <p>With exposed sets: {policy.exposedValue.toLocaleString('en-GB')} points{policy.exposedFishingValue === undefined ? '' : `, or ${policy.exposedFishingValue.toLocaleString('en-GB')} when one tile from winning`}.</p>}
+              {policy?.allowed === true && policy.exposedValue === undefined && <p>Exposed sets are allowed.</p>}
+              {policy?.multiplier !== undefined && <p>Exposed sets multiply the score by {policy.multiplier}.</p>}
+              {treatment.winningMethods?.length ? <p>Winning method: {treatment.winningMethods.join(' or ')}.</p> : null}
+              {example ? <AtlasExampleVisual example={example} title={`${treatment.name} tile example`} /> : <p>No reviewed tile example is available for this hand.</p>}
+              {href && <a className="inline-flex min-h-11 items-center font-semibold text-[#284d45] underline underline-offset-4" href={href}>Read about {treatment.name}</a>}
+            </div>
+          </details>
+        </li>;
+      })}</ul>
+    </details>
+  </Section>;
+}
+
+export function ProfileEvidenceDetails({ profile }: { profile: RulesDescriptor['profile'] }) {
+  const facts = readGovernedFacts(profile);
+  return <details className="mt-4 rounded-xl border border-[#d8ceb8] bg-white p-4 sm:p-5">
+    <summary className="min-h-11 cursor-pointer font-semibold text-[#284d45]">Evidence and scorer links</summary>
+    <p className="mt-3 text-sm leading-6">This optional record keeps source claims, scorer connections and their review states separate. It does not claim complete rule coverage.</p>
+    <ul className="mt-3 space-y-3">{facts.map((fact) => <li key={fact.factId} className="min-w-0 border-t border-[#e4dccd] pt-3 text-sm leading-5">
+      <p className="break-words font-semibold text-[#284d45]">{fact.subject.id} · {fact.sourceState} · {fact.runtime.mappingState}</p>
+      <p>Treatment: {fact.treatment ? `${fact.treatment.recordId} v${fact.treatment.recordVersion}` : typeof fact.runtime.state === 'string' ? fact.runtime.state : fact.runtime.state.kind} · scorer: {fact.runtime.ref ? `${fact.runtime.ref.kind}:${fact.runtime.ref.id}` : fact.runtime.capability} · {fact.runtime.conformance}</p>
+      {fact.claims.map((claim) => <div key={`${claim.recordId}:${claim.recordVersion}`} className="mt-2 break-words">
+        <p>{claim.text}</p><p className="text-xs">Claim {claim.recordId} v{claim.recordVersion} · {claim.status}{claim.source ? ` · ${claim.source.citation} · ${claim.source.locator.label} · source ${claim.source.recordId} v${claim.source.recordVersion}` : ' · source link unavailable'}</p>
+        {claim.source?.locator.url && <a className="text-xs font-semibold underline" href={claim.source.locator.url} target="_blank" rel="noreferrer">Open source</a>}
+      </div>)}
+      {fact.runtime.fixturePaths.map((path) => <p key={path} className="break-all text-xs">Fixture: {path}</p>)}
+    </li>)}</ul>
+  </details>;
+}
+
+function McrPlayersAndTiles() {
+  if (MCR_WMO_2006_PROFILE.kind !== 'root') return null;
+  const { table, tileSet } = MCR_WMO_2006_PROFILE.definition;
+  if (!table || Array.isArray(table) || typeof table !== 'object' || !tileSet || Array.isArray(tileSet) || typeof tileSet !== 'object') return null;
+  if (typeof table.playerCount !== 'number' || typeof table.seatModelId !== 'string' || typeof tileSet.presetId !== 'string') return null;
+  const seats = table.seatModelId === 'seats.winds-4' ? 'East, South, West and North' : 'Seat order not translated';
+  const tiles = tileSet.presetId === 'tiles.flowers-144' ? '144 tiles, including Flowers and Seasons' : 'Tile set not translated';
+  return <Section title="Players and tiles"><dl className="grid gap-3 sm:grid-cols-3">
+    <div className="rounded-xl border border-[#d8ceb8] bg-[#fdfbf5] p-4"><dt className="text-[13px] font-semibold text-[#536860]">Players</dt><dd className="mt-2 text-[18px] font-semibold text-[#284d45]">{table.playerCount} players</dd><dd className="mt-2 text-[12px] leading-5 text-[#536860]">Configured in the MCR scorer</dd></div>
+    <div className="rounded-xl border border-[#d8ceb8] bg-[#fdfbf5] p-4"><dt className="text-[13px] font-semibold text-[#536860]">Seats</dt><dd className="mt-2 text-[18px] font-semibold text-[#284d45]">{seats}</dd><dd className="mt-2 text-[12px] leading-5 text-[#536860]">Configured in the MCR scorer</dd></div>
+    <div className="rounded-xl border border-[#d8ceb8] bg-[#fdfbf5] p-4"><dt className="text-[13px] font-semibold text-[#536860]">Main tile set</dt><dd className="mt-2 text-[18px] font-semibold leading-6 text-[#284d45]">{tiles}</dd><dd className="mt-2 text-[12px] leading-5 text-[#536860]">Configured in the MCR scorer</dd></div>
+  </dl></Section>;
+}
 
 export function RulesSupportStatus({ descriptor }: { descriptor: RulesDescriptor }) {
   const provisional = descriptor.support.implementation === 'Provisional';
@@ -41,11 +114,11 @@ const pageCopy: Record<Exclude<PublicRulesSlug, 'club'>, { eyebrow: string; intr
     eyebrow: 'Rules reference',
     intro: 'The stable British / BMJA-style profile used by Mahjong Reference. It gives your table a shared way to score a hand, settle it and continue the game.',
     identity: <>British / BMJA-style Mahjong is a standardised British profile within the wider Western/classical Mahjong tradition. Mahjong Reference uses the BMJA-approved British rules reference for this scorer; that is a source basis, not a claim of BMJA affiliation.</>,
-    table: <>A normal winning hand is four sets and a pair, alongside defined special hands. Flowers and Seasons are scoring bonus tiles. Ordinary hands allow at most one Chow, and the profile includes fishing treatment, East/dealer effects and Goulash after a drawn hand.</>,
-    scoring: <>Ordinary scoring starts with base points for qualifying sets, pairs and bonus tiles, then applies doubles. Defined special hands and fishing can instead have their own values. This is the scoring grammar; the detailed points tables stay in the British scoring guide.</>,
+    table: <>A normal winning hand is four sets and a pair, alongside defined special hands. Flowers and Seasons are scoring bonus tiles. Ordinary hands allow at most one Chow. The published rules describe Goulash after a drawn hand; this scorer does not switch to Goulash automatically.</>,
+    scoring: <>Ordinary scoring starts with points for qualifying sets, pairs and bonus tiles, then applies doubles. Some special hands and hands that are one tile from winning have their own values. For the full points table, see the British scoring guide.</>,
     after: <>The winner is paid for the winning hand. Losing hands can matter too: settlement compares them with one another, and East pays or receives double where the rules apply. The game tracker carries that settlement and Wind progression forward.</>,
     distinctive: <>British rules deliberately standardise a restricted special-hand catalogue and a one-Chow ordinary-hand limit. Clubs may agree variations, so check the table's own sheet when it differs from this profile.</>,
-    provenance: <>The scorer baseline is verified against the BMJA-approved British rules reference, including its scoring, special-hands, settlement and Q&amp;A material. This page gives a practical overview; the guide and examples provide the detailed learning material.</>,
+    provenance: <>These rules are checked against the BMJA-approved British rules reference, including its scoring, special-hand, settlement and Q&amp;A material. This page gives a practical overview; the guide and examples provide the detailed learning material.</>,
     links: [['Track a British game', '/game/british'], ['Score a hand', '/hand?rules=british'], ['British scoring guide', '/guide'], ['Special hands', '/special-hands'], ['Scoring examples', '/scoring-examples'], ['Compare Mahjong rules', '/mahjong-rules-compared']],
   },
   western: {
@@ -62,18 +135,18 @@ const pageCopy: Record<Exclude<PublicRulesSlug, 'club'>, { eyebrow: string; intr
   buzzard: {
     eyebrow: 'Rules reference', intro: 'British/Western Classical — Buzzard 2000 is a source-specific profile with a configurable table limit.',
     identity: <>This profile identifies Buzzard 2000 exactly; it is not a claim about all Classical or Western Mahjong.</>,
-    table: <>Standing Hand is declared and locked at the physical table; this app records the resolved scoring fact, not later physical actions. Dead-hand/final-14, claim priority and Kong replacement or rob-Kong remain table procedures, not wall simulation or arbitration.</>,
-    scoring: <>The scorer records existing winning-method evidence such as last-wall, Loose Tile and rob-Kong. The configured table limit is a table setting: 600 is the source-backed Buzzard default/example, not a universal Mahjong constant.</>,
+    table: <>The ordinary hand follows this profile’s classical hand rules. Buzzard also has ten named limit hands, including a Calling Nine Tile Hand. Calling is a waiting declaration; a completed Standing Hand adds 100 points. The table declares and locks Standing Hand physically, while the scorer records the resolved fact. Dead-hand/final-14, claim priority and Kong replacement or rob-Kong remain table procedures, not wall simulation or arbitration.</>,
+    scoring: <>A completed Buzzard limit hand receives the configured table-limit treatment. The configured table limit belongs to the table: 600 is the source-backed Buzzard default/example, not a universal Mahjong constant. The scorer also records supported winning-method evidence such as last-wall, Loose Tile and rob-Kong. Buzzard uses Calling and Standing Hand; it does not use the British/T&M special-hand Fishing scores.</>,
     after: <>Dangerous discard is entered as an already-resolved table incident and liability, never inferred from discard history.</>,
     distinctive: <>Use the game tracker to record the established incident and incomplete-hand facts; it does not police physical play.</>,
-    provenance: <>Copy follows the profile evidence record and stays deliberately concise.</>,
+    provenance: <>The Buzzard 2000 profile evidence keeps its own named hands, table limit and Standing Hand treatment separate from general British and Western rules.</>,
     links: [['Track a Buzzard game', '/game/buzzard'], ['Score a hand', '/hand?rules=buzzard']],
   },
   mcr: {
     eyebrow: 'Rules reference', intro: 'Mahjong Competition Rules / WMO 2006 profile 0.1 remains Provisional. Winning-hand scoring and Table Companion game tracking are available.',
     identity: <>This profile represents the Mahjong Competition Rules / WMO 2006 source context.</>,
     table: <>The scorer evaluates completed winning hands using fan. The Table Companion records resolved table and end-of-hand facts; it does not arbitrate physical play.</>,
-    scoring: <>A hand must reach the 8-point qualifying minimum before Flowers. Flowers are added after qualification.</>,
+    scoring: <>A winning hand must first reach the 8-point minimum from qualifying fan patterns. Flowers are added only after that qualification. Settlement uses the accepted Basic Points; British points, doubles and Fishing do not apply here.</>,
     after: <>Accepted Basic Points drive settlement. The dealer passes after every completed hand, while seats and prevailing-wind progression are tracked under the MCR progression profile.</>,
     distinctive: <>This profile remains version 0.1 and Provisional. Table tracking records the table's resolved result rather than deciding what happened during physical play.</>,
     provenance: <>Source context: the existing 2006 MCR/EMA Green Book evidence record. This source context does not imply affiliation or endorsement.</>,
@@ -84,15 +157,23 @@ const pageCopy: Record<Exclude<PublicRulesSlug, 'club'>, { eyebrow: string; intr
 export function RulesProfilePage({ slug }: { slug: Exclude<PublicRulesSlug, 'club'> }) {
   const descriptor = descriptorForSlug(slug);
   const copy = pageCopy[slug];
-  return <PageFrame eyebrow={copy.eyebrow} title={descriptor.title} intro={copy.intro}>
-    <section className="px-5 py-7 sm:px-8 lg:px-12"><RulesSupportStatus descriptor={descriptor} /></section>
-    <Section title="Identity and authority"><p>{copy.identity}</p></Section>
-    <Section title="At the table"><p>{copy.table}</p></Section>
-    <Section title="How scoring works"><p>{copy.scoring}</p></Section>
-    <Section id="settlement" title="What happens after a hand"><p>{copy.after}</p>{slug === 'british' && <p className="mt-3"><a href="/mahjong-settlement" className="font-semibold text-[#284d45] underline decoration-[#ae6249] underline-offset-4">See the worked British settlement explainer</a>.</p>}</Section>
-    <Section title="Distinctive mechanics"><p>{copy.distinctive}</p></Section>
+  if (slug === 'british') return <PageFrame eyebrow={copy.eyebrow} title={descriptor.title} intro="A practical guide to the British Mahjong rules used by this scorer. Check the hand, its score and what happens next; open the source details when you want to see how a rule was checked.">
+    <RulesetProfileReport profile={descriptor.profile} />
+    <Section title="How hands work"><p>{copy.table}</p></Section>
+    <Section title="How scoring works"><p>{copy.scoring}</p><p className="mt-3"><a href="/guide" className="font-semibold text-[#284d45] underline underline-offset-4">See the British scoring guide</a> or <a href="/scoring-examples" className="font-semibold text-[#284d45] underline underline-offset-4">worked scoring examples</a>.</p></Section>
+    <BritishSpecialHands profile={descriptor.profile} />
+    <Section id="settlement" title="What happens after a hand"><p>{copy.after}</p><p className="mt-3"><a href="/mahjong-settlement" className="font-semibold text-[#284d45] underline decoration-[#ae6249] underline-offset-4">See a worked settlement example</a>.</p></Section>
+    <Section title="Where these rules come from"><div className="space-y-3"><p>{copy.provenance}</p><p>Robbing a Kong still needs eligibility validation, and the source wording about Blessing and Chow remains unresolved. These are open differences in the evidence, not new scoring decisions.</p><RulesetProfileDetails profile={descriptor.profile} /></div></Section>
     <Section title="Use these rules"><div className="flex flex-wrap gap-3">{copy.links.map(([label, href]) => <a key={href} href={href} className={href.startsWith('/game') ? actionClass : secondaryActionClass}>{label}<ArrowRight size={16} aria-hidden="true" /></a>)}</div></Section>
-    <Section title="Sources and provenance"><div className="rounded-xl border border-[#d8ceb8] bg-[#fdfbf5] p-5 sm:p-6"><p><strong className="text-[#284d45]">Reference basis:</strong> {descriptor.support.authority}.</p><p className="mt-4">{copy.provenance}</p></div></Section>
+  </PageFrame>;
+  return <PageFrame eyebrow={copy.eyebrow} title={descriptor.title} intro={copy.intro}>
+    {slug === 'mcr' ? <McrPlayersAndTiles /> : <RulesetProfileReport profile={descriptor.profile} />}
+    <Section title="How hands work"><p>{copy.table}</p></Section>
+    <Section title="How scoring works"><p>{copy.scoring}</p></Section>
+    <ProfileSpecialHands profile={descriptor.profile} slug={slug} />
+    <Section id="settlement" title="What happens after a hand"><p>{copy.after}</p></Section>
+    <Section title="Where these rules come from"><div className="space-y-3"><RulesSupportStatus descriptor={descriptor} /><p><strong>Reference basis:</strong> {descriptor.support.authority}.</p><p>{copy.identity}</p><p>{copy.provenance}</p><ProfileEvidenceDetails profile={descriptor.profile} /></div></Section>
+    <Section title="Use these rules"><div className="flex flex-wrap gap-3">{copy.links.map(([label, href]) => <a key={href} href={href} className={href.startsWith('/game') ? actionClass : secondaryActionClass}>{label}<ArrowRight size={16} aria-hidden="true" /></a>)}</div></Section>
   </PageFrame>;
 }
 

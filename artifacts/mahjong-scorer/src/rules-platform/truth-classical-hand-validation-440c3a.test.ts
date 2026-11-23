@@ -56,7 +56,8 @@ describe('Issue 440C3A Classical hand structure and validation truth', () => {
     expect(classicalHandValidation440c3aCoverage.filter(({ evidenceStatus }) => evidenceStatus === 'source-ready')).toHaveLength(24);
     expect(classicalHandValidation440c3aCoverage.filter(({ evidenceStatus }) => evidenceStatus === 'source-unresolved')).toHaveLength(3);
     expect(classicalHandValidation440c3aCoverage.filter(({ evidenceStatus }) => evidenceStatus === 'not-applicable')).toHaveLength(15);
-    expect(classicalHandValidation440c3aCoverage.filter(({ treatmentStatus }) => treatmentStatus === 'runtime-edge-migration-incomplete')).toHaveLength(23);
+    expect(classicalHandValidation440c3aCoverage.filter(({ treatmentStatus }) => treatmentStatus === 'runtime-edge-migration-incomplete')).toHaveLength(22);
+    expect(classicalHandValidation440c3aCoverage.filter(({ treatmentStatus }) => treatmentStatus === 'migrated')).toHaveLength(1);
     expect(classicalHandValidation440c3aCoverage.filter(({ treatmentStatus }) => treatmentStatus === 'present-not-modelled')).toHaveLength(1);
   });
 
@@ -94,11 +95,13 @@ describe('Issue 440C3A Classical hand structure and validation truth', () => {
         subjectId: record.subjectId,
         runtimeState: record.subjectId === 'rule.bmja.dead-wanted-tile-does-not-remove-fishing-eligibility'
           ? { kind: 'present-not-modelled' }
-          : { kind: 'migration-incomplete' },
+          : record.subjectId === 'rule.classical.normal-hand-at-most-one-chow' && record.profile.id === 'bmja'
+            ? { kind: 'executable', ref: { kind: 'rule', id: 'scoring.validateHand' } }
+            : { kind: 'migration-incomplete' },
         evidenceClaimIds: [`evidence.${record.subjectId}.${record.profile.id}`],
       });
       expect('score' in record || 'value' in record).toBe(false);
-      expect(record.runtimeState.kind).not.toBe('executable');
+      if (record.subjectId !== 'rule.classical.normal-hand-at-most-one-chow') expect(record.runtimeState.kind).not.toBe('executable');
     }
     expect(currentTruthCorpus.sources.filter(({ record }) => record.sourceId === 'bmja-qa')).toHaveLength(1);
     expect(currentTruthCorpus.sources.find(({ record }) => record.sourceId === 'bmja-qa')?.record).toMatchObject({

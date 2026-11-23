@@ -4,6 +4,8 @@ import {
   scoreBonusDoubles,
   scoreBonusTiles,
   isPurityHand,
+  BMJA_BONUS_TILE_SCORING,
+  bonusTileSubtotal,
 } from './rules';
 import {
   detectSpecialHands,
@@ -69,15 +71,19 @@ export const scoreHand = (
     ? calculatedSpecialHandExposureMultiplierFor(hand, calculatedBinding)
     : 1;
   const purity = canAnalyseWholeHand && isPurityHand(hand) && !scoringPolicy?.pureSuitAnyStandardMeld;
-  const specialFinalDiscardDouble =
+  const specialFinalDiscardDoubles =
     matchedFixedSpecial && hand.winningMethod === 'final-discard'
+      ? BMJA_BONUS_TILE_SCORING.modes.fixedSpecial.finalDiscardDoubles
+      : 0;
+  const specialFinalDiscardDouble =
+    specialFinalDiscardDoubles > 0
       ? [
           {
             id: 'special-final-discard',
             label: 'Final discard bonus',
             description:
               'For a special hand, the final discard doubles bonus-tile points only.',
-            amount: 1,
+            amount: specialFinalDiscardDoubles,
             unit: 'doubles' as const,
           },
         ]
@@ -107,6 +113,10 @@ export const scoreHand = (
   const selectedFishing = scoredFishingMatches[0];
   const specialFishing = selectedFishing?.fishing;
   const fishingOptions = selectedFishing?.options;
+  const applicableBonusDoubleRules = matchedFixedSpecial
+    && BMJA_BONUS_TILE_SCORING.modes.fixedSpecial.doubles === 'none'
+    ? []
+    : scoreBonusDoubles(hand, context);
   const pointRules = fishingOptions
     ? fishingOptions.pointRules
     : matchedFixedSpecial
@@ -118,7 +128,7 @@ export const scoreHand = (
   const doubleRules = fishingOptions
     ? fishingOptions.doubleRules
     : matchedFixedSpecial
-      ? [...scoreBonusDoubles(hand, context), ...specialFinalDiscardDouble]
+      ? [...applicableBonusDoubleRules, ...specialFinalDiscardDouble]
       : [
           ...(scoringPolicy?.transformStandardDoubleRules?.(
             applyDoubleRules(hand, context), hand, context,
@@ -131,7 +141,7 @@ export const scoreHand = (
     (sum, rule) => sum + rule.amount,
     0,
   );
-  const bonusDoubles = scoreBonusDoubles(hand, context).reduce(
+  const bonusDoubles = applicableBonusDoubleRules.reduce(
     (sum, rule) => sum + rule.amount,
     0,
   );
@@ -155,8 +165,12 @@ export const scoreHand = (
               id: 'special-bonus-tiles',
               label: 'Bonus tiles',
               base: bonusPoints,
-              doubles: bonusDoubles + finalDiscardDouble,
-              subtotal: bonusPoints * 2 ** (bonusDoubles + finalDiscardDouble),
+              doubles: bonusDoubles + specialFinalDiscardDoubles,
+              subtotal: bonusTileSubtotal(
+                bonusPoints,
+                bonusDoubles + specialFinalDiscardDoubles,
+                BMJA_BONUS_TILE_SCORING.modes.fixedSpecial.doubles,
+              ),
             },
           ]
         : []),

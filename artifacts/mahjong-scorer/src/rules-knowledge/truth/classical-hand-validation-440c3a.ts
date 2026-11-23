@@ -1,5 +1,6 @@
 import type { EvidenceClaim, ProfileTreatment, SemanticSubject } from '../../rules-platform/truth-model';
 import { versioned } from './records';
+import { classicalRuntimeRefBySubject } from './classical-scoring-runtime';
 
 type ProfileKey = 'bmja' | 'outside-the-box' | 'buzzard-2000';
 type ClaimRow = {
@@ -118,7 +119,11 @@ export const classicalHandValidation440c3aTreatments = families.flatMap(({ id: s
       treatmentId,
       profile: profileRefs[row.profile],
       subjectId,
-      runtimeState: { kind: row.runtimeState ?? 'migration-incomplete' },
+      runtimeState: row.runtimeState
+        ? { kind: row.runtimeState }
+        : row.profile === 'bmja' && classicalRuntimeRefBySubject[subjectId as keyof typeof classicalRuntimeRefBySubject]
+          ? { kind: 'executable', ref: classicalRuntimeRefBySubject[subjectId as keyof typeof classicalRuntimeRefBySubject] }
+          : { kind: 'migration-incomplete' },
       evidenceClaimIds: [`evidence.${subjectId}.${row.profile}`],
     };
     return versioned(treatmentId, record);
@@ -134,7 +139,9 @@ export const classicalHandValidation440c3aCoverage = families.flatMap(({ id, cla
       profile: profileRefs[profile],
       evidenceStatus: (row ? 'source-ready' : isUnresolved ? 'source-unresolved' : 'not-applicable') as 'source-ready' | 'source-unresolved' | 'not-applicable',
       recordStatus: (row ? 'migrated' : isUnresolved ? 'not-migrated' : 'not-applicable') as 'migrated' | 'not-migrated' | 'not-applicable',
-      treatmentStatus: (row?.runtimeState === 'present-not-modelled' ? 'present-not-modelled' : row ? 'runtime-edge-migration-incomplete' : 'not-applicable') as 'runtime-edge-migration-incomplete' | 'present-not-modelled' | 'not-applicable',
+      treatmentStatus: (row?.runtimeState === 'present-not-modelled' ? 'present-not-modelled'
+        : row && profile === 'bmja' && classicalRuntimeRefBySubject[id as keyof typeof classicalRuntimeRefBySubject] ? 'migrated'
+          : row ? 'runtime-edge-migration-incomplete' : 'not-applicable') as 'migrated' | 'runtime-edge-migration-incomplete' | 'present-not-modelled' | 'not-applicable',
     };
   }),
 );

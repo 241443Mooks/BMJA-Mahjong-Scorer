@@ -83,7 +83,8 @@ describe('Issue 440C2A BMJA and Outside the Box scoring deltas truth', () => {
     const c1Treatments = currentTruthCorpus.treatments.filter(({ record }) => classicalOrdinaryFoundationInventory.includes(record.subjectId));
     expect(c1Claims).toHaveLength(39);
     expect(c1Treatments).toHaveLength(39);
-    expect(c1Treatments.every(({ record }) => record.runtimeState.kind === 'migration-incomplete')).toBe(true);
+    expect(c1Treatments.filter(({ record }) => record.runtimeState.kind === 'executable')).toHaveLength(3);
+    expect(c1Treatments.filter(({ record }) => record.runtimeState.kind === 'migration-incomplete')).toHaveLength(36);
     expect(currentTruthCorpus.claims.filter(({ record }) => record.subjectId === 'rule.buzzard-2000.self-draw-winner-bonus' || record.subjectId === 'rule.buzzard-2000.complete-flower-season-set-double' || record.subjectId === 'rule.buzzard-2000.ordinary-table-limit')).toHaveLength(3);
     expect(currentTruthCorpus.treatments.filter(({ record }) => record.subjectId === 'rule.buzzard-2000.self-draw-winner-bonus' || record.subjectId === 'rule.buzzard-2000.complete-flower-season-set-double' || record.subjectId === 'rule.buzzard-2000.ordinary-table-limit')).toHaveLength(3);
     expect(currentTruthCorpus.treatments.filter(({ record }) => record.subjectId.startsWith('pattern.') && record.runtimeState.kind === 'executable').length).toBeGreaterThan(0);

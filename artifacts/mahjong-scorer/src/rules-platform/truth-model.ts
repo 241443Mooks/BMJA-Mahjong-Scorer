@@ -58,6 +58,7 @@ export type ProfileRelationship =
 export type RuntimeTreatmentRef =
   | { kind: 'rule'; id: string }
   | { kind: 'binding'; id: string }
+  | { kind: 'hand-mode'; id: string }
   | { kind: 'policy'; id: string };
 
 /** Runtime/treatment state is explicit; omission is never used to encode uncertainty. */

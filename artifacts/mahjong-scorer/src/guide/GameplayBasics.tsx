@@ -203,20 +203,23 @@ export function GameplayBasics() {
             <section className="border-b border-[#ddd3bf] py-9 sm:py-11">
               <div className="mb-4 flex items-center gap-3">
                 <div className="fine-rule w-10" />
-                <span className="font-mono text-[10px] uppercase tracking-[.2em] text-[#ae6249]">Your first game</span>
+                <span className="font-mono text-[10px] uppercase tracking-[.2em] text-[#ae6249]">At the table</span>
               </div>
               <h1 className="max-w-[760px] font-serif text-[clamp(38px,6vw,62px)] leading-[.98] text-[#284d45]">
-                A first game of British Mahjong, step by step.
+                How to play a British Mahjong hand.
               </h1>
               <p className="mt-5 max-w-[740px] text-[15px] leading-7 text-[#596b65]">
-                British Mahjong is played by building a hand while taking one tile and discarding one tile in turn. You do not need to know all the scoring rules before you begin.
+                Follow the play from the deal to the next hand: turns, claims, replacement tiles and Winds. You do not need to learn the scoring rules to follow what happens at the table.
               </p>
               <a
-                href="/mahjong-rules-compared"
+                href="/guide#ordinary-scoring"
                 className="mt-4 inline-flex items-center gap-2 text-[12px] font-semibold text-[#284d45] underline decoration-[#cfa58f] underline-offset-4 transition hover:text-[#ae6249] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]"
               >
-                Not sure which Mahjong rules you play? Compare British, Hong Kong, Riichi, MCR and American Mahjong <ArrowRight size={13} />
+                Next: how British scoring works <ArrowRight size={13} />
               </a>
+              <p className="mt-2 text-[11px] leading-5 text-[#8c8a7f]">
+                For the full rule reference, see <a href="/rules/british" className="font-semibold text-[#284d45] underline decoration-[#cfa58f] underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">British Mahjong rules</a>.
+              </p>
 
               <div className="mt-7 rounded-xl bg-[#284d45] p-5 text-[#f8f4e9]">
                 <div className="flex items-start gap-3">
@@ -251,7 +254,7 @@ export function GameplayBasics() {
                   </div>
                 ))}
               </div>
-              <Callout>Play moves anti-clockwise through these player positions. Your seat Wind can also affect scoring and determines your matching Flower and Season.</Callout>
+              <Callout>Play moves anti-clockwise through these player positions. Your seat Wind can also affect scoring.</Callout>
             </GuideSection>
 
             <GuideSection id="deal" number="02" title="The deal">
@@ -376,8 +379,8 @@ export function GameplayBasics() {
                   ))}
                 </div>
               </HorizontalScrollRegion>
-              <a href="/guide#tiles" className="inline-flex items-center gap-2 text-[12px] font-semibold text-[#284d45] underline decoration-[#cfa58f] underline-offset-4 hover:text-[#ae6249] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">
-                Why do Flowers and Seasons match Winds? <ArrowRight size={13} />
+              <a href="/encyclopaedia/flowers-and-seasons" className="inline-flex items-center gap-2 text-[12px] font-semibold text-[#284d45] underline decoration-[#cfa58f] underline-offset-4 hover:text-[#ae6249] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ae6249]">
+                Read more about Flowers and Seasons <ArrowRight size={13} />
               </a>
             </GuideSection>
 

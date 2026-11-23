@@ -4,6 +4,8 @@ import {
   isPurityHand,
   scoreBonusDoubles,
   scoreBonusTiles,
+  BMJA_BONUS_TILE_SCORING,
+  bonusTileSubtotal,
 } from './rules';
 import {
   bmjaSpecialHandBindings,
@@ -236,13 +238,19 @@ export const fishingScoreOptions = (
 ) => {
   const intrinsicHand = fishingIntrinsicHand(hand);
   const bonusPointRules = scoreBonusTiles(hand);
-  const bonusDoubleRules = scoreBonusDoubles(hand, context);
+  const bonusDoubleRules = BMJA_BONUS_TILE_SCORING.modes.fishing.doubles === 'bonus-only'
+    ? scoreBonusDoubles(hand, context)
+    : [];
   const bonusBase = bonusPointRules.reduce((sum, rule) => sum + rule.amount, 0);
   const bonusDoubles = bonusDoubleRules.reduce(
     (sum, rule) => sum + rule.amount,
     0,
   );
-  const bonusSubtotal = bonusBase * 2 ** bonusDoubles;
+  const bonusSubtotal = bonusTileSubtotal(
+    bonusBase,
+    bonusDoubles,
+    BMJA_BONUS_TILE_SCORING.modes.fishing.doubles,
+  );
   const playingPointRules = applyPointRules(
     { ...intrinsicHand, bonusTiles: [] },
     context,
