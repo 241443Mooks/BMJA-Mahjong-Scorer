@@ -1,13 +1,13 @@
 # #251 A2 relationship stress-test seed
 
-Status: **pre-runtime candidate set only — not a completed crosswalk**  
+Status: **historical candidate seed — not a completed crosswalk**
 Date: 19 September 2026  
 Parent: #251  
 Product model: `../../product/REFERENCE_KNOWLEDGE_ARCHITECTURE.md`
 
 ## Purpose
 
-Give 251A2 a small, high-information starting set once executable Buzzard/MCR/Riichi identities exist.
+Give 251A2 a small, high-information candidate set for comparison when exact profile identities are available. The current-main preflight selects a bounded Classical + MCR subset; this seed remains discovery input only. See [`ISSUE_251A2_PREFLIGHT_2026-10-01.md`](ISSUE_251A2_PREFLIGHT_2026-10-01.md).
 
 These candidates are deliberately chosen to test different relationship failure modes. **No relationship below is asserted as fact before A2 compares source + runtime semantics.**
 

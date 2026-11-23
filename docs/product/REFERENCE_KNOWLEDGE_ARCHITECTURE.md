@@ -380,14 +380,15 @@ Layer 3 may clarify. It may not silently amend layers 1 or 2.
 
 ## 251 sequencing consequence
 
-The existing dependency gate remains correct:
+The current start gate is Classical + MCR governed truth. Do not wait for Riichi; use it as a later conformance/extension test:
 
 ```text
-Buzzard executable identity
-MCR executable identity
-EMA Riichi executable identity
+current Classical executable/source-backed truth
+MCR executable/source-backed truth
         ↓
-251A2 relationship audit
+251A2 sparse relationship audit
+        ↓
+Riichi and later families as conformance/extension tests
         ↓
 251B structured concept/treatment vertical proof
         ↓
