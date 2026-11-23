@@ -42,6 +42,7 @@ Current inventory records include:
 - `TENHOU_SANMA_PROFILE_NOTE.md` — first-party Sanma delta, inherited Riichi catalogue not recounted;
 - `WRIGHT_PATTERSON_SOURCE_GATE.md` — current paid/copyrighted source gate;
 - `SOURCE_INVENTORY_V4.md` — **current manifest: 18 corpora / 626 finite source-local entries**.
+- [`../RECEIVED_SOURCE_MATERIAL_2026-11-08.md`](../RECEIVED_SOURCE_MATERIAL_2026-11-08.md) — **Bell 1978 and Pritchard 2013 book/photo receipt, historical comparison leads and real-table research**; not admitted as new counted corpora, no implementation or publishable club-card material.
 
 `SOURCE_INVENTORY_V4.md` is the current coverage manifest. It points back to source/profile indexes rather than duplicating all rules data.
 
