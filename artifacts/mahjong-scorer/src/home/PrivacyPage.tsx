@@ -22,7 +22,7 @@ export function PrivacyPage() {
           <section className="rounded-xl border border-[#d8ceb8] bg-[#fbf8ed] p-5 sm:p-6">
             <h2 className="font-serif text-[26px] text-[#284d45]">Analytics</h2>
             <p className="mt-3">
-              The site uses PostHog Cloud EU for privacy-conscious web and product analytics. It helps answer questions such as which pages are visited, how people move between pages, and which supported rules profiles people choose.
+              The production site (mahjong.smooks.co.uk) uses PostHog Cloud EU for privacy-conscious web and product analytics. Local and preview hosts do not send analytics to this project. It helps answer questions such as which pages are visited, how people move between pages, and which supported rules profiles people choose.
             </p>
             <p className="mt-3">
               PostHog is configured in cookieless mode. Mahjong Reference does not ask PostHog to write analytics cookies, local storage or session storage. Person profiles and session replay are disabled, interaction autocapture is disabled, and the PostHog project is configured to discard client IP addresses.
