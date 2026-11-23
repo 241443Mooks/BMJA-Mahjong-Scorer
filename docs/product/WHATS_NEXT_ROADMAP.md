@@ -1,20 +1,32 @@
 # What's next — project handoff roadmap
 
-**Snapshot:** 3 October 2026
+**Snapshot:** 28 October 2026 (current handoff; earlier architectural snapshots retained below)
 **Purpose:** current restart point after truth-corpus closeout, Riichi preflight and recent product-assurance work.
 **Live authority:** issue #105 remains the programme map; this file is the dated handoff companion, not a second backlog.
 
-## 17 October 2026 — post-table validation handoff (supersedes the 3 October priority snapshot below)
+## 28 October 2026 — evidence-led product focus (supersedes 26 October ordering)
 
-**Authority:** live programme tracker #105 and current `main`. The sections below preserve the earlier architectural context; this section is the current product handoff.
+**Authority:** [live programme map #105](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/105), production `main@3f68b860`. The user has deliberately narrowed the near-term product question: **is Mahjong Reference a dependable, mobile-first scoring and game-tracking companion?** Avoid treating the larger Encyclopaedia or personalised learning platform as an automatic next release.
 
+- **First measurement slice:** [#556](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/556) / [draft #557](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/pull/557) restricts PostHog collection to the production hostname, preserves `ruleset_selected` semantics and documents measurement/privacy limits. It is **draft, unmerged, undeployed and incomplete**: meaningful hand-score and game-completion events are not implemented. Live recalculation of partial hands, game Undo/reconfirmation and automatic recovery make naive completion/resume events misleading. Define and test durable event boundaries separately; do not add artificial user actions solely for analytics.
+- **Evidence caveat:** earlier all-host PostHog views included localhost and Cloudflare previews. Production-only last-30-day pageviews at the 27 October review: Home 198, Game 133, Hand 64, Rules Comparison 7. These are pageviews, **not completed tasks, proven demand or reliable retention**. Mobile accounted for 555 of 673 production pageviews in the device breakdown. Avoid overinterpreting development/owner QA.
+- **Near-term priority:** finish and review the small production-only analytics foundation, agree genuine completion event definitions, run [#253](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/253) production/mobile/recovery QA and use [#89](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/89) table feedback to fix proven scoring friction. Observe aggregate outcomes for 2–4 weeks after trustworthy instrumentation ships.
+- **Reference scope held for decision:** [#541](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/pull/541) and stacked [#553](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/pull/553) remain draft and require owner approval. Coordinate [#554](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/554)/[#555](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/555) as a **bounded evidence-led scope/release decision**, not a mandate for site-wide expansion. Preserve completed work without automatically shipping it.
+- **Independent tracks:** Riichi [#494](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/494) remains the prerequisite before #262; MCR remains provisional. Public What's New remains at its existing October player milestone; no new player-facing merge has occurred since test-only #536 on 23 October.
+- **Branch cleanup:** [#398](https://github.com/241443Mooks/BMJA-Mahjong-Scorer/issues/398) tracks eight reverified exact-head merged candidates; protect all eight current draft PR heads including #557, stacked bases and unique/ambiguous work. No deletion.
+
+## 26 October 2026 — prior handoff (retained for history)
+
+**Authority at that date:** live programme tracker #105 and then-current `main`. The sections below preserve earlier architectural context; the 28 October section above supersedes this handoff.
+
+- **Reference release gate:** Draft #541 integrates the rules reference, comparison and Encyclopaedia; draft #553 is stacked on #541 for selected-rules learning. Both are unmerged. Coordinate #554 (read-only whole-site walkthrough) and #555 (owner release decision) before any merge. Five public Encyclopaedia articles and 36 displayed comparison questions in the draft do not prove full coverage. #552 owns Encyclopaedia discovery planning; do not duplicate it or turn this review into a broad redesign.
 - **10 October field validation (#89):** three real tables used the app; players valued it. Repeated full-hand calculation and end-of-hand scrolling were major friction, including for experienced players. Terminology, identifying winds/flowers/seasons and progression clarity also need attention.
 - **Merged:** #521 preserves finished games as dated local, read-only ledgers with print/save and second-tab protection. #525 makes hand outcome/winner explicit, records directly after deterministic settlement validation, leaves settlement details optional and supports Undo. #517/#518 improved player entry and contextual hand scoring. #527 adds the compact Previous games homepage card, #528 uses plain-language tile-group labels, and #529 opens final standings at completion and offers Start a new game.
 - **Not cloud storage:** previous games persist in the same browser/profile/device subject to site-data clearing and browser limitations. Important records should be exported.
 - **Next product QA:** formal end-to-end production verification #253, including the full calculator → record → undo → next hand journey, finished-game history and browser-process restart recovery. Owner phone feedback is positive, but does not satisfy the formal #253 gate.
 - **Next bounded UX:** #519 terminology and #522 Previous games homepage card are implemented by merged #528/#527; do not reopen them. Investigate wind/flower/season reference assistance and seating/progression clarity using #89 evidence before creating implementation contracts.
-- **Public What's New:** maintain a curated outcome-level history, not one entry per PR. Review a coherent October milestone after verification; minor polish alone does not warrant publication.
-- **Independent rules work:** Riichi remains #494 → #262 → #263 → #264, with experienced-player validation before stable release. MCR remains provisional.
+- **Public What's New:** the October “Revisit your finished games” milestone is merged through #530 and live. Maintain curated outcome-level history, not one entry per PR; minor polish alone does not warrant publication.
+- **Independent rules work:** #494 has a bounded Codex handoff dated 22 October and remains unimplemented; Riichi proceeds #494 → #262 → #263 → #264, with experienced-player validation before stable release. MCR remains provisional.
 
 ## Where Mahjong Reference is now
 
@@ -33,7 +45,7 @@ Production `main` has:
 - the completed #399 machine-readable rules-truth architecture, with typed source/evidence/treatment records, fail-closed integrity gates and Classical + MCR proof;
 - the shared #406 profile × dimension contract for #296/#405 projections.
 
-Verified production baseline for this reconciliation: `718bdc496983a249ef714d090872075116fce6a0`.
+Historical 3 October production baseline: `718bdc496983a249ef714d090872075116fce6a0`. Current 26 October `main`: `3f68b860f6e31c59f2597e765e3d15c56d883ac1` (last merge: test-only PR #536 on 23 October).
 
 ## Completed architecture programme — #399 rules truth
 
@@ -148,7 +160,7 @@ That is a good future direction, but it is **not the next batch**. It should be 
 Useful independent/lighter slices remain:
 
 - **#429 MCR scorer UX** — results are visually noisy and too many information boxes are required; preflight exact materiality before changing UI;
-- **#412 Public What's New** — a curated player-facing milestone history above the technical changelog;
+- **#412 Public What's New** — the curated player-facing milestone history is live; maintain periodically when material player outcomes change, not as a new feature task;
 - **#378 British learning-path ownership** — Gameplay Basics versus Scoring Guide;
 - **#393 contact/feedback** — keep account-free and low-friction;
 - **#288 static-route/real-404 boundary** — separate from the merged visitor-facing 404 UI.
@@ -177,18 +189,19 @@ Rules:
 - never force a branch to `main` as a substitute for deletion;
 - if merge status is ambiguous, leave it.
 
-There were no open PRs when this reconciliation began. Branches were not deleted: the available safe ref-deletion capability was not established, and branch names alone do not prove merge status. Preserve `main`, open-PR heads, unique/unmerged work, #167 parking-lot branches and ambiguous refs. In particular, `docs/2026-10-03-eod-housekeeping` was not present among fetched refs; no similarly named branch was moved or reset. Record proven cleanup candidates in #398 for a safe deletion-capable pass.
+At the start of the 23 October review there were no open PRs; draft #531 is now open for this roadmap correction. No branches were deleted: the available connector has no safe ref-deletion operation, and branch names alone do not prove merge status. #398 now records seven verified current tips matching merged PR heads (#524–#530). Preserve `main`, open-PR heads, unique/unmerged work, #167 parking-lot branches and ambiguous refs. In particular, `docs/2026-10-03-eod-housekeeping` **is present** with a unique README commit and must not be deleted without review; `codex/issue-520` has post-merge work. Reverify immediately before any manual deletion.
 
 ## Current next-step position
 
 Unless new evidence changes the priority:
 
-1. Product validation: **#253 current-production QA → #89 real-table validation on 10 October 2026**; continue #246 analytics observation and experienced-player MCR review.
-2. Riichi: **#494 → #262 → #263 → #264 → experienced EMA/European player review**.
-3. Suitable independent bounded work: **#412** public What's New and **#429** MCR evidence UX.
-4. Keep **#434** at American/NMJL-style N0 evidence + architecture.
-5. Keep **#447 parked** until real ruleset onboarding/migration pain provides evidence for the authoring workflow.
-6. #407 remains technically available but is not automatically next. #167 remains the parking-lot index.
+1. Reference release review: **#554 read-only visitor/content audit + #555 owner decision** for draft #541/#553; preserve stacked PRs until approved.
+2. Product validation: **#253 formal current-production QA**, then evidence-led follow-up from the **completed 10 October #89 real-table session**; continue #246 analytics observation and experienced-player MCR review.
+3. Riichi: **#494 → #262 → #263 → #264 → experienced EMA/European player review**.
+4. Suitable independent bounded work: **#429** MCR evidence UX. **#412** What's New is already live; maintain it only when a meaningful player-facing milestone warrants an entry.
+5. Keep **#434** at American/NMJL-style N0 evidence + architecture.
+6. Keep **#447 parked** until real ruleset onboarding/migration pain provides evidence for the authoring workflow.
+7. #407 remains technically available but is not automatically next. #167 remains the parking-lot index.
 
 ## Things not to do on restart
 
@@ -212,7 +225,7 @@ Read, in order:
 
 1. this file;
 2. issue #105;
-3. the exact active issue from the current programme map (currently #253 validation or #494 Riichi prerequisite, by chosen track);
+3. the exact active issue from the current programme map (currently #554/#555 reference release review, #253 validation or #494 Riichi prerequisite, by chosen track);
 4. only the current `main` code/tests and authority documents needed by that batch.
 
 Then do one bounded thing.
