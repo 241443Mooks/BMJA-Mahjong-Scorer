@@ -1,6 +1,6 @@
 # Issue #147 · private typed interpretation preview
 
-Draft PR #563 contains a typed-only preview for standalone British (BMJA 1.0) non-winning grouped hands in normal mode. It uses the existing hand-entry workspace and scorer. The Cloudflare preview and its OpenAI-backed evaluation are awaiting owner approval and configuration.
+Draft PR #563 contains a typed-only preview for standalone British (BMJA 1.0) non-winning grouped hands in normal mode. It uses the existing hand-entry workspace and scorer. The Cloudflare preview is awaiting confirmation of the owner-only Access policy and explicit deployment approval. The OpenAI-backed evaluation follows deployment and secret setup.
 
 ## Verification completed offline
 
@@ -16,20 +16,21 @@ Live model accuracy, latency, cost, Cloudflare edge access enforcement, and succ
 ## Owner setup before private deployment
 
 1. Choose a dedicated unused Cloudflare-proxied hostname, for example `voice-preview.<your-zone>`. Use the separate Worker `mahjong-typed-private-preview` and its dedicated asset build and Durable Object. Verify the selected account, zone and Worker name are distinct from production resources. Check that no existing DNS record, Worker route, origin or Cache Rule on that hostname can serve or cache content outside this Worker.
-2. In **Cloudflare Zero Trust → Access → Applications**, create a **Self-hosted** application for that exact hostname, with the path left blank so the policy covers the page, API and static assets. Use a short session such as one hour, long enough for the suite. Add an **Allow** policy whose **Include → Emails** lists only named testers. Select the approved identity provider. Check inherited policies and remove any broader Allow, Bypass or Service Auth grants covering this hostname. Record the app's **Application Audience (AUD) Tag** and the team issuer URL, for example `https://<team>.cloudflareaccess.com`.
-3. In a dedicated OpenAI project, have the owner select or create a project key restricted to writing Responses and allow the pinned `gpt-4o-mini-2024-07-18` model. Confirm the account's rate, pricing and data-retention settings and configure a project budget alert. Use synthetic Mahjong descriptions for this first test. OpenAI receives each description with `store: false`; provider abuse-monitoring retention is governed by the project settings. The app keeps description and proposal in memory for review and sends no transcript or output to Worker logs, storage or caches.
-4. From the repository root, initialise artwork, install dependencies and build the dedicated asset directory. Create the ignored owner config beside the template. In that copy set `vars.PREVIEW_HOST` and `routes[0].pattern` to the same exact hostname, set `vars.ACCESS_ISSUER` to the team URL without a trailing slash, and set `vars.ACCESS_AUD` to the application's AUD tag. The checked-in template intentionally uses a reserved invalid hostname.
+2. In **Cloudflare Zero Trust → Access → Applications**, create a **Self-hosted** application for that exact hostname, with the path left blank so the policy covers the page, API and static assets. Use a short session such as one hour, long enough for the suite. Add an **Allow** policy whose **Include → Emails** contains only the owner’s individually named email address. Select the approved identity provider. Check every applicable and inherited policy for this hostname and all its paths. The effective Allow policy must be restricted to that email. Everyone, broad group or domain grants, Bypass, and Service Auth must be absent. Record the app's **Application Audience (AUD) Tag** and the team issuer URL, for example `https://<team>.cloudflareaccess.com`.
+3. In a dedicated OpenAI project, have the owner select or create a project key restricted to writing Responses and allow the pinned `gpt-5.4-mini-2026-03-17` snapshot for Responses with Structured Outputs and standard processing. Confirm the account's rate, pricing and data-retention settings and configure a project budget alert. Use synthetic Mahjong descriptions for this first test. OpenAI receives each description with `store: false`; provider abuse-monitoring retention is governed by the project settings. The app keeps description and proposal in memory for review and sends no transcript or output to Worker logs, storage or caches.
+4. From the repository root, initialise artwork, install dependencies and build the dedicated asset directory. Reuse the ignored owner config beside the template if already prepared. Otherwise, copy the template. In that copy set `vars.PREVIEW_HOST` and `routes[0].pattern` to the same exact hostname, set `vars.ACCESS_ISSUER` to the team URL without a trailing slash, and set `vars.ACCESS_AUD` to the application's AUD tag. The checked-in template intentionally uses a reserved invalid hostname.
 
    ```sh
    git submodule update --init --depth 1
    pnpm install --frozen-lockfile
    pnpm --filter @workspace/mahjong-scorer run build:voice-preview
    cd artifacts/mahjong-scorer/voice-preview
-   cp wrangler.jsonc wrangler.owner.jsonc
-   # Edit wrangler.owner.jsonc as described above.
+   # For a fresh checkout only, copy and fill the ignored config.
+   test -f wrangler.owner.jsonc || cp wrangler.jsonc wrangler.owner.jsonc
+   # Confirm the owner config contains the approved values before the dry run.
    npx wrangler@4.166.0 deploy --dry-run --config wrangler.owner.jsonc
    ```
-5. **Approval gate.** Obtain explicit owner approval for the exact draft commit, Cloudflare account and preview hostname, tester allowlist, OpenAI project, and the bounded paid run. Confirm the Access application is in place before deploying the Worker. The commands below are for the owner or authorised Cloudflare operator after approval only.
+5. **Approval gate.** Obtain explicit owner approval for the exact draft commit, Cloudflare account and preview hostname, owner-only Access policy, OpenAI project, and the bounded paid run. Before deploying, require the owner to confirm that the effective Access Allow policy names only their individual email and that no Everyone grant, broader Allow, Bypass, or Service Auth applies to the preview hostname or its paths. Hold deployment until that confirmation and explicit deployment approval are both received. The commands below are for the owner or authorised Cloudflare operator after approval only.
 
    ```sh
    # From artifacts/mahjong-scorer/voice-preview
@@ -54,7 +55,7 @@ The Worker validates the signed Access application JWT before it serves assets o
    node artifacts/mahjong-scorer/voice-dev/evaluate.mjs https://<approved-preview-host>
    ```
 
-   The JSON lines report exact evidence and source coverage, correctly preserved unresolved facts, omitted facts, incorrect guesses, readiness, failure reasons, round-trip and provider latency, and usage where returned. The final line reports provider p50/p95 and estimated USD for metered responses. Estimates use $0.15 input, $0.075 cached input and $0.60 output per million tokens. Check pricing and reconcile with the dedicated project's actual usage after the run, including failed or timed-out attempts with no usage returned. Save the metrics report and the opted-in synthetic screenshots for owner review. The runner does not write raw descriptions or responses.
+   The JSON lines report exact evidence and source coverage, correctly preserved unresolved facts, omitted facts, incorrect guesses, readiness, failure reasons, round-trip and provider latency, and usage where returned. The final line reports provider p50/p95 and estimated USD for metered responses. Estimates use standard text rates of $0.75 uncached input, $0.075 cached input and $4.50 output per million tokens. Check pricing and reconcile with the dedicated project's actual usage after the run, including failed or timed-out attempts with no usage returned. Save the metrics report and the opted-in synthetic screenshots for owner review. The runner does not write raw descriptions or responses. [OpenAI model and pricing](https://developers.openai.com/api/docs/models/gpt-5.4-mini)
 5. Report every live failure by case ID and cause. Review cases that passed exact evidence but correctly require manual clarification, and record any user journey differences as findings before approving the next slice.
 
 Existing scope limits include other rules profiles, winners, tracked games, special layouts, remaining or blank tiles, and unsupported bonus or context descriptions. Edit currently means revising and re-interpreting the description or explicitly confirming missing exposure before acceptance. The build has a large-bundle warning.

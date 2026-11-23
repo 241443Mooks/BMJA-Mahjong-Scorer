@@ -5,7 +5,7 @@ import { setTimeout as delay } from 'node:timers/promises';
 import { fileURLToPath } from 'node:url';
 import { createServer } from 'vite';
 import { compareEvidence } from './evidence-metrics.mjs';
-import { MODEL } from './openai.mjs';
+import { estimateOpenAICostUsd, MODEL } from './openai.mjs';
 
 const [target, caseId, ...extra] = process.argv.slice(2);
 const corpus = JSON.parse(await readFile(new URL('./evaluation.json', import.meta.url), 'utf8'));
@@ -71,10 +71,12 @@ try {
       const cached = number('X-Voice-Cached-Tokens') ?? 0;
       const output = number('X-Voice-Output-Tokens');
       const model = response.headers.get('X-Voice-Model');
-      if (model === MODEL && input !== null && output !== null && cached <= input) {
-        result.usage = { input, cached, output };
-        result.estimatedUsd = ((input - cached) * 0.15 + cached * 0.075 + output * 0.60) / 1e6;
-        cost += result.estimatedUsd;
+      const usage = { input, cached, output };
+      const estimate = estimateOpenAICostUsd(model, usage);
+      if (estimate !== null) {
+        result.usage = usage;
+        result.estimatedUsd = estimate;
+        cost += estimate;
         metered++;
       }
       if (!response.ok) {
