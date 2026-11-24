@@ -3,11 +3,95 @@ import { act } from 'react';
 import { createRoot } from 'react-dom/client';
 import { beforeAll, afterEach, describe, it, expect, vi } from 'vitest';
 import { HandScorer } from './App';
+import { VoiceTestPanel } from './game/VoiceTestPanel';
 import { BMJA_PROFILE_REF } from './game/ruleset';
 import { initialiseCurrentRulesRuntimes } from './rules-platform/current-runtime-registry';
 
 beforeAll(async () => { await initialiseCurrentRulesRuntimes(); });
 afterEach(() => { vi.unstubAllGlobals(); window.history.replaceState({}, '', '/'); });
+
+describe('private interpretation failure diagnostics', () => {
+  it.each([
+    {
+      label: 'provider HTTP error with both diagnostic headers',
+      makeResponse: () => new Response('sensitive response body', {
+        status: 502,
+        headers: { 'X-Voice-Outcome': 'provider-http', 'X-Voice-Provider-Status': '401', 'X-Other': 'sensitive header' },
+      }),
+      diagnostics: ' HTTP 502 · X-Voice-Outcome: provider-http · X-Voice-Provider-Status: 401',
+      bodyRead: false,
+    },
+    {
+      label: 'limit response with no diagnostic headers',
+      makeResponse: () => new Response('sensitive response body', { status: 429 }),
+      diagnostics: ' HTTP 429',
+      bodyRead: false,
+    },
+    {
+      label: 'invalid outcome with a valid provider status',
+      makeResponse: () => new Response('sensitive response body', {
+        status: 502,
+        headers: { 'X-Voice-Outcome': 'sensitive header', 'X-Voice-Provider-Status': '400' },
+      }),
+      diagnostics: ' HTTP 502 · X-Voice-Provider-Status: 400',
+      bodyRead: false,
+    },
+    {
+      label: 'valid outcome with an invalid provider status',
+      makeResponse: () => new Response('sensitive response body', {
+        status: 502,
+        headers: { 'X-Voice-Outcome': 'schema', 'X-Voice-Provider-Status': 'sensitive header' },
+      }),
+      diagnostics: ' HTTP 502 · X-Voice-Outcome: schema',
+      bodyRead: false,
+    },
+    {
+      label: 'unusable evidence from an HTTP success',
+      makeResponse: () => Response.json({ unexpected: 'sensitive response body' }, {
+        headers: { 'X-Voice-Provider-Status': '200' },
+      }),
+      diagnostics: ' HTTP 200 · X-Voice-Provider-Status: 200',
+      bodyRead: true,
+    },
+    {
+      label: 'network failure without an HTTP response',
+      makeResponse: () => undefined,
+      diagnostics: '',
+      bodyRead: undefined,
+    },
+  ])('shows only safe details for $label', async ({ makeResponse, diagnostics, bodyRead }) => {
+    vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
+    const response = makeResponse();
+    vi.stubGlobal('fetch', vi.fn(async () => {
+      if (!response) throw new Error('sensitive exception');
+      return response;
+    }));
+    const container = document.createElement('div');
+    document.body.append(container);
+    const root = createRoot(container);
+    const onAccept = vi.fn();
+    try {
+      await act(async () => root.render(<VoiceTestPanel onAccept={onAccept} />));
+      const textarea = container.querySelector('textarea')!;
+      await act(async () => {
+        Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')!.set!.call(textarea, 'synthetic input');
+        textarea.dispatchEvent(new Event('input', { bubbles: true }));
+      });
+      await act(async () => container.querySelector('button')!.click());
+      expect(container.querySelector('[role="status"]')?.textContent).toBe(
+        'Interpretation is unavailable. Try again or use manual entry.' + diagnostics,
+      );
+      expect(container.textContent).not.toMatch(/sensitive|What I heard/);
+      expect(textarea.value).toBe('synthetic input');
+      expect(response?.bodyUsed).toBe(bodyRead);
+      expect(onAccept).not.toHaveBeenCalled();
+    } finally {
+      await act(async () => root.unmount());
+      container.remove();
+    }
+  });
+});
+
 describe('local voice test integration', () => {
   it('keeps manual work intact until accepting a confirmed interpretation', async () => {
     vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);

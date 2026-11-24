@@ -3,6 +3,21 @@ import { expandedTiles, type HandSet } from '../scoring';
 import { playingTileDefinition, tileAssetUrl } from '../tiles/MahjongTileArtwork';
 import { voiceProposalBlockers, voiceProposalSchema, type VoiceProposal } from './voice-evidence';
 
+const interpretationUnavailable = 'Interpretation is unavailable. Try again or use manual entry.';
+const diagnosticOutcomes = new Set(['provider-http', 'schema', 'source', 'refusal', 'incomplete']);
+
+function interpretationFailure(response?: Response) {
+  if (!response || response.status < 100 || response.status > 599) return interpretationUnavailable;
+  const details = [`HTTP ${response.status}`];
+  const outcome = response.headers.get('X-Voice-Outcome');
+  if (outcome && diagnosticOutcomes.has(outcome)) details.push(`X-Voice-Outcome: ${outcome}`);
+  const providerStatus = response.headers.get('X-Voice-Provider-Status');
+  if (providerStatus && /^[1-5][0-9]{2}$/.test(providerStatus)) {
+    details.push(`X-Voice-Provider-Status: ${providerStatus}`);
+  }
+  return `${interpretationUnavailable} ${details.join(' · ')}`;
+}
+
 export function VoiceTestPanel({ onAccept, disabledReason }: { onAccept: (proposal: VoiceProposal) => Promise<string | null>; disabledReason?: string }) {
   const descriptionRef = useRef<HTMLTextAreaElement>(null);
   const [transcript, setTranscript] = useState('');
@@ -27,11 +42,15 @@ export function VoiceTestPanel({ onAccept, disabledReason }: { onAccept: (propos
   }
   async function interpret() {
     setError(''); setProposal(null); setHeard(transcript); setPending(true);
+    let response: Response | undefined;
     try {
-      const response = await fetch('/__voice/interpret', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ transcript }) });
-      if (!response.ok) throw new Error();
+      response = await fetch('/__voice/interpret', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ transcript }) });
+      if (!response.ok) {
+        setError(interpretationFailure(response));
+        return;
+      }
       setProposal(voiceProposalSchema.parse(await response.json()));
-    } catch { setError('Interpretation is unavailable. Try again or use manual entry.'); }
+    } catch { setError(interpretationFailure(response)); }
     finally { setPending(false); }
   }
   return <section className="mb-5 rounded-xl border border-[#c9b99d] bg-[#fbf8ed] p-4" aria-label="Private typed voice test">
@@ -39,7 +58,7 @@ export function VoiceTestPanel({ onAccept, disabledReason }: { onAccept: (propos
     <p className="mt-2 text-sm">Your description is sent to OpenAI for interpretation. Review it before adding anything to this hand.</p>
     <label className="mt-3 block text-sm font-semibold">Description<textarea className="mt-1 block w-full rounded border p-2 font-normal" ref={descriptionRef} rows={3} maxLength={2000} autoComplete="off" spellCheck={false} disabled={pending || accepting} value={transcript} onChange={e => { setTranscript(e.target.value); setProposal(null); setHeard(''); setError(''); }} /></label>
     <button type="button" className="mt-2 rounded bg-[#284d45] px-4 py-2 text-white disabled:opacity-50" disabled={pending || accepting || !transcript.trim()} onClick={interpret}>{pending ? 'Interpreting…' : 'Interpret'}</button>
-    {heard && <p className="mt-3 whitespace-pre-wrap text-sm"><b>What I heard:</b> {heard}</p>}
+    {heard && proposal && <p className="mt-3 whitespace-pre-wrap text-sm"><b>What I heard:</b> {heard}</p>}
     {proposal && <div className="mt-3 space-y-3"><h3 className="font-semibold">Interpretation</h3>
       {proposal.groups.map((group, index) => <div key={index} className="rounded border border-[#cfc3aa] p-3 text-sm"><p>“{group.source}”</p><p className="capitalize">{group.kind ?? 'Unknown group'} · {group.visibility ?? 'Exposure unknown'}</p>
         {group.tile && group.kind && <div className="my-2 flex flex-wrap gap-1">{expandedTiles({ id: 'preview', kind: group.kind, tile: group.tile as HandSet['tile'], visibility: 'concealed' }).map((tile, i) => { const art = playingTileDefinition(tile); return <img key={i} className="h-12 w-9" src={tileAssetUrl(art.asset)} alt={art.label} />; })}</div>}
