@@ -1,6 +1,6 @@
 import { createRemoteJWKSet, jwtVerify } from 'jose';
 import { voiceProposalSchema } from '../src/game/voice-evidence';
-import { interpretWithOpenAI, MAX_BODY_BYTES, MAX_DESCRIPTION_LENGTH, MODEL } from '../voice-dev/openai.mjs';
+import { readOpenAIInterpretation, requestOpenAIInterpretation, MAX_BODY_BYTES, MAX_DESCRIPTION_LENGTH, MODEL } from '../voice-dev/openai.mjs';
 export { VoiceQuota } from './quota.mjs';
 
 const apiPath = '/__voice/interpret';
@@ -88,6 +88,8 @@ export default {
     if (input.status) return json(input.status, { error: 'Send one description of at most 2,000 characters and 4 KiB of JSON.' });
     if (!env.OPENAI_API_KEY) return json(503, { error: 'OpenAI configuration is unavailable.' });
 
+    let stage = 'quota-preparation';
+    const metrics = {};
     try {
       const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(subject));
       const principal = Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, '0')).join('');
@@ -98,10 +100,14 @@ export default {
       }
       if (quota.status !== 204) throw new Error();
 
-      const result = await interpretWithOpenAI(input.transcript, env.OPENAI_API_KEY);
+      stage = 'openai-transport';
+      const start = performance.now();
+      const response = await requestOpenAIInterpretation(input.transcript, env.OPENAI_API_KEY);
+      stage = 'openai-response';
+      metrics['X-Voice-Provider-Status'] = String(response.status);
+      const result = await readOpenAIInterpretation(response);
+      metrics['X-Voice-Provider-Ms'] = String(Math.round(performance.now() - start));
       const proposal = voiceProposalSchema.safeParse(result.proposal);
-      const metrics = { 'X-Voice-Provider-Status': String(result.providerStatus) };
-      if (result.latencyMs !== undefined) metrics['X-Voice-Provider-Ms'] = String(result.latencyMs);
       if (result.model === MODEL) metrics['X-Voice-Model'] = MODEL;
       for (const [name, value] of Object.entries({
         'X-Voice-Input-Tokens': result.usage?.input_tokens,
@@ -110,7 +116,7 @@ export default {
       })) {
         if (Number.isSafeInteger(value) && value >= 0) metrics[name] = String(value);
       }
-      const failure = result.providerStatus !== 200 ? 'provider-http'
+      const failure = response.status !== 200 ? 'provider-http'
         : result.outcome !== 'completed' ? result.outcome
         : !proposal.success ? 'schema'
         : proposal.data.groups.some(group => !input.transcript.includes(group.source)) ? 'source' : null;
@@ -121,7 +127,9 @@ export default {
       }
       return json(200, proposal.data, metrics);
     } catch {
-      return json(502, { error: 'Interpretation is unavailable. Try again or use manual entry.' });
+      return json(502, { error: 'Interpretation is unavailable. Try again or use manual entry.' }, {
+        ...metrics, 'X-Voice-Outcome': stage,
+      });
     }
   },
 };

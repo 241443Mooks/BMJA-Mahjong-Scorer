@@ -2,6 +2,7 @@ import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { exportJWK, generateKeyPair, SignJWT } from 'jose';
 import worker from './worker.mjs';
 import { LIMITS, VoiceQuota } from './quota.mjs';
+import { MODEL } from '../voice-dev/openai.mjs';
 
 const env = {
   PREVIEW_HOST: 'voice-preview.example.com',
@@ -75,6 +76,98 @@ describe('private preview boundary', () => {
     expect((await post('{}')).status).toBe(400);
     expect((await post('{"transcript":"pung of circles"}')).status).toBe(503);
     expect(env.VOICE_QUOTA.getByName).not.toHaveBeenCalled();
+  });
+});
+
+describe('private interpretation diagnostics', () => {
+  const transcript = 'Pung 3 circles concealed';
+  const providerUrl = 'https://api.openai.com/v1/responses';
+  const secret = 'synthetic-test-secret';
+  const privateFailure = 'synthetic private exception text';
+  const reserved = () => new Response(null, { status: 204 });
+  const fail = () => { throw new Error(privateFailure); };
+
+  async function interpret(reserve, provider) {
+    const reserveQuota = vi.fn(reserve);
+    vi.stubGlobal('fetch', vi.fn(async (url, options) => {
+      if (String(url) === providerUrl) return provider(url, options);
+      expect(String(url)).toBe(`${env.ACCESS_ISSUER}/cdn-cgi/access/certs`);
+      return Response.json({ keys: [jwk] });
+    }));
+
+    const assertion = await signed();
+    const response = await worker.fetch(new Request(origin + '/__voice/interpret', {
+      method: 'POST',
+      headers: { 'Cf-Access-Jwt-Assertion': assertion, Origin: origin, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ transcript }),
+    }), {
+      ...env,
+      OPENAI_API_KEY: secret,
+      VOICE_QUOTA: {
+        getByName(name) {
+          expect(name).toBe('typed-preview');
+          return { fetch: reserveQuota };
+        },
+      },
+    });
+    expect(reserveQuota).toHaveBeenCalledTimes(1);
+    return { response, assertion };
+  }
+
+  it.each([
+    ['quota exception', fail, undefined, 'quota-preparation', null],
+    ['unexpected quota status', () => new Response(null, { status: 500 }), undefined, 'quota-preparation', null],
+    ['OpenAI transport exception', reserved, fail, 'openai-transport', null],
+    ['unreadable provider envelope', reserved, () => new Response(privateFailure), 'openai-response', '200'],
+    ['unreadable structured output', reserved, () => Response.json({
+      status: 'completed', output: [{ content: [{ type: 'output_text', text: privateFailure }] }],
+    }), 'openai-response', '200'],
+    ['provider HTTP failure', reserved, () => new Response(privateFailure, { status: 401 }), 'provider-http', '401'],
+    ['failure to discard a provider error body', reserved, () => new Response(new ReadableStream({ cancel: fail }), { status: 503 }),
+      'openai-response', '503'],
+    ['invalid evidence shape', reserved, () => Response.json({
+      status: 'completed', output: [{ content: [{ type: 'output_text', text: JSON.stringify({ unexpected: privateFailure }) }] }],
+    }), 'schema', '200'],
+  ])('reports only fixed metadata for %s', async (_label, reserve, fetchProvider, outcome, providerStatus) => {
+    const provider = vi.fn(fetchProvider);
+    const { response, assertion } = await interpret(reserve, provider);
+    expect(provider).toHaveBeenCalledTimes(fetchProvider ? 1 : 0);
+    expect(response.status).toBe(502);
+    expect(response.headers.get('X-Voice-Outcome')).toBe(outcome);
+    expect(response.headers.get('X-Voice-Provider-Status')).toBe(providerStatus);
+    expect(response.headers.get('Cache-Control')).toContain('no-store');
+    const diagnostics = JSON.stringify([...response.headers]) + await response.text();
+    for (const privateValue of [privateFailure, transcript, secret, assertion]) {
+      expect(diagnostics.includes(privateValue)).toBe(false);
+    }
+  });
+
+  it('preserves the validated proposal, usage and OpenAI request settings on success', async () => {
+    const proposal = {
+      groups: [{ source: transcript, kind: 'pung', visibility: 'concealed', tile: { family: 'suit', suit: 'circles', rank: 3 }, ambiguity: null }],
+      unparsed: [],
+    };
+    const provider = vi.fn(async (_url, options) => {
+      expect(JSON.parse(options.body)).toMatchObject({
+        model: MODEL, store: false, text: { format: { type: 'json_schema', strict: true } },
+      });
+      return Response.json({
+        status: 'completed',
+        model: MODEL,
+        output: [{ content: [{ type: 'output_text', text: JSON.stringify(proposal) }] }],
+        usage: { input_tokens: 40, output_tokens: 20, input_tokens_details: { cached_tokens: 0 } },
+      });
+    });
+    const { response } = await interpret(reserved, provider);
+    expect(provider).toHaveBeenCalledTimes(1);
+    expect(response.status).toBe(200);
+    expect(response.headers.get('X-Voice-Outcome')).toBeNull();
+    expect(response.headers.get('X-Voice-Provider-Status')).toBe('200');
+    expect(response.headers.get('X-Voice-Model')).toBe(MODEL);
+    expect(response.headers.get('X-Voice-Input-Tokens')).toBe('40');
+    expect(response.headers.get('X-Voice-Cached-Tokens')).toBe('0');
+    expect(response.headers.get('X-Voice-Output-Tokens')).toBe('20');
+    expect(await response.json()).toEqual(proposal);
   });
 });
 

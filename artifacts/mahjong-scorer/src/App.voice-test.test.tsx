@@ -12,6 +12,15 @@ afterEach(() => { vi.unstubAllGlobals(); window.history.replaceState({}, '', '/'
 
 describe('private interpretation failure diagnostics', () => {
   it.each([
+    ...['quota-preparation', 'openai-transport', 'openai-response'].map(outcome => ({
+      label: outcome,
+      makeResponse: () => new Response('sensitive response body', {
+        status: 502,
+        headers: { 'X-Voice-Outcome': outcome, ...(outcome === 'openai-response' ? { 'X-Voice-Provider-Status': '200' } : {}) },
+      }),
+      diagnostics: ` HTTP 502 · X-Voice-Outcome: ${outcome}` + (outcome === 'openai-response' ? ' · X-Voice-Provider-Status: 200' : ''),
+      bodyRead: false,
+    })),
     {
       label: 'provider HTTP error with both diagnostic headers',
       makeResponse: () => new Response('sensitive response body', {

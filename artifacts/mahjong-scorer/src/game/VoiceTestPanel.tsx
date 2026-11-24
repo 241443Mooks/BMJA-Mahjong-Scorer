@@ -4,7 +4,10 @@ import { playingTileDefinition, tileAssetUrl } from '../tiles/MahjongTileArtwork
 import { voiceProposalBlockers, voiceProposalSchema, type VoiceProposal } from './voice-evidence';
 
 const interpretationUnavailable = 'Interpretation is unavailable. Try again or use manual entry.';
-const diagnosticOutcomes = new Set(['provider-http', 'schema', 'source', 'refusal', 'incomplete']);
+const diagnosticOutcomes = new Set([
+  'quota-preparation', 'openai-transport', 'openai-response',
+  'provider-http', 'schema', 'source', 'refusal', 'incomplete',
+]);
 
 function interpretationFailure(response?: Response) {
   if (!response || response.status < 100 || response.status > 599) return interpretationUnavailable;

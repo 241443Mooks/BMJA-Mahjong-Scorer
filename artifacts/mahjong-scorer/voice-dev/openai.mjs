@@ -25,9 +25,8 @@ export function estimateOpenAICostUsd(model, { input, cached, output }) {
   return ((input - cached) * PRICE_PER_MILLION.input + cached * PRICE_PER_MILLION.cached + output * PRICE_PER_MILLION.output) / 1e6;
 }
 
-export async function interpretWithOpenAI(transcript, key) {
-  const start = performance.now();
-  const response = await fetch('https://api.openai.com/v1/responses', {
+export function requestOpenAIInterpretation(transcript, key) {
+  return fetch('https://api.openai.com/v1/responses', {
     method: 'POST',
     headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -42,24 +41,19 @@ export async function interpretWithOpenAI(transcript, key) {
     redirect: 'error',
     signal: AbortSignal.timeout(30000),
   });
+}
+
+export async function readOpenAIInterpretation(response) {
   if (!response.ok) {
     await response.body?.cancel();
-    return { providerStatus: response.status, latencyMs: Math.round(performance.now() - start) };
+    return { outcome: 'provider-http' };
   }
   const result = await response.json();
   const content = result.output?.flatMap(item => item.content ?? []) ?? [];
   const output = content.find(item => item.type === 'output_text');
-  let proposal;
-  try {
-    if (result.status === 'completed' && output?.text) proposal = JSON.parse(output.text);
-  } catch {
-    // Keep usage and latency when the response could not be decoded.
-  }
   return {
-    providerStatus: response.status,
     outcome: content.some(item => item.type === 'refusal') ? 'refusal' : result.status !== 'completed' ? 'incomplete' : 'completed',
-    proposal,
-    latencyMs: Math.round(performance.now() - start),
+    proposal: result.status === 'completed' && output?.text ? JSON.parse(output.text) : undefined,
     usage: result.usage,
     model: result.model,
   };
