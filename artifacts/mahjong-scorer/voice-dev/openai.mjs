@@ -38,7 +38,7 @@ export function requestOpenAIInterpretation(transcript, key) {
       text: { format: { type: 'json_schema', name: 'mahjong_evidence', strict: true, schema } },
       max_output_tokens: MAX_OUTPUT_TOKENS,
     }),
-    redirect: 'error',
+    redirect: 'manual',
     signal: AbortSignal.timeout(30000),
   });
 }
