@@ -1,5 +1,5 @@
 import { createRemoteJWKSet, jwtVerify } from 'jose';
-import { voiceProposalSchema } from '../src/game/voice-evidence';
+import { guardVoiceProposal, voiceProposalSchema } from '../src/game/voice-evidence';
 import { readOpenAIInterpretation, requestOpenAIInterpretation, MAX_BODY_BYTES, MAX_DESCRIPTION_LENGTH, MODEL } from '../voice-dev/openai.mjs';
 export { VoiceQuota } from './quota.mjs';
 
@@ -108,6 +108,7 @@ export default {
       const result = await readOpenAIInterpretation(response);
       metrics['X-Voice-Provider-Ms'] = String(Math.round(performance.now() - start));
       const proposal = voiceProposalSchema.safeParse(result.proposal);
+      const guarded = proposal.success ? voiceProposalSchema.safeParse(guardVoiceProposal(proposal.data)) : proposal;
       if (result.model === MODEL) metrics['X-Voice-Model'] = MODEL;
       for (const [name, value] of Object.entries({
         'X-Voice-Input-Tokens': result.usage?.input_tokens,
@@ -118,14 +119,14 @@ export default {
       }
       const failure = response.status !== 200 ? 'provider-http'
         : result.outcome !== 'completed' ? result.outcome
-        : !proposal.success ? 'schema'
-        : proposal.data.groups.some(group => !input.transcript.includes(group.source)) ? 'source' : null;
+        : !guarded.success ? 'schema'
+        : ![...guarded.data.groups.map(group => group.source), ...guarded.data.unparsed].every(span => input.transcript.includes(span)) ? 'source' : null;
       if (failure) {
         return json(502, { error: 'OpenAI returned no verifiable interpretation. Try again or use manual entry.' }, {
           ...metrics, 'X-Voice-Outcome': failure,
         });
       }
-      return json(200, proposal.data, metrics);
+      return json(200, guarded.data, metrics);
     } catch {
       return json(502, { error: 'Interpretation is unavailable. Try again or use manual entry.' }, {
         ...metrics, 'X-Voice-Outcome': stage,

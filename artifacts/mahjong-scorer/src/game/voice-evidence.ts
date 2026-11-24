@@ -23,6 +23,41 @@ export const voiceProposalSchema = z.object({
 export type VoiceProposal = z.infer<typeof voiceProposalSchema>;
 export type DraftSet = Omit<HandSet, 'tile'> & { tile: PlayingTile | null };
 
+const groupNames = {
+  pung: /\b(?:pung|pong)s?\b/i,
+  kong: /\bkongs?\b/i,
+  chow: /\bchows?\b/i,
+  pair: /\bpairs?\b/i,
+};
+const conflictingHonourName = /\b(?:(?:east|south|west|north)\s+dragons?|(?:red|green|white)\s+winds?)\b/i;
+
+function invalidChowTile({ kind, tile }: VoiceProposal['groups'][number]): boolean {
+  return kind === 'chow' && tile !== null && (tile.family !== 'suit' || tile.rank > 7);
+}
+
+/** Withhold unsupported groups and structurally impossible tiles. Preserve their source for review. */
+export function guardVoiceProposal(proposal: VoiceProposal): VoiceProposal {
+  const groups: VoiceProposal['groups'] = [];
+  const unparsed = [...proposal.unparsed];
+  for (const group of proposal.groups) {
+    if (!Object.values(groupNames).some(name => name.test(group.source))) {
+      if (!unparsed.some(fragment => fragment.includes(group.source))) unparsed.push(group.source);
+      continue;
+    }
+    if (group.kind && !groupNames[group.kind].test(group.source)) {
+      groups.push({ ...group, kind: null, ambiguity: 'Confirm the group type.' });
+    } else if (invalidChowTile(group)) {
+      groups.push({ ...group, tile: null, ambiguity: 'A Chow needs three consecutive tiles in one suit.' });
+    } else if (group.tile && group.ambiguity && conflictingHonourName.test(group.source)) {
+      // An already unresolved honour name cannot support a proposed tile.
+      groups.push({ ...group, tile: null, ambiguity: 'Confirm the Wind or Dragon tile.' });
+    } else {
+      groups.push(group);
+    }
+  }
+  return { groups, unparsed };
+}
+
 /** Append only fully confirmed groups; preserve every existing picker entry and id. */
 export function appendConfirmedVoiceGroups(
   current: readonly DraftSet[], proposal: unknown, ids: readonly string[],
@@ -51,7 +86,7 @@ export function voiceProposalBlockers(proposal: VoiceProposal): string[] {
     if (!group.tile) blockers.push(`${label}: tile unknown.`);
     if (!group.visibility) blockers.push(`${label}: exposure unknown.`);
     if (group.ambiguity) blockers.push(`${label}: needs clarification.`);
-    if (group.kind === 'chow' && group.tile && (group.tile.family !== 'suit' || group.tile.rank > 7)) {
+    if (invalidChowTile(group)) {
       blockers.push(`${label}: invalid Chow.`);
     }
   });

@@ -8,12 +8,13 @@ import { compareEvidence } from './evidence-metrics.mjs';
 import { estimateOpenAICostUsd, MODEL } from './openai.mjs';
 
 const [target, caseId, ...extra] = process.argv.slice(2);
-const corpus = JSON.parse(await readFile(new URL('./evaluation.json', import.meta.url), 'utf8'));
-const cases = caseId ? corpus.filter(item => item.id === caseId) : corpus;
+const holdout = caseId === '--holdout';
+const corpus = JSON.parse(await readFile(new URL(holdout ? './evaluation-holdout.json' : './evaluation.json', import.meta.url), 'utf8'));
+const cases = caseId && !holdout ? corpus.filter(item => item.id === caseId) : corpus;
 let url;
 try { url = new URL(target); } catch {}
 if (!url || url.protocol !== 'https:' || url.pathname !== '/' || url.search || url.hash || url.username || url.password || !cases.length || extra.length) {
-  console.error('Usage: node artifacts/mahjong-scorer/voice-dev/evaluate.mjs https://<approved-preview-host> [01-26]');
+  console.error('Usage: node artifacts/mahjong-scorer/voice-dev/evaluate.mjs https://<approved-preview-host> [01-26|--holdout]');
   process.exit(2);
 }
 
@@ -116,6 +117,7 @@ try {
   latencies.sort((a, b) => a - b);
   const percentile = p => latencies[Math.ceil(p * latencies.length) - 1] ?? null;
   console.log(JSON.stringify({
+    ...(holdout ? { corpus: 'holdout' } : {}),
     model: MODEL, attempted: results.length, passed: results.filter(result => result.pass).length,
     measuredCases: results.filter(result => result.exact !== undefined).length,
     exactCases: results.filter(result => result.exact).length,

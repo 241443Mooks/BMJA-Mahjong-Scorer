@@ -1,0 +1,12 @@
+[
+  {"id":"H01","text":"uh, exposed kong of six bams, you know","expected":[["kong","suit","bamboo",6,"exposed"]],"sources":["exposed kong of six bams"],"unparsed":[],"ready":true},
+  {"id":"H02","text":"closed pair, seven cracks","expected":[["pair","suit","characters",7,"concealed"]],"sources":["closed pair, seven cracks"],"unparsed":[],"ready":true},
+  {"id":"H03","text":"concealed two of the four circles, a pair","expected":[["pair","suit","circles",4,"concealed"]],"sources":["concealed two of the four circles, a pair"],"unparsed":[],"ready":true},
+  {"id":"H04","text":"closed kong of south winds, I mean north winds","expected":[["kong","wind","north",null,"concealed"]],"sources":["closed kong of south winds, I mean north winds"],"unparsed":[],"ready":true},
+  {"id":"H05","text":"an open pair of south dragons","expected":[["pair",null,null,null,"exposed"]],"sources":["open pair of south dragons"],"unparsed":[],"ready":false},
+  {"id":"H06","text":"concealed chow six eight nine characters","expected":[["chow",null,null,null,"concealed"]],"sources":["concealed chow six eight nine characters"],"unparsed":[],"ready":false},
+  {"id":"H07","text":"two white dragons and a bit of table chatter","expected":[],"sources":[],"unparsed":["two white dragons"],"ready":false},
+  {"id":"H08","text":"open pung of red dragons, or white dragons, I'm not sure","expected":[["pung",null,null,null,"exposed"]],"sources":["open pung of red dragons, or white dragons"],"unparsed":[],"ready":false},
+  {"id":"H09","text":"exposed chow seven eight nine bams","expected":[["chow","suit","bamboo",7,"exposed"]],"sources":["exposed chow seven eight nine bams"],"unparsed":[],"ready":true},
+  {"id":"H10","text":"four green dragons and an open pong of seven dots","expected":[["pung","suit","circles",7,"exposed"]],"sources":["open pong of seven dots"],"unparsed":["four green dragons"],"ready":false}
+]

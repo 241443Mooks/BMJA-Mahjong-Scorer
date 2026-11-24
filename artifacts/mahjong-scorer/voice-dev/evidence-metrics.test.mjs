@@ -1,11 +1,12 @@
 import { beforeAll, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { compareEvidence } from './evidence-metrics.mjs';
-import { appendConfirmedVoiceGroups, validateVoiceCandidate, voiceProposalBlockers, voiceProposalSchema } from '../src/game/voice-evidence';
+import { appendConfirmedVoiceGroups, guardVoiceProposal, validateVoiceCandidate, voiceProposalBlockers, voiceProposalSchema } from '../src/game/voice-evidence';
 import { getCurrentCompiledRulesRuntime, initialiseCurrentRulesRuntimes } from '../src/rules-platform/current-runtime-registry';
 import { BMJA_PROFILE_REF } from '../src/game/ruleset';
 
 const cases = JSON.parse(readFileSync(new URL('./evaluation.json', import.meta.url)));
+const holdout = JSON.parse(readFileSync(new URL('./evaluation-holdout.json', import.meta.url)));
 let runtime;
 beforeAll(async () => {
   await initialiseCurrentRulesRuntimes();
@@ -35,12 +36,66 @@ function assess(item, proposal) {
   return compareEvidence(item, proposal, blockers);
 }
 
-it.each(cases)('$id checks evidence, preservation of unresolved facts, and acceptance', item => {
+it.each([...cases, ...holdout])('$id checks evidence, preservation of unresolved facts, and acceptance', item => {
   const proposal = fixture(item);
   expect(assess(item, proposal)).toMatchObject({ exact: true, ready: item.ready, pass: true });
+  expect(guardVoiceProposal(proposal)).toEqual(proposal);
   const lostEvidence = { groups: [], unparsed: [item.text] };
   if (item.expected.length) expect(assess(item, lostEvidence).pass).toBe(false);
   if (item.ready) expect(assess(item, lostEvidence).ready).toBe(false);
+});
+
+it('withholds a group inferred only from a tile count without duplicating the loose source', () => {
+  const item = holdout.find(entry => entry.id === 'H07');
+  const loose = { source: item.unparsed[0], kind: 'pair', tile: { family: 'dragon', dragon: 'white' }, visibility: null, ambiguity: null };
+  const guarded = guardVoiceProposal({ groups: [loose], unparsed: item.unparsed });
+  expect(guarded).toEqual(fixture(item));
+  expect(assess(item, guarded)).toMatchObject({ exact: true, ready: false });
+});
+
+it('preserves other spoken fields while withholding an unsupported group type', () => {
+  const item = holdout.find(entry => entry.id === 'H03');
+  const proposal = fixture(item);
+  const spoken = proposal.groups[0];
+  proposal.groups[0] = { ...spoken, kind: 'pung' };
+  const guarded = guardVoiceProposal(proposal);
+  expect(guarded.groups[0]).toMatchObject({ ...spoken, kind: null, ambiguity: 'Confirm the group type.' });
+  expect(assess(item, guarded).ready).toBe(false);
+});
+
+it('withholds a guessed tile for an unresolved conflicting honour name', () => {
+  const item = holdout.find(entry => entry.id === 'H05');
+  const proposal = fixture(item);
+  const spoken = proposal.groups[0];
+  proposal.groups[0] = { ...spoken, tile: { family: 'wind', wind: 'south' } };
+  const guarded = guardVoiceProposal(proposal);
+  expect(guarded.groups[0]).toMatchObject({ ...spoken, ambiguity: 'Confirm the Wind or Dragon tile.' });
+  expect(assess(item, guarded)).toMatchObject({ exact: true, ready: false });
+});
+
+it('does not withhold a resolved correction merely because the superseded words are present', () => {
+  const group = {
+    source: 'open pair of west dragons, I mean red dragons',
+    kind: 'pair',
+    visibility: 'exposed',
+    tile: { family: 'dragon', dragon: 'red' },
+    ambiguity: null,
+  };
+  const proposal = { groups: [group], unparsed: [] };
+  expect(guardVoiceProposal(proposal)).toEqual(proposal);
+});
+
+it.each([
+  { family: 'suit', suit: 'characters', rank: 8 },
+  { family: 'wind', wind: 'east' },
+])('withholds an impossible Chow tile while keeping explicitly stated group fields', tile => {
+  const item = holdout.find(entry => entry.id === 'H06');
+  const proposal = fixture(item);
+  const spoken = proposal.groups[0];
+  proposal.groups[0] = { ...spoken, tile, ambiguity: null };
+  const guarded = guardVoiceProposal(proposal);
+  expect(guarded.groups[0]).toMatchObject({ ...spoken, ambiguity: expect.any(String) });
+  expect(assess(item, guarded)).toMatchObject({ exact: true, ready: false });
 });
 
 it('rejects guesses even when a proposal carries an ambiguity flag', () => {

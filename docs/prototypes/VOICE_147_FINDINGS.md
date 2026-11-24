@@ -1,6 +1,6 @@
 # Issue #147 · private typed interpretation preview
 
-Draft PR #563 contains a typed-only preview for standalone British (BMJA 1.0) non-winning grouped hands in normal mode. It uses the existing hand-entry workspace and scorer. The Cloudflare preview is awaiting confirmation of the owner-only Access policy and explicit deployment approval. The OpenAI-backed evaluation follows deployment and secret setup.
+Draft PR #563 contains a typed-only preview for standalone British (BMJA 1.0) non-winning grouped hands in normal mode. It uses the existing hand-entry workspace and scorer. The private preview served the first approved live evaluation. Each subsequent deployment requires approval for the exact candidate commit.
 
 ## Verification completed offline
 
@@ -11,7 +11,37 @@ Draft PR #563 contains a typed-only preview for standalone British (BMJA 1.0) no
 - Worker tests cover application JWT signature, issuer, audience, expiration, request validation, alternate-host rejection, missing secret, and quota persistence across object instances. Wrangler can bundle the separate Worker and assets in dry-run mode.
 - The local Chromium preview loaded the typed panel and existing manual scorer. A submitted synthetic description produced the unavailable state and preserved the entered Pung and its **8-point** score. The screenshot in the work session shows the keyless local path.
 
-Live model accuracy, latency, cost, Cloudflare edge access enforcement, and successful review screenshots remain unmeasured. The offline fixtures check the evaluator and scoring integration.
+The offline fixtures check the evaluator and scoring integration. The live baseline below measures interpretation through the private API.
+
+## Live baseline and interpretation failures
+
+The first live run used commit `8d86b8bb5c95a9fa46f546ba19557e46b25d0b25` with `gpt-5.4-mini-2026-03-17`. The [original per-case report](VOICE_147_BASELINE.jsonl) is preserved byte for byte. It records the diagnostics and numeric usage without raw request or model output bodies. It establishes which fields, source spans and readiness checks differed from the original [26 cases](../../artifacts/mahjong-scorer/voice-dev/evaluation.json). It cannot establish exactly which unmatched text the model returned or why it chose it.
+
+All 26 requests received HTTP 200 from the preview and OpenAI. Exact evidence and acceptance passed in 19 cases. Readiness matched in 22 cases. All 11 expected clarification cases stayed blocked, and 4 of the 15 expected-ready cases were incorrectly blocked. Four cases had unsupported guesses and five had omissions or unexpected unresolved fragments. OpenAI latency was 1,237 ms p50 and 1,687 ms p95. The total estimated API cost was $0.017721.
+
+| Case | Expected | Observed in the saved diagnostics |
+| --- | --- | --- |
+| 09 | Ready exposed Pung using spoken aliases with filler | All five spoken facts matched and the source span passed. An unexpected unresolved fragment blocked acceptance. |
+| 13 | Ready concealed Pung of 4 Characters from “closed pong, four cracks” | Kind and exposure matched. Tile family, identity and rank were missing. The group was ambiguous, its source failed the expected span check, and there was an extra unresolved fragment. |
+| 15 | Ready concealed Pung of 6 Bamboo with the group name last | Tile and exposure matched. The group type was missing, the source span did not support the whole group, and a second unsupported group and ambiguity blocked acceptance. |
+| 16 | Ready exposed Green Dragon Pung after an explicit correction | All expected facts and the source span matched. The retained ambiguity was the sole blocker. |
+| 17 | Exposed Pung with unknown tile after an incompatible honour name | Kind and exposure matched. The proposal supplied an unsupported tile family and identity. The ambiguity flag still blocked acceptance. |
+| 19 | Exposed Chow with unknown tile after an invalid sequence | Kind and exposure matched. The proposal supplied an unsupported tile family, identity and rank. The structural Chow check blocked acceptance. |
+| 21 | Unresolved loose tiles without a group | A group was inferred without a stated group type and the expected loose-tile span was missing from the unresolved evidence. Acceptance stayed blocked. |
+
+The candidate instructions now require explicit group names, explain common tile vocabulary, validate the whole Chow sequence, apply clear corrections only to the relevant field, and distinguish unresolved evidence from filler. The Worker withholds groups without a supported name, structurally impossible Chow tiles, and proposed tiles for already unresolved Wind or Dragon naming conflicts. Both group sources and unresolved fragments must be verbatim. The Worker preserves remaining evidence for review and never derives a replacement tile or group. The prompt still handles semantic interpretation of conflicting names and corrections, which need live verification.
+
+## Candidate comparison
+
+After approval, run the unchanged 26-case corpus and the separate [10-case holdout](../../artifacts/mahjong-scorer/voice-dev/evaluation-holdout.json). The holdout includes terminology, filler, trailing group names, corrections, ambiguous honours, an in-range but non-consecutive Chow, loose tiles, and mixed supported and unsupported evidence. Its inputs are absent from the prompt and the original corpus.
+
+```sh
+node artifacts/mahjong-scorer/voice-dev/evaluate.mjs https://<approved-preview-host> > candidate-26.jsonl
+# Wait 60 seconds between runs to stay within the rolling per-tester limit.
+node artifacts/mahjong-scorer/voice-dev/evaluate.mjs https://<approved-preview-host> --holdout > candidate-holdout.jsonl
+```
+
+Each run is complete when its summary reports the intended attempt count, even if it exits non-zero for evidence mismatches. Use separate reports and record the candidate commit. Compare exact evidence, readiness, cases with unsupported guesses, provider latency and estimated cost. Count incorrectly blocked and unexpectedly ready cases separately. The two runs require 36 attempts, so start them with sufficient daily and lifetime quota available. The candidate has offline verification only until it is approved and the live reports are collected.
 
 ## Owner setup before private deployment
 

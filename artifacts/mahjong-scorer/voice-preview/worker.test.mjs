@@ -128,6 +128,9 @@ describe('private interpretation diagnostics', () => {
     ['invalid evidence shape', reserved, () => Response.json({
       status: 'completed', output: [{ content: [{ type: 'output_text', text: JSON.stringify({ unexpected: privateFailure }) }] }],
     }), 'schema', '200'],
+    ['fabricated unresolved fragment', reserved, () => Response.json({
+      status: 'completed', output: [{ content: [{ type: 'output_text', text: JSON.stringify({ groups: [], unparsed: [privateFailure] }) }] }],
+    }), 'source', '200'],
   ])('reports only fixed metadata for %s', async (_label, reserve, fetchProvider, outcome, providerStatus) => {
     const provider = vi.fn(fetchProvider);
     const { response, assertion } = await interpret(reserve, provider);
