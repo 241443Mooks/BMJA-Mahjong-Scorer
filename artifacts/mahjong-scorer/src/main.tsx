@@ -45,6 +45,11 @@ function applyStructuredData(canonicalPath: string, description: string) {
 }
 
 function applyRouteMetadata() {
+  if ((import.meta.env.DEV || import.meta.env.VITE_PRIVATE_VOICE_PREVIEW === '1') && path === '/voice-test') {
+    document.title = 'Private typed voice test | Mahjong Reference';
+    setMeta('meta[name="robots"]', 'content', 'noindex, nofollow');
+    return;
+  }
   const canonicalPath = canonicalPathFor(path);
   const metadata = routeMetadata.get(canonicalPath);
   const canonicalUrl = `${siteUrl}${canonicalPath === '/' ? '/' : canonicalPath}`;

@@ -5,6 +5,8 @@ import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { Check, ChevronDown, Copy, RotateCcw, Sparkles, X, AlertCircle, Info } from 'lucide-react';
 import { GameScorer } from './game/GameScorer';
+import { VoiceTestPanel } from './game/VoiceTestPanel';
+import { appendConfirmedVoiceGroups, validateVoiceCandidate, type VoiceProposal } from './game/voice-evidence';
 import { SiteHeader } from './components/SiteHeader';
 import { specialHandReferenceHref } from './guide/special-hand-references';
 import { SPECIAL_HANDS_ATLAS } from './guide/special-hands-atlas';
@@ -1218,12 +1220,39 @@ export function HandScorer({ context, onClose, standaloneHand, standaloneRulesPr
     {score?.specialFishing && <div data-testid="special-fishing-detected" className="mt-3 rounded-md border border-[#b8cdbf] bg-[#edf3ed] p-3 text-[11px] text-[#284d45]"><p className="font-semibold">Fishing detected</p><p className="mt-1">{score.specialFishing.name} · {score.specialFishing.completingTiles.length} completing {score.specialFishing.completingTiles.length === 1 ? 'tile' : 'tiles'}.</p></div>}
   </>;
 
+  const voiceTest = (import.meta.env.DEV || import.meta.env.VITE_PRIVATE_VOICE_PREVIEW === '1') && typeof window !== 'undefined' && window.location.pathname === '/voice-test';
+  const voiceDisabled = activeProfile.id !== BMJA_PROFILE_REF.id || activeProfile.version !== BMJA_PROFILE_REF.version || layoutMode !== 'sets' || isWinner || handMode !== 'normal' || !plainStandaloneHand || remainingTiles.length > 0 || ungroupedBlankTiles.length > 0 || !!winningTileProvenance;
+  const [voiceReceipt, setVoiceReceipt] = useState<{ ids: string[]; finish: (message: string | null) => void } | null>(null);
+  useEffect(() => {
+    if (!voiceReceipt) return;
+    const applied = voiceReceipt.ids.every(id => sets.some(group => group.id === id));
+    voiceReceipt.finish(applied ? null : 'The hand changed while adding groups. Review the current hand and try again.');
+    setVoiceReceipt(null);
+  }, [sets, voiceReceipt]);
+
+  async function acceptVoiceProposal(proposal: VoiceProposal): Promise<string | null> {
+    if (voiceDisabled || !scoringRuntime) return 'Typed entry supports only a standalone British non-winning grouped hand without remaining tiles.';
+    try {
+      const ids = proposal.groups.map(() => `voice-${crypto.randomUUID()}`);
+      const next = appendConfirmedVoiceGroups(sets, proposal, ids);
+      const errors = validateVoiceCandidate(next, hand, gameContext, scoringRuntime);
+      if (errors.length) return errors.join(' ');
+      return new Promise(resolve => {
+        setSets(current => current === sets ? next : current);
+        setVoiceReceipt({ ids, finish: resolve });
+      });
+    } catch {
+      return 'Resolve every unknown or ambiguous group before accepting.';
+    }
+  }
+
   return (
     <div className="mahjong-shell">
       <SiteHeader onNavigate={navigateAway} />
 
       <main className="mx-auto grid max-w-[1440px] grid-cols-[minmax(0,1fr)] gap-6 px-5 py-7 lg:px-8 lg:py-9">
         <section className="min-w-0">
+          {voiceTest && <VoiceTestPanel onAccept={acceptVoiceProposal} disabledReason={voiceDisabled ? "Typed entry supports only a standalone British non-winning grouped hand without remaining tiles." : undefined} />}
           <div className={`${compactTaskHeader ? 'mb-4' : 'mb-7'} animate-rise`}>
             {example && <>
               <a data-testid="link-back-to-example" href={example.returnHref} className="mb-4 inline-flex min-h-10 items-center rounded-md border border-[#b8cdbf] bg-[#edf3ed] px-3 text-[11px] font-semibold text-[#284d45] transition hover:bg-[#dceade]">{example.returnLabel} · {example.name}</a>

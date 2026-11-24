@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite --config vite.config.ts --host 0.0.0.0",
     "build": "node scripts/build-atlas-v02-content.mjs --check && vite build --config vite.config.ts && node scripts/prerender-seo.mjs",
+    "build:voice-preview": "VITE_PRIVATE_VOICE_PREVIEW=1 PORT=5173 BASE_PATH=/ vite build --config vite.config.ts",
     "serve": "vite preview --config vite.config.ts --host 0.0.0.0",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "node scripts/build-atlas-v02-content.mjs --check && vitest run --config vitest.config.ts",
@@ -58,6 +59,7 @@
     "framer-motion": "catalog:",
     "happy-dom": "^20.14.5",
     "input-otp": "^1.4.2",
+    "jose": "6.2.2",
     "lucide-react": "catalog:",
     "marked": "^18.0.14",
     "next-themes": "^0.4.6",

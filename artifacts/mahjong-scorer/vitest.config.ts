@@ -15,6 +15,7 @@ export default defineConfig({
       'src/evidence/**/*.test.ts',
       'src/*.test.ts',
       'src/*.test.tsx',
+      'voice-{dev,preview}/**/*.test.mjs',
     ],
   },
 });

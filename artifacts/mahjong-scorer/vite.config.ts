@@ -42,14 +42,14 @@ export default defineConfig({
   },
   root: path.resolve(import.meta.dirname),
   build: {
-    outDir: path.resolve(import.meta.dirname, 'dist/public'),
+    outDir: path.resolve(import.meta.dirname, process.env.VITE_PRIVATE_VOICE_PREVIEW === '1' ? 'dist/voice-preview' : 'dist/public'),
     emptyOutDir: true,
   },
   server: {
     port,
     strictPort: true,
-    host: '0.0.0.0',
-    allowedHosts: true,
+    host: process.env.VOICE_TEST_LOCAL === '1' ? '127.0.0.1' : '0.0.0.0',
+    allowedHosts: process.env.VOICE_TEST_LOCAL === '1' ? ['127.0.0.1'] : true,
     fs: {
       strict: true,
     },
