@@ -1,6 +1,6 @@
 const MINUTE = 60_000;
 const DAY = 86_400_000;
-export const LIMITS = { perMinute: 5, globalPerMinute: 10, perDay: 40, globalPerDay: 60, lifetime: 100 };
+export const LIMITS = { perMinute: 5, globalPerMinute: 10, perDay: 80, globalPerDay: 90, lifetime: 100 };
 
 export class VoiceQuota {
   constructor(ctx) {
